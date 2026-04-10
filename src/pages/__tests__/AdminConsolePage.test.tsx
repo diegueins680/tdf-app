@@ -442,6 +442,35 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('flags role selections that collapse to the same app navigation', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    renderPage();
+
+    const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
+    await user.click(editButton);
+
+    expect(
+      screen.queryByText(/Estos roles muestran la misma navegación principal en esta app:/i),
+    ).not.toBeInTheDocument();
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    await user.click(rolesSelect);
+    await user.click(getMenuItemByText('Manager'));
+    await user.keyboard('{Escape}');
+
+    expect(
+      await screen.findByText(
+        /Estos roles muestran la misma navegación principal en esta app: Admin y Manager\. Revisa si necesitas ambos antes de guardar\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('replaces the single-audit table with a compact first-event summary', async () => {
     mockAuditLogs.mockResolvedValue([
       {

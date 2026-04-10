@@ -37,6 +37,7 @@ import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
 import type { AdminConsoleCard, AdminUserDTO, AdminUserStatus, AuditLogEntry, RoleKey } from '../api/types';
 import { ROLE_OPTIONS, formatRoleList } from '../constants/roles';
+import { normalizeRoles } from '../config/menu';
 
 const ADMIN_REFRESH_QUERY_KEYS = [
   ['admin', 'health'],
@@ -133,6 +134,33 @@ function hasRoleSelectionChanged(currentRoles?: readonly RoleKey[] | null, nextR
   }
 
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
+}
+
+function formatRoleGroupLabel(roles: readonly RoleKey[]) {
+  if (roles.length <= 1) {
+    return roles[0] ?? '';
+  }
+
+  if (roles.length === 2) {
+    return `${roles[0]} y ${roles[1]}`;
+  }
+
+  return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
+}
+
+function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
+  const groupedByNavigationProfile = new Map<string, RoleKey[]>();
+
+  normalizeRoleSelection(roles).forEach((role) => {
+    const navigationProfile = normalizeRoles([role])[0] ?? role.toLowerCase();
+    const group = groupedByNavigationProfile.get(navigationProfile) ?? [];
+    group.push(role);
+    groupedByNavigationProfile.set(navigationProfile, group);
+  });
+
+  return [...groupedByNavigationProfile.values()]
+    .map((group) => normalizeRoleSelection(group))
+    .filter((group): group is RoleKey[] => group.length > 1);
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -240,6 +268,16 @@ export default function AdminConsolePage() {
   const hasPendingRoleChanges = useMemo(() => (
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
   ), [editingUser, selectedRoles]);
+  const equivalentRoleWarning = useMemo(() => {
+    const groups = getNavigationEquivalentRoleGroups(selectedRoles);
+    if (groups.length === 0) {
+      return null;
+    }
+
+    return groups
+      .map((group) => formatRoleGroupLabel(group))
+      .join(' · ');
+  }, [selectedRoles]);
   const isRefreshingPanel =
     healthQuery.isFetching
     || auditQuery.isFetching
@@ -690,6 +728,11 @@ export default function AdminConsolePage() {
                 : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
             </FormHelperText>
           </FormControl>
+          {equivalentRoleWarning && (
+            <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+              Estos roles muestran la misma navegación principal en esta app: {equivalentRoleWarning}. Revisa si necesitas ambos antes de guardar.
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={updateRolesMutation.isPending}>
