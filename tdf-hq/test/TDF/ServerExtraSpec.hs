@@ -258,9 +258,9 @@ spec = do
     it "accepts target fields that exactly match the declared checkout target kind" $ do
       validateCheckoutTargets TargetParty (Just "  Backline Crew  ") Nothing Nothing
         `shouldBe` Right (Just "Backline Crew", Nothing, Nothing)
-      validateCheckoutTargets TargetRoom (Just "stale party") (Just roomId) Nothing
+      validateCheckoutTargets TargetRoom Nothing (Just roomId) Nothing
         `shouldBe` Right (Nothing, Just roomId, Nothing)
-      validateCheckoutTargets TargetSession (Just "stale party") Nothing (Just sessionId)
+      validateCheckoutTargets TargetSession Nothing Nothing (Just sessionId)
         `shouldBe` Right (Nothing, Nothing, Just sessionId)
 
     it "rejects contradictory or destination-less checkout targets instead of creating ambiguous checkout rows" $ do
@@ -274,6 +274,8 @@ spec = do
       assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just "Crew") (Just roomId) Nothing)
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
+      assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetRoom (Just "Crew") (Just roomId) Nothing)
+      assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetSession (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom Nothing (Just roomId) (Just sessionId))
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession Nothing (Just roomId) (Just sessionId))
 

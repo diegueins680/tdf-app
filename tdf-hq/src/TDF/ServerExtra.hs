@@ -105,15 +105,17 @@ validateCheckoutTargets
 validateCheckoutTargets targetKind mTargetParty mRoom mSession =
   case targetKind of
     TargetRoom ->
-      case (mRoom, mSession) of
-        (Nothing, _) -> Left err400 { errBody = "targetRoom required for room checkout" }
-        (Just _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
-        (Just roomKey, Nothing) -> Right (Nothing, Just roomKey, Nothing)
+      case (normalizedTargetParty, mRoom, mSession) of
+        (Just _, _, _) -> Left err400 { errBody = "targetParty is only allowed for party checkout" }
+        (_, Nothing, _) -> Left err400 { errBody = "targetRoom required for room checkout" }
+        (_, Just _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
+        (Nothing, Just roomKey, Nothing) -> Right (Nothing, Just roomKey, Nothing)
     TargetSession ->
-      case (mRoom, mSession) of
-        (_, Nothing) -> Left err400 { errBody = "targetSession required for session checkout" }
-        (Just _, Just _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
-        (Nothing, Just sessionKey) -> Right (Nothing, Nothing, Just sessionKey)
+      case (normalizedTargetParty, mRoom, mSession) of
+        (Just _, _, _) -> Left err400 { errBody = "targetParty is only allowed for party checkout" }
+        (_, _, Nothing) -> Left err400 { errBody = "targetSession required for session checkout" }
+        (_, Just _, Just _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
+        (Nothing, Nothing, Just sessionKey) -> Right (Nothing, Nothing, Just sessionKey)
     TargetParty ->
       case (normalizedTargetParty, mRoom, mSession) of
         (Nothing, _, _) -> Left err400 { errBody = "targetParty required for party checkout" }
