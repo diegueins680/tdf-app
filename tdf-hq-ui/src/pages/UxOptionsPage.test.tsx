@@ -78,6 +78,9 @@ const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLButtonElement>('button')).filter((element) => buttonText(element) === labelText);
 
+const getButtonByAriaLabel = (root: ParentNode, labelText: string) =>
+  root.querySelector<HTMLButtonElement>(`button[aria-label="${labelText}"]`);
+
 const getInputByLabel = (container: HTMLElement, labelText: string) => {
   const label = Array.from(container.querySelectorAll('label')).find(
     (element) => buttonText(element) === labelText,
@@ -258,6 +261,54 @@ describe('UxOptionsPage', () => {
         expect((labelInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('Rock');
         expect(getButtonsByText(container, 'Guardar')).toHaveLength(0);
         expect(getButtonsByText(container, 'Revertir')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the filter clear action inside the field so the list toolbar stays compact', async () => {
+    listDropdownsMock.mockResolvedValue([
+      buildOption(),
+      buildOption({
+        optionId: 'band-genre-2',
+        value: 'jazz',
+        label: 'Jazz',
+        sortOrder: 2,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Filtrar opciones');
+        expect(getButtonsByText(container, 'Limpiar filtro')).toHaveLength(0);
+        expect(getButtonByAriaLabel(container, 'Limpiar filtro')).toBeNull();
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      const filterInput = getInputByLabel(container, 'Filtrar opciones');
+
+      await act(async () => {
+        setInputValue(filterInput, 'jazz');
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Limpiar filtro')).toHaveLength(0);
+        expect(getButtonByAriaLabel(container, 'Limpiar filtro')).toBeTruthy();
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonByAriaLabel(container, 'Limpiar filtro')!);
+
+      await waitForExpectation(() => {
+        expect((filterInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('');
+        expect(getButtonByAriaLabel(container, 'Limpiar filtro')).toBeNull();
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {
       await cleanup();

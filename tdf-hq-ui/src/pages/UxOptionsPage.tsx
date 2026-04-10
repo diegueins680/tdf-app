@@ -7,6 +7,8 @@ import {
   Checkbox,
   Collapse,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   Paper,
   Stack,
   Table,
@@ -17,6 +19,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { Admin } from '../api/admin';
@@ -211,6 +214,7 @@ export default function UxOptionsPage() {
   );
   const isCreateFormVisible = (hasLoadedOptions && !hasOptions) || showCreateForm;
   const showListChrome = hasOptions && (options.length > 1 || hasActiveFilter);
+  const showClearFilterAction = showListChrome && hasActiveFilter;
   const showSingleOptionGuidance = options.length === 1 && !hasActiveFilter;
 
   useEffect(() => {
@@ -373,17 +377,20 @@ export default function UxOptionsPage() {
               onChange={(e) => setOptionFilter(e.target.value)}
               size="small"
               sx={{ minWidth: { xs: '100%', sm: 280 } }}
+              InputProps={{
+                endAdornment: showClearFilterAction ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      aria-label="Limpiar filtro"
+                      onClick={() => setOptionFilter('')}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
             />
-            {optionFilter.trim() && (
-              <Button
-                size="small"
-                variant="text"
-                onClick={() => setOptionFilter('')}
-                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
-              >
-                Limpiar filtro
-              </Button>
-            )}
           </Stack>
         ) : showSingleOptionGuidance ? (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
