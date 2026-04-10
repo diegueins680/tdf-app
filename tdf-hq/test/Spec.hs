@@ -16,6 +16,7 @@ import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartDa
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
+import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.LiveSessions (LiveSessionIntakePayload (..), LiveSessionMusicianPayload (..))
 import TDF.API.WhatsApp
     ( CompleteReq (..),
@@ -159,6 +160,40 @@ main = hspec $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+
+    describe "feedback multipart parsing" $ do
+        it "accepts omitted consent as false and normalizes explicit truthy values" $ do
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "  Broken flow  ")
+                    , ("description", "  Steps to reproduce  ")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    expectationFailure ("Expected feedback payload without consent to parse, got: " <> err)
+                Right payload -> do
+                    fpTitle payload `shouldBe` "Broken flow"
+                    fpDescription payload `shouldBe` "Steps to reproduce"
+                    fpConsent payload `shouldBe` False
+
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("consent", " yes ")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    expectationFailure ("Expected truthy feedback consent to parse, got: " <> err)
+                Right payload ->
+                    fpConsent payload `shouldBe` True
+
+        it "rejects malformed consent values instead of silently coercing them to false" $
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("consent", "maybe")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "consent must be a boolean"
+                Right payload ->
+                    expectationFailure ("Expected invalid consent to be rejected, got: " <> show payload)
 
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do
@@ -1134,6 +1169,13 @@ main = hspec $ do
 
 mkLiveSessionMultipart :: [(Text, Text)] -> MultipartData Tmp
 mkLiveSessionMultipart fields =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = []
+        }
+
+mkFeedbackMultipart :: [(Text, Text)] -> MultipartData Tmp
+mkFeedbackMultipart fields =
     MultipartData
         { inputs = map (uncurry Input) fields
         , files = []

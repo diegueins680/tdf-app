@@ -41,10 +41,10 @@ instance FromMultipart Tmp FeedbackPayload where
   fromMultipart multipart = do
     title <- lookupText "title" multipart
     description <- lookupText "description" multipart
+    consent <- optionalBool "consent" multipart
     let category    = optionalText "category" multipart
         severity    = optionalText "severity" multipart
         contact     = optionalText "contactEmail" multipart
-        consent     = parseBool "consent" multipart
         attachment  = lookupFile "attachment" multipart
     pure FeedbackPayload
       { fpTitle        = T.strip title
@@ -65,12 +65,24 @@ instance FromMultipart Tmp FeedbackPayload where
 
       optionalText name mp = inputValueText <$> findInput name mp
 
-      parseBool name mp =
+      optionalBool name mp =
         case findInput name mp of
-          Nothing   -> False
-          Just val  ->
-            let txt = T.toLower (T.strip (inputValueText val))
-            in txt `elem` ["true", "1", "yes", "on", "si", "sí"]
+          Nothing  -> Right False
+          Just val -> parseBoolField name (inputValueText val)
+
+      parseBoolField name raw =
+        case T.toLower (T.strip raw) of
+          "true" -> Right True
+          "1" -> Right True
+          "yes" -> Right True
+          "on" -> Right True
+          "si" -> Right True
+          "sí" -> Right True
+          "false" -> Right False
+          "0" -> Right False
+          "no" -> Right False
+          "off" -> Right False
+          _ -> Left ("Invalid field: " <> T.unpack name <> " must be a boolean")
 
       lookupFile name mp = lookup name [(fdInputName f, f) | f <- files mp]
 
