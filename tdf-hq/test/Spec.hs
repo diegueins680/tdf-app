@@ -21,6 +21,7 @@ import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
       validateHookVerifyRequest,
+      validateLeadCompletionId,
       validateLeadCompletionLookup,
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
@@ -927,6 +928,20 @@ main = hspec $ do
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@-example.com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example-.com") "Invalid email format"
+
+    describe "validateLeadCompletionId" $ do
+        it "accepts only positive lead identifiers before the completion lookup runs" $
+            validateLeadCompletionId 42 `shouldBe` Right 42
+
+        it "rejects zero or negative lead identifiers with a precise 400" $ do
+            let assertInvalid rawLeadId = case validateLeadCompletionId rawLeadId of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "leadId must be a positive integer"
+                    Right value ->
+                        expectationFailure ("Expected invalid lead id to be rejected, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-7)
 
     describe "validateLeadCompletionLookup" $ do
         it "allows only matching non-completed lead records" $ do

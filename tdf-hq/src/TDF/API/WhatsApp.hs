@@ -10,6 +10,7 @@ module TDF.API.WhatsApp
   , leadsCompleteServer
   , validateHookVerifyRequest
   , validateLeadCompletionRequest
+  , validateLeadCompletionId
   , validateLeadCompletionLookup
   , ensureLeadCompletionUpdated
   , CompleteReq(..)
@@ -99,15 +100,16 @@ instance FromJSON CompleteReq
 
 leadsCompleteServer :: Connection -> Server LeadsCompleteApi
 leadsCompleteServer conn lid rawReq = do
+  leadId <- either throwError pure (validateLeadCompletionId lid)
   CompleteReq tok nm em <- either throwError pure (validateLeadCompletionRequest rawReq)
   existing <- liftIO $ query conn
       "SELECT status, token FROM lead WHERE id = ? LIMIT 1"
-      (Only lid)
+      (Only leadId)
   either throwError pure (validateLeadCompletionLookup tok (listToMaybe existing))
 
   n <- liftIO $ execute conn
        "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=NULL WHERE id=? AND token=? AND status != 'COMPLETED'"
-       (nm, em, lid, tok)
+       (nm, em, leadId, tok)
   either throwError pure (ensureLeadCompletionUpdated n)
   pure $ object ["ok" .= True]
 
@@ -154,6 +156,13 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
     tokenValue = T.strip rawToken
     nameValue = T.strip rawName
     emailValue = T.strip rawEmail
+
+validateLeadCompletionId :: Int -> Either ServerError Int
+validateLeadCompletionId leadId
+  | leadId > 0 =
+      Right leadId
+  | otherwise =
+      Left err400 { errBody = "leadId must be a positive integer" }
 
 validateLeadCompletionLookup :: Text -> Maybe (Text, Maybe Text) -> Either ServerError ()
 validateLeadCompletionLookup _ Nothing =
