@@ -10,9 +10,11 @@ import TDF.ServerAdmin (
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
     normalizeAdminEmailBodyLines,
+    normalizeAdminUsername,
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
+    validateOptionalAdminUsername,
   )
 
 spec :: Spec
@@ -34,6 +36,30 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "trims lines and drops blanks" $
             normalizeAdminEmailBodyLines ["  Hola  ", "", "   ", " Link: https://example.com  "]
                 `shouldBe` ["Hola", "Link: https://example.com"]
+
+    describe "normalizeAdminUsername" $ do
+        it "canonicalizes explicit usernames to the stored admin-login shape" $ do
+            normalizeAdminUsername " Ada.Example " `shouldBe` Just "ada.example"
+            normalizeAdminUsername " Team Lead! " `shouldBe` Just "teamlead"
+
+        it "rejects usernames that do not contain any supported login characters" $ do
+            normalizeAdminUsername "   " `shouldBe` Nothing
+            normalizeAdminUsername "!!!" `shouldBe` Nothing
+
+    describe "validateOptionalAdminUsername" $ do
+        it "keeps omitted usernames unset and normalizes explicit values" $ do
+            validateOptionalAdminUsername Nothing `shouldBe` Right Nothing
+            validateOptionalAdminUsername (Just " Team Lead! ")
+                `shouldBe` Right (Just "teamlead")
+
+        it "rejects explicit blank or unusable usernames instead of silently falling back" $
+            case validateOptionalAdminUsername (Just "!!!") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Username must contain at least one letter, number, dot, dash, or underscore"
+                Right value ->
+                    expectationFailure ("Expected invalid admin username to be rejected, got " <> show value)
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $

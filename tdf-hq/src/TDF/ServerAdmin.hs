@@ -8,12 +8,14 @@ module TDF.ServerAdmin
   ( adminServer
   , dedupeAdminEmailRecipients
   , normalizeAdminEmailAddress
+  , normalizeAdminUsername
   , normalizeAdminEmailBodyLines
   , parseSocialErrorsChannel
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
   , validateSocialErrorsLimit
   , validateAdminWhatsAppSendMode
+  , validateOptionalAdminUsername
   ) where
 
 import           Control.Exception      (SomeException, try)
@@ -661,8 +663,9 @@ adminServer user =
             (throwError err400 { errBody = "Party must have a valid primary email before creating a user" })
             pure
             (normalizeAdminEmailAddress addr)
+      explicitUsername <- either throwError pure (validateOptionalAdminUsername uacUsername)
       baseUsername <-
-        case normalizeUsername =<< uacUsername of
+        case explicitUsername of
           Just provided -> pure provided
           Nothing       -> pure (deriveUsername partyEnt emailAddress)
       uniqueUsername <- generateUniqueUsername baseUsername
@@ -696,12 +699,6 @@ adminServer user =
         Right () -> pure ()
       pure account
       where
-        normalizeUsername :: Text -> Maybe Text
-        normalizeUsername txt =
-          let lowered = T.toLower (T.strip txt)
-              cleaned = T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) lowered
-          in if T.null cleaned then Nothing else Just cleaned
-
         deriveUsername :: Entity Party -> Text -> Text
         deriveUsername (Entity pid party) emailVal
           | not (T.null emailVal) = T.toLower emailVal
@@ -731,10 +728,8 @@ adminServer user =
 
     updateUser userId UserAccountUpdate{..} = do
       ensureStrictAdmin user
-      let credKey         = toSqlKey userId :: UserCredentialId
-          usernameUpdate  = T.strip <$> uauUsername
-      when (maybe False T.null usernameUpdate) $
-        throwError err400 { errBody = "Username must not be empty" }
+      let credKey = toSqlKey userId :: UserCredentialId
+      usernameUpdate <- either throwError pure (validateOptionalAdminUsername uauUsername)
       passwordHash <- case uauPassword of
         Nothing -> pure Nothing
         Just rawPwd ->
@@ -1148,6 +1143,24 @@ normalizeAdminEmailAddress :: Text -> Maybe Text
 normalizeAdminEmailAddress raw =
   let normalized = T.toLower (T.strip raw)
   in if isValidAdminEmailAddress normalized then Just normalized else Nothing
+
+normalizeAdminUsername :: Text -> Maybe Text
+normalizeAdminUsername raw =
+  let lowered = T.toLower (T.strip raw)
+      cleaned = T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) lowered
+  in if T.null cleaned then Nothing else Just cleaned
+
+validateOptionalAdminUsername :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalAdminUsername Nothing = Right Nothing
+validateOptionalAdminUsername (Just raw) =
+  case normalizeAdminUsername raw of
+    Just normalized -> Right (Just normalized)
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Username must contain at least one letter, number, dot, dash, or underscore")
+        }
 
 isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
