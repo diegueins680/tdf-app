@@ -86,8 +86,31 @@ const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
   );
 
 const ROLE_MANAGEMENT_INTRO = 'Revisa el acceso actual y ajusta roles sin salir de esta tabla.';
-const ALL_ACTIVE_STATUS_SUMMARY =
-  'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.';
+
+const buildRoleManagementSummary = ({
+  showContactColumn,
+  showStatusColumn,
+}: {
+  showContactColumn: boolean;
+  showStatusColumn: boolean;
+}) => {
+  const hiddenColumnSummaries: string[] = [];
+
+  if (!showContactColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de contacto sigue oculta hasta que exista al menos un email o teléfono',
+    );
+  }
+
+  if (!showStatusColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de estado sigue oculta mientras todas las cuentas sigan activas',
+    );
+  }
+
+  if (hiddenColumnSummaries.length === 0) return ROLE_MANAGEMENT_INTRO;
+  return `${ROLE_MANAGEMENT_INTRO} Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+};
 
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
@@ -99,6 +122,7 @@ export default function UserRoleManagement() {
   const [saving, setSaving] = useState(false);
   const showContactColumn = users.some((user) => getContactLines(user).length > 0);
   const showStatusColumn = users.some((user) => user.status === 'Inactive');
+  const roleManagementSummary = buildRoleManagementSummary({ showContactColumn, showStatusColumn });
 
   useEffect(() => {
     void loadUsers();
@@ -196,20 +220,9 @@ export default function UserRoleManagement() {
               Roles y permisos
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {ROLE_MANAGEMENT_INTRO}
+              {roleManagementSummary}
             </Typography>
           </Stack>
-          {!showContactColumn && (
-            <Typography variant="body2" color="text.secondary">
-              Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato
-              para revisar.
-            </Typography>
-          )}
-          {!showStatusColumn && (
-            <Typography variant="body2" color="text.secondary">
-              {ALL_ACTIVE_STATUS_SUMMARY}
-            </Typography>
-          )}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>

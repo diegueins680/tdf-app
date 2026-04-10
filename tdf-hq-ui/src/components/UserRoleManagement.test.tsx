@@ -167,9 +167,8 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
-        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
         expect(container.textContent).toContain(
-          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Active');
 
@@ -223,10 +222,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Roles y edición']);
         expect(container.textContent).toContain(
-          'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
-        );
-        expect(container.textContent).toContain(
-          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Sin email ni teléfono');
         expect(container.textContent).not.toContain('Active');
@@ -261,9 +257,8 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
         expect(container.textContent).toContain('Roles y permisos');
-        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
         expect(container.textContent).toContain(
-          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Acciones');
         expect(container.textContent).not.toContain('Active');
@@ -299,15 +294,51 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
-        expect(container.textContent).not.toContain(
-          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
-        );
+        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
+        expect(container.textContent).not.toContain('Vista actual:');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('Active');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('Inactive');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('condenses hidden-column guidance into one summary line so the default admin view stays easier to scan', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 501,
+        name: 'Ada Lovelace',
+        email: '   ',
+        phone: null,
+      }),
+      buildUser({
+        id: 502,
+        name: 'Grace Hopper',
+        email: null,
+        phone: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+        );
+        expect(container.textContent).not.toContain(
+          'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
+        );
+        expect(container.textContent).not.toContain(
+          'Todos los usuarios administrables están activos. La columna de estado aparecerá cuando exista al menos una cuenta inactiva.',
+        );
       });
     } finally {
       await cleanup();
