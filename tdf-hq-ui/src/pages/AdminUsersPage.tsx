@@ -36,8 +36,11 @@ const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'
   return preferredPhone ?? email;
 };
 
-const hasUserContactChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) =>
-  Boolean(getUserContactSummary(user));
+const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
+  normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+
+const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
+  Boolean(getUserWhatsAppChannel(user));
 
 const getUserAccessSummary = (values: string[]) =>
   Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).join(', ');
@@ -46,9 +49,9 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const ADMIN_USERS_PAGE_INTRO =
-  'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.';
+  'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
 const SINGLE_USER_GUIDANCE =
-  'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa Comunicación si ya tiene un canal disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
@@ -111,11 +114,11 @@ export default function AdminUsersPage() {
     () => (usersQuery.data ?? []).filter((user) => matchesUserQuery(user, deferredSearchQuery)),
     [deferredSearchQuery, usersQuery.data],
   );
-  const visibleUsersMissingContactCount = useMemo(
-    () => visibleUsers.filter((user) => !hasUserContactChannel(user)).length,
+  const visibleUsersMissingWhatsAppCount = useMemo(
+    () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user)).length,
     [visibleUsers],
   );
-  const visibleUsersWithContactCount = visibleUsers.length - visibleUsersMissingContactCount;
+  const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
@@ -124,7 +127,7 @@ export default function AdminUsersPage() {
   const showGeneralIntro = hasMultipleUsers || hasActiveSearch;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
-  const showMixedContactStateGuidance = visibleUsersMissingContactCount > 0 && visibleUsersWithContactCount > 0;
+  const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
   const activeScopeSummary = hasUsers && !includeInactive
@@ -141,10 +144,10 @@ export default function AdminUsersPage() {
       parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
     }
 
-    if (showMixedContactStateGuidance) {
+    if (showMixedWhatsAppStateGuidance) {
       parts.push(
-        `${visibleUsersWithContactCount} ${visibleUsersWithContactCount === 1 ? 'listo' : 'listos'} para comunicación y `
-        + `${visibleUsersMissingContactCount} ${visibleUsersMissingContactCount === 1 ? 'pendiente' : 'pendientes'} de contacto.`,
+        `${visibleUsersWithWhatsAppCount} ${visibleUsersWithWhatsAppCount === 1 ? 'listo' : 'listos'} para WhatsApp y `
+        + `${visibleUsersMissingWhatsAppCount} ${visibleUsersMissingWhatsAppCount === 1 ? 'pendiente' : 'pendientes'} de WhatsApp.`,
       );
     }
 
@@ -153,12 +156,12 @@ export default function AdminUsersPage() {
     hasMultipleUsers,
     hasUsers,
     isFiltered,
-    showMixedContactStateGuidance,
+    showMixedWhatsAppStateGuidance,
     showSingleUserGuidance,
     totalUsersCount,
     visibleUsers.length,
-    visibleUsersMissingContactCount,
-    visibleUsersWithContactCount,
+    visibleUsersMissingWhatsAppCount,
+    visibleUsersWithWhatsAppCount,
   ]);
   const headerGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
@@ -295,10 +298,12 @@ function UserRow({
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
+  const hasWhatsAppChannel = hasUserWhatsAppChannel(user);
   const rolesSummary = getUserAccessSummary(user.roles);
   const modulesSummary = getUserAccessSummary(user.modules);
   const identity = summarizeUserIdentity(user);
   const profilePath = `/perfil/${user.partyId}`;
+  const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
 
   return (
     <Box
@@ -352,12 +357,12 @@ function UserRow({
         </Box>
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-        {hasContactInfo ? (
+        {hasWhatsAppChannel ? (
           <Button size="small" variant="contained" onClick={onOpenCommunications}>
-            Comunicación
+            WhatsApp
           </Button>
         ) : (
-          <Chip label="Contacto pendiente" color="warning" variant="outlined" size="small" />
+          <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
         )}
       </Stack>
     </Box>

@@ -196,7 +196,7 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(hasExactText(container, 'Usuarios')).toBe(true);
         expect(container.textContent).not.toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('admin API');
         expect(container.textContent).toContain(
@@ -213,7 +213,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('shows only real contact channels in each row so partial contact info stays scan-friendly', async () => {
+  it('shows the WhatsApp CTA only for users with a phone-backed channel so email-only rows stay accurate', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -255,22 +255,28 @@ describe('AdminUsersPage', () => {
         expect(emailOnlyRow.textContent).toContain('email@example.com');
         expect(emailOnlyRow.textContent).not.toContain('Sin teléfono');
         expect(emailOnlyRow.textContent).not.toContain('Sin correo');
+        expect(emailOnlyRow.textContent).toContain('WhatsApp pendiente');
+        expect(getButtonsByText(emailOnlyRow, 'WhatsApp')).toHaveLength(0);
 
         const phoneOnlyRow = getRowByUserId(container, 102);
         expect(phoneOnlyRow.textContent).toContain('+593999000222');
         expect(phoneOnlyRow.textContent).not.toContain('Sin teléfono');
         expect(phoneOnlyRow.textContent).not.toContain('Sin correo');
+        expect(getButtonsByText(phoneOnlyRow, 'WhatsApp')).toHaveLength(1);
 
         const whatsappRow = getRowByUserId(container, 103);
         expect(whatsappRow.textContent).toContain('+593999000444 · whatsapp@example.com');
         expect(whatsappRow.textContent).not.toContain('+593999000333');
+        expect(getButtonsByText(whatsappRow, 'WhatsApp')).toHaveLength(1);
 
         const noContactRow = getRowByUserId(container, 104);
         expect(noContactRow.textContent).not.toContain('Sin teléfono');
         expect(noContactRow.textContent).not.toContain('Sin correo');
         expect(noContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
         expect(noContactRow.textContent).toContain('Contacto pendiente');
+        expect(noContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
+        expect(getButtonsByText(noContactRow, 'WhatsApp')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -347,12 +353,12 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
-        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
         expect(container.textContent).toContain(
-          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto.',
+          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
         );
         expect(container.textContent).toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('1 usuario sigue sin canal de contacto');
         expect(container.textContent).not.toContain('1 sin contacto');
@@ -366,6 +372,7 @@ describe('AdminUsersPage', () => {
 
         const missingContactRow = getRowByUserId(container, 102);
         expect(missingContactRow.textContent).toContain('Contacto pendiente');
+        expect(missingContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(missingContactRow.textContent).not.toContain('Abrir perfil');
         expect(missingContactRow.textContent).not.toContain('Falta contacto');
         expect(missingContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
@@ -379,7 +386,7 @@ describe('AdminUsersPage', () => {
         ).toHaveLength(1);
       });
 
-      await clickButton(getButtonsByText(container, 'Comunicación')[0]!);
+      await clickButton(getButtonsByText(container, 'WhatsApp')[0]!);
 
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Dialogo abierto para ada');
@@ -415,15 +422,15 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(countExactText(
           container,
-          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         )).toBe(1);
         expect(countExactText(
           container,
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         )).toBe(1);
         expect(countExactText(
           container,
-          '2 usuarios en esta vista. 1 listo para comunicación y 1 pendiente de contacto.',
+          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
         )).toBe(0);
         expect(countExactText(
           container,
@@ -529,11 +536,11 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).not.toContain(
-          'Comunicación se habilita cuando el usuario ya tiene WhatsApp, teléfono o correo.',
+          'WhatsApp se habilita cuando el usuario ya tiene un número disponible.',
         );
         expect(container.textContent).not.toContain('2 sin contacto');
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
-        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(0);
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
         expect(container.textContent).not.toContain('Falta contacto');
 
         const firstRow = getRowByUserId(container, 201);
@@ -561,18 +568,18 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa Comunicación si ya tiene un canal disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Revisa su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
         ).toBe(false);
         expect(container.textContent).not.toContain(
-          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa Comunicación cuando haya un canal disponible.',
+          'Busca por identidad, acceso o contacto. Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('1 usuario');
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
-        expect(getButtonsByText(container, 'Comunicación')).toHaveLength(1);
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
 
         const loneRow = getRowByUserId(container, 101);
         expect(loneRow.querySelectorAll('button')).toHaveLength(1);
