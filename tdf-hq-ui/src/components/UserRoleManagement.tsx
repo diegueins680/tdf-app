@@ -23,8 +23,8 @@ import {
   Alert,
   Typography,
   Stack,
+  ButtonBase,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
@@ -85,7 +85,7 @@ const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
     (value): value is string => value != null,
   );
 
-const ROLE_MANAGEMENT_INTRO = 'Revisa el acceso actual y ajusta roles sin salir de esta tabla.';
+const ROLE_MANAGEMENT_INTRO = 'Haz clic sobre los roles para editarlos sin salir de esta tabla.';
 
 const buildRoleManagementSummary = ({
   showContactColumn,
@@ -230,7 +230,7 @@ export default function UserRoleManagement() {
                   <TableCell>Usuario</TableCell>
                   {showContactColumn && <TableCell>Contacto</TableCell>}
                   {showStatusColumn && <TableCell>Estado</TableCell>}
-                  <TableCell>Roles y edición</TableCell>
+                  <TableCell>Roles</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -272,24 +272,24 @@ export default function UserRoleManagement() {
                         </TableCell>
                       )}
                       <TableCell>
-                        <Stack spacing={1} alignItems="flex-start">
+                        <ButtonBase
+                          onClick={() => handleEditClick(user)}
+                          aria-label={`Editar roles de ${user.name}`}
+                          sx={{
+                            borderRadius: 1,
+                            display: 'inline-flex',
+                            justifyContent: 'flex-start',
+                            maxWidth: '100%',
+                            textAlign: 'left',
+                          }}
+                        >
                           <Box display="flex" gap={0.5} flexWrap="wrap">
                             {user.roles.map((role) => (
                               <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
                             ))}
                             {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
                           </Box>
-                          <Button
-                            size="small"
-                            color="primary"
-                            startIcon={<EditIcon fontSize="small" />}
-                            onClick={() => handleEditClick(user)}
-                            aria-label={`Editar roles de ${user.name}`}
-                            sx={{ px: 0, minWidth: 0 }}
-                          >
-                            Editar roles
-                          </Button>
-                        </Stack>
+                        </ButtonBase>
                       </TableCell>
                     </TableRow>
                   );

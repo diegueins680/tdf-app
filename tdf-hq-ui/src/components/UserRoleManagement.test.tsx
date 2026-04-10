@@ -166,16 +166,17 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
         expect(container.textContent).toContain(
-          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Active');
+        expect(container.textContent).not.toContain('Editar roles');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
-        expect(adaRow.textContent).toContain('Editar roles');
+        expect(adaRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]')).not.toBeNull();
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
@@ -220,9 +221,9 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Roles']);
         expect(container.textContent).toContain(
-          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Sin email ni teléfono');
         expect(container.textContent).not.toContain('Active');
@@ -238,7 +239,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps role editing inside the roles column so the default admin landing page drops a separate actions column', async () => {
+  it('uses the rendered roles as the edit affordance so the default admin landing page drops a duplicate action label', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 301,
@@ -255,18 +256,36 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles y edición']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
         expect(container.textContent).toContain('Roles y permisos');
         expect(container.textContent).toContain(
-          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Acciones');
+        expect(container.textContent).not.toContain('Roles y edición');
         expect(container.textContent).not.toContain('Active');
+        expect(container.textContent).not.toContain('Editar roles');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('Admin');
         expect(graceRow.textContent).toContain('Manager');
-        expect(graceRow.textContent).toContain('Editar roles');
+        const editButton = graceRow.querySelector('button[aria-label="Editar roles de Grace Hopper"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Grace Hopper"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Editar roles de Grace Hopper');
+        expect(document.body.textContent).toContain('Guardar');
       });
     } finally {
       await cleanup();
@@ -293,8 +312,8 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles y edición']);
-        expect(container.textContent).toContain('Revisa el acceso actual y ajusta roles sin salir de esta tabla.');
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles']);
+        expect(container.textContent).toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain('Vista actual:');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
@@ -331,7 +350,7 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Revisa el acceso actual y ajusta roles sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain(
           'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
