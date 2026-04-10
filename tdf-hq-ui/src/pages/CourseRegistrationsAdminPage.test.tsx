@@ -3064,8 +3064,9 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain(
-        'No hay inscripciones en la vista actual: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Restablece la vista o usa refrescar si esperabas resultados.',
+        'No hay inscripciones en la vista actual: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Usa refrescar si esperabas resultados.',
       );
+      expect(container.textContent).not.toContain('Restablece la vista o usa refrescar si esperabas resultados.');
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
       );

@@ -649,19 +649,15 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Restablecer vista'
       : 'Restablecer filtros'
     : 'Restablecer límite';
-  const resetViewInstruction = hasManualFilters
-    ? hasCustomLimit
-      ? 'Restablece la vista o usa refrescar si esperabas resultados.'
-      : 'Restablece filtros o usa refrescar si esperabas resultados.'
-    : 'Restablece el límite o usa refrescar si esperabas resultados.';
+  const filteredEmptyStateRecoveryHint = 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit
       ? 'en la vista actual'
       : 'con los filtros actuales'
     : 'con el límite actual';
   const filteredEmptyStateMessage = activeFilterSummary
-    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${resetViewInstruction}`
-    : `No hay inscripciones ${filteredEmptyStateScope}. ${resetViewInstruction}`;
+    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
+    : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
   const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
   const showStandaloneListUtilitySummary = !hasCustomFilters && (canCopyCsv || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
