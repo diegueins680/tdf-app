@@ -50,6 +50,8 @@ import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateC
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
       validateOptionalInternPermissionStatusInput,
+      validateOptionalInternPartyIdInput,
+      validateOptionalInternPartyIdUpdate,
       validateInternTaskProgressUpdate,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
@@ -848,6 +850,30 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship task progress to be rejected, got " <> show value)
             assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
             assertInvalid (validateInternTaskProgressUpdate (Just 101))
+
+    describe "internship party id validation" $ do
+        it "preserves omitted optional ids, clear operations, and positive party references" $ do
+            validateOptionalInternPartyIdInput "partyId" Nothing `shouldBe` Right Nothing
+            validateOptionalInternPartyIdInput "partyId" (Just 42) `shouldBe` Right (Just 42)
+            validateOptionalInternPartyIdUpdate "assignedTo" Nothing `shouldBe` Right Nothing
+            validateOptionalInternPartyIdUpdate "assignedTo" (Just Nothing)
+                `shouldBe` Right (Just Nothing)
+            validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 7))
+                `shouldBe` Right (Just (Just 7))
+
+        it "rejects non-positive internship party ids instead of silently producing dangling filters or assignees" $ do
+            let assertInvalid expected result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship party id to be rejected, got " <> show value)
+            assertInvalid "partyId must be a positive integer"
+                (validateOptionalInternPartyIdInput "partyId" (Just 0))
+            assertInvalid "assignedTo must be a positive integer"
+                (validateOptionalInternPartyIdInput "assignedTo" (Just (-1)))
+            assertInvalid "assignedTo must be a positive integer"
+                (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do

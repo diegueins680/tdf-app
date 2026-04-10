@@ -69,6 +69,26 @@ validateInternTaskProgressUpdate (Just rawProgress)
   | otherwise =
       Right (Just rawProgress)
 
+validateOptionalInternPartyIdInput :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalInternPartyIdInput _ Nothing = Right Nothing
+validateOptionalInternPartyIdInput fieldName (Just rawPartyId) =
+  Just <$> validatePositiveInternPartyId fieldName rawPartyId
+
+validateOptionalInternPartyIdUpdate :: Text -> Maybe (Maybe Int64) -> Either ServerError (Maybe (Maybe Int64))
+validateOptionalInternPartyIdUpdate _ Nothing = Right Nothing
+validateOptionalInternPartyIdUpdate _ (Just Nothing) = Right (Just Nothing)
+validateOptionalInternPartyIdUpdate fieldName (Just (Just rawPartyId)) =
+  Just . Just <$> validatePositiveInternPartyId fieldName rawPartyId
+
+validatePositiveInternPartyId :: Text -> Int64 -> Either ServerError Int64
+validatePositiveInternPartyId fieldName rawPartyId
+  | rawPartyId > 0 = Right rawPartyId
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+        }
+
 validateInternStatusValue :: Text -> [Text] -> Text -> Either ServerError Text
 validateInternStatusValue fieldName allowedStatuses rawStatus
   | T.null canonical =
@@ -276,9 +296,10 @@ internshipsServer user =
       ensureAdmin
       projectKey <- parseKey @ME.InternProject itcProjectId
       now <- liftIO getCurrentTime
+      assignedTo <- either throwError pure (validateOptionalInternPartyIdInput "assignedTo" itcAssignedTo)
       mProject <- withPool $ getEntity projectKey
       _ <- maybe (throwError err404) pure mProject
-      let assignedKey = fmap toSqlKey itcAssignedTo
+      let assignedKey = fmap toSqlKey assignedTo
       ent <- withPool $ do
         newId <- insert ME.InternTask
           { ME.internTaskProjectId   = projectKey
@@ -312,11 +333,12 @@ internshipsServer user =
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
+      assignedToUpdate <- either throwError pure (validateOptionalInternPartyIdUpdate "assignedTo" ituAssignedTo)
       let
           adminUpdates =
             [ fmap (ME.InternTaskTitle =.) ituTitle
             , fmap (ME.InternTaskDescription =.) ituDescription
-            , fmap (ME.InternTaskAssignedTo =.) (fmap (fmap toSqlKey) ituAssignedTo)
+            , fmap (ME.InternTaskAssignedTo =.) (fmap (fmap toSqlKey) assignedToUpdate)
             , fmap (ME.InternTaskDueAt =.) ituDueAt
             ]
           commonUpdates =
@@ -394,9 +416,13 @@ internshipsServer user =
     listTimeEntriesH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => Maybe Int64 -> m [InternTimeEntryDTO]
     listTimeEntriesH mPartyId = do
       ensureInternAccess
+      validatedPartyId <-
+        if isAdmin user
+          then either throwError pure (validateOptionalInternPartyIdInput "partyId" mPartyId)
+          else pure Nothing
       let partyFilter =
             if isAdmin user
-              then maybe [] (\pid -> [ME.InternTimeEntryPartyId ==. toSqlKey pid]) mPartyId
+              then maybe [] (\pid -> [ME.InternTimeEntryPartyId ==. toSqlKey pid]) validatedPartyId
               else [ME.InternTimeEntryPartyId ==. auPartyId user]
       entries <- withPool $ selectList partyFilter [Desc ME.InternTimeEntryClockIn, LimitTo 200]
       let partyIds = nub (map (ME.internTimeEntryPartyId . entityVal) entries)
