@@ -721,6 +721,24 @@ export default function CourseRegistrationsAdminPage() {
     limit,
     visibleActiveFilterSummary,
   ]);
+  const inlineSummaryResetAction = Boolean(
+    combinedSingleChoiceSummary
+    && hasCustomFilters
+    && hasVisibleRegistrations
+    && !activeViewSummaryMessage
+    && !showVisibleRegistrationsSummary
+    && !canCopyCsv
+    && !copyMessage,
+  );
+  const showFilteredUtilityRow = hasCustomFilters
+    && hasVisibleRegistrations
+    && (
+      Boolean(activeViewSummaryMessage)
+      || showVisibleRegistrationsSummary
+      || canCopyCsv
+      || Boolean(copyMessage)
+      || !inlineSummaryResetAction
+    );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
@@ -1684,6 +1702,17 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="caption" color="text.secondary">
                       {combinedSingleChoiceHelperText}
                     </Typography>
+                    {inlineSummaryResetAction && (
+                      <Button
+                        size="small"
+                        variant="text"
+                        sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                        onClick={handleResetFilters}
+                        data-testid="course-registration-inline-reset"
+                      >
+                        {resetViewLabel}
+                      </Button>
+                    )}
                   </Stack>
                 </Grid>
               ) : (
@@ -1835,7 +1864,7 @@ export default function CourseRegistrationsAdminPage() {
                 {filtersHelpText}
               </Typography>
             )}
-            {hasCustomFilters && hasVisibleRegistrations && (
+            {showFilteredUtilityRow && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
                 {activeViewSummaryMessage && (
                   <Typography variant="body2" color="text.secondary">
@@ -1847,9 +1876,11 @@ export default function CourseRegistrationsAdminPage() {
                     {visibleRegistrationsSummary}
                   </Typography>
                 )}
-                <Button size="small" onClick={handleResetFilters}>
-                  {resetViewLabel}
-                </Button>
+                {!inlineSummaryResetAction && (
+                  <Button size="small" onClick={handleResetFilters}>
+                    {resetViewLabel}
+                  </Button>
+                )}
                 {canCopyCsv && (
                   <Button
                     size="small"
