@@ -51,6 +51,10 @@ const STATUS_OPTIONS: StatusOption[] = [
   { value: 'Retired', label: 'Retirado' },
 ];
 
+function getStatusLabel(status: string) {
+  return STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+}
+
 function CreateAssetDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateForm>({
@@ -242,6 +246,10 @@ export default function InventoryPage() {
   const assets: AssetDTO[] = assetsData?.items ?? [];
   const hasSearchQuery = query.trim().length > 0;
   const showFirstAssetSetup = !assetsQuery.isLoading && !assetsQuery.isError && assets.length === 0 && !hasSearchQuery;
+  const singleAsset =
+    !assetsQuery.isLoading && !assetsQuery.isError && !hasSearchQuery && assets.length === 1
+      ? (assets[0] ?? null)
+      : null;
 
   const handleDelete = (asset: AssetDTO) => {
     deleteMutation.mutate(asset.assetId);
@@ -288,6 +296,68 @@ export default function InventoryPage() {
               </Typography>
             </Stack>
           </Box>
+        ) : singleAsset ? (
+          <Box sx={{ p: 2.5 }}>
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Primer activo registrado.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Revísalo aquí; cuando exista el segundo, volverán la búsqueda y la tabla para comparar equipos.
+              </Typography>
+              <Stack
+                spacing={1.25}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 1.25,
+                }}
+              >
+                <Stack spacing={0.35}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {singleAsset.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Categoría: {singleAsset.category}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estado: {getStatusLabel(singleAsset.status)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ubicación: {singleAsset.location ?? '—'}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={() => setEditing(singleAsset)}
+                  >
+                    Editar activo
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<QrCode2Icon />}
+                    onClick={() => printQr(singleAsset)}
+                  >
+                    Imprimir QR
+                  </Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteOutlineIcon />}
+                    onClick={() => handleDelete(singleAsset)}
+                  >
+                    Eliminar activo
+                  </Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          </Box>
         ) : (
           <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
@@ -313,7 +383,7 @@ export default function InventoryPage() {
                     <TableRow key={asset.assetId} hover>
                       <TableCell>{asset.name}</TableCell>
                       <TableCell>{asset.category}</TableCell>
-                      <TableCell>{asset.status}</TableCell>
+                      <TableCell>{getStatusLabel(asset.status)}</TableCell>
                       <TableCell>{asset.location ?? '—'}</TableCell>
                       <TableCell>
                         <Tooltip title="Editar activo">

@@ -132,11 +132,57 @@ describe('InventoryPage', () => {
     expect(screen.queryByText('No se encontraron activos.')).not.toBeInTheDocument();
   });
 
+  it('replaces the single-row table with a compact first-asset summary until comparison matters', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Inventario')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primer activo registrado.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Revísalo aquí; cuando exista el segundo, volverán la búsqueda y la tabla para comparar equipos\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Neumann U87')).toBeInTheDocument();
+      expect(screen.getByText('Categoría: Micrófono')).toBeInTheDocument();
+      expect(screen.getByText('Estado: Activo')).toBeInTheDocument();
+      expect(screen.getByText('Ubicación: Sala A')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Editar activo$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Imprimir QR$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Eliminar activo$/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('textbox', { name: /Buscar/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Nombre$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Categoría$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Ubicación$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Editar activo Neumann U87')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Imprimir QR de Neumann U87')).not.toBeInTheDocument();
+  });
+
   it('keeps one edit control per row and sends the QR action directly to print', async () => {
     const user = userEvent.setup();
     const printMock = vi.fn();
     const writeMock = vi.fn();
     const closeMock = vi.fn();
+    mockList.mockResolvedValue({
+      items: [
+        buildAsset(),
+        buildAsset({
+          assetId: 'asset-2',
+          name: 'Yamaha HS8',
+          category: 'Monitor',
+          status: 'Booked',
+          location: 'Sala B',
+        }),
+      ],
+      page: 1,
+      pageSize: 20,
+      total: 2,
+    });
 
     vi.spyOn(window, 'open').mockImplementation(
       () =>
