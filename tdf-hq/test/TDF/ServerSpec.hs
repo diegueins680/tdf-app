@@ -36,6 +36,7 @@ import TDF.Server
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
+    , validateMarketplaceBuyerEmail
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
@@ -520,6 +521,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+
+    describe "validateMarketplaceBuyerEmail" $ do
+        it "trims and lowercases valid buyer emails before checkout creates marketplace orders" $
+            validateMarketplaceBuyerEmail " Buyer@Example.com " `shouldBe` Right "buyer@example.com"
+
+        it "rejects blank or malformed buyer emails instead of creating unusable checkout attempts" $ do
+            let assertInvalid rawEmail expectedMessage =
+                    case validateMarketplaceBuyerEmail rawEmail of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right emailVal ->
+                            expectationFailure ("Expected invalid marketplace buyer email to be rejected, got: " <> show emailVal)
+            assertInvalid "   " "buyerEmail requerido"
+            assertInvalid "not-an-email" "buyerEmail inválido"
+            assertInvalid "buyer@example..com" "buyerEmail inválido"
+            assertInvalid "buyer@-example.com" "buyerEmail inválido"
+            assertInvalid "buyer@example-.com" "buyerEmail inválido"
 
     describe "validateCourseRegistrationUrlField" $ do
         it "trims valid absolute http(s) URLs and still lets optional attachment fields clear to Nothing" $ do
