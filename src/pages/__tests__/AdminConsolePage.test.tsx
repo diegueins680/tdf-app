@@ -180,18 +180,17 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Valida el estado del servicio antes de cambiar permisos o repetir una acción\./i,
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
-          /Ajusta los accesos desde Usuarios y roles para resolver el caso actual\./i,
-        ),
+        screen.getByRole('link', { name: /1\. Estado del servicio/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
-          /Confirma el resultado en Auditoría reciente antes de seguir con otro cambio\./i,
-        ),
+        screen.getByRole('link', { name: /2\. Usuarios y roles/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /3\. Auditoría reciente/i }),
       ).toBeInTheDocument();
       expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
       expect(
@@ -199,10 +198,22 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
+    expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');
+    expect(screen.getByRole('link', { name: /2\. Usuarios y roles/i })).toHaveAttribute('href', '#admin-users-and-roles');
+    expect(screen.getByRole('link', { name: /3\. Auditoría reciente/i })).toHaveAttribute('href', '#admin-recent-audit');
     expect(screen.queryByText('Gestión de usuarios')).not.toBeInTheDocument();
     expect(screen.queryByText(/Si es tu primera vez aquí/i)).not.toBeInTheDocument();
     expect(
       screen.queryByText(/La asignación de roles se administra desde la pantalla de Parties\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Valida el estado del servicio antes de cambiar permisos o repetir una acción\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Ajusta los accesos desde Usuarios y roles para resolver el caso actual\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma el resultado en Auditoría reciente antes de seguir con otro cambio\./i),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(

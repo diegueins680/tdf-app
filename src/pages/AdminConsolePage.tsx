@@ -61,10 +61,10 @@ const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'gestion de usuarios',
   'auditoria reciente',
 ]);
-const GETTING_STARTED_ADMIN_STEPS = [
-  'Valida el estado del servicio antes de cambiar permisos o repetir una acción.',
-  'Ajusta los accesos desde Usuarios y roles para resolver el caso actual.',
-  'Confirma el resultado en Auditoría reciente antes de seguir con otro cambio.',
+const GETTING_STARTED_ADMIN_SECTIONS = [
+  { label: '1. Estado del servicio', targetId: 'admin-service-health' },
+  { label: '2. Usuarios y roles', targetId: 'admin-users-and-roles' },
+  { label: '3. Auditoría reciente', targetId: 'admin-recent-audit' },
 ] as const;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
@@ -315,16 +315,27 @@ export default function AdminConsolePage() {
 
       {showGettingStartedGuidance && (
         <Alert severity="info" variant="outlined">
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Primeros pasos
-          </Typography>
-          <Box component="ol" sx={{ pl: 2.5, m: 0 }}>
-            {GETTING_STARTED_ADMIN_STEPS.map((step) => (
-              <Box component="li" key={step} sx={{ '& + &': { mt: 0.5 } }}>
-                <Typography variant="body2">{step}</Typography>
-              </Box>
-            ))}
-          </Box>
+          <Stack spacing={1.5}>
+            <Box>
+              <Typography variant="subtitle2">Primeros pasos</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {GETTING_STARTED_ADMIN_SECTIONS.map((section) => (
+                <Chip
+                  key={section.targetId}
+                  component="a"
+                  clickable
+                  color="info"
+                  variant="outlined"
+                  label={section.label}
+                  href={`#${section.targetId}`}
+                />
+              ))}
+            </Stack>
+          </Stack>
         </Alert>
       )}
 
@@ -336,7 +347,7 @@ export default function AdminConsolePage() {
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <Card variant="outlined">
+          <Card variant="outlined" id="admin-service-health">
             <CardHeader title="Estado del servicio" />
             <CardContent>
               <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
@@ -401,7 +412,7 @@ export default function AdminConsolePage() {
         ))}
       </Grid>
 
-      <Paper variant="outlined">
+      <Paper variant="outlined" id="admin-users-and-roles">
         <Box sx={{ px: 2, py: 1 }}>
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
@@ -550,7 +561,7 @@ export default function AdminConsolePage() {
         ) : null}
       </Paper>
 
-      <Paper variant="outlined">
+      <Paper variant="outlined" id="admin-recent-audit">
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="h6">Auditoría reciente</Typography>
           <Typography variant="body2" color="text.secondary">
