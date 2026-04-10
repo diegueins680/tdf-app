@@ -2440,12 +2440,12 @@ listCourseRegistrations
   -> AppM [DTO.CourseRegistrationDTO]
 listCourseRegistrations mSlug mStatus mLimit = do
   normalizedStatus <- traverse (either throwError pure . parseCourseRegistrationStatus) (cleanOptional mStatus)
+  limit <- either throwError pure (validateCourseRegistrationListLimit 200 mLimit)
   let filters = catMaybes
         [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
         , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
-      capped = max 1 (min 500 (fromMaybe 200 mLimit))
-  rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo capped]
+  rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limit]
   pure (map toCourseRegistrationDTO rows)
 
 fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
@@ -5416,6 +5416,14 @@ parseCourseRegistrationStatus raw =
         { errBody =
             "Invalid course registration status. Allowed values: pending_payment, paid, cancelled"
         }
+
+validateCourseRegistrationListLimit :: Int -> Maybe Int -> Either ServerError Int
+validateCourseRegistrationListLimit defaultLimit Nothing = Right defaultLimit
+validateCourseRegistrationListLimit _ (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 500 =
+      Left err400 { errBody = "limit must be between 1 and 500" }
+  | otherwise =
+      Right rawLimit
 
 normalizeCourseRegistrationStatus :: Text -> Maybe Text
 normalizeCourseRegistrationStatus raw =

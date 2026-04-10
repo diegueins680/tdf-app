@@ -32,6 +32,7 @@ import TDF.Server
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
+    , validateCourseRegistrationListLimit
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
@@ -441,6 +442,23 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "pending_payment, paid, cancelled"
                 Right statusVal ->
                     expectationFailure ("Expected an invalid course-registration status error, got: " <> show statusVal)
+
+    describe "validateCourseRegistrationListLimit" $ do
+        it "defaults omitted limits and preserves explicit values inside the supported page window" $ do
+            validateCourseRegistrationListLimit 200 Nothing `shouldBe` Right 200
+            validateCourseRegistrationListLimit 200 (Just 1) `shouldBe` Right 1
+            validateCourseRegistrationListLimit 200 (Just 500) `shouldBe` Right 500
+
+        it "rejects out-of-range limits instead of silently clamping course-registration listings" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "limit must be between 1 and 500"
+                    Right limitVal ->
+                        expectationFailure ("Expected invalid course-registration list limit to be rejected, got: " <> show limitVal)
+            assertInvalid (validateCourseRegistrationListLimit 200 (Just 0))
+            assertInvalid (validateCourseRegistrationListLimit 200 (Just 501))
+            assertInvalid (validateCourseRegistrationListLimit 200 (Just (-3)))
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do
