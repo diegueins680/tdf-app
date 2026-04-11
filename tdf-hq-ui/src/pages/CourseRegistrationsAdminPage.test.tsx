@@ -3126,6 +3126,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps reset attached to the current-view summary when a custom limit still shows multiple registrations', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
+      expect(container.querySelector('[data-testid="course-registration-inline-reset"]')?.textContent?.trim()).toBe('Restablecer límite');
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
+      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the header comparative by hiding a solitary total chip and redundant single-status totals', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

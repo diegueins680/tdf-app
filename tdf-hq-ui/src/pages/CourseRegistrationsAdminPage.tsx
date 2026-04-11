@@ -740,14 +740,10 @@ export default function CourseRegistrationsAdminPage() {
     limit,
     visibleActiveFilterSummary,
   ]);
-  const inlineSummaryResetAction = Boolean(
+  const showInlineSummaryResetAction = Boolean(
     combinedSingleChoiceSummary
     && hasCustomFilters
-    && hasVisibleRegistrations
-    && !activeViewSummaryMessage
-    && !showVisibleRegistrationsSummary
-    && !canCopyCsv
-    && !copyMessage,
+    && hasVisibleRegistrations,
   );
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
@@ -756,7 +752,7 @@ export default function CourseRegistrationsAdminPage() {
       || showVisibleRegistrationsSummary
       || canCopyCsv
       || Boolean(copyMessage)
-      || !inlineSummaryResetAction
+      || !showInlineSummaryResetAction
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1721,7 +1717,7 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="caption" color="text.secondary">
                       {combinedSingleChoiceHelperText}
                     </Typography>
-                    {inlineSummaryResetAction && (
+                    {showInlineSummaryResetAction && (
                       <Button
                         size="small"
                         variant="text"
@@ -1895,7 +1891,7 @@ export default function CourseRegistrationsAdminPage() {
                     {visibleRegistrationsSummary}
                   </Typography>
                 )}
-                {!inlineSummaryResetAction && (
+                {!showInlineSummaryResetAction && (
                   <Button size="small" onClick={handleResetFilters}>
                     {resetViewLabel}
                   </Button>
