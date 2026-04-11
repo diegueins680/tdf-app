@@ -717,6 +717,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a cohort-only filtered view focused on the cohort select instead of repeating reset chrome', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: undefined,
+        limit: 200,
+      });
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
+      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+    });
+
+    await cleanup();
+  });
+
   it('condenses each registration contact line into one scan-friendly summary', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

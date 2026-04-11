@@ -673,6 +673,8 @@ export default function CourseRegistrationsAdminPage() {
     hasSlugFilter,
     hasStatusFilter,
   });
+  const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
+  const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
   const filteredEmptyStateRecoveryHint = 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit
@@ -724,6 +726,7 @@ export default function CourseRegistrationsAdminPage() {
   ]);
   const activeViewSummaryMessage = useMemo(() => {
     if (!hasCustomFilters || !hasVisibleRegistrations) return '';
+    if (cohortFilterCanSelfReset) return '';
     if (!hasManualFilters && hasCustomLimit) {
       return combinedSingleChoiceLimitSummary
         ? ''
@@ -733,6 +736,7 @@ export default function CourseRegistrationsAdminPage() {
     return `Vista filtrada: ${visibleActiveFilterSummary}.`;
   }, [
     combinedSingleChoiceLimitSummary,
+    cohortFilterCanSelfReset,
     hasCustomFilters,
     hasCustomLimit,
     hasManualFilters,
@@ -745,6 +749,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && hasVisibleRegistrations,
   );
+  const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset;
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -752,7 +757,7 @@ export default function CourseRegistrationsAdminPage() {
       || showVisibleRegistrationsSummary
       || canCopyCsv
       || Boolean(copyMessage)
-      || !showInlineSummaryResetAction
+      || showFilteredResetAction
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1891,7 +1896,7 @@ export default function CourseRegistrationsAdminPage() {
                     {visibleRegistrationsSummary}
                   </Typography>
                 )}
-                {!showInlineSummaryResetAction && (
+                {showFilteredResetAction && (
                   <Button size="small" onClick={handleResetFilters}>
                     {resetViewLabel}
                   </Button>
