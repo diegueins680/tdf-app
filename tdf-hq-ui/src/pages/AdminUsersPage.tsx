@@ -353,6 +353,10 @@ function UserRow({
   const modulesSummary = getUserAccessSummary(user.modules);
   const showRolesSummary = Boolean(rolesSummary) && rolesSummary !== sharedRolesSummary;
   const showModulesSummary = Boolean(modulesSummary) && modulesSummary !== sharedModulesSummary;
+  const accessSummary = [
+    showRolesSummary ? `Roles: ${rolesSummary}` : '',
+    showModulesSummary ? `Módulos: ${modulesSummary}` : '',
+  ].filter(Boolean).join(' · ');
   const identity = summarizeUserIdentity(user);
   const profilePath = `/perfil/${user.partyId}`;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
@@ -394,18 +398,11 @@ function UserRow({
       {showInactiveStatusChip && (
         <Chip label="Inactivo" color="default" size="small" />
       )}
-      {(showRolesSummary || showModulesSummary) && (
+      {accessSummary && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
-          {showRolesSummary && (
-            <Typography variant="body2" color="text.secondary">
-              Roles: {rolesSummary}
-            </Typography>
-          )}
-          {showModulesSummary && (
-            <Typography variant="body2" color="text.secondary">
-              Módulos: {modulesSummary}
-            </Typography>
-          )}
+          <Typography variant="body2" color="text.secondary">
+            {accessSummary}
+          </Typography>
         </Box>
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>

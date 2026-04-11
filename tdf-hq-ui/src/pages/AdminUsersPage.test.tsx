@@ -633,8 +633,9 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const row = getRowByUserId(container, 103);
-        expect(row.textContent).toContain('Roles: Admin, Teacher');
-        expect(row.textContent).toContain('Módulos: admin, crm');
+        expect(hasExactText(row, 'Roles: Admin, Teacher · Módulos: admin, crm')).toBe(true);
+        expect(hasExactText(row, 'Roles: Admin, Teacher')).toBe(false);
+        expect(hasExactText(row, 'Módulos: admin, crm')).toBe(false);
         expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
         expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
       });
