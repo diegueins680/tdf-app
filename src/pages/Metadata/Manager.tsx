@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { Box, Button, Menu, MenuItem, Paper, Stack, Typography } from '@mui/material';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { api } from '../../api/client';
 
@@ -15,8 +15,42 @@ interface MetadataRow {
 
 const EMPTY_ROWS: MetadataRow[] = [];
 
+function downloadMetadataFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadMetadataCsv(rows: readonly MetadataRow[]) {
+  const header = ['Catalog ID', 'Artist', 'Project', 'Type', 'BPM', 'Key', 'Genre'];
+  const data = rows.map((row) => [
+    row.catalog_id,
+    row.artist_name,
+    row.project_title,
+    row.session_type,
+    row.bpm,
+    row.key,
+    row.genre,
+  ]);
+  const csv = [header, ...data]
+    .map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  downloadMetadataFile(csv, 'metadata-export.csv', 'text/csv;charset=utf-8;');
+}
+
+function downloadMetadataJson(rows: readonly MetadataRow[]) {
+  downloadMetadataFile(JSON.stringify(rows, null, 2), 'metadata-export.json', 'application/json;charset=utf-8;');
+}
+
 export default function MetadataManager() {
   const [rows, setRows] = useState<MetadataRow[]>(EMPTY_ROWS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
   const columns: GridColDef<MetadataRow>[] = useMemo(
     () => [
@@ -33,6 +67,7 @@ export default function MetadataManager() {
 
   useEffect(() => {
     let isActive = true;
+    setIsLoading(true);
 
     api<MetadataRow[]>('/api/metadata')
       .then((data) => {
@@ -44,6 +79,11 @@ export default function MetadataManager() {
         if (isActive) {
           setRows(EMPTY_ROWS);
         }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoading(false);
+        }
       });
 
     return () => {
@@ -51,26 +91,100 @@ export default function MetadataManager() {
     };
   }, []);
 
+  const hasRows = rows.length > 0;
+  const showEmptyState = !isLoading && !hasRows;
+  const exportMenuOpen = Boolean(exportAnchorEl);
+  const toolbarDescription = isLoading
+    ? 'Cargando catálogo…'
+    : showEmptyState
+      ? 'Empieza con Importar metadatos. La exportación aparecerá cuando exista el primer registro.'
+      : 'Exporta el catálogo actual en CSV o JSON desde un solo menú para evitar acciones duplicadas.';
+
+  const handleOpenExportMenu = (event: MouseEvent<HTMLButtonElement>) => {
+    setExportAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseExportMenu = () => {
+    setExportAnchorEl(null);
+  };
+
+  const handleExport = (format: 'csv' | 'json') => {
+    if (format === 'csv') {
+      downloadMetadataCsv(rows);
+    } else {
+      downloadMetadataJson(rows);
+    }
+    handleCloseExportMenu();
+  };
+
   return (
     <Stack spacing={3} sx={{ p: 3 }}>
       <Typography component="h1" variant="h4">
         Metadata Manager
       </Typography>
 
-      <div style={{ height: 560, width: '100%', backgroundColor: '#fff' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          getRowId={(row: MetadataRow) => row.catalog_id}
-          disableRowSelectionOnClick
-        />
-      </div>
+      {showEmptyState ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            minHeight: 320,
+            px: 3,
+            py: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
+            <Typography variant="h6">Todavía no hay metadatos cargados.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Usa Importar metadatos para traer tu primer catálogo. Cuando exista el primero,
+              aquí podrás revisarlo y exportarlo en CSV o JSON desde un solo lugar.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : (
+        <Box sx={{ height: 560, width: '100%', backgroundColor: '#fff' }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={isLoading}
+            getRowId={(row: MetadataRow) => row.catalog_id}
+            disableRowSelectionOnClick
+          />
+        </Box>
+      )}
 
-      <Stack direction="row" spacing={1.5}>
-        <Button variant="contained">Import CSV/JSON</Button>
-        <Button variant="outlined">Export CSV</Button>
-        <Button variant="outlined">Export JSON</Button>
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Button variant="contained">Importar metadatos</Button>
+          {hasRows && (
+            <Button
+              variant="outlined"
+              onClick={handleOpenExportMenu}
+              aria-controls={exportMenuOpen ? 'metadata-export-menu' : undefined}
+              aria-expanded={exportMenuOpen ? 'true' : undefined}
+              aria-haspopup="menu"
+            >
+              Exportar
+            </Button>
+          )}
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          {toolbarDescription}
+        </Typography>
       </Stack>
+
+      <Menu
+        id="metadata-export-menu"
+        anchorEl={exportAnchorEl}
+        open={exportMenuOpen}
+        onClose={handleCloseExportMenu}
+      >
+        <MenuItem onClick={() => handleExport('csv')}>Exportar CSV</MenuItem>
+        <MenuItem onClick={() => handleExport('json')}>Exportar JSON</MenuItem>
+      </Menu>
     </Stack>
   );
 }
