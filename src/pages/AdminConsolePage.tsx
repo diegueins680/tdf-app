@@ -15,7 +15,6 @@ import {
   DialogTitle,
   FormControl,
   FormHelperText,
-  Grid,
   InputLabel,
   MenuItem,
   Paper,
@@ -357,11 +356,10 @@ export default function AdminConsolePage() {
     buttonLabel: 'Cargar datos de ejemplo',
     pendingLabel: 'Cargando ejemplo…',
   } as const;
-  const demoSeedCardCopy = {
-    title: 'Datos de demostración',
-    description: 'Restablece los datos de demo en ambientes de prueba cuando necesites repetir el flujo sin refrescos manuales extra.',
-    buttonLabel: 'Restablecer demo',
+  const demoSeedActionCopy = {
+    buttonLabel: 'Restablecer datos demo',
     pendingLabel: 'Restableciendo demo…',
+    successMessage: 'Datos de demostración preparados correctamente.',
   } as const;
 
   const handleCloseDialog = () => {
@@ -402,19 +400,37 @@ export default function AdminConsolePage() {
             Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar.
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleRefreshPanel}
-          disabled={isRefreshingPanel}
-        >
-          {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
-        </Button>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefreshPanel}
+            disabled={isRefreshingPanel}
+          >
+            {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
+          </Button>
+          {!showGettingStartedGuidance && (
+            <Button
+              variant="text"
+              startIcon={<AutoFixHighIcon />}
+              onClick={() => seedMutation.mutate()}
+              disabled={seedMutation.isPending}
+            >
+              {seedMutation.isPending ? demoSeedActionCopy.pendingLabel : demoSeedActionCopy.buttonLabel}
+            </Button>
+          )}
+        </Stack>
       </Stack>
 
       {rotationWarning && (
         <Alert severity="warning" onClose={() => setRotationWarning(false)}>
           Tu sesión lleva 30 días activa. Genera un nuevo token o vuelve a autenticarte para mantener la seguridad.
+        </Alert>
+      )}
+
+      {seedMutation.isSuccess && !showGettingStartedGuidance && (
+        <Alert severity="success">
+          {demoSeedActionCopy.successMessage}
         </Alert>
       )}
 
@@ -469,49 +485,20 @@ export default function AdminConsolePage() {
         </Alert>
       )}
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Card variant="outlined" id="admin-service-health">
-            <CardHeader title="Estado del servicio" />
-            <CardContent>
-              <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
-              <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
-              {healthQuery.isError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  {(healthQuery.error as Error).message}
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {!showGettingStartedGuidance && (
-          <Grid item xs={12} md={4}>
-            <Card variant="outlined">
-              <CardHeader title={demoSeedCardCopy.title} />
-              <CardContent>
-                <Typography variant="body2">
-                  {demoSeedCardCopy.description}
-                </Typography>
-                <Button
-                  sx={{ mt: 2 }}
-                  variant="contained"
-                  startIcon={<AutoFixHighIcon />}
-                  onClick={() => seedMutation.mutate()}
-                  disabled={seedMutation.isPending}
-                >
-                  {seedMutation.isPending ? demoSeedCardCopy.pendingLabel : demoSeedCardCopy.buttonLabel}
-                </Button>
-                {seedMutation.isSuccess && (
-                  <Alert severity="success" sx={{ mt: 2 }}>
-                    Datos de demostración preparados correctamente.
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
+      <Box sx={{ maxWidth: 480 }}>
+        <Card variant="outlined" id="admin-service-health">
+          <CardHeader title="Estado del servicio" />
+          <CardContent>
+            <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
+            <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
+            {healthQuery.isError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {(healthQuery.error as Error).message}
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
 
       <Paper variant="outlined" id="admin-users-and-roles">
         <Box sx={{ px: 2, py: 1 }}>
