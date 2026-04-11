@@ -108,8 +108,6 @@ const hasRoleSelectionChanged = (
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
 };
 
-const ROLE_MANAGEMENT_INTRO = 'Haz clic sobre los roles para editarlos sin salir de esta tabla.';
-
 const buildRoleManagementSummary = ({
   showContactColumn,
   showStatusColumn,
@@ -131,8 +129,8 @@ const buildRoleManagementSummary = ({
     );
   }
 
-  if (hiddenColumnSummaries.length === 0) return ROLE_MANAGEMENT_INTRO;
-  return `${ROLE_MANAGEMENT_INTRO} Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+  if (hiddenColumnSummaries.length === 0) return '';
+  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
 };
 
 export default function UserRoleManagement() {
@@ -245,9 +243,11 @@ export default function UserRoleManagement() {
             <Typography variant="h5" fontWeight={700}>
               Roles y permisos
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {roleManagementSummary}
-            </Typography>
+            {roleManagementSummary && (
+              <Typography variant="body2" color="text.secondary">
+                {roleManagementSummary}
+              </Typography>
+            )}
           </Stack>
           <TableContainer component={Paper}>
             <Table>
@@ -256,7 +256,17 @@ export default function UserRoleManagement() {
                   <TableCell>Usuario</TableCell>
                   {showContactColumn && <TableCell>Contacto</TableCell>}
                   {showStatusColumn && <TableCell>Estado</TableCell>}
-                  <TableCell>Roles</TableCell>
+                  <TableCell>
+                    <Stack spacing={0}>
+                      <Typography component="span" variant="body2" fontWeight={600}>
+                        Roles
+                      </Typography>
+                      {'\n'}
+                      <Typography component="span" variant="caption" color="text.secondary">
+                        Editar aquí
+                      </Typography>
+                    </Stack>
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

@@ -83,6 +83,11 @@ const getButtonsByText = (root: ParentNode, labelText: string) =>
     (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
   );
 
+const countExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
+    (element) => buttonText(element) === labelText,
+  ).length;
+
 const getRowByName = (container: HTMLElement, name: string) => {
   const row = Array.from(container.querySelectorAll('tbody tr')).find((element) =>
     (element.textContent ?? '').includes(name),
@@ -181,10 +186,12 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles Editar aquí']);
         expect(container.textContent).toContain(
-          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
+        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
+        expect(countExactText(container, 'Editar aquí')).toBe(1);
         expect(container.textContent).not.toContain('Active');
         expect(container.textContent).not.toContain('Editar roles');
 
@@ -237,10 +244,12 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Roles Editar aquí']);
         expect(container.textContent).toContain(
-          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
+        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
+        expect(countExactText(container, 'Editar aquí')).toBe(1);
         expect(container.textContent).not.toContain('Sin email ni teléfono');
         expect(container.textContent).not.toContain('Active');
 
@@ -272,11 +281,11 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles Editar aquí']);
         expect(container.textContent).toContain('Roles y permisos');
-        expect(container.textContent).toContain(
-          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
-        );
+        expect(container.textContent).toContain('Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.');
+        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
+        expect(countExactText(container, 'Editar aquí')).toBe(1);
         expect(container.textContent).not.toContain('Acciones');
         expect(container.textContent).not.toContain('Roles y edición');
         expect(container.textContent).not.toContain('Active');
@@ -372,8 +381,9 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles']);
-        expect(container.textContent).toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles Editar aquí']);
+        expect(countExactText(container, 'Editar aquí')).toBe(1);
+        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain('Vista actual:');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
@@ -410,8 +420,9 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Haz clic sobre los roles para editarlos sin salir de esta tabla. Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
+        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain(
           'Todavía no hay email ni teléfono cargado. La columna de contacto aparecerá cuando exista al menos un dato para revisar.',
         );
