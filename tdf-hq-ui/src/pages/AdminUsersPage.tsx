@@ -205,25 +205,32 @@ export default function AdminUsersPage() {
     visibleUsersMissingWhatsAppCount,
     visibleUsersWithWhatsAppCount,
   ]);
-  const headerGuidance = useMemo(() => {
+  const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
 
     const sharedAccessSummaryParts: string[] = [];
     if (sharedRolesSummary) sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);
     if (sharedModulesSummary) sharedAccessSummaryParts.push(`Módulos: ${sharedModulesSummary}`);
-    const sharedAccessSummary = sharedAccessSummaryParts.length
+    return sharedAccessSummaryParts.length
       ? `Acceso compartido en esta vista: ${sharedAccessSummaryParts.join(' · ')}.`
       : '';
-    const parts = [visibleUsersSummary, activeScopeSummary, sharedAccessSummary].filter(Boolean);
-
-    return parts.join(' ');
-  }, [activeScopeSummary, sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance, visibleUsersSummary]);
+  }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
+  const viewGuidance = useMemo(
+    () => [visibleUsersSummary, activeScopeSummary].filter(Boolean).join(' '),
+    [activeScopeSummary, visibleUsersSummary],
+  );
   const generalIntro = hasVisibleWhatsAppAction
     ? ADMIN_USERS_PAGE_INTRO
     : ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO;
   const singleUserGuidance = hasVisibleWhatsAppAction
     ? SINGLE_USER_GUIDANCE
     : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+  const primaryGuidance = showSingleUserGuidance
+    ? singleUserGuidance
+    : showGeneralIntro
+      ? generalIntro
+      : '';
+  const pageGuidance = [primaryGuidance, viewGuidance].filter(Boolean).join(' ');
 
   return (
     <>
@@ -237,11 +244,6 @@ export default function AdminUsersPage() {
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
               <Typography variant="h4" fontWeight={700}>Usuarios</Typography>
-              {showGeneralIntro && (
-                <Typography variant="body2" color="text.secondary">
-                  {generalIntro}
-                </Typography>
-              )}
               {showSearchField && (
                 <TextField
                   label="Buscar usuarios"
@@ -261,14 +263,14 @@ export default function AdminUsersPage() {
                   }}
                 />
               )}
-              {showSingleUserGuidance && (
-                <Typography variant="body2" color="text.secondary">
-                  {singleUserGuidance}
+              {pageGuidance && (
+                <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
+                  {pageGuidance}
                 </Typography>
               )}
-              {headerGuidance && (
+              {sharedAccessGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  {headerGuidance}
+                  {sharedAccessGuidance}
                 </Typography>
               )}
             </Stack>

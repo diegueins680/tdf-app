@@ -166,6 +166,12 @@ const getRenderedRowUserIds = (container: HTMLElement) => (
     .map((row) => Number(row.dataset['testid']?.replace('admin-user-row-', '')))
 );
 
+const getPageGuidance = (container: HTMLElement) => {
+  const guidance = container.querySelector<HTMLElement>('[data-testid="admin-users-page-guidance"]');
+  if (!guidance) throw new Error('Page guidance not found');
+  return buttonText(guidance);
+};
+
 describe('AdminUsersPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -479,13 +485,9 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
-          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
-        expect(countExactText(
-          container,
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
-        )).toBe(1);
         expect(countExactText(
           container,
           '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
@@ -493,6 +495,10 @@ describe('AdminUsersPage', () => {
         expect(countExactText(
           container,
           'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        )).toBe(0);
+        expect(countExactText(
+          container,
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         )).toBe(0);
         expect(countExactText(container, 'Haz clic en el nombre para abrir el perfil.')).toBe(0);
       });
