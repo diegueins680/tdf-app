@@ -26,6 +26,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceDirection
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
+  , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
   , validateEventArtistIds
   , normalizeMomentMediaType
@@ -1784,8 +1785,9 @@ socialEventsServer user = eventsServer
       ticketOrders <- liftIO $ runSqlPool
         (selectList [EventTicketOrderEventId ==. eventKey] [Desc EventTicketOrderPurchasedAt, Desc EventTicketOrderId])
         envPool
-      let manualDtos = map financeEntryEntityToDTO manualRows
-          ticketDtos = concatMap (ticketOrderAccountingEntries eventKey) ticketOrders
+      manualDtos <- either (throwError . financeInvariantServerError) pure
+        (traverse financeEntryEntityToDTOEither manualRows)
+      let ticketDtos = concatMap (ticketOrderAccountingEntries eventKey) ticketOrders
           merged = manualDtos ++ ticketDtos
           filtered = filter (matchesFinanceFilters directionFilter sourceFilter statusFilter) merged
       pure (sortOn (Down . efeOccurredAt) filtered)
@@ -1827,9 +1829,8 @@ socialEventsServer user = eventsServer
         , eventFinanceEntryUpdatedAt = now
         }) envPool
       mCreated <- liftIO $ runSqlPool (getEntity entryKey) envPool
-      maybe (throwError err500 { errBody = "Could not create finance entry" })
-            (pure . financeEntryEntityToDTO)
-            mCreated
+      created <- maybe (throwError err500 { errBody = "Could not create finance entry" }) pure mCreated
+      either (throwError . financeInvariantServerError) pure (financeEntryEntityToDTOEither created)
 
     updateFinanceEntry :: T.Text -> T.Text -> EventFinanceEntryDTO -> AppM EventFinanceEntryDTO
     updateFinanceEntry eventIdStr entryIdStr dto = do
@@ -1869,9 +1870,8 @@ socialEventsServer user = eventsServer
         , EventFinanceEntryUpdatedAt =. now
         ]) envPool
       mUpdated <- liftIO $ runSqlPool (getEntity entryKey) envPool
-      maybe (throwError err500 { errBody = "Could not update finance entry" })
-            (pure . financeEntryEntityToDTO)
-            mUpdated
+      updated <- maybe (throwError err500 { errBody = "Could not update finance entry" }) pure mUpdated
+      either (throwError . financeInvariantServerError) pure (financeEntryEntityToDTOEither updated)
 
     getFinanceSummary :: T.Text -> AppM EventFinanceSummaryDTO
     getFinanceSummary eventIdStr = do
@@ -1885,6 +1885,8 @@ socialEventsServer user = eventsServer
         (selectList [EventFinanceEntryEventId ==. eventKey] [])
         envPool
       ticketOrders <- liftIO $ runSqlPool (selectList [EventTicketOrderEventId ==. eventKey] []) envPool
+      normalizedFinanceRows <- either (throwError . financeInvariantServerError) pure
+        (traverse storedFinanceEntrySummaryFields allFinanceRows)
 
       let plannedIncomeCents =
             sum
@@ -1898,9 +1900,10 @@ socialEventsServer user = eventsServer
               | Entity _ lineRec <- budgetRows
               , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "expense"
               ]
-          entryStatus entry = normalizeFinanceEntryStatus (Just (eventFinanceEntryStatus entry))
-          entryDirection entry = normalizeFinanceDirection (Just (eventFinanceEntryDirection entry))
-          entrySource entry = normalizeFinanceSource (Just (eventFinanceEntrySource entry))
+          entryAmount (amountCents, _, _, _) = amountCents
+          entryDirection (_, directionVal, _, _) = directionVal
+          entrySource (_, _, sourceVal, _) = sourceVal
+          entryStatus (_, _, _, statusVal) = statusVal
           isPosted entry = entryStatus entry == "posted"
           isPendingLike entry =
             let statusVal = entryStatus entry
@@ -1908,15 +1911,15 @@ socialEventsServer user = eventsServer
           isNonVoid entry = entryStatus entry /= "void"
           manualIncomeCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entryDirection entry == "income"
               ]
           manualExpenseCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entryDirection entry == "expense"
               ]
@@ -1940,66 +1943,66 @@ socialEventsServer user = eventsServer
               ]
           accountsPayableCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPendingLike entry
               , entryDirection entry == "expense"
               ]
           accountsReceivableManualCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPendingLike entry
               , entryDirection entry == "income"
               ]
           accountsReceivableCents = accountsReceivableManualCents + ticketPendingRevenueCents
           contractCommittedCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isNonVoid entry
               , entrySource entry == "contract_commitment"
               ]
           contractPaidCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entrySource entry == "contract_payment"
               ]
           procurementCommittedCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isNonVoid entry
               , entrySource entry == "purchase_order"
               ]
           procurementPaidCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entrySource entry == "purchase_payment"
               ]
           assetInvestmentCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entrySource entry == "asset_purchase"
               ]
           liabilityIncurredCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entrySource entry == "liability_loan"
               , entryDirection entry == "income"
               ]
           liabilityPaidCents =
             sum
-              [ eventFinanceEntryAmountCents entry
-              | Entity _ entry <- allFinanceRows
+              [ entryAmount entry
+              | entry <- normalizedFinanceRows
               , isPosted entry
               , entrySource entry == "liability_payment"
               , entryDirection entry == "expense"
@@ -2314,11 +2317,18 @@ normalizeCategory mCategory =
     Just "" -> "general"
     Just v -> v
 
+parseFinanceDirection :: T.Text -> Maybe T.Text
+parseFinanceDirection raw =
+  case T.toLower (T.strip raw) of
+    "income" -> Just "income"
+    "expense" -> Just "expense"
+    _ -> Nothing
+
 normalizeFinanceDirection :: Maybe T.Text -> T.Text
 normalizeFinanceDirection mDirection =
-  case fmap (T.toLower . T.strip) mDirection of
-    Just "income" -> "income"
-    _ -> "expense"
+  case mDirection >>= parseFinanceDirection of
+    Just directionVal -> directionVal
+    Nothing -> "expense"
 
 normalizeFinanceSource :: Maybe T.Text -> T.Text
 normalizeFinanceSource mSource =
@@ -2349,21 +2359,36 @@ parseFinanceSource raw =
     "accounts_receivable_settlement" -> Just "accounts_receivable_collection"
     _ -> Nothing
 
+parseFinanceEntryStatus :: T.Text -> Maybe T.Text
+parseFinanceEntryStatus raw =
+  case T.toLower (T.strip raw) of
+    "draft" -> Just "draft"
+    "posted" -> Just "posted"
+    "void" -> Just "void"
+    "pending" -> Just "pending"
+    _ -> Nothing
+
 normalizeFinanceEntryStatus :: Maybe T.Text -> T.Text
 normalizeFinanceEntryStatus mStatus =
-  case fmap (T.toLower . T.strip) mStatus of
-    Just "draft" -> "draft"
-    Just "posted" -> "posted"
-    Just "void" -> "void"
-    Just "pending" -> "pending"
-    _ -> "posted"
+  case mStatus >>= parseFinanceEntryStatus of
+    Just statusVal -> statusVal
+    Nothing -> "posted"
+
+validateStoredFinanceEntryDimensions :: EventFinanceEntry -> Either T.Text (T.Text, T.Text, T.Text)
+validateStoredFinanceEntryDimensions entry = do
+  directionVal <- maybe (Left "Stored finance entry direction is invalid") Right
+    (parseFinanceDirection (eventFinanceEntryDirection entry))
+  sourceVal <- maybe (Left "Stored finance entry source is invalid") Right
+    (parseFinanceSource (eventFinanceEntrySource entry))
+  statusVal <- maybe (Left "Stored finance entry status is invalid") Right
+    (parseFinanceEntryStatus (eventFinanceEntryStatus entry))
+  pure (directionVal, sourceVal, statusVal)
 
 normalizeFinanceDirectionInput :: T.Text -> AppM T.Text
 normalizeFinanceDirectionInput raw =
-  case T.toLower (T.strip raw) of
-    "income" -> pure "income"
-    "expense" -> pure "expense"
-    _ -> throwError err400 { errBody = "direction must be income or expense" }
+  case parseFinanceDirection raw of
+    Just directionVal -> pure directionVal
+    Nothing -> throwError err400 { errBody = "direction must be income or expense" }
 
 normalizeFinanceSourceInput :: T.Text -> AppM T.Text
 normalizeFinanceSourceInput raw =
@@ -2373,21 +2398,19 @@ normalizeFinanceSourceInput raw =
 
 normalizeFinanceEntryStatusInput :: T.Text -> AppM T.Text
 normalizeFinanceEntryStatusInput raw =
-  case T.toLower (T.strip raw) of
-    "draft" -> pure "draft"
-    "posted" -> pure "posted"
-    "void" -> pure "void"
-    "pending" -> pure "pending"
-    _ -> throwError err400 { errBody = "Invalid finance status" }
+  case parseFinanceEntryStatus raw of
+    Just statusVal -> pure statusVal
+    Nothing -> throwError err400 { errBody = "Invalid finance status" }
 
 normalizeFinanceDirectionFilter :: Maybe T.Text -> AppM (Maybe T.Text)
 normalizeFinanceDirectionFilter Nothing = pure Nothing
 normalizeFinanceDirectionFilter (Just raw) =
   case T.toLower (T.strip raw) of
     "" -> pure Nothing
-    "income" -> pure (Just "income")
-    "expense" -> pure (Just "expense")
-    _ -> throwError err400 { errBody = "Invalid direction filter" }
+    _ ->
+      case parseFinanceDirection raw of
+        Just directionVal -> pure (Just directionVal)
+        Nothing -> throwError err400 { errBody = "Invalid direction filter" }
 
 normalizeFinanceSourceFilter :: Maybe T.Text -> AppM (Maybe T.Text)
 normalizeFinanceSourceFilter Nothing = pure Nothing
@@ -2404,11 +2427,10 @@ normalizeFinanceEntryStatusFilter Nothing = pure Nothing
 normalizeFinanceEntryStatusFilter (Just raw) =
   case T.toLower (T.strip raw) of
     "" -> pure Nothing
-    "draft" -> pure (Just "draft")
-    "posted" -> pure (Just "posted")
-    "void" -> pure (Just "void")
-    "pending" -> pure (Just "pending")
-    _ -> throwError err400 { errBody = "Invalid status filter" }
+    _ ->
+      case parseFinanceEntryStatus raw of
+        Just statusVal -> pure (Just statusVal)
+        Nothing -> throwError err400 { errBody = "Invalid status filter" }
 
 parseTicketOrderStatus :: T.Text -> Maybe T.Text
 parseTicketOrderStatus raw =
@@ -2861,25 +2883,36 @@ budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) = EventBudg
   , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
   }
 
-financeEntryEntityToDTO :: Entity EventFinanceEntry -> EventFinanceEntryDTO
-financeEntryEntityToDTO (Entity entryKey entryRec) = EventFinanceEntryDTO
-  { efeId = Just (renderKeyText entryKey)
-  , efeEventId = Just (renderKeyText (eventFinanceEntryEventId entryRec))
-  , efeBudgetLineId = fmap renderKeyText (eventFinanceEntryBudgetLineId entryRec)
-  , efeDirection = normalizeFinanceDirection (Just (eventFinanceEntryDirection entryRec))
-  , efeSource = normalizeFinanceSource (Just (eventFinanceEntrySource entryRec))
-  , efeCategory = normalizeCategory (Just (eventFinanceEntryCategory entryRec))
-  , efeConcept = eventFinanceEntryConcept entryRec
-  , efeAmountCents = eventFinanceEntryAmountCents entryRec
-  , efeCurrency = normalizeCurrency (eventFinanceEntryCurrency entryRec)
-  , efeStatus = normalizeFinanceEntryStatus (Just (eventFinanceEntryStatus entryRec))
-  , efeExternalRef = eventFinanceEntryExternalRef entryRec
-  , efeNotes = eventFinanceEntryNotes entryRec
-  , efeOccurredAt = eventFinanceEntryOccurredAt entryRec
-  , efeRecordedByPartyId = eventFinanceEntryRecordedByPartyId entryRec
-  , efeCreatedAt = Just (eventFinanceEntryCreatedAt entryRec)
-  , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
-  }
+financeInvariantServerError :: T.Text -> ServerError
+financeInvariantServerError message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+financeEntryEntityToDTOEither :: Entity EventFinanceEntry -> Either T.Text EventFinanceEntryDTO
+financeEntryEntityToDTOEither (Entity entryKey entryRec) = do
+  (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
+  pure EventFinanceEntryDTO
+    { efeId = Just (renderKeyText entryKey)
+    , efeEventId = Just (renderKeyText (eventFinanceEntryEventId entryRec))
+    , efeBudgetLineId = fmap renderKeyText (eventFinanceEntryBudgetLineId entryRec)
+    , efeDirection = directionVal
+    , efeSource = sourceVal
+    , efeCategory = normalizeCategory (Just (eventFinanceEntryCategory entryRec))
+    , efeConcept = eventFinanceEntryConcept entryRec
+    , efeAmountCents = eventFinanceEntryAmountCents entryRec
+    , efeCurrency = normalizeCurrency (eventFinanceEntryCurrency entryRec)
+    , efeStatus = statusVal
+    , efeExternalRef = eventFinanceEntryExternalRef entryRec
+    , efeNotes = eventFinanceEntryNotes entryRec
+    , efeOccurredAt = eventFinanceEntryOccurredAt entryRec
+    , efeRecordedByPartyId = eventFinanceEntryRecordedByPartyId entryRec
+    , efeCreatedAt = Just (eventFinanceEntryCreatedAt entryRec)
+    , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
+    }
+
+storedFinanceEntrySummaryFields :: Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
+storedFinanceEntrySummaryFields (Entity _ entryRec) = do
+  (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
+  pure (eventFinanceEntryAmountCents entryRec, directionVal, sourceVal, statusVal)
 
 ticketOrderAccountingEntries :: SocialEventId -> Entity EventTicketOrder -> [EventFinanceEntryDTO]
 ticketOrderAccountingEntries eventKey (Entity orderKey orderRec) =

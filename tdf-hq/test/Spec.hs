@@ -45,7 +45,7 @@ import TDF.DTO.SocialEventsDTO
       iudMessageUpdate,
       vcuPhone,
       vudContactUpdate )
-import TDF.Models.SocialEventsModels (EventInvitationId, SocialEventId)
+import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioImportLimit, validateRadioMetadataRefreshLimit, validateRadioStreamUrl)
@@ -89,6 +89,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentMediaType,
     normalizeMomentReaction,
     normalizePositivePartyIdText,
+    validateStoredFinanceEntryDimensions,
     parseEventStatusQueryParamEither,
     parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
@@ -1073,6 +1074,39 @@ main = hspec $ do
             normalizeFinanceSource (Just "nonsense") `shouldBe` "manual"
             normalizeFinanceEntryStatus (Just "draft") `shouldBe` "draft"
             normalizeFinanceEntryStatus (Just "bad") `shouldBe` "posted"
+
+    describe "stored finance entry invariants" $ do
+        let financeTimestamp = UTCTime (fromGregorian 2026 1 1) 0
+            validStoredFinanceEntry =
+                EventFinanceEntry
+                    { eventFinanceEntryEventId = toSqlKey 1
+                    , eventFinanceEntryBudgetLineId = Nothing
+                    , eventFinanceEntryDirection = "income"
+                    , eventFinanceEntrySource = "manual"
+                    , eventFinanceEntryCategory = "general"
+                    , eventFinanceEntryConcept = "Initial deposit"
+                    , eventFinanceEntryAmountCents = 2500
+                    , eventFinanceEntryCurrency = "USD"
+                    , eventFinanceEntryStatus = "draft"
+                    , eventFinanceEntryExternalRef = Nothing
+                    , eventFinanceEntryNotes = Nothing
+                    , eventFinanceEntryMetadata = Nothing
+                    , eventFinanceEntryOccurredAt = financeTimestamp
+                    , eventFinanceEntryRecordedByPartyId = Nothing
+                    , eventFinanceEntryCreatedAt = financeTimestamp
+                    , eventFinanceEntryUpdatedAt = financeTimestamp
+                    }
+
+        it "accepts persisted finance entries whose enum-like dimensions are already canonical" $
+            validateStoredFinanceEntryDimensions validStoredFinanceEntry
+                `shouldBe` Right ("income", "manual", "draft")
+
+        it "rejects invalid persisted finance statuses instead of rewriting them to posted" $
+            case validateStoredFinanceEntryDimensions validStoredFinanceEntry { eventFinanceEntryStatus = "bad-status" } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry status is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored finance status to be rejected, got " <> show value)
 
     describe "event list query validation" $ do
         it "accepts blank filters and canonicalizes supported event type and status values" $ do
