@@ -77,6 +77,26 @@ validateInternPermissionDateRange startAt (Just endAt)
   | otherwise =
       Right ()
 
+validateInternProfileDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
+validateInternProfileDateRange Nothing _ = Right ()
+validateInternProfileDateRange (Just startAt) endAt =
+  validateInternPermissionDateRange startAt endAt
+
+validateInternProfileDateUpdate
+  :: Maybe Day
+  -> Maybe Day
+  -> Maybe (Maybe Day)
+  -> Maybe (Maybe Day)
+  -> Either ServerError ()
+validateInternProfileDateUpdate currentStart currentEnd updateStart updateEnd
+  | updateStart == Nothing && updateEnd == Nothing =
+      Right ()
+  | otherwise =
+      validateInternProfileDateRange effectiveStart effectiveEnd
+  where
+    effectiveStart = fromMaybe currentStart updateStart
+    effectiveEnd = fromMaybe currentEnd updateEnd
+
 validateOptionalInternPartyIdInput :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalInternPartyIdInput _ Nothing = Right Nothing
 validateOptionalInternPartyIdInput fieldName (Just rawPartyId) =
@@ -222,8 +242,18 @@ internshipsServer user =
             , fmap (ME.InternProfileSkills =.) cleanedSkills
             , fmap (ME.InternProfileAreas =.) cleanedAreas
             ]
+      mProfile <- withPool $ getBy (ME.UniqueInternProfile (auPartyId user))
+      either throwError pure $
+        case mProfile of
+          Just (Entity _ profile) ->
+            validateInternProfileDateUpdate
+              (ME.internProfileStartAt profile)
+              (ME.internProfileEndAt profile)
+              ipuStartAt
+              ipuEndAt
+          Nothing ->
+            validateInternProfileDateUpdate Nothing Nothing ipuStartAt ipuEndAt
       ent <- withPool $ do
-        mProfile <- getBy (ME.UniqueInternProfile (auPartyId user))
         case mProfile of
           Just (Entity key _) -> do
             unless (null updates) (update key (updates ++ [ME.InternProfileUpdatedAt =. now]))

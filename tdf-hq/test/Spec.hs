@@ -55,6 +55,7 @@ import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateC
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
       validateInternPermissionDateRange,
+      validateInternProfileDateUpdate,
       validateInternTaskUpdatePermissions,
       validateOptionalInternPermissionStatusInput,
       validateOptionalInternPartyIdInput,
@@ -1045,6 +1046,53 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "endAt must be on or after startAt"
                 Right value ->
                     expectationFailure ("Expected invalid internship permission date range to be rejected, got " <> show value)
+
+    describe "internship profile date validation" $ do
+        it "accepts no-op updates, forward ranges, and clearing an existing start date" $ do
+            validateInternProfileDateUpdate
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 12))
+                Nothing
+                Nothing
+                `shouldBe` Right ()
+            validateInternProfileDateUpdate
+                Nothing
+                Nothing
+                (Just (Just (fromGregorian 2026 4 11)))
+                (Just (Just (fromGregorian 2026 4 12)))
+                `shouldBe` Right ()
+            validateInternProfileDateUpdate
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 10))
+                (Just Nothing)
+                Nothing
+                `shouldBe` Right ()
+
+        it "rejects updates that would leave the effective profile end date before start date" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "endAt must be on or after startAt"
+                    Right value ->
+                        expectationFailure ("Expected invalid internship profile date range to be rejected, got " <> show value)
+            assertInvalid
+                (validateInternProfileDateUpdate
+                    Nothing
+                    Nothing
+                    (Just (Just (fromGregorian 2026 4 11)))
+                    (Just (Just (fromGregorian 2026 4 10))))
+            assertInvalid
+                (validateInternProfileDateUpdate
+                    (Just (fromGregorian 2026 4 11))
+                    Nothing
+                    Nothing
+                    (Just (Just (fromGregorian 2026 4 10))))
+            assertInvalid
+                (validateInternProfileDateUpdate
+                    (Just (fromGregorian 2026 4 10))
+                    (Just (fromGregorian 2026 4 11))
+                    (Just (Just (fromGregorian 2026 4 12)))
+                    Nothing)
 
     describe "internship task update permissions" $ do
         it "allows interns to change status/progress while keeping admin-only task edits available to admins" $ do
