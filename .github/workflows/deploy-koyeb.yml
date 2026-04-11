@@ -34,8 +34,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq ca-certificates
+          command -v jq >/dev/null 2>&1 || {
+            echo "jq is required on the GitHub runner image." >&2
+            exit 1
+          }
           node ./scripts/install-koyeb-cli.mjs
       - name: Deploy image to Koyeb
         env:
