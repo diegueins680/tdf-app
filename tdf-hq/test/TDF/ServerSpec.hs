@@ -58,7 +58,9 @@ import TDF.ServerAuth
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
     , signupEmailExists
+    , validateOptionalSignupClaimArtistId
     , validateRequestedSignupRoles
+    , validateSignupFanArtistIds
     )
 import Test.Hspec
 
@@ -303,6 +305,38 @@ spec = describe "TDF.Server helpers" $ do
                 Right rolesVal ->
                     expectationFailure
                         ("Expected forbidden signup roles to be rejected, got: " <> show rolesVal)
+
+    describe "validateOptionalSignupClaimArtistId" $ do
+        it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
+            validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
+            validateOptionalSignupClaimArtistId (Just 42) `shouldBe` Right (Just 42)
+
+        it "rejects zero or negative artist ids instead of silently dropping the requested claim" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "claimArtistId must be a positive integer"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid claimArtistId to be rejected, got: " <> show value)
+            assertInvalid (validateOptionalSignupClaimArtistId (Just 0))
+            assertInvalid (validateOptionalSignupClaimArtistId (Just (-7)))
+
+    describe "validateSignupFanArtistIds" $ do
+        it "preserves omission and deduplicates positive artist ids before signup follows are created" $ do
+            validateSignupFanArtistIds Nothing `shouldBe` Right []
+            validateSignupFanArtistIds (Just [7, 11, 7, 13]) `shouldBe` Right [7, 11, 13]
+
+        it "rejects zero or negative artist ids instead of silently dropping requested follows" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "fanArtistIds must contain only positive integers"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid fanArtistIds to be rejected, got: " <> show value)
+            assertInvalid (validateSignupFanArtistIds (Just [7, 0, 13]))
+            assertInvalid (validateSignupFanArtistIds (Just [-5]))
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers and preserves the raw-token fallback" $ do

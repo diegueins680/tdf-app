@@ -22,6 +22,8 @@ module TDF.ServerAuth
   , runPasswordResetConfirm
   , signupEmailExists
   , validateRequestedSignupRoles
+  , validateOptionalSignupClaimArtistId
+  , validateSignupFanArtistIds
   ) where
 
 import Control.Applicative ((<|>))
@@ -166,6 +168,29 @@ validateRequestedSignupRoles requestedRoles =
              msg = "Requested signup roles are not allowed for self-signup: " <> roleList
          in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
+validateOptionalSignupClaimArtistId :: Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalSignupClaimArtistId Nothing = Right Nothing
+validateOptionalSignupClaimArtistId (Just rawArtistId)
+  | rawArtistId > 0 = Right (Just rawArtistId)
+  | otherwise =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "claimArtistId must be a positive integer")
+        }
+
+validateSignupFanArtistIds :: Maybe [Int64] -> Either ServerError [Int64]
+validateSignupFanArtistIds Nothing = Right []
+validateSignupFanArtistIds (Just rawArtistIds) =
+  nub <$> traverse validateArtistId rawArtistIds
+  where
+    validateArtistId artistId
+      | artistId > 0 = Right artistId
+      | otherwise =
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "fanArtistIds must contain only positive integers")
+            }
+
 sessionServer :: AuthedUser -> ServerT Api.SessionAPI AppM
 sessionServer user =
        currentSession user
@@ -248,7 +273,6 @@ signup SignupRequest
       firstClean = T.strip rawFirst
       lastClean = T.strip rawLast
       phoneClean = fmap T.strip rawPhone
-      claimArtistIdClean = rawClaimArtistId >>= (\val -> if val > 0 then Just val else Nothing)
       internshipSkillsClean = cleanOptional rawInternshipSkills
       internshipAreasClean = cleanOptional rawInternshipAreas
   when (T.null emailInput) $ throwBadRequest "Email is required"
@@ -263,10 +287,11 @@ signup SignupRequest
   when (maybe False (< 0) rawInternshipRequiredHours) $
     throwBadRequest "Internship required hours must be non-negative"
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
+  claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
+  sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
-      sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb
       emailClean
