@@ -508,31 +508,6 @@ export default function AdminConsolePage() {
             </Card>
           </Grid>
         )}
-
-        {consoleCards.map((card) => (
-          <Grid item xs={12} md={4} key={card.cardId}>
-            <Card variant="outlined">
-              <CardHeader title={card.title} />
-              <CardContent>
-                {card.body.map((paragraph, idx) => (
-                  <Typography
-                    key={`${card.cardId}-line-${idx}`}
-                    variant="body2"
-                    color="text.secondary"
-                    paragraph={idx < card.body.length - 1}
-                  >
-                    {paragraph}
-                  </Typography>
-                ))}
-                {consoleQuery.isFetching && !consoleQuery.isError && (
-                  <Typography variant="caption" color="text.secondary">
-                    {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
       </Grid>
 
       <Paper variant="outlined" id="admin-users-and-roles">
@@ -783,6 +758,45 @@ export default function AdminConsolePage() {
           </Box>
         ) : null}
       </Paper>
+
+      {consoleCards.length > 0 && (
+        <Paper variant="outlined" id="admin-additional-modules">
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="h6">Módulos adicionales</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {showGettingStartedGuidance
+                ? 'Se muestran aparte para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
+                : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
+            </Typography>
+          </Box>
+          <Grid container spacing={2} sx={{ px: 2, pb: 2 }}>
+            {consoleCards.map((card) => (
+              <Grid item xs={12} md={4} key={card.cardId}>
+                <Card variant="outlined">
+                  <CardHeader title={card.title} />
+                  <CardContent>
+                    {card.body.map((paragraph, idx) => (
+                      <Typography
+                        key={`${card.cardId}-line-${idx}`}
+                        variant="body2"
+                        color="text.secondary"
+                        paragraph={idx < card.body.length - 1}
+                      >
+                        {paragraph}
+                      </Typography>
+                    ))}
+                    {consoleQuery.isFetching && !consoleQuery.isError && (
+                      <Typography variant="caption" color="text.secondary">
+                        {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
 
       <Dialog open={!!editingUser} onClose={handleCloseDialog} fullWidth maxWidth="sm">
         <DialogTitle>Editar roles · {editingTitle}</DialogTitle>

@@ -152,6 +152,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Recorrido con demo')).not.toBeInTheDocument();
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
   });
 
@@ -281,6 +282,12 @@ describe('AdminConsolePage', () => {
           /Los módulos adicionales aparecen aparte; primero ubica salud, usuarios y auditoría\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Se muestran aparte para que el recorrido inicial siga centrado en salud, usuarios y auditoría\./i,
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -320,6 +327,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
       expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
       expect(
         screen.getAllByText(
