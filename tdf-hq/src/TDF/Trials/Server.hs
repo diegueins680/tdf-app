@@ -909,9 +909,10 @@ privateTrialsServer user@AuthedUser{..} =
     queueH :: Maybe Int -> Maybe Text -> AppM [TrialQueueItem]
     queueH mSubject mStatus = do
       ensureSchoolStaffAccess
+      normalizedSubjectId <- either (liftIO . throwIO) pure (traverse validatePublicSubjectIdInput mSubject)
       normalizedStatus <- either (liftIO . throwIO) pure (validateOptionalTrialRequestStatusFilter mStatus)
       let filters = catMaybes
-            [ (TrialRequestSubjectId ==.) . intKey <$> mSubject
+            [ (TrialRequestSubjectId ==.) . intKey <$> normalizedSubjectId
             , (TrialRequestStatus ==.) <$> normalizedStatus
             ]
       requests <- selectList filters [Desc TrialRequestCreatedAt]

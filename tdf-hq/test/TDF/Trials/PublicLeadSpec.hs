@@ -24,7 +24,7 @@ import TDF.Trials.DTO
   , TrialRequestOut (..)
   , TrialScheduleIn (..)
   )
-import TDF.Trials.API (ClassSessionIn (..), ClassSessionOut, InterestIn (..))
+import TDF.Trials.API (ClassSessionIn (..), ClassSessionOut, InterestIn (..), TrialQueueItem)
 import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
@@ -303,6 +303,20 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotEnd 0)
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
+
+  describe "private trial queue filtering" $ do
+    it "rejects non-positive subject filters before querying the queue" $ do
+      let assertRejected rawSubjectId = do
+            result <- try $ runTrialsInMemory $
+              privateQueueHandler (Just rawSubjectId) Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "subjectId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid queue subject filter to be rejected"
+      assertRejected 0
+      assertRejected (-3)
 
   describe "private trial scheduling" $ do
     it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
@@ -867,6 +881,11 @@ adminUser =
       , auRoles = roles
       , auModules = modulesForRoles roles
       }
+
+privateQueueHandler :: Maybe Int -> Maybe Text -> SqlPersistT IO [TrialQueueItem]
+privateQueueHandler =
+  let queueH :<|> _ = privateTrialsServer adminUser
+  in queueH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =
