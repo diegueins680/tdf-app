@@ -597,7 +597,8 @@ sessionsServer user =
 
     createSessionH req = do
       ensureModule ModuleScheduling user
-      roomKeys <- traverse (parseKey @Room) (scRoomIds req)
+      parsedRoomKeys <- traverse (parseKey @Room) (scRoomIds req)
+      roomKeys <- either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
       either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
@@ -655,7 +656,9 @@ sessionsServer user =
           pure (Just (Just parsed))
       roomKeysUpdate <- case suRoomIds req of
         Nothing     -> pure Nothing
-        Just rooms  -> Just <$> traverse (parseKey @Room) rooms
+        Just rooms  -> do
+          parsedRoomKeys <- traverse (parseKey @Room) rooms
+          Just <$> either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
       let currentSession = entityVal existing
           effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
@@ -1414,6 +1417,13 @@ validateSessionTimeRange startAt endAt
   | endAt > startAt = Right ()
   | otherwise = Left err400
       { errBody = "sessionEndAt must be after sessionStartAt"
+      }
+
+validateDistinctSessionRooms :: [Key Room] -> Either ServerError [Key Room]
+validateDistinctSessionRooms roomKeys
+  | length roomKeys == Set.size (Set.fromList roomKeys) = Right roomKeys
+  | otherwise = Left err400
+      { errBody = "roomIds must not contain duplicates"
       }
 
 ensureModule

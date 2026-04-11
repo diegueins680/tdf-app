@@ -63,6 +63,7 @@ import TDF.ServerExtra (
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
+    validateDistinctSessionRooms,
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateCheckoutTargets,
@@ -322,6 +323,26 @@ spec = do
               expectationFailure ("Expected invalid session time range error, got " <> show value)
       assertInvalid (validateSessionTimeRange startAt startAt)
       assertInvalid (validateSessionTimeRange startAt (addUTCTime (-60) startAt))
+
+  describe "validateDistinctSessionRooms" $ do
+    let roomIdA = case (fromPathPiece "00000000-0000-0000-0000-000000000042" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid room fixture key A"
+        roomIdB = case (fromPathPiece "00000000-0000-0000-0000-000000000084" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid room fixture key B"
+
+    it "keeps empty and unique room selections unchanged" $ do
+      validateDistinctSessionRooms [] `shouldBe` Right []
+      validateDistinctSessionRooms [roomIdA, roomIdB] `shouldBe` Right [roomIdA, roomIdB]
+
+    it "rejects duplicate room selections before session writes hit uniqueness constraints" $
+      case validateDistinctSessionRooms [roomIdA, roomIdA] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "roomIds must not contain duplicates"
+        Right value ->
+          expectationFailure ("Expected duplicate session room ids to be rejected, got " <> show value)
 
   describe "validatePaymentMethod" $ do
     it "accepts supported manual-payment aliases, including persisted enum labels reused by the UI" $ do
