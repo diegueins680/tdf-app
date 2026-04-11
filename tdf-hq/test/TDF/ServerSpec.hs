@@ -38,10 +38,12 @@ import TDF.Server
     , validateCourseRegistrationListLimit
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
+    , validateOptionalMarketplaceOrderStatus
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
     , validateMarketplaceBuyerEmail
+    , parsePayPalCaptureOrderStatus
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
@@ -554,6 +556,48 @@ spec = describe "TDF.Server helpers" $ do
             assertLimitInvalid (validateMarketplaceOrderListLimit (Just 0))
             assertLimitInvalid (validateMarketplaceOrderListLimit (Just 201))
             assertOffsetInvalid (validateMarketplaceOrderListOffset (Just (-1)))
+
+    describe "validateOptionalMarketplaceOrderStatus" $ do
+        it "treats omitted or blank filters as absent and canonicalizes supported statuses" $ do
+            validateOptionalMarketplaceOrderStatus Nothing `shouldBe` Right Nothing
+            validateOptionalMarketplaceOrderStatus (Just "   ") `shouldBe` Right Nothing
+            validateOptionalMarketplaceOrderStatus (Just " PayPal Pending ")
+                `shouldBe` Right (Just "paypal_pending")
+            validateOptionalMarketplaceOrderStatus (Just "canceled")
+                `shouldBe` Right (Just "cancelled")
+            validateOptionalMarketplaceOrderStatus (Just "datafast failed")
+                `shouldBe` Right (Just "datafast_failed")
+
+        it "rejects unknown marketplace statuses instead of silently returning an empty slice" $
+            case validateOptionalMarketplaceOrderStatus (Just "refunded") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "pending, contact, paid, cancelled"
+                Right statusVal ->
+                    expectationFailure
+                        ( "Expected invalid marketplace order status to be rejected, got: "
+                            <> show statusVal
+                        )
+
+    describe "parsePayPalCaptureOrderStatus" $ do
+        it "maps known PayPal capture statuses onto canonical marketplace order states" $ do
+            parsePayPalCaptureOrderStatus "COMPLETED" `shouldBe` Right "paid"
+            parsePayPalCaptureOrderStatus " approved " `shouldBe` Right "paypal_pending"
+            parsePayPalCaptureOrderStatus "VOIDED" `shouldBe` Right "cancelled"
+            parsePayPalCaptureOrderStatus "DENIED" `shouldBe` Right "paypal_failed"
+
+        it "rejects unsupported PayPal capture statuses instead of persisting raw gateway labels" $
+            case parsePayPalCaptureOrderStatus "mystery_status" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 502
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Unsupported PayPal capture status: mystery_status"
+                Right statusVal ->
+                    expectationFailure
+                        ( "Expected unsupported PayPal capture status to be rejected, got: "
+                            <> show statusVal
+                        )
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do

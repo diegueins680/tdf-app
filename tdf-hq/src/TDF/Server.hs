@@ -5474,6 +5474,71 @@ validateMarketplaceOrderListOffset (Just rawOffset)
   | otherwise =
       Right rawOffset
 
+validateOptionalMarketplaceOrderStatus :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalMarketplaceOrderStatus Nothing = Right Nothing
+validateOptionalMarketplaceOrderStatus (Just rawStatus) =
+  case normalizeOptionalInput (Just rawStatus) of
+    Nothing -> Right Nothing
+    Just statusVal ->
+      case normalizeMarketplaceOrderStatus statusVal of
+        Just normalized -> Right (Just normalized)
+        Nothing ->
+          Left err400
+            { errBody =
+                "status must be one of: pending, contact, paid, cancelled, failed, "
+                  <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
+                  <> "paypal_failed"
+            }
+
+parsePayPalCaptureOrderStatus :: Text -> Either ServerError Text
+parsePayPalCaptureOrderStatus rawStatus =
+  case normalizePayPalCaptureOrderStatus rawStatus of
+    Just normalized -> Right normalized
+    Nothing ->
+      Left err502
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "Unsupported PayPal capture status: " <> T.strip rawStatus
+        }
+
+normalizeMarketplaceOrderStatus :: Text -> Maybe Text
+normalizeMarketplaceOrderStatus rawStatus =
+  case normalizeMarketplaceOrderStatusToken rawStatus of
+    "pending" -> Just "pending"
+    "contact" -> Just "contact"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    "failed" -> Just "failed"
+    "datafastinit" -> Just "datafast_init"
+    "datafastpending" -> Just "datafast_pending"
+    "datafastfailed" -> Just "datafast_failed"
+    "paypalpending" -> Just "paypal_pending"
+    "paypalfailed" -> Just "paypal_failed"
+    _ -> Nothing
+
+normalizePayPalCaptureOrderStatus :: Text -> Maybe Text
+normalizePayPalCaptureOrderStatus rawStatus =
+  case normalizeMarketplaceOrderStatusToken rawStatus of
+    "completed" -> Just "paid"
+    "approved" -> Just "paypal_pending"
+    "created" -> Just "paypal_pending"
+    "payeractionrequired" -> Just "paypal_pending"
+    "pending" -> Just "paypal_pending"
+    "saved" -> Just "paypal_pending"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    "voided" -> Just "cancelled"
+    "failed" -> Just "paypal_failed"
+    "declined" -> Just "paypal_failed"
+    "denied" -> Just "paypal_failed"
+    "expired" -> Just "paypal_failed"
+    _ -> Nothing
+
+normalizeMarketplaceOrderStatusToken :: Text -> Text
+normalizeMarketplaceOrderStatusToken =
+  T.filter isAlphaNum . T.toLower . T.strip
+
 normalizeCourseRegistrationStatus :: Text -> Maybe Text
 normalizeCourseRegistrationStatus raw =
   case normalizeBookingStatusToken raw of
@@ -7559,8 +7624,11 @@ capturePaypalOrder PaypalCaptureReq{..} = do
       manager <- liftIO $ newManager tlsManagerSettings
       PayPalCaptureOutcome statusTxt payerEmail <- capturePaypalOrderRemote manager cid sec baseUrl pcCapturePaypalId
       now <- liftIO getCurrentTime
-      let nextStatus = if T.toUpper statusTxt == "COMPLETED" then "paid" else T.toLower statusTxt
-          paidAtVal  = if T.toUpper statusTxt == "COMPLETED" then Just now else ME.marketplaceOrderPaidAt order
+      nextStatus <- either throwError pure (parsePayPalCaptureOrderStatus statusTxt)
+      let paidAtVal =
+            if nextStatus == "paid"
+              then Just now
+              else ME.marketplaceOrderPaidAt order
       liftIO $ flip runSqlPool envPool $ update orderKey
         [ ME.MarketplaceOrderStatus =. nextStatus
         , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
@@ -7668,21 +7736,18 @@ listMarketplaceOrders user mStatus mLimit mOffset = do
   requireMarketplaceAccess user
   limitCount <- either throwError pure (validateMarketplaceOrderListLimit mLimit)
   offsetCount <- either throwError pure (validateMarketplaceOrderListOffset mOffset)
-  let normalizedStatus = mStatus >>= nonEmpty
-      filters = maybe [] (\st -> [ME.MarketplaceOrderStatus ==. st]) normalizedStatus
+  normalizedStatus <- either throwError pure (validateOptionalMarketplaceOrderStatus mStatus)
+  let filters = maybe [] (\st -> [ME.MarketplaceOrderStatus ==. st]) normalizedStatus
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool $ do
     orders <- selectList filters [Desc ME.MarketplaceOrderCreatedAt, OffsetBy offsetCount, LimitTo limitCount]
     catMaybes <$> mapM (loadOrderDTO . entityKey) orders
-  where
-    nonEmpty t =
-      let trimmed = T.strip t
-      in if T.null trimmed then Nothing else Just trimmed
 
 updateMarketplaceOrder :: AuthedUser -> Text -> MarketplaceOrderUpdate -> AppM MarketplaceOrderDTO
 updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   requireMarketplaceAccess user
   orderKey <- parseOrderId rawId
+  nextStatus <- either throwError pure (validateOptionalMarketplaceOrderStatus mouStatus)
   now <- liftIO getCurrentTime
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ do
@@ -7693,7 +7758,6 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
         let cleanTxt txt =
               let trimmed = T.strip txt
               in if T.null trimmed then Nothing else Just trimmed
-            nextStatus   = mouStatus >>= cleanTxt
             nextProvider = mouPaymentProvider >>= \mp -> pure (mp >>= cleanTxt)
             paidAtInput  = mouPaidAt
             paidAtBase   = case paidAtInput of
