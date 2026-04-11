@@ -257,7 +257,8 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('keeps unique preview cards while preserving first-run guidance until core admin data exists', async () => {
+  it('keeps unique preview cards collapsed during first-run until the admin asks to see them', async () => {
+    const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -285,22 +286,35 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Se muestran aparte para que el recorrido inicial siga centrado en salud, usuarios y auditoría\./i,
+          /Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
+
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
   it('deduplicates repeated preview cards so the console only shows each extra workflow once', async () => {
+    const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -328,13 +342,19 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
-      expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
-      expect(
-        screen.getAllByText(
-          /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
-        ),
-      ).toHaveLength(1);
+      expect(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
     });
+
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
+
+    expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(
+      screen.getAllByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });

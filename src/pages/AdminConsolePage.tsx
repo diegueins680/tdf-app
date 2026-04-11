@@ -15,6 +15,7 @@ import {
   DialogTitle,
   FormControl,
   FormHelperText,
+  Grid,
   InputLabel,
   MenuItem,
   Paper,
@@ -221,6 +222,7 @@ export default function AdminConsolePage() {
   const [editingUser, setEditingUser] = useState<AdminUserDTO | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleKey[]>([]);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const [showFirstRunAdditionalModules, setShowFirstRunAdditionalModules] = useState(false);
 
   const healthQuery = useQuery({
     queryKey: ['admin', 'health'],
@@ -326,6 +328,15 @@ export default function AdminConsolePage() {
         ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
         : null
     );
+  const additionalModulesCountLabel = consoleCards.length === 1
+    ? '1 módulo adicional'
+    : `${consoleCards.length} módulos adicionales`;
+  const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
+  useEffect(() => {
+    if (showGettingStartedGuidance) {
+      setShowFirstRunAdditionalModules(false);
+    }
+  }, [showGettingStartedGuidance]);
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -755,36 +766,52 @@ export default function AdminConsolePage() {
             <Typography variant="h6">Módulos adicionales</Typography>
             <Typography variant="body2" color="text.secondary">
               {showGettingStartedGuidance
-                ? 'Se muestran aparte para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
+                ? 'Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
                 : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
             </Typography>
+            {showGettingStartedGuidance && (
+              <Button
+                size="small"
+                variant="text"
+                sx={{ mt: 1 }}
+                onClick={() => setShowFirstRunAdditionalModules((currentValue) => !currentValue)}
+                aria-controls="admin-additional-modules-list"
+                aria-expanded={shouldShowAdditionalModuleCards}
+              >
+                {shouldShowAdditionalModuleCards
+                  ? 'Ocultar módulos adicionales'
+                  : `Mostrar ${additionalModulesCountLabel}`}
+              </Button>
+            )}
           </Box>
-          <Grid container spacing={2} sx={{ px: 2, pb: 2 }}>
-            {consoleCards.map((card) => (
-              <Grid item xs={12} md={4} key={card.cardId}>
-                <Card variant="outlined">
-                  <CardHeader title={card.title} />
-                  <CardContent>
-                    {card.body.map((paragraph, idx) => (
-                      <Typography
-                        key={`${card.cardId}-line-${idx}`}
-                        variant="body2"
-                        color="text.secondary"
-                        paragraph={idx < card.body.length - 1}
-                      >
-                        {paragraph}
-                      </Typography>
-                    ))}
-                    {consoleQuery.isFetching && !consoleQuery.isError && (
-                      <Typography variant="caption" color="text.secondary">
-                        {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          {shouldShowAdditionalModuleCards && (
+            <Grid container spacing={2} sx={{ px: 2, pb: 2 }} id="admin-additional-modules-list">
+              {consoleCards.map((card) => (
+                <Grid item xs={12} md={4} key={card.cardId}>
+                  <Card variant="outlined">
+                    <CardHeader title={card.title} />
+                    <CardContent>
+                      {card.body.map((paragraph, idx) => (
+                        <Typography
+                          key={`${card.cardId}-line-${idx}`}
+                          variant="body2"
+                          color="text.secondary"
+                          paragraph={idx < card.body.length - 1}
+                        >
+                          {paragraph}
+                        </Typography>
+                      ))}
+                      {consoleQuery.isFetching && !consoleQuery.isError && (
+                        <Typography variant="caption" color="text.secondary">
+                          {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
         </Paper>
       )}
 
