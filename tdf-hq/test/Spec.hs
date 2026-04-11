@@ -17,7 +17,10 @@ import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
 import TDF.API.Feedback (FeedbackPayload (..))
-import TDF.API.LiveSessions (LiveSessionIntakePayload (..), LiveSessionMusicianPayload (..))
+import TDF.API.LiveSessions
+    ( LiveSessionIntakePayload (..),
+      LiveSessionMusicianPayload (..),
+      LiveSessionSongPayload (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
@@ -1162,6 +1165,46 @@ main = hspec $ do
                             lsmIsExisting musician `shouldBe` False
                         musicians ->
                             expectationFailure ("Expected exactly one normalized musician, got: " <> show musicians)
+
+        it "accepts the canonical frontend musician and setlist keys instead of requiring internal prefixes" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"  Keys  \",\"email\":\" Player@Example.com \",\"isExisting\":false}]"
+                      )
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"songKey\":\"C#m\",\"sortOrder\":3}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected canonical live session payload to parse, got: " <> err)
+                Right payload -> do
+                    case lsiMusicians payload of
+                        [musician] -> do
+                            lsmName musician `shouldBe` "Keys"
+                            lsmEmail musician `shouldBe` Just "player@example.com"
+                            lsmIsExisting musician `shouldBe` False
+                        musicians ->
+                            expectationFailure ("Expected one musician from canonical payload, got: " <> show musicians)
+                    case lsiSetlist payload of
+                        [song] -> do
+                            lssTitle song `shouldBe` "Intro Jam"
+                            lssSongKey song `shouldBe` Just "C#m"
+                            lssSortOrder song `shouldBe` Just 3
+                        songs ->
+                            expectationFailure ("Expected one song from canonical payload, got: " <> show songs)
+
+        it "rejects conflicting canonical and legacy musician keys instead of accepting ambiguous payloads" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"lsmName\":\"Drums\",\"isExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Conflicting fields: name and lsmName must match when both are provided"
+                Right payload ->
+                    expectationFailure ("Expected conflicting musician aliases to be rejected, got: " <> show payload)
 
         it "rejects accepted terms without a terms version" $
             case fromMultipart (mkLiveSessionMultipart

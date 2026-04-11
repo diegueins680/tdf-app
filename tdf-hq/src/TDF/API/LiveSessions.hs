@@ -12,7 +12,9 @@ module TDF.API.LiveSessions
   , LiveSessionSongPayload(..)
   ) where
 
-import           Data.Aeson               (FromJSON, eitherDecodeStrict')
+import           Data.Aeson               (FromJSON(..), Object, Value, eitherDecodeStrict', withObject, (.:?))
+import qualified Data.Aeson.Key           as AesonKey
+import           Data.Aeson.Types         (Parser)
 import           Data.Char                (isAsciiLower, isDigit, isSpace)
 import           Data.List                (find)
 import           Data.Text                (Text)
@@ -30,7 +32,6 @@ import           Servant.Multipart        ( FileData
                                           , Tmp
                                           , fdInputName
                                           )
-
 type LiveSessionsAPI =
   "live-sessions" :>
     ( "intake" :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
@@ -46,7 +47,16 @@ data LiveSessionMusicianPayload = LiveSessionMusicianPayload
   , lsmIsExisting :: Bool
   } deriving (Show, Generic)
 
-instance FromJSON LiveSessionMusicianPayload
+instance FromJSON LiveSessionMusicianPayload where
+  parseJSON = withAliasedObject "LiveSessionMusicianPayload" $ \obj ->
+    LiveSessionMusicianPayload
+      <$> parseAliasedOptionalField obj "partyId" "lsmPartyId"
+      <*> parseAliasedRequiredField obj "name" "lsmName"
+      <*> parseAliasedOptionalField obj "email" "lsmEmail"
+      <*> parseAliasedOptionalField obj "instrument" "lsmInstrument"
+      <*> parseAliasedOptionalField obj "role" "lsmRole"
+      <*> parseAliasedOptionalField obj "notes" "lsmNotes"
+      <*> parseAliasedRequiredField obj "isExisting" "lsmIsExisting"
 
 data LiveSessionSongPayload = LiveSessionSongPayload
   { lssTitle     :: Text
@@ -56,7 +66,14 @@ data LiveSessionSongPayload = LiveSessionSongPayload
   , lssSortOrder :: Maybe Int
   } deriving (Show, Generic)
 
-instance FromJSON LiveSessionSongPayload
+instance FromJSON LiveSessionSongPayload where
+  parseJSON = withAliasedObject "LiveSessionSongPayload" $ \obj ->
+    LiveSessionSongPayload
+      <$> parseAliasedRequiredField obj "title" "lssTitle"
+      <*> parseAliasedOptionalField obj "bpm" "lssBpm"
+      <*> parseAliasedOptionalField obj "songKey" "lssSongKey"
+      <*> parseAliasedOptionalField obj "lyrics" "lssLyrics"
+      <*> parseAliasedOptionalField obj "sortOrder" "lssSortOrder"
 
 data LiveSessionIntakePayload = LiveSessionIntakePayload
   { lsiBandName     :: Text
@@ -239,3 +256,55 @@ readMaybeDay txt =
     (Left "Invalid date format for sessionDate (expected YYYY-MM-DD)")
     Right
     (parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack txt) :: Maybe Day)
+
+withAliasedObject :: String -> (Object -> Parser a) -> Value -> Parser a
+withAliasedObject = withObject
+
+parseAliasedRequiredField
+  :: (Eq a, FromJSON a)
+  => Object
+  -> Text
+  -> Text
+  -> Parser a
+parseAliasedRequiredField obj canonicalField legacyField = do
+  canonicalValue <- obj .:? AesonKey.fromText canonicalField
+  legacyValue <- obj .:? AesonKey.fromText legacyField
+  case (canonicalValue, legacyValue) of
+    (Just canonical, Just legacy)
+      | canonical == legacy -> pure canonical
+      | otherwise -> fail conflictingMessage
+    (Just canonical, Nothing) -> pure canonical
+    (Nothing, Just legacy) -> pure legacy
+    (Nothing, Nothing) -> fail missingMessage
+  where
+    conflictingMessage =
+      "Conflicting fields: "
+        <> T.unpack canonicalField
+        <> " and "
+        <> T.unpack legacyField
+        <> " must match when both are provided"
+    missingMessage = "Missing required field: " <> T.unpack canonicalField
+
+parseAliasedOptionalField
+  :: (Eq a, FromJSON a)
+  => Object
+  -> Text
+  -> Text
+  -> Parser (Maybe a)
+parseAliasedOptionalField obj canonicalField legacyField = do
+  canonicalValue <- obj .:? AesonKey.fromText canonicalField
+  legacyValue <- obj .:? AesonKey.fromText legacyField
+  case (canonicalValue, legacyValue) of
+    (Just canonical, Just legacy)
+      | canonical == legacy -> pure (Just canonical)
+      | otherwise -> fail conflictingMessage
+    (Just canonical, Nothing) -> pure (Just canonical)
+    (Nothing, Just legacy) -> pure (Just legacy)
+    (Nothing, Nothing) -> pure Nothing
+  where
+    conflictingMessage =
+      "Conflicting fields: "
+        <> T.unpack canonicalField
+        <> " and "
+        <> T.unpack legacyField
+        <> " must match when both are provided"
