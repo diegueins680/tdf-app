@@ -62,6 +62,9 @@ import TDF.ServerAuth
     , validateRequestedSignupRoles
     , validateSignupFanArtistIds
     )
+import TDF.ServerProposals
+    ( resolveOptionalProposalClientPartyReference
+    )
 import Test.Hspec
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -181,6 +184,42 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unknown booking party id to be rejected, got: " <> show value)
+
+    describe "resolveOptionalProposalClientPartyReference" $ do
+        it "preserves omitted refs and resolves existing proposal client parties" $ do
+            (expectedPartyId, omittedResult, resolvedResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Proposal Client"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "client@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                omitted <- resolveOptionalProposalClientPartyReference Nothing
+                resolved <- resolveOptionalProposalClientPartyReference (Just (fromSqlKey partyId))
+                pure (fromSqlKey partyId, omitted, resolved)
+
+            omittedResult `shouldBe` Right Nothing
+            resolvedResult `shouldBe` Right (Just (toSqlKey expectedPartyId))
+
+        it "rejects unknown proposal client party ids instead of persisting dangling CRM references" $ do
+            result <- runAuthSqlite $
+                resolveOptionalProposalClientPartyReference (Just 999999)
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "clientPartyId references an unknown party"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown proposal client party id to be rejected, got: " <> show value)
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts positive booking list identifiers" $

@@ -7,6 +7,7 @@
 module TDF.ServerProposals
   ( proposalsServer
   , ProposalContentSource(..)
+  , resolveOptionalProposalClientPartyReference
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
   , validateOptionalProposalClientPartyId
@@ -43,6 +44,7 @@ import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPie
 import           TDF.API.Proposals
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import           TDF.DB                     (Env(..))
+import           TDF.Models                 (Party)
 import qualified TDF.ModelsExtra            as ME
 import qualified TDF.Handlers.InputList     as InputList
 
@@ -103,13 +105,14 @@ proposalsServer user =
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
-      clientPartyId <- either throwError pure (validateOptionalProposalClientPartyId pcClientPartyId)
+      clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
+        >>= either throwError pure
       now <- liftIO getCurrentTime
       pipelineCardKey <- parseOptionalKey @ME.PipelineCard pcPipelineCardId
       let proposalRecord = ME.Proposal
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
-            , ME.proposalClientPartyId  = toSqlKey <$> clientPartyId
+            , ME.proposalClientPartyId  = clientPartyKey
             , ME.proposalContactName    = normalizeOptionalText pcContactName
             , ME.proposalContactEmail   = contactEmail
             , ME.proposalContactPhone   = normalizeOptionalText pcContactPhone
@@ -144,14 +147,17 @@ proposalsServer user =
           titleUpdate <- traverse (requireText "title") puTitle
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
           contactEmailUpdate <- either throwError pure (traverse validateOptionalProposalContactEmail puContactEmail)
-          clientPartyIdUpdate <- either throwError pure (traverse validateOptionalProposalClientPartyId puClientPartyId)
+          clientPartyIdUpdate <- case puClientPartyId of
+            Nothing -> pure Nothing
+            Just rawClientPartyId -> do
+              resolvedClientParty <- withPool (resolveOptionalProposalClientPartyReference rawClientPartyId)
+              Just <$> either throwError pure resolvedClientParty
           pipelineCardUpdate <- parseOptionalKeyUpdate @ME.PipelineCard puPipelineCardId
           let updates = catMaybes
                 [ fmap (ME.ProposalTitle =.) titleUpdate
                 , fmap (ME.ProposalStatus =.) statusUpdate
                 , fmap (ME.ProposalServiceKind =.) puServiceKind
-                , fmap (ME.ProposalClientPartyId =.)
-                    (fmap (fmap toSqlKey) clientPartyIdUpdate)
+                , fmap (ME.ProposalClientPartyId =.) clientPartyIdUpdate
                 , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) (normalizeOptionalUpdate puContactPhone)
@@ -380,6 +386,23 @@ validateOptionalProposalClientPartyId (Just rawClientPartyId)
       Left err400 { errBody = "clientPartyId must be a positive integer" }
   | otherwise =
       Right (Just rawClientPartyId)
+
+resolveOptionalProposalClientPartyReference
+  :: Maybe Int64
+  -> SqlPersistT IO (Either ServerError (Maybe (Key Party)))
+resolveOptionalProposalClientPartyReference rawClientPartyId =
+  case validateOptionalProposalClientPartyId rawClientPartyId of
+    Left err -> pure (Left err)
+    Right Nothing -> pure (Right Nothing)
+    Right (Just clientPartyId) -> do
+      let partyKey = toSqlKey clientPartyId
+      mParty <- getEntity partyKey
+      pure $
+        case mParty of
+          Nothing ->
+            Left err422
+              { errBody = encodeUtf8Lazy "clientPartyId references an unknown party" }
+          Just _ -> Right (Just partyKey)
 
 normalizeProposalStatus :: Text -> Maybe Text
 normalizeProposalStatus rawStatus =
