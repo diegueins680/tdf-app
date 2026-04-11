@@ -239,6 +239,7 @@ export default function MarketplaceOrdersPage() {
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
+  const showActiveFiltersTray = filtersDirty;
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -573,29 +574,37 @@ export default function MarketplaceOrdersPage() {
               ))}
             </TextField>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
-              <Box flex={1} />
-              {filtersActiveCount > 0 && (
-                <Button size="small" onClick={copyFiltersLink}>
-                  Copiar enlace de filtros
-                </Button>
+              {showActiveFiltersTray ? (
+                <>
+                  <Box flex={1} />
+                  {filtersActiveCount > 0 && (
+                    <Button size="small" onClick={copyFiltersLink}>
+                      Copiar enlace de filtros
+                    </Button>
+                  )}
+                  {statusFilter !== 'all' && (
+                    <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
+                  )}
+                  {providerFilter !== 'all' && (
+                    <Chip
+                      size="small"
+                      label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
+                      onDelete={() => setProviderFilter('all')}
+                    />
+                  )}
+                  {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
+                  {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
+                  {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
+                  {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
+                  <Button onClick={clearFilters} variant="text">
+                    Limpiar filtros
+                  </Button>
+                </>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+                  Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.
+                </Typography>
               )}
-              {statusFilter !== 'all' && (
-                <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
-              )}
-              {providerFilter !== 'all' && (
-                <Chip
-                  size="small"
-                  label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
-                  onDelete={() => setProviderFilter('all')}
-                />
-              )}
-              {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
-              {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
-              {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
-              {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
-              <Button onClick={clearFilters} disabled={!filtersDirty} variant="text">
-                Limpiar filtros
-              </Button>
             </Stack>
           </Stack>
           {paidTotal > 0 && paidVisible === 0 && filtersDirty && (

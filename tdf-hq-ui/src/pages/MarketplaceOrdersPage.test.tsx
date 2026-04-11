@@ -276,10 +276,13 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados.',
         );
+        expect(container.textContent).toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(queryActionByText(container, 'Últimos 7 días')).toBeNull();
         expect(queryActionByText(container, 'Tarjeta pendiente')).toBeNull();
-        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {
@@ -435,7 +438,10 @@ describe('MarketplaceOrdersPage', () => {
       await waitForExpectation(() => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
         expect(container.querySelector('tbody tr')).not.toBeNull();
-        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.textContent).toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
       });
 
       const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
@@ -446,6 +452,9 @@ describe('MarketplaceOrdersPage', () => {
           'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
         );
         expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(container.textContent).not.toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
         expect(container.querySelector('tbody tr')).toBeNull();
       });
