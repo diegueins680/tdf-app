@@ -2995,7 +2995,7 @@ listCourseRegistrationEmailEvents
   -> AppM [DTO.CourseEmailEventDTO]
 listCourseRegistrationEmailEvents regId mLimit = do
   let regKey = toSqlKey regId :: Key ME.CourseRegistration
-      capped = max 1 (min 500 (fromMaybe 100 mLimit))
+  capped <- either throwError pure (validateCourseRegistrationEmailEventListLimit mLimit)
   mRow <- runDB $ getEntity regKey
   case mRow of
     Nothing -> throwNotFound "Registro no encontrado"
@@ -5481,6 +5481,10 @@ validateCourseRegistrationListLimit _ (Just rawLimit)
       Left err400 { errBody = "limit must be between 1 and 500" }
   | otherwise =
       Right rawLimit
+
+validateCourseRegistrationEmailEventListLimit :: Maybe Int -> Either ServerError Int
+validateCourseRegistrationEmailEventListLimit =
+  validateCourseRegistrationListLimit 100
 
 validateMarketplaceOrderListLimit :: Maybe Int -> Either ServerError Int
 validateMarketplaceOrderListLimit Nothing = Right 50

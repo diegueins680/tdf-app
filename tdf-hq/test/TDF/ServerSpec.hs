@@ -36,6 +36,7 @@ import TDF.Server
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
+    , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
@@ -652,6 +653,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateCourseRegistrationListLimit 200 (Just 0))
             assertInvalid (validateCourseRegistrationListLimit 200 (Just 501))
             assertInvalid (validateCourseRegistrationListLimit 200 (Just (-3)))
+
+    describe "validateCourseRegistrationEmailEventListLimit" $ do
+        it "defaults omitted limits and preserves explicit values inside the supported page window" $ do
+            validateCourseRegistrationEmailEventListLimit Nothing `shouldBe` Right 100
+            validateCourseRegistrationEmailEventListLimit (Just 1) `shouldBe` Right 1
+            validateCourseRegistrationEmailEventListLimit (Just 500) `shouldBe` Right 500
+
+        it "rejects out-of-range limits instead of silently clamping course-registration email history" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "limit must be between 1 and 500"
+                    Right limitVal ->
+                        expectationFailure ("Expected invalid course-registration email-event limit to be rejected, got: " <> show limitVal)
+            assertInvalid (validateCourseRegistrationEmailEventListLimit (Just 0))
+            assertInvalid (validateCourseRegistrationEmailEventListLimit (Just 501))
+            assertInvalid (validateCourseRegistrationEmailEventListLimit (Just (-3)))
 
     describe "marketplace order list pagination validation" $ do
         it "keeps marketplace order defaults only when the caller omits pagination" $ do
