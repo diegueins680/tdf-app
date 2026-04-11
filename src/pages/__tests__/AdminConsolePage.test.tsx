@@ -580,17 +580,53 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Todas las cuentas administrables están activas\. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Roles/i })).toBeInTheDocument();
       expect(screen.getByText('Editar aquí')).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/^Activo$/i)).not.toBeInTheDocument();
     });
 
     expect(screen.getAllByText('Editar aquí')).toHaveLength(1);
+  });
+
+  it('shows the status column again as soon as one admin account needs that extra context', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+        status: 'INVITED',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(
+          /Todas las cuentas administrables están activas\. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+        ),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
+      expect(screen.getByText('Activo')).toBeInTheDocument();
+      expect(screen.getByText('Invitado')).toBeInTheDocument();
+    });
   });
 
   it('keeps save disabled in the role dialog until the admin makes a real change', async () => {

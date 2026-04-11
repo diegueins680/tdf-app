@@ -69,7 +69,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 ] as const;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
-const ADMIN_USER_TABLE_COLUMN_COUNT = 4;
+const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 3;
 const AUDIT_TABLE_COLUMN_COUNT = 5;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
@@ -304,6 +304,7 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : '—';
   const showUsersTable = isUsersLoading || users.length > 1;
+  const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
   const hasUsersSectionData = showUsersTable || singleAdminUser !== null;
@@ -319,7 +320,11 @@ export default function AdminConsolePage() {
     : (
       singleAdminUser
         ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
-        : null
+        : (
+          showUsersTable && !showUsersStatusColumn
+            ? 'Todas las cuentas administrables están activas. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida.'
+            : null
+        )
     );
   const auditSectionDescription = showGettingStartedGuidance
     ? null
@@ -556,13 +561,13 @@ export default function AdminConsolePage() {
                     </Stack>
                   </TableCell>
                   <TableCell>Último acceso</TableCell>
-                  <TableCell>Estado</TableCell>
+                  {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isUsersLoading && (
                   <TableRow>
-                    <TableCell colSpan={ADMIN_USER_TABLE_COLUMN_COUNT}>
+                    <TableCell colSpan={ADMIN_USER_TABLE_BASE_COLUMN_COUNT + (showUsersStatusColumn ? 1 : 0)}>
                       <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
                         <CircularProgress size={18} />
                         <Typography variant="body2" color="text.secondary">
@@ -609,7 +614,7 @@ export default function AdminConsolePage() {
                         </Button>
                       </TableCell>
                       <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
-                      <TableCell>{renderStatus(user.status)}</TableCell>
+                      {showUsersStatusColumn && <TableCell>{renderStatus(user.status)}</TableCell>}
                     </TableRow>
                   );
                 })}
