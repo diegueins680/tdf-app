@@ -12,7 +12,7 @@ import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Servant (ServerError (..))
-import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
@@ -209,6 +209,41 @@ main = hspec $ do
                     err `shouldContain` "consent must be a boolean"
                 Right payload ->
                     expectationFailure ("Expected invalid consent to be rejected, got: " <> show payload)
+
+        it "rejects duplicate scalar fields instead of silently taking the first value" $ do
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("title", "Shadow title")
+                    , ("description", "Steps to reproduce")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "Duplicate field: title"
+                Right payload ->
+                    expectationFailure ("Expected duplicate title field to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("consent", "true")
+                    , ("consent", "false")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "Duplicate field: consent"
+                Right payload ->
+                    expectationFailure ("Expected duplicate consent field to be rejected, got: " <> show payload)
+
+        it "rejects duplicate attachment fields instead of arbitrarily picking one upload" $
+            case fromMultipart (mkFeedbackMultipartWithFiles
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    ]
+                    [ mkFeedbackAttachment "first.png"
+                    , mkFeedbackAttachment "second.png"
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "Duplicate file field: attachment"
+                Right payload ->
+                    expectationFailure ("Expected duplicate attachment field to be rejected, got: " <> show payload)
 
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do
@@ -1396,4 +1431,20 @@ mkFeedbackMultipart fields =
     MultipartData
         { inputs = map (uncurry Input) fields
         , files = []
+        }
+
+mkFeedbackMultipartWithFiles :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkFeedbackMultipartWithFiles fields uploads =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = uploads
+        }
+
+mkFeedbackAttachment :: Text -> FileData Tmp
+mkFeedbackAttachment fileName =
+    FileData
+        { fdInputName = "attachment"
+        , fdFileName = fileName
+        , fdFileCType = "image/png"
+        , fdPayload = "/tmp/mock-feedback-upload"
         }

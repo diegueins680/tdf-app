@@ -42,10 +42,10 @@ instance FromMultipart Tmp FeedbackPayload where
     title <- lookupText "title" multipart
     description <- lookupText "description" multipart
     consent <- optionalBool "consent" multipart
-    let category    = optionalText "category" multipart
-        severity    = optionalText "severity" multipart
-        contact     = optionalText "contactEmail" multipart
-        attachment  = lookupFile "attachment" multipart
+    category <- optionalText "category" multipart
+    severity <- optionalText "severity" multipart
+    contact <- optionalText "contactEmail" multipart
+    attachment <- lookupFile "attachment" multipart
     pure FeedbackPayload
       { fpTitle        = T.strip title
       , fpDescription  = T.strip description
@@ -57,18 +57,21 @@ instance FromMultipart Tmp FeedbackPayload where
       }
     where
       lookupText name mp =
-        case findInput name mp of
-          Nothing -> Left ("Missing field: " <> T.unpack name)
-          Just val ->
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Left ("Missing field: " <> T.unpack name)
+          Right (Just val) ->
             let txt = T.strip (inputValueText val)
             in if T.null txt then Left ("Missing field: " <> T.unpack name) else Right txt
 
-      optionalText name mp = inputValueText <$> findInput name mp
+      optionalText name mp =
+        fmap (fmap inputValueText) (lookupSingleInput name mp)
 
       optionalBool name mp =
-        case findInput name mp of
-          Nothing  -> Right False
-          Just val -> parseBoolField name (inputValueText val)
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right False
+          Right (Just val) -> parseBoolField name (inputValueText val)
 
       parseBoolField name raw =
         case T.toLower (T.strip raw) of
@@ -84,11 +87,16 @@ instance FromMultipart Tmp FeedbackPayload where
           "off" -> Right False
           _ -> Left ("Invalid field: " <> T.unpack name <> " must be a boolean")
 
-      lookupFile name mp = lookup name [(fdInputName f, f) | f <- files mp]
+      lookupFile name mp =
+        case [file | file <- files mp, fdInputName file == name] of
+          [] -> Right Nothing
+          [file] -> Right (Just file)
+          _ -> Left ("Duplicate file field: " <> T.unpack name)
 
-      findInput name mp =
+      lookupSingleInput name mp =
         case filter (\(Input nm _) -> nm == name) (inputs mp) of
-          []      -> Nothing
-          (x : _) -> Just x
+          [] -> Right Nothing
+          [x] -> Right (Just x)
+          _ -> Left ("Duplicate field: " <> T.unpack name)
 
       inputValueText (Input _ value) = value
