@@ -1175,6 +1175,17 @@ main = hspec $ do
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@-example.com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example-.com") "Invalid email format"
 
+        it "rejects malformed completion tokens before lookup falls through to a misleading 403" $ do
+            let assertInvalid rawToken = case validateLeadCompletionRequest (CompleteReq rawToken "Ada Lovelace" "ada@example.com") of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "Completion token format is invalid"
+                    Right value ->
+                        expectationFailure ("Expected malformed completion token to be rejected, got " <> show value)
+            assertInvalid "token 123"
+            assertInvalid "token/123"
+            assertInvalid "token?123"
+
     describe "validateLeadCompletionId" $ do
         it "accepts only positive lead identifiers before the completion lookup runs" $
             validateLeadCompletionId 42 `shouldBe` Right 42

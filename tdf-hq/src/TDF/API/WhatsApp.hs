@@ -146,6 +146,8 @@ validateLeadCompletionRequest :: CompleteReq -> Either ServerError CompleteReq
 validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
   | T.null tokenValue =
       Left err400 { errBody = "Completion token is required" }
+  | not (isValidLeadCompletionToken tokenValue) =
+      Left err400 { errBody = "Completion token format is invalid" }
   | T.null nameValue || T.length nameValue > 200 =
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
   | not (isValidEmail emailValue) =
@@ -156,6 +158,14 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
     tokenValue = T.strip rawToken
     nameValue = T.strip rawName
     emailValue = T.toLower (T.strip rawEmail)
+
+isValidLeadCompletionToken :: Text -> Bool
+isValidLeadCompletionToken =
+  T.all isValidLeadCompletionTokenChar
+
+isValidLeadCompletionTokenChar :: Char -> Bool
+isValidLeadCompletionTokenChar c =
+  isAscii c && (isAlphaNum c || c == '-' || c == '_')
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId
