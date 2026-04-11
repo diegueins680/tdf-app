@@ -4,11 +4,13 @@ module TDF.ServerAdminSpec (spec) where
 
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Text as T
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import TDF.API.Admin (EmailTestRequest (..))
 import TDF.ServerAdmin (
+    buildAdminUsernameCandidate,
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
     normalizeAdminEmailBodyLines,
@@ -40,28 +42,46 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 `shouldBe` ["Hola", "Link: https://example.com"]
 
     describe "normalizeAdminUsername" $ do
-        it "canonicalizes explicit usernames to the stored admin-login shape" $ do
+        it "canonicalizes explicit usernames when they are already in the supported login shape" $ do
             normalizeAdminUsername " Ada.Example " `shouldBe` Just "ada.example"
-            normalizeAdminUsername " Team Lead! " `shouldBe` Just "teamlead"
 
-        it "rejects usernames that do not contain any supported login characters" $ do
+        it "rejects usernames that would need lossy rewriting or exceed the storage limit" $ do
             normalizeAdminUsername "   " `shouldBe` Nothing
             normalizeAdminUsername "!!!" `shouldBe` Nothing
+            normalizeAdminUsername " Team Lead! " `shouldBe` Nothing
+            normalizeAdminUsername (T.replicate 61 "a") `shouldBe` Nothing
+
+    describe "buildAdminUsernameCandidate" $ do
+        it "preserves collision suffixes within the 60-character username budget" $ do
+            let candidate = buildAdminUsernameCandidate (T.replicate 60 "a") 12
+            T.length candidate `shouldBe` 60
+            candidate `shouldBe` (T.replicate 57 "a" <> "-12")
 
     describe "validateOptionalAdminUsername" $ do
         it "keeps omitted usernames unset and normalizes explicit values" $ do
             validateOptionalAdminUsername Nothing `shouldBe` Right Nothing
-            validateOptionalAdminUsername (Just " Team Lead! ")
-                `shouldBe` Right (Just "teamlead")
+            validateOptionalAdminUsername (Just " Ada.Example ")
+                `shouldBe` Right (Just "ada.example")
 
-        it "rejects explicit blank or unusable usernames instead of silently falling back" $
-            case validateOptionalAdminUsername (Just "!!!") of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err)
-                        `shouldContain` "Username must contain at least one letter, number, dot, dash, or underscore"
-                Right value ->
-                    expectationFailure ("Expected invalid admin username to be rejected, got " <> show value)
+        it "rejects blank, unsupported, or too-long usernames instead of mutating them implicitly" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin username to be rejected, got " <> show value)
+            assertInvalid
+                "Username must contain at least one letter, number, dot, dash, or underscore"
+                (validateOptionalAdminUsername (Just "   "))
+            assertInvalid
+                "Username may only contain letters, numbers, dots, dashes, or underscores"
+                (validateOptionalAdminUsername (Just " Team Lead! "))
+            assertInvalid
+                "Username may only contain letters, numbers, dots, dashes, or underscores"
+                (validateOptionalAdminUsername (Just "!!!"))
+            assertInvalid
+                "Username must be 60 characters or fewer"
+                (validateOptionalAdminUsername (Just (T.replicate 61 "a")))
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $

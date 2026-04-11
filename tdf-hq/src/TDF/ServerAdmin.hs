@@ -7,6 +7,7 @@
 module TDF.ServerAdmin
   ( adminServer
   , dedupeAdminEmailRecipients
+  , buildAdminUsernameCandidate
   , normalizeAdminEmailAddress
   , normalizeAdminUsername
   , normalizeAdminEmailBodyLines
@@ -710,9 +711,10 @@ adminServer user =
 
         generateUniqueUsername base = go (0 :: Int)
           where
+            normalizedBase = sanitizeGeneratedAdminUsername base
+            root = if T.null normalizedBase then "tdf-user" else normalizedBase
             go attempt = do
-              let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
-                  candidate = T.take 60 (base <> suffix)
+              let candidate = buildAdminUsernameCandidate root attempt
               conflict <- withPool $ getBy (UniqueCredentialUsername candidate)
               case conflict of
                 Nothing -> pure candidate
@@ -1144,23 +1146,57 @@ normalizeAdminEmailAddress raw =
   let normalized = T.toLower (T.strip raw)
   in if isValidAdminEmailAddress normalized then Just normalized else Nothing
 
+adminUsernameMaxLength :: Int
+adminUsernameMaxLength = 60
+
+isAdminUsernameChar :: Char -> Bool
+isAdminUsernameChar c = isAlphaNum c || c `elem` (".-_" :: String)
+
+sanitizeGeneratedAdminUsername :: Text -> Text
+sanitizeGeneratedAdminUsername =
+  T.take adminUsernameMaxLength . T.filter isAdminUsernameChar . T.toLower . T.strip
+
 normalizeAdminUsername :: Text -> Maybe Text
 normalizeAdminUsername raw =
-  let lowered = T.toLower (T.strip raw)
-      cleaned = T.filter (\c -> isAlphaNum c || c `elem` (".-_" :: String)) lowered
-  in if T.null cleaned then Nothing else Just cleaned
+  let normalized = T.toLower (T.strip raw)
+  in
+    if T.null normalized
+         || T.length normalized > adminUsernameMaxLength
+         || not (T.all isAdminUsernameChar normalized)
+      then Nothing
+      else Just normalized
+
+buildAdminUsernameCandidate :: Text -> Int -> Text
+buildAdminUsernameCandidate root attempt =
+  let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+      rootBudget = max 0 (adminUsernameMaxLength - T.length suffix)
+  in T.take rootBudget root <> suffix
 
 validateOptionalAdminUsername :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalAdminUsername Nothing = Right Nothing
 validateOptionalAdminUsername (Just raw) =
-  case normalizeAdminUsername raw of
+  let trimmed = T.toLower (T.strip raw)
+  in case normalizeAdminUsername raw of
     Just normalized -> Right (Just normalized)
-    Nothing ->
-      Left err400
-        { errBody =
-            BL.fromStrict
-              (TE.encodeUtf8 "Username must contain at least one letter, number, dot, dash, or underscore")
-        }
+    Nothing
+      | T.null trimmed ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "Username must contain at least one letter, number, dot, dash, or underscore")
+            }
+      | T.length trimmed > adminUsernameMaxLength ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "Username must be 60 characters or fewer")
+            }
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "Username may only contain letters, numbers, dots, dashes, or underscores")
+            }
 
 isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
