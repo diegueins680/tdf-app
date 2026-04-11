@@ -290,16 +290,58 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps the list filter label distinct from the order editor status field', async () => {
+  it('replaces a single real status filter with context copy when the current list already shares one status', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+        moStatus: 'pending',
       }),
       buildOrder({
         moOrderId: 'order-2',
         moCartId: 'cart-2',
         moBuyerName: 'Grace Hopper',
         moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'datafast',
+        moStatus: 'pending',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(1);
+        expect(container.textContent).toContain(
+          'Todos los pedidos visibles comparten el estado Pendiente. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.',
+        );
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the list filter label distinct from the order editor status field', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
         moCreatedAt: '2030-01-02T12:00:00.000Z',
         moUpdatedAt: '2030-01-02T12:00:00.000Z',
       }),
@@ -336,6 +378,7 @@ describe('MarketplaceOrdersPage', () => {
         moOrderId: 'order-1',
         moBuyerName: 'Ada Lovelace',
         moPaymentProvider: 'paypal',
+        moStatus: 'pending',
       }),
       buildOrder({
         moOrderId: 'order-2',
@@ -343,6 +386,8 @@ describe('MarketplaceOrdersPage', () => {
         moBuyerName: 'Grace Hopper',
         moBuyerEmail: 'grace@example.com',
         moPaymentProvider: 'paypal',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
         moCreatedAt: '2030-01-02T12:00:00.000Z',
         moUpdatedAt: '2030-01-02T12:00:00.000Z',
       }),

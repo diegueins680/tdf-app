@@ -159,12 +159,13 @@ export default function MarketplaceOrdersPage() {
     }
   }, [statusInput, paidAtInput]);
 
-  const listContextOrders = useMemo(() => {
+  const normalizedProviderFilter = normalizeProviderFilterValue(providerFilter);
+
+  const baseContextOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     const fromDt = fromDate ? DateTime.fromISO(fromDate) : null;
     const toDt = toDate ? DateTime.fromISO(toDate).endOf('day') : null;
     return sortedOrders.filter((order) => {
-      if (statusFilter !== 'all' && order.moStatus !== statusFilter) return false;
       if (paidOnly && !order.moPaidAt) return false;
       const created = DateTime.fromISO(order.moCreatedAt);
       if (fromDt && created < fromDt) return false;
@@ -181,40 +182,69 @@ export default function MarketplaceOrdersPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [sortedOrders, search, statusFilter, fromDate, toDate, paidOnly]);
+  }, [sortedOrders, search, fromDate, toDate, paidOnly]);
+
+  const statusContextOrders = useMemo(() => {
+    if (normalizedProviderFilter === 'all') return baseContextOrders;
+    return baseContextOrders.filter(
+      (order) => normalizeProviderFilterValue(order.moPaymentProvider) === normalizedProviderFilter,
+    );
+  }, [baseContextOrders, normalizedProviderFilter]);
+
+  const availableStatusFilters = useMemo(
+    () =>
+      Array.from(
+        new Set(statusContextOrders.map((order) => order.moStatus.trim()).filter(Boolean)),
+      ),
+    [statusContextOrders],
+  );
+
+  const showStatusFilter = statusFilter !== 'all' || availableStatusFilters.length > 1;
+  const statusFilterHelperText = (() => {
+    if (statusFilter !== 'all' || statusContextOrders.length === 0 || showStatusFilter) return null;
+    return `Todos los pedidos visibles comparten el estado ${statusLabel(availableStatusFilters[0] ?? '')}. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.`;
+  })();
+
+  const providerContextOrders = useMemo(() => {
+    if (statusFilter === 'all') return baseContextOrders;
+    return baseContextOrders.filter((order) => order.moStatus === statusFilter);
+  }, [baseContextOrders, statusFilter]);
 
   const availableProviderFilters = useMemo(
     () =>
       Array.from(
         new Set(
-          listContextOrders
+          providerContextOrders
             .map((order) => normalizeProviderFilterValue(order.moPaymentProvider))
             .filter(Boolean),
         ),
       ),
-    [listContextOrders],
+    [providerContextOrders],
   );
   const hasOrdersWithoutProvider = useMemo(
-    () => listContextOrders.some((order) => !normalizeProviderFilterValue(order.moPaymentProvider)),
-    [listContextOrders],
+    () => providerContextOrders.some((order) => !normalizeProviderFilterValue(order.moPaymentProvider)),
+    [providerContextOrders],
   );
   const showProviderFilter =
     providerFilter !== 'all' ||
     availableProviderFilters.length > 1 ||
     (availableProviderFilters.length === 1 && hasOrdersWithoutProvider);
   const providerFilterHelperText = (() => {
-    if (providerFilter !== 'all' || listContextOrders.length === 0 || showProviderFilter) return null;
+    if (providerFilter !== 'all' || providerContextOrders.length === 0 || showProviderFilter) return null;
     if (availableProviderFilters.length === 0) {
       return 'Los pedidos visibles todavía no tienen método de pago registrado.';
     }
     return `Todos los pedidos visibles usan ${getMarketplacePaymentProviderLabel(availableProviderFilters[0] ?? '')}. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.`;
   })();
   const filtered = useMemo(() => {
-    if (providerFilter === 'all') return listContextOrders;
-    return listContextOrders.filter(
-      (order) => normalizeProviderFilterValue(order.moPaymentProvider) === providerFilter.toLowerCase(),
-    );
-  }, [listContextOrders, providerFilter]);
+    return baseContextOrders.filter((order) => {
+      if (statusFilter !== 'all' && order.moStatus !== statusFilter) return false;
+      if (normalizedProviderFilter !== 'all' && normalizeProviderFilterValue(order.moPaymentProvider) !== normalizedProviderFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [baseContextOrders, normalizedProviderFilter, statusFilter]);
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
@@ -468,22 +498,37 @@ export default function MarketplaceOrdersPage() {
               />
             </Grid>
             <Grid item xs={12} md={3} lg={3}>
-              <FormControl fullWidth>
-                <InputLabel id="status-filter-label">Estado del listado</InputLabel>
-                <Select
-                  labelId="status-filter-label"
-                  label="Estado del listado"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+              {showStatusFilter ? (
+                <FormControl fullWidth>
+                  <InputLabel id="status-filter-label">Estado del listado</InputLabel>
+                  <Select
+                    labelId="status-filter-label"
+                    label="Estado del listado"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">Todos</MenuItem>
+                    {STATUS_PRESETS.map((st) => (
+                      <MenuItem key={st.value} value={st.value}>
+                        {st.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : (
+                <Box
+                  sx={{
+                    height: '100%',
+                    minHeight: 56,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
                 >
-                  <MenuItem value="all">Todos</MenuItem>
-                  {STATUS_PRESETS.map((st) => (
-                    <MenuItem key={st.value} value={st.value}>
-                      {st.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <Typography variant="body2" color="text.secondary">
+                    {statusFilterHelperText}
+                  </Typography>
+                </Box>
+              )}
             </Grid>
             <Grid item xs={12} md={4} lg={3}>
               {showProviderFilter ? (
