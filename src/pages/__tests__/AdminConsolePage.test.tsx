@@ -525,14 +525,14 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
       expect(screen.getByText('Roles: Admin')).toBeInTheDocument();
       expect(screen.getByText('Último acceso: —')).toBeInTheDocument();
-      expect(screen.getByText('Estado: Activo')).toBeInTheDocument();
+      expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
     });
 
@@ -552,7 +552,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
@@ -560,6 +560,27 @@ describe('AdminConsolePage', () => {
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the single-user status only when that account needs attention', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        status: 'INVITED',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
+    });
   });
 
   it('keeps the roles edit hint inside the column header instead of repeating it above the table', async () => {

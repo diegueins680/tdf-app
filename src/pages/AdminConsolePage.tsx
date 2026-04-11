@@ -300,9 +300,10 @@ export default function AdminConsolePage() {
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
   const singleAdminUserIdentity = singleAdminUser ? summarizeAdminUserIdentity(singleAdminUser) : null;
-  const singleAdminUserStatusLabel = singleAdminUser?.status
+  const shouldShowSingleAdminUserStatus = singleAdminUser?.status != null && singleAdminUser.status !== 'ACTIVE';
+  const singleAdminUserStatusLabel = shouldShowSingleAdminUserStatus && singleAdminUser?.status
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
-    : '—';
+    : null;
   const showUsersTable = isUsersLoading || users.length > 1;
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
@@ -625,7 +626,7 @@ export default function AdminConsolePage() {
           <Box sx={{ px: 2, pb: 2 }}>
             <Stack spacing={1.25}>
               <Typography variant="body2" color="text.secondary">
-                Primer usuario administrable. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa.
+                Primer usuario administrable. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa.
               </Typography>
               <Stack
                 spacing={1}
@@ -671,9 +672,11 @@ export default function AdminConsolePage() {
                   <Typography variant="body2" color="text.secondary">
                     Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Estado: {singleAdminUserStatusLabel}
-                  </Typography>
+                  {singleAdminUserStatusLabel && (
+                    <Typography variant="body2" color="text.secondary">
+                      Estado: {singleAdminUserStatusLabel}
+                    </Typography>
+                  )}
                 </Stack>
               </Stack>
             </Stack>
