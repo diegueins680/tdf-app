@@ -16,7 +16,6 @@ import           Data.Aeson               (FromJSON(..), Object, Value, eitherDe
 import qualified Data.Aeson.Key           as AesonKey
 import           Data.Aeson.Types         (Parser)
 import           Data.Char                (isAsciiLower, isDigit, isSpace)
-import           Data.List                (find)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Data.Text.Encoding       (encodeUtf8)
@@ -99,7 +98,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     inputList <- optionalText "inputList" multipart
     contactEmail <- optionalEmail "contactEmail" multipart
     contactPhone <- optionalText "contactPhone" multipart
-    let riderFile    = lookupFile "rider" multipart
+    riderFile <- lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
     availability <- optionalText "availability" multipart
     acceptedTerms <- optionalBool "acceptedTerms" multipart
@@ -127,31 +126,36 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           , lsiRider        = riderFile
           }
     where
-      lookupInputByName name mp =
-        find (\(Input nm _) -> nm == name) (inputs mp)
       lookupText name mp =
-        maybe (Left ("Missing field: " <> T.unpack name)) (Right . inputValueText) (lookupInputByName name mp)
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Left ("Missing field: " <> T.unpack name)
+          Right (Just val) -> Right (inputValueText val)
       optionalText name mp =
-        case lookupInputByName name mp of
-          Nothing  -> Right Nothing
-          Just inp -> Right (normalizeOptionalText (inputValueText inp))
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right Nothing
+          Right (Just inp) -> Right (normalizeOptionalText (inputValueText inp))
       optionalEmail name mp =
-        case lookupInputByName name mp of
-          Nothing  -> Right Nothing
-          Just inp -> validateOptionalEmailText name (inputValueText inp)
-      lookupFile name mp = lookup name [(fdInputName f, f) | f <- files mp]
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right Nothing
+          Right (Just inp) -> validateOptionalEmailText name (inputValueText inp)
+      lookupFile = lookupSingleFile
       optionalDay name mp =
-        case lookupInputByName name mp of
-          Nothing  -> Right Nothing
-          Just inp ->
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right Nothing
+          Right (Just inp) ->
             let txt = T.strip (inputValueText inp)
             in if T.null txt
                  then Right Nothing
                  else fmap Just (readMaybeDay txt)
       optionalBool name mp =
-        case lookupInputByName name mp of
-          Nothing -> Right False
-          Just inp -> parseBoolField name (inputValueText inp)
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right False
+          Right (Just inp) -> parseBoolField name (inputValueText inp)
 
       decodeMusicians txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
@@ -246,6 +250,18 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           "no" -> Right False
           "off" -> Right False
           _ -> Left ("Invalid field: " <> T.unpack fieldName <> " must be a boolean")
+
+      lookupSingleInput name mp =
+        case filter (\(Input nm _) -> nm == name) (inputs mp) of
+          [] -> Right Nothing
+          [x] -> Right (Just x)
+          _ -> Left ("Duplicate field: " <> T.unpack name)
+
+      lookupSingleFile name mp =
+        case [file | file <- files mp, fdInputName file == name] of
+          [] -> Right Nothing
+          [file] -> Right (Just file)
+          _ -> Left ("Duplicate file field: " <> T.unpack name)
 
       inputValueText :: Input -> Text
       inputValueText (Input _ value) = value

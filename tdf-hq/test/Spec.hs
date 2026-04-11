@@ -1540,6 +1540,41 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected invalid musician partyId to be rejected, got: " <> show payload)
 
+        it "rejects duplicate scalar fields instead of silently taking the first multipart value" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("bandName", "Shadow Band")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Duplicate field: bandName"
+                Right payload ->
+                    expectationFailure ("Expected duplicate bandName field to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("acceptedTerms", "true")
+                    , ("acceptedTerms", "false")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Duplicate field: acceptedTerms"
+                Right payload ->
+                    expectationFailure ("Expected duplicate acceptedTerms field to be rejected, got: " <> show payload)
+
+        it "rejects duplicate rider uploads instead of arbitrarily picking one file" $
+            case fromMultipart (mkLiveSessionMultipartWithFiles
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    ]
+                    [ mkLiveSessionRider "first.pdf"
+                    , mkLiveSessionRider "second.pdf"
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Duplicate file field: rider"
+                Right payload ->
+                    expectationFailure ("Expected duplicate rider files to be rejected, got: " <> show payload)
+
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
@@ -1555,6 +1590,22 @@ mkLiveSessionMultipart fields =
     MultipartData
         { inputs = map (uncurry Input) fields
         , files = []
+        }
+
+mkLiveSessionMultipartWithFiles :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkLiveSessionMultipartWithFiles fields uploads =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = uploads
+        }
+
+mkLiveSessionRider :: Text -> FileData Tmp
+mkLiveSessionRider fileName =
+    FileData
+        { fdInputName = "rider"
+        , fdFileName = fileName
+        , fdFileCType = "application/pdf"
+        , fdPayload = "/tmp/mock-live-session-rider"
         }
 
 mkFeedbackMultipart :: [(Text, Text)] -> MultipartData Tmp
