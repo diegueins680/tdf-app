@@ -211,6 +211,27 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('0 usuarios');
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps refresh visible once the page has administrable users to revisit', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+        );
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
     } finally {

@@ -155,6 +155,7 @@ export default function AdminUsersPage() {
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
+  const showRefreshAction = usersQuery.isLoading || Boolean(usersQuery.error) || hasUsers;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
@@ -273,17 +274,19 @@ export default function AdminUsersPage() {
                   />
                 </>
               )}
-              <Tooltip title="Refrescar">
-                <span>
-                  <IconButton
-                    aria-label="Refrescar lista de usuarios"
-                    onClick={handleRefresh}
-                    disabled={usersQuery.isFetching}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
+              {showRefreshAction && (
+                <Tooltip title="Refrescar">
+                  <span>
+                    <IconButton
+                      aria-label="Refrescar lista de usuarios"
+                      onClick={handleRefresh}
+                      disabled={usersQuery.isFetching}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
             </Stack>
           </Stack>
         </Stack>
