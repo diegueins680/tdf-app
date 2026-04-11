@@ -5,6 +5,7 @@ module TDF.ServerSpec (spec) where
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
+import Data.Aeson (object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
@@ -16,10 +17,12 @@ import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSo
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
 import TDF.Server
-    ( normalizeOptionalInput
+    ( MetaBackfillOptions(..)
+    , normalizeOptionalInput
     , parseBookingStatus
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
+    , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
     , validateWhatsAppMessagesLimit
@@ -157,6 +160,51 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateWhatsAppMessagesLimit (Just 0))
             assertInvalid (validateWhatsAppMessagesLimit (Just 201))
             assertInvalid (validateWhatsAppMessagesLimit (Just (-5)))
+
+    describe "validateMetaBackfillOptions" $ do
+        it "keeps defaults only when omitted and normalizes supported explicit values" $ do
+            validateMetaBackfillOptions (object [])
+                `shouldBe` Right
+                    MetaBackfillOptions
+                        { mboPlatform = "all"
+                        , mboConversationLimit = 50
+                        , mboMessagesPerConversation = 50
+                        , mboOnlyUnread = True
+                        , mboDryRun = False
+                        }
+            validateMetaBackfillOptions
+                (object
+                    [ "platform" .= (" Instagram " :: T.Text)
+                    , "conversationLimit" .= (12 :: Int)
+                    , "messagesPerConversation" .= (7 :: Int)
+                    , "onlyUnread" .= False
+                    , "dryRun" .= True
+                    ])
+                `shouldBe` Right
+                    MetaBackfillOptions
+                        { mboPlatform = "instagram"
+                        , mboConversationLimit = 12
+                        , mboMessagesPerConversation = 7
+                        , mboOnlyUnread = False
+                        , mboDryRun = True
+                        }
+
+        it "rejects invalid explicit platform or limit values instead of broadening the backfill request" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right optionsVal ->
+                        expectationFailure ("Expected invalid meta backfill options to be rejected, got: " <> show optionsVal)
+            assertInvalid
+                "all, instagram, facebook"
+                (validateMetaBackfillOptions (object ["platform" .= ("threads" :: T.Text)]))
+            assertInvalid
+                "conversationLimit must be between 1 and 200"
+                (validateMetaBackfillOptions (object ["conversationLimit" .= (0 :: Int)]))
+            assertInvalid
+                "messagesPerConversation must be between 1 and 200"
+                (validateMetaBackfillOptions (object ["messagesPerConversation" .= (201 :: Int)]))
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do

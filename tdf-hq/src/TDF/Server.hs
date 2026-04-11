@@ -1031,30 +1031,56 @@ data MetaBackfillOptions = MetaBackfillOptions
   } deriving (Show, Eq)
 
 parseMetaBackfillOptions :: Value -> Maybe MetaBackfillOptions
-parseMetaBackfillOptions =
-  parseMaybe $ withObject "MetaBackfillOptions" $ \o -> do
-    mPlatform <- o .:? "platform"
-    mConversationLimit <- o .:? "conversationLimit"
-    mMessagesPerConversation <- o .:? "messagesPerConversation"
-    mOnlyUnread <- o .:? "onlyUnread"
-    mDryRun <- o .:? "dryRun"
-    let platformRaw = fromMaybe "all" (mPlatform :: Maybe Text)
-        platformNorm =
-          case T.toCaseFold (T.strip platformRaw) of
-            "instagram" -> "instagram"
-            "facebook" -> "facebook"
-            "all" -> "all"
-            _ -> "all"
-        clamp minV maxV v = max minV (min maxV v)
-        convLimit = clamp 1 200 (fromMaybe 50 (mConversationLimit :: Maybe Int))
-        msgLimit = clamp 1 200 (fromMaybe 50 (mMessagesPerConversation :: Maybe Int))
-    pure MetaBackfillOptions
-      { mboPlatform = platformNorm
-      , mboConversationLimit = convLimit
-      , mboMessagesPerConversation = msgLimit
-      , mboOnlyUnread = fromMaybe True (mOnlyUnread :: Maybe Bool)
-      , mboDryRun = fromMaybe False (mDryRun :: Maybe Bool)
-      }
+parseMetaBackfillOptions = either (const Nothing) Just . validateMetaBackfillOptions
+
+validateMetaBackfillOptions :: Value -> Either ServerError MetaBackfillOptions
+validateMetaBackfillOptions raw =
+  case parseMaybe (withObject "MetaBackfillOptions" parseOptions) raw of
+    Nothing -> metaBackfillBadRequest "Invalid meta backfill payload"
+    Just (mPlatform, mConversationLimit, mMessagesPerConversation, mOnlyUnread, mDryRun) -> do
+      platformNorm <- validateMetaBackfillPlatform mPlatform
+      convLimit <- validateMetaBackfillLimit "conversationLimit" 50 mConversationLimit
+      msgLimit <- validateMetaBackfillLimit "messagesPerConversation" 50 mMessagesPerConversation
+      pure MetaBackfillOptions
+        { mboPlatform = platformNorm
+        , mboConversationLimit = convLimit
+        , mboMessagesPerConversation = msgLimit
+        , mboOnlyUnread = fromMaybe True mOnlyUnread
+        , mboDryRun = fromMaybe False mDryRun
+        }
+  where
+    parseOptions o = do
+      mPlatform <- o .:? "platform"
+      mConversationLimit <- o .:? "conversationLimit"
+      mMessagesPerConversation <- o .:? "messagesPerConversation"
+      mOnlyUnread <- o .:? "onlyUnread"
+      mDryRun <- o .:? "dryRun"
+      pure ( mPlatform
+           , mConversationLimit
+           , mMessagesPerConversation
+           , mOnlyUnread
+           , mDryRun
+           )
+
+validateMetaBackfillPlatform :: Maybe Text -> Either ServerError Text
+validateMetaBackfillPlatform Nothing = pure "all"
+validateMetaBackfillPlatform (Just raw) =
+  case T.toCaseFold (T.strip raw) of
+    "instagram" -> pure "instagram"
+    "facebook" -> pure "facebook"
+    "all" -> pure "all"
+    _ -> metaBackfillBadRequest "platform must be one of: all, instagram, facebook"
+
+validateMetaBackfillLimit :: Text -> Int -> Maybe Int -> Either ServerError Int
+validateMetaBackfillLimit _ defaultValue Nothing = pure defaultValue
+validateMetaBackfillLimit fieldName _ (Just rawValue)
+  | rawValue < 1 || rawValue > 200 =
+      metaBackfillBadRequest (fieldName <> " must be between 1 and 200")
+  | otherwise = pure rawValue
+
+metaBackfillBadRequest :: Text -> Either ServerError a
+metaBackfillBadRequest msg =
+  Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 jsonTextField :: Text -> Value -> Maybe Text
 jsonTextField fieldName payload =
@@ -1415,7 +1441,7 @@ backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
 metaBackfillServer :: AuthedUser -> Value -> AppM Value
 metaBackfillServer user payload = do
   unless (hasRole Admin user) $ throwError err403
-  opts <- maybe (throwBadRequest "Invalid meta backfill payload") pure (parseMetaBackfillOptions payload)
+  opts <- either throwError pure (validateMetaBackfillOptions payload)
   Env{envConfig} <- ask
   manager <- liftIO $ newManager tlsManagerSettings
   rows <- runDB $
