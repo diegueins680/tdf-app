@@ -188,6 +188,23 @@ const buildAutomaticFilterHelpText = ({
   return `Los filtros se aplican automáticamente al cambiar. ${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
 };
 
+const getResetViewLabel = ({
+  hasCustomLimit,
+  hasSlugFilter,
+  hasStatusFilter,
+}: {
+  hasCustomLimit: boolean;
+  hasSlugFilter: boolean;
+  hasStatusFilter: boolean;
+}) => {
+  if (hasCustomLimit && (hasSlugFilter || hasStatusFilter)) return 'Restablecer vista';
+  if (hasCustomLimit) return 'Restablecer límite';
+  if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todas las cohortes';
+  if (!hasSlugFilter && hasStatusFilter) return 'Mostrar todos los estados';
+  if (hasSlugFilter && hasStatusFilter) return 'Restablecer filtros';
+  return 'Restablecer vista';
+};
+
 const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 
@@ -625,7 +642,9 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummary = Boolean(
     singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
   );
-  const hasManualFilters = slug.trim() !== '' || status !== 'all';
+  const hasSlugFilter = slug.trim() !== '';
+  const hasStatusFilter = status !== 'all';
+  const hasManualFilters = hasSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
   const activeFilterSummary = useMemo(
@@ -649,11 +668,11 @@ export default function CourseRegistrationsAdminPage() {
   const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
     ? summarizedVisibleSourceLabel
     : '';
-  const resetViewLabel = hasManualFilters
-    ? hasCustomLimit
-      ? 'Restablecer vista'
-      : 'Restablecer filtros'
-    : 'Restablecer límite';
+  const resetViewLabel = getResetViewLabel({
+    hasCustomLimit,
+    hasSlugFilter,
+    hasStatusFilter,
+  });
   const filteredEmptyStateRecoveryHint = 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit

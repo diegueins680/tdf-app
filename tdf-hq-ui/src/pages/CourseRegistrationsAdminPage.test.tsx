@@ -711,6 +711,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).toContain('Fuente: landing');
+      expect(getButtonByText(container, 'Mostrar todas las cohortes')).toBeTruthy();
     });
 
     await cleanup();
@@ -1401,13 +1402,13 @@ describe('CourseRegistrationsAdminPage', () => {
         'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
       );
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
-      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(getButtonByText(container, 'Mostrar todos los estados')).toBeTruthy();
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Restablecer filtros'));
+      clickButton(getButtonByText(container, 'Mostrar todos los estados'));
       await flushPromises();
       await flushPromises();
     });
@@ -1468,8 +1469,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
-      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
-      expect(countButtonsByText(container, 'Restablecer filtros')).toBe(1);
+      expect(getButtonByText(container, 'Mostrar todos los estados')).toBeTruthy();
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).not.toBeNull();
       expect(
         Array.from(container.querySelectorAll('button')).some(
