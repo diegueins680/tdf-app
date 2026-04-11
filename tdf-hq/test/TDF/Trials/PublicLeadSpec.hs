@@ -73,6 +73,14 @@ spec = do
 
       storedName `shouldBe` "student@example.com"
 
+    it "accepts common dot-and-plus email aliases while still normalizing casing" $ do
+      storedEmail <- runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- createOrFetchParty (Just "Test User") (Just " User.Name+Trial@Example.com ") Nothing now
+        Models.partyPrimaryEmail . entityVal <$> getJustEntity partyId
+
+      storedEmail `shouldBe` Just "user.name+trial@example.com"
+
     it "rejects explicitly invalid nonblank phones instead of silently discarding them" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "---")
       case result of
@@ -107,6 +115,10 @@ spec = do
       assertRejected "user@example..com"
       assertRejected "user@-example.com"
       assertRejected "user@example-.com"
+      assertRejected ".user@example.com"
+      assertRejected "user.@example.com"
+      assertRejected "user..name@example.com"
+      assertRejected "user()@example.com"
 
     it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
