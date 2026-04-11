@@ -562,6 +562,12 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.',
+        );
+        expect(container.textContent).not.toContain(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
         expect(container.textContent).not.toContain(
           'WhatsApp se habilita cuando el usuario ya tiene un número disponible.',
         );
@@ -574,6 +580,37 @@ describe('AdminUsersPage', () => {
         const secondRow = getRowByUserId(container, 202);
         expect(firstRow.textContent).toContain('Contacto pendiente');
         expect(secondRow.textContent).toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('swaps the lone-user intro to contact setup guidance when the first admin still lacks a WhatsApp-ready number', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-no-whatsapp',
+        primaryEmail: 'solo@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(container.textContent).not.toContain(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
+        expect(getRowByUserId(container, 101).textContent).toContain('WhatsApp pendiente');
       });
     } finally {
       await cleanup();

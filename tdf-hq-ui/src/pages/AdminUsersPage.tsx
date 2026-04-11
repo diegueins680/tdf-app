@@ -60,8 +60,12 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const ADMIN_USERS_PAGE_INTRO =
   'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
+const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
+  'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_USER_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
+const SINGLE_USER_CONTACT_SETUP_GUIDANCE =
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.';
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
@@ -160,6 +164,7 @@ export default function AdminUsersPage() {
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
   const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
+  const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = hasMultipleUsers || hasActiveSearch;
   const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;
@@ -212,6 +217,12 @@ export default function AdminUsersPage() {
 
     return parts.join(' ');
   }, [activeScopeSummary, sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance, visibleUsersSummary]);
+  const generalIntro = hasVisibleWhatsAppAction
+    ? ADMIN_USERS_PAGE_INTRO
+    : ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO;
+  const singleUserGuidance = hasVisibleWhatsAppAction
+    ? SINGLE_USER_GUIDANCE
+    : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
 
   return (
     <>
@@ -227,7 +238,7 @@ export default function AdminUsersPage() {
               <Typography variant="h4" fontWeight={700}>Usuarios</Typography>
               {showGeneralIntro && (
                 <Typography variant="body2" color="text.secondary">
-                  {ADMIN_USERS_PAGE_INTRO}
+                  {generalIntro}
                 </Typography>
               )}
               {showSearchField && (
@@ -251,7 +262,7 @@ export default function AdminUsersPage() {
               )}
               {showSingleUserGuidance && (
                 <Typography variant="body2" color="text.secondary">
-                  {SINGLE_USER_GUIDANCE}
+                  {singleUserGuidance}
                 </Typography>
               )}
               {headerGuidance && (
