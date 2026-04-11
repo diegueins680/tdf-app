@@ -16,6 +16,7 @@ import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
 import           Data.List              (foldl', sortOn)
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
@@ -461,6 +462,45 @@ validateTrialScheduleInput input@TrialScheduleIn{..}
       Left err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
   | otherwise =
       Right input
+
+badRequestText :: Text -> ServerError
+badRequestText message =
+  err400 { errBody = BL8.pack (T.unpack message) }
+
+validatePositiveIntField :: Text -> Int -> Either ServerError Int
+validatePositiveIntField fieldName value
+  | value <= 0 =
+      Left (badRequestText (fieldName <> " must be a positive integer"))
+  | otherwise =
+      Right value
+
+validateOptionalPositiveIntField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
+validateOptionalPositiveIntField fieldName =
+  traverse (validatePositiveIntField fieldName)
+
+validateNonNegativeIntField :: Text -> Int -> Either ServerError Int
+validateNonNegativeIntField fieldName value
+  | value < 0 =
+      Left (badRequestText (fieldName <> " must be zero or a positive integer"))
+  | otherwise =
+      Right value
+
+validatePurchaseInput :: PurchaseIn -> Either ServerError PurchaseIn
+validatePurchaseInput input@PurchaseIn{..} = do
+  _ <- validatePositiveIntField "studentId" studentId
+  _ <- validatePositiveIntField "packageId" packageId
+  _ <- validateOptionalPositiveIntField "sellerId" sellerId
+  _ <- validateOptionalPositiveIntField "commissionedTeacherId" commissionedTeacherId
+  _ <- validateOptionalPositiveIntField "trialRequestId" trialRequestId
+  _ <- validateNonNegativeIntField "priceCents" priceCents
+  discount <- maybe (Right 0) (validateNonNegativeIntField "discountCents") discountCents
+  tax <- maybe (Right 0) (validateNonNegativeIntField "taxCents") taxCents
+  when (discount > priceCents) $
+    Left (badRequestText "discountCents must not exceed priceCents")
+  let total = priceCents - discount + tax
+  when (total < 0) $
+    Left (badRequestText "purchase total must not be negative")
+  Right input
 
 normalizeTrialRequestStatusFilter :: Text -> Maybe Text
 normalizeTrialRequestStatusFilter rawStatus =
@@ -1276,8 +1316,9 @@ privateTrialsServer user@AuthedUser{..} =
            ]
 
     purchaseH :: PurchaseIn -> AppM PurchaseOut
-    purchaseH PurchaseIn{..} = do
+    purchaseH rawInput = do
       ensureSchoolStaffAccess
+      PurchaseIn{..} <- either (liftIO . throwIO) pure (validatePurchaseInput rawInput)
       now <- liftIO getCurrentTime
       let studentKey = intKey studentId
           packageKey = intKey packageId

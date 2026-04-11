@@ -24,12 +24,19 @@ import TDF.Trials.DTO
   , TrialRequestOut (..)
   , TrialScheduleIn (..)
   )
-import TDF.Trials.API (ClassSessionIn (..), ClassSessionOut, InterestIn (..), TrialQueueItem)
+import TDF.Trials.API
+  ( ClassSessionIn (..)
+  , ClassSessionOut
+  , InterestIn (..)
+  , PurchaseIn (..)
+  , TrialQueueItem
+  )
 import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
   , validateOptionalTrialRequestStatusFilter
+  , validatePurchaseInput
   , validatePreferredSlots
   , validatePreferredSlotsAt
   , validatePublicInterestInput
@@ -303,6 +310,44 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotEnd 0)
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
+
+  describe "validatePurchaseInput" $ do
+    let validPurchase :: PurchaseIn
+        validPurchase = PurchaseIn 1 2 12000 (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 5)
+
+    it "accepts positive ids and non-negative purchase totals" $
+      case validatePurchaseInput validPurchase of
+        Left err ->
+          expectationFailure ("Expected valid purchase input to be accepted, got " <> show err)
+        Right _ ->
+          pure ()
+
+    it "rejects malformed ids and impossible money fields before persisting a purchase" $ do
+      let assertInvalid expectedMessage purchase =
+            case validatePurchaseInput purchase of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid purchase input to be rejected"
+      assertInvalid "studentId must be a positive integer" $
+        PurchaseIn 0 2 12000 (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 5)
+      assertInvalid "packageId must be a positive integer" $
+        PurchaseIn 1 (-1) 12000 (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 5)
+      assertInvalid "sellerId must be a positive integer" $
+        PurchaseIn 1 2 12000 (Just 1000) (Just 1440) (Just 0) (Just 4) (Just 5)
+      assertInvalid "commissionedTeacherId must be a positive integer" $
+        PurchaseIn 1 2 12000 (Just 1000) (Just 1440) (Just 3) (Just (-3)) (Just 5)
+      assertInvalid "trialRequestId must be a positive integer" $
+        PurchaseIn 1 2 12000 (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 0)
+      assertInvalid "priceCents must be zero or a positive integer" $
+        PurchaseIn 1 2 (-1) (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 5)
+      assertInvalid "discountCents must be zero or a positive integer" $
+        PurchaseIn 1 2 12000 (Just (-1)) (Just 1440) (Just 3) (Just 4) (Just 5)
+      assertInvalid "taxCents must be zero or a positive integer" $
+        PurchaseIn 1 2 12000 (Just 1000) (Just (-1)) (Just 3) (Just 4) (Just 5)
+      assertInvalid "discountCents must not exceed priceCents" $
+        PurchaseIn 1 2 12000 (Just 13000) (Just 1440) (Just 3) (Just 4) (Just 5)
 
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do
