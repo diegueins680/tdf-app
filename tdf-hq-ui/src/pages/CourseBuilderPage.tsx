@@ -37,10 +37,10 @@ const splitTopics = (input: string) =>
     .filter(Boolean);
 
 const DEFAULT_SESSIONS: SessionInput[] = [
-  { label: 'Sábado 1 · Introducción', date: '2026-04-11' },
-  { label: 'Sábado 2 · Grabación', date: '2026-04-18' },
-  { label: 'Sábado 3 · Mezcla', date: '2026-04-25' },
-  { label: 'Sábado 4 · Masterización', date: '2026-05-02' },
+  { label: 'Sábado 1 · Introducción', date: '2026-04-25' },
+  { label: 'Sábado 2 · Grabación', date: '2026-05-02' },
+  { label: 'Sábado 3 · Mezcla', date: '2026-05-09' },
+  { label: 'Sábado 4 · Masterización', date: '2026-05-16' },
 ];
 
 const DEFAULT_SYLLABUS: SyllabusInput[] = [
@@ -100,7 +100,7 @@ const DEFAULT_SLUG = COURSE_DEFAULTS.slug || generateSlug(DEFAULT_TITLE, DEFAULT
 
 export default function CourseBuilderPage() {
   const [title, setTitle] = useState(DEFAULT_TITLE);
-  const [subtitle, setSubtitle] = useState('Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril');
+  const [subtitle, setSubtitle] = useState('Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: último sábado de abril');
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('Cuatro sábados (16 horas en total)');
   const [price, setPrice] = useState('150');

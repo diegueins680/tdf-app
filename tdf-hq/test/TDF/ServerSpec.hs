@@ -11,7 +11,7 @@ import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), get, insert)
-import Database.Persist.Sql (SqlPersistT, rawExecute, toSqlKey)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
@@ -22,6 +22,7 @@ import TDF.Server
     , parseBookingStatus
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
+    , resolveOptionalBookingPartyReference
     , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
@@ -130,6 +131,54 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "resolveOptionalBookingPartyReference" $ do
+        it "preserves omitted refs and resolves existing booking parties" $ do
+            (expectedPartyId, omittedResult, resolvedResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Booked Engineer"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "engineer@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                omitted <- resolveOptionalBookingPartyReference "engineerPartyId" Nothing
+                resolved <- resolveOptionalBookingPartyReference "engineerPartyId" (Just (fromSqlKey partyId))
+                pure (fromSqlKey partyId, omitted, resolved)
+
+            case omittedResult of
+                Right Nothing -> pure ()
+                Right other ->
+                    expectationFailure ("Expected omitted booking party reference to stay empty, got: " <> show other)
+                Left serverErr ->
+                    expectationFailure ("Expected omitted booking party reference to succeed, got: " <> show serverErr)
+            case resolvedResult of
+                Right (Just (Entity resolvedKey resolvedParty)) -> do
+                    fromSqlKey resolvedKey `shouldBe` expectedPartyId
+                    partyDisplayName resolvedParty `shouldBe` "Booked Engineer"
+                Right other ->
+                    expectationFailure ("Expected booking party reference to resolve, got: " <> show other)
+                Left serverErr ->
+                    expectationFailure ("Expected booking party reference to resolve, got: " <> show serverErr)
+
+        it "rejects unknown booking party ids instead of deferring to a foreign-key failure" $ do
+            result <- runAuthSqlite $
+                resolveOptionalBookingPartyReference "engineerPartyId" (Just 999999)
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "engineerPartyId references an unknown party"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown booking party id to be rejected, got: " <> show value)
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts positive booking list identifiers" $

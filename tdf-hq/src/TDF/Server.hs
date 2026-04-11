@@ -2176,10 +2176,10 @@ courseMetadataFor cfg mWaContact slugVal =
     else
       let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
           sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 4 11)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 4 18)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 4 25)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 5 2)
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 4 25)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 5 2)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 5 9)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 5 16)
             ]
           syllabus =
             [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]
@@ -2190,7 +2190,7 @@ courseMetadataFor cfg mWaContact slugVal =
       in Just CourseMetadata
         { slug = fallbackSlug
         , title = "Curso de Producción Musical"
-        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: segundo sábado de abril"
+        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: último sábado de abril"
         , format = "Presencial"
         , duration = "Cuatro sábados (16 horas en total)"
         , price = productionCoursePrice
@@ -5063,6 +5063,7 @@ courseCalendarBookings = do
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
   when (T.null (T.strip pbFullName)) (throwBadRequest "nombre requerido")
+  Env pool _ <- ask
   (emailClean, phoneClean) <-
     either throwError pure $
       validatePublicBookingContactDetails pbEmail pbPhone
@@ -5078,25 +5079,24 @@ createPublicBooking PublicBookingReq{..} = do
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
+  mEngineerParty <-
+    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
+      >>= either throwError pure
   let endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
       notesClean   = normalizeOptionalInput pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) emailClean phoneClean
-  Env pool _ <- ask
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) pbStartsAt endsAt
-  mEngineerParty <- case engineerIdClean of
-    Nothing -> pure Nothing
-    Just pid -> liftIO $ flip runSqlPool pool $ get (toSqlKey (fromIntegral pid) :: Key Party)
   let resolvedEngineerName =
         engineerNameClean
-          <|> (M.partyDisplayName <$> mEngineerParty)
+          <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
   now <- liftIO getCurrentTime
   let bookingRecord = Booking
         { bookingTitle          = buildTitle serviceTypeClean pbFullName
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = Just partyId
         , bookingServiceType    = serviceTypeClean
-        , bookingEngineerPartyId = engineerIdClean >>= (Just . toSqlKey . fromIntegral)
+        , bookingEngineerPartyId = entityKey <$> mEngineerParty
         , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = pbStartsAt
         , bookingEndsAt         = endsAt
@@ -5164,9 +5164,15 @@ createBooking user req = do
   partyIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "partyId" (cbPartyId req)
+  mParty <-
+    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "partyId" partyIdClean))
+      >>= either throwError pure
+  mEngineerParty <-
+    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
+      >>= either throwError pure
   let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
-      partyKey         = fmap (toSqlKey . fromIntegral) partyIdClean
+      partyKey         = entityKey <$> mParty
       requestedRooms   = fromMaybe [] (cbResourceIds req)
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
@@ -5174,19 +5180,16 @@ createBooking user req = do
 
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
-  mEngineerParty <- case engineerIdClean of
-    Nothing -> pure Nothing
-    Just pid -> liftIO $ flip runSqlPool pool $ get (toSqlKey (fromIntegral pid) :: Key Party)
   let resolvedEngineerName =
         engineerNameClean
-          <|> (M.partyDisplayName <$> mEngineerParty)
+          <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
 
   let bookingRecord = Booking
         { bookingTitle          = cbTitle req
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = partyKey
         , bookingServiceType    = serviceTypeClean
-        , bookingEngineerPartyId = engineerIdClean >>= (Just . toSqlKey . fromIntegral)
+        , bookingEngineerPartyId = entityKey <$> mEngineerParty
         , bookingEngineerName    = resolvedEngineerName
         , bookingStartsAt       = cbStartsAt req
         , bookingEndsAt         = cbEndsAt req
@@ -5251,39 +5254,60 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
-        case traverse parseBookingStatus (ubStatus req) of
-          Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
-          Right requestedStatus -> do
-            let applyText fallback Nothing = fallback
-                applyText fallback (Just val) =
-                  let trimmed = T.strip val
-                  in if T.null trimmed then fallback else trimmed
-                applyMaybeText fallback Nothing = fallback
-                applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
-                updated = current
-                  { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
-                  , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
-                  , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
-                  , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
-                  , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
-                  , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
-                  , bookingEngineerPartyId =
-                      maybe
-                        (bookingEngineerPartyId current)
-                        (Just . toSqlKey . fromIntegral)
-                        requestedEngineerId
-                  , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
-                  }
-            case validateBookingTimeRange (bookingStartsAt updated) (bookingEndsAt updated) of
-              Left bookingErr -> pure (Left bookingErr)
-              Right () ->
-                case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
-                  Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
-                  Right () -> do
-                    replace bookingId updated
-                    dtos <- buildBookingDTOs [Entity bookingId updated]
-                    pure (maybe (Left err500) Right (listToMaybe dtos))
+        requestedEngineerRef <- resolveOptionalBookingPartyReference "engineerPartyId" requestedEngineerId
+        case requestedEngineerRef of
+          Left refErr -> pure (Left refErr)
+          Right requestedEngineerParty ->
+            case traverse parseBookingStatus (ubStatus req) of
+              Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
+              Right requestedStatus -> do
+                let applyText fallback Nothing = fallback
+                    applyText fallback (Just val) =
+                      let trimmed = T.strip val
+                      in if T.null trimmed then fallback else trimmed
+                    applyMaybeText fallback Nothing = fallback
+                    applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
+                    updated = current
+                      { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
+                      , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
+                      , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
+                      , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
+                      , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
+                      , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)
+                      , bookingEngineerPartyId =
+                          maybe
+                            (bookingEngineerPartyId current)
+                            (Just . entityKey)
+                            requestedEngineerParty
+                      , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
+                      }
+                case validateBookingTimeRange (bookingStartsAt updated) (bookingEndsAt updated) of
+                  Left bookingErr -> pure (Left bookingErr)
+                  Right () ->
+                    case validateEngineer (bookingServiceType updated) (fmap fromSqlKey (bookingEngineerPartyId updated)) (bookingEngineerName updated) of
+                      Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
+                      Right () -> do
+                        replace bookingId updated
+                        dtos <- buildBookingDTOs [Entity bookingId updated]
+                        pure (maybe (Left err500) Right (listToMaybe dtos))
   either throwError pure result
+
+resolveOptionalBookingPartyReference
+  :: Text
+  -> Maybe Int64
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
+resolveOptionalBookingPartyReference _ Nothing = pure (Right Nothing)
+resolveOptionalBookingPartyReference fieldName (Just rawId) = do
+  let partyKey = toSqlKey (fromIntegral rawId) :: Key Party
+  mParty <- getEntity partyKey
+  pure $
+    case mParty of
+      Nothing ->
+        Left err422
+          { errBody =
+              BL.fromStrict (TE.encodeUtf8 (fieldName <> " references an unknown party"))
+          }
+      Just partyEnt -> Right (Just partyEnt)
 
 
 loadBookingResourceMap :: [Key Booking] -> SqlPersistT IO (Map.Map (Key Booking) [BookingResourceDTO])
