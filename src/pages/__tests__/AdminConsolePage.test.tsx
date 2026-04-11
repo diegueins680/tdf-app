@@ -256,7 +256,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('keeps unique preview cards that add context beyond the built-in admin sections', async () => {
+  it('keeps unique preview cards while preserving first-run guidance until core admin data exists', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -275,15 +275,22 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Los módulos adicionales aparecen aparte; primero ubica salud, usuarios y auditoría\./i,
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
       expect(
         screen.getByText(
           /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
   it('deduplicates repeated preview cards so the console only shows each extra workflow once', async () => {
@@ -312,6 +319,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
       expect(
         screen.getAllByText(
@@ -320,7 +328,7 @@ describe('AdminConsolePage', () => {
       ).toHaveLength(1);
     });
 
-    expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
@@ -431,6 +439,17 @@ describe('AdminConsolePage', () => {
         },
       ],
     });
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
 
     renderPage();
 
@@ -442,6 +461,7 @@ describe('AdminConsolePage', () => {
           /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.getByText('roles.updated')).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();

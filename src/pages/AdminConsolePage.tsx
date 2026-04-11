@@ -311,7 +311,6 @@ export default function AdminConsolePage() {
     !consoleQuery.isPending
     && !usersQuery.isLoading
     && !auditQuery.isLoading
-    && consoleCards.length === 0
     && users.length === 0
     && audits.length === 0;
   const usersSectionDescription = showGettingStartedGuidance
@@ -424,6 +423,11 @@ export default function AdminConsolePage() {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
               </Typography>
+              {consoleCards.length > 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Los módulos adicionales aparecen aparte; primero ubica salud, usuarios y auditoría.
+                </Typography>
+              )}
             </Box>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
               {GETTING_STARTED_ADMIN_SECTIONS.map((section) => (
