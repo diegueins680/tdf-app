@@ -9,6 +9,7 @@ module TDF.ServerProposals
   , ProposalContentSource(..)
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
+  , validateOptionalProposalClientPartyId
   , validateProposalContentSource
   , validateProposalStatus
   , validateProposalVersionNumber
@@ -20,6 +21,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
+import           Data.Int                   (Int64)
 import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, maybeToList)
@@ -101,12 +103,13 @@ proposalsServer user =
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
+      clientPartyId <- either throwError pure (validateOptionalProposalClientPartyId pcClientPartyId)
       now <- liftIO getCurrentTime
       pipelineCardKey <- parseOptionalKey @ME.PipelineCard pcPipelineCardId
       let proposalRecord = ME.Proposal
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
-            , ME.proposalClientPartyId  = toSqlKey <$> pcClientPartyId
+            , ME.proposalClientPartyId  = toSqlKey <$> clientPartyId
             , ME.proposalContactName    = normalizeOptionalText pcContactName
             , ME.proposalContactEmail   = contactEmail
             , ME.proposalContactPhone   = normalizeOptionalText pcContactPhone
@@ -141,13 +144,14 @@ proposalsServer user =
           titleUpdate <- traverse (requireText "title") puTitle
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
           contactEmailUpdate <- either throwError pure (traverse validateOptionalProposalContactEmail puContactEmail)
+          clientPartyIdUpdate <- either throwError pure (traverse validateOptionalProposalClientPartyId puClientPartyId)
           pipelineCardUpdate <- parseOptionalKeyUpdate @ME.PipelineCard puPipelineCardId
           let updates = catMaybes
                 [ fmap (ME.ProposalTitle =.) titleUpdate
                 , fmap (ME.ProposalStatus =.) statusUpdate
                 , fmap (ME.ProposalServiceKind =.) puServiceKind
                 , fmap (ME.ProposalClientPartyId =.)
-                    (fmap (fmap toSqlKey) puClientPartyId)
+                    (fmap (fmap toSqlKey) clientPartyIdUpdate)
                 , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) (normalizeOptionalUpdate puContactPhone)
@@ -368,6 +372,14 @@ validateOptionalProposalContactEmail (Just rawEmail) =
       in if isValidProposalEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
+validateOptionalProposalClientPartyId Nothing = Right Nothing
+validateOptionalProposalClientPartyId (Just rawClientPartyId)
+  | rawClientPartyId <= 0 =
+      Left err400 { errBody = "clientPartyId must be a positive integer" }
+  | otherwise =
+      Right (Just rawClientPartyId)
 
 normalizeProposalStatus :: Text -> Maybe Text
 normalizeProposalStatus rawStatus =

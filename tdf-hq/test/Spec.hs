@@ -64,6 +64,7 @@ import TDF.ServerInternships
       validateOptionalInternTaskStatusInput )
 import TDF.ServerProposals
     ( ProposalContentSource (..),
+      validateOptionalProposalClientPartyId,
       validateOptionalProposalContactEmail,
       validateOptionalProposalStatus,
       validateProposalContentSource,
@@ -850,6 +851,21 @@ main = hspec $ do
             assertInvalid "sales@example..com"
             assertInvalid "sales@-example.com"
             assertInvalid "sales@example-.com"
+
+    describe "validateOptionalProposalClientPartyId" $ do
+        it "preserves omitted ids and accepts positive client party ids" $ do
+            validateOptionalProposalClientPartyId Nothing `shouldBe` Right Nothing
+            validateOptionalProposalClientPartyId (Just 42) `shouldBe` Right (Just 42)
+
+        it "rejects zero or negative client party ids before proposals reach ambiguous DB behavior" $ do
+            let assertInvalid raw = case validateOptionalProposalClientPartyId (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "clientPartyId must be a positive integer"
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal clientPartyId to be rejected, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-9)
 
     describe "validateContractId" $ do
         it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
