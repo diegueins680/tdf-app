@@ -163,7 +163,7 @@ const getRowByUserId = (container: HTMLElement, userId: number) => {
 
 const getRenderedRowUserIds = (container: HTMLElement) => (
   Array.from(container.querySelectorAll<HTMLElement>('[data-testid^="admin-user-row-"]'))
-    .map((row) => Number(row.dataset.testid?.replace('admin-user-row-', '')))
+    .map((row) => Number(row.dataset['testid']?.replace('admin-user-row-', '')))
 );
 
 describe('AdminUsersPage', () => {
