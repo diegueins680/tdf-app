@@ -163,7 +163,7 @@ describe('InventoryPage', () => {
     expect(screen.queryByLabelText('Imprimir QR de Neumann U87')).not.toBeInTheDocument();
   });
 
-  it('keeps one edit control per row and sends the QR action directly to print', async () => {
+  it('uses one row actions trigger and reveals explicit labels only when the menu opens', async () => {
     const user = userEvent.setup();
     const printMock = vi.fn();
     const writeMock = vi.fn();
@@ -200,18 +200,28 @@ describe('InventoryPage', () => {
     expect(await screen.findByText('Neumann U87')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getAllByLabelText('Editar activo Neumann U87')).toHaveLength(1);
-      expect(screen.getByLabelText('Imprimir QR de Neumann U87')).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /^Acciones de /i })).toHaveLength(2);
     });
 
-    await user.click(screen.getByLabelText('Imprimir QR de Neumann U87'));
+    expect(screen.queryByLabelText('Editar activo Neumann U87')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Imprimir QR de Neumann U87')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Eliminar activo Neumann U87')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Acciones de Neumann U87' }));
+
+    expect(await screen.findByRole('menuitem', { name: /Editar activo/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Imprimir QR/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Eliminar activo/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('menuitem', { name: /Imprimir QR/i }));
 
     expect(window.open).toHaveBeenCalledTimes(1);
     expect(writeMock).toHaveBeenCalledTimes(1);
     expect(closeMock).toHaveBeenCalledTimes(1);
     expect(printMock).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: /editar/i })).not.toBeInTheDocument();
-    expect(screen.queryByText('Editar…')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Editar activo/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Imprimir QR/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Eliminar activo/i })).not.toBeInTheDocument();
   });
 });

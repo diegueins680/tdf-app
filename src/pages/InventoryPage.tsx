@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import {
   Alert,
   Box,
@@ -7,7 +7,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Paper,
   Stack,
@@ -25,6 +27,7 @@ import QrCode2Icon from '@mui/icons-material/QrCode2';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -219,6 +222,8 @@ function printQr(asset: AssetDTO) {
 export default function InventoryPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AssetDTO | null>(null);
+  const [actionsAnchorEl, setActionsAnchorEl] = useState<HTMLElement | null>(null);
+  const [activeAsset, setActiveAsset] = useState<AssetDTO | null>(null);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -253,6 +258,34 @@ export default function InventoryPage() {
 
   const handleDelete = (asset: AssetDTO) => {
     deleteMutation.mutate(asset.assetId);
+  };
+
+  const handleOpenRowActions = (event: MouseEvent<HTMLElement>, asset: AssetDTO) => {
+    setActionsAnchorEl(event.currentTarget);
+    setActiveAsset(asset);
+  };
+
+  const handleCloseRowActions = () => {
+    setActionsAnchorEl(null);
+    setActiveAsset(null);
+  };
+
+  const handleEditFromMenu = () => {
+    if (!activeAsset) return;
+    setEditing(activeAsset);
+    handleCloseRowActions();
+  };
+
+  const handlePrintFromMenu = () => {
+    if (!activeAsset) return;
+    printQr(activeAsset);
+    handleCloseRowActions();
+  };
+
+  const handleDeleteFromMenu = () => {
+    if (!activeAsset) return;
+    handleDelete(activeAsset);
+    handleCloseRowActions();
   };
 
   return (
@@ -375,7 +408,7 @@ export default function InventoryPage() {
                     <TableCell>Categoría</TableCell>
                     <TableCell>Estado</TableCell>
                     <TableCell>Ubicación</TableCell>
-                    <TableCell width={120}>Acciones</TableCell>
+                    <TableCell width={160}>Acciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -386,24 +419,16 @@ export default function InventoryPage() {
                       <TableCell>{getStatusLabel(asset.status)}</TableCell>
                       <TableCell>{asset.location ?? '—'}</TableCell>
                       <TableCell>
-                        <Tooltip title="Editar activo">
-                          <IconButton size="small" aria-label={`Editar activo ${asset.name}`} onClick={() => setEditing(asset)}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Eliminar">
-                          <IconButton size="small" aria-label={`Eliminar activo ${asset.name}`} onClick={() => handleDelete(asset)}>
-                            <DeleteOutlineIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Imprimir QR">
-                          <IconButton
+                        <Tooltip title="Editar, imprimir o eliminar desde un solo menú">
+                          <Button
                             size="small"
-                            aria-label={`Imprimir QR de ${asset.name}`}
-                            onClick={() => printQr(asset)}
+                            variant="text"
+                            endIcon={<MoreHorizIcon fontSize="small" />}
+                            aria-label={`Acciones de ${asset.name}`}
+                            onClick={(event) => handleOpenRowActions(event, asset)}
                           >
-                            <QrCode2Icon fontSize="small" />
-                          </IconButton>
+                            Acciones
+                          </Button>
                         </Tooltip>
                       </TableCell>
                     </TableRow>
@@ -423,6 +448,31 @@ export default function InventoryPage() {
           </Box>
         )}
       </Paper>
+
+      <Menu
+        anchorEl={actionsAnchorEl}
+        open={!!actionsAnchorEl && !!activeAsset}
+        onClose={handleCloseRowActions}
+      >
+        <MenuItem onClick={handleEditFromMenu}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Editar activo</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handlePrintFromMenu}>
+          <ListItemIcon>
+            <QrCode2Icon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Imprimir QR</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDeleteFromMenu}>
+          <ListItemIcon>
+            <DeleteOutlineIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Eliminar activo</ListItemText>
+        </MenuItem>
+      </Menu>
 
       <CreateAssetDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditAssetDialog asset={editing} open={!!editing} onClose={() => setEditing(null)} />
