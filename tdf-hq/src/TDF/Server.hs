@@ -5458,6 +5458,22 @@ validateCourseRegistrationListLimit _ (Just rawLimit)
   | otherwise =
       Right rawLimit
 
+validateMarketplaceOrderListLimit :: Maybe Int -> Either ServerError Int
+validateMarketplaceOrderListLimit Nothing = Right 50
+validateMarketplaceOrderListLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 200 =
+      Left err400 { errBody = "limit must be between 1 and 200" }
+  | otherwise =
+      Right rawLimit
+
+validateMarketplaceOrderListOffset :: Maybe Int -> Either ServerError Int
+validateMarketplaceOrderListOffset Nothing = Right 0
+validateMarketplaceOrderListOffset (Just rawOffset)
+  | rawOffset < 0 =
+      Left err400 { errBody = "offset must be greater than or equal to 0" }
+  | otherwise =
+      Right rawOffset
+
 normalizeCourseRegistrationStatus :: Text -> Maybe Text
 normalizeCourseRegistrationStatus raw =
   case normalizeBookingStatusToken raw of
@@ -7650,9 +7666,9 @@ isDfPaymentPending code = code == "000.200.000"
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
   requireMarketplaceAccess user
+  limitCount <- either throwError pure (validateMarketplaceOrderListLimit mLimit)
+  offsetCount <- either throwError pure (validateMarketplaceOrderListOffset mOffset)
   let normalizedStatus = mStatus >>= nonEmpty
-      limitCount = maybe 50 (max 1 . min 200) mLimit
-      offsetCount = max 0 (fromMaybe 0 mOffset)
       filters = maybe [] (\st -> [ME.MarketplaceOrderStatus ==. st]) normalizedStatus
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool $ do

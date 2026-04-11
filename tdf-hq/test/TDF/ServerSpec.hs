@@ -36,6 +36,8 @@ import TDF.Server
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
     , validateCourseRegistrationListLimit
+    , validateMarketplaceOrderListLimit
+    , validateMarketplaceOrderListOffset
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
@@ -526,6 +528,32 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateCourseRegistrationListLimit 200 (Just 0))
             assertInvalid (validateCourseRegistrationListLimit 200 (Just 501))
             assertInvalid (validateCourseRegistrationListLimit 200 (Just (-3)))
+
+    describe "marketplace order list pagination validation" $ do
+        it "keeps marketplace order defaults only when the caller omits pagination" $ do
+            validateMarketplaceOrderListLimit Nothing `shouldBe` Right 50
+            validateMarketplaceOrderListLimit (Just 1) `shouldBe` Right 1
+            validateMarketplaceOrderListLimit (Just 200) `shouldBe` Right 200
+            validateMarketplaceOrderListOffset Nothing `shouldBe` Right 0
+            validateMarketplaceOrderListOffset (Just 0) `shouldBe` Right 0
+            validateMarketplaceOrderListOffset (Just 25) `shouldBe` Right 25
+
+        it "rejects explicit out-of-range pagination instead of silently clamping admin order queries" $ do
+            let assertLimitInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "limit must be between 1 and 200"
+                    Right limitVal ->
+                        expectationFailure ("Expected invalid marketplace order limit to be rejected, got: " <> show limitVal)
+                assertOffsetInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "offset must be greater than or equal to 0"
+                    Right offsetVal ->
+                        expectationFailure ("Expected invalid marketplace order offset to be rejected, got: " <> show offsetVal)
+            assertLimitInvalid (validateMarketplaceOrderListLimit (Just 0))
+            assertLimitInvalid (validateMarketplaceOrderListLimit (Just 201))
+            assertOffsetInvalid (validateMarketplaceOrderListOffset (Just (-1)))
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do
