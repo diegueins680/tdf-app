@@ -420,7 +420,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('keeps the detailed users empty state when the page is not in first-run checklist mode', async () => {
+  it('keeps a single detailed users empty state when the page is not in first-run checklist mode', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -439,17 +439,17 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
-        ),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(
           /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
         ),
       ).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
+      ),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
     ).not.toBeInTheDocument();
@@ -612,7 +612,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
   });
 
-  it('keeps the detailed audit empty state when the page is not in first-run checklist mode', async () => {
+  it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
     renderPage();
@@ -622,18 +622,15 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
-        ),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(
           /Todavía no hay eventos de auditoría\. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo\./i,
         ),
       ).toBeInTheDocument();
     });
 
     expect(
-      screen.queryByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      screen.queryByText(
+        /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
+      ),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i),

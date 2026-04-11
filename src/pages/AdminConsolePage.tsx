@@ -292,6 +292,8 @@ export default function AdminConsolePage() {
   const showUsersTable = isUsersLoading || users.length > 1;
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
+  const hasUsersSectionData = showUsersTable || singleAdminUser !== null;
+  const hasAuditSectionData = showAuditTable || singleAuditEntry !== null;
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -302,16 +304,16 @@ export default function AdminConsolePage() {
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
-      showUsersTable || singleAdminUser
+      hasUsersSectionData
         ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
-        : 'Aquí aparecerán los usuarios administrables. Cuando exista el primero, podrás editar sus roles desde esta misma vista.'
+        : null
     );
   const auditSectionDescription = showGettingStartedGuidance
     ? null
     : (
-      showAuditTable || singleAuditEntry
+      hasAuditSectionData
         ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
-        : 'Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo.'
+        : null
     );
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
