@@ -98,20 +98,19 @@ const buildAsset = (overrides: Partial<AssetDTO> = {}): AssetDTO => ({
 });
 
 const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): AssetCheckoutDTO => ({
-  checkoutId: 1,
+  checkoutId: 'checkout-1',
   assetId: 'asset-1',
   targetKind: 'party',
-  targetPartyId: 9,
+  targetPartyRef: 'Ada Lovelace',
   targetRoomId: null,
   targetSessionId: null,
+  checkedOutBy: 'admin',
   dueAt: '2030-01-04T03:04:05.000Z',
   checkedOutAt: '2030-01-02T03:04:05.000Z',
   returnedAt: null,
   conditionOut: 'Excelente',
   conditionIn: null,
   notes: 'Uso en grabación.',
-  partyName: 'Ada Lovelace',
-  roomName: null,
   ...overrides,
 });
 
