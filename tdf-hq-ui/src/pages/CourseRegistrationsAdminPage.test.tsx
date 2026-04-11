@@ -613,6 +613,46 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the current-view summary but drops filter onboarding copy after the first row action', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).not.toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('reveals the limit toggle only when the current batch reaches its cap or a custom limit is active', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -699,6 +699,7 @@ export default function CourseRegistrationsAdminPage() {
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const useCompactStatusActionLabel = showSingleStatusSummary && loadedRegistrationCount > 1;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
+  const showFilterOnboardingCopy = !hasUsedRowAction;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1719,9 +1720,11 @@ export default function CourseRegistrationsAdminPage() {
                         {combinedSingleChoiceLimitSummary}
                       </Typography>
                     )}
-                    <Typography variant="caption" color="text.secondary">
-                      {combinedSingleChoiceHelperText}
-                    </Typography>
+                    {showFilterOnboardingCopy && (
+                      <Typography variant="caption" color="text.secondary">
+                        {combinedSingleChoiceHelperText}
+                      </Typography>
+                    )}
                     {showInlineSummaryResetAction && (
                       <Button
                         size="small"
@@ -1762,9 +1765,11 @@ export default function CourseRegistrationsAdminPage() {
                             {standaloneSingleChoiceSourceSummary}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          {singleAvailableCohortHelperText}
-                        </Typography>
+                        {showFilterOnboardingCopy && (
+                          <Typography variant="caption" color="text.secondary">
+                            {singleAvailableCohortHelperText}
+                          </Typography>
+                        )}
                       </Stack>
                     ) : (
                       <TextField
@@ -1817,9 +1822,11 @@ export default function CourseRegistrationsAdminPage() {
                             {standaloneSingleChoiceSourceSummary}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          {singleVisibleStatusHelperText}
-                        </Typography>
+                        {showFilterOnboardingCopy && (
+                          <Typography variant="caption" color="text.secondary">
+                            {singleVisibleStatusHelperText}
+                          </Typography>
+                        )}
                       </Stack>
                     ) : (
                       <Stack spacing={1}>
@@ -1879,7 +1886,7 @@ export default function CourseRegistrationsAdminPage() {
                 />
               </Box>
             </Collapse>
-            {filtersHelpText && !showFilteredEmptyState && (
+            {showFilterOnboardingCopy && filtersHelpText && !showFilteredEmptyState && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                 {filtersHelpText}
               </Typography>
