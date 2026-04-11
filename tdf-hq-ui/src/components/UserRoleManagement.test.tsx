@@ -91,6 +91,14 @@ const getRowByName = (container: HTMLElement, name: string) => {
   return row;
 };
 
+const getContactCellText = (row: Element) => {
+  const contactCell = row.querySelectorAll('td')[1];
+  if (!(contactCell instanceof HTMLElement)) {
+    throw new Error('Contact cell not found');
+  }
+  return buttonText(contactCell);
+};
+
 describe('UserRoleManagement', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -183,22 +191,23 @@ describe('UserRoleManagement', () => {
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
+        expect(getContactCellText(adaRow)).toBe('ada@example.com');
         expect(adaRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]')).not.toBeNull();
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('ID 102');
         expect(graceRow.textContent).toContain('+593999000222');
+        expect(getContactCellText(graceRow)).toBe('+593999000222');
         expect(graceRow.textContent).not.toContain('Sin email ni teléfono');
 
         const linusRow = getRowByName(container, 'Linus QA');
         expect(linusRow.textContent).toContain('ID 103');
-        expect(linusRow.textContent).toContain('linus@example.com');
-        expect(linusRow.textContent).toContain('+593999000333');
+        expect(getContactCellText(linusRow)).toBe('linus@example.com · +593999000333');
 
         const missingContactRow = getRowByName(container, 'Sin Contacto');
         expect(missingContactRow.textContent).toContain('ID 104');
-        expect(missingContactRow.textContent).toContain('Sin email ni teléfono');
+        expect(getContactCellText(missingContactRow)).toBe('Sin email ni teléfono');
         expect(missingContactRow.textContent).not.toContain('--');
       });
     } finally {

@@ -81,10 +81,14 @@ const normalizeContactValue = (value?: string | null) => {
   return trimmed ? trimmed : null;
 };
 
-const getContactLines = (user: Pick<NormalizedUser, 'email' | 'phone'>) =>
-  [normalizeContactValue(user.email), normalizeContactValue(user.phone)].filter(
+const getContactSummary = (user: Pick<NormalizedUser, 'email' | 'phone'>) => {
+  const contactValues = [normalizeContactValue(user.email), normalizeContactValue(user.phone)].filter(
     (value): value is string => value != null,
   );
+
+  if (contactValues.length === 0) return null;
+  return contactValues.join(' · ');
+};
 
 const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) =>
   Array.from(new Set((roles ?? []).map((role) => role.trim()).filter(Boolean)))
@@ -139,7 +143,7 @@ export default function UserRoleManagement() {
   const [selectedUser, setSelectedUser] = useState<NormalizedUser | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
-  const showContactColumn = users.some((user) => getContactLines(user).length > 0);
+  const showContactColumn = users.some((user) => getContactSummary(user) != null);
   const showStatusColumn = users.some((user) => user.status === 'Inactive');
   const roleManagementSummary = buildRoleManagementSummary({ showContactColumn, showStatusColumn });
   const hasPendingRoleChanges = selectedUser
@@ -257,7 +261,7 @@ export default function UserRoleManagement() {
               </TableHead>
               <TableBody>
                 {users.map((user) => {
-                  const contactLines = getContactLines(user);
+                  const contactSummary = getContactSummary(user);
 
                   return (
                     <TableRow key={user.id}>
@@ -273,14 +277,10 @@ export default function UserRoleManagement() {
                       </TableCell>
                       {showContactColumn && (
                         <TableCell>
-                          {contactLines.length > 0 ? (
-                            <Box display="flex" flexDirection="column" gap={0.25}>
-                              {contactLines.map((line) => (
-                                <Typography key={`${user.id}-${line}`} variant="body2">
-                                  {line}
-                                </Typography>
-                              ))}
-                            </Box>
+                          {contactSummary ? (
+                            <Typography variant="body2">
+                              {contactSummary}
+                            </Typography>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
                               Sin email ni teléfono
