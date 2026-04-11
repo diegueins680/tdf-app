@@ -18,6 +18,7 @@ import TDF.ServerAdmin (
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
+    validateAdminEmailBroadcastLimit,
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
   )
@@ -150,6 +151,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid (validateUserCommunicationHistoryLimit (Just 0))
             assertInvalid (validateUserCommunicationHistoryLimit (Just 301))
             assertInvalid (validateUserCommunicationHistoryLimit (Just (-5)))
+
+    describe "validateAdminEmailBroadcastLimit" $ do
+        it "keeps omitted limits unset and accepts explicit values inside the supported send window" $ do
+            validateAdminEmailBroadcastLimit Nothing `shouldBe` Right Nothing
+            validateAdminEmailBroadcastLimit (Just 1) `shouldBe` Right (Just 1)
+            validateAdminEmailBroadcastLimit (Just 5000) `shouldBe` Right (Just 5000)
+
+        it "rejects out-of-range limits instead of silently clamping broadcast batches" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` "limit must be between 1 and 5000"
+                    Right value ->
+                        expectationFailure ("Expected invalid email broadcast limit, got " <> show value)
+            assertInvalid (validateAdminEmailBroadcastLimit (Just 0))
+            assertInvalid (validateAdminEmailBroadcastLimit (Just (-3)))
+            assertInvalid (validateAdminEmailBroadcastLimit (Just 5001))
 
     describe "validateSocialUnholdLookup" $ do
         it "accepts exactly one lookup key and trims the chosen identifier" $ do

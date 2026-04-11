@@ -17,6 +17,7 @@ module TDF.ServerAdmin
   , validateSocialErrorsLimit
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
+  , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   ) where
 
@@ -859,11 +860,7 @@ adminServer user =
         throwError err400 { errBody = "Subject must not be empty" }
       when (null bodyLines) $
         throwError err400 { errBody = "At least one non-empty body line is required" }
-      limitValue <- case aebrLimit of
-        Nothing -> pure Nothing
-        Just rawLimit
-          | rawLimit <= 0 -> throwError err400 { errBody = "limit must be a positive integer" }
-          | otherwise -> pure (Just (min 5000 rawLimit))
+      limitValue <- either throwError pure (validateAdminEmailBroadcastLimit aebrLimit)
       cfg <- asks envConfig
       let emailSvc = EmailSvc.mkEmailService cfg
       when (not dryRun && isNothing (EmailSvc.esConfig emailSvc)) $
@@ -1045,6 +1042,13 @@ validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
       | otherwise -> Right "notify"
     _ ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+
+validateAdminEmailBroadcastLimit :: Maybe Int -> Either ServerError (Maybe Int)
+validateAdminEmailBroadcastLimit Nothing = Right Nothing
+validateAdminEmailBroadcastLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 5000 =
+      Left err400 { errBody = "limit must be between 1 and 5000" }
+  | otherwise = Right (Just rawLimit)
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do
