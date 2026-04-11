@@ -1,15 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerAdminSpec (spec) where
 
+import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.Reader (ReaderT, runReaderT)
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
-import Servant (ServerError (errBody, errHTTPCode))
+import Database.Persist.Sql (toSqlKey)
+import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
 import TDF.API.Admin (EmailTestRequest (..))
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.DB (Env (..))
+import TDF.DTO (LogEntryDTO)
+import TDF.Models (RoleEnum (..))
 import TDF.ServerAdmin (
+    adminServer,
     buildAdminUsernameCandidate,
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
@@ -19,6 +28,7 @@ import TDF.ServerAdmin (
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
     validateAdminEmailBroadcastLimit,
+    validateAdminLogsLimit,
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
   )
@@ -152,6 +162,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid (validateUserCommunicationHistoryLimit (Just 301))
             assertInvalid (validateUserCommunicationHistoryLimit (Just (-5)))
 
+    describe "validateAdminLogsLimit" $ do
+        it "defaults omitted limits and accepts explicit values inside the retained log window" $ do
+            validateAdminLogsLimit Nothing `shouldBe` Right 100
+            validateAdminLogsLimit (Just 1) `shouldBe` Right 1
+            validateAdminLogsLimit (Just 1000) `shouldBe` Right 1000
+
+        it "rejects out-of-range limits instead of silently returning a partial or empty log slice" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` "limit must be between 1 and 1000"
+                    Right value ->
+                        expectationFailure ("Expected invalid admin logs limit, got " <> show value)
+            assertInvalid (validateAdminLogsLimit (Just 0))
+            assertInvalid (validateAdminLogsLimit (Just (-3)))
+            assertInvalid (validateAdminLogsLimit (Just 1001))
+
     describe "validateAdminEmailBroadcastLimit" $ do
         it "keeps omitted limits unset and accepts explicit values inside the supported send window" $ do
             validateAdminEmailBroadcastLimit Nothing `shouldBe` Right Nothing
@@ -187,8 +214,64 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Provide externalId or senderId" (validateSocialUnholdLookup (Just "   ") (Just ""))
             assertInvalid "Provide only one of externalId or senderId"
                 (validateSocialUnholdLookup (Just "ext-1") (Just "sender-1"))
+
+    describe "admin logs route authorization" $ do
+        it "requires the Admin module before listing or clearing logs" $ do
+            let listLogs :<|> clearLogs = logsHandlersFor (mkUser [Fan])
+
+            listResult <- runAdminTest (listLogs Nothing)
+            case listResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Missing required module access"
+                Right value ->
+                    expectationFailure ("Expected unauthorized log listing to be rejected, got " <> show value)
+
+            clearResult <- runAdminTest clearLogs
+            case clearResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Missing required module access"
+                Right NoContent ->
+                    expectationFailure "Expected unauthorized log clearing to be rejected"
   where
     decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
     decodeEmailTest = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+
+type AdminTestM = ReaderT Env (ExceptT ServerError IO)
+
+mkUser :: [RoleEnum] -> AuthedUser
+mkUser roles =
+    AuthedUser
+        { auPartyId = toSqlKey 1
+        , auRoles = roles
+        , auModules = modulesForRoles roles
+        }
+
+runAdminTest :: AdminTestM a -> IO (Either ServerError a)
+runAdminTest action = runExceptT (runReaderT action dummyEnv)
+
+dummyEnv :: Env
+dummyEnv =
+    Env
+        { envPool = error "envPool should be unused in ServerAdminSpec"
+        , envConfig = error "envConfig should be unused in ServerAdminSpec"
+        }
+
+logsHandlersFor :: AuthedUser -> (Maybe Int -> AdminTestM [LogEntryDTO]) :<|> AdminTestM NoContent
+logsHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> _artists
+            :<|> logsRouter
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                logsRouter

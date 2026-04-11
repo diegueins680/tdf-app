@@ -15,6 +15,7 @@ module TDF.ServerAdmin
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
   , validateSocialErrorsLimit
+  , validateAdminLogsLimit
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
   , validateAdminEmailBroadcastLimit
@@ -184,7 +185,16 @@ adminServer user =
       :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
 
     logsRouter =
-      getLogs :<|> clearLogsHandler
+      listLogsHandler :<|> clearLogsProtected
+
+    listLogsHandler mLimit = do
+      ensureModule ModuleAdmin user
+      limit <- either throwError pure (validateAdminLogsLimit mLimit)
+      getLogs limit
+
+    clearLogsProtected = do
+      ensureModule ModuleAdmin user
+      clearLogsHandler
 
     emailTestHandler EmailTestRequest{..} = do
       ensureModule ModuleAdmin user
@@ -1018,6 +1028,13 @@ validateSocialErrorsLimit (Just rawLimit)
       Left err400 { errBody = "limit debe estar entre 1 y 200" }
   | otherwise = Right rawLimit
 
+validateAdminLogsLimit :: Maybe Int -> Either ServerError Int
+validateAdminLogsLimit Nothing = Right 100
+validateAdminLogsLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 1000 =
+      Left err400 { errBody = "limit must be between 1 and 1000" }
+  | otherwise = Right rawLimit
+
 validateUserCommunicationHistoryLimit :: Maybe Int -> Either ServerError Int
 validateUserCommunicationHistoryLimit Nothing = Right 150
 validateUserCommunicationHistoryLimit (Just rawLimit)
@@ -1301,9 +1318,8 @@ toDTO (Entity key option) = DropdownOptionDTO
   }
 
 -- Log handlers
-getLogs :: (MonadIO m) => Maybe Int -> m [LogEntryDTO]
-getLogs mLimit = do
-  let limit = fromMaybe 100 mLimit
+getLogs :: (MonadIO m) => Int -> m [LogEntryDTO]
+getLogs limit = do
   entries <- liftIO $ getRecentLogs limit
   pure $ map logEntryToDTO entries
 
