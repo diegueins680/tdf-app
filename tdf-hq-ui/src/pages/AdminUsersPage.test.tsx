@@ -161,6 +161,11 @@ const getRowByUserId = (container: HTMLElement, userId: number) => {
   return row;
 };
 
+const getRenderedRowUserIds = (container: HTMLElement) => (
+  Array.from(container.querySelectorAll<HTMLElement>('[data-testid^="admin-user-row-"]'))
+    .map((row) => Number(row.dataset.testid?.replace('admin-user-row-', '')))
+);
+
 describe('AdminUsersPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -611,6 +616,77 @@ describe('AdminUsersPage', () => {
         expect(row.textContent).toContain('Módulos: admin, crm');
         expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
         expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps active users first and alphabetizes the visible list so inactive exceptions stay grouped at the bottom', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 204,
+              partyId: 24,
+              partyName: 'Zed Inactive',
+              username: 'zed-inactive',
+              active: false,
+            }),
+            buildUser({
+              userId: 202,
+              partyId: 22,
+              partyName: 'Bruno Active',
+              username: 'bruno-active',
+            }),
+            buildUser({
+              userId: 201,
+              partyId: 21,
+              partyName: 'Ada Active',
+              username: 'ada-active',
+            }),
+            buildUser({
+              userId: 203,
+              partyId: 23,
+              partyName: 'Carla Inactive',
+              username: 'carla-inactive',
+              active: false,
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 202,
+              partyId: 22,
+              partyName: 'Bruno Active',
+              username: 'bruno-active',
+            }),
+            buildUser({
+              userId: 201,
+              partyId: 21,
+              partyName: 'Ada Active',
+              username: 'ada-active',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
+      });
+
+      const includeInactiveCheckbox = getCheckboxByLabelText(container, 'Incluir inactivos');
+
+      await clickButton(includeInactiveCheckbox);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
+        expect(getRowByUserId(container, 203).textContent).toContain('Inactivo');
+        expect(getRowByUserId(container, 204).textContent).toContain('Inactivo');
       });
     } finally {
       await cleanup();

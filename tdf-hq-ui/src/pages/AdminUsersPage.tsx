@@ -79,6 +79,20 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | '
   };
 };
 
+const compareAdminUsers = (left: AdminUser, right: AdminUser) => {
+  if (left.active !== right.active) return left.active ? -1 : 1;
+
+  const leftIdentity = summarizeUserIdentity(left).primary.trim();
+  const rightIdentity = summarizeUserIdentity(right).primary.trim();
+  const identityComparison = leftIdentity.localeCompare(rightIdentity, 'es', { sensitivity: 'base' });
+  if (identityComparison !== 0) return identityComparison;
+
+  const usernameComparison = left.username.trim().localeCompare(right.username.trim(), 'es', { sensitivity: 'base' });
+  if (usernameComparison !== 0) return usernameComparison;
+
+  return left.userId - right.userId;
+};
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const query = normalizeSearchValue(rawQuery);
   if (!query) return true;
@@ -121,7 +135,9 @@ export default function AdminUsersPage() {
   };
 
   const visibleUsers = useMemo(
-    () => (usersQuery.data ?? []).filter((user) => matchesUserQuery(user, deferredSearchQuery)),
+    () => (usersQuery.data ?? [])
+      .filter((user) => matchesUserQuery(user, deferredSearchQuery))
+      .sort(compareAdminUsers),
     [deferredSearchQuery, usersQuery.data],
   );
   const visibleUsersMissingWhatsAppCount = useMemo(
