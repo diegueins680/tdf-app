@@ -4,6 +4,8 @@
 
 module TDF.Server.SocialSync
   ( socialSyncServer
+  , validateSocialSyncArtistPartyId
+  , validateSocialSyncArtistProfileId
   ) where
 
 import           Control.Monad              (forM)
@@ -168,15 +170,32 @@ socialSyncServer user =
 
 parsePartyId :: MonadError ServerError m => Text -> m (Key Party)
 parsePartyId raw =
-  case readMaybeInt64 raw of
-    Nothing  -> throwError err400 { errBody = "Invalid partyId" }
-    Just val -> pure (toSqlKey val)
+  case validateSocialSyncArtistPartyId raw of
+    Left err  -> throwError err
+    Right val -> pure (toSqlKey val)
 
 parseProfileId :: MonadError ServerError m => Text -> m (Key ArtistProfile)
 parseProfileId raw =
+  case validateSocialSyncArtistProfileId raw of
+    Left err  -> throwError err
+    Right val -> pure (toSqlKey val)
+
+validateSocialSyncArtistPartyId :: Text -> Either ServerError Int64
+validateSocialSyncArtistPartyId =
+  validatePositiveSocialSyncId "artistPartyId"
+
+validateSocialSyncArtistProfileId :: Text -> Either ServerError Int64
+validateSocialSyncArtistProfileId =
+  validatePositiveSocialSyncId "artistProfileId"
+
+validatePositiveSocialSyncId :: Text -> Text -> Either ServerError Int64
+validatePositiveSocialSyncId fieldName raw =
   case readMaybeInt64 raw of
-    Nothing  -> throwError err400 { errBody = "Invalid artistProfileId" }
-    Just val -> pure (toSqlKey val)
+    Just val | val > 0 -> Right val
+    _ ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+        }
 
 readMaybeInt64 :: Text -> Maybe Int64
 readMaybeInt64 txt =

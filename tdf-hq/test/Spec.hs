@@ -67,6 +67,9 @@ import TDF.ServerProposals
       validateProposalVersionNumber,
       validateTemplateKey )
 import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
+import TDF.Server.SocialSync
+    ( validateSocialSyncArtistPartyId,
+      validateSocialSyncArtistProfileId )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -247,6 +250,25 @@ main = hspec $ do
     describe "normalizeArtistGenres" $ do
         it "trims genres, drops blanks, and deduplicates case-insensitively" $ do
             normalizeArtistGenres ["  Salsa ", "", "salsa", " Rock ", "ROCK", "Pop"] `shouldBe` ["Salsa", "Rock", "Pop"]
+
+    describe "social sync id validation" $ do
+        it "accepts positive artist references after trimming and canonicalizing the numeric value" $ do
+            validateSocialSyncArtistPartyId " 0042 " `shouldBe` Right 42
+            validateSocialSyncArtistProfileId " 0007 " `shouldBe` Right 7
+
+        it "rejects blank, malformed, zero, or negative social sync references with precise 400s" $ do
+            let assertInvalid expected validator raw =
+                    case validator raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid social sync id to be rejected, got " <> show value)
+            assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "   "
+            assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "-12"
+            assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "0"
+            assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "abc"
+            assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "-1"
 
     describe "social events update payload parsing" $ do
         it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
