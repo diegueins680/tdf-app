@@ -890,6 +890,9 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
+        expect(container.textContent).not.toContain(
+          'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {

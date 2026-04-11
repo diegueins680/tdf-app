@@ -171,7 +171,7 @@ export default function AdminUsersPage() {
   const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showClearSearchAction = showSearchField && hasActiveSearch;
-  const showActiveScopeSummary = hasUsers && !includeInactive && (!hasActiveSearch || visibleUsers.length === 0);
+  const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
