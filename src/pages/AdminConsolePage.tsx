@@ -331,6 +331,9 @@ export default function AdminConsolePage() {
   const additionalModulesCountLabel = consoleCards.length === 1
     ? '1 módulo adicional'
     : `${consoleCards.length} módulos adicionales`;
+  const firstRunAdditionalModulesDescription = consoleCards.length === 1
+    ? 'Hay 1 módulo adicional fuera del recorrido inicial. Revísalo solo si ya necesitas ese flujo.'
+    : `Hay ${consoleCards.length} módulos adicionales fuera del recorrido inicial. Revísalos solo si ya necesitas esos flujos.`;
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
   useEffect(() => {
     if (showGettingStartedGuidance) {
@@ -453,9 +456,9 @@ export default function AdminConsolePage() {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
               </Typography>
-              {consoleCards.length > 0 && (
+              {consoleCards.length > 0 && !shouldShowAdditionalModuleCards && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Los módulos adicionales aparecen aparte; primero ubica salud, usuarios y auditoría.
+                  {firstRunAdditionalModulesDescription}
                 </Typography>
               )}
             </Box>
@@ -485,6 +488,15 @@ export default function AdminConsolePage() {
               >
                 {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
               </Button>
+              {consoleCards.length > 0 && !shouldShowAdditionalModuleCards && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setShowFirstRunAdditionalModules(true)}
+                >
+                  {`Mostrar ${additionalModulesCountLabel}`}
+                </Button>
+              )}
             </Stack>
           </Stack>
         </Alert>
@@ -760,7 +772,7 @@ export default function AdminConsolePage() {
         ) : null}
       </Paper>
 
-      {consoleCards.length > 0 && (
+      {consoleCards.length > 0 && (!showGettingStartedGuidance || shouldShowAdditionalModuleCards) && (
         <Paper variant="outlined" id="admin-additional-modules">
           <Box sx={{ px: 2, py: 1 }}>
             <Typography variant="h6">Módulos adicionales</Typography>
