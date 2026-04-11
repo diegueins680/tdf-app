@@ -317,7 +317,7 @@ export default function AdminConsolePage() {
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
-      hasUsersSectionData
+      singleAdminUser
         ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
         : null
     );
@@ -545,7 +545,16 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>Roles</TableCell>
+                  <TableCell>
+                    <Stack spacing={0}>
+                      <Typography variant="body2" fontWeight={600}>
+                        Roles
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Editar aquí
+                      </Typography>
+                    </Stack>
+                  </TableCell>
                   <TableCell>Último acceso</TableCell>
                   <TableCell>Estado</TableCell>
                 </TableRow>

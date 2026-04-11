@@ -562,7 +562,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
   });
 
-  it('uses each rendered role value as the edit affordance instead of showing duplicate edit actions', async () => {
+  it('keeps the roles edit hint inside the column header instead of repeating it above the table', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -579,10 +579,9 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
-      ).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /Roles/i })).toBeInTheDocument();
+      expect(screen.getByText('Editar aquí')).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
@@ -590,6 +589,8 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
     });
+
+    expect(screen.getAllByText('Editar aquí')).toHaveLength(1);
   });
 
   it('keeps save disabled in the role dialog until the admin makes a real change', async () => {
