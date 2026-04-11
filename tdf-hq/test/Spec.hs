@@ -54,6 +54,7 @@ import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
+      validateInternPermissionDateRange,
       validateInternTaskUpdatePermissions,
       validateOptionalInternPermissionStatusInput,
       validateOptionalInternPartyIdInput,
@@ -1006,6 +1007,27 @@ main = hspec $ do
                 (validateOptionalInternPartyIdInput "assignedTo" (Just (-1)))
             assertInvalid "assignedTo must be a positive integer"
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
+
+    describe "internship permission date validation" $ do
+        it "accepts open-ended and same-day permission ranges" $ do
+            validateInternPermissionDateRange
+                (fromGregorian 2026 4 11)
+                Nothing
+                `shouldBe` Right ()
+            validateInternPermissionDateRange
+                (fromGregorian 2026 4 11)
+                (Just (fromGregorian 2026 4 11))
+                `shouldBe` Right ()
+
+        it "rejects permission end dates before the start date instead of storing impossible requests" $ do
+            case validateInternPermissionDateRange
+                (fromGregorian 2026 4 11)
+                (Just (fromGregorian 2026 4 10)) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "endAt must be on or after startAt"
+                Right value ->
+                    expectationFailure ("Expected invalid internship permission date range to be rejected, got " <> show value)
 
     describe "internship task update permissions" $ do
         it "allows interns to change status/progress while keeping admin-only task edits available to admins" $ do

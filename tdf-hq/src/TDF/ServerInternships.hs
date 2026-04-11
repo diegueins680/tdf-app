@@ -19,7 +19,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (diffUTCTime, getCurrentTime)
+import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
 import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectFirst, selectList, update, (==.), (=.), (<-.))
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
@@ -68,6 +68,14 @@ validateInternTaskProgressUpdate (Just rawProgress)
       Left err400 { errBody = "taskProgress must be between 0 and 100" }
   | otherwise =
       Right (Just rawProgress)
+
+validateInternPermissionDateRange :: Day -> Maybe Day -> Either ServerError ()
+validateInternPermissionDateRange _ Nothing = Right ()
+validateInternPermissionDateRange startAt (Just endAt)
+  | endAt < startAt =
+      Left err400 { errBody = "endAt must be on or after startAt" }
+  | otherwise =
+      Right ()
 
 validateOptionalInternPartyIdInput :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalInternPartyIdInput _ Nothing = Right Nothing
@@ -502,6 +510,7 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
+      either throwError pure (validateInternPermissionDateRange ipcStartAt ipcEndAt)
       ent <- withPool $ do
         newId <- insert ME.InternPermissionRequest
           { ME.internPermissionRequestPartyId    = partyId
