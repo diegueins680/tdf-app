@@ -595,6 +595,35 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('normalizes repeated role labels so the admin page shows one stable access summary', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        roles: ['Manager', 'Admin', 'Manager'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Roles: Admin, Manager')).toBeInTheDocument();
+      expect(screen.queryByText('Roles: Manager, Admin, Manager')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }));
+
+    expect(
+      await screen.findByText(
+        /Roles actuales: Admin, Manager\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Roles actuales: Manager, Admin, Manager\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('flags role selections that collapse to the same app navigation', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);

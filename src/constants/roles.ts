@@ -19,10 +19,31 @@ export const ROLE_OPTIONS: { value: RoleKey; label: string }[] = ROLE_VALUES.map
   label: value,
 }));
 
-export function formatRoleList(roles?: RoleKey[] | null): string {
+const ROLE_ORDER = new Map<RoleKey, number>(ROLE_VALUES.map((value, index) => [value, index]));
+
+export function normalizeRoleList(roles?: readonly RoleKey[] | null): RoleKey[] {
   if (!roles || roles.length === 0) {
-    return '—';
+    return [];
   }
-  return roles.join(', ');
+
+  return [...new Set(roles)].sort((left, right) => {
+    const leftOrder = ROLE_ORDER.get(left) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = ROLE_ORDER.get(right) ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+
+    return left.localeCompare(right);
+  });
 }
 
+export function formatRoleList(roles?: readonly RoleKey[] | null): string {
+  const normalizedRoles = normalizeRoleList(roles);
+
+  if (normalizedRoles.length === 0) {
+    return '—';
+  }
+
+  return normalizedRoles.join(', ');
+}

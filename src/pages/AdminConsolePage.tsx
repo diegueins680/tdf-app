@@ -36,7 +36,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
 import type { AdminConsoleCard, AdminUserDTO, AdminUserStatus, AuditLogEntry, RoleKey } from '../api/types';
-import { ROLE_OPTIONS, formatRoleList } from '../constants/roles';
+import { ROLE_OPTIONS, formatRoleList, normalizeRoleList } from '../constants/roles';
 import { normalizeRoles } from '../config/menu';
 
 const ADMIN_REFRESH_QUERY_KEYS = [
@@ -169,7 +169,7 @@ function formatAuditActor(actorId?: number | null) {
 }
 
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
-  return [...new Set(roles ?? [])].sort();
+  return normalizeRoleList(roles);
 }
 
 function hasRoleSelectionChanged(currentRoles?: readonly RoleKey[] | null, nextRoles?: readonly RoleKey[] | null) {
@@ -278,7 +278,7 @@ export default function AdminConsolePage() {
 
   useEffect(() => {
     if (editingUser) {
-      setSelectedRoles(editingUser.roles ?? []);
+      setSelectedRoles(normalizeRoleList(editingUser.roles));
       setDialogError(null);
     } else {
       setSelectedRoles([]);
@@ -331,6 +331,9 @@ export default function AdminConsolePage() {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
   }, [editingUser]);
+  const currentRoleSummary = useMemo(() => (
+    editingUser ? formatRoleList(editingUser.roles) : '—'
+  ), [editingUser]);
   const hasPendingRoleChanges = useMemo(() => (
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
   ), [editingUser, selectedRoles]);
@@ -802,7 +805,7 @@ export default function AdminConsolePage() {
         <DialogTitle>Editar roles · {editingTitle}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Selecciona los roles que determinan los módulos visibles y acciones permitidas para esta cuenta.
+            Roles actuales: {currentRoleSummary}. Ajusta la selección para abrir o retirar módulos en esta cuenta.
           </Typography>
           {dialogError && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -816,7 +819,7 @@ export default function AdminConsolePage() {
               label="Roles asignados"
               multiple
               value={selectedRoles}
-              onChange={(event) => setSelectedRoles(event.target.value as RoleKey[])}
+              onChange={(event) => setSelectedRoles(normalizeRoleList(event.target.value as RoleKey[]))}
               renderValue={(value) => formatRoleList(value as RoleKey[])}
             >
               {ROLE_OPTIONS.map((option) => (
