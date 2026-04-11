@@ -292,8 +292,9 @@ describe('SocialInboxPage', () => {
       expect(hasLabel(container, 'Limit')).toBe(false);
       expect(container.textContent).toContain('No inbound messages yet.');
       expect(container.textContent).toContain(
-        'Select the review asset, send one test message, then refresh. Status filters and channel panels appear after the first inbound message arrives.',
+        'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
       );
+      expect(container.textContent).not.toContain('then refresh');
       expect(container.textContent).not.toContain('No messages for this filter.');
       expect(container.textContent).not.toContain('Status available');
     });
