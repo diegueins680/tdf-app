@@ -6,6 +6,7 @@ module TDF.Server.SocialSync
   ( socialSyncServer
   , validateSocialSyncArtistPartyId
   , validateSocialSyncArtistProfileId
+  , validateSocialSyncPostsLimit
   ) where
 
 import           Control.Monad              (forM)
@@ -151,12 +152,12 @@ socialSyncServer user =
       ensureSocialSyncAccess
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
+      limitVal <- either throwError pure (validateSocialSyncPostsLimit mLimit)
       let filters = catMaybes
             [ (SocialSyncPostPlatform ==.) <$> fmap normalizePlatform mPlatform
             , (SocialSyncPostArtistPartyId ==.) . Just <$> partyKey
             , (SocialSyncPostArtistProfileId ==.) . Just <$> profileKey
             ]
-          limitVal = clampLimit (fromMaybe 50 mLimit)
       rows <- withPool $ selectList filters [Desc SocialSyncPostPostedAt, Desc SocialSyncPostCreatedAt, LimitTo limitVal]
       let mapped = map toDTO rows
       pure $ maybe mapped (\tag -> filter (hasTag tag) mapped) mTag
@@ -187,6 +188,15 @@ validateSocialSyncArtistPartyId =
 validateSocialSyncArtistProfileId :: Text -> Either ServerError Int64
 validateSocialSyncArtistProfileId =
   validatePositiveSocialSyncId "artistProfileId"
+
+validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
+validateSocialSyncPostsLimit Nothing = Right 50
+validateSocialSyncPostsLimit (Just n)
+  | n >= 1 && n <= 500 = Right n
+  | otherwise =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "limit must be between 1 and 500")
+        }
 
 validatePositiveSocialSyncId :: Text -> Text -> Either ServerError Int64
 validatePositiveSocialSyncId fieldName raw =
@@ -228,12 +238,6 @@ buildSummary Nothing = Nothing
 buildSummary (Just txt) =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just (T.take 180 trimmed)
-
-clampLimit :: Int -> Int
-clampLimit n
-  | n < 1 = 1
-  | n > 500 = 500
-  | otherwise = n
 
 setMaybe :: PersistField a => EntityField SocialSyncPost (Maybe a) -> Maybe a -> [Update SocialSyncPost]
 setMaybe _ Nothing = []

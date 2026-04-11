@@ -71,7 +71,8 @@ import TDF.ServerProposals
 import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
 import TDF.Server.SocialSync
     ( validateSocialSyncArtistPartyId,
-      validateSocialSyncArtistProfileId )
+      validateSocialSyncArtistProfileId,
+      validateSocialSyncPostsLimit )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -271,6 +272,23 @@ main = hspec $ do
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "abc"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "-1"
+
+    describe "social sync posts limit validation" $ do
+        it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
+            validateSocialSyncPostsLimit Nothing `shouldBe` Right 50
+            validateSocialSyncPostsLimit (Just 1) `shouldBe` Right 1
+            validateSocialSyncPostsLimit (Just 500) `shouldBe` Right 500
+
+        it "rejects out-of-range explicit limits instead of silently clamping social sync queries" $ do
+            let assertInvalid raw = case validateSocialSyncPostsLimit (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 500"
+                    Right value ->
+                        expectationFailure ("Expected invalid social sync limit to be rejected, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-5)
+            assertInvalid 501
 
     describe "social events update payload parsing" $ do
         it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
