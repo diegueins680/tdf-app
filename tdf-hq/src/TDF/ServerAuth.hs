@@ -21,6 +21,7 @@ module TDF.ServerAuth
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
   , signupEmailExists
+  , validateRequestedSignupRoles
   ) where
 
 import Control.Applicative ((<|>))
@@ -154,6 +155,17 @@ signupAllowedRoles =
   , ReadOnly
   ]
 
+validateRequestedSignupRoles :: Maybe [RoleEnum] -> Either ServerError [RoleEnum]
+validateRequestedSignupRoles requestedRoles =
+  let disallowedRoles =
+        nub (filter (`notElem` signupAllowedRoles) (fromMaybe [] requestedRoles))
+  in if null disallowedRoles
+       then Right (nub (Customer : Fan : fromMaybe [] requestedRoles))
+       else
+         let roleList = T.intercalate ", " (map roleToText disallowedRoles)
+             msg = "Requested signup roles are not allowed for self-signup: " <> roleList
+         in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
 sessionServer :: AuthedUser -> ServerT Api.SessionAPI AppM
 sessionServer user =
        currentSession user
@@ -250,11 +262,10 @@ signup SignupRequest
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   when (maybe False (< 0) rawInternshipRequiredHours) $
     throwBadRequest "Internship required hours must be non-negative"
+  sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
-      allowedRoles = maybe [] (filter (`elem` signupAllowedRoles)) requestedRoles
-      sanitizedRoles = nub (Customer : Fan : allowedRoles)
       sanitizedFanArtists = maybe [] (filter (> 0)) requestedFanArtistIds
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb

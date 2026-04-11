@@ -50,6 +50,7 @@ import TDF.ServerAuth
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
     , signupEmailExists
+    , validateRequestedSignupRoles
     )
 import Test.Hspec
 
@@ -184,6 +185,23 @@ spec = describe "TDF.Server helpers" $ do
             normalizeAuthEmailAddress "user@example..com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@-example.com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@example-.com" `shouldBe` Nothing
+
+    describe "validateRequestedSignupRoles" $ do
+        it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do
+            validateRequestedSignupRoles (Just [Student, Fan, Customer, Vendor, Student])
+                `shouldBe` Right [Customer, Fan, Student, Vendor]
+            validateRequestedSignupRoles Nothing
+                `shouldBe` Right [Customer, Fan]
+
+        it "rejects forbidden self-signup roles instead of silently dropping them" $
+            case validateRequestedSignupRoles (Just [Student, Admin, Manager]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Requested signup roles are not allowed for self-signup: Admin, Manager"
+                Right rolesVal ->
+                    expectationFailure
+                        ("Expected forbidden signup roles to be rejected, got: " <> show rolesVal)
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers and preserves the raw-token fallback" $ do
