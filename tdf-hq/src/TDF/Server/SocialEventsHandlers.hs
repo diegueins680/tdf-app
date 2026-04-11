@@ -27,6 +27,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
   , normalizePositivePartyIdText
+  , validateEventArtistIds
   , normalizeMomentMediaType
   , normalizeMomentReaction
   , normalizeMomentCaption
@@ -493,6 +494,7 @@ socialEventsServer user = eventsServer
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
       currencyVal <- either throwError pure (validateEventCurrencyInput (eventCurrency dto))
+      artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
       let metadataVal =
             encodeEventMetadata
               EventMetadataDTO
@@ -523,14 +525,9 @@ socialEventsServer user = eventsServer
         , socialEventCreatedAt = now
         , socialEventUpdatedAt = now
         }) envPool
-      let artists = eventArtists dto
       liftIO $ runSqlPool
-        (forM_ artists $ \a ->
-           case artistId a of
-             Nothing -> pure ()
-             Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
-               Nothing -> pure ()
-               Just anum -> insert_ (EventArtist key (toSqlKey anum) Nothing)
+        (forM_ artistKeys $ \artistKey ->
+           insert_ (EventArtist key artistKey Nothing)
         )
         envPool
       pure dto
@@ -570,6 +567,7 @@ socialEventsServer user = eventsServer
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
       validatedMetadataUpdate <- either throwError pure (validateEventMetadataUpdate eudMetadataUpdate)
+      artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
       let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
           mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
@@ -589,14 +587,9 @@ socialEventsServer user = eventsServer
         , SocialEventUpdatedAt =. now
         ]) envPool
       liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. eventKey]) envPool
-      let artists = eventArtists dto
       liftIO $ runSqlPool
-        (forM_ artists $ \a ->
-           case artistId a of
-             Nothing -> pure ()
-             Just atxt -> case readMaybe (T.unpack atxt) :: Maybe Int64 of
-               Nothing -> pure ()
-               Just anum -> insert_ (EventArtist eventKey (toSqlKey anum) Nothing)
+        (forM_ artistKeys $ \artistKey ->
+           insert_ (EventArtist eventKey artistKey Nothing)
         )
         envPool
       pure (dto
@@ -2139,6 +2132,21 @@ validateRsvpStatus raw =
     "declined" -> Right "declined"
     "maybe" -> Right "maybe"
     _ -> Left err400 { errBody = "rsvpStatus must be one of: accepted, declined, maybe" }
+
+validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
+validateEventArtistIds =
+  fmap catMaybes . traverse validateArtistId
+  where
+    validateArtistId artist =
+      case artistId artist of
+        Nothing -> Right Nothing
+        Just rawArtistId ->
+          case normalizePositiveIdentifierText rawArtistId of
+            Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
+            Just normalizedArtistId ->
+              case readMaybe (T.unpack normalizedArtistId) :: Maybe Int64 of
+                Just artistIdValue -> Right (Just (toSqlKey artistIdValue))
+                Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text

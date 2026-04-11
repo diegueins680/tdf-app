@@ -10,7 +10,7 @@ import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist.Sql (toSqlKey)
+import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Servant (ServerError (..))
 import Servant.Multipart (FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
@@ -32,7 +32,8 @@ import TDF.API.WhatsApp
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DTO.SocialEventsDTO
-    ( EventMetadataUpdateDTO (..),
+    ( ArtistDTO (..),
+      EventMetadataUpdateDTO (..),
       EventUpdateDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
@@ -96,6 +97,7 @@ import TDF.Server.SocialEventsHandlers (
     parseInvitationIdsEither,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
+    validateEventArtistIds,
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateEventCurrencyInput,
@@ -395,6 +397,38 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
                 Right value ->
                     expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
+
+    describe "validateEventArtistIds" $ do
+        let mkArtist rawArtistId =
+                ArtistDTO
+                    { artistId = rawArtistId
+                    , artistPartyId = Nothing
+                    , artistName = ""
+                    , artistGenres = []
+                    , artistBio = Nothing
+                    , artistAvatarUrl = Nothing
+                    , artistSocialLinks = Nothing
+                    , artistCreatedAt = Nothing
+                    , artistUpdatedAt = Nothing
+                    }
+
+        it "preserves omitted artist references and canonicalizes explicit positive ids" $ do
+            fmap (map fromSqlKey)
+                (validateEventArtistIds [mkArtist Nothing, mkArtist (Just " 0042 "), mkArtist (Just "7")])
+                `shouldBe` Right [42, 7]
+
+        it "rejects malformed explicit artist ids instead of silently dropping event links" $ do
+            let assertInvalid rawArtistId =
+                    case validateEventArtistIds [mkArtist (Just rawArtistId)] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be a positive integer"
+                        Right value ->
+                            expectationFailure ("Expected invalid event artist id to be rejected, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "artist-42"
+            assertInvalid "0"
+            assertInvalid "-5"
 
     describe "normalizePositivePartyIdText" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do
