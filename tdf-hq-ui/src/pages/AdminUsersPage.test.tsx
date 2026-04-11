@@ -230,7 +230,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
@@ -425,6 +425,37 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps two-user rosters focused by waiting to show search until the list is denser', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('2 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-admin');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses the default multi-user guidance into one summary line instead of stacked helper copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
@@ -604,10 +635,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(container.textContent).not.toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
         expect(getRowByUserId(container, 101).textContent).toContain('WhatsApp pendiente');
@@ -632,7 +663,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando exista el segundo, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
@@ -876,6 +907,15 @@ describe('AdminUsersPage', () => {
         roles: ['Manager'],
         modules: ['crm'],
       }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -900,7 +940,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
-        expect(container.textContent).toContain('Mostrando 1 de 2 usuarios.');
+        expect(container.textContent).toContain('Mostrando 1 de 3 usuarios.');
         expect(container.textContent).not.toContain(
           'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
@@ -937,6 +977,15 @@ describe('AdminUsersPage', () => {
         roles: ['Manager'],
         modules: ['crm'],
       }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -950,7 +999,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
-        expect(container.textContent).toContain('2 usuarios en esta vista.');
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
         expect(container.textContent).not.toContain('Busca por identidad');
         expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
       });
@@ -975,6 +1024,15 @@ describe('AdminUsersPage', () => {
         roles: ['Manager'],
         modules: ['crm'],
       }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -986,6 +1044,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+        expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
       });
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
@@ -995,7 +1054,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(container.textContent).not.toContain('Mostrando 0 de 2');
+        expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
 
@@ -1006,6 +1065,7 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+        expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
       });
     } finally {
       await cleanup();
