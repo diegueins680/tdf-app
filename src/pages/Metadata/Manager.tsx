@@ -93,12 +93,15 @@ export default function MetadataManager() {
 
   const hasRows = rows.length > 0;
   const showEmptyState = !isLoading && !hasRows;
+  const singleMetadataRow = !isLoading && rows.length === 1 ? (rows[0] ?? null) : null;
   const exportMenuOpen = Boolean(exportAnchorEl);
   const toolbarDescription = isLoading
     ? 'Cargando catálogo…'
     : showEmptyState
       ? 'Empieza con Importar metadatos. La exportación aparecerá cuando exista el primer registro.'
-      : 'Exporta el catálogo actual en CSV o JSON desde un solo menú para evitar acciones duplicadas.';
+      : singleMetadataRow
+        ? 'Ya puedes exportar el catálogo actual en CSV o JSON. La tabla aparecerá cuando exista un segundo registro para comparar.'
+        : 'Exporta el catálogo actual en CSV o JSON desde un solo menú para evitar acciones duplicadas.';
 
   const handleOpenExportMenu = (event: MouseEvent<HTMLButtonElement>) => {
     setExportAnchorEl(event.currentTarget);
@@ -142,6 +145,46 @@ export default function MetadataManager() {
               Usa Importar metadatos para traer tu primer catálogo. Cuando exista el primero,
               aquí podrás revisarlo y exportarlo en CSV o JSON desde un solo lugar.
             </Typography>
+          </Stack>
+        </Paper>
+      ) : singleMetadataRow ? (
+        <Paper variant="outlined" sx={{ px: 3, py: 3 }}>
+          <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+            <Box>
+              <Typography variant="h6">Primer registro cargado.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Revísalo aquí; cuando exista el segundo, volverá la tabla para comparar catálogo, tempo y tonalidad.
+              </Typography>
+            </Box>
+            <Stack
+              spacing={0.75}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Typography variant="body2">
+                <Box component="span" sx={{ fontWeight: 600 }}>Catalog ID:</Box> {singleMetadataRow.catalog_id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Artist:</Box> {singleMetadataRow.artist_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Project:</Box> {singleMetadataRow.project_title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Type:</Box> {singleMetadataRow.session_type}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>BPM / Key:</Box> {singleMetadataRow.bpm} / {singleMetadataRow.key}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Genre:</Box> {singleMetadataRow.genre}
+              </Typography>
+            </Stack>
           </Stack>
         </Paper>
       ) : (
