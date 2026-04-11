@@ -487,6 +487,26 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
   });
 
+  it('deduplicates repeated users before deciding whether the page needs the full comparison table', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser(), buildAdminUser()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer usuario administrable\. Revísalo aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+  });
+
   it('uses each rendered role value as the edit affordance instead of showing duplicate edit actions', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),

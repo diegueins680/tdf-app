@@ -127,6 +127,19 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   });
 }
 
+function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
+  const seenUserIds = new Set<number>();
+
+  return users.filter((user) => {
+    if (seenUserIds.has(user.userId)) {
+      return false;
+    }
+
+    seenUserIds.add(user.userId);
+    return true;
+  });
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -281,7 +294,7 @@ export default function AdminConsolePage() {
   );
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
-  const users = usersQuery.data ?? [];
+  const users = dedupeAdminUsers(usersQuery.data ?? []);
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
