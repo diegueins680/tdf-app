@@ -15,6 +15,7 @@ module TDF.ServerAdmin
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
   , validateSocialErrorsLimit
+  , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
   , validateOptionalAdminUsername
   ) where
@@ -765,7 +766,7 @@ adminServer user =
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user
-      let limit = max 1 (min 300 (fromMaybe 150 mLimit))
+      limit <- either throwError pure (validateUserCommunicationHistoryLimit mLimit)
       mContext <- withPool (loadUserCommunicationContext userId)
       case mContext of
         Nothing -> throwError err404
@@ -1018,6 +1019,13 @@ validateSocialErrorsLimit Nothing = Right 50
 validateSocialErrorsLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 200 =
       Left err400 { errBody = "limit debe estar entre 1 y 200" }
+  | otherwise = Right rawLimit
+
+validateUserCommunicationHistoryLimit :: Maybe Int -> Either ServerError Int
+validateUserCommunicationHistoryLimit Nothing = Right 150
+validateUserCommunicationHistoryLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > 300 =
+      Left err400 { errBody = "limit must be between 1 and 300" }
   | otherwise = Right rawLimit
 
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text

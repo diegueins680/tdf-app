@@ -18,6 +18,7 @@ import TDF.ServerAdmin (
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
+    validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
   )
 
@@ -132,6 +133,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
             assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
             assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))
+
+    describe "validateUserCommunicationHistoryLimit" $ do
+        it "defaults omitted limits and accepts explicit values inside the supported history window" $ do
+            validateUserCommunicationHistoryLimit Nothing `shouldBe` Right 150
+            validateUserCommunicationHistoryLimit (Just 1) `shouldBe` Right 1
+            validateUserCommunicationHistoryLimit (Just 300) `shouldBe` Right 300
+
+        it "rejects out-of-range limits instead of silently clamping admin history queries" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` "limit must be between 1 and 300"
+                    Right value ->
+                        expectationFailure ("Expected invalid user communication history limit, got " <> show value)
+            assertInvalid (validateUserCommunicationHistoryLimit (Just 0))
+            assertInvalid (validateUserCommunicationHistoryLimit (Just 301))
+            assertInvalid (validateUserCommunicationHistoryLimit (Just (-5)))
 
     describe "validateSocialUnholdLookup" $ do
         it "accepts exactly one lookup key and trims the chosen identifier" $ do
