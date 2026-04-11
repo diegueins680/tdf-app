@@ -80,6 +80,17 @@ validateOptionalInternPartyIdUpdate _ (Just Nothing) = Right (Just Nothing)
 validateOptionalInternPartyIdUpdate fieldName (Just (Just rawPartyId)) =
   Just . Just <$> validatePositiveInternPartyId fieldName rawPartyId
 
+validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
+validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
+  | isAdminUser = Right ()
+  | isJust ituTitle
+      || isJust ituDescription
+      || isJust ituAssignedTo
+      || isJust ituDueAt =
+      Left err403
+        { errBody = "Only admins can update task title, description, assignee, or due date" }
+  | otherwise = Right ()
+
 validatePositiveInternPartyId :: Text -> Int64 -> Either ServerError Int64
 validatePositiveInternPartyId fieldName rawPartyId
   | rawPartyId > 0 = Right rawPartyId
@@ -331,9 +342,13 @@ internshipsServer user =
           isAdminUser = isAdmin user
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
+      either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
-      assignedToUpdate <- either throwError pure (validateOptionalInternPartyIdUpdate "assignedTo" ituAssignedTo)
+      assignedToUpdate <-
+        if isAdminUser
+          then either throwError pure (validateOptionalInternPartyIdUpdate "assignedTo" ituAssignedTo)
+          else pure Nothing
       let
           adminUpdates =
             [ fmap (ME.InternTaskTitle =.) ituTitle

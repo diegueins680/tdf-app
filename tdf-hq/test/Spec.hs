@@ -21,6 +21,7 @@ import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
       LiveSessionSongPayload (..) )
+import TDF.API.Types (InternTaskUpdate (..))
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
@@ -52,6 +53,7 @@ import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
+      validateInternTaskUpdatePermissions,
       validateOptionalInternPermissionStatusInput,
       validateOptionalInternPartyIdInput,
       validateOptionalInternPartyIdUpdate,
@@ -917,6 +919,34 @@ main = hspec $ do
                 (validateOptionalInternPartyIdInput "assignedTo" (Just (-1)))
             assertInvalid "assignedTo must be a positive integer"
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
+
+    describe "internship task update permissions" $ do
+        it "allows interns to change status/progress while keeping admin-only task edits available to admins" $ do
+            validateInternTaskUpdatePermissions False
+                (InternTaskUpdate Nothing Nothing (Just "doing") (Just 55) Nothing Nothing)
+                `shouldBe` Right ()
+            validateInternTaskUpdatePermissions True
+                (InternTaskUpdate (Just "Retitle")
+                    (Just (Just "Add checklist"))
+                    Nothing
+                    Nothing
+                    (Just (Just 7))
+                    (Just Nothing))
+                `shouldBe` Right ()
+
+        it "rejects non-admin attempts to change title, description, assignee, or due date instead of silently ignoring them" $ do
+            let assertForbidden payload = case validateInternTaskUpdatePermissions False payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 403
+                        BL.unpack (errBody err)
+                            `shouldContain` "Only admins can update task title, description, assignee, or due date"
+                    Right value ->
+                        expectationFailure
+                            ("Expected non-admin task update to be rejected, got " <> show value)
+            assertForbidden (InternTaskUpdate (Just "Retitle") Nothing Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing (Just (Just "Details")) Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing (Just (Just 7)) Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing (Just Nothing))
 
     describe "event finance normalizers" $ do
         it "normalizes event type and status with safe fallbacks" $ do
