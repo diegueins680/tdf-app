@@ -2,16 +2,17 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { AssetDTO, PartyDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types';
 
 const listAssetsMock = jest.fn<() => Promise<AssetDTO[] | { items: AssetDTO[] }>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
+const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
   Inventory: {
     list: () => listAssetsMock(),
-    history: jest.fn(() => Promise.resolve([])),
+    history: (assetId: string) => historyMock(assetId),
     generateQr: jest.fn(() => Promise.resolve({ qrUrl: 'https://example.com/qr' })),
     checkout: jest.fn(() => Promise.resolve(null)),
     checkin: jest.fn(() => Promise.resolve(null)),
@@ -96,6 +97,24 @@ const buildAsset = (overrides: Partial<AssetDTO> = {}): AssetDTO => ({
   ...overrides,
 });
 
+const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): AssetCheckoutDTO => ({
+  checkoutId: 1,
+  assetId: 'asset-1',
+  targetKind: 'party',
+  targetPartyId: 9,
+  targetRoomId: null,
+  targetSessionId: null,
+  dueAt: '2030-01-04T03:04:05.000Z',
+  checkedOutAt: '2030-01-02T03:04:05.000Z',
+  returnedAt: null,
+  conditionOut: 'Excelente',
+  conditionIn: null,
+  notes: 'Uso en grabación.',
+  partyName: 'Ada Lovelace',
+  roomName: null,
+  ...overrides,
+});
+
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
 
@@ -123,10 +142,12 @@ describe('InventoryPage', () => {
     listAssetsMock.mockReset();
     listRoomsMock.mockReset();
     listPartiesMock.mockReset();
+    historyMock.mockReset();
 
     listAssetsMock.mockResolvedValue([buildAsset()]);
     listRoomsMock.mockResolvedValue([]);
     listPartiesMock.mockResolvedValue([]);
+    historyMock.mockResolvedValue([]);
   });
 
   it('replaces the blank inventory table with first-run guidance when there are no assets', async () => {
@@ -210,6 +231,52 @@ describe('InventoryPage', () => {
         expect(container.querySelector('[aria-label="Abrir check-out de Prestado Uno"]')).toBeNull();
         expect(container.querySelector('[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
         expect(container.querySelector('[aria-label="Abrir check-out de Retirado Uno"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps checkout history inside the checkout flow until the admin explicitly opens the standalone history panel', async () => {
+    historyMock.mockResolvedValue([
+      buildCheckoutHistoryEntry(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[aria-label="Abrir check-out de Neumann U87"]')).not.toBeNull();
+      });
+
+      await act(async () => {
+        const checkoutButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir check-out de Neumann U87"]');
+        checkoutButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(historyMock).toHaveBeenCalledWith('asset-1');
+        expect(container.textContent).not.toContain('Historial · Neumann U87');
+        expect(container.textContent).not.toContain('Uso en grabación.');
+      });
+
+      await act(async () => {
+        const historyButton = Array.from(container.querySelectorAll('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Historial',
+        );
+        historyButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(historyMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('Historial · Neumann U87');
+        expect(container.textContent).toContain('Uso en grabación.');
       });
     } finally {
       await cleanup();

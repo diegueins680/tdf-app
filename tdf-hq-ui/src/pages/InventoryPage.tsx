@@ -70,6 +70,7 @@ export default function InventoryPage() {
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
+  const [historyViewMode, setHistoryViewMode] = useState<'panel' | 'embedded' | null>(null);
   const [currentCheckout, setCurrentCheckout] = useState<AssetCheckoutDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | null>(null);
   const [form, setForm] = useState<AssetCheckoutRequest>({
@@ -128,6 +129,7 @@ export default function InventoryPage() {
   });
 
   const openCheckout = (asset: AssetDTO) => {
+    setHistoryViewMode('embedded');
     setCurrentCheckout(null);
     setHistory([]);
     assetHistoryMutation.mutate(asset.assetId);
@@ -147,11 +149,13 @@ export default function InventoryPage() {
   };
 
   const openCheckin = (asset: AssetDTO) => {
+    setHistoryViewMode(null);
     setSelected(asset);
     setDialogOpen('checkin');
   };
 
   const openQr = (asset: AssetDTO) => {
+    setHistoryViewMode(null);
     setSelected(asset);
     if (asset.qrToken) {
       const url = buildInventoryScanUrl(asset.qrToken);
@@ -164,6 +168,7 @@ export default function InventoryPage() {
   };
 
   const openHistory = (asset: AssetDTO) => {
+    setHistoryViewMode('panel');
     setSelected(asset);
     assetHistoryMutation.mutate(asset.assetId);
   };
@@ -328,7 +333,7 @@ export default function InventoryPage() {
         </DialogActions>
       </Dialog>
 
-      {selected && history.length > 0 && (
+      {historyViewMode === 'panel' && selected && history.length > 0 && (
         <Card sx={{ mt: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
