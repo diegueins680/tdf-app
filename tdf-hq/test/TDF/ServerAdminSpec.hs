@@ -2,10 +2,12 @@
 
 module TDF.ServerAdminSpec (spec) where
 
+import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
+import TDF.API.Admin (EmailTestRequest (..))
 import TDF.ServerAdmin (
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
@@ -77,6 +79,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 , ("Linus", "linus@example.com")
                 ]
 
+    describe "EmailTestRequest FromJSON" $ do
+        it "accepts public wire keys instead of leaking internal record prefixes into the API contract" $
+            case eitherDecode
+                "{\"email\":\"ada@example.com\",\"name\":\"Ada\",\"subject\":\"Hola\",\"body\":\"Prueba\",\"ctaUrl\":\"https://example.com\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical email-test payload to decode, got: " <> err)
+                Right payload -> do
+                    etrEmail payload `shouldBe` "ada@example.com"
+                    etrName payload `shouldBe` Just "Ada"
+                    etrSubject payload `shouldBe` Just "Hola"
+                    etrBody payload `shouldBe` Just "Prueba"
+                    etrCtaUrl payload `shouldBe` Just "https://example.com"
+
+        it "rejects prefixed or unexpected keys so malformed email-test bodies fail explicitly" $ do
+            decodeEmailTest "{\"etrEmail\":\"ada@example.com\"}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
             validateAdminWhatsAppSendMode " reply " (Just 42) `shouldBe` Right "reply"
@@ -112,3 +131,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Provide externalId or senderId" (validateSocialUnholdLookup (Just "   ") (Just ""))
             assertInvalid "Provide only one of externalId or senderId"
                 (validateSocialUnholdLookup (Just "ext-1") (Just "sender-1"))
+  where
+    decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
+    decodeEmailTest = eitherDecode
+    isLeft (Left _) = True
+    isLeft (Right _) = False

@@ -17,7 +17,7 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
-import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, withObject, (.:?))
+import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, rejectUnknownFields, withObject, (.:?))
 import           Data.Aeson.Types (Parser)
 import           Data.Char      (toLower)
 import           GHC.Generics (Generic)
@@ -222,7 +222,11 @@ data EmailTestRequest = EmailTestRequest
   , etrBody    :: Maybe Text
   , etrCtaUrl  :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON EmailTestRequest
+instance FromJSON EmailTestRequest where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data EmailTestResponse = EmailTestResponse
   { status  :: Text
