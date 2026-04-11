@@ -525,6 +525,7 @@ isValidHttpUrl rawUrl
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
+        && not (looksLikeInvalidIpv4 normalizedHost)
         && not (isPrivateHost normalizedHost)
 
     validateBracketedHost host =
@@ -559,6 +560,16 @@ isValidHttpUrl rawUrl
           od <- parseOctet d
           pure (oa, ob, oc, od)
         _ -> Nothing
+
+    -- Reject malformed dotted-quad hosts that would otherwise slip through as DNS labels.
+    looksLikeInvalidIpv4 host =
+      case T.splitOn "." host of
+        [a, b, c, d]
+          | all isNumericLabel [a, b, c, d] -> isNothing (parseIpv4Octets host)
+        _ -> False
+
+    isNumericLabel label =
+      not (T.null label) && T.all isDigit label
 
     parseOctet octet
       | T.null octet || T.any (not . isDigit) octet = Nothing

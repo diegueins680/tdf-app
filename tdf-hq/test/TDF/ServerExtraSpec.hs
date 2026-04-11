@@ -406,6 +406,7 @@ spec = do
               expectationFailure ("Expected invalid payment attachment URL error, got " <> show value)
       assertInvalid (validatePaymentAttachmentUrl (Just "proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://files.example.com/proof copy.pdf"))
+      assertInvalid (validatePaymentAttachmentUrl (Just "https://256.256.256.256/proof.pdf"))
 
   describe "validatePaymentConcept" $ do
     it "trims meaningful concepts before storing manual payment rows" $ do
