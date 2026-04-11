@@ -462,6 +462,25 @@ validateTrialScheduleInput input@TrialScheduleIn{..}
   | otherwise =
       Right input
 
+normalizeTrialRequestStatusFilter :: Text -> Maybe Text
+normalizeTrialRequestStatusFilter rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "requested" -> Just statusRequested
+    "assigned" -> Just statusAssigned
+    "scheduled" -> Just statusScheduled
+    _ -> Nothing
+
+validateOptionalTrialRequestStatusFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalTrialRequestStatusFilter Nothing = Right Nothing
+validateOptionalTrialRequestStatusFilter (Just rawStatus) =
+  case cleanOptional (Just rawStatus) of
+    Nothing -> Right Nothing
+    Just statusVal ->
+      case normalizeTrialRequestStatusFilter statusVal of
+        Just normalized -> Right (Just normalized)
+        Nothing ->
+          Left err400 { errBody = "status must be one of: Requested, Assigned, Scheduled" }
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
@@ -879,9 +898,10 @@ privateTrialsServer user@AuthedUser{..} =
     queueH :: Maybe Int -> Maybe Text -> AppM [TrialQueueItem]
     queueH mSubject mStatus = do
       ensureSchoolStaffAccess
+      normalizedStatus <- either (liftIO . throwIO) pure (validateOptionalTrialRequestStatusFilter mStatus)
       let filters = catMaybes
             [ (TrialRequestSubjectId ==.) . intKey <$> mSubject
-            , (TrialRequestStatus ==.) . T.strip <$> mStatus
+            , (TrialRequestStatus ==.) <$> normalizedStatus
             ]
       requests <- selectList filters [Desc TrialRequestCreatedAt]
       let subjectIds = map (trialRequestSubjectId . entityVal) requests

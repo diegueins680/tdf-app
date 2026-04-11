@@ -29,6 +29,7 @@ import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
+  , validateOptionalTrialRequestStatusFilter
   , validatePreferredSlots
   , validatePreferredSlotsAt
   , validatePublicInterestInput
@@ -131,6 +132,22 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
+
+  describe "validateOptionalTrialRequestStatusFilter" $ do
+    it "treats omitted or blank filters as absent and canonicalizes supported values" $ do
+      validateOptionalTrialRequestStatusFilter Nothing `shouldBe` Right Nothing
+      validateOptionalTrialRequestStatusFilter (Just "   ") `shouldBe` Right Nothing
+      validateOptionalTrialRequestStatusFilter (Just " requested ") `shouldBe` Right (Just "Requested")
+      validateOptionalTrialRequestStatusFilter (Just "ASSIGNED") `shouldBe` Right (Just "Assigned")
+      validateOptionalTrialRequestStatusFilter (Just "Scheduled") `shouldBe` Right (Just "Scheduled")
+
+    it "rejects unknown trial request statuses instead of silently returning an empty queue" $
+      case validateOptionalTrialRequestStatusFilter (Just "pending") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "status must be one of: Requested, Assigned, Scheduled"
+        Right value ->
+          expectationFailure ("Expected invalid trial queue status filter to be rejected, got " <> show value)
 
   describe "validatePublicInterestInput" $ do
     it "rejects blank interest types instead of creating unusable anonymous lead rows" $
