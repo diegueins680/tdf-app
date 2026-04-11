@@ -72,7 +72,10 @@ import TDF.ServerProposals
       validateProposalStatus,
       validateProposalVersionNumber,
       validateTemplateKey )
-import TDF.ServerFeedback (normalizeOptionalFeedbackText, validateOptionalFeedbackContactEmail)
+import TDF.ServerFeedback
+    ( normalizeOptionalFeedbackText,
+      sanitizeFeedbackAttachmentFileName,
+      validateOptionalFeedbackContactEmail )
 import TDF.Server.SocialSync
     ( validateSocialSyncArtistPartyId,
       validateSocialSyncArtistProfileId,
@@ -179,6 +182,19 @@ main = hspec $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+
+    describe "sanitizeFeedbackAttachmentFileName" $ do
+        it "reduces attachment names to a stable safe basename" $ do
+            sanitizeFeedbackAttachmentFileName "  ../Bug report final?.png  "
+                `shouldBe` "Bug-report-final-.png"
+            sanitizeFeedbackAttachmentFileName " screenshot\t2026-04-11\nfinal.png "
+                `shouldBe` "screenshot-2026-04-11-final.png"
+
+        it "falls back when the upload filename is blank or only dangerous punctuation" $ do
+            sanitizeFeedbackAttachmentFileName "   " `shouldBe` "attachment"
+            sanitizeFeedbackAttachmentFileName "." `shouldBe` "attachment"
+            sanitizeFeedbackAttachmentFileName ".." `shouldBe` "attachment"
+            sanitizeFeedbackAttachmentFileName "/\\///" `shouldBe` "attachment"
 
     describe "feedback multipart parsing" $ do
         it "accepts omitted consent as false and normalizes explicit truthy values" $ do

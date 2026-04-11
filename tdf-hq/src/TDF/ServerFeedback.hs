@@ -7,6 +7,7 @@ module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
   , validateOptionalFeedbackContactEmail
+  , sanitizeFeedbackAttachmentFileName
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
@@ -14,7 +15,7 @@ import           Control.Monad              (forM_, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
-import           Data.Char                  (isAsciiLower, isDigit)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import           Data.Time                  (getCurrentTime)
@@ -83,16 +84,13 @@ feedbackServer user = submitFeedback
 
     storeAttachment :: FileData Tmp -> IO FilePath
     storeAttachment FileData{..} = do
-      let safeName = sanitize (T.pack (takeFileName (T.unpack fdFileName)))
+      let safeName = sanitizeFeedbackAttachmentFileName (T.pack (takeFileName (T.unpack fdFileName)))
       token <- toText <$> nextRandom
       let destDir = "uploads/feedback"
       createDirectoryIfMissing True destDir
       let destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
       BL.readFile fdPayload >>= BL.writeFile destPath
       pure destPath
-
-    sanitize :: Text -> Text
-    sanitize = T.filter (\c -> c /= '/' && c /= '\\')
 
 normalizeOptionalFeedbackText :: Maybe Text -> Maybe Text
 normalizeOptionalFeedbackText mVal =
@@ -131,6 +129,23 @@ isValidDomainLabel label =
 
 isValidDomainChar :: Char -> Bool
 isValidDomainChar c = isAsciiLower c || isDigit c || c == '-'
+
+sanitizeFeedbackAttachmentFileName :: Text -> Text
+sanitizeFeedbackAttachmentFileName rawName =
+  let trimmed = T.strip rawName
+      baseName = T.pack (takeFileName (T.unpack trimmed))
+      cleaned = T.map normalizeAttachmentChar baseName
+      stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+  in
+    if T.null stripped || stripped == "." || stripped == ".."
+      then "attachment"
+      else stripped
+  where
+    normalizeAttachmentChar ch
+      | isAscii ch && isAlphaNum ch = ch
+      | ch == '.' || ch == '-' || ch == '_' = ch
+      | ch == ' ' = '-'
+      | otherwise = '-'
 
 notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
 notify emailSvc title body mCat mSev mContact attachmentPath = do
