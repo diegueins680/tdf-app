@@ -6,6 +6,7 @@ module TDF.Contracts.Server
   , decodeStoredContract
   , validateContractId
   , validateContractPayload
+  , validateContractSendPayload
   ) where
 
 import           Control.Monad.IO.Class (liftIO)
@@ -97,14 +98,16 @@ server = createH :<|> pdfH :<|> sendH
             Right pdf -> pure pdf
 
     sendH :: Text -> A.Value -> Handler A.Value
-    sendH cid _body = do
+    sendH cid body = do
       contractId <- either throwError pure (validateContractId cid)
+      recipientEmail <- either throwError pure (validateContractSendPayload body)
       storedResult <- liftIO (loadContract contractId)
       case storedResult of
         Left errMsg ->
           throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
         Right Nothing -> throwError err404 { errBody = "Contract not found" }
-        Right (Just _)  -> pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId])
+        Right (Just _)  ->
+          pure (A.object ["status" .= ("sent" :: Text), "id" .= contractId, "email" .= recipientEmail])
 
 persistContract :: StoredContract -> IO ()
 persistContract stored = do
@@ -167,6 +170,29 @@ validateContractId raw =
         { errBody = "Invalid contract id"
         }
 
+validateContractSendPayload :: A.Value -> Either ServerError Text
+validateContractSendPayload (A.Object payloadObj)
+  | not (KM.null (KM.delete "email" payloadObj)) =
+      Left err400
+        { errBody = "Contract send payload only supports the email field"
+        }
+  | otherwise =
+      case KM.lookup "email" payloadObj of
+        Just (A.String rawEmail) ->
+          case normalizeContractEmail rawEmail of
+            Just email -> Right email
+            Nothing -> invalidEmail
+        _ -> invalidEmail
+  where
+    invalidEmail =
+      Left err400
+        { errBody = "Contract send payload must include a valid email"
+        }
+validateContractSendPayload _ =
+  Left err400
+    { errBody = "Contract send payload must be a JSON object"
+    }
+
 validateContractPayload :: A.Value -> Either ServerError (Text, A.Value)
 validateContractPayload (A.Object payloadObj) =
   case KM.lookup "kind" payloadObj of
@@ -188,6 +214,44 @@ validateContractPayload _ =
   Left err400
     { errBody = "Contract payload must be a JSON object"
     }
+
+normalizeContractEmail :: Text -> Maybe Text
+normalizeContractEmail rawEmail =
+  let normalized = T.toLower (T.strip rawEmail)
+  in if isValidContractEmail normalized then Just normalized else Nothing
+
+isValidContractEmail :: Text -> Bool
+isValidContractEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      isValidContractEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
+        && T.isInfixOf "." domain
+        && all isValidContractEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+isValidContractEmailLocalPart :: Text -> Bool
+isValidContractEmailLocalPart localPart =
+  not (T.null localPart)
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidContractEmailLocalChar localPart
+
+isValidContractEmailLocalChar :: Char -> Bool
+isValidContractEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidContractEmailDomainLabel :: Text -> Bool
+isValidContractEmailDomainLabel label =
+  not (T.null label)
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidContractEmailDomainChar label
+
+isValidContractEmailDomainChar :: Char -> Bool
+isValidContractEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 normalizeContractKind :: Text -> Either ServerError Text
 normalizeContractKind rawKind

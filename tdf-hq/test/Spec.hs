@@ -51,7 +51,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio (validateRadioImportLimit, validateRadioMetadataRefreshLimit, validateRadioStreamUrl)
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
-import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload)
+import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
 import TDF.ServerInternships
     ( validateInternProjectStatusInput,
       validateInternPermissionDateRange,
@@ -1019,6 +1019,27 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
+
+    describe "validateContractSendPayload" $ do
+        it "requires an object body with a canonical recipient email" $
+            validateContractSendPayload (A.object ["email" .= (" Sales@Example.com " :: Text)])
+                `shouldBe` Right "sales@example.com"
+
+        it "rejects missing, malformed, or unexpected send fields instead of silently ignoring the request body" $ do
+            let assertInvalid payload expected =
+                    case validateContractSendPayload payload of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid contract send payload to be rejected, got: " <> show value)
+            assertInvalid (A.String "sales@example.com") "Contract send payload must be a JSON object"
+            assertInvalid (A.object []) "Contract send payload must include a valid email"
+            assertInvalid (A.object ["email" .= ("" :: Text)]) "Contract send payload must include a valid email"
+            assertInvalid (A.object ["email" .= ("not-an-email" :: Text)]) "Contract send payload must include a valid email"
+            assertInvalid
+                (A.object ["email" .= ("sales@example.com" :: Text), "subject" .= ("Contract" :: Text)])
+                "Contract send payload only supports the email field"
 
     describe "decodeStoredContract" $ do
         it "accepts persisted contracts with the expected stored shape" $
