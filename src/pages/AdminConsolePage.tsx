@@ -327,7 +327,7 @@ export default function AdminConsolePage() {
     ? null
     : (
       singleAdminUser
-        ? 'Haz clic sobre un rol para editarlo desde esta misma vista.'
+        ? null
         : (
           showUsersTable && !showUsersStatusColumn
             ? 'Todas las cuentas administrables están activas. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida.'
@@ -678,7 +678,7 @@ export default function AdminConsolePage() {
                       textTransform: 'none',
                     }}
                   >
-                    Roles: {formatRoleList(singleAdminUser.roles)}
+                    Editar roles: {formatRoleList(singleAdminUser.roles)}
                   </Button>
                   <Typography variant="body2" color="text.secondary">
                     Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}

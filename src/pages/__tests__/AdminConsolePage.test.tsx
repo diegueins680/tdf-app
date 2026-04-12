@@ -547,9 +547,10 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
-      expect(screen.getByText('Roles: Admin')).toBeInTheDocument();
+      expect(screen.getByText('Editar roles: Admin')).toBeInTheDocument();
       expect(screen.getByText('Último acceso: —')).toBeInTheDocument();
       expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toBeInTheDocument();
     });
 
@@ -710,8 +711,8 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('Roles: Admin, Manager')).toBeInTheDocument();
-      expect(screen.queryByText('Roles: Manager, Admin, Manager')).not.toBeInTheDocument();
+      expect(screen.getByText('Editar roles: Admin, Manager')).toBeInTheDocument();
+      expect(screen.queryByText('Editar roles: Manager, Admin, Manager')).not.toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }));
