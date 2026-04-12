@@ -27,6 +27,7 @@ data AppConfig = AppConfig
   , dbUser          :: String
   , dbPass          :: String
   , dbName          :: String
+  , dbConnUrl       :: Maybe String
   , appPort         :: Int
   , resetDb         :: Bool
   , seedDatabase    :: Bool
@@ -85,19 +86,23 @@ ragEmbeddingDim cfg = fromMaybe 1536 (openAiEmbedDimensions (openAiEmbedModel cf
 
 dbConnString :: AppConfig -> String
 dbConnString cfg =
-  "host="    <> dbHost cfg    <>
-  " port="   <> dbPort cfg    <>
-  " user="   <> dbUser cfg    <>
-  " password=" <> dbPass cfg  <>
-  " dbname=" <> dbName cfg    -- no 'pool=' here; pooling is managed by createPostgresqlPool
+  fromMaybe keywordStyle (dbConnUrl cfg)
+  where
+    keywordStyle =
+      "host="    <> dbHost cfg    <>
+      " port="   <> dbPort cfg    <>
+      " user="   <> dbUser cfg    <>
+      " password=" <> dbPass cfg  <>
+      " dbname=" <> dbName cfg    -- no 'pool=' here; pooling is managed by createPostgresqlPool
 
 loadConfig :: IO AppConfig
 loadConfig = do
-  h          <- get "DB_HOST" "127.0.0.1"
-  p          <- get "DB_PORT" "5432"
-  u          <- get "DB_USER" "postgres"
-  w          <- get "DB_PASS" "postgres"
-  d          <- get "DB_NAME" "tdf_hq"
+  connUrl    <- lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
+  p          <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
+  u          <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
+  w          <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
+  d          <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
   ap         <- get "APP_PORT" "8080"
   rdb        <- get "RESET_DB" "false"
   sdb        <- get "SEED_DB" "false"
@@ -166,6 +171,7 @@ loadConfig = do
     , dbUser = u
     , dbPass = w
     , dbName = d
+    , dbConnUrl = connUrl
     , appPort = parseInt 8080 (Just ap)
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb
@@ -215,6 +221,16 @@ loadConfig = do
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
+    getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
+    lookupFirstEnv [] = pure Nothing
+    lookupFirstEnv (key:rest) = do
+      value <- lookupEnv key
+      case value >>= normalizeEnvString of
+        Just normalized -> pure (Just normalized)
+        Nothing -> lookupFirstEnv rest
+    normalizeEnvString raw =
+      let trimmed = T.unpack (T.strip (T.pack raw))
+      in if null trimmed then Nothing else Just trimmed
     asBool v = case fmap toLower v of
       "true"  -> True
       "1"     -> True

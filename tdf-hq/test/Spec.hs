@@ -111,7 +111,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
-import TDF.Config (appPort, emailConfig, loadConfig, smtpPort)
+import TDF.Config (appPort, dbConnString, emailConfig, loadConfig, smtpPort)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
@@ -153,6 +153,40 @@ main = hspec $ do
                     cfg <- loadConfig
                     appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
+
+        it "prefers DATABASE_URL-style connection strings when platform secrets provide them" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
+                , ("DB_HOST", Just "127.0.0.1")
+                , ("DB_PORT", Just "5432")
+                , ("DB_USER", Just "postgres")
+                , ("DB_PASS", Just "postgres")
+                , ("DB_NAME", Just "tdf_hq")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+
+        it "falls back to standard PG* env vars when DB_* vars are not configured" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Nothing)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Just "pg.fly.internal")
+                , ("PGPORT", Just "6543")
+                , ("PGUSER", Just "flyuser")
+                , ("PGPASSWORD", Just "flypass")
+                , ("PGDATABASE", Just "flydb")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb"
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do
