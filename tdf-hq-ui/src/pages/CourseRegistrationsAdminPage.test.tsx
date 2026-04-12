@@ -3403,6 +3403,21 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the initial loading state focused on the first-result setup instead of a refresh action', async () => {
+    listRegistrationsMock.mockImplementation(() => new Promise(() => {}));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Cargando inscripciones…');
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Refrescar lista')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first-run empty state focused on onboarding guidance instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 

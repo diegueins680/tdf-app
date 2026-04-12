@@ -765,7 +765,10 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
-  const showListRefreshAction = !showInitialFilterGuidance;
+  const showListRefreshAction = regsQuery.isError
+    || cohortsQuery.isError
+    || hasCustomFilters
+    || hasVisibleRegistrations;
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT
