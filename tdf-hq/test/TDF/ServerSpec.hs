@@ -831,9 +831,8 @@ spec = describe "TDF.Server helpers" $ do
             assertOffsetInvalid (validateMarketplaceOrderListOffset (Just (-1)))
 
     describe "validateOptionalMarketplaceOrderStatus" $ do
-        it "treats omitted or blank filters as absent and canonicalizes supported statuses" $ do
+        it "keeps omitted filters absent and canonicalizes supported statuses" $ do
             validateOptionalMarketplaceOrderStatus Nothing `shouldBe` Right Nothing
-            validateOptionalMarketplaceOrderStatus (Just "   ") `shouldBe` Right Nothing
             validateOptionalMarketplaceOrderStatus (Just " PayPal Pending ")
                 `shouldBe` Right (Just "paypal_pending")
             validateOptionalMarketplaceOrderStatus (Just "canceled")
@@ -841,17 +840,20 @@ spec = describe "TDF.Server helpers" $ do
             validateOptionalMarketplaceOrderStatus (Just "datafast failed")
                 `shouldBe` Right (Just "datafast_failed")
 
-        it "rejects unknown marketplace statuses instead of silently returning an empty slice" $
-            case validateOptionalMarketplaceOrderStatus (Just "refunded") of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "pending, contact, paid, cancelled"
-                Right statusVal ->
-                    expectationFailure
-                        ( "Expected invalid marketplace order status to be rejected, got: "
-                            <> show statusVal
-                        )
+        it "rejects blank or unknown marketplace statuses instead of silently broadening the list query" $ do
+            let assertInvalid rawStatus =
+                    case validateOptionalMarketplaceOrderStatus (Just rawStatus) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "status must be omitted or one of"
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected invalid marketplace order status to be rejected, got: "
+                                    <> show statusVal
+                                )
+            assertInvalid "   "
+            assertInvalid "refunded"
 
     describe "validateMarketplaceOrderUpdateStatus" $ do
         it "keeps omitted update statuses untouched and canonicalizes supported explicit values" $ do

@@ -5598,11 +5598,11 @@ validateOptionalMarketplaceOrderStatus :: Maybe Text -> Either ServerError (Mayb
 validateOptionalMarketplaceOrderStatus Nothing = Right Nothing
 validateOptionalMarketplaceOrderStatus (Just rawStatus) =
   case normalizeOptionalInput (Just rawStatus) of
-    Nothing -> Right Nothing
+    Nothing -> Left err400 { errBody = marketplaceOptionalOrderStatusErrorBody }
     Just statusVal ->
       case normalizeMarketplaceOrderStatus statusVal of
         Just normalized -> Right (Just normalized)
-        Nothing -> Left err400 { errBody = marketplaceOrderStatusErrorBody }
+        Nothing -> Left err400 { errBody = marketplaceOptionalOrderStatusErrorBody }
 
 validateMarketplaceOrderUpdateStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateMarketplaceOrderUpdateStatus Nothing = Right Nothing
@@ -5617,6 +5617,12 @@ validateMarketplaceOrderUpdateStatus (Just rawStatus) =
 marketplaceOrderStatusErrorBody :: BL.ByteString
 marketplaceOrderStatusErrorBody =
   "status must be one of: pending, contact, paid, cancelled, failed, "
+    <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
+    <> "paypal_failed"
+
+marketplaceOptionalOrderStatusErrorBody :: BL.ByteString
+marketplaceOptionalOrderStatusErrorBody =
+  "status must be omitted or one of: pending, contact, paid, cancelled, failed, "
     <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
     <> "paypal_failed"
 
