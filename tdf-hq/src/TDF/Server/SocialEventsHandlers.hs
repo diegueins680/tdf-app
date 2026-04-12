@@ -33,6 +33,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentReaction
   , normalizeMomentCaption
   , normalizeMomentCommentBody
+  , validateEventCreateUpdateDimensions
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
@@ -492,7 +493,11 @@ socialEventsServer user = eventsServer
       now <- liftIO getCurrentTime
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
-      when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
+      either throwError pure $
+        validateEventCreateUpdateDimensions
+          (eventPriceCents dto)
+          (eventCapacity dto)
+          (eventBudgetCents dto)
       (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
       currencyVal <- either throwError pure (validateEventCurrencyInput (eventCurrency dto))
       artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
@@ -566,7 +571,11 @@ socialEventsServer user = eventsServer
       let dto = eudEvent
       when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
-      when (maybe False (< 0) (eventBudgetCents dto)) $ throwError err400 { errBody = "event budget must be >= 0" }
+      either throwError pure $
+        validateEventCreateUpdateDimensions
+          (eventPriceCents dto)
+          (eventCapacity dto)
+          (eventBudgetCents dto)
       validatedMetadataUpdate <- either throwError pure (validateEventMetadataUpdate eudMetadataUpdate)
       artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
       let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
@@ -2272,6 +2281,17 @@ normalizeBudgetCentsMaybe mBudget =
   case mBudget of
     Just n | n >= 0 -> Just n
     _ -> Nothing
+
+validateEventCreateUpdateDimensions :: Maybe Int -> Maybe Int -> Maybe Int -> Either ServerError ()
+validateEventCreateUpdateDimensions mPriceCents mCapacity mBudgetCents
+  | maybe False (< 0) mPriceCents =
+      Left err400 { errBody = "event price must be >= 0" }
+  | maybe False (< 0) mCapacity =
+      Left err400 { errBody = "event capacity must be >= 0" }
+  | maybe False (< 0) mBudgetCents =
+      Left err400 { errBody = "event budget must be >= 0" }
+  | otherwise =
+      Right ()
 
 validateEventCurrencyInput :: Maybe T.Text -> Either ServerError T.Text
 validateEventCurrencyInput mCurrency =

@@ -98,6 +98,7 @@ import TDF.Server.SocialEventsHandlers (
     parseEventStatusQueryParamEither,
     parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
+    validateEventCreateUpdateDimensions,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
     parseNearQueryEither,
@@ -534,6 +535,30 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
                 Right value ->
                     expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
+
+    describe "validateEventCreateUpdateDimensions" $ do
+        it "accepts omitted, free, and finite non-negative event pricing dimensions" $ do
+            validateEventCreateUpdateDimensions Nothing Nothing Nothing `shouldBe` Right ()
+            validateEventCreateUpdateDimensions (Just 0) (Just 0) (Just 0) `shouldBe` Right ()
+            validateEventCreateUpdateDimensions (Just 2500) (Just 120) (Just 9000) `shouldBe` Right ()
+
+        it "rejects negative event price, capacity, and budget values instead of storing invalid event dimensions" $ do
+            let assertInvalid dims expected =
+                    case dims of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid event dimensions to be rejected, got " <> show value)
+            assertInvalid
+                (validateEventCreateUpdateDimensions (Just (-1)) Nothing Nothing)
+                "event price must be >= 0"
+            assertInvalid
+                (validateEventCreateUpdateDimensions Nothing (Just (-5)) Nothing)
+                "event capacity must be >= 0"
+            assertInvalid
+                (validateEventCreateUpdateDimensions Nothing Nothing (Just (-10)))
+                "event budget must be >= 0"
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =
