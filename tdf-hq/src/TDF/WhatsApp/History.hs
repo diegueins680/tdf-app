@@ -244,9 +244,10 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
   snapshot <- resolveWhatsAppContactSnapshot owrRecipientPartyId (Just owrRecipientPhone)
   let recipientPhone = fromMaybe (nonEmptyOr "unknown" owrRecipientPhone) (normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot)
       safeBase = if T.null (T.strip recipientPhone) then "unknown" else T.strip recipientPhone
+      fallbackExternalId = safeBase <> "-out-" <> T.pack (show now)
       externalId = case sendResult of
-        Left _ -> safeBase <> "-out-" <> T.pack (show now)
-        Right resp -> fromMaybe (safeBase <> "-out-" <> T.pack (show now)) (sendTextMessageId resp)
+        Left _ -> fallbackExternalId
+        Right resp -> fromMaybe fallbackExternalId (cleanMaybeText (sendTextMessageId resp))
       isFailure =
         case sendResult of
           Left _ -> True
