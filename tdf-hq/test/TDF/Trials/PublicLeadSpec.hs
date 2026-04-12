@@ -6,7 +6,7 @@ import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
@@ -20,6 +20,7 @@ import TDF.Trials.DTO
   ( ClassSessionDTO
   , ClassSessionUpdate (..)
   , PreferredSlot (..)
+  , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
   , TrialRequestOut (..)
@@ -399,6 +400,31 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
         Right value ->
           expectationFailure ("Expected inverted availability window to be rejected, got " <> show value)
+
+  describe "private trial availability upserts" $ do
+    it "rejects non-room resources instead of publishing impossible availability slots" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let availabilityStart = addUTCTime 3600 now
+            availabilityEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
+        subjectKey <- insert (Subject "Piano" True)
+        privateAvailabilityUpsertHandler
+          (TrialAvailabilityUpsert
+            Nothing
+            (fromIntegral (fromSqlKey subjectKey))
+            (pack (show (fromSqlKey nonRoomResourceId)))
+            availabilityStart
+            availabilityEnd
+            Nothing
+            (Just (fromIntegral (fromSqlKey teacherPartyId))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no es una sala"
+        Right _ ->
+          expectationFailure "Expected non-room resources to be rejected for availability upserts"
 
   describe "private trial scheduling" $ do
     it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
@@ -1016,6 +1042,11 @@ privateAvailabilityListHandler
 privateAvailabilityListHandler =
   let _ :<|> _ :<|> _ :<|> availabilityListH :<|> _ = privateTrialsServer adminUser
   in availabilityListH
+
+privateAvailabilityUpsertHandler :: TrialAvailabilityUpsert -> SqlPersistT IO TrialAvailabilitySlotDTO
+privateAvailabilityUpsertHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> availabilityUpsertH :<|> _ = privateTrialsServer adminUser
+  in availabilityUpsertH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =

@@ -1262,7 +1262,10 @@ privateTrialsServer user@AuthedUser{..} =
           mRoom <- get key
           case mRoom of
             Nothing -> liftIO $ throwIO err404
-            Just _  -> pure key
+            Just room ->
+              if Models.resourceResourceType room == Models.Room
+                then pure key
+                else liftIO $ throwIO err422 { errBody = "El recurso seleccionado no es una sala" }
 
     ensureRoomAllowed :: SubjectId -> ResourceId -> AppM ()
     ensureRoomAllowed subjectKey roomKey = do
