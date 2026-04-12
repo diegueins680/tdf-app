@@ -156,6 +156,38 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
   });
 
+  it('collapses the healthy service card into one friendly summary', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Estado del servicio')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Todo listo: API y base de datos responden correctamente\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/^API:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Base de datos:/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps detailed service checks visible when one dependency is not healthy', async () => {
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
+
+    renderPage();
+
+    expect(await screen.findByText('Estado del servicio')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('API: ok')).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/Todo listo: API y base de datos responden correctamente\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the header refresh action available when first-run data is empty because a query failed', async () => {
     mockHealthFetch.mockRejectedValue(new Error('Sin conexión'));
 

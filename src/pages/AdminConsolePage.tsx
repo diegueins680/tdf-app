@@ -71,6 +71,7 @@ const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_COLUMN_COUNT = 5;
+const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -192,6 +193,14 @@ function formatAuditActor(actorId?: number | null) {
 
 function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
   return user.lastSeenAt ?? user.lastLoginAt;
+}
+
+function normalizeHealthIndicator(value?: string | null) {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function isHealthyHealthIndicator(value?: string | null) {
+  return HEALTHY_HEALTH_INDICATORS.has(normalizeHealthIndicator(value));
 }
 
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
@@ -436,6 +445,10 @@ export default function AdminConsolePage() {
     || auditQuery.isFetching
     || consoleQuery.isFetching
     || usersQuery.isFetching;
+  const showCompactHealthyServiceSummary =
+    healthQuery.data != null
+    && isHealthyHealthIndicator(healthQuery.data.status)
+    && isHealthyHealthIndicator(healthQuery.data.db);
   const firstRunDemoActionCopy = {
     description: 'Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
     buttonLabel: 'Cargar datos de ejemplo',
@@ -588,8 +601,16 @@ export default function AdminConsolePage() {
         <Card variant="outlined" id="admin-service-health">
           <CardHeader title="Estado del servicio" />
           <CardContent>
-            <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
-            <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
+            {showCompactHealthyServiceSummary ? (
+              <Typography variant="body2">
+                Todo listo: API y base de datos responden correctamente.
+              </Typography>
+            ) : (
+              <>
+                <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
+                <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
+              </>
+            )}
             {healthQuery.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {(healthQuery.error as Error).message}
