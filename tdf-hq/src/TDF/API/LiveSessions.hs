@@ -167,7 +167,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       decodeSetlist txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
-          Right xs -> Right xs
+          Right xs ->
+            case traverse validateSetlistSong xs of
+              Left err -> Left ("Invalid setlist payload: " <> err)
+              Right validated -> Right validated
 
       validateMusician musician = do
         normalizedEmail <-
@@ -192,6 +195,18 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           else if noReferenceProvided
             then Left "each musician must include a non-blank name, email, or partyId"
             else Right normalizedMusician
+
+      validateSetlistSong song =
+        let normalizedTitle = T.strip (lssTitle song)
+            normalizedSong =
+              song
+                { lssTitle = normalizedTitle
+                , lssSongKey = lssSongKey song >>= normalizeOptionalText
+                , lssLyrics = lssLyrics song >>= normalizeOptionalText
+                }
+        in if T.null normalizedTitle
+             then Left "each setlist song must include a non-blank title"
+             else Right normalizedSong
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =

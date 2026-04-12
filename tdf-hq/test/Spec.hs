@@ -1649,6 +1649,17 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected anonymous musician row to be rejected, got: " <> show payload)
 
+        it "rejects blank setlist titles instead of silently dropping songs from the intake" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"   \",\"songKey\":\"C#m\"}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "each setlist song must include a non-blank title"
+                Right payload ->
+                    expectationFailure ("Expected blank setlist title to be rejected, got: " <> show payload)
+
         it "rejects non-positive musician party ids before any database lookup" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
