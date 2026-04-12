@@ -1281,7 +1281,9 @@ export default function SocialInboxPage() {
     : [];
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
-  const showUnifiedEmptyState = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
+  const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
+  const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
+  const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showManualRefresh = !reviewMode;
@@ -1406,7 +1408,7 @@ export default function SocialInboxPage() {
           </Stack>
         </Paper>
       )}
-      {showUnifiedEmptyState ? (
+      {showReviewSetupOnlyState ? null : showUnifiedEmptyState ? (
         <Alert severity="info" variant="outlined">
           <Stack spacing={0.5}>
             <Typography variant="body2" fontWeight={700}>

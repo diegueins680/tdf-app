@@ -236,6 +236,10 @@ describe('SocialInboxPage', () => {
       );
       expect(container.textContent).toContain('@tdfreview');
       expect(container.textContent).toContain('IG User ID: ig-user-1');
+      expect(container.textContent).toContain('No inbound messages yet.');
+      expect(container.textContent).toContain(
+        'Send one test message to the selected asset and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+      );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
@@ -281,7 +285,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('shows one guided empty state instead of empty filters and channel tables when inbox is empty', async () => {
+  it('keeps the first empty review run focused on setup until an asset is selected', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -290,8 +294,10 @@ describe('SocialInboxPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(hasLabel(container, 'Limit')).toBe(false);
-      expect(container.textContent).toContain('No inbound messages yet.');
-      expect(container.textContent).toContain(
+      expect(container.textContent).toContain('Recording checklist');
+      expect(container.textContent).toContain('No asset selected yet. Go to Instagram setup and select the Page/account first.');
+      expect(container.textContent).not.toContain('No inbound messages yet.');
+      expect(container.textContent).not.toContain(
         'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
       );
       expect(container.textContent).not.toContain('then refresh');
