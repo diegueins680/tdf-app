@@ -4,18 +4,58 @@ module TDF.Social.FollowHandlerSpec (spec) where
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist (insert)
-import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool)
 import Database.Persist.Sqlite (createSqlitePool)
+import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
 import TDF.DTO.SocialEventsDTO (ArtistFollowerDTO (..))
+import TDF.Models (Party (..))
 import TDF.Models.SocialEventsModels
-import TDF.Server.SocialEventsHandlers (followArtistDb)
+import TDF.Server.SocialEventsHandlers (followArtistDb, resolveExistingPartyIdText)
 
 spec :: Spec
 spec = describe "followArtistDb helper" $ do
+    it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
+        pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+
+        unknownResult <- resolveExistingPartyIdText pool "followerPartyId" "42"
+        case unknownResult of
+            Left err -> do
+                errHTTPCode err `shouldBe` 422
+                BL8.unpack (errBody err) `shouldContain` "followerPartyId references an unknown party"
+            Right value ->
+                expectationFailure ("Expected missing follower party to be rejected, got: " <> show value)
+
+        now <- liftIO getCurrentTime
+        existingPartyId <-
+            runSqlPool
+                ( insert
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Follower"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "follower@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                )
+                pool
+
+        let existingPartyText = T.pack (show (fromSqlKey existingPartyId))
+        resolveExistingPartyIdText pool "followerPartyId" (" 00" <> existingPartyText <> " ")
+            `shouldReturn` Right existingPartyText
+
     it "creates a follow and is idempotent" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -45,6 +85,22 @@ spec = describe "followArtistDb helper" $ do
 initializeSocialSchema :: SqlPersistT IO ()
 initializeSocialSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"social_artist_profile\" (\
         \\"id\" INTEGER PRIMARY KEY,\

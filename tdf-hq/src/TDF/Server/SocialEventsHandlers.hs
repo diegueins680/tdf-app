@@ -28,6 +28,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceEntryStatus
   , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
+  , resolveExistingPartyIdText
   , validateEventArtistIds
   , normalizeMomentMediaType
   , normalizeMomentReaction
@@ -104,6 +105,7 @@ import           TDF.DTO.SocialEventsDTO
   , EventFinanceSummaryDTO(..)
   )
 import           TDF.DB (Env(..))
+import           TDF.Models (Party)
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 
@@ -1036,9 +1038,8 @@ socialEventsServer user = eventsServer
       mArtist <- liftIO $ runSqlPool (get artistKey) envPool
       when (isNothing mArtist) $ throwError err404 { errBody = "Artist not found" }
       followerParty <-
-        case normalizePositivePartyIdText afrFollowerPartyId of
-          Nothing -> throwError err400 { errBody = "followerPartyId must be a positive integer" }
-          Just normalized -> pure normalized
+        liftIO (resolveExistingPartyIdText envPool "followerPartyId" afrFollowerPartyId)
+          >>= either throwError pure
       liftIO $ followArtistDb envPool artistKey followerParty
 
     unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
@@ -1082,9 +1083,8 @@ socialEventsServer user = eventsServer
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
       statusVal <- either throwError pure (validateRsvpStatus (rsvpStatus dto))
       partyIdVal <-
-        case normalizePositivePartyIdText (rsvpPartyId dto) of
-          Nothing -> throwError err400 { errBody = "rsvpPartyId must be a positive integer" }
-          Just normalized -> pure normalized
+        liftIO (resolveExistingPartyIdText envPool "rsvpPartyId" (rsvpPartyId dto))
+          >>= either throwError pure
 
       existingRsvps <- liftIO $ runSqlPool
         (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. partyIdVal] [])
@@ -2112,6 +2112,27 @@ followArtistDb pool artistId followerPartyIdRaw = do
 normalizePositivePartyIdText :: T.Text -> Maybe T.Text
 normalizePositivePartyIdText rawPartyId =
   normalizePositiveIdentifierText rawPartyId
+
+resolveExistingPartyIdText :: ConnectionPool -> T.Text -> T.Text -> IO (Either ServerError T.Text)
+resolveExistingPartyIdText pool fieldName rawPartyId =
+  case normalizePositivePartyIdText rawPartyId of
+    Nothing ->
+      pure (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer")) })
+    Just normalized ->
+      case readMaybe (T.unpack normalized) :: Maybe Int64 of
+        Nothing ->
+          pure (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer")) })
+        Just partyIdValue -> do
+          mParty <- runSqlPool (get (toSqlKey partyIdValue :: Key Party)) pool
+          pure $
+            case mParty of
+              Just _ -> Right normalized
+              Nothing ->
+                Left err422
+                  { errBody =
+                      BL.fromStrict
+                        (TE.encodeUtf8 (fieldName <> " references an unknown party"))
+                  }
 
 normalizePositiveIdentifierText :: T.Text -> Maybe T.Text
 normalizePositiveIdentifierText rawIdentifier =
