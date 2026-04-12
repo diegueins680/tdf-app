@@ -788,7 +788,6 @@ export default function CmsAdminPage() {
                     </Button>
                   )}
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
-                  {payloadChanged && <Chip label="Payload modificado vs en vivo" size="small" color="warning" />}
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
                   {draftAutosaveHelperText}

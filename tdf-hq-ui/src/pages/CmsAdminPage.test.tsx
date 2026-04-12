@@ -263,14 +263,14 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('shows the compare action only while the draft differs from the live payload', async () => {
+  it('keeps the compare action as the only draft-vs-live status control', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Comparar con live')).toBe(1);
-      expect(container.textContent).toContain('Payload modificado vs en vivo');
+      expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
       );
@@ -301,7 +301,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Comparar con live')).toBe(1);
-      expect(container.textContent).toContain('Payload modificado vs en vivo');
+      expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
       );
