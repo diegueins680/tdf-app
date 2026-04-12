@@ -170,7 +170,9 @@ export default function AdminUsersPage() {
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
-  const showClearSearchAction = showSearchField && hasActiveSearch;
+  const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
+  const showEmptyStateClearSearchAction = showSearchEmptyState && hasActiveSearch;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
@@ -253,7 +255,7 @@ export default function AdminUsersPage() {
                   fullWidth
                   placeholder="Usuario, nombre, ID, contacto o acceso"
                   InputProps={{
-                    endAdornment: showClearSearchAction ? (
+                    endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
                         <IconButton size="small" aria-label="Limpiar búsqueda" onClick={handleClearSearch}>
                           <ClearIcon fontSize="small" />
@@ -314,12 +316,24 @@ export default function AdminUsersPage() {
                 No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.
               </Typography>
             )}
-            {usersQuery.data?.length && visibleUsers.length === 0 ? (
-              <Typography color="text.secondary">
-                {activeSearchSummary
-                  ? `No hay coincidencias para "${activeSearchSummary}".`
-                  : 'No hay coincidencias para este filtro.'}
-              </Typography>
+            {showSearchEmptyState ? (
+              <Stack spacing={1} alignItems="flex-start">
+                <Typography color="text.secondary">
+                  {activeSearchSummary
+                    ? `No hay coincidencias para "${activeSearchSummary}".`
+                    : 'No hay coincidencias para este filtro.'}
+                </Typography>
+                {showEmptyStateClearSearchAction && (
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={handleClearSearch}
+                    data-testid="admin-users-empty-search-reset"
+                  >
+                    Limpiar búsqueda
+                  </Button>
+                )}
+              </Stack>
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>

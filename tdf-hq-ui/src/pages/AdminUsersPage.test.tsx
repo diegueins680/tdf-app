@@ -1063,6 +1063,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).not.toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
@@ -1072,6 +1073,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
         expect(getRowByUserId(container, 103).textContent).toContain('linus-view');
