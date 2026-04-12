@@ -869,38 +869,38 @@ main = hspec $ do
                 Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
 
     describe "validateRadioImportLimit" $ do
-        it "uses the import default only when the caller omits the limit" $ do
+        it "uses the import default only when the caller omits the limit and caps explicit requests at the import batch budget" $ do
             validateRadioImportLimit Nothing `shouldBe` Right 800
             validateRadioImportLimit (Just 1) `shouldBe` Right 1
-            validateRadioImportLimit (Just 2000) `shouldBe` Right 2000
+            validateRadioImportLimit (Just 800) `shouldBe` Right 800
 
         it "rejects out-of-range explicit import limits instead of silently clamping them" $ do
             let assertRejected rawLimit =
                     case validateRadioImportLimit (Just rawLimit) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 2000"
+                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 800"
                         Right value ->
                             expectationFailure ("Expected invalid radio import limit to be rejected, got " <> show value)
             assertRejected 0
-            assertRejected 2001
+            assertRejected 801
 
     describe "validateRadioMetadataRefreshLimit" $ do
-        it "uses the refresh default only when the caller omits the limit" $ do
+        it "uses the refresh default only when the caller omits the limit and caps explicit requests at the refresh batch budget" $ do
             validateRadioMetadataRefreshLimit Nothing `shouldBe` Right 400
             validateRadioMetadataRefreshLimit (Just 1) `shouldBe` Right 1
-            validateRadioMetadataRefreshLimit (Just 2000) `shouldBe` Right 2000
+            validateRadioMetadataRefreshLimit (Just 400) `shouldBe` Right 400
 
         it "rejects out-of-range explicit refresh limits instead of silently clamping them" $ do
             let assertRejected rawLimit =
                     case validateRadioMetadataRefreshLimit (Just rawLimit) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 2000"
+                            BL.unpack (errBody err) `shouldContain` "limit must be between 1 and 400"
                         Right value ->
                             expectationFailure ("Expected invalid radio refresh limit to be rejected, got " <> show value)
             assertRejected 0
-            assertRejected 2001
+            assertRejected 401
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do

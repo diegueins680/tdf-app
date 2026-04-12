@@ -234,9 +234,9 @@ validateRadioMetadataRefreshLimit = validateRadioBatchLimit 400
 
 validateRadioBatchLimit :: Int -> Maybe Int -> Either ServerError Int
 validateRadioBatchLimit defaultLimit Nothing = Right defaultLimit
-validateRadioBatchLimit _ (Just rawLimit)
-  | rawLimit < 1 || rawLimit > 2000 =
-      Left err400 { errBody = "limit must be between 1 and 2000" }
+validateRadioBatchLimit defaultLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > defaultLimit =
+      Left err400 { errBody = "limit must be between 1 and " <> BL.fromStrict (BS8.pack (show defaultLimit)) }
   | otherwise =
       Right rawLimit
 
