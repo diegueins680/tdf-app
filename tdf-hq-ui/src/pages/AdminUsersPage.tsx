@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
     : showGeneralIntro
       ? generalIntro
       : '';
-  const pageGuidance = [primaryGuidance, viewGuidance].filter(Boolean).join(' ');
+  const pageGuidance = [primaryGuidance, viewGuidance, sharedAccessGuidance].filter(Boolean).join(' ');
 
   return (
     <>
@@ -268,11 +268,6 @@ export default function AdminUsersPage() {
               {pageGuidance && (
                 <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
                   {pageGuidance}
-                </Typography>
-              )}
-              {sharedAccessGuidance && (
-                <Typography variant="body2" color="text.secondary">
-                  {sharedAccessGuidance}
                 </Typography>
               )}
             </Stack>

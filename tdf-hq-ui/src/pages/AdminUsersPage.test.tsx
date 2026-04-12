@@ -507,7 +507,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
         );
         expect(countExactText(
           container,
@@ -520,6 +520,10 @@ describe('AdminUsersPage', () => {
         expect(countExactText(
           container,
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        )).toBe(0);
+        expect(countExactText(
+          container,
+          'Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
         )).toBe(0);
         expect(countExactText(container, 'Haz clic en el nombre para abrir el perfil.')).toBe(0);
       });
@@ -810,7 +814,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('moves shared access scope into one page summary when every visible user repeats the same roles and modules', async () => {
+  it('keeps shared access scope inside the main page summary when every visible user repeats the same roles and modules', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -835,9 +839,13 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
-          'Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
         );
+        expect(countExactText(
+          container,
+          'Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
+        )).toBe(0);
 
         const firstRow = getRowByUserId(container, 101);
         const secondRow = getRowByUserId(container, 102);
