@@ -41,6 +41,7 @@ import TDF.Server
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
     , validateOptionalMarketplaceOrderStatus
+    , validateMarketplaceOrderUpdateStatus
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
@@ -739,6 +740,28 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected invalid marketplace order status to be rejected, got: "
                             <> show statusVal
                         )
+
+    describe "validateMarketplaceOrderUpdateStatus" $ do
+        it "keeps omitted update statuses untouched and canonicalizes supported explicit values" $ do
+            validateMarketplaceOrderUpdateStatus Nothing `shouldBe` Right Nothing
+            validateMarketplaceOrderUpdateStatus (Just " PayPal Pending ")
+                `shouldBe` Right (Just "paypal_pending")
+            validateMarketplaceOrderUpdateStatus (Just "canceled")
+                `shouldBe` Right (Just "cancelled")
+
+        it "rejects blank or unknown explicit statuses instead of turning admin updates into silent no-ops" $ do
+            let assertInvalid rawStatus expectedMessage =
+                    case validateMarketplaceOrderUpdateStatus (Just rawStatus) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected invalid marketplace order update status to be rejected, got: "
+                                    <> show statusVal
+                                )
+            assertInvalid "   " "status cannot be blank"
+            assertInvalid "refunded" "pending, contact, paid, cancelled"
 
     describe "parsePayPalCaptureOrderStatus" $ do
         it "maps known PayPal capture statuses onto canonical marketplace order states" $ do

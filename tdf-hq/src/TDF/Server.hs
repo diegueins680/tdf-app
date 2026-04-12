@@ -5522,13 +5522,23 @@ validateOptionalMarketplaceOrderStatus (Just rawStatus) =
     Just statusVal ->
       case normalizeMarketplaceOrderStatus statusVal of
         Just normalized -> Right (Just normalized)
-        Nothing ->
-          Left err400
-            { errBody =
-                "status must be one of: pending, contact, paid, cancelled, failed, "
-                  <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
-                  <> "paypal_failed"
-            }
+        Nothing -> Left err400 { errBody = marketplaceOrderStatusErrorBody }
+
+validateMarketplaceOrderUpdateStatus :: Maybe Text -> Either ServerError (Maybe Text)
+validateMarketplaceOrderUpdateStatus Nothing = Right Nothing
+validateMarketplaceOrderUpdateStatus (Just rawStatus) =
+  case normalizeOptionalInput (Just rawStatus) of
+    Nothing -> Left err400 { errBody = "status cannot be blank" }
+    Just statusVal ->
+      case normalizeMarketplaceOrderStatus statusVal of
+        Just normalized -> Right (Just normalized)
+        Nothing -> Left err400 { errBody = marketplaceOrderStatusErrorBody }
+
+marketplaceOrderStatusErrorBody :: BL.ByteString
+marketplaceOrderStatusErrorBody =
+  "status must be one of: pending, contact, paid, cancelled, failed, "
+    <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
+    <> "paypal_failed"
 
 parsePayPalCaptureOrderStatus :: Text -> Either ServerError Text
 parsePayPalCaptureOrderStatus rawStatus =
@@ -7787,7 +7797,7 @@ updateMarketplaceOrder :: AuthedUser -> Text -> MarketplaceOrderUpdate -> AppM M
 updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   requireMarketplaceAccess user
   orderKey <- parseOrderId rawId
-  nextStatus <- either throwError pure (validateOptionalMarketplaceOrderStatus mouStatus)
+  nextStatus <- either throwError pure (validateMarketplaceOrderUpdateStatus mouStatus)
   now <- liftIO getCurrentTime
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ do
