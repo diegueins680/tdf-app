@@ -305,7 +305,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('keeps unique preview cards collapsed during first-run until the admin asks to see them', async () => {
+  it('keeps unique preview cards collapsed during first-run until the admin asks to see them, then moves the hide action onto the expanded section', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
@@ -371,7 +371,13 @@ describe('AdminConsolePage', () => {
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).toBeInTheDocument();
-    expect(within(getFirstRunAlert()).getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
+    const additionalModulesSection = screen.getByText('Módulos adicionales').closest('#admin-additional-modules');
+    if (!(additionalModulesSection instanceof HTMLElement)) {
+      throw new Error('Expected additional modules section container to render');
+    }
+
+    expect(within(getFirstRunAlert()).queryByRole('button', { name: /Ocultar módulos adicionales/i })).not.toBeInTheDocument();
+    expect(within(additionalModulesSection).getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Ocultar módulos adicionales/i })).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();

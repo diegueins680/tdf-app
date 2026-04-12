@@ -466,7 +466,13 @@ export default function AdminConsolePage() {
     ? 'Hay 1 módulo adicional fuera del recorrido inicial. Revísalo solo si ya necesitas ese flujo.'
     : `Hay ${consoleCards.length} módulos adicionales fuera del recorrido inicial. Revísalos solo si ya necesitas esos flujos.`;
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
-  const showFirstRunAdditionalModulesToggle = showGettingStartedGuidance && consoleCards.length > 0;
+  const showFirstRunAdditionalModulesShowAction =
+    showGettingStartedGuidance
+    && consoleCards.length > 0
+    && !shouldShowAdditionalModuleCards;
+  const showFirstRunAdditionalModulesHideAction =
+    showGettingStartedGuidance
+    && shouldShowAdditionalModuleCards;
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
@@ -629,17 +635,15 @@ export default function AdminConsolePage() {
               >
                 {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
               </Button>
-              {showFirstRunAdditionalModulesToggle && (
+              {showFirstRunAdditionalModulesShowAction && (
                 <Button
                   size="small"
                   variant="text"
                   onClick={() => setShowFirstRunAdditionalModules((currentValue) => !currentValue)}
-                  aria-controls={shouldShowAdditionalModuleCards ? 'admin-additional-modules-list' : undefined}
-                  aria-expanded={shouldShowAdditionalModuleCards ? 'true' : 'false'}
+                  aria-controls="admin-additional-modules-list"
+                  aria-expanded="false"
                 >
-                  {shouldShowAdditionalModuleCards
-                    ? 'Ocultar módulos adicionales'
-                    : `Mostrar ${additionalModulesCountLabel}`}
+                  {`Mostrar ${additionalModulesCountLabel}`}
                 </Button>
               )}
             </Stack>
@@ -956,12 +960,32 @@ export default function AdminConsolePage() {
       {consoleCards.length > 0 && (!showGettingStartedGuidance || shouldShowAdditionalModuleCards) && (
         <Paper variant="outlined" id="admin-additional-modules">
           <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="h6">Módulos adicionales</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {showGettingStartedGuidance
-                ? 'Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
-                : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
-            </Typography>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+            >
+              <Box>
+                <Typography variant="h6">Módulos adicionales</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {showGettingStartedGuidance
+                    ? 'Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
+                    : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
+                </Typography>
+              </Box>
+              {showFirstRunAdditionalModulesHideAction && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setShowFirstRunAdditionalModules(false)}
+                  aria-controls="admin-additional-modules-list"
+                  aria-expanded="true"
+                >
+                  Ocultar módulos adicionales
+                </Button>
+              )}
+            </Stack>
           </Box>
           {shouldShowAdditionalModuleCards && (
             <Grid container spacing={2} sx={{ px: 2, pb: 2 }} id="admin-additional-modules-list">
