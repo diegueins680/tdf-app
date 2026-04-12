@@ -28,7 +28,22 @@ jobs:
 
       - name: Install flyctl
         run: |
-          curl -L https://fly.io/install.sh | sh
+          install_flyctl() {
+            curl -fsSL https://fly.io/install.sh | sh
+          }
+
+          for attempt in 1 2 3; do
+            if install_flyctl; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "flyctl installation failed after ${attempt} attempts." >&2
+              exit 1
+            fi
+            echo "flyctl install attempt ${attempt} failed; retrying..." >&2
+            sleep $((attempt * 5))
+          done
+
           # Persist flyctl into the PATH for following steps and current shell
           echo "$HOME/.fly/bin" >> $GITHUB_PATH
           export PATH="$HOME/.fly/bin:$PATH"
