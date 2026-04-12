@@ -460,6 +460,50 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('uses row click as the primary table action and removes the duplicate action column', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Haz clic en una fila para revisar estado, pago y datos del comprador.',
+        );
+        expect(container.textContent).not.toContain('Revisa el estado, pagos y detalles de cada pedido.');
+        expect(container.textContent).not.toContain('Acciones');
+        expect(container.querySelectorAll('button[aria-label^="Copiar fila del pedido "]')).toHaveLength(0);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(queryActionByText(document.body, 'Copiar resumen')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the existing reset-filters control when a search hides the current order list', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

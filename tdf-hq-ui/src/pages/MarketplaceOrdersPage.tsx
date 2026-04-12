@@ -421,24 +421,6 @@ export default function MarketplaceOrdersPage() {
     }
   };
 
-  const copyRow = async (order: MarketplaceOrderDTO) => {
-    const row = [
-      order.moOrderId,
-      order.moBuyerName ?? '',
-      order.moBuyerEmail ?? '',
-      order.moTotalDisplay,
-      order.moStatus,
-      order.moPaymentProvider ?? '',
-      formatDate(order.moCreatedAt),
-      formatDate(order.moPaidAt),
-    ].join('\t');
-    try {
-      await navigator.clipboard.writeText(row);
-    } catch {
-      // ignore clipboard failures
-    }
-  };
-
   const confirmIfIrreversible = (nextStatus: string): boolean => {
     const risky = ['paid', 'cancelled', 'refunded', 'failed'];
     if (!risky.includes(nextStatus)) return true;
@@ -668,7 +650,7 @@ export default function MarketplaceOrdersPage() {
               ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
               : showSingleOrderFocusedState
                 ? 'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
-                : 'Revisa el estado, pagos y detalles de cada pedido.'
+                : 'Haz clic en una fila para revisar estado, pago y datos del comprador.'
           }
           action={showFirstOrderEmptyState || showSingleOrderFocusedState ? null : (
             <Stack direction="row" spacing={1}>
@@ -734,7 +716,6 @@ export default function MarketplaceOrdersPage() {
                   <TableCell>Creado</TableCell>
                   <TableCell>Pagado</TableCell>
                   <TableCell>Items</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -833,20 +814,6 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="caption" color="text.secondary">
                           {summarizeItems(order.moItems)}
                         </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Copiar fila (TSV)">
-                          <IconButton
-                            size="small"
-                            aria-label={`Copiar fila del pedido ${order.moOrderId} como TSV`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void copyRow(order);
-                            }}
-                          >
-                            <ContentCopyIcon fontSize="inherit" />
-                          </IconButton>
-                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
