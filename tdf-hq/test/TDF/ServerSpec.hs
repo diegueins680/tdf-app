@@ -53,6 +53,7 @@ import TDF.Server
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
+    , validateServiceMarketplaceBookingRefs
     , validatePublicBookingContactDetails
     , validateRequiredCmsField
     , validateServiceMarketplaceCatalog
@@ -150,6 +151,23 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateServiceMarketplaceBookingRefs" $ do
+        it "accepts positive ad and slot identifiers before marketplace booking lookups" $
+            validateServiceMarketplaceBookingRefs 42 99 `shouldBe` Right (42, 99)
+
+        it "rejects zero or negative booking refs instead of turning malformed marketplace requests into 404s" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid marketplace booking refs to be rejected, got: " <> show value)
+            assertInvalid "adId must be a positive integer"
+                (validateServiceMarketplaceBookingRefs 0 99)
+            assertInvalid "slotId must be a positive integer"
+                (validateServiceMarketplaceBookingRefs 42 (-3))
 
     describe "validateChatMessageListLookup" $ do
         it "accepts a positive thread id plus at most one positive pagination cursor" $ do

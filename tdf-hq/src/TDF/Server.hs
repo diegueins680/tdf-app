@@ -4769,11 +4769,12 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
 createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
   paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
+  (adId, slotId) <- either throwError pure (validateServiceMarketplaceBookingRefs smbAdId smbSlotId)
   pool <- asks envPool
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
-    let adKey = toSqlKey smbAdId :: Key ServiceAd
-        slotKey = toSqlKey smbSlotId :: Key ServiceAdSlot
+    let adKey = toSqlKey adId :: Key ServiceAd
+        slotKey = toSqlKey slotId :: Key ServiceAdSlot
     adEnt <- getJustEntity adKey
     slotEnt <- getJustEntity slotKey
     let ad = entityVal adEnt
@@ -5458,6 +5459,12 @@ validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
     )
     (Left err400 { errBody = "bookingId cannot be combined with partyId or engineerPartyId" })
   pure (bookingIdFilter, partyIdFilter, engineerPartyIdFilter)
+
+validateServiceMarketplaceBookingRefs :: Int64 -> Int64 -> Either ServerError (Int64, Int64)
+validateServiceMarketplaceBookingRefs rawAdId rawSlotId = do
+  adId <- validatePositiveIdField "adId" rawAdId
+  slotId <- validatePositiveIdField "slotId" rawSlotId
+  pure (adId, slotId)
 
 normalizeOptionalCmsFilter :: Maybe Text -> Maybe Text
 normalizeOptionalCmsFilter = normalizeOptionalInput
