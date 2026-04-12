@@ -97,7 +97,15 @@ dbConnString cfg =
 
 loadConfig :: IO AppConfig
 loadConfig = do
-  keywordDbEnvConfigured <- anyEnvPresent ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASS", "DB_NAME", "PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE"]
+  -- Prefer a connection URL unless every keyword-style field is present.
+  -- Fly/Koyeb environments can expose partial PG* variables alongside DATABASE_URL.
+  keywordDbEnvConfigured <- allEnvPresent
+    [ ["DB_HOST", "PGHOST"]
+    , ["DB_PORT", "PGPORT"]
+    , ["DB_USER", "PGUSER"]
+    , ["DB_PASS", "PGPASSWORD"]
+    , ["DB_NAME", "PGDATABASE"]
+    ]
   connUrl    <- if keywordDbEnvConfigured
     then pure Nothing
     else lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
@@ -225,12 +233,12 @@ loadConfig = do
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
     getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
-    anyEnvPresent [] = pure False
-    anyEnvPresent (key:rest) = do
-      value <- lookupEnv key
-      case value >>= normalizeEnvString of
-        Just _ -> pure True
-        Nothing -> anyEnvPresent rest
+    allEnvPresent [] = pure True
+    allEnvPresent (keys:rest) = do
+      value <- lookupFirstEnv keys
+      case value of
+        Just _ -> allEnvPresent rest
+        Nothing -> pure False
     lookupFirstEnv [] = pure Nothing
     lookupFirstEnv (key:rest) = do
       value <- lookupEnv key

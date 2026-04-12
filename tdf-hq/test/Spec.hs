@@ -188,6 +188,27 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
 
+        it "keeps DATABASE_URL authoritative when only partial keyword DB env vars exist" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Just "pg.fly.internal")
+                , ("PGPORT", Just "6543")
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+
         it "falls back to standard PG* env vars when DB_* vars are not configured" $
             withEnvOverrides
                 [ ("DATABASE_URL", Nothing)
