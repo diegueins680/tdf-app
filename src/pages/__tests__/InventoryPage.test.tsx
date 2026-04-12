@@ -132,7 +132,8 @@ describe('InventoryPage', () => {
     expect(screen.queryByText('No se encontraron activos.')).not.toBeInTheDocument();
   });
 
-  it('replaces the single-row table with a compact first-asset summary until comparison matters', async () => {
+  it('replaces the single-row table with a compact first-asset summary and keeps one action entry point', async () => {
+    const user = userEvent.setup();
     renderPage();
 
     expect(await screen.findByText('Inventario')).toBeInTheDocument();
@@ -148,9 +149,7 @@ describe('InventoryPage', () => {
       expect(screen.getByText('Categoría: Micrófono')).toBeInTheDocument();
       expect(screen.getByText('Estado: Activo')).toBeInTheDocument();
       expect(screen.getByText('Ubicación: Sala A')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Editar activo$/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Imprimir QR$/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Eliminar activo$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Acciones de Neumann U87' })).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('textbox', { name: /Buscar/i })).not.toBeInTheDocument();
@@ -161,6 +160,15 @@ describe('InventoryPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Editar activo Neumann U87')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Imprimir QR de Neumann U87')).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Editar activo/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Imprimir QR/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Eliminar activo/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Acciones de Neumann U87' }));
+
+    expect(await screen.findByRole('menuitem', { name: /Editar activo/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Imprimir QR/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Eliminar activo/i })).toBeInTheDocument();
   });
 
   it('uses one row actions trigger and reveals explicit labels only when the menu opens', async () => {

@@ -362,32 +362,17 @@ export default function InventoryPage() {
                     Ubicación: {singleAsset.location ?? '—'}
                   </Typography>
                 </Stack>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Tooltip title="Editar, imprimir o eliminar desde un solo menú">
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={() => setEditing(singleAsset)}
+                    endIcon={<MoreHorizIcon fontSize="small" />}
+                    aria-label={`Acciones de ${singleAsset.name}`}
+                    onClick={(event) => handleOpenRowActions(event, singleAsset)}
                   >
-                    Editar activo
+                    Acciones del activo
                   </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<QrCode2Icon />}
-                    onClick={() => printQr(singleAsset)}
-                  >
-                    Imprimir QR
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    startIcon={<DeleteOutlineIcon />}
-                    onClick={() => handleDelete(singleAsset)}
-                  >
-                    Eliminar activo
-                  </Button>
-                </Stack>
+                </Tooltip>
               </Stack>
             </Stack>
           </Box>
