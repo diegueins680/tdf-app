@@ -246,6 +246,8 @@ main = hspec $ do
             validateOptionalFeedbackContactEmail (Just "   ") `shouldBe` Right Nothing
             validateOptionalFeedbackContactEmail (Just " User@Example.com ")
                 `shouldBe` Right (Just "user@example.com")
+            validateOptionalFeedbackContactEmail (Just " User.Name+Feedback@Example.com ")
+                `shouldBe` Right (Just "user.name+feedback@example.com")
 
         it "rejects malformed feedback contact emails instead of storing unusable contact data" $ do
             let assertInvalid raw = case validateOptionalFeedbackContactEmail (Just raw) of
@@ -258,6 +260,10 @@ main = hspec $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+            assertInvalid ".user@example.com"
+            assertInvalid "user.@example.com"
+            assertInvalid "user..name@example.com"
+            assertInvalid "user()@example.com"
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do

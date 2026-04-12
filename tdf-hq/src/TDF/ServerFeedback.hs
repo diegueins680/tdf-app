@@ -113,12 +113,24 @@ isValidFeedbackEmail :: Text -> Bool
 isValidFeedbackEmail candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      not (T.null localPart)
+      isValidFeedbackEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidFeedbackEmailLocalPart :: Text -> Bool
+isValidFeedbackEmailLocalPart localPart =
+  not (T.null localPart)
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidFeedbackEmailLocalChar localPart
+
+isValidFeedbackEmailLocalChar :: Char -> Bool
+isValidFeedbackEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidDomainLabel :: Text -> Bool
 isValidDomainLabel label =
