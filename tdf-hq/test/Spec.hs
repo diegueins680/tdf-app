@@ -798,6 +798,19 @@ main = hspec $ do
             assertInvalid "https://radio..example.com/live"
             assertInvalid "https://radio.example.com./live"
 
+        it "rejects ambiguous numeric host shortcuts before they can bypass host checks" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl must include a valid host"
+                        Right value ->
+                            expectationFailure
+                                ("Expected ambiguous numeric streamUrl host to be rejected, got " <> show value)
+            assertInvalid "https://127.1/live"
+            assertInvalid "https://127.0.1/live"
+            assertInvalid "https://2130706433/live"
+
         it "rejects localhost and private-network targets before the server fetches them" $ do
             let assertPrivateTarget rawUrl =
                     case validateRadioStreamUrl rawUrl of

@@ -123,6 +123,8 @@ validateRadioAuthority rawAuthority
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
       | T.isPrefixOf "." host || T.isSuffixOf "." host =
           Left err400 { errBody = "streamUrl must include a valid host" }
+      | isAmbiguousNumericHost host =
+          Left err400 { errBody = "streamUrl must include a valid host" }
       | any invalidHostLabel (T.splitOn "." host) =
           Left err400 { errBody = "streamUrl must include a valid host" }
       | otherwise = validatePublicRadioHost host
@@ -186,6 +188,11 @@ parseIpv4Octets host =
           if value >= 0 && value <= 255
             then Just value
             else Nothing
+
+isAmbiguousNumericHost :: Text -> Bool
+isAmbiguousNumericHost host =
+  T.all (\c -> isDigit c || c == '.') host
+    && isNothing (parseIpv4Octets host)
 
 trailingIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
 trailingIpv4Octets host =
