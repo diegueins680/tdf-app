@@ -334,11 +334,17 @@ spec = describe "TDF.Server helpers" $ do
     describe "normalizeAuthEmailAddress" $ do
         it "trims and lowercases valid auth emails before signup or reset flows use them" $ do
             normalizeAuthEmailAddress " User@Example.com " `shouldBe` Just "user@example.com"
+            normalizeAuthEmailAddress " User.Name+Artist@Example.com "
+                `shouldBe` Just "user.name+artist@example.com"
 
         it "rejects blank or malformed auth emails instead of sending ambiguous auth responses" $ do
             normalizeAuthEmailAddress "   " `shouldBe` Nothing
             normalizeAuthEmailAddress "not-an-email" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@ example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress ".user@example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user.@example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user..name@example.com" `shouldBe` Nothing
+            normalizeAuthEmailAddress "user()@example.com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@example..com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@-example.com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@example-.com" `shouldBe` Nothing
