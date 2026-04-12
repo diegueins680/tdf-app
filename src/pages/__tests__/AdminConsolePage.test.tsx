@@ -601,7 +601,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('keeps the roles edit hint inside the column header instead of repeating it above the table', async () => {
+  it('keeps the roles edit hint inside the column header while hiding empty comparison columns', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -621,13 +621,14 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
       expect(
         screen.getByText(
-          /Todas las cuentas administrables están activas\. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+          /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Roles/i })).toBeInTheDocument();
       expect(screen.getByText('Editar aquí')).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
@@ -662,9 +663,10 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.queryByText(
-          /Todas las cuentas administrables están activas\. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+          /Vista actual:/i,
         ),
       ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /Último acceso/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
     });

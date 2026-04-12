@@ -69,7 +69,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 ] as const;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
-const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 3;
+const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_COLUMN_COUNT = 5;
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
@@ -190,6 +190,10 @@ function formatAuditActor(actorId?: number | null) {
   return actorId ?? 'Sistema';
 }
 
+function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
+  return user.lastSeenAt ?? user.lastLoginAt;
+}
+
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
   return normalizeRoleList(roles);
 }
@@ -230,6 +234,34 @@ function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
   return [...groupedByNavigationProfile.values()]
     .map((group) => normalizeRoleSelection(group))
     .filter((group): group is RoleKey[] => group.length > 1);
+}
+
+function buildAdminUsersSectionDescription({
+  showLastAccessColumn,
+  showStatusColumn,
+}: {
+  showLastAccessColumn: boolean;
+  showStatusColumn: boolean;
+}) {
+  const hiddenColumnSummaries: string[] = [];
+
+  if (!showLastAccessColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado',
+    );
+  }
+
+  if (!showStatusColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida',
+    );
+  }
+
+  if (hiddenColumnSummaries.length === 0) {
+    return null;
+  }
+
+  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -327,6 +359,7 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
+  const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
@@ -351,8 +384,11 @@ export default function AdminConsolePage() {
       singleAdminUser
         ? null
         : (
-          showUsersTable && !showUsersStatusColumn
-            ? 'Todas las cuentas administrables están activas. La columna de estado reaparecerá cuando exista una cuenta invitada o suspendida.'
+          showUsersTable
+            ? buildAdminUsersSectionDescription({
+              showLastAccessColumn: showUsersLastAccessColumn,
+              showStatusColumn: showUsersStatusColumn,
+            })
             : null
         )
     );
@@ -595,14 +631,20 @@ export default function AdminConsolePage() {
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>Último acceso</TableCell>
+                  {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
                   {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isUsersLoading && (
                   <TableRow>
-                    <TableCell colSpan={ADMIN_USER_TABLE_BASE_COLUMN_COUNT + (showUsersStatusColumn ? 1 : 0)}>
+                    <TableCell
+                      colSpan={
+                        ADMIN_USER_TABLE_BASE_COLUMN_COUNT
+                        + (showUsersLastAccessColumn ? 1 : 0)
+                        + (showUsersStatusColumn ? 1 : 0)
+                      }
+                    >
                       <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
                         <CircularProgress size={18} />
                         <Typography variant="body2" color="text.secondary">
@@ -648,7 +690,7 @@ export default function AdminConsolePage() {
                           {formatRoleList(user.roles)}
                         </Button>
                       </TableCell>
-                      <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
+                      {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
                       {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
                     </TableRow>
                   );
