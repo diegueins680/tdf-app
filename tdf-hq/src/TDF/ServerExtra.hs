@@ -311,7 +311,7 @@ inventoryServer user =
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
       asset <- withPool $ get assetKey
-      _ <- maybe (throwError err404) pure asset
+      assetRecord <- maybe (throwError err404) pure asset
       now <- liftIO getCurrentTime
       targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
       targetRoomKey <- either throwError pure (parseOptionalKeyField @Room "targetRoom" (coTargetRoom req))
@@ -322,6 +322,7 @@ inventoryServer user =
       active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
       when (isJust active) $
         throwError err409 { errBody = "Asset already checked out" }
+      either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
       (mTargetParty, mRoom, mSession) <-
         either throwError pure (validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey)
       recEnt <- withPool $ do
@@ -1389,6 +1390,21 @@ validateAssetStatusUpdate (Just rawStatus) =
     Nothing -> Left err400
       { errBody = "Invalid asset status. Allowed values: active, booked, out_for_maintenance, retired"
       }
+
+validateAssetCheckoutStatus :: AssetStatus -> Either ServerError ()
+validateAssetCheckoutStatus Active = Right ()
+validateAssetCheckoutStatus Booked =
+  Left err409
+    { errBody = "Asset status is booked; resolve the existing checkout state before creating a new checkout"
+    }
+validateAssetCheckoutStatus OutForMaintenance =
+  Left err409
+    { errBody = "Asset is out for maintenance and cannot be checked out"
+    }
+validateAssetCheckoutStatus Retired =
+  Left err409
+    { errBody = "Asset is retired and cannot be checked out"
+    }
 
 parseSessionStatus :: Text -> Maybe SessionStatus
 parseSessionStatus = lookupStatus . normalise

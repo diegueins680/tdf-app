@@ -24,7 +24,7 @@ import TDF.API.Types (AssetCheckinRequest (..))
 import TDF.ModelsExtra
   ( Asset (..)
   , AssetCondition (Good)
-  , AssetStatus (Active, Booked, OutForMaintenance)
+  , AssetStatus (Active, Booked, OutForMaintenance, Retired)
   , CheckoutTarget (TargetParty, TargetRoom, TargetSession)
   , MaintenancePolicy (None)
   , Room
@@ -74,6 +74,7 @@ import TDF.ServerExtra (
     validateServiceCatalogCurrencyUpdate,
     validateServiceCatalogTaxBps,
     validateServiceCatalogTaxBpsUpdate,
+    validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
     validatePageParams,
  )
@@ -217,6 +218,22 @@ spec = do
               expectationFailure ("Expected invalid status error, got " <> show value)
       assertInvalid (validateAssetStatusUpdate (Just "   "))
       assertInvalid (validateAssetStatusUpdate (Just "on-loan"))
+
+  describe "validateAssetCheckoutStatus" $ do
+    it "allows checkout only when the asset is in the active inventory state" $
+      validateAssetCheckoutStatus Active `shouldBe` Right ()
+
+    it "rejects booked, maintenance, or retired assets instead of creating impossible checkout rows" $ do
+      let assertInvalid expectedMessage statusValue =
+            case validateAssetCheckoutStatus statusValue of
+              Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected checkout status validation error, got " <> show value)
+      assertInvalid "resolve the existing checkout state" Booked
+      assertInvalid "out for maintenance" OutForMaintenance
+      assertInvalid "retired" Retired
 
   describe "parseCheckoutTargetKind" $ do
     it "defaults omitted target kinds to party and normalizes supported values" $ do
