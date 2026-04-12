@@ -2219,10 +2219,9 @@ instagramServer user =
       ensureInboxAccess
       now <- liftIO getCurrentTime
       Env{..} <- ask
-      let recipient = IG.irSenderId req
-          body = T.strip (IG.irMessage req)
-          mExternalId =
-            IG.irExternalId req >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
+      recipient <- either throwError pure (validateSocialReplySenderId (IG.irSenderId req))
+      mExternalId <- either throwError pure (validateSocialReplyExternalId (IG.irExternalId req))
+      let body = T.strip (IG.irMessage req)
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
       (mTargetAccountId, mTargetAccessToken) <-
@@ -2340,10 +2339,9 @@ facebookServer user =
       ensureInboxAccess
       now <- liftIO getCurrentTime
       Env{..} <- ask
-      let recipient = FB.frSenderId req
-          body = T.strip (FB.frMessage req)
-          mExternalId =
-            FB.frExternalId req >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
+      recipient <- either throwError pure (validateSocialReplySenderId (FB.frSenderId req))
+      mExternalId <- either throwError pure (validateSocialReplyExternalId (FB.frExternalId req))
+      let body = T.strip (FB.frMessage req)
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
@@ -2635,6 +2633,19 @@ validateSocialLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 200 =
       Left err400 { errBody = "limit must be between 1 and 200" }
   | otherwise = Right rawLimit
+
+validateSocialReplySenderId :: Text -> Either ServerError Text
+validateSocialReplySenderId rawSenderId =
+  case normalizeOptionalTextField (Just rawSenderId) of
+    Just senderId -> Right senderId
+    Nothing -> Left err400 { errBody = "senderId is required" }
+
+validateSocialReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialReplyExternalId Nothing = Right Nothing
+validateSocialReplyExternalId (Just rawExternalId) =
+  case normalizeOptionalTextField (Just rawExternalId) of
+    Just externalId -> Right (Just externalId)
+    Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
 
 parseSocialBoolParam :: MonadError ServerError m => Maybe Text -> m Bool
 parseSocialBoolParam Nothing = pure False

@@ -50,6 +50,8 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
+    validateSocialReplyExternalId,
+    validateSocialReplySenderId,
     validateInventoryPageParams,
     validatePaymentAmountCents,
     validatePaymentAttachmentUrl,
@@ -491,6 +493,24 @@ spec = do
                 expectationFailure ("Expected invalid social inbox limit error, got " <> show value)
       assertInvalid 0
       assertInvalid 201
+
+  describe "social reply input validation" $ do
+    it "trims valid sender and external ids before reply dispatch" $ do
+      validateSocialReplySenderId "  17841400000000000  "
+        `shouldBe` Right "17841400000000000"
+      validateSocialReplyExternalId (Just "  mid.abc123  ")
+        `shouldBe` Right (Just "mid.abc123")
+      validateSocialReplyExternalId Nothing `shouldBe` Right Nothing
+
+    it "rejects blank sender ids or explicitly blank external ids instead of sending ambiguous replies" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid social reply input error, got " <> show value)
+      assertInvalid "senderId is required" (validateSocialReplySenderId "   ")
+      assertInvalid "externalId must be omitted or a non-empty string" (validateSocialReplyExternalId (Just "   "))
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do
