@@ -893,6 +893,87 @@ describe('AdminConsolePage', () => {
     expect(screen.getAllByText(/roles\.updated/i)).toHaveLength(1);
   });
 
+  it('hides empty audit columns until one event adds actor or detail context', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: null,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-2',
+        action: 'package.synced',
+        diff: '   ',
+        createdAt: '2026-04-09T16:00:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Vista actual: la columna de actor reaparecerá cuando un cambio quede asociado a una cuenta específica y la columna de detalle reaparecerá cuando exista información extra para revisar\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Fecha$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
+      expect(screen.getByText('package.created')).toBeInTheDocument();
+      expect(screen.getByText('package.synced')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sistema$/i)).not.toBeInTheDocument();
+  });
+
+  it('shows audit actor and detail columns again as soon as one event needs them', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: null,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: 777,
+        entity: 'user',
+        entityId: 'USR-1',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T16:00:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/Vista actual:/i),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
+      expect(screen.getByText('777')).toBeInTheDocument();
+      expect(screen.getByText('Admin -> Admin, Manager')).toBeInTheDocument();
+    });
+  });
+
   it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 

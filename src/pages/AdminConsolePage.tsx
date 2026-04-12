@@ -70,7 +70,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
-const AUDIT_TABLE_COLUMN_COUNT = 5;
+const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
@@ -191,6 +191,14 @@ function formatAuditActor(actorId?: number | null) {
   return actorId ?? 'Sistema';
 }
 
+function hasAuditActor(actorId?: number | null) {
+  return actorId != null;
+}
+
+function hasAuditDetail(diff?: string | null) {
+  return (diff?.trim().length ?? 0) > 0;
+}
+
 function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
   return user.lastSeenAt ?? user.lastLoginAt;
 }
@@ -263,6 +271,34 @@ function buildAdminUsersSectionDescription({
   if (!showStatusColumn) {
     hiddenColumnSummaries.push(
       'la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida',
+    );
+  }
+
+  if (hiddenColumnSummaries.length === 0) {
+    return null;
+  }
+
+  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+}
+
+function buildAuditSectionDescription({
+  showActorColumn,
+  showDetailColumn,
+}: {
+  showActorColumn: boolean;
+  showDetailColumn: boolean;
+}) {
+  const hiddenColumnSummaries: string[] = [];
+
+  if (!showActorColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de actor reaparecerá cuando un cambio quede asociado a una cuenta específica',
+    );
+  }
+
+  if (!showDetailColumn) {
+    hiddenColumnSummaries.push(
+      'la columna de detalle reaparecerá cuando exista información extra para revisar',
     );
   }
 
@@ -372,6 +408,8 @@ export default function AdminConsolePage() {
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
+  const showAuditActorColumn = auditQuery.isLoading || audits.some((entry) => hasAuditActor(entry.actorId));
+  const showAuditDetailColumn = auditQuery.isLoading || audits.some((entry) => hasAuditDetail(entry.diff));
   const hasUsersSectionData = showUsersTable || singleAdminUser !== null;
   const hasAuditSectionData = showAuditTable || singleAuditEntry !== null;
   const showGettingStartedGuidance =
@@ -404,9 +442,19 @@ export default function AdminConsolePage() {
   const auditSectionDescription = showGettingStartedGuidance
     ? null
     : (
-      hasAuditSectionData
-        ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
-        : null
+      showAuditTable
+        ? (
+          buildAuditSectionDescription({
+            showActorColumn: showAuditActorColumn,
+            showDetailColumn: showAuditDetailColumn,
+          })
+          ?? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
+        )
+        : (
+          hasAuditSectionData
+            ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
+            : null
+        )
     );
   const additionalModulesCountLabel = consoleCards.length === 1
     ? '1 módulo adicional'
@@ -816,8 +864,8 @@ export default function AdminConsolePage() {
                   <TableCell>Fecha</TableCell>
                   <TableCell>Entidad</TableCell>
                   <TableCell>Acción</TableCell>
-                  <TableCell>Actor</TableCell>
-                  <TableCell>Detalle</TableCell>
+                  {showAuditActorColumn && <TableCell>Actor</TableCell>}
+                  {showAuditDetailColumn && <TableCell>Detalle</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -826,17 +874,25 @@ export default function AdminConsolePage() {
                     <TableCell>{formatDate(entry.createdAt)}</TableCell>
                     <TableCell>{entry.entity} · {entry.entityId}</TableCell>
                     <TableCell>{entry.action}</TableCell>
-                    <TableCell>{formatAuditActor(entry.actorId)}</TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
-                        {entry.diff ?? '—'}
-                      </Typography>
-                    </TableCell>
+                    {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId)}</TableCell>}
+                    {showAuditDetailColumn && (
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
+                          {entry.diff ?? '—'}
+                        </Typography>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 {auditQuery.isLoading && (
                   <TableRow>
-                    <TableCell colSpan={AUDIT_TABLE_COLUMN_COUNT}>
+                    <TableCell
+                      colSpan={
+                        AUDIT_TABLE_BASE_COLUMN_COUNT
+                        + (showAuditActorColumn ? 1 : 0)
+                        + (showAuditDetailColumn ? 1 : 0)
+                      }
+                    >
                       <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
                         Cargando auditoría…
                       </Typography>
