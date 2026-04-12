@@ -407,6 +407,8 @@ export default function AdminConsolePage() {
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
+  const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
+  const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
   const showAuditTable = auditQuery.isLoading || audits.length > 1;
   const showAuditActorColumn = auditQuery.isLoading || audits.some((entry) => hasAuditActor(entry.actorId));
   const showAuditDetailColumn = auditQuery.isLoading || audits.some((entry) => hasAuditDetail(entry.diff));
@@ -927,12 +929,16 @@ export default function AdminConsolePage() {
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {singleAuditEntry.entity} · {singleAuditEntry.entityId}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                  <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff ?? '—'}
-                </Typography>
+                {singleAuditHasActor && (
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId)}
+                  </Typography>
+                )}
+                {singleAuditHasDetail && (
+                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff}
+                  </Typography>
+                )}
               </Stack>
             </Stack>
           </Box>

@@ -850,6 +850,38 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
   });
 
+  it('hides empty actor and detail rows in the single-audit summary until that context exists', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: '   ',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*package\.created/i)).toBeInTheDocument();
+      expect(screen.getByText(/Entidad:\s*package · PKG-1/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Actor:\s*Sistema/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Detalle:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
+
   it('deduplicates repeated audit entries so one repeated event keeps the compact first-event summary', async () => {
     mockAuditLogs.mockResolvedValue([
       {
