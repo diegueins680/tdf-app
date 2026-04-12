@@ -114,6 +114,17 @@ const parseMinVersionFilter = (raw: string): number | null => {
   return Number.isSafeInteger(parsed) ? parsed : null;
 };
 
+const formatCmsAdminTimestamp = (value: string) => {
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
+};
+
 export default function CmsAdminPage() {
   const qc = useQueryClient();
   const [slugFilter, setSlugFilter] = useState<string>(() => {
@@ -475,8 +486,8 @@ export default function CmsAdminPage() {
               <Typography variant="body2" color="text.secondary">
                 v{pendingVersion.ccdVersion} · {pendingVersion.ccdStatus} · {pendingVersion.ccdLocale} ·{' '}
                 {pendingVersion.ccdPublishedAt
-                  ? `publicado ${new Date(pendingVersion.ccdPublishedAt).toLocaleString()}`
-                  : `creado ${new Date(pendingVersion.ccdCreatedAt).toLocaleString()}`}
+                  ? `publicado ${formatCmsAdminTimestamp(pendingVersion.ccdPublishedAt)}`
+                  : `creado ${formatCmsAdminTimestamp(pendingVersion.ccdCreatedAt)}`}
               </Typography>
               <Typography variant="body2">
                 Live actual:{' '}
@@ -697,7 +708,7 @@ export default function CmsAdminPage() {
                           <Chip label={liveContent.ccdStatus} size="small" color={liveContent.ccdStatus === 'published' ? 'success' : 'default'} />
                           {liveContent.ccdPublishedAt && (
                             <Chip
-                              label={`Publicado: ${new Date(liveContent.ccdPublishedAt).toLocaleString()}`}
+                              label={`Publicado: ${formatCmsAdminTimestamp(liveContent.ccdPublishedAt)}`}
                               size="small"
                               variant="outlined"
                             />
@@ -930,7 +941,7 @@ export default function CmsAdminPage() {
                         />
                         {v.ccdPublishedAt && (
                           <Chip
-                            label={`pub: ${new Date(v.ccdPublishedAt).toLocaleString()}`}
+                            label={`pub: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
                             size="small"
                             variant="outlined"
                           />
@@ -953,7 +964,13 @@ export default function CmsAdminPage() {
                           Editar en formulario
                         </Button>
                       ) : rowActions.loadedStateLabel ? (
-                        <Chip size="small" color="info" variant="outlined" label={rowActions.loadedStateLabel} />
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ alignSelf: 'center', px: 0.5 }}
+                        >
+                          {rowActions.loadedStateLabel}
+                        </Typography>
                       ) : null}
                       <Button
                         size="small"
