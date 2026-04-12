@@ -697,7 +697,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
-  const useCompactStatusActionLabel = showSingleStatusSummary && loadedRegistrationCount > 1;
+  const useCompactStatusActionLabel = showSingleStatusSummary;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
   const showFilterOnboardingCopy = !hasUsedRowAction;
   const visibleRegistrationsSummary = hasCustomFilters
