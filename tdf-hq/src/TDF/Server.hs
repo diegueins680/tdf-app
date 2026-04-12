@@ -3913,9 +3913,9 @@ chatListMessages user threadId mLimit mBeforeId mAfterId = do
   let limit = fromMaybe 50 mLimit
   when (limit < 1 || limit > 200) $
     throwBadRequest "limit must be between 1 and 200"
-  when (isJust mBeforeId && isJust mAfterId) $
-    throwBadRequest "Use either beforeId or afterId"
-  let tid = toSqlKey threadId :: ChatThreadId
+  (threadIdValid, mBeforeIdValid, mAfterIdValid) <-
+    either throwError pure (validateChatMessageListLookup threadId mBeforeId mAfterId)
+  let tid = toSqlKey threadIdValid :: ChatThreadId
   mThread <- runDB $ get tid
   thread <-
     case mThread of
@@ -3924,7 +3924,7 @@ chatListMessages user threadId mLimit mBeforeId mAfterId = do
   requireChatThreadParticipant user thread
   let baseFilters = [ChatMessageThreadId ==. tid]
   messages <- runDB $
-    case (mBeforeId, mAfterId) of
+    case (mBeforeIdValid, mAfterIdValid) of
       (Just beforeId, Nothing) -> do
         let beforeKey = toSqlKey beforeId :: ChatMessageId
         rows <- selectList (baseFilters ++ [ChatMessageId <. beforeKey]) [Desc ChatMessageId, LimitTo limit]
@@ -3944,7 +3944,8 @@ chatSendMessage user threadId ChatSendMessageRequest{..} = do
     throwBadRequest "Mensaje vacío"
   when (T.length bodyClean > 5000) $
     throwBadRequest "Mensaje demasiado largo (max 5000 caracteres)"
-  let tid = toSqlKey threadId :: ChatThreadId
+  threadIdValid <- either throwError pure (validatePositiveIdField "threadId" threadId)
+  let tid = toSqlKey threadIdValid :: ChatThreadId
       me  = auPartyId user
   mThread <- runDB $ get tid
   thread <-
@@ -5424,6 +5425,19 @@ validateOptionalPositiveIdField :: Text -> Maybe Int64 -> Either ServerError (Ma
 validateOptionalPositiveIdField _ Nothing = Right Nothing
 validateOptionalPositiveIdField fieldName (Just rawId)
   | otherwise = Just <$> validatePositiveIdField fieldName rawId
+
+validateChatMessageListLookup
+  :: Int64
+  -> Maybe Int64
+  -> Maybe Int64
+  -> Either ServerError (Int64, Maybe Int64, Maybe Int64)
+validateChatMessageListLookup threadId mBeforeId mAfterId = do
+  threadIdValid <- validatePositiveIdField "threadId" threadId
+  beforeIdValid <- validateOptionalPositiveIdField "beforeId" mBeforeId
+  afterIdValid <- validateOptionalPositiveIdField "afterId" mAfterId
+  when (isJust beforeIdValid && isJust afterIdValid) $
+    Left err400 { errBody = "Use either beforeId or afterId" }
+  pure (threadIdValid, beforeIdValid, afterIdValid)
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do

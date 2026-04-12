@@ -42,6 +42,7 @@ import TDF.Server
     , validateCourseRegistrationListLimit
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
+    , validateChatMessageListLookup
     , validateOptionalMarketplaceOrderStatus
     , validateMarketplaceOrderUpdateStatus
     , validateCourseRegistrationPhoneE164
@@ -148,6 +149,39 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateChatMessageListLookup" $ do
+        it "accepts a positive thread id plus at most one positive pagination cursor" $ do
+            validateChatMessageListLookup 12 Nothing Nothing
+                `shouldBe` Right (12, Nothing, Nothing)
+            validateChatMessageListLookup 12 (Just 33) Nothing
+                `shouldBe` Right (12, Just 33, Nothing)
+            validateChatMessageListLookup 12 Nothing (Just 44)
+                `shouldBe` Right (12, Nothing, Just 44)
+
+        it "rejects invalid thread or cursor ids instead of turning chat lookups into empty or missing results" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid chat lookup input to be rejected, got: " <> show value)
+            assertInvalid "threadId must be a positive integer"
+                (validateChatMessageListLookup 0 Nothing Nothing)
+            assertInvalid "beforeId must be a positive integer"
+                (validateChatMessageListLookup 12 (Just 0) Nothing)
+            assertInvalid "afterId must be a positive integer"
+                (validateChatMessageListLookup 12 Nothing (Just (-4)))
+
+        it "rejects contradictory beforeId and afterId cursors instead of silently picking one" $
+            case validateChatMessageListLookup 12 (Just 33) (Just 44) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "Use either beforeId or afterId"
+                Right value ->
+                    expectationFailure
+                        ("Expected contradictory chat cursors to be rejected, got: " <> show value)
 
     describe "resolveOptionalBookingPartyReference" $ do
         it "preserves omitted refs and resolves existing booking parties" $ do
