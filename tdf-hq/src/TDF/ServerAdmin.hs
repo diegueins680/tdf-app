@@ -1181,6 +1181,9 @@ adminUsernameMaxLength = 60
 isAdminUsernameChar :: Char -> Bool
 isAdminUsernameChar c = isAlphaNum c || c `elem` (".-_" :: String)
 
+hasAdminUsernameIdentifierChar :: Text -> Bool
+hasAdminUsernameIdentifierChar = T.any isAlphaNum
+
 sanitizeGeneratedAdminUsername :: Text -> Text
 sanitizeGeneratedAdminUsername =
   T.take adminUsernameMaxLength . T.filter isAdminUsernameChar . T.toLower . T.strip
@@ -1191,6 +1194,7 @@ normalizeAdminUsername raw =
   in
     if T.null normalized
          || T.length normalized > adminUsernameMaxLength
+         || not (hasAdminUsernameIdentifierChar normalized)
          || not (T.all isAdminUsernameChar normalized)
       then Nothing
       else Just normalized
@@ -1219,6 +1223,18 @@ validateOptionalAdminUsername (Just raw) =
             { errBody =
                 BL.fromStrict
                   (TE.encodeUtf8 "Username must be 60 characters or fewer")
+            }
+      | not (T.all isAdminUsernameChar trimmed) ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "Username may only contain letters, numbers, dots, dashes, or underscores")
+            }
+      | not (hasAdminUsernameIdentifierChar trimmed) ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "Username must include at least one letter or number")
             }
       | otherwise ->
           Left err400

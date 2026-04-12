@@ -62,8 +62,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do
             normalizeAdminUsername " Ada.Example " `shouldBe` Just "ada.example"
 
-        it "rejects usernames that would need lossy rewriting or exceed the storage limit" $ do
+        it "rejects usernames that would need lossy rewriting, have no identifier characters, or exceed the storage limit" $ do
             normalizeAdminUsername "   " `shouldBe` Nothing
+            normalizeAdminUsername "._-" `shouldBe` Nothing
             normalizeAdminUsername "!!!" `shouldBe` Nothing
             normalizeAdminUsername " Team Lead! " `shouldBe` Nothing
             normalizeAdminUsername (T.replicate 61 "a") `shouldBe` Nothing
@@ -90,6 +91,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Username must contain at least one letter, number, dot, dash, or underscore"
                 (validateOptionalAdminUsername (Just "   "))
+            assertInvalid
+                "Username must include at least one letter or number"
+                (validateOptionalAdminUsername (Just "._-"))
             assertInvalid
                 "Username may only contain letters, numbers, dots, dashes, or underscores"
                 (validateOptionalAdminUsername (Just " Team Lead! "))
