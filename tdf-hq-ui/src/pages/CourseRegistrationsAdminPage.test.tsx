@@ -3213,6 +3213,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).not.toBeNull();
     });
 
     listRegistrationsMock.mockClear();
@@ -3368,7 +3370,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps CSV export focused on real list views and leaves row counts in passive context copy', async () => {
+  it('keeps populated-list utilities together and leaves row counts in passive context copy', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -3385,6 +3387,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
       expect(container.textContent).not.toContain('Total: 200');
       expect(container.textContent).not.toContain('Pagadas:');
       expect(container.textContent).not.toContain('Pendientes:');
@@ -3399,7 +3402,11 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV (200 filas)',
         ),
       ).toBe(false);
-      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(listUtilities).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(getButtonByText(listUtilities!, 'Refrescar lista')).toBeTruthy();
+      expect(getButtonByText(listUtilities!, 'Copiar CSV')).toBeTruthy();
     });
 
     await act(async () => {

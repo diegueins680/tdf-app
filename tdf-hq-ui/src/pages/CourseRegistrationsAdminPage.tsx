@@ -758,6 +758,15 @@ export default function CourseRegistrationsAdminPage() {
     ].filter(Boolean).join(' '),
     [activeViewSummaryMessage, showVisibleRegistrationsSummary, visibleRegistrationsSummary],
   );
+  const showFilteredEmptyState = !regsQuery.isLoading
+    && !regsQuery.isError
+    && hasCustomFilters
+    && !hasVisibleRegistrations;
+  const showHeaderRefreshAction = regsQuery.isError
+    || cohortsQuery.isError
+    || showFilteredEmptyState;
+  const showInlineListRefreshAction = !showHeaderRefreshAction
+    && (hasCustomFilters || hasVisibleRegistrations);
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -766,16 +775,20 @@ export default function CourseRegistrationsAdminPage() {
       || canCopyCsv
       || Boolean(copyMessage)
       || showFilteredResetAction
+      || showInlineListRefreshAction
+    );
+  const showStandaloneListUtilityRow = !hasCustomFilters
+    && hasVisibleRegistrations
+    && (
+      canCopyCsv
+      || Boolean(copyMessage)
+      || showInlineListRefreshAction
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
-  const showListRefreshAction = regsQuery.isError
-    || cohortsQuery.isError
-    || hasCustomFilters
-    || hasVisibleRegistrations;
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT
@@ -797,10 +810,6 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
-  const showFilteredEmptyState = !regsQuery.isLoading
-    && !regsQuery.isError
-    && hasCustomFilters
-    && !hasVisibleRegistrations;
   const hasSystemEmailHistory = (emailEventsQuery.data?.length ?? 0) > 0;
   const showSystemEmailHistoryAction = showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError;
   const showEmptySystemEmailHistoryHint = !showSystemEmailHistoryAction
@@ -1675,8 +1684,14 @@ export default function CourseRegistrationsAdminPage() {
             </Typography>
           )}
         </Stack>
-        {showListRefreshAction && (
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {showHeaderRefreshAction && (
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            useFlexGap
+            data-testid="course-registration-header-actions"
+          >
             <Button
               size="small"
               variant="outlined"
@@ -1902,7 +1917,15 @@ export default function CourseRegistrationsAdminPage() {
               </Typography>
             )}
             {showFilteredUtilityRow && (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mt: 1.5 }}
+                flexWrap="wrap"
+                useFlexGap
+                data-testid="course-registration-filter-utilities"
+              >
                 {filteredUtilitySummaryMessage && (
                   <Typography
                     data-testid="course-registration-filter-summary"
@@ -1915,6 +1938,17 @@ export default function CourseRegistrationsAdminPage() {
                 {showFilteredResetAction && (
                   <Button size="small" onClick={handleResetFilters}>
                     {resetViewLabel}
+                  </Button>
+                )}
+                {showInlineListRefreshAction && (
+                  <Button
+                    size="small"
+                    variant="text"
+                    startIcon={<RefreshIcon fontSize="small" />}
+                    onClick={handleRefresh}
+                    disabled={regsQuery.isFetching}
+                  >
+                    Refrescar lista
                   </Button>
                 )}
                 {canCopyCsv && (
@@ -1951,11 +1985,32 @@ export default function CourseRegistrationsAdminPage() {
                 )}
               </>
             )}
-            {hasVisibleRegistrations && showStandaloneListUtilitySummary && (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
-                <Typography variant="body2" color="text.secondary">
-                  {visibleRegistrationsSummary}
-                </Typography>
+            {showStandaloneListUtilityRow && (
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mt: 2 }}
+                flexWrap="wrap"
+                useFlexGap
+                data-testid="course-registration-list-utilities"
+              >
+                {showStandaloneListUtilitySummary && (
+                  <Typography variant="body2" color="text.secondary">
+                    {visibleRegistrationsSummary}
+                  </Typography>
+                )}
+                {showInlineListRefreshAction && (
+                  <Button
+                    size="small"
+                    variant="text"
+                    startIcon={<RefreshIcon fontSize="small" />}
+                    onClick={handleRefresh}
+                    disabled={regsQuery.isFetching}
+                  >
+                    Refrescar lista
+                  </Button>
+                )}
                 {canCopyCsv && (
                   <Button
                     size="small"
