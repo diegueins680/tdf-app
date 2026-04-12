@@ -66,6 +66,7 @@ import TDF.ServerExtra (
     persistMetaInbound,
     validatePaymentMethod,
     validateDistinctSessionRooms,
+    validateDistinctBandMemberIds,
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateCheckoutTargets,
@@ -345,6 +346,22 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "roomIds must not contain duplicates"
         Right value ->
           expectationFailure ("Expected duplicate session room ids to be rejected, got " <> show value)
+
+  describe "validateDistinctBandMemberIds" $ do
+    let partyIdA = toSqlKey 42 :: Key M.Party
+        partyIdB = toSqlKey 84 :: Key M.Party
+
+    it "keeps empty and unique band member selections unchanged" $ do
+      validateDistinctBandMemberIds [] `shouldBe` Right []
+      validateDistinctBandMemberIds [partyIdA, partyIdB] `shouldBe` Right [partyIdA, partyIdB]
+
+    it "rejects duplicate band members before band creation can persist ambiguous memberships" $
+      case validateDistinctBandMemberIds [partyIdA, partyIdA] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "band members must not contain duplicates"
+        Right value ->
+          expectationFailure ("Expected duplicate band member ids to be rejected, got " <> show value)
 
   describe "validatePaymentMethod" $ do
     it "accepts supported manual-payment aliases, including persisted enum labels reused by the UI" $ do

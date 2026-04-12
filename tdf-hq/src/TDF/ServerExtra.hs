@@ -451,7 +451,8 @@ bandsServer user =
       ensureModule ModuleCRM user
       let trimmedName = T.strip (bcName req)
           toPartyKey pid = toSqlKey pid :: Key Party
-          memberPartyKeys = map (toPartyKey . bmiPartyId) (bcMembers req)
+      memberPartyKeys <- either throwError pure
+        (validateDistinctBandMemberIds (map (toPartyKey . bmiPartyId) (bcMembers req)))
       when (trimmedName == "") $
         throwError err400 { errBody = "Band name is required" }
       nameExists <- withPool $ do
@@ -1424,6 +1425,13 @@ validateDistinctSessionRooms roomKeys
   | length roomKeys == Set.size (Set.fromList roomKeys) = Right roomKeys
   | otherwise = Left err400
       { errBody = "roomIds must not contain duplicates"
+      }
+
+validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
+validateDistinctBandMemberIds partyKeys
+  | length partyKeys == Set.size (Set.fromList partyKeys) = Right partyKeys
+  | otherwise = Left err400
+      { errBody = "band members must not contain duplicates"
       }
 
 ensureModule
