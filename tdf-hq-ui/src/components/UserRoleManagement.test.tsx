@@ -317,10 +317,35 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps save disabled until the admin makes a real role change', async () => {
+  it('deduplicates repeated API roles so the landing table shows one stable access summary per user', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 302,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Manager', 'Admin', 'Manager', 'Admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const linusRow = getRowByName(container, 'Linus QA');
+        const chipLabels = Array.from(linusRow.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
+        expect(chipLabels).toEqual(['Admin', 'Manager']);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps save disabled until the admin makes a real role change', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 303,
         name: 'Linus QA',
         email: 'linus@example.com',
         roles: ['Admin', 'Manager'],

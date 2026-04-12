@@ -163,7 +163,7 @@ export default function UserRoleManagement() {
         email: u.email,
         phone: u.phone,
         status: u.status ?? 'Inactive',
-        roles: (u.roles ?? []) as RoleValue[],
+        roles: normalizeRoleSelection((u.roles ?? []) as RoleValue[]),
       }));
       setUsers(normalized);
     } catch (err) {
@@ -175,7 +175,7 @@ export default function UserRoleManagement() {
 
   const handleEditClick = (user: NormalizedUser) => {
     setSelectedUser(user);
-    setSelectedRoles(user.roles);
+    setSelectedRoles(normalizeRoleSelection(user.roles));
     setEditDialogOpen(true);
   };
 
@@ -197,8 +197,9 @@ export default function UserRoleManagement() {
 
     try {
       setSaving(true);
-      await apiClient.updateUserRoles(selectedUser.id, selectedRoles);
-      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: selectedRoles } : u)));
+      const normalizedRoles = normalizeRoleSelection(selectedRoles);
+      await apiClient.updateUserRoles(selectedUser.id, normalizedRoles);
+      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: normalizedRoles } : u)));
       handleCloseDialog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron actualizar los roles');
