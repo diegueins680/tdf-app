@@ -20,6 +20,7 @@ import TDF.Trials.DTO
   ( ClassSessionDTO
   , ClassSessionUpdate (..)
   , PreferredSlot (..)
+  , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
   , TrialRequestOut (..)
   , TrialScheduleIn (..)
@@ -374,6 +375,30 @@ spec = do
                 expectationFailure "Expected invalid queue subject filter to be rejected"
       assertRejected 0
       assertRejected (-3)
+
+  describe "private trial availability filtering" $ do
+    it "rejects non-positive subject filters before querying availability slots" $ do
+      let assertRejected rawSubjectId = do
+            result <- try $ runTrialsInMemory $
+              privateAvailabilityListHandler (Just rawSubjectId) Nothing Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "subjectId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid availability subject filter to be rejected"
+      assertRejected 0
+      assertRejected (-3)
+
+    it "rejects inverted availability windows instead of silently returning no slots" $ do
+      result <- try $ runTrialsInMemory $
+        privateAvailabilityListHandler Nothing (Just slotEnd) (Just slotStart)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right value ->
+          expectationFailure ("Expected inverted availability window to be rejected, got " <> show value)
 
   describe "private trial scheduling" $ do
     it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
@@ -982,6 +1007,15 @@ privateQueueHandler :: Maybe Int -> Maybe Text -> SqlPersistT IO [TrialQueueItem
 privateQueueHandler =
   let queueH :<|> _ = privateTrialsServer adminUser
   in queueH
+
+privateAvailabilityListHandler
+  :: Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> SqlPersistT IO [TrialAvailabilitySlotDTO]
+privateAvailabilityListHandler =
+  let _ :<|> _ :<|> _ :<|> availabilityListH :<|> _ = privateTrialsServer adminUser
+  in availabilityListH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =

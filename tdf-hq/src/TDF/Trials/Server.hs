@@ -533,6 +533,20 @@ validateOptionalTrialRequestStatusFilter (Just rawStatus) =
         Nothing ->
           Left err400 { errBody = "status must be one of: Requested, Assigned, Scheduled" }
 
+validateAvailabilityListFilters
+  :: Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Either ServerError (Maybe Int, Maybe UTCTime, Maybe UTCTime)
+validateAvailabilityListFilters rawSubjectId mFrom mTo = do
+  subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
+  case (mFrom, mTo) of
+    (Just fromTs, Just toTs)
+      | fromTs > toTs ->
+          Left err400 { errBody = "from must be on or before to" }
+    _ -> pure ()
+  Right (subjectId, mFrom, mTo)
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
@@ -1053,12 +1067,14 @@ privateTrialsServer user@AuthedUser{..} =
     availabilityListH :: Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> AppM [TrialAvailabilitySlotDTO]
     availabilityListH mSubject mFrom mTo = do
       ensureSchoolAccess
+      (normalizedSubjectId, normalizedFrom, normalizedTo) <-
+        either (liftIO . throwIO) pure (validateAvailabilityListFilters mSubject mFrom mTo)
       let teacherKey = auPartyId
           filters =
             [ TeacherAvailabilityTeacherId ==. teacherKey ]
-            ++ maybe [] (\sid -> [TeacherAvailabilitySubjectId ==. intKey sid]) mSubject
-            ++ maybe [] (\fromTs -> [TeacherAvailabilityEndAt >=. fromTs]) mFrom
-            ++ maybe [] (\toTs -> [TeacherAvailabilityStartAt <=. toTs]) mTo
+            ++ maybe [] (\sid -> [TeacherAvailabilitySubjectId ==. intKey sid]) normalizedSubjectId
+            ++ maybe [] (\fromTs -> [TeacherAvailabilityEndAt >=. fromTs]) normalizedFrom
+            ++ maybe [] (\toTs -> [TeacherAvailabilityStartAt <=. toTs]) normalizedTo
       records <- selectList filters [Asc TeacherAvailabilityStartAt]
       let subjects = map (Trials.teacherAvailabilitySubjectId . entityVal) records
           teachers = map (Trials.teacherAvailabilityTeacherId . entityVal) records
