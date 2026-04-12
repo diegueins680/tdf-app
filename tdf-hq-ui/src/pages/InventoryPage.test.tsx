@@ -236,6 +236,55 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('turns an empty history request into one dismissible panel instead of a silent no-op', async () => {
+    historyMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Abrir check-out de Neumann U87"]')).not.toBeNull();
+      });
+
+      await act(async () => {
+        const historyButton = Array.from(container.querySelectorAll('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Historial',
+        );
+        historyButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(historyMock).toHaveBeenCalledWith('asset-1');
+        expect(container.textContent).toContain('Historial · Neumann U87');
+        expect(container.textContent).toContain(
+          'Todavía no hay movimientos registrados para este equipo. Cuando ocurra el primero, aquí verás salida, devolución, destino y notas.',
+        );
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
+      });
+
+      await act(async () => {
+        const hideButton = Array.from(container.querySelectorAll('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Ocultar historial',
+        );
+        hideButton?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain('Historial · Neumann U87');
+        expect(container.textContent).not.toContain(
+          'Todavía no hay movimientos registrados para este equipo. Cuando ocurra el primero, aquí verás salida, devolución, destino y notas.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps checkout history inside the checkout flow until the admin explicitly opens the standalone history panel', async () => {
     historyMock.mockResolvedValue([
       buildCheckoutHistoryEntry(),

@@ -169,8 +169,16 @@ export default function InventoryPage() {
 
   const openHistory = (asset: AssetDTO) => {
     setHistoryViewMode('panel');
+    setHistory([]);
+    setCurrentCheckout(null);
     setSelected(asset);
     assetHistoryMutation.mutate(asset.assetId);
+  };
+
+  const closeHistoryPanel = () => {
+    setHistoryViewMode(null);
+    setHistory([]);
+    setCurrentCheckout(null);
   };
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
@@ -333,32 +341,54 @@ export default function InventoryPage() {
         </DialogActions>
       </Dialog>
 
-      {historyViewMode === 'panel' && selected && history.length > 0 && (
+      {historyViewMode === 'panel' && selected && (
         <Card sx={{ mt: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Historial · {selected.name}
-            </Typography>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Salida</TableCell>
-                  <TableCell>Devuelto</TableCell>
-                  <TableCell>Destino</TableCell>
-                  <TableCell>Notas</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {history.map((h) => (
-                  <TableRow key={h.checkoutId}>
-                    <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
-                    <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
-                    <TableCell>{h.targetKind}</TableCell>
-                    <TableCell>{h.notes ?? '—'}</TableCell>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              spacing={1}
+              sx={{ mb: 1.5 }}
+            >
+              <Typography variant="h6">
+                Historial · {selected.name}
+              </Typography>
+              <Button size="small" variant="text" onClick={closeHistoryPanel}>
+                Ocultar historial
+              </Button>
+            </Stack>
+            {assetHistoryMutation.isPending ? (
+              <Typography variant="body2" color="text.secondary">
+                Cargando historial…
+              </Typography>
+            ) : history.length > 0 ? (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Salida</TableCell>
+                    <TableCell>Devuelto</TableCell>
+                    <TableCell>Destino</TableCell>
+                    <TableCell>Notas</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {history.map((h) => (
+                    <TableRow key={h.checkoutId}>
+                      <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
+                      <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
+                      <TableCell>{h.targetKind}</TableCell>
+                      <TableCell>{h.notes ?? '—'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Alert severity="info">
+                Todavía no hay movimientos registrados para este equipo. Cuando ocurra el primero, aquí verás salida,
+                devolución, destino y notas.
+              </Alert>
+            )}
           </CardContent>
         </Card>
       )}
