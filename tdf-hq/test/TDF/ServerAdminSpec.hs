@@ -12,7 +12,7 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
-import TDF.API.Admin (EmailTestRequest (..))
+import TDF.API.Admin (EmailTestRequest (..), SocialUnholdRequest (..))
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.DTO (LogEntryDTO)
@@ -128,6 +128,22 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeEmailTest "{\"etrEmail\":\"ada@example.com\"}" `shouldSatisfy` isLeft
             decodeEmailTest "{\"email\":\"ada@example.com\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
+    describe "SocialUnholdRequest FromJSON" $ do
+        it "accepts canonical admin wire keys for social unhold lookups" $
+            case eitherDecode
+                "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"note\":\"retry latest reply\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical social unhold payload to decode, got: " <> err)
+                Right payload -> do
+                    surChannel payload `shouldBe` "whatsapp"
+                    surExternalId payload `shouldBe` Nothing
+                    surSenderId payload `shouldBe` Just "wa:+593999000111"
+                    surNote payload `shouldBe` Just "retry latest reply"
+
+        it "rejects prefixed or unexpected keys instead of silently accepting malformed admin payloads" $ do
+            decodeSocialUnhold "{\"surChannel\":\"whatsapp\",\"surSenderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
+            decodeSocialUnhold "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
             validateAdminWhatsAppSendMode " reply " (Just 42) `shouldBe` Right "reply"
@@ -237,6 +253,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
   where
     decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
     decodeEmailTest = eitherDecode
+    decodeSocialUnhold :: BL8.ByteString -> Either String SocialUnholdRequest
+    decodeSocialUnhold = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
 

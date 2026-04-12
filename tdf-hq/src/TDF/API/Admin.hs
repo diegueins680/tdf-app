@@ -109,7 +109,11 @@ data SocialUnholdRequest = SocialUnholdRequest
   , surNote       :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON SocialUnholdRequest
+instance FromJSON SocialUnholdRequest where
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
   { awsrMessage          :: Text
