@@ -415,6 +415,7 @@ export default function AdminConsolePage() {
     ? 'Hay 1 módulo adicional fuera del recorrido inicial. Revísalo solo si ya necesitas ese flujo.'
     : `Hay ${consoleCards.length} módulos adicionales fuera del recorrido inicial. Revísalos solo si ya necesitas esos flujos.`;
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
+  const showFirstRunAdditionalModulesToggle = showGettingStartedGuidance && consoleCards.length > 0;
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
@@ -577,13 +578,17 @@ export default function AdminConsolePage() {
               >
                 {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
               </Button>
-              {consoleCards.length > 0 && !shouldShowAdditionalModuleCards && (
+              {showFirstRunAdditionalModulesToggle && (
                 <Button
                   size="small"
                   variant="text"
-                  onClick={() => setShowFirstRunAdditionalModules(true)}
+                  onClick={() => setShowFirstRunAdditionalModules((currentValue) => !currentValue)}
+                  aria-controls={shouldShowAdditionalModuleCards ? 'admin-additional-modules-list' : undefined}
+                  aria-expanded={shouldShowAdditionalModuleCards ? 'true' : 'false'}
                 >
-                  {`Mostrar ${additionalModulesCountLabel}`}
+                  {shouldShowAdditionalModuleCards
+                    ? 'Ocultar módulos adicionales'
+                    : `Mostrar ${additionalModulesCountLabel}`}
                 </Button>
               )}
             </Stack>
@@ -895,20 +900,6 @@ export default function AdminConsolePage() {
                 ? 'Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
                 : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
             </Typography>
-            {showGettingStartedGuidance && (
-              <Button
-                size="small"
-                variant="text"
-                sx={{ mt: 1 }}
-                onClick={() => setShowFirstRunAdditionalModules((currentValue) => !currentValue)}
-                aria-controls="admin-additional-modules-list"
-                aria-expanded={shouldShowAdditionalModuleCards}
-              >
-                {shouldShowAdditionalModuleCards
-                  ? 'Ocultar módulos adicionales'
-                  : `Mostrar ${additionalModulesCountLabel}`}
-              </Button>
-            )}
           </Box>
           {shouldShowAdditionalModuleCards && (
             <Grid container spacing={2} sx={{ px: 2, pb: 2 }} id="admin-additional-modules-list">

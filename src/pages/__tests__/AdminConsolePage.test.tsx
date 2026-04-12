@@ -323,6 +323,15 @@ describe('AdminConsolePage', () => {
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+    await screen.findByText('Primeros pasos');
+    const getFirstRunAlert = () => {
+      const firstRunAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+      if (!(firstRunAlert instanceof HTMLElement)) {
+        throw new Error('Expected first-run alert container to render');
+      }
+
+      return firstRunAlert;
+    };
 
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
@@ -331,7 +340,7 @@ describe('AdminConsolePage', () => {
           /Hay 1 módulo adicional fuera del recorrido inicial\. Revísalo solo si ya necesitas ese flujo\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
+      expect(within(getFirstRunAlert()).getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
@@ -348,7 +357,7 @@ describe('AdminConsolePage', () => {
       ),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
+    await user.click(within(getFirstRunAlert()).getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
 
     expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
     expect(
@@ -362,7 +371,8 @@ describe('AdminConsolePage', () => {
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
+    expect(within(getFirstRunAlert()).getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Ocultar módulos adicionales/i })).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
