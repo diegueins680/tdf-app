@@ -99,6 +99,32 @@ const SINGLE_USER_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const SINGLE_USER_CONTACT_SETUP_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+const SINGLE_SEARCH_RESULT_GUIDANCE =
+  'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.';
+const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
+  'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+
+const buildUserAccessSummary = ({
+  modules,
+  roles,
+  sharedModulesSummary = '',
+  sharedRolesSummary = '',
+}: {
+  modules: string[];
+  roles: string[];
+  sharedModulesSummary?: string;
+  sharedRolesSummary?: string;
+}) => {
+  const rolesSummary = getUserAccessSummary(roles);
+  const modulesSummary = getUserAccessSummary(modules);
+  const showRolesSummary = Boolean(rolesSummary) && rolesSummary !== sharedRolesSummary;
+  const showModulesSummary = Boolean(modulesSummary) && modulesSummary !== sharedModulesSummary;
+
+  return [
+    showRolesSummary ? `Roles: ${rolesSummary}` : '',
+    showModulesSummary ? `Módulos: ${modulesSummary}` : '',
+  ].filter(Boolean).join(' · ');
+};
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
@@ -205,6 +231,7 @@ export default function AdminUsersPage() {
   const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
+  const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
@@ -212,6 +239,7 @@ export default function AdminUsersPage() {
   const showEmptyStateClearSearchAction = showSearchEmptyState && hasActiveSearch;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
+  const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
@@ -267,12 +295,37 @@ export default function AdminUsersPage() {
   const singleUserGuidance = hasVisibleWhatsAppAction
     ? SINGLE_USER_GUIDANCE
     : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+  const singleSearchResultGuidance = showSingleSearchResultGuidance
+    ? (
+      hasVisibleWhatsAppAction
+        ? SINGLE_SEARCH_RESULT_GUIDANCE
+        : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
+    )
+    : '';
+  const singleSearchResultAccessSummary = useMemo(
+    () => (
+      singleSearchResult
+        ? buildUserAccessSummary({
+          roles: singleSearchResult.roles,
+          modules: singleSearchResult.modules,
+        })
+        : ''
+    ),
+    [singleSearchResult],
+  );
   const primaryGuidance = showSingleUserGuidance
     ? singleUserGuidance
+    : showSingleSearchResultGuidance
+      ? singleSearchResultGuidance
     : showGeneralIntro
       ? generalIntro
       : '';
-  const pageGuidance = [primaryGuidance, viewGuidance, sharedAccessGuidance].filter(Boolean).join(' ');
+  const pageGuidance = [
+    primaryGuidance,
+    viewGuidance,
+    singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
+    sharedAccessGuidance,
+  ].filter(Boolean).join(' ');
 
   return (
     <>
@@ -380,6 +433,7 @@ export default function AdminUsersPage() {
                     onOpenCommunications={() => setSelectedUser(user)}
                     sharedModulesSummary={sharedModulesSummary}
                     sharedRolesSummary={sharedRolesSummary}
+                    hideAccessSummary={showSingleSearchResultGuidance}
                   />
                 ))}
               </Stack>
@@ -402,24 +456,24 @@ function UserRow({
   onOpenCommunications,
   sharedRolesSummary,
   sharedModulesSummary,
+  hideAccessSummary,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
   onOpenCommunications: () => void;
   sharedRolesSummary: string;
   sharedModulesSummary: string;
+  hideAccessSummary: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
   const hasWhatsAppChannel = hasUserWhatsAppChannel(user);
-  const rolesSummary = getUserAccessSummary(user.roles);
-  const modulesSummary = getUserAccessSummary(user.modules);
-  const showRolesSummary = Boolean(rolesSummary) && rolesSummary !== sharedRolesSummary;
-  const showModulesSummary = Boolean(modulesSummary) && modulesSummary !== sharedModulesSummary;
-  const accessSummary = [
-    showRolesSummary ? `Roles: ${rolesSummary}` : '',
-    showModulesSummary ? `Módulos: ${modulesSummary}` : '',
-  ].filter(Boolean).join(' · ');
+  const accessSummary = buildUserAccessSummary({
+    roles: user.roles,
+    modules: user.modules,
+    sharedRolesSummary,
+    sharedModulesSummary,
+  });
   const identity = summarizeUserIdentity(user);
   const profilePath = `/perfil/${user.partyId}`;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
@@ -461,7 +515,7 @@ function UserRow({
       {showInactiveStatusChip && (
         <Chip label="Inactivo" color="default" size="small" />
       )}
-      {accessSummary && (
+      {!hideAccessSummary && accessSummary && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
           <Typography variant="body2" color="text.secondary">
             {accessSummary}

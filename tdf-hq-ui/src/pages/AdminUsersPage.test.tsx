@@ -969,6 +969,66 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('moves single-result access context into the header so the filtered row stays focused on identity and actions', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Mostrando 1 de 3 usuarios. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+
+        const resultRow = getRowByUserId(container, 102);
+        expect(resultRow.textContent).toContain('Grace Hopper');
+        expect(resultRow.textContent).toContain('+593999000444');
+        expect(resultRow.textContent).not.toContain('Roles:');
+        expect(resultRow.textContent).not.toContain('Módulos:');
+        expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides the generic intro while a search is active so header guidance stays focused on the results', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
