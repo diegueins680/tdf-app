@@ -149,7 +149,7 @@ export default function RegisterPage() {
 
       <Grid item xs={12} md={6}>
         <Paper sx={{ p: 2 }}>
-          <Typography variant="h6">Abrir caja</Typography>
+          <Typography variant="h6">1. Abrir caja</Typography>
           <Stack direction="row" spacing={1} mt={2}>
             <TextField
               label="Fondo inicial ($)"
@@ -208,88 +208,105 @@ export default function RegisterPage() {
         </Paper>
 
         <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6">Depósito de efectivo</Typography>
-          <Stack direction="row" spacing={1} mt={2}>
-            <TextField
-              label="Depósito ($)"
-              type="number"
-              inputProps={{ min: 0, step: "0.01" }}
-              value={dropAmount / 100}
-              onChange={(event) => setDropAmount(Math.max(0, Math.round(Number(event.target.value || 0) * 100)))}
-              fullWidth
-            />
-            <Button
-              variant="outlined"
-              disabled={effectiveShiftId <= 0 || dropMutation.isPending}
-              onClick={() => dropMutation.mutate()}
-            >
-              {dropMutation.isPending ? "Registrando…" : "Registrar"}
-            </Button>
-          </Stack>
+          <Typography variant="h6">2. Depósito de efectivo</Typography>
+          {effectiveShiftId > 0 ? (
+            <Stack direction="row" spacing={1} mt={2}>
+              <TextField
+                label="Depósito ($)"
+                type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                value={dropAmount / 100}
+                onChange={(event) => setDropAmount(Math.max(0, Math.round(Number(event.target.value || 0) * 100)))}
+                fullWidth
+              />
+              <Button
+                variant="outlined"
+                disabled={dropMutation.isPending}
+                onClick={() => dropMutation.mutate()}
+              >
+                {dropMutation.isPending ? "Registrando…" : "Registrar"}
+              </Button>
+            </Stack>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Este paso aparece cuando abras la caja o continúes un turno existente.
+            </Typography>
+          )}
         </Paper>
       </Grid>
 
       <Grid item xs={12} md={6}>
         <Paper sx={{ p: 2, height: "100%" }}>
-          <Typography variant="h6">Conteo de caja</Typography>
-          <Divider sx={{ my: 2 }} />
-          <Grid container spacing={1}>
-            {USD_DENOMS.map((den) => (
-              <Grid item xs={6} key={den}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography sx={{ minWidth: 90 }}>${(den / 100).toFixed(2)}</Typography>
-                  <TextField
-                    type="number"
-                    size="small"
-                    inputProps={{ min: 0, step: 1 }}
-                    value={counts[den] ?? ''}
-                    onChange={(event) => {
-                      const raw = event.target.value;
-                      setCounts((prev) => {
-                        const next = { ...prev };
-                        if (!raw.trim()) {
-                          delete next[den];
-                          return next;
-                        }
-                        const parsed = Number(raw);
-                        if (Number.isNaN(parsed)) {
-                          delete next[den];
-                          return next;
-                        }
-                        next[den] = Math.max(0, Math.round(parsed));
-                        return next;
-                      });
-                    }}
-                  />
-                </Stack>
+          <Typography variant="h6">3. Conteo y cierre</Typography>
+          {effectiveShiftId > 0 ? (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Grid container spacing={1}>
+                {USD_DENOMS.map((den) => (
+                  <Grid item xs={6} key={den}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography sx={{ minWidth: 90 }}>${(den / 100).toFixed(2)}</Typography>
+                      <TextField
+                        type="number"
+                        size="small"
+                        inputProps={{ min: 0, step: 1 }}
+                        value={counts[den] ?? ''}
+                        onChange={(event) => {
+                          const raw = event.target.value;
+                          setCounts((prev) => {
+                            const next = { ...prev };
+                            if (!raw.trim()) {
+                              delete next[den];
+                              return next;
+                            }
+                            const parsed = Number(raw);
+                            if (Number.isNaN(parsed)) {
+                              delete next[den];
+                              return next;
+                            }
+                            next[den] = Math.max(0, Math.round(parsed));
+                            return next;
+                          });
+                        }}
+                      />
+                    </Stack>
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
-          <Divider sx={{ my: 2 }} />
-          <Typography>Declarado: ${(sumDeclared / 100).toFixed(2)}</Typography>
-          {countResult && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Esperado: ${(countResult.expectedCents / 100).toFixed(2)} · Diferencia:{" "}
-              {(countResult.overShortCents / 100).toFixed(2)}
-            </Typography>
+              <Divider sx={{ my: 2 }} />
+              <Typography>Declarado: ${(sumDeclared / 100).toFixed(2)}</Typography>
+              {countResult && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Esperado: ${(countResult.expectedCents / 100).toFixed(2)} · Diferencia:{" "}
+                  {(countResult.overShortCents / 100).toFixed(2)}
+                </Typography>
+              )}
+              <Stack direction="row" spacing={1} mt={2}>
+                <Button
+                  variant="outlined"
+                  disabled={countMutation.isPending}
+                  onClick={() => countMutation.mutate()}
+                >
+                  {countMutation.isPending ? "Calculando…" : "Calcular diferencia"}
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={closeMutation.isPending}
+                  onClick={() => closeMutation.mutate()}
+                >
+                  {closeMutation.isPending ? "Cerrando…" : "Cerrar turno"}
+                </Button>
+              </Stack>
+            </>
+          ) : (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="body2" color="text.secondary">
+                El conteo y el cierre se habilitan después de abrir la caja o vincular un turno manual.
+              </Typography>
+            </>
           )}
-          <Stack direction="row" spacing={1} mt={2}>
-            <Button
-              variant="outlined"
-              disabled={effectiveShiftId <= 0 || countMutation.isPending}
-              onClick={() => countMutation.mutate()}
-            >
-              {countMutation.isPending ? "Calculando…" : "Calcular diferencia"}
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={effectiveShiftId <= 0 || closeMutation.isPending}
-              onClick={() => closeMutation.mutate()}
-            >
-              {closeMutation.isPending ? "Cerrando…" : "Cerrar turno"}
-            </Button>
-          </Stack>
         </Paper>
       </Grid>
     </Grid>

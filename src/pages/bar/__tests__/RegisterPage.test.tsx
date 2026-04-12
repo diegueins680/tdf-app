@@ -53,7 +53,17 @@ describe("RegisterPage", () => {
     expect(
       screen.getByText(/Si la caja ya fue abierta fuera de esta pantalla, continúa con su ID manual\./i),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Este paso aparece cuando abras la caja o continúes un turno existente\./i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/El conteo y el cierre se habilitan después de abrir la caja o vincular un turno manual\./i),
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText("Continuar con ID de turno")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Depósito ($)")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Calcular diferencia" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cerrar turno" })).not.toBeInTheDocument();
+    expect(screen.queryByText("$100.00")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Ya tengo un turno abierto" }));
 
@@ -61,6 +71,13 @@ describe("RegisterPage", () => {
     expect(
       screen.getByText(/Úsalo solo si la caja ya fue abierta desde otro flujo\./i),
     ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Continuar con ID de turno"), "55");
+
+    expect(screen.getByLabelText("Depósito ($)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Calcular diferencia" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cerrar turno" })).toBeInTheDocument();
+    expect(screen.getByText("$100.00")).toBeInTheDocument();
   });
 
   it("walks through opening, drop, count and close actions", async () => {
