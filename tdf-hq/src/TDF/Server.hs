@@ -5432,6 +5432,19 @@ validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
     (Left err400 { errBody = "bookingId cannot be combined with partyId or engineerPartyId" })
   pure (bookingIdFilter, partyIdFilter, engineerPartyIdFilter)
 
+normalizeOptionalCmsFilter :: Maybe Text -> Maybe Text
+normalizeOptionalCmsFilter = normalizeOptionalInput
+
+validateRequiredCmsField :: Text -> Text -> Either ServerError Text
+validateRequiredCmsField fieldName rawValue =
+  case normalizeOptionalCmsFilter (Just rawValue) of
+    Just value -> Right value
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " requerido"))
+        }
+
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
 validateCmsContentStatus Nothing = Right "draft"
 validateCmsContentStatus (Just rawStatus) =
@@ -7229,8 +7242,11 @@ cmsPublicServer = cmsGet :<|> cmsList
         }
 
     cmsGet mSlug mLocale = do
-      slug <- maybe (throwError err400 { errBody = "slug requerido" }) pure mSlug
-      let locale = fromMaybe "es" mLocale
+      slug <-
+        maybe (throwError err400 { errBody = "slug requerido" })
+          (either throwError pure . validateRequiredCmsField "slug")
+          mSlug
+      let locale = fromMaybe "es" (normalizeOptionalCmsFilter mLocale)
       mPublished <- runDB $ selectFirst
         [ CMS.CmsContentSlug ==. slug
         , CMS.CmsContentLocale ==. locale
@@ -7239,7 +7255,7 @@ cmsPublicServer = cmsGet :<|> cmsList
       maybe (fallbackContent slug locale) (pure . toCmsDTO) mPublished
 
     cmsList mLocale mPrefix = do
-      let locale = fromMaybe "es" mLocale
+      let locale = fromMaybe "es" (normalizeOptionalCmsFilter mLocale)
       entries <- runDB $
         selectList
           [ CMS.CmsContentLocale ==. locale
@@ -7248,7 +7264,7 @@ cmsPublicServer = cmsGet :<|> cmsList
           [ Desc CMS.CmsContentPublishedAt
           , Desc CMS.CmsContentVersion
           ]
-      let filtered = case mPrefix of
+      let filtered = case normalizeOptionalCmsFilter mPrefix of
             Nothing -> entries
             Just prefix -> filter (\(Entity _ c) -> prefix `T.isPrefixOf` CMS.cmsContentSlug c) entries
       pure (map toCmsDTO filtered)
@@ -8363,8 +8379,8 @@ cmsAdminServer user =
     cmsListH mSlug mLocale = do
       requireWebmaster
       let filters = catMaybes
-            [ (CMS.CmsContentSlug ==.) <$> mSlug
-            , (CMS.CmsContentLocale ==.) <$> mLocale
+            [ (CMS.CmsContentSlug ==.) <$> normalizeOptionalCmsFilter mSlug
+            , (CMS.CmsContentLocale ==.) <$> normalizeOptionalCmsFilter mLocale
             ]
       rows <- runDB $ selectList filters [Desc CMS.CmsContentCreatedAt]
       pure (map toCmsDTO rows)
@@ -8373,8 +8389,8 @@ cmsAdminServer user =
       requireWebmaster
       now <- liftIO getCurrentTime
       statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
-      let slug = cciSlug
-          locale = cciLocale
+      slug <- either throwError pure (validateRequiredCmsField "slug" cciSlug)
+      locale <- either throwError pure (validateRequiredCmsField "locale" cciLocale)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug

@@ -33,6 +33,7 @@ import TDF.Server
     , validateServiceAdCurrency
     , validateServiceAdSlotMinutes
     , validateCmsContentStatus
+    , normalizeOptionalCmsFilter
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
@@ -51,6 +52,7 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validatePublicBookingContactDetails
+    , validateRequiredCmsField
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     )
@@ -331,6 +333,29 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected invalid CMS status to be rejected, got: " <> show statusVal)
             assertInvalid (validateCmsContentStatus (Just "   "))
             assertInvalid (validateCmsContentStatus (Just "scheduled"))
+
+    describe "normalizeOptionalCmsFilter" $ do
+        it "trims meaningful CMS filter values and drops blank ones" $ do
+            normalizeOptionalCmsFilter Nothing `shouldBe` Nothing
+            normalizeOptionalCmsFilter (Just "  homepage ") `shouldBe` Just "homepage"
+            normalizeOptionalCmsFilter (Just "   ") `shouldBe` Nothing
+
+    describe "validateRequiredCmsField" $ do
+        it "trims required CMS identifiers before create and lookup handlers use them" $ do
+            validateRequiredCmsField "slug" "  homepage hero " `shouldBe` Right "homepage hero"
+            validateRequiredCmsField "locale" " es-EC " `shouldBe` Right "es-EC"
+
+        it "rejects blank CMS identifiers instead of persisting or querying ambiguous keys" $ do
+            let assertInvalid fieldName rawValue =
+                    case validateRequiredCmsField fieldName rawValue of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` T.unpack fieldName
+                            BL8.unpack (errBody serverErr) `shouldContain` "requerido"
+                        Right value ->
+                            expectationFailure ("Expected blank CMS field to be rejected, got: " <> show value)
+            assertInvalid "slug" "   "
+            assertInvalid "locale" "\n\t"
 
     describe "normalizeAuthEmailAddress" $ do
         it "trims and lowercases valid auth emails before signup or reset flows use them" $ do
