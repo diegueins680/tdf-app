@@ -907,7 +907,7 @@ main = hspec $ do
             validateTemplateKey "  tdf_live_sessions  " `shouldBe` Right "tdf_live_sessions"
             validateTemplateKey "  TDF_Live_Sessions  " `shouldBe` Right "tdf_live_sessions"
 
-        it "rejects blank or unsafe template keys with a 400 instead of a missing-template 404" $ do
+        it "rejects blank, separator-only, or unsafe template keys with a 400 instead of a missing-template 404" $ do
             let assertInvalid raw expected = case validateTemplateKey raw of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
@@ -915,6 +915,7 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid templateKey to be rejected, got: " <> show value)
             assertInvalid "   " "templateKey required"
+            assertInvalid "---" "include at least one letter or number"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
 
     describe "validateProposalContentSource" $ do

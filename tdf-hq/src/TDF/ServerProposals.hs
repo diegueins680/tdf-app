@@ -527,7 +527,7 @@ validateTemplateKey raw =
         if isSafeTemplateKey canonical
           then Right canonical
           else Left err400
-            { errBody = "templateKey must contain only ASCII letters, numbers, hyphens, or underscores"
+            { errBody = "templateKey must contain only ASCII letters, numbers, hyphens, or underscores, and include at least one letter or number"
             }
 
 loadTemplate :: Text -> IO (Maybe Text)
@@ -547,9 +547,10 @@ proposalAssetsDir = templatesDir </> "assets"
 
 isSafeTemplateKey :: Text -> Bool
 isSafeTemplateKey key =
-  not (T.null key) && T.all isAllowed key
+  not (T.null key) && T.any isAsciiAlphaNum key && T.all isAllowed key
   where
     isAllowed c = isAscii c && (isAlphaNum c || c == '-' || c == '_')
+    isAsciiAlphaNum c = isAscii c && isAlphaNum c
 
 canonicalTemplateKey :: Text -> Text
 canonicalTemplateKey = T.toLower . T.strip
