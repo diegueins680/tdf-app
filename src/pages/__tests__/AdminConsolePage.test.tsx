@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import AdminConsolePage from '../AdminConsolePage';
@@ -641,7 +641,9 @@ describe('AdminConsolePage', () => {
 
   it('shows the status column again as soon as one admin account needs that extra context', async () => {
     mockListUsers.mockResolvedValue([
-      buildAdminUser(),
+      buildAdminUser({
+        lastSeenAt: '2026-04-10T12:00:00.000Z',
+      }),
       buildAdminUser({
         userId: 102,
         username: 'grace',
@@ -649,6 +651,7 @@ describe('AdminConsolePage', () => {
         partyId: 10,
         roles: ['Manager'],
         status: 'INVITED',
+        lastSeenAt: '2026-04-10T13:00:00.000Z',
       }),
     ]);
 
@@ -663,9 +666,19 @@ describe('AdminConsolePage', () => {
         ),
       ).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
-      expect(screen.getByText('Activo')).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
     });
+
+    const activeRow = screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }).closest('tr');
+    const invitedRow = screen.getByRole('button', { name: 'Editar roles de Grace Hopper' }).closest('tr');
+
+    if (!(activeRow instanceof HTMLTableRowElement) || !(invitedRow instanceof HTMLTableRowElement)) {
+      throw new Error('Expected admin user rows to render inside the comparison table');
+    }
+
+    expect(within(activeRow).queryByText(/^Activo$/i)).not.toBeInTheDocument();
+    expect(within(activeRow).getByText('—')).toBeInTheDocument();
+    expect(within(invitedRow).getByText('Invitado')).toBeInTheDocument();
   });
 
   it('keeps save disabled in the role dialog until the admin makes a real change', async () => {

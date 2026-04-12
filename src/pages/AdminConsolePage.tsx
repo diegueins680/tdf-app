@@ -404,8 +404,9 @@ export default function AdminConsolePage() {
     invalidateAdminPanelQueries(qc);
   };
 
-  const renderStatus = (status?: AdminUserStatus | null) => {
+  const renderStatus = (status?: AdminUserStatus | null, options?: { hideActive?: boolean }) => {
     if (!status) return '—';
+    if (options?.hideActive && status === 'ACTIVE') return '—';
     const meta = STATUS_META[status];
     if (!meta) {
       return status;
@@ -626,7 +627,7 @@ export default function AdminConsolePage() {
                         </Button>
                       </TableCell>
                       <TableCell>{formatDateOrDash(user.lastSeenAt ?? user.lastLoginAt)}</TableCell>
-                      {showUsersStatusColumn && <TableCell>{renderStatus(user.status)}</TableCell>}
+                      {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
                     </TableRow>
                   );
                 })}
