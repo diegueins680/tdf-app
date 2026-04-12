@@ -1015,6 +1015,7 @@ privateTrialsServer user@AuthedUser{..} =
         Just req -> do
           ensureTeacherSelection teacherK
           ensureSchedulableRoom roomK
+          ensureRoomAllowed (trialRequestSubjectId req) roomK
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
           unless teacherFree $
             liftIO $ throwIO err409 { errBody = "Profesor no disponible en ese horario" }

@@ -504,6 +504,36 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for trial scheduling"
 
+    it "rejects scheduling a trial into a room that is not allowed for the subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        allowedRoomId <- insertRoomFixture "Sala Piano" "sala-piano"
+        blockedRoomId <- insertRoomFixture "Sala Voces" "sala-voces"
+        subjectKey <- insert (Subject "Piano" True)
+        _ <- insert Trials.SubjectRoomPreference
+          { Trials.subjectRoomPreferenceSubjectId = subjectKey
+          , Trials.subjectRoomPreferenceRoomId = allowedRoomId
+          , Trials.subjectRoomPreferencePriority = 1
+          }
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey blockedRoomId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "Esta materia no se dicta en la sala seleccionada."
+        Right _ ->
+          expectationFailure "Expected rooms outside the subject preference list to be rejected"
+
     it "rejects scheduling a trial when the teacher is already booked in an overlapping class" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -842,6 +872,15 @@ initializeTrialsSchema = do
     \\"name\" VARCHAR NOT NULL,\
     \\"active\" BOOLEAN NOT NULL,\
     \CONSTRAINT \"unique_subject_name\" UNIQUE (\"name\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"subject_room_preference\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"room_id\" INTEGER NOT NULL,\
+    \\"priority\" INTEGER NOT NULL,\
+    \CONSTRAINT \"unique_subject_room\" UNIQUE (\"subject_id\", \"room_id\")\
     \)"
     []
   rawExecute
