@@ -32,6 +32,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
@@ -697,16 +698,7 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>
-                    <Stack spacing={0}>
-                      <Typography variant="body2" fontWeight={600}>
-                        Roles
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Editar aquí
-                      </Typography>
-                    </Stack>
-                  </TableCell>
+                  <TableCell>Roles</TableCell>
                   {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
                   {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                 </TableRow>
@@ -754,6 +746,7 @@ export default function AdminConsolePage() {
                       <TableCell>
                         <Button
                           size="small"
+                          endIcon={<EditOutlinedIcon fontSize="inherit" />}
                           onClick={() => setEditingUser(user)}
                           aria-label={`Editar roles de ${identity.primary}`}
                           sx={{
@@ -761,6 +754,9 @@ export default function AdminConsolePage() {
                             minWidth: 0,
                             justifyContent: 'flex-start',
                             textTransform: 'none',
+                            '& .MuiButton-endIcon': {
+                              ml: 0.75,
+                            },
                           }}
                         >
                           {formatRoleList(user.roles)}
@@ -811,12 +807,16 @@ export default function AdminConsolePage() {
                 <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                   <Button
                     size="small"
+                    endIcon={<EditOutlinedIcon fontSize="inherit" />}
                     onClick={() => setEditingUser(singleAdminUser)}
                     aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
                     sx={{
                       px: 0,
                       minWidth: 0,
                       textTransform: 'none',
+                      '& .MuiButton-endIcon': {
+                        ml: 0.75,
+                      },
                     }}
                   >
                     {formatRoleList(singleAdminUser.roles)}

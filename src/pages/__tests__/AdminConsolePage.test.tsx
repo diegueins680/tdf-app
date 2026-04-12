@@ -643,7 +643,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('keeps the roles edit hint inside the column header while hiding empty comparison columns', async () => {
+  it('keeps the roles header compact and moves the edit cue onto each roles button while hiding empty comparison columns', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -667,19 +667,19 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Roles/i })).toBeInTheDocument();
-      expect(screen.getByText('Editar aquí')).toBeInTheDocument();
+      expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Activo$/i)).not.toBeInTheDocument();
     });
-
-    expect(screen.getAllByText('Editar aquí')).toHaveLength(1);
   });
 
   it('shows the status column again as soon as one admin account needs that extra context', async () => {
