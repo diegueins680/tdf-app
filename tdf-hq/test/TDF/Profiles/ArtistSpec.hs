@@ -61,6 +61,43 @@ spec = describe "Artist profile helpers" $ do
         apSpotifyUrl dto `shouldBe` Just "https://open.spotify.com/artist/spotify-123"
         apHasUserAccount dto `shouldBe` False
 
+    it "trims optional artist profile text fields and drops explicit blanks instead of storing whitespace-only data" $ do
+        dto <- runInMemory $ do
+            now <- liftIO getCurrentTime
+            artistId <- insertParty "   Mentores del Aire   "
+            let payload =
+                    ArtistProfileUpsert
+                        { apuArtistId = fromSqlKey artistId
+                        , apuDisplayName = Just "  Mentores del Aire  "
+                        , apuSlug = Just "  mentores-del-aire  "
+                        , apuBio = Just "   "
+                        , apuCity = Just "  Quito  "
+                        , apuHeroImageUrl = Just "  https://cdn.tdf/hero.jpg  "
+                        , apuSpotifyArtistId = Just "  spotify-456  "
+                        , apuSpotifyUrl = Just "   "
+                        , apuYoutubeChannelId = Just "  yt-mentores  "
+                        , apuYoutubeUrl = Just " https://youtube.com/@mentores "
+                        , apuWebsiteUrl = Just "   "
+                        , apuFeaturedVideoUrl = Just "  https://youtube.com/watch?v=456  "
+                        , apuGenres = Just "  Latin Pop  "
+                        , apuHighlights = Just "   "
+                        }
+            upsertArtistProfileRecord artistId payload now
+
+        apDisplayName dto `shouldBe` "Mentores del Aire"
+        apSlug dto `shouldBe` Just "mentores-del-aire"
+        apBio dto `shouldBe` Nothing
+        apCity dto `shouldBe` Just "Quito"
+        apHeroImageUrl dto `shouldBe` Just "https://cdn.tdf/hero.jpg"
+        apSpotifyArtistId dto `shouldBe` Just "spotify-456"
+        apSpotifyUrl dto `shouldBe` Nothing
+        apYoutubeChannelId dto `shouldBe` Just "yt-mentores"
+        apYoutubeUrl dto `shouldBe` Just "https://youtube.com/@mentores"
+        apWebsiteUrl dto `shouldBe` Nothing
+        apFeaturedVideoUrl dto `shouldBe` Just "https://youtube.com/watch?v=456"
+        apGenres dto `shouldBe` Just "Latin Pop"
+        apHighlights dto `shouldBe` Nothing
+
 -- Helpers
 
 runInMemory :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a

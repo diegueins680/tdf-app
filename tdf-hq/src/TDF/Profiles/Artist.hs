@@ -29,6 +29,13 @@ import           TDF.DTO                   ( ArtistProfileDTO(..)
 import           TDF.Models
 import qualified TDF.Models                as M
 
+cleanOptionalText :: Maybe Text -> Maybe Text
+cleanOptionalText = (>>= nonBlank)
+  where
+    nonBlank txt =
+      let trimmed = T.strip txt
+      in if T.null trimmed then Nothing else Just trimmed
+
 upsertArtistProfileRecord
   :: MonadIO m
   => PartyId
@@ -36,7 +43,19 @@ upsertArtistProfileRecord
   -> UTCTime
   -> SqlPersistT m ArtistProfileDTO
 upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
-  let trimmedDisplay = fmap T.strip apuDisplayName
+  let trimmedDisplay = cleanOptionalText apuDisplayName
+      normalizedSlug = cleanOptionalText apuSlug
+      normalizedBio = cleanOptionalText apuBio
+      normalizedCity = cleanOptionalText apuCity
+      normalizedHeroImageUrl = cleanOptionalText apuHeroImageUrl
+      normalizedSpotifyArtistId = cleanOptionalText apuSpotifyArtistId
+      normalizedSpotifyUrl = cleanOptionalText apuSpotifyUrl
+      normalizedYoutubeChannelId = cleanOptionalText apuYoutubeChannelId
+      normalizedYoutubeUrl = cleanOptionalText apuYoutubeUrl
+      normalizedWebsiteUrl = cleanOptionalText apuWebsiteUrl
+      normalizedFeaturedVideoUrl = cleanOptionalText apuFeaturedVideoUrl
+      normalizedGenres = cleanOptionalText apuGenres
+      normalizedHighlights = cleanOptionalText apuHighlights
       displayUpdate =
         case trimmedDisplay of
           Just name | not (T.null name) -> Just (M.PartyDisplayName =. name)
@@ -47,33 +66,33 @@ upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
   _ <- upsert
     ArtistProfile
       { artistProfileArtistPartyId    = artistKey
-      , artistProfileSlug             = apuSlug
-      , artistProfileBio              = apuBio
-      , artistProfileCity             = apuCity
-      , artistProfileHeroImageUrl     = apuHeroImageUrl
-      , artistProfileSpotifyArtistId  = apuSpotifyArtistId
-      , artistProfileSpotifyUrl       = apuSpotifyUrl
-      , artistProfileYoutubeChannelId = apuYoutubeChannelId
-      , artistProfileYoutubeUrl       = apuYoutubeUrl
-      , artistProfileWebsiteUrl       = apuWebsiteUrl
-      , artistProfileFeaturedVideoUrl = apuFeaturedVideoUrl
-      , artistProfileGenres           = apuGenres
-      , artistProfileHighlights       = apuHighlights
+      , artistProfileSlug             = normalizedSlug
+      , artistProfileBio              = normalizedBio
+      , artistProfileCity             = normalizedCity
+      , artistProfileHeroImageUrl     = normalizedHeroImageUrl
+      , artistProfileSpotifyArtistId  = normalizedSpotifyArtistId
+      , artistProfileSpotifyUrl       = normalizedSpotifyUrl
+      , artistProfileYoutubeChannelId = normalizedYoutubeChannelId
+      , artistProfileYoutubeUrl       = normalizedYoutubeUrl
+      , artistProfileWebsiteUrl       = normalizedWebsiteUrl
+      , artistProfileFeaturedVideoUrl = normalizedFeaturedVideoUrl
+      , artistProfileGenres           = normalizedGenres
+      , artistProfileHighlights       = normalizedHighlights
       , artistProfileCreatedAt        = now
       , artistProfileUpdatedAt        = Just now
       }
-    [ ArtistProfileSlug             =. apuSlug
-    , ArtistProfileBio              =. apuBio
-    , ArtistProfileCity             =. apuCity
-    , ArtistProfileHeroImageUrl     =. apuHeroImageUrl
-    , ArtistProfileSpotifyArtistId  =. apuSpotifyArtistId
-    , ArtistProfileSpotifyUrl       =. apuSpotifyUrl
-    , ArtistProfileYoutubeChannelId =. apuYoutubeChannelId
-    , ArtistProfileYoutubeUrl       =. apuYoutubeUrl
-    , ArtistProfileWebsiteUrl       =. apuWebsiteUrl
-    , ArtistProfileFeaturedVideoUrl =. apuFeaturedVideoUrl
-    , ArtistProfileGenres           =. apuGenres
-    , ArtistProfileHighlights       =. apuHighlights
+    [ ArtistProfileSlug             =. normalizedSlug
+    , ArtistProfileBio              =. normalizedBio
+    , ArtistProfileCity             =. normalizedCity
+    , ArtistProfileHeroImageUrl     =. normalizedHeroImageUrl
+    , ArtistProfileSpotifyArtistId  =. normalizedSpotifyArtistId
+    , ArtistProfileSpotifyUrl       =. normalizedSpotifyUrl
+    , ArtistProfileYoutubeChannelId =. normalizedYoutubeChannelId
+    , ArtistProfileYoutubeUrl       =. normalizedYoutubeUrl
+    , ArtistProfileWebsiteUrl       =. normalizedWebsiteUrl
+    , ArtistProfileFeaturedVideoUrl =. normalizedFeaturedVideoUrl
+    , ArtistProfileGenres           =. normalizedGenres
+    , ArtistProfileHighlights       =. normalizedHighlights
     , ArtistProfileUpdatedAt        =. Just now
     ]
   mDto <- loadArtistProfileDTO artistKey
