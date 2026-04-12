@@ -122,16 +122,20 @@ data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
   } deriving (Show, Generic)
 
 instance FromJSON AdminWhatsAppSendRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data AdminWhatsAppResendRequest = AdminWhatsAppResendRequest
   { awrrMessage :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON AdminWhatsAppResendRequest where
-  parseJSON = withObject "AdminWhatsAppResendRequest" $ \o -> do
-    mMessage <- o .:? "message"
-    pure AdminWhatsAppResendRequest { awrrMessage = mMessage }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data WhatsAppMessageAdminDTO = WhatsAppMessageAdminDTO
   { wmdId                :: Int64

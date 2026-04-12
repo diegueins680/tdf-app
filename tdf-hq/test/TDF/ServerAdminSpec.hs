@@ -12,7 +12,12 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
-import TDF.API.Admin (EmailTestRequest (..), SocialUnholdRequest (..))
+import TDF.API.Admin
+    ( AdminWhatsAppResendRequest (..)
+    , AdminWhatsAppSendRequest (..)
+    , EmailTestRequest (..)
+    , SocialUnholdRequest (..)
+    )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.DTO (LogEntryDTO)
@@ -144,6 +149,37 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeSocialUnhold "{\"surChannel\":\"whatsapp\",\"surSenderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
             decodeSocialUnhold "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
+    describe "AdminWhatsAppSendRequest FromJSON" $ do
+        it "accepts canonical admin wire keys for WhatsApp sends" $
+            case eitherDecode
+                "{\"message\":\"Hola\",\"mode\":\"reply\",\"replyToMessageId\":42}" of
+                Left err ->
+                    expectationFailure ("Expected canonical WhatsApp send payload to decode, got: " <> err)
+                Right payload -> do
+                    awsrMessage payload `shouldBe` "Hola"
+                    awsrMode payload `shouldBe` "reply"
+                    awsrReplyToMessageId payload `shouldBe` Just 42
+
+        it "rejects prefixed or unexpected keys so malformed WhatsApp send bodies fail explicitly" $ do
+            decodeWhatsAppSend
+                "{\"awsrMessage\":\"Hola\",\"awsrMode\":\"reply\",\"awsrReplyToMessageId\":42}"
+                `shouldSatisfy` isLeft
+            decodeWhatsAppSend
+                "{\"message\":\"Hola\",\"mode\":\"notify\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "AdminWhatsAppResendRequest FromJSON" $ do
+        it "accepts canonical admin wire keys for WhatsApp resends" $
+            case eitherDecode "{\"message\":\"Reintentando\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical WhatsApp resend payload to decode, got: " <> err)
+                Right payload ->
+                    awrrMessage payload `shouldBe` Just "Reintentando"
+
+        it "rejects prefixed or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
+            decodeWhatsAppResend "{\"awrrMessage\":\"Hola\"}" `shouldSatisfy` isLeft
+            decodeWhatsAppResend "{\"message\":\"Hola\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
             validateAdminWhatsAppSendMode " reply " (Just 42) `shouldBe` Right "reply"
@@ -255,6 +291,10 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeEmailTest = eitherDecode
     decodeSocialUnhold :: BL8.ByteString -> Either String SocialUnholdRequest
     decodeSocialUnhold = eitherDecode
+    decodeWhatsAppSend :: BL8.ByteString -> Either String AdminWhatsAppSendRequest
+    decodeWhatsAppSend = eitherDecode
+    decodeWhatsAppResend :: BL8.ByteString -> Either String AdminWhatsAppResendRequest
+    decodeWhatsAppResend = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
 
