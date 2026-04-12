@@ -263,6 +263,53 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('shows the compare action only while the draft differs from the live payload', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Comparar con live')).toBe(1);
+      expect(container.textContent).toContain('Payload modificado vs en vivo');
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(container.textContent).not.toContain('Payload modificado vs en vivo');
+      expect(container.textContent).toContain(
+        'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
+      );
+    });
+
+    await act(async () => {
+      setInputValue(
+        getInputByLabel(container, 'Payload JSON'),
+        JSON.stringify({ heroTitle: 'Landing actualizada' }, null, 2),
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Comparar con live')).toBe(1);
+      expect(container.textContent).toContain('Payload modificado vs en vivo');
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('hides the example action for custom slugs and replaces it with custom-slug guidance', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',

@@ -450,8 +450,13 @@ export default function CmsAdminPage() {
       ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
       : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const compareHint = livePayloadPretty
-    ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+    ? payloadError
+      ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
+      : payloadChanged
+        ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+        : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
+  const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -777,7 +782,7 @@ export default function CmsAdminPage() {
                       {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
                     </Button>
                   )}
-                  {livePayloadPretty && (
+                  {canCompareWithLive && (
                     <Button variant="text" onClick={() => setShowDraftDiff(true)}>
                       Comparar con live
                     </Button>
