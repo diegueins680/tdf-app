@@ -872,6 +872,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid ".user@example.com"
             assertInvalid "user.@example.com"
             assertInvalid "user..name@example.com"
+            assertInvalid "user()@example.com"
+            assertInvalid "usér@example.com"
 
     describe "validateMarketplaceBuyerEmail" $ do
         it "trims and lowercases valid buyer emails before checkout creates marketplace orders" $
@@ -891,6 +893,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer@-example.com" "buyerEmail inválido"
             assertInvalid "buyer@example-.com" "buyerEmail inválido"
             assertInvalid "buyer..name@example.com" "buyerEmail inválido"
+            assertInvalid "buyer()@example.com" "buyerEmail inválido"
 
     describe "validateCourseRegistrationUrlField" $ do
         it "trims valid absolute http(s) URLs and still lets optional attachment fields clear to Nothing" $ do
@@ -929,6 +932,7 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected invalid public-booking contact data to be rejected, got: " <> show contactVal)
             assertInvalid "   " Nothing "email requerido"
             assertInvalid "not-an-email" Nothing "email inválido"
+            assertInvalid "user()@example.com" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
 
     describe "validatePublicBookingDurationMinutes" $ do

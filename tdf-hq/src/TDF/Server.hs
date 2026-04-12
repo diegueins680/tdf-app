@@ -3580,6 +3580,11 @@ isValidEmailLocalPart localPart =
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (T.isInfixOf ".." localPart)
+    && T.all isValidEmailLocalChar localPart
+
+isValidEmailLocalChar :: Char -> Bool
+isValidEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
