@@ -14,6 +14,7 @@ import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
+import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
 import qualified TDF.DTO as DTO
@@ -40,6 +41,8 @@ import TDF.Server
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
+    , validateCourseSessionInputs
+    , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
     , validateChatMessageListLookup
@@ -1138,6 +1141,45 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateCourseNonNegativeField "capacity" (-5)) "capacity"
             assertInvalid (validateOptionalCourseNonNegativeField "sessionStartHour" (Just (-1))) "sessionStartHour"
             assertInvalid (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2))) "sessionDurationHours"
+
+    describe "course upsert nested text validation" $ do
+        it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do
+            let sessionDay = fromGregorian 2026 4 20
+            case validateCourseSessionInputs [CourseSessionIn "  Kickoff session  " sessionDay (Just 2)] of
+                Right [CourseSessionIn labelVal dateVal orderVal] -> do
+                    labelVal `shouldBe` "Kickoff session"
+                    dateVal `shouldBe` sessionDay
+                    orderVal `shouldBe` Just 2
+                Right value ->
+                    expectationFailure ("Expected a single normalized course session, got: " <> show value)
+                Left serverErr ->
+                    expectationFailure ("Expected course session validation to succeed, got: " <> show serverErr)
+            case validateCourseSyllabusInputs [CourseSyllabusIn "  Intro module  " ["  Ableton  ", " ", " Mixing"] (Just 3)] of
+                Right [CourseSyllabusIn titleVal topicsVal orderVal] -> do
+                    titleVal `shouldBe` "Intro module"
+                    topicsVal `shouldBe` ["Ableton", "Mixing"]
+                    orderVal `shouldBe` Just 3
+                Right value ->
+                    expectationFailure ("Expected a single normalized syllabus item, got: " <> show value)
+                Left serverErr ->
+                    expectationFailure ("Expected syllabus validation to succeed, got: " <> show serverErr)
+
+        it "rejects blank session labels or syllabus titles instead of storing empty course rows" $ do
+            let sessionDay = fromGregorian 2026 4 20
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid nested course text to be rejected, got: " <> show value)
+            assertInvalid
+                "sessions[1].label is required"
+                (validateCourseSessionInputs [CourseSessionIn "   " sessionDay Nothing])
+            assertInvalid
+                "syllabus[1].title is required"
+                (validateCourseSyllabusInputs [CourseSyllabusIn "   " ["Ableton"] Nothing])
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $

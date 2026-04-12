@@ -2338,6 +2338,8 @@ saveCourse Courses.CourseUpsert{..} = do
   priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
   startHourClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionStartHour" sessionStartHour)
   durationHoursClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionDurationHours" sessionDurationHours)
+  sessionsClean <- either throwError pure (validateCourseSessionInputs sessions)
+  syllabusClean <- either throwError pure (validateCourseSyllabusInputs syllabus)
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
@@ -2358,7 +2360,6 @@ saveCourse Courses.CourseUpsert{..} = do
         case filter (not . T.null) (map T.strip xs) of
           [] -> Nothing
           ys -> Just ys
-      sanitizeTopics = filter (not . T.null . T.strip)
       withOrder fallbackIdx mOrder = fromMaybe fallbackIdx mOrder
   runDB $ do
     mExisting <- getBy (Trials.UniqueCourseSlug slugVal)
@@ -2414,23 +2415,23 @@ saveCourse Courses.CourseUpsert{..} = do
     deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
     deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
 
-    let sessionPayload = zip [1..] sessions
+    let sessionPayload = zip [1..] sessionsClean
     for_ sessionPayload $ \(idx, CourseSessionIn{..}) -> do
       let ordVal = withOrder idx order
       insert_ Trials.CourseSessionModel
         { Trials.courseSessionModelCourseId = courseId
-        , Trials.courseSessionModelLabel = T.strip label
+        , Trials.courseSessionModelLabel = label
         , Trials.courseSessionModelDate = date
         , Trials.courseSessionModelOrder = Just ordVal
         }
 
-    let syllabusPayload = zip [1..] syllabus
+    let syllabusPayload = zip [1..] syllabusClean
     for_ syllabusPayload $ \(idx, CourseSyllabusIn{title = syllabusTitle, topics = syllabusTopics, order = syllabusOrder}) -> do
       let ordVal = withOrder idx syllabusOrder
       insert_ Trials.CourseSyllabusItem
         { Trials.courseSyllabusItemCourseId = courseId
-        , Trials.courseSyllabusItemTitle = T.strip syllabusTitle
-        , Trials.courseSyllabusItemTopics = sanitizeTopics syllabusTopics
+        , Trials.courseSyllabusItemTitle = syllabusTitle
+        , Trials.courseSyllabusItemTopics = syllabusTopics
         , Trials.courseSyllabusItemOrder = Just ordVal
         }
   loadCourseMetadata slugVal
@@ -5500,6 +5501,38 @@ validateCourseNonNegativeField fieldName value
 validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
 validateOptionalCourseNonNegativeField fieldName =
   traverse (validateCourseNonNegativeField fieldName)
+
+validateCourseSessionInputs :: [CourseSessionIn] -> Either ServerError [CourseSessionIn]
+validateCourseSessionInputs =
+  traverse (uncurry validateCourseSessionInput) . zip [1 :: Int ..]
+
+validateCourseSessionInput :: Int -> CourseSessionIn -> Either ServerError CourseSessionIn
+validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
+  case normalizeOptionalInput (Just rawLabel) of
+    Just labelClean -> Right (CourseSessionIn labelClean dayVal orderVal)
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "sessions[" <> T.pack (show idx) <> "].label is required"
+        }
+
+validateCourseSyllabusInputs :: [CourseSyllabusIn] -> Either ServerError [CourseSyllabusIn]
+validateCourseSyllabusInputs =
+  traverse (uncurry validateCourseSyllabusInput) . zip [1 :: Int ..]
+
+validateCourseSyllabusInput :: Int -> CourseSyllabusIn -> Either ServerError CourseSyllabusIn
+validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
+  case normalizeOptionalInput (Just rawTitle) of
+    Just titleClean ->
+      Right
+        (CourseSyllabusIn titleClean (mapMaybe (normalizeOptionalInput . Just) rawTopics) orderVal)
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "syllabus[" <> T.pack (show idx) <> "].title is required"
+        }
 
 parseBookingStatus :: Text -> Either Text BookingStatus
 parseBookingStatus raw =
