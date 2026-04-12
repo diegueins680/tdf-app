@@ -144,6 +144,9 @@ export default function UserRoleManagement() {
   const showContactColumn = users.some((user) => getContactSummary(user) != null);
   const showStatusColumn = users.some((user) => user.status === 'Inactive');
   const roleManagementSummary = buildRoleManagementSummary({ showContactColumn, showStatusColumn });
+  const singleUser = users.length === 1 ? users[0] : null;
+  const singleUserContactSummary = singleUser ? getContactSummary(singleUser) : null;
+  const showComparisonTable = users.length > 1;
   const hasPendingRoleChanges = selectedUser
     ? hasRoleSelectionChanged(selectedUser.roles, selectedRoles)
     : false;
@@ -244,92 +247,151 @@ export default function UserRoleManagement() {
             <Typography variant="h5" fontWeight={700}>
               Roles y permisos
             </Typography>
-            {roleManagementSummary && (
+            {showComparisonTable && roleManagementSummary && (
               <Typography variant="body2" color="text.secondary">
                 {roleManagementSummary}
               </Typography>
             )}
           </Stack>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Usuario</TableCell>
-                  {showContactColumn && <TableCell>Contacto</TableCell>}
-                  {showStatusColumn && <TableCell>Estado</TableCell>}
-                  <TableCell>
-                    <Stack spacing={0}>
-                      <Typography component="span" variant="body2" fontWeight={600}>
+          {singleUser ? (
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Stack spacing={1.25}>
+                <Typography variant="body2" color="text.secondary">
+                  Primer usuario administrable. Revisa sus datos clave y edita roles aquí; cuando exista el segundo,
+                  volverá la tabla comparativa.
+                </Typography>
+                <Stack
+                  spacing={1}
+                  direction={{ xs: 'column', md: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', md: 'center' }}
+                >
+                  <Stack spacing={0.25}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {singleUser.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ID {singleUser.id}
+                    </Typography>
+                    {singleUserContactSummary && (
+                      <Typography variant="body2" color="text.secondary">
+                        {singleUserContactSummary}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Stack spacing={0.75} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                    {singleUser.status === 'Inactive' && (
+                      <Chip label={singleUser.status} color={STATUS_COLORS[singleUser.status]} size="small" />
+                    )}
+                    <Stack spacing={0.25} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                      <Typography variant="caption" color="text.secondary">
                         Roles
                       </Typography>
-                      {'\n'}
-                      <Typography component="span" variant="caption" color="text.secondary">
-                        Editar aquí
-                      </Typography>
+                      <ButtonBase
+                        onClick={() => handleEditClick(singleUser)}
+                        aria-label={`Editar roles de ${singleUser.name}`}
+                        sx={{
+                          borderRadius: 1,
+                          display: 'inline-flex',
+                          justifyContent: 'flex-start',
+                          maxWidth: '100%',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <Box display="flex" gap={0.5} flexWrap="wrap">
+                          {singleUser.roles.map((role) => (
+                            <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+                          ))}
+                          {singleUser.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                        </Box>
+                      </ButtonBase>
                     </Stack>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => {
-                  const contactSummary = getContactSummary(user);
+                  </Stack>
+                </Stack>
+              </Stack>
+            </Paper>
+          ) : (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Usuario</TableCell>
+                    {showContactColumn && <TableCell>Contacto</TableCell>}
+                    {showStatusColumn && <TableCell>Estado</TableCell>}
+                    <TableCell>
+                      <Stack spacing={0}>
+                        <Typography component="span" variant="body2" fontWeight={600}>
+                          Roles
+                        </Typography>
+                        {'\n'}
+                        <Typography component="span" variant="caption" color="text.secondary">
+                          Editar aquí
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.map((user) => {
+                    const contactSummary = getContactSummary(user);
 
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {user.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            ID {user.id}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      {showContactColumn && (
+                    return (
+                      <TableRow key={user.id}>
                         <TableCell>
-                          {contactSummary ? (
-                            <Typography variant="body2">
-                              {contactSummary}
+                          <Stack spacing={0.25}>
+                            <Typography variant="body2" fontWeight={600}>
+                              {user.name}
                             </Typography>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              Sin email ni teléfono
+                            <Typography variant="caption" color="text.secondary">
+                              ID {user.id}
                             </Typography>
-                          )}
+                          </Stack>
                         </TableCell>
-                      )}
-                      {showStatusColumn && (
+                        {showContactColumn && (
+                          <TableCell>
+                            {contactSummary ? (
+                              <Typography variant="body2">
+                                {contactSummary}
+                              </Typography>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                Sin email ni teléfono
+                              </Typography>
+                            )}
+                          </TableCell>
+                        )}
+                        {showStatusColumn && (
+                          <TableCell>
+                            <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                          </TableCell>
+                        )}
                         <TableCell>
-                          <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                          <ButtonBase
+                            onClick={() => handleEditClick(user)}
+                            aria-label={`Editar roles de ${user.name}`}
+                            sx={{
+                              borderRadius: 1,
+                              display: 'inline-flex',
+                              justifyContent: 'flex-start',
+                              maxWidth: '100%',
+                              textAlign: 'left',
+                            }}
+                          >
+                            <Box display="flex" gap={0.5} flexWrap="wrap">
+                              {user.roles.map((role) => (
+                                <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+                              ))}
+                              {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                            </Box>
+                          </ButtonBase>
                         </TableCell>
-                      )}
-                      <TableCell>
-                        <ButtonBase
-                          onClick={() => handleEditClick(user)}
-                          aria-label={`Editar roles de ${user.name}`}
-                          sx={{
-                            borderRadius: 1,
-                            display: 'inline-flex',
-                            justifyContent: 'flex-start',
-                            maxWidth: '100%',
-                            textAlign: 'left',
-                          }}
-                        >
-                          <Box display="flex" gap={0.5} flexWrap="wrap">
-                            {user.roles.map((role) => (
-                              <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                            ))}
-                            {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
-                          </Box>
-                        </ButtonBase>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Stack>
       )}
 

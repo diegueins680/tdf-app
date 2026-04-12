@@ -264,7 +264,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('uses the rendered roles as the edit affordance so the default admin landing page drops a duplicate action label', async () => {
+  it('replaces the single-user table with a compact first-user summary that keeps roles editable', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 301,
@@ -281,20 +281,25 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles Editar aquí']);
         expect(container.textContent).toContain('Roles y permisos');
-        expect(container.textContent).toContain('Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.');
-        expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
-        expect(countExactText(container, 'Editar aquí')).toBe(1);
-        expect(container.textContent).not.toContain('Acciones');
-        expect(container.textContent).not.toContain('Roles y edición');
+        expect(container.textContent).toContain(
+          'Primer usuario administrable. Revisa sus datos clave y edita roles aquí; cuando exista el segundo, volverá la tabla comparativa.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelectorAll('thead th')).toHaveLength(0);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Vista actual:');
+        expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).not.toContain('Active');
-        expect(container.textContent).not.toContain('Editar roles');
+        expect(container.textContent).toContain('Roles');
 
-        const graceRow = getRowByName(container, 'Grace Hopper');
-        expect(graceRow.textContent).toContain('Admin');
-        expect(graceRow.textContent).toContain('Manager');
-        const editButton = graceRow.querySelector('button[aria-label="Editar roles de Grace Hopper"]');
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain('ID 301');
+        expect(container.textContent).toContain('grace@example.com');
+        expect(container.textContent).toContain('Admin');
+        expect(container.textContent).toContain('Manager');
+
+        const editButton = container.querySelector('button[aria-label="Editar roles de Grace Hopper"]');
         expect(editButton).not.toBeNull();
       });
 
@@ -317,7 +322,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('deduplicates repeated API roles so the landing table shows one stable access summary per user', async () => {
+  it('deduplicates repeated API roles so the landing summary shows one stable access snapshot per user', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 302,
@@ -333,8 +338,12 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        const linusRow = getRowByName(container, 'Linus QA');
-        const chipLabels = Array.from(linusRow.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
+        const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+        if (!(editButton instanceof HTMLButtonElement)) {
+          throw new Error('Edit roles button not found');
+        }
+
+        const chipLabels = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
         expect(chipLabels).toEqual(['Admin', 'Manager']);
       });
     } finally {
