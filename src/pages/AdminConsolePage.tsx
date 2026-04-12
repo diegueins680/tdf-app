@@ -678,7 +678,7 @@ export default function AdminConsolePage() {
                       textTransform: 'none',
                     }}
                   >
-                    Editar roles: {formatRoleList(singleAdminUser.roles)}
+                    {formatRoleList(singleAdminUser.roles)}
                   </Button>
                   <Typography variant="body2" color="text.secondary">
                     Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}
