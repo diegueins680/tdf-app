@@ -73,6 +73,8 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
+const ADMIN_USERS_INLINE_EDIT_HINT_ID = 'admin-users-inline-edit-hint';
+const ADMIN_USERS_INLINE_EDIT_HINT = 'Haz clic sobre un rol para editarlo desde esta misma vista.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -422,6 +424,7 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
+  const showUsersInlineEditHint = showUsersTable && users.length > 0;
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
@@ -706,6 +709,15 @@ export default function AdminConsolePage() {
                 {usersSectionDescription}
               </Typography>
             )}
+            {showUsersInlineEditHint && (
+              <Typography
+                id={ADMIN_USERS_INLINE_EDIT_HINT_ID}
+                variant="body2"
+                color="text.secondary"
+              >
+                {ADMIN_USERS_INLINE_EDIT_HINT}
+              </Typography>
+            )}
           </Box>
         </Box>
         {usersError && (
@@ -767,17 +779,14 @@ export default function AdminConsolePage() {
                       <TableCell>
                         <Button
                           size="small"
-                          endIcon={<EditOutlinedIcon fontSize="inherit" />}
                           onClick={() => setEditingUser(user)}
                           aria-label={`Editar roles de ${identity.primary}`}
+                          aria-describedby={showUsersInlineEditHint ? ADMIN_USERS_INLINE_EDIT_HINT_ID : undefined}
                           sx={{
                             px: 0,
                             minWidth: 0,
                             justifyContent: 'flex-start',
                             textTransform: 'none',
-                            '& .MuiButton-endIcon': {
-                              ml: 0.75,
-                            },
                           }}
                         >
                           {formatRoleList(user.roles)}
