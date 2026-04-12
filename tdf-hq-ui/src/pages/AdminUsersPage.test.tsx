@@ -224,6 +224,27 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the initial loading state focused on first-user setup instead of a refresh action', async () => {
+    listUsersMock.mockImplementation(() => new Promise(() => {}));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasExactText(container, 'Usuarios')).toBe(true);
+        expect(container.textContent).toContain('Cargando usuarios…');
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+        expect(container.textContent).not.toContain(
+          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps refresh visible once the page has administrable users to revisit', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),

@@ -160,7 +160,7 @@ export default function AdminUsersPage() {
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = usersQuery.data?.length ?? 0;
   const hasUsers = totalUsersCount > 0;
-  const showRefreshAction = usersQuery.isLoading || Boolean(usersQuery.error) || hasUsers;
+  const showRefreshAction = Boolean(usersQuery.error) || hasUsers;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
