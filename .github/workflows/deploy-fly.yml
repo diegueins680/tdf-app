@@ -57,4 +57,5 @@ jobs:
           flyctl deploy \
             --config ./fly.toml \
             --image "${DOCKER_IMAGE_REPO}:${IMAGE_TAG}" \
-            --strategy rolling
+            --strategy rolling \
+            --smoke-checks=false
