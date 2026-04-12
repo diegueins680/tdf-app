@@ -140,6 +140,28 @@ function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
   });
 }
 
+function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {
+  const seenEntries = new Set<string>();
+
+  return entries.filter((entry) => {
+    const fingerprint = [
+      entry.entity,
+      entry.entityId,
+      entry.action,
+      entry.actorId ?? '',
+      entry.diff ?? '',
+      entry.createdAt,
+    ].join('::');
+
+    if (seenEntries.has(fingerprint)) {
+      return false;
+    }
+
+    seenEntries.add(fingerprint);
+    return true;
+  });
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -287,7 +309,7 @@ export default function AdminConsolePage() {
     }
   }, [editingUser]);
 
-  const audits = auditQuery.data ?? [];
+  const audits = dedupeAuditEntries(auditQuery.data ?? []);
   const previewCards = dedupeAdminConsoleCards(
     sanitizeAdminConsoleCards(
       consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
