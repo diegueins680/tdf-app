@@ -751,6 +751,13 @@ export default function CourseRegistrationsAdminPage() {
     && hasVisibleRegistrations,
   );
   const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset;
+  const filteredUtilitySummaryMessage = useMemo(
+    () => [
+      activeViewSummaryMessage,
+      showVisibleRegistrationsSummary ? visibleRegistrationsSummary : '',
+    ].filter(Boolean).join(' '),
+    [activeViewSummaryMessage, showVisibleRegistrationsSummary, visibleRegistrationsSummary],
+  );
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -1896,14 +1903,13 @@ export default function CourseRegistrationsAdminPage() {
             )}
             {showFilteredUtilityRow && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
-                {activeViewSummaryMessage && (
-                  <Typography variant="body2" color="text.secondary">
-                    {activeViewSummaryMessage}
-                  </Typography>
-                )}
-                {showVisibleRegistrationsSummary && (
-                  <Typography variant="body2" color="text.secondary">
-                    {visibleRegistrationsSummary}
+                {filteredUtilitySummaryMessage && (
+                  <Typography
+                    data-testid="course-registration-filter-summary"
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    {filteredUtilitySummaryMessage}
                   </Typography>
                 )}
                 {showFilteredResetAction && (

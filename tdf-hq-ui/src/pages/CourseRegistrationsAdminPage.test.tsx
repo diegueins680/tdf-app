@@ -757,6 +757,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('combines filtered scope and visible-count copy into one passive utility summary', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101&status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: 'paid',
+        limit: 200,
+      });
+      const summary = container.querySelector<HTMLElement>('[data-testid="course-registration-filter-summary"]');
+      expect(summary?.textContent?.trim()).toBe(
+        'Vista filtrada: cohorte Beatmaking 101 (beatmaking-101). Mostrando 2 inscripciones.',
+      );
+      expect(container.querySelectorAll('[data-testid="course-registration-filter-summary"]')).toHaveLength(1);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a cohort-only filtered view focused on the cohort select instead of repeating reset chrome', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
