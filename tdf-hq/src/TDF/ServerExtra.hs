@@ -604,6 +604,7 @@ sessionsServer user =
       bandKey  <- traverse (parseKey @Band) (scBandId req)
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
       either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
+      either throwError pure =<< withPool (validateSessionReferences bandKey roomKeys)
       let
           status'   = fromMaybe InPrep statusVal
       (sessionEnt, rooms) <- withPool $ do
@@ -666,6 +667,8 @@ sessionsServer user =
           effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
           effectiveEndAt = fromMaybe (sessionEndAt currentSession) (suEndAt req)
       either throwError pure (validateSessionTimeRange effectiveStartAt effectiveEndAt)
+      either throwError pure =<< withPool
+        (validateSessionReferences (join bandUpdate) (fromMaybe [] roomKeysUpdate))
       let
           updates     = catMaybes
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
@@ -1442,6 +1445,24 @@ validateDistinctSessionRooms roomKeys
   | otherwise = Left err400
       { errBody = "roomIds must not contain duplicates"
       }
+
+validateSessionReferences
+  :: MonadIO m
+  => Maybe (Key Band)
+  -> [Key Room]
+  -> SqlPersistT m (Either ServerError ())
+validateSessionReferences mBandKey roomKeys = do
+  mBand <- join <$> traverse getEntity mBandKey
+  existingRoomKeys <-
+    if null roomKeys
+      then pure Set.empty
+      else Set.fromList . map entityKey <$> selectList [RoomId <-. roomKeys] []
+  pure $
+    if isJust mBandKey && isNothing mBand
+      then Left err400 { errBody = "bandId references an unknown band" }
+      else if any (`Set.notMember` existingRoomKeys) roomKeys
+        then Left err400 { errBody = "roomIds reference one or more unknown rooms" }
+        else Right ()
 
 validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
 validateDistinctBandMemberIds partyKeys

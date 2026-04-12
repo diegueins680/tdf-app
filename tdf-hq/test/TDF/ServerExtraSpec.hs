@@ -25,9 +25,10 @@ import TDF.ModelsExtra
   ( Asset (..)
   , AssetCondition (Good)
   , AssetStatus (Active, Booked, OutForMaintenance, Retired)
+  , Band (..)
   , CheckoutTarget (TargetParty, TargetRoom, TargetSession)
   , MaintenancePolicy (None)
-  , Room
+  , Room (..)
   , Session
   , SessionStatus (InPrep, InSession)
   )
@@ -77,6 +78,7 @@ import TDF.ServerExtra (
     validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
     validatePageParams,
+    validateSessionReferences,
  )
 
 spec :: Spec
@@ -363,6 +365,46 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "roomIds must not contain duplicates"
         Right value ->
           expectationFailure ("Expected duplicate session room ids to be rejected, got " <> show value)
+
+  describe "validateSessionReferences" $ do
+    let existingBandId = case (fromPathPiece "00000000-0000-0000-0000-000000000111" :: Maybe (Key Band)) of
+          Just key -> key
+          Nothing -> error "invalid band fixture key"
+        missingBandId = case (fromPathPiece "00000000-0000-0000-0000-000000000222" :: Maybe (Key Band)) of
+          Just key -> key
+          Nothing -> error "invalid missing band fixture key"
+        existingRoomId = case (fromPathPiece "00000000-0000-0000-0000-000000000333" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid room fixture key"
+        missingRoomId = case (fromPathPiece "00000000-0000-0000-0000-000000000444" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid missing room fixture key"
+
+    it "accepts existing optional band refs and room refs used by session writes" $
+      runSessionReferenceValidationSql $ do
+        seedSessionReferenceFixture existingBandId existingRoomId
+        noBandResult <- validateSessionReferences Nothing [existingRoomId]
+        withBandResult <- validateSessionReferences (Just existingBandId) [existingRoomId]
+        noRoomResult <- validateSessionReferences (Just existingBandId) []
+        liftIO $ do
+          noBandResult `shouldBe` Right ()
+          withBandResult `shouldBe` Right ()
+          noRoomResult `shouldBe` Right ()
+
+    it "rejects unknown band or room references before session writes fall through to DB errors" $
+      runSessionReferenceValidationSql $ do
+        seedSessionReferenceFixture existingBandId existingRoomId
+        let assertInvalid expectedMessage result = case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid session reference error, got " <> show value)
+        unknownBandResult <- validateSessionReferences (Just missingBandId) [existingRoomId]
+        unknownRoomResult <- validateSessionReferences (Just existingBandId) [missingRoomId]
+        liftIO $ do
+          assertInvalid "bandId references an unknown band" unknownBandResult
+          assertInvalid "roomIds reference one or more unknown rooms" unknownRoomResult
 
   describe "validateDistinctBandMemberIds" $ do
     let partyIdA = toSqlKey 42 :: Key M.Party
@@ -718,6 +760,12 @@ runPaymentValidationSql action =
         initializePaymentValidationSchema
         action
 
+runSessionReferenceValidationSql :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
+runSessionReferenceValidationSql action =
+    runSqlite ":memory:" $ do
+        initializeSessionReferenceValidationSchema
+        action
+
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -745,6 +793,33 @@ initializeMetaInboxSchema = do
         \\"deleted_at\" TIMESTAMP NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \CONSTRAINT \"unique_instagram_message\" UNIQUE (\"external_id\")\
+        \)"
+        []
+
+initializeSessionReferenceValidationSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
+initializeSessionReferenceValidationSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"band\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"label_artist\" BOOLEAN NOT NULL,\
+        \\"primary_genre\" VARCHAR NULL,\
+        \\"home_city\" VARCHAR NULL,\
+        \\"photo_url\" VARCHAR NULL,\
+        \\"contract_flags\" VARCHAR NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"room\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"is_bookable\" BOOLEAN NOT NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"channel_count\" INTEGER NULL,\
+        \\"default_sample_rate\" INTEGER NULL,\
+        \\"patchbay_notes\" VARCHAR NULL\
         \)"
         []
 
@@ -854,6 +929,29 @@ initializePaymentValidationSchema = do
         \\"total_cents\" INTEGER NOT NULL\
         \)"
         []
+
+seedSessionReferenceFixture
+  :: Key Band
+  -> Key Room
+  -> SqlPersistT (NoLoggingT (ResourceT IO)) ()
+seedSessionReferenceFixture bandId roomId = do
+  insertKey bandId Band
+    { bandPartyId = toSqlKey 1
+    , bandName = "Reference Fixture Band"
+    , bandLabelArtist = False
+    , bandPrimaryGenre = Nothing
+    , bandHomeCity = Nothing
+    , bandPhotoUrl = Nothing
+    , bandContractFlags = Nothing
+    }
+  insertKey roomId Room
+    { roomName = "Reference Fixture Room"
+    , roomIsBookable = True
+    , roomCapacity = Nothing
+    , roomChannelCount = Nothing
+    , roomDefaultSampleRate = Nothing
+    , roomPatchbayNotes = Nothing
+    }
 
 seedPaymentReferenceFixture
   :: UTCTime
