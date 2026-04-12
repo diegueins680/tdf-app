@@ -856,6 +856,31 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
   });
 
+  it('shows the known admin identity in audit attribution before falling back to raw ids', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Actor:\s*Ada Lovelace \(ada\)/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Actor:\s*101/i)).not.toBeInTheDocument();
+  });
+
   it('hides empty actor and detail rows in the single-audit summary until that context exists', async () => {
     mockAuditLogs.mockResolvedValue([
       {

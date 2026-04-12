@@ -188,8 +188,21 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   return { primary, username, showUsername };
 }
 
-function formatAuditActor(actorId?: number | null) {
-  return actorId ?? 'Sistema';
+function formatAuditActor(
+  actorId: number | null | undefined,
+  usersById: ReadonlyMap<number, Pick<AdminUserDTO, 'displayName' | 'username'>>,
+) {
+  if (actorId == null) {
+    return 'Sistema';
+  }
+
+  const actor = usersById.get(actorId);
+  if (!actor) {
+    return actorId;
+  }
+
+  const identity = summarizeAdminUserIdentity(actor);
+  return identity.showUsername ? `${identity.primary} (${identity.username})` : identity.primary;
 }
 
 function hasAuditActor(actorId?: number | null) {
@@ -396,6 +409,10 @@ export default function AdminConsolePage() {
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
   const users = dedupeAdminUsers(usersQuery.data ?? []);
+  const usersById = useMemo(
+    () => new Map(users.map((user) => [user.userId, user])),
+    [users],
+  );
   const isUsersLoading = usersQuery.isLoading;
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
@@ -880,7 +897,7 @@ export default function AdminConsolePage() {
                     <TableCell>{formatDate(entry.createdAt)}</TableCell>
                     <TableCell>{entry.entity} · {entry.entityId}</TableCell>
                     <TableCell>{entry.action}</TableCell>
-                    {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId)}</TableCell>}
+                    {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
                     {showAuditDetailColumn && (
                       <TableCell>
                         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
@@ -935,7 +952,7 @@ export default function AdminConsolePage() {
                 </Typography>
                 {singleAuditHasActor && (
                   <Typography variant="body2" color="text.secondary">
-                    <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId)}
+                    <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId, usersById)}
                   </Typography>
                 )}
                 {singleAuditHasDetail && (
