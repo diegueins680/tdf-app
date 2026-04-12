@@ -336,6 +336,46 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('distinguishes missing WhatsApp from missing contact in the page summary', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'with-phone',
+        primaryEmail: 'ready@example.com',
+        primaryPhone: '+593999000111',
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        username: 'email-only',
+        primaryEmail: 'email@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        username: 'no-contact',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 1 listo para WhatsApp, 1 pendiente de WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows the person name first and only keeps the system username when it adds identity context', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
@@ -410,7 +450,7 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(0);
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
         expect(container.textContent).toContain(
-          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
+          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto.',
         );
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
@@ -507,11 +547,11 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
         );
         expect(countExactText(
           container,
-          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp.',
+          '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto.',
         )).toBe(0);
         expect(countExactText(
           container,

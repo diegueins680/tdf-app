@@ -42,6 +42,38 @@ const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone
 const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   Boolean(getUserWhatsAppChannel(user));
 
+const joinSpanishSummaryParts = (parts: readonly string[]) => {
+  if (parts.length <= 1) return parts[0] ?? '';
+  if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+};
+
+const buildContactStateSummary = ({
+  readyForWhatsAppCount,
+  pendingWhatsAppCount,
+  pendingContactCount,
+}: {
+  readyForWhatsAppCount: number;
+  pendingWhatsAppCount: number;
+  pendingContactCount: number;
+}) => {
+  const parts: string[] = [];
+
+  if (readyForWhatsAppCount > 0) {
+    parts.push(`${readyForWhatsAppCount} ${readyForWhatsAppCount === 1 ? 'listo' : 'listos'} para WhatsApp`);
+  }
+
+  if (pendingWhatsAppCount > 0) {
+    parts.push(`${pendingWhatsAppCount} ${pendingWhatsAppCount === 1 ? 'pendiente' : 'pendientes'} de WhatsApp`);
+  }
+
+  if (pendingContactCount > 0) {
+    parts.push(`${pendingContactCount} ${pendingContactCount === 1 ? 'pendiente' : 'pendientes'} de contacto`);
+  }
+
+  return joinSpanishSummaryParts(parts);
+};
+
 const getUserAccessSummary = (values: string[]) =>
   Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
     .sort((left, right) => left.localeCompare(right))
@@ -149,6 +181,11 @@ export default function AdminUsersPage() {
     () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user)).length,
     [visibleUsers],
   );
+  const visibleUsersMissingContactCount = useMemo(
+    () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user)).length,
+    [visibleUsers],
+  );
+  const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
   const sharedRolesSummary = useMemo(
     () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.roles))),
     [visibleUsers],
@@ -168,7 +205,8 @@ export default function AdminUsersPage() {
   const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
-  const showMixedWhatsAppStateGuidance = visibleUsersMissingWhatsAppCount > 0 && visibleUsersWithWhatsAppCount > 0;
+  const showMixedContactStateGuidance = hasVisibleWhatsAppAction
+    && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
   const showEmptyStateClearSearchAction = showSearchEmptyState && hasActiveSearch;
@@ -188,11 +226,12 @@ export default function AdminUsersPage() {
       parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
     }
 
-    if (showMixedWhatsAppStateGuidance) {
-      parts.push(
-        `${visibleUsersWithWhatsAppCount} ${visibleUsersWithWhatsAppCount === 1 ? 'listo' : 'listos'} para WhatsApp y `
-        + `${visibleUsersMissingWhatsAppCount} ${visibleUsersMissingWhatsAppCount === 1 ? 'pendiente' : 'pendientes'} de WhatsApp.`,
-      );
+    if (showMixedContactStateGuidance) {
+      parts.push(`${buildContactStateSummary({
+        readyForWhatsAppCount: visibleUsersWithWhatsAppCount,
+        pendingWhatsAppCount: visibleUsersPendingWhatsAppCount,
+        pendingContactCount: visibleUsersMissingContactCount,
+      })}.`);
     }
 
     return parts.join(' ');
@@ -200,11 +239,12 @@ export default function AdminUsersPage() {
     hasMultipleUsers,
     hasUsers,
     isFiltered,
-    showMixedWhatsAppStateGuidance,
+    showMixedContactStateGuidance,
     showSingleUserGuidance,
     totalUsersCount,
     visibleUsers.length,
-    visibleUsersMissingWhatsAppCount,
+    visibleUsersMissingContactCount,
+    visibleUsersPendingWhatsAppCount,
     visibleUsersWithWhatsAppCount,
   ]);
   const sharedAccessGuidance = useMemo(() => {
