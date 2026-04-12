@@ -57,6 +57,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
+    , validatePublicBookingStartAt
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
@@ -1017,6 +1018,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-15)
             assertInvalid 0
             assertInvalid 29
+
+    describe "validatePublicBookingStartAt" $ do
+        it "accepts public bookings whose requested start time is still in the future" $ do
+            let now = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                startsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 39600)
+            validatePublicBookingStartAt now startsAt `shouldBe` Right startsAt
+
+        it "rejects past or current public booking starts instead of creating already-expired bookings" $ do
+            let now = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                pastStart = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 32400)
+                assertInvalid startsAtCandidate =
+                    case validatePublicBookingStartAt now startsAtCandidate of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "startsAt must be in the future"
+                        Right startsAtValue ->
+                            expectationFailure ("Expected invalid public booking start time to be rejected, got: " <> show startsAtValue)
+            assertInvalid pastStart
+            assertInvalid now
 
     describe "validateBookingTimeRange" $ do
         it "accepts booking ranges whose end is strictly after the start" $ do

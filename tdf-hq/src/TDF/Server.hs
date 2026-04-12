@@ -3525,6 +3525,11 @@ validatePublicBookingDurationMinutes (Just durationMinutes)
   | otherwise =
       Right durationMinutes
 
+validatePublicBookingStartAt :: UTCTime -> UTCTime -> Either ServerError UTCTime
+validatePublicBookingStartAt now startsAt
+  | startsAt > now = Right startsAt
+  | otherwise = Left err400 { errBody = "startsAt must be in the future" }
+
 validateBookingTimeRange :: UTCTime -> UTCTime -> Either ServerError ()
 validateBookingTimeRange startsAt endsAt
   | endsAt > startsAt = Right ()
@@ -5077,12 +5082,16 @@ createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
   when (T.null (T.strip pbFullName)) (throwBadRequest "nombre requerido")
   Env pool _ <- ask
+  now <- liftIO getCurrentTime
   (emailClean, phoneClean) <-
     either throwError pure $
       validatePublicBookingContactDetails pbEmail pbPhone
   durationMins <-
     either throwError pure $
       validatePublicBookingDurationMinutes pbDurationMinutes
+  startsAtClean <-
+    either throwError pure $
+      validatePublicBookingStartAt now pbStartsAt
   let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
   when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
   engineerIdClean <-
@@ -5095,15 +5104,14 @@ createPublicBooking PublicBookingReq{..} = do
   mEngineerParty <-
     liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
       >>= either throwError pure
-  let endsAt       = addUTCTime (fromIntegral durationMins * 60) pbStartsAt
+  let endsAt       = addUTCTime (fromIntegral durationMins * 60) startsAtClean
       notesClean   = normalizeOptionalInput pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) emailClean phoneClean
   resourceKeys <- liftIO $ flip runSqlPool pool $
-    resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) pbStartsAt endsAt
+    resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =
         engineerNameClean
           <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
-  now <- liftIO getCurrentTime
   let bookingRecord = Booking
         { bookingTitle          = buildTitle serviceTypeClean pbFullName
         , bookingServiceOrderId = Nothing
@@ -5111,7 +5119,7 @@ createPublicBooking PublicBookingReq{..} = do
         , bookingServiceType    = serviceTypeClean
         , bookingEngineerPartyId = entityKey <$> mEngineerParty
         , bookingEngineerName    = resolvedEngineerName
-        , bookingStartsAt       = pbStartsAt
+        , bookingStartsAt       = startsAtClean
         , bookingEndsAt         = endsAt
         , bookingStatus         = Tentative
         , bookingCreatedBy      = Nothing
