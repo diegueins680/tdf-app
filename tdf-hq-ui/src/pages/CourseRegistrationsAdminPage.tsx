@@ -1452,7 +1452,7 @@ export default function CourseRegistrationsAdminPage() {
                 {emptyNotesSectionHelperText}
               </Typography>
               <Button size="small" variant="text" onClick={handleOpenNotesComposer}>
-                Agregar nota opcional
+                Agregar nota
               </Button>
             </Stack>
           )}
