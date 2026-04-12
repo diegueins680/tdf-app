@@ -5,7 +5,7 @@ module TDF.ServerSpec (spec) where
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
-import Data.Aeson (object, (.=))
+import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
@@ -16,6 +16,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import qualified TDF.DTO as DTO
 import TDF.Server
     ( MetaBackfillOptions(..)
     , normalizeOptionalInput
@@ -97,6 +98,13 @@ expectCatalogError result assertErr =
     case result of
         Left serverErr -> assertErr serverErr
         Right kind -> expectationFailure ("Expected catalog validation error, got kind: " <> show kind)
+
+decodeSignup :: BL8.ByteString -> Either String DTO.SignupRequest
+decodeSignup = eitherDecode
+
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
@@ -391,6 +399,29 @@ spec = describe "TDF.Server helpers" $ do
                 Right rolesVal ->
                     expectationFailure
                         ("Expected forbidden signup roles to be rejected, got: " <> show rolesVal)
+
+    describe "SignupRequest FromJSON" $ do
+        it "accepts canonical public signup fields" $
+            case decodeSignup
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"roles\":[\"Student\"],\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical signup payload to decode, got: " <> decodeErr)
+                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ _ _ _ rolesValue fanArtistIdsValue claimArtistIdValue) -> do
+                    firstNameValue `shouldBe` "Ada"
+                    lastNameValue `shouldBe` "Lovelace"
+                    emailValue `shouldBe` "ada@example.com"
+                    phoneValue `shouldBe` Just "+593991234567"
+                    rolesValue `shouldBe` Just [Student]
+                    fanArtistIdsValue `shouldBe` Just [7, 11]
+                    claimArtistIdValue `shouldBe` Just 42
+
+        it "rejects unexpected signup keys instead of silently ignoring typoed client payloads" $ do
+            decodeSignup
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"supersecret\",\"claimArtistID\":42}"
+                `shouldSatisfy` isLeft
+            decodeSignup
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"supersecret\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do

@@ -5,7 +5,7 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, rejectUnknownFields)
 import           Data.Aeson.Types (fieldLabelModifier, omitNothingFields)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -660,7 +660,8 @@ data SignupRequest = SignupRequest
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
-instance FromJSON SignupRequest
+instance FromJSON SignupRequest where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data ChangePasswordRequest = ChangePasswordRequest
   { username        :: Maybe Text
