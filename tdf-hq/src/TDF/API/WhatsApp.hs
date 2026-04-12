@@ -20,7 +20,7 @@ import Servant
 import GHC.Generics (Generic)
 import Data.Aeson
 import Control.Monad (unless)
-import Data.Char (isAlphaNum, isAscii, isDigit)
+import Data.Char (isAlphaNum, isAscii, isAsciiLower, isDigit)
 import Data.Int (Int64)
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
@@ -125,12 +125,24 @@ isValidEmail :: Text -> Bool
 isValidEmail candidate =
   case T.split (== '@') candidate of
     [localPart, domain] ->
+      isValidEmailLocalPart localPart &&
       not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
-      not (T.null localPart) &&
       not (T.null domain) &&
       T.isInfixOf "." domain &&
       all isValidDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidEmailLocalPart :: Text -> Bool
+isValidEmailLocalPart localPart =
+  not (T.null localPart) &&
+  not (T.isPrefixOf "." localPart) &&
+  not (T.isSuffixOf "." localPart) &&
+  not (".." `T.isInfixOf` localPart) &&
+  T.all isValidEmailLocalChar localPart
+
+isValidEmailLocalChar :: Char -> Bool
+isValidEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidDomainLabel :: Text -> Bool
 isValidDomainLabel label =

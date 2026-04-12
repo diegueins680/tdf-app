@@ -1413,6 +1413,10 @@ main = hspec $ do
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@-example.com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example-.com") "Invalid email format"
+            assertInvalid (CompleteReq "token-123" "Ada Lovelace" ".ada@example.com") "Invalid email format"
+            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada.@example.com") "Invalid email format"
+            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"
+            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada()@example.com") "Invalid email format"
 
         it "rejects malformed completion tokens before lookup falls through to a misleading 403" $ do
             let assertInvalid rawToken = case validateLeadCompletionRequest (CompleteReq rawToken "Ada Lovelace" "ada@example.com") of
