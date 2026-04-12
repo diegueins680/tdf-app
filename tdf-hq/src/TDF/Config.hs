@@ -97,7 +97,10 @@ dbConnString cfg =
 
 loadConfig :: IO AppConfig
 loadConfig = do
-  connUrl    <- lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  keywordDbEnvConfigured <- anyEnvPresent ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASS", "DB_NAME", "PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE"]
+  connUrl    <- if keywordDbEnvConfigured
+    then pure Nothing
+    else lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
   h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
   p          <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
   u          <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
@@ -222,6 +225,12 @@ loadConfig = do
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
     getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
+    anyEnvPresent [] = pure False
+    anyEnvPresent (key:rest) = do
+      value <- lookupEnv key
+      case value >>= normalizeEnvString of
+        Just _ -> pure True
+        Nothing -> anyEnvPresent rest
     lookupFirstEnv [] = pure Nothing
     lookupFirstEnv (key:rest) = do
       value <- lookupEnv key

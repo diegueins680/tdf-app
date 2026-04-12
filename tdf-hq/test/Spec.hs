@@ -154,7 +154,7 @@ main = hspec $ do
                     appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
 
-        it "prefers DATABASE_URL-style connection strings when platform secrets provide them" $
+        it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
                 , ("DB_HOST", Just "127.0.0.1")
@@ -162,6 +162,27 @@ main = hspec $ do
                 , ("DB_USER", Just "postgres")
                 , ("DB_PASS", Just "postgres")
                 , ("DB_NAME", Just "tdf_hq")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq"
+
+        it "uses DATABASE_URL-style connection strings when keyword-style DB env vars are absent" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
                 ]
                 $ do
                     cfg <- loadConfig
