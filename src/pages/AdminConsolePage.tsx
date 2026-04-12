@@ -316,6 +316,13 @@ export default function AdminConsolePage() {
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
+  const showHeaderRefreshAction =
+    !showGettingStartedGuidance
+    || healthQuery.isError
+    || auditQuery.isError
+    || consoleQuery.isError
+    || usersQuery.isError;
+  const showHeaderActions = showHeaderRefreshAction || !showGettingStartedGuidance;
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
@@ -420,26 +427,30 @@ export default function AdminConsolePage() {
             Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar.
           </Typography>
         </Box>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefreshPanel}
-            disabled={isRefreshingPanel}
-          >
-            {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
-          </Button>
-          {!showGettingStartedGuidance && (
-            <Button
-              variant="text"
-              startIcon={<AutoFixHighIcon />}
-              onClick={() => seedMutation.mutate()}
-              disabled={seedMutation.isPending}
-            >
-              {seedMutation.isPending ? demoSeedActionCopy.pendingLabel : demoSeedActionCopy.buttonLabel}
-            </Button>
-          )}
-        </Stack>
+        {showHeaderActions && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            {showHeaderRefreshAction && (
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleRefreshPanel}
+                disabled={isRefreshingPanel}
+              >
+                {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
+              </Button>
+            )}
+            {!showGettingStartedGuidance && (
+              <Button
+                variant="text"
+                startIcon={<AutoFixHighIcon />}
+                onClick={() => seedMutation.mutate()}
+                disabled={seedMutation.isPending}
+              >
+                {seedMutation.isPending ? demoSeedActionCopy.pendingLabel : demoSeedActionCopy.buttonLabel}
+              </Button>
+            )}
+          </Stack>
+        )}
       </Stack>
 
       {rotationWarning && (

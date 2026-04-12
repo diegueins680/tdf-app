@@ -100,7 +100,7 @@ describe('AdminConsolePage', () => {
     mockUpdateUserRoles.mockResolvedValue(undefined);
   });
 
-  it('uses one page-level refresh action and keeps first-run onboarding in a single block', async () => {
+  it('keeps the clean first-run state focused on onboarding instead of header refresh controls', async () => {
     renderPage();
 
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
@@ -114,8 +114,8 @@ describe('AdminConsolePage', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: /Actualizar panel/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Actualizar panel/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /^Actualizar$/i }),
     ).not.toBeInTheDocument();
@@ -154,6 +154,22 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps the header refresh action available when first-run data is empty because a query failed', async () => {
+    mockHealthFetch.mockRejectedValue(new Error('Sin conexión'));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+      expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
   });
 
   it('keeps demo reset as one compact header action once the console already has data', async () => {
@@ -422,6 +438,7 @@ describe('AdminConsolePage', () => {
 
   it('refreshes every admin dataset from the single panel action', async () => {
     const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
     const { queryClient } = renderPage();
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
