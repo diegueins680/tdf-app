@@ -223,9 +223,11 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected unknown proposal client party id to be rejected, got: " <> show value)
 
     describe "validateBookingListFilters" $ do
-        it "preserves omitted filters and accepts positive booking list identifiers" $
-            validateBookingListFilters (Just 7) (Just 11) (Just 13)
-                `shouldBe` Right (Just 7, Just 11, Just 13)
+        it "preserves omitted filters and accepts either a unique booking id or broader party filters" $ do
+            validateBookingListFilters (Just 7) Nothing Nothing
+                `shouldBe` Right (Just 7, Nothing, Nothing)
+            validateBookingListFilters Nothing (Just 11) (Just 13)
+                `shouldBe` Right (Nothing, Just 11, Just 13)
 
         it "rejects invalid booking list filters instead of silently broadening the query" $ do
             let assertInvalid expectedMessage result = case result of
@@ -238,6 +240,18 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "bookingId must be a positive integer" (validateBookingListFilters (Just 0) Nothing Nothing)
             assertInvalid "partyId must be a positive integer" (validateBookingListFilters Nothing (Just (-1)) Nothing)
             assertInvalid "engineerPartyId must be a positive integer" (validateBookingListFilters Nothing Nothing (Just 0))
+
+        it "rejects bookingId combined with broader party filters instead of silently ignoring them" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "bookingId cannot be combined with partyId or engineerPartyId"
+                    Right filtersVal ->
+                        expectationFailure
+                            ("Expected conflicting booking list filters to be rejected, got: " <> show filtersVal)
+            assertInvalid (validateBookingListFilters (Just 7) (Just 11) Nothing)
+            assertInvalid (validateBookingListFilters (Just 7) Nothing (Just 13))
 
     describe "validateWhatsAppMessagesLimit" $ do
         it "defaults omitted limits and preserves explicit values inside the supported page window" $ do

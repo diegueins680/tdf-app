@@ -5418,6 +5418,11 @@ validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
   bookingIdFilter <- validateOptionalPositiveIdField "bookingId" mBookingId
   partyIdFilter <- validateOptionalPositiveIdField "partyId" mPartyId
   engineerPartyIdFilter <- validateOptionalPositiveIdField "engineerPartyId" mEngineerPartyId
+  when
+    ( isJust bookingIdFilter
+        && (isJust partyIdFilter || isJust engineerPartyIdFilter)
+    )
+    (Left err400 { errBody = "bookingId cannot be combined with partyId or engineerPartyId" })
   pure (bookingIdFilter, partyIdFilter, engineerPartyIdFilter)
 
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
