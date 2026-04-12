@@ -806,6 +806,8 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationEmail Nothing `shouldBe` Right Nothing
             validateCourseRegistrationEmail (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationEmail (Just " User@Example.com ") `shouldBe` Right (Just "user@example.com")
+            validateCourseRegistrationEmail (Just " User.Name+Promo@Example.com ")
+                `shouldBe` Right (Just "user.name+promo@example.com")
 
         it "rejects explicitly invalid email shapes instead of storing unusable addresses" $ do
             let assertInvalid rawEmail =
@@ -819,6 +821,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example..com"
             assertInvalid "user@-example.com"
             assertInvalid "user@example-.com"
+            assertInvalid ".user@example.com"
+            assertInvalid "user.@example.com"
+            assertInvalid "user..name@example.com"
 
     describe "validateMarketplaceBuyerEmail" $ do
         it "trims and lowercases valid buyer emails before checkout creates marketplace orders" $
@@ -837,6 +842,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer@example..com" "buyerEmail inválido"
             assertInvalid "buyer@-example.com" "buyerEmail inválido"
             assertInvalid "buyer@example-.com" "buyerEmail inválido"
+            assertInvalid "buyer..name@example.com" "buyerEmail inválido"
 
     describe "validateCourseRegistrationUrlField" $ do
         it "trims valid absolute http(s) URLs and still lets optional attachment fields clear to Nothing" $ do
