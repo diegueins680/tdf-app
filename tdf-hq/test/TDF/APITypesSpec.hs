@@ -3,12 +3,14 @@
 module TDF.APITypesSpec (spec) where
 
 import Data.Aeson (eitherDecode)
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy (..))
 import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
 import TDF.API.Types (LooseJSON, RolePayload (..))
 import qualified TDF.Routes.Courses as Courses
+import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
@@ -65,9 +67,35 @@ spec = do
             decodeCourseRegistration
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
+
+    describe "TrialRequestIn FromJSON" $ do
+        it "accepts canonical public trial request payloads" $
+            case decodeTrialRequest
+                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"},{\"startAt\":\"2026-05-02T17:00:00Z\",\"endAt\":\"2026-05-02T18:00:00Z\"}],\"notes\":\"Afternoons preferred\",\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical trial request payload to decode, got: " <> err)
+                Right (TrialRequestIn partyIdVal subjectIdVal preferredVal notesVal fullNameVal emailVal phoneVal) -> do
+                    partyIdVal `shouldBe` Nothing
+                    subjectIdVal `shouldBe` 7
+                    length preferredVal `shouldBe` 2
+                    notesVal `shouldBe` Just "Afternoons preferred"
+                    fullNameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    phoneVal `shouldBe` Just "+593991234567"
+
+        it "rejects unexpected top-level or nested slot keys so malformed trial requests fail explicitly" $ do
+            decodeTrialRequest
+                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"}],\"status\":\"Requested\"}"
+                `shouldSatisfy` isLeft
+            decodeTrialRequest
+                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\",\"label\":\"after work\"}]}"
+                `shouldSatisfy` isLeft
   where
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeCourseRegistration = eitherDecode
+    decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
+    decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
