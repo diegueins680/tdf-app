@@ -11,6 +11,8 @@ import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
+import Network.Wai (defaultRequest)
+import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
@@ -119,6 +121,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
  )
+import TDF.Auth (extractToken)
 import TDF.Config (appPort, dbConnString, emailConfig, loadConfig, smtpPort)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -237,6 +240,41 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb"
+
+    describe "extractToken" $ do
+        let loadAuthConfig =
+                withEnvOverrides [("SESSION_COOKIE_NAME", Just "tdf_session_test")] loadConfig
+            requestWithHeaders headers =
+                defaultRequest { requestHeaders = headers }
+
+        it "accepts a valid bearer token and keeps it authoritative over the cookie" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Bearer header-token")
+                    , ("Cookie", "tdf_session_test=cookie-token")
+                    ])
+                `shouldBe` Right "header-token"
+
+        it "uses the configured session cookie when no Authorization header is present" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Cookie", "other=1; tdf_session_test = cookie-token ; foo=bar")
+                    ])
+                `shouldBe` Right "cookie-token"
+
+        it "rejects malformed Authorization headers instead of silently falling through to the cookie" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Token header-token")
+                    , ("Cookie", "tdf_session_test=cookie-token")
+                    ])
+                `shouldBe` Left "Invalid Authorization header"
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do

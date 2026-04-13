@@ -18,6 +18,7 @@ module TDF.Auth
   , loadAuthedUser
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
+  , extractToken
   , sessionCookieHeader
   , clearSessionCookieHeader
   ) where
@@ -204,23 +205,26 @@ ensureDefaultRoles pid roles = do
 
 extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =
-  case extractHeaderToken req <|> extractCookieToken cfg req of
-    Just token -> Right token
-    Nothing -> Left "Missing or invalid auth token"
+  case lookup "Authorization" (requestHeaders req) of
+    Just rawHeader ->
+      parseAuthHeaderValue rawHeader
+    Nothing ->
+      case extractCookieToken cfg req of
+        Just token -> Right token
+        Nothing -> Left "Missing or invalid auth token"
   where
-    extractHeaderToken request =
-      lookup "Authorization" (requestHeaders request) >>= parseAuthHeader . TE.decodeUtf8'
-
     extractCookieToken AppConfig{sessionCookieName} request =
       lookup "Cookie" (requestHeaders request)
         >>= either (const Nothing) (lookupCookie sessionCookieName) . TE.decodeUtf8'
 
-    parseAuthHeader (Left _) = Nothing
-    parseAuthHeader (Right txt) =
-      case T.words txt of
-        [scheme, value]
-          | T.toLower scheme == "bearer" -> Just value
-        _ -> Nothing
+    parseAuthHeaderValue rawHeader =
+      case TE.decodeUtf8' rawHeader of
+        Left _ -> Left "Invalid Authorization header"
+        Right txt ->
+          case T.words txt of
+            [scheme, value]
+              | T.toLower scheme == "bearer" -> Right value
+            _ -> Left "Invalid Authorization header"
 
 lookupCookie :: Text -> Text -> Maybe Text
 lookupCookie cookieName rawHeader =
