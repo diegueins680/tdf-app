@@ -2702,18 +2702,24 @@ parseSocialBoolParam (Just raw) =
     "false" -> pure False
     "0" -> pure False
     "no" -> pure False
-    "" -> pure False
-    _ -> throwError err400 { errBody = "Invalid repliedOnly value" }
+    "" -> invalidRepliedOnly
+    _ -> invalidRepliedOnly
+  where
+    invalidRepliedOnly =
+      throwError err400 { errBody = "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no" }
 
 parseSocialDirectionParam :: MonadError ServerError m => Maybe Text -> m (Maybe Text)
 parseSocialDirectionParam Nothing = pure Nothing
 parseSocialDirectionParam (Just raw) =
   case T.toCaseFold (T.strip raw) of
-    "" -> pure Nothing
+    "" -> invalidDirection
     "all" -> pure Nothing
     "incoming" -> pure (Just "incoming")
     "outgoing" -> pure (Just "outgoing")
-    _ -> throwError err400 { errBody = "Invalid direction value" }
+    _ -> invalidDirection
+  where
+    invalidDirection =
+      throwError err400 { errBody = "direction must be omitted or one of: all, incoming, outgoing" }
 
 -- Shared helpers ----------------------------------------------------------
 

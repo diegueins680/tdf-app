@@ -51,6 +51,8 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
+    parseSocialBoolParam,
+    parseSocialDirectionParam,
     validateSocialReplyExternalId,
     validateSocialReplySenderId,
     validateInventoryPageParams,
@@ -569,6 +571,41 @@ spec = do
                 expectationFailure ("Expected invalid social inbox limit error, got " <> show value)
       assertInvalid 0
       assertInvalid 201
+
+  describe "social list filter parsing" $ do
+    it "uses defaults only when direction and repliedOnly are omitted, while still normalizing supported explicit values" $ do
+      (parseSocialDirectionParam Nothing :: Either ServerError (Maybe Text))
+        `shouldBe` Right Nothing
+      (parseSocialDirectionParam (Just " ALL ") :: Either ServerError (Maybe Text))
+        `shouldBe` Right Nothing
+      (parseSocialDirectionParam (Just " Incoming ") :: Either ServerError (Maybe Text))
+        `shouldBe` Right (Just "incoming")
+      (parseSocialBoolParam Nothing :: Either ServerError Bool)
+        `shouldBe` Right False
+      (parseSocialBoolParam (Just " YES ") :: Either ServerError Bool)
+        `shouldBe` Right True
+      (parseSocialBoolParam (Just "0") :: Either ServerError Bool)
+        `shouldBe` Right False
+
+    it "rejects explicitly blank or unknown filter values instead of silently widening inbox queries" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid social list filter error, got " <> show value)
+      assertInvalid
+        "direction must be omitted or one of: all, incoming, outgoing"
+        ((parseSocialDirectionParam (Just "   ")) :: Either ServerError (Maybe Text))
+      assertInvalid
+        "direction must be omitted or one of: all, incoming, outgoing"
+        ((parseSocialDirectionParam (Just "sideways")) :: Either ServerError (Maybe Text))
+      assertInvalid
+        "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
+        ((parseSocialBoolParam (Just "   ")) :: Either ServerError Bool)
+      assertInvalid
+        "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
+        ((parseSocialBoolParam (Just "maybe")) :: Either ServerError Bool)
 
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do
