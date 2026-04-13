@@ -723,8 +723,8 @@ whatsappMessagesServer user mLimit mDirection mRepliedOnly = do
   unless (hasSocialInboxAccess user) $
     throwError err403 { errBody = "Missing required module access" }
   limit <- either throwError pure (validateWhatsAppMessagesLimit mLimit)
-  direction <- parseDirectionParam mDirection
-  repliedOnly <- parseBoolParam mRepliedOnly
+  direction <- either throwError pure (parseDirectionParam mDirection)
+  repliedOnly <- either throwError pure (parseBoolParam mRepliedOnly)
   let filters =
         concat
           [ maybe [] (\dir -> [ME.WhatsAppMessageDirection ==. dir]) direction
@@ -996,28 +996,34 @@ validateWhatsAppMessagesLimit (Just rawLimit)
       Left err400 { errBody = "limit must be between 1 and 200" }
   | otherwise = Right rawLimit
 
-parseBoolParam :: Maybe Text -> AppM Bool
-parseBoolParam Nothing = pure False
+parseBoolParam :: Maybe Text -> Either ServerError Bool
+parseBoolParam Nothing = Right False
 parseBoolParam (Just raw) =
   case T.toCaseFold (T.strip raw) of
-    "true" -> pure True
-    "1" -> pure True
-    "yes" -> pure True
-    "false" -> pure False
-    "0" -> pure False
-    "no" -> pure False
-    "" -> pure False
-    _ -> throwBadRequest "Invalid repliedOnly value"
+    "true" -> Right True
+    "1" -> Right True
+    "yes" -> Right True
+    "false" -> Right False
+    "0" -> Right False
+    "no" -> Right False
+    "" -> invalidRepliedOnly
+    _ -> invalidRepliedOnly
+  where
+    invalidRepliedOnly =
+      Left err400 { errBody = "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no" }
 
-parseDirectionParam :: Maybe Text -> AppM (Maybe Text)
-parseDirectionParam Nothing = pure Nothing
+parseDirectionParam :: Maybe Text -> Either ServerError (Maybe Text)
+parseDirectionParam Nothing = Right Nothing
 parseDirectionParam (Just raw) =
   case T.toCaseFold (T.strip raw) of
-    "" -> pure Nothing
-    "all" -> pure Nothing
-    "incoming" -> pure (Just "incoming")
-    "outgoing" -> pure (Just "outgoing")
-    _ -> throwBadRequest "Invalid direction value"
+    "" -> invalidDirection
+    "all" -> Right Nothing
+    "incoming" -> Right (Just "incoming")
+    "outgoing" -> Right (Just "outgoing")
+    _ -> invalidDirection
+  where
+    invalidDirection =
+      Left err400 { errBody = "direction must be omitted or one of: all, incoming, outgoing" }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Show, Eq)

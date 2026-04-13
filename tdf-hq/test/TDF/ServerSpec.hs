@@ -22,8 +22,10 @@ import TDF.Server
     ( MetaBackfillOptions(..)
     , normalizeOptionalInput
     , parseBookingStatus
+    , parseBoolParam
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
+    , parseDirectionParam
     , resolveOptionalBookingPartyReference
     , validateMetaBackfillOptions
     , parsePaymentMethodText
@@ -352,6 +354,35 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateWhatsAppMessagesLimit (Just 0))
             assertInvalid (validateWhatsAppMessagesLimit (Just 201))
             assertInvalid (validateWhatsAppMessagesLimit (Just (-5)))
+
+    describe "WhatsApp inbox filter parsing" $ do
+        it "preserves omitted filters and normalizes supported explicit direction and repliedOnly values" $ do
+            parseDirectionParam Nothing `shouldBe` Right Nothing
+            parseDirectionParam (Just " ALL ") `shouldBe` Right Nothing
+            parseDirectionParam (Just " Incoming ") `shouldBe` Right (Just "incoming")
+            parseBoolParam Nothing `shouldBe` Right False
+            parseBoolParam (Just " YES ") `shouldBe` Right True
+            parseBoolParam (Just "0") `shouldBe` Right False
+
+        it "rejects blank or unknown filters instead of silently broadening WhatsApp inbox queries" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid WhatsApp inbox filter to be rejected, got: " <> show value)
+            assertInvalid
+                "direction must be omitted or one of: all, incoming, outgoing"
+                (parseDirectionParam (Just "   "))
+            assertInvalid
+                "direction must be omitted or one of: all, incoming, outgoing"
+                (parseDirectionParam (Just "sideways"))
+            assertInvalid
+                "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
+                (parseBoolParam (Just "   "))
+            assertInvalid
+                "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
+                (parseBoolParam (Just "maybe"))
 
     describe "validateMetaBackfillOptions" $ do
         it "keeps defaults only when omitted and normalizes supported explicit values" $ do
