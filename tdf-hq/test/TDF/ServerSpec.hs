@@ -59,6 +59,7 @@ import TDF.Server
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
+    , validateOptionalCourseRegistrationStatusFilter
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
@@ -1171,6 +1172,29 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "pending_payment, paid, cancelled"
                 Right statusVal ->
                     expectationFailure ("Expected an invalid course-registration status error, got: " <> show statusVal)
+
+    describe "validateOptionalCourseRegistrationStatusFilter" $ do
+        it "keeps omitted filters absent and canonicalizes supported explicit values" $ do
+            validateOptionalCourseRegistrationStatusFilter Nothing `shouldBe` Right Nothing
+            validateOptionalCourseRegistrationStatusFilter (Just " Pending Payment ")
+                `shouldBe` Right (Just "pending_payment")
+            validateOptionalCourseRegistrationStatusFilter (Just "canceled")
+                `shouldBe` Right (Just "cancelled")
+
+        it "rejects blank or unknown filters instead of silently widening course-registration listings" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right statusVal ->
+                        expectationFailure
+                            ("Expected invalid optional course-registration status filter, got: " <> show statusVal)
+            assertInvalid
+                "status must be omitted or one of: pending_payment, paid, cancelled"
+                (validateOptionalCourseRegistrationStatusFilter (Just "   "))
+            assertInvalid
+                "pending_payment, paid, cancelled"
+                (validateOptionalCourseRegistrationStatusFilter (Just "refunded"))
 
     describe "validateCourseRegistrationListLimit" $ do
         it "defaults omitted limits and preserves explicit values inside the supported page window" $ do

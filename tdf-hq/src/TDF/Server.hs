@@ -2472,7 +2472,7 @@ listCourseRegistrations
   -> Maybe Int
   -> AppM [DTO.CourseRegistrationDTO]
 listCourseRegistrations mSlug mStatus mLimit = do
-  normalizedStatus <- traverse (either throwError pure . parseCourseRegistrationStatus) (cleanOptional mStatus)
+  normalizedStatus <- either throwError pure (validateOptionalCourseRegistrationStatusFilter mStatus)
   limit <- either throwError pure (validateCourseRegistrationListLimit 200 mLimit)
   let filters = catMaybes
         [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
@@ -5615,6 +5615,17 @@ parseCourseRegistrationStatus raw =
         { errBody =
             "Invalid course registration status. Allowed values: pending_payment, paid, cancelled"
         }
+
+validateOptionalCourseRegistrationStatusFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCourseRegistrationStatusFilter Nothing = Right Nothing
+validateOptionalCourseRegistrationStatusFilter (Just rawStatus) =
+  let trimmed = T.strip rawStatus
+  in if T.null trimmed
+       then
+         Left err400
+           { errBody = "status must be omitted or one of: pending_payment, paid, cancelled"
+           }
+       else Just <$> parseCourseRegistrationStatus trimmed
 
 validateCourseRegistrationListLimit :: Int -> Maybe Int -> Either ServerError Int
 validateCourseRegistrationListLimit defaultLimit Nothing = Right defaultLimit
