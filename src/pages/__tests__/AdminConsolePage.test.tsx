@@ -590,14 +590,14 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.queryByText('Editar roles: Admin')).not.toBeInTheDocument();
-      expect(screen.getByText('Último acceso: —')).toBeInTheDocument();
+      expect(screen.queryByText(/^Último acceso:/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
       expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
     });
@@ -618,7 +618,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
@@ -642,10 +642,31 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
+    });
+  });
+
+  it('shows the single-user last access only when that timestamp exists', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        lastSeenAt: '2026-04-10T12:00:00.000Z',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });
   });
 

@@ -419,6 +419,7 @@ export default function AdminConsolePage() {
   const usersError = usersQuery.isError ? (usersQuery.error as Error).message : null;
   const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
   const singleAdminUserIdentity = singleAdminUser ? summarizeAdminUserIdentity(singleAdminUser) : null;
+  const singleAdminUserLastAccess = singleAdminUser ? getAdminUserLastAccess(singleAdminUser) : null;
   const shouldShowSingleAdminUserStatus = singleAdminUser?.status != null && singleAdminUser.status !== 'ACTIVE';
   const singleAdminUserStatusLabel = shouldShowSingleAdminUserStatus && singleAdminUser?.status
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
@@ -804,7 +805,7 @@ export default function AdminConsolePage() {
           <Box sx={{ px: 2, pb: 2 }}>
             <Stack spacing={1.25}>
               <Typography variant="body2" color="text.secondary">
-                Primer usuario administrable. Revisa roles y último acceso aquí; cuando exista el segundo, volverá la tabla comparativa.
+                Primer usuario administrable. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.
               </Typography>
               <Stack
                 spacing={1}
@@ -851,9 +852,11 @@ export default function AdminConsolePage() {
                   >
                     {formatRoleList(singleAdminUser.roles)}
                   </Button>
-                  <Typography variant="body2" color="text.secondary">
-                    Último acceso: {formatDateOrDash(singleAdminUser.lastSeenAt ?? singleAdminUser.lastLoginAt)}
-                  </Typography>
+                  {singleAdminUserLastAccess && (
+                    <Typography variant="body2" color="text.secondary">
+                      Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
+                    </Typography>
+                  )}
                   {singleAdminUserStatusLabel && (
                     <Typography variant="body2" color="text.secondary">
                       Estado: {singleAdminUserStatusLabel}
