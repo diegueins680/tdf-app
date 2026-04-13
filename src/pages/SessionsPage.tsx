@@ -1060,6 +1060,7 @@ export default function SessionsPage() {
 
   const sessions = sessionsQuery.data ?? { items: [], page: 1, pageSize, total: 0 };
   const rows: SessionDTO[] = sessions.items;
+  const showFirstSessionSetupState = !sessionsQuery.isLoading && !sessionsQuery.isError && sessions.total === 0;
 
   return (
     <Stack spacing={2}>
@@ -1068,65 +1069,80 @@ export default function SessionsPage() {
         <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva sesión</Button>
       </Stack>
       <Paper variant="outlined">
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Horario</TableCell>
-                <TableCell>Servicio</TableCell>
-                <TableCell>Booking</TableCell>
-                <TableCell>Ingeniero</TableCell>
-                <TableCell>Salas</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell width={160}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((session) => (
-                <TableRow key={session.sessionId} hover>
-                  <TableCell>{formatDateRange(session.sStartAt, session.sEndAt)}</TableCell>
-                  <TableCell>{session.sService ?? '—'}</TableCell>
-                  <TableCell>{session.sBookingRef ?? '—'}</TableCell>
-                  <TableCell>{session.sEngineerRef ?? '—'}</TableCell>
-                  <TableCell>
-                    {session.sRoomIds && session.sRoomIds.length > 0
-                      ? session.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <StatusChip value={session.sStatus} />
-                  </TableCell>
-                  <TableCell>
-                    <Button size="small" variant="outlined" onClick={() => setEditId(session.sessionId)}>
-                      Editar
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                      {sessionsQuery.isLoading ? 'Cargando sesiones…' : 'No hay sesiones registradas todavía.'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={sessions.total}
-          page={page}
-          onPageChange={(_event, value) => setPage(value)}
-          rowsPerPage={pageSize}
-          onRowsPerPageChange={(event) => {
-            setPageSize(parseInt(event.target.value, 10));
-            setPage(0);
-          }}
-          rowsPerPageOptions={[10, 25, 50]}
-        />
+        {showFirstSessionSetupState ? (
+          <Box sx={{ px: 2, py: 3 }}>
+            <Stack spacing={1} alignItems="flex-start">
+              <Typography variant="body1" fontWeight={600}>
+                Todavía no hay sesiones registradas.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Empieza con Nueva sesión. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión.
+              </Typography>
+            </Stack>
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Horario</TableCell>
+                    <TableCell>Servicio</TableCell>
+                    <TableCell>Booking</TableCell>
+                    <TableCell>Ingeniero</TableCell>
+                    <TableCell>Salas</TableCell>
+                    <TableCell>Estado</TableCell>
+                    <TableCell width={160}>Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((session) => (
+                    <TableRow key={session.sessionId} hover>
+                      <TableCell>{formatDateRange(session.sStartAt, session.sEndAt)}</TableCell>
+                      <TableCell>{session.sService ?? '—'}</TableCell>
+                      <TableCell>{session.sBookingRef ?? '—'}</TableCell>
+                      <TableCell>{session.sEngineerRef ?? '—'}</TableCell>
+                      <TableCell>
+                        {session.sRoomIds && session.sRoomIds.length > 0
+                          ? session.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
+                          : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip value={session.sStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <Button size="small" variant="outlined" onClick={() => setEditId(session.sessionId)}>
+                          Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {rows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7}>
+                        <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                          {sessionsQuery.isLoading ? 'Cargando sesiones…' : 'No hay sesiones registradas todavía.'}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              component="div"
+              count={sessions.total}
+              page={page}
+              onPageChange={(_event, value) => setPage(value)}
+              rowsPerPage={pageSize}
+              onRowsPerPageChange={(event) => {
+                setPageSize(parseInt(event.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 25, 50]}
+            />
+          </>
+        )}
       </Paper>
 
       <CreateSessionDialog
