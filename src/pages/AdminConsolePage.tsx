@@ -393,11 +393,21 @@ function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminCo
 function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
   const count = cards.length;
 
-  if (count === 1) {
-    return 'Ver 1 módulo adicional';
+  if (count === 0) {
+    return 'Ver módulos adicionales';
   }
 
-  return `Ver ${count} módulos adicionales`;
+  if (count === 1) {
+    return `Ver 1 módulo adicional: ${cards[0]?.title ?? ''}`;
+  }
+
+  const [firstTitle = '', secondTitle = ''] = cards.map((card) => card.title);
+
+  if (count === 2) {
+    return `Ver 2 módulos adicionales: ${firstTitle} y ${secondTitle}`;
+  }
+
+  return `Ver ${count} módulos adicionales: ${firstTitle}, ${secondTitle} y ${count - 2} más`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {

@@ -603,6 +603,53 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
   });
 
+  it('previews the first hidden module names in the standalone CTA before expanding extras', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'integrations',
+          title: 'Integraciones',
+          body: [
+            'Revisa conectores pendientes sin salir de la consola.',
+          ],
+        },
+        {
+          cardId: 'api-access',
+          title: 'Acceso API',
+          body: [
+            'Consulta credenciales técnicas y accesos de servicio.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /Ver 3 módulos adicionales: Tokens de servicio, Integraciones y 1 más/i },
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+  });
+
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
