@@ -196,7 +196,10 @@ data AdminEmailBroadcastRequest = AdminEmailBroadcastRequest
   } deriving (Show, Generic)
 
 instance FromJSON AdminEmailBroadcastRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data AdminEmailBroadcastRecipientDTO = AdminEmailBroadcastRecipientDTO
   { aerdEmail   :: Text

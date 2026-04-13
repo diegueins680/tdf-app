@@ -17,6 +17,7 @@ import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
 import TDF.API.Feedback (FeedbackPayload (..))
+import TDF.API.Admin (AdminEmailBroadcastRequest)
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
@@ -1556,6 +1557,15 @@ main = hspec $ do
                             expectationFailure ("Expected invalid social errors limit to be rejected, got " <> show value)
             assertRejected 0
             assertRejected 201
+
+    describe "AdminEmailBroadcastRequest" $ do
+        it "rejects unknown JSON fields so typos cannot silently change send behavior" $ do
+            let payload =
+                    "{\"subject\":\"Launch\","
+                    <> "\"bodyLines\":[\"Line 1\"],"
+                    <> "\"dryRun\":true,"
+                    <> "\"dryrun\":false}"
+            isLeft (eitherDecode payload :: Either String AdminEmailBroadcastRequest) `shouldBe` True
 
     describe "live session intake multipart parsing" $ do
         it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
