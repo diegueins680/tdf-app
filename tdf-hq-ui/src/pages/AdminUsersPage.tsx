@@ -41,6 +41,14 @@ const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone
 const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   Boolean(getUserWhatsAppChannel(user));
 
+const getUserContactReadiness = (
+  user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>,
+) => {
+  if (hasUserWhatsAppChannel(user)) return 'whatsapp-ready' as const;
+  if (getUserContactSummary(user)) return 'contact-ready' as const;
+  return 'missing-contact' as const;
+};
+
 const joinSpanishSummaryParts = (parts: readonly string[]) => {
   if (parts.length <= 1) return parts[0] ?? '';
   if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
@@ -93,14 +101,20 @@ const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
 const ADMIN_USERS_PAGE_INTRO =
   'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
+const ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO =
+  'Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
   'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_USER_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+const SINGLE_USER_NUMBER_SETUP_GUIDANCE =
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const SINGLE_USER_CONTACT_SETUP_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const SINGLE_SEARCH_RESULT_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.';
+const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
+  'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 
@@ -242,19 +256,23 @@ export default function AdminUsersPage() {
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
   const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
+  const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
+  const singleVisibleUser = showSingleUserGuidance ? (visibleUsers[0] ?? null) : null;
+  const singleVisibleUserReadiness = singleVisibleUser ? getUserContactReadiness(singleVisibleUser) : null;
+  const visibleUsersAllNeedContact = visibleUsers.length > 0 && visibleUsersMissingContactCount === visibleUsers.length;
   const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
-  const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
+  const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
@@ -315,14 +333,20 @@ export default function AdminUsersPage() {
   );
   const generalIntro = hasVisibleWhatsAppAction
     ? ADMIN_USERS_PAGE_INTRO
-    : ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO;
-  const singleUserGuidance = hasVisibleWhatsAppAction
+    : visibleUsersAllNeedContact
+      ? ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO
+      : ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO;
+  const singleUserGuidance = singleVisibleUserReadiness === 'whatsapp-ready'
     ? SINGLE_USER_GUIDANCE
-    : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+    : singleVisibleUserReadiness === 'contact-ready'
+      ? SINGLE_USER_NUMBER_SETUP_GUIDANCE
+      : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
   const singleSearchResultGuidance = showSingleSearchResultGuidance
     ? (
-      hasVisibleWhatsAppAction
+      singleSearchResultReadiness === 'whatsapp-ready'
         ? SINGLE_SEARCH_RESULT_GUIDANCE
+        : singleSearchResultReadiness === 'contact-ready'
+          ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
         : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
     )
     : '';
