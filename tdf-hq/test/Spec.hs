@@ -18,6 +18,7 @@ import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (.
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 
+import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import TDF.API.LiveSessions
@@ -275,6 +276,42 @@ main = hspec $ do
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
                 `shouldBe` Left "Invalid Authorization header"
+
+    describe "WhatsApp consent payloads" $ do
+        it "accept canonical public consent and opt-out bodies" $ do
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"name\":\"Ada\",\"consent\":true,\"source\":\"landing\",\"sendMessage\":false}" of
+                Left err ->
+                    expectationFailure ("Expected canonical consent payload to decode, got: " <> err)
+                Right payload -> do
+                    wcrPhone payload `shouldBe` "+593991234567"
+                    wcrName payload `shouldBe` Just "Ada"
+                    wcrConsent payload `shouldBe` True
+                    wcrSource payload `shouldBe` Just "landing"
+                    wcrSendMessage payload `shouldBe` Just False
+
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"sendMessage\":true}" of
+                Left err ->
+                    expectationFailure ("Expected canonical opt-out payload to decode, got: " <> err)
+                Right payload -> do
+                    worPhone payload `shouldBe` "+593991234567"
+                    worReason payload `shouldBe` Just "stop"
+                    worSendMessage payload `shouldBe` Just True
+
+        it "rejects unknown consent or opt-out keys so typoed public requests fail explicitly" $ do
+            isLeft
+                ( eitherDecode
+                    "{\"phone\":\"+593991234567\",\"consent\":true,\"sendmessage\":false}"
+                    :: Either String WhatsAppConsentRequest
+                )
+                `shouldBe` True
+            isLeft
+                ( eitherDecode
+                    "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"send_message\":true}"
+                    :: Either String WhatsAppOptOutRequest
+                )
+                `shouldBe` True
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do

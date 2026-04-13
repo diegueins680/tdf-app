@@ -14,7 +14,7 @@ import           Data.Text (Text)
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Data.Char (toLower)
-import           Data.Aeson (ToJSON(..), FromJSON(..), Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier)
+import           Data.Aeson (ToJSON(..), FromJSON(..), Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, rejectUnknownFields)
 import           Data.Aeson.Types (camelTo2, withObject, (.:?))
 import qualified Data.ByteString.Lazy as BL
 
@@ -188,7 +188,10 @@ data WhatsAppConsentRequest = WhatsAppConsentRequest
   } deriving (Show, Generic)
 
 instance FromJSON WhatsAppConsentRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data WhatsAppOptOutRequest = WhatsAppOptOutRequest
   { worPhone       :: Text
@@ -197,7 +200,10 @@ data WhatsAppOptOutRequest = WhatsAppOptOutRequest
   } deriving (Show, Generic)
 
 instance FromJSON WhatsAppOptOutRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data WhatsAppConsentStatus = WhatsAppConsentStatus
   { wcsPhone       :: Text
