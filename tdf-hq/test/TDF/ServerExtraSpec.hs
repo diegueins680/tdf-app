@@ -3,8 +3,9 @@
 module TDF.ServerExtraSpec (spec) where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (NoLoggingT)
-import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.Logger (NoLoggingT, runStdoutLoggingT)
+import Control.Monad.Trans.Except (ExceptT, runExceptT)
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson ((.=))
 import qualified Data.Aeson as A
@@ -13,14 +14,17 @@ import Data.Text (Text)
 import Data.Time (utctDay)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, toSqlKey)
-import Database.Persist.Sqlite (runSqlite)
-import Servant (ServerError (errBody, errHTTPCode))
+import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sqlite (createSqlitePool, runSqlite)
+import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
-import TDF.API.Types (AssetCheckinRequest (..))
+import TDF.API.Inventory (InventoryAPI)
+import TDF.API.Types (AssetCheckinRequest (..), AssetCheckoutDTO)
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.DB (Env (..))
 import TDF.ModelsExtra
   ( Asset (..)
   , AssetCondition (Good)
@@ -82,7 +86,10 @@ import TDF.ServerExtra (
     validateAssetStatusUpdate,
     validatePageParams,
     validateSessionReferences,
+    inventoryServer,
  )
+
+type InventoryTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
 spec = do
@@ -355,6 +362,35 @@ spec = do
         `shouldBe` (Nothing, Nothing)
       normalizeAssetCheckinFields (AssetCheckinRequest (Just "   ") (Just "   "))
         `shouldBe` (Nothing, Nothing)
+
+  describe "checkinAssetH" $ do
+    let missingAssetId = "00000000-0000-0000-0000-000000000901"
+        existingAssetId = "00000000-0000-0000-0000-000000000902"
+        request = AssetCheckinRequest Nothing Nothing
+
+    it "rejects unknown asset ids before collapsing them into missing checkout errors" $ do
+      result <- runInventoryCheckinHandler (pure ()) missingAssetId request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Asset not found"
+        Right value ->
+          expectationFailure ("Expected missing asset check-in to fail, got " <> show value)
+
+    it "keeps the active-checkout 404 for real assets that are not currently checked out" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "No active checkout"
+        Right value ->
+          expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
@@ -844,6 +880,47 @@ runSessionReferenceValidationSql action =
         initializeSessionReferenceValidationSchema
         action
 
+runInventoryCheckinHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetCheckinRequest
+  -> IO (Either ServerError AssetCheckoutDTO)
+runInventoryCheckinHandler setup rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory check-in tests"
+            }
+    liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
+
+inventoryUser :: AuthedUser
+inventoryUser =
+  AuthedUser
+    { auPartyId = toSqlKey 1
+    , auRoles = [M.Admin]
+    , auModules = modulesForRoles [M.Admin]
+    }
+
+checkinHandlerFor :: AuthedUser -> Text -> AssetCheckinRequest -> InventoryTestM AssetCheckoutDTO
+checkinHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          checkinAsset
+
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -916,6 +993,50 @@ initializeSessionReferenceValidationSchema = do
         \\"bit_depth\" INTEGER NULL,\
         \\"daw\" VARCHAR NULL,\
         \\"session_folder_drive_id\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL\
+        \)"
+        []
+
+initializeInventoryCheckinSchema :: SqlPersistT IO ()
+initializeInventoryCheckinSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"asset\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"category\" VARCHAR NOT NULL,\
+        \\"brand\" VARCHAR NULL,\
+        \\"model\" VARCHAR NULL,\
+        \\"serial_number\" VARCHAR NULL,\
+        \\"purchase_date\" DATE NULL,\
+        \\"purchase_price_usd_cents\" INTEGER NULL,\
+        \\"condition\" VARCHAR NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"location_id\" uuid NULL,\
+        \\"owner\" VARCHAR NOT NULL,\
+        \\"qr_code\" VARCHAR NULL,\
+        \\"photo_url\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"warranty_expires\" DATE NULL,\
+        \\"maintenance_policy\" VARCHAR NOT NULL,\
+        \\"next_maintenance_due\" DATE NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"asset_checkout\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"asset_id\" uuid NOT NULL,\
+        \\"target_kind\" VARCHAR NOT NULL,\
+        \\"target_session_id\" uuid NULL,\
+        \\"target_party_ref\" VARCHAR NULL,\
+        \\"target_room_id\" uuid NULL,\
+        \\"checked_out_by_ref\" VARCHAR NOT NULL,\
+        \\"checked_out_at\" TIMESTAMP NOT NULL,\
+        \\"due_at\" TIMESTAMP NULL,\
+        \\"condition_out\" VARCHAR NULL,\
+        \\"photo_drive_file_id\" VARCHAR NULL,\
+        \\"returned_at\" TIMESTAMP NULL,\
+        \\"condition_in\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL\
         \)"
         []

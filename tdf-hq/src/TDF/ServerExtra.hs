@@ -349,6 +349,9 @@ inventoryServer user =
     checkinAssetH rawId req = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
+      mAsset <- withPool $ get assetKey
+      when (isNothing mAsset) $
+        throwError err404 { errBody = "Asset not found" }
       now <- liftIO getCurrentTime
       let (conditionInUpdate, checkinNotesUpdate) = normalizeAssetCheckinFields req
       mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
