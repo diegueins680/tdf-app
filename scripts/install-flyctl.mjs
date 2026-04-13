@@ -6,13 +6,13 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { findExtractedKoyebBinary, selectKoyebDownloadUrl } from './lib/koyeb-cli.mjs';
+import { findExtractedFlyctlBinary, selectFlyctlDownloadUrl } from './lib/flyctl-cli.mjs';
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_RELEASE_API = 'https://api.github.com/repos/koyeb/koyeb-cli/releases/latest';
+const DEFAULT_RELEASE_API = 'https://api.github.com/repos/superfly/flyctl/releases/latest';
 const REQUEST_HEADERS = {
   Accept: 'application/vnd.github+json',
-  'User-Agent': 'tdf-app-koyeb-installer',
+  'User-Agent': 'tdf-app-flyctl-installer',
 };
 
 function createLogger(log) {
@@ -81,11 +81,11 @@ async function withRetries(operationName, operation, { attempts = 5, initialDela
 
 async function fetchJson(url, githubToken, log, retryOptions) {
   return withRetries(
-    'Fetch Koyeb release metadata',
+    'Fetch Fly release metadata',
     async () => {
       const response = await fetch(url, { headers: buildRequestHeaders(githubToken) });
       if (!response.ok) {
-        throw createHttpError('Failed to fetch Koyeb release metadata', response);
+        throw createHttpError('Failed to fetch Fly release metadata', response);
       }
       return response.json();
     },
@@ -95,11 +95,11 @@ async function fetchJson(url, githubToken, log, retryOptions) {
 
 async function downloadFile(url, filePath, log, retryOptions) {
   await withRetries(
-    'Download Koyeb CLI archive',
+    'Download flyctl archive',
     async () => {
       const response = await fetch(url, { headers: REQUEST_HEADERS });
       if (!response.ok) {
-        throw createHttpError('Failed to download Koyeb CLI', response);
+        throw createHttpError('Failed to download flyctl', response);
       }
 
       const archiveBytes = Buffer.from(await response.arrayBuffer());
@@ -109,9 +109,9 @@ async function downloadFile(url, filePath, log, retryOptions) {
   );
 }
 
-export async function installKoyebCli({
+export async function installFlyctl({
   releaseApiUrl = DEFAULT_RELEASE_API,
-  installDir = '/usr/local/bin',
+  installDir = path.join(os.homedir(), '.fly', 'bin'),
   workDir,
   skipVersionCheck = false,
   githubToken,
@@ -124,11 +124,11 @@ export async function installKoyebCli({
     attempts: retryAttempts,
     initialDelayMs: retryInitialDelayMs,
   };
-  const workspace = workDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'koyeb-cli-')));
+  const workspace = workDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'flyctl-')));
   const shouldCleanupWorkspace = workDir == null;
-  const archivePath = path.join(workspace, 'koyeb.tar.gz');
+  const archivePath = path.join(workspace, 'flyctl.tar.gz');
   const extractDir = path.join(workspace, 'extract');
-  const installPath = path.join(installDir, 'koyeb');
+  const installPath = path.join(installDir, 'flyctl');
 
   await fs.mkdir(workspace, { recursive: true });
   await fs.mkdir(extractDir, { recursive: true });
@@ -138,19 +138,19 @@ export async function installKoyebCli({
     const release = await fetchJson(releaseApiUrl, githubToken, logger, retryOptions);
     const assets = Array.isArray(release?.assets) ? release.assets : [];
     const candidateUrls = assets.map((asset) => asset?.browser_download_url);
-    const downloadUrl = selectKoyebDownloadUrl(candidateUrls);
+    const downloadUrl = selectFlyctlDownloadUrl(candidateUrls);
 
     if (!downloadUrl) {
-      throw new Error('Failed to resolve Koyeb CLI download URL');
+      throw new Error('Failed to resolve flyctl download URL');
     }
 
-    logger(`Downloading Koyeb CLI from ${downloadUrl}`);
+    logger(`Downloading flyctl from ${downloadUrl}`);
     await downloadFile(downloadUrl, archivePath, logger, retryOptions);
     await execFileAsync('tar', ['-xzf', archivePath, '-C', extractDir]);
 
-    const binPath = await findExtractedKoyebBinary(extractDir);
+    const binPath = await findExtractedFlyctlBinary(extractDir);
     if (!binPath) {
-      throw new Error('Koyeb binary not found after extraction');
+      throw new Error('flyctl binary not found after extraction');
     }
 
     await execFileAsync('install', ['-m', '755', binPath, installPath]);
@@ -174,12 +174,12 @@ export async function installKoyebCli({
 
 async function main() {
   try {
-    await installKoyebCli({
-      releaseApiUrl: process.env.KOYEB_RELEASE_API || DEFAULT_RELEASE_API,
-      installDir: process.env.KOYEB_INSTALL_DIR || '/usr/local/bin',
-      workDir: process.env.KOYEB_WORK_DIR || undefined,
-      skipVersionCheck: process.env.KOYEB_SKIP_VERSION_CHECK === '1',
-      githubToken: process.env.KOYEB_RELEASE_GITHUB_TOKEN || process.env.GITHUB_TOKEN,
+    await installFlyctl({
+      releaseApiUrl: process.env.FLYCTL_RELEASE_API || DEFAULT_RELEASE_API,
+      installDir: process.env.FLYCTL_INSTALL_DIR || path.join(os.homedir(), '.fly', 'bin'),
+      workDir: process.env.FLYCTL_WORK_DIR || undefined,
+      skipVersionCheck: process.env.FLYCTL_SKIP_VERSION_CHECK === '1',
+      githubToken: process.env.FLYCTL_RELEASE_GITHUB_TOKEN || process.env.GITHUB_TOKEN,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
