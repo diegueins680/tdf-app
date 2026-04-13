@@ -10,7 +10,7 @@ import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
-import Data.Time.Clock (UTCTime (..), getCurrentTime, secondsToDiffTime)
+import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
@@ -27,6 +27,7 @@ import TDF.Models
     , RefundPolicy (..)
     , RoleEnum (..)
     , ServiceAd (..)
+    , ServiceAdSlot (..)
     , ServiceCatalog (..)
     , ServiceKind (..)
     , UnitsKind (..)
@@ -43,6 +44,7 @@ import TDF.Server
     , parseDirectionParam
     , resolveOptionalBookingPartyReference
     , resolveServiceAdEntity
+    , resolveServiceAdSlotEntity
     , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
@@ -333,6 +335,61 @@ spec = describe "TDF.Server helpers" $ do
                 Entity resolvedKey resolvedAd -> do
                     resolvedKey `shouldBe` expectedAdId
                     serviceAdHeadline resolvedAd `shouldBe` "Analog mix"
+
+    describe "resolveServiceAdSlotEntity" $ do
+        it "rejects non-positive slot ids before marketplace bookings can collapse malformed slot refs into internal lookup failures" $ do
+            let assertInvalid rawSlotId = do
+                    result <- try $ runServiceAdSqlite $
+                        resolveServiceAdSlotEntity rawSlotId
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "slotId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid service ad slot id to be rejected, got: " <> show value)
+            assertInvalid 0
+            assertInvalid (-9)
+
+        it "returns 404 for unknown slots instead of letting booking creation fail through a generic entity exception" $ do
+            result <- try $ runServiceAdSqlite $
+                resolveServiceAdSlotEntity 999999
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr) `shouldContain` "Service ad slot not found"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown service ad slot lookup to be rejected, got: " <> show value)
+
+        it "resolves existing service ad slots before booking creation checks slot ownership and availability" $ do
+            (expectedSlotId, result) <- runServiceAdSqlite $ do
+                now <- liftIO getCurrentTime
+                adId <- insert ServiceAd
+                    { serviceAdProviderPartyId = toSqlKey 1
+                    , serviceAdServiceCatalogId = Nothing
+                    , serviceAdRoleTag = "Mastering"
+                    , serviceAdHeadline = "Master a single"
+                    , serviceAdDescription = Nothing
+                    , serviceAdFeeCents = 15000
+                    , serviceAdCurrency = "USD"
+                    , serviceAdSlotMinutes = 60
+                    , serviceAdActive = True
+                    , serviceAdCreatedAt = now
+                    }
+                slotId <- insert ServiceAdSlot
+                    { serviceAdSlotAdId = adId
+                    , serviceAdSlotStartsAt = now
+                    , serviceAdSlotEndsAt = addUTCTime 3600 now
+                    , serviceAdSlotStatus = "open"
+                    , serviceAdSlotCreatedAt = now
+                    }
+                resolved <- resolveServiceAdSlotEntity (fromSqlKey slotId)
+                pure (slotId, resolved)
+            case result of
+                Entity resolvedKey resolvedSlot -> do
+                    resolvedKey `shouldBe` expectedSlotId
+                    serviceAdSlotStatus resolvedSlot `shouldBe` "open"
 
     describe "validateChatMessageListLookup" $ do
         it "accepts a positive thread id plus at most one positive pagination cursor" $ do
@@ -1699,6 +1756,17 @@ initializeServiceAdSchema = do
         \\"slot_minutes\" INTEGER NOT NULL,\
         \\"active\" BOOLEAN NOT NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_ad_slot\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"ad_id\" INTEGER NOT NULL REFERENCES \"service_ad\"(\"id\") ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"starts_at\" TIMESTAMP NOT NULL,\
+        \\"ends_at\" TIMESTAMP NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \UNIQUE(\"ad_id\", \"starts_at\", \"ends_at\")\
         \)"
         []
 

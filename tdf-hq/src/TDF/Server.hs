@@ -4735,6 +4735,18 @@ resolveServiceAdEntity rawAdId = do
     pure
     mAd
 
+resolveServiceAdSlotEntity :: Int64 -> SqlPersistT IO (Entity ServiceAdSlot)
+resolveServiceAdSlotEntity rawSlotId = do
+  slotId <- case validatePositiveIdField "slotId" rawSlotId of
+    Left serverErr -> liftIO $ throwIO serverErr
+    Right validSlotId -> pure validSlotId
+  let slotKey = toSqlKey slotId :: Key ServiceAdSlot
+  mSlot <- getEntity slotKey
+  maybe
+    (liftIO $ throwIO err404 { errBody = "Service ad slot not found" })
+    pure
+    mSlot
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
@@ -4806,10 +4818,8 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
   pool <- asks envPool
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
-    let adKey = toSqlKey adId :: Key ServiceAd
-        slotKey = toSqlKey slotId :: Key ServiceAdSlot
-    adEnt <- getJustEntity adKey
-    slotEnt <- getJustEntity slotKey
+    adEnt@(Entity adKey _) <- resolveServiceAdEntity adId
+    slotEnt@(Entity slotKey _) <- resolveServiceAdSlotEntity slotId
     let ad = entityVal adEnt
         slot = entityVal slotEnt
         providerId = serviceAdProviderPartyId ad
