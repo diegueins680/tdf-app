@@ -390,6 +390,16 @@ function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminCo
   return `Opcional: ver ${count} módulos adicionales: ${firstTitle}, ${secondTitle} y ${count - 2} más`;
 }
 
+function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+  const count = cards.length;
+
+  if (count === 1) {
+    return 'Ver 1 módulo adicional';
+  }
+
+  return `Ver ${count} módulos adicionales`;
+}
+
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   ACTIVE: { label: 'Activo', color: 'success' },
   INVITED: { label: 'Invitado', color: 'info' },
@@ -446,6 +456,7 @@ export default function AdminConsolePage() {
   const [selectedRoles, setSelectedRoles] = useState<RoleKey[]>([]);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [showFirstRunAdditionalModules, setShowFirstRunAdditionalModules] = useState(false);
+  const [showStandaloneAdditionalModules, setShowStandaloneAdditionalModules] = useState(false);
 
   const healthQuery = useQuery({
     queryKey: ['admin', 'health'],
@@ -599,6 +610,7 @@ export default function AdminConsolePage() {
     showGettingStartedGuidance
     && shouldShowAdditionalModuleCards;
   const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
+  const standaloneAdditionalModulesActionLabel = formatStandaloneAdditionalModulesActionLabel(consoleCards);
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
@@ -1133,12 +1145,23 @@ export default function AdminConsolePage() {
               <Box>
                 <Typography variant="h6">Módulos adicionales</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.
+                  Tarjetas auxiliares del panel. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría.
                 </Typography>
               </Box>
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setShowStandaloneAdditionalModules((current) => !current)}
+                aria-controls="admin-additional-modules-list"
+                aria-expanded={showStandaloneAdditionalModules}
+              >
+                {showStandaloneAdditionalModules
+                  ? 'Ocultar módulos adicionales'
+                  : standaloneAdditionalModulesActionLabel}
+              </Button>
             </Stack>
           </Box>
-          {renderAdditionalModuleCardsGrid({
+          {showStandaloneAdditionalModules && renderAdditionalModuleCardsGrid({
             cards: consoleCards,
             isFetching: consoleQuery.isFetching,
             isPending: consoleQuery.isPending,

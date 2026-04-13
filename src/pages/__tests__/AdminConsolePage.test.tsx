@@ -491,7 +491,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
     expect(
       screen.getAllByText(
@@ -693,6 +693,60 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
+  });
+
+  it('keeps standalone additional modules collapsed until the admin explicitly expands them', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver 1 módulo adicional/i })).toBeInTheDocument();
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        /Tarjetas auxiliares del panel\. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Ver 1 módulo adicional/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Ver 1 módulo adicional/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Ocultar módulos adicionales/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('refreshes every admin dataset from the single panel action', async () => {
