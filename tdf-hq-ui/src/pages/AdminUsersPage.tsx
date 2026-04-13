@@ -234,6 +234,7 @@ export default function AdminUsersPage() {
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
+  const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
@@ -426,7 +427,7 @@ export default function AdminUsersPage() {
                     onOpenCommunications={() => setSelectedUser(user)}
                     sharedModulesSummary={sharedModulesSummary}
                     sharedRolesSummary={sharedRolesSummary}
-                    hideAccessSummary={showSingleSearchResultGuidance}
+                    hideAccessSummary={hideRowAccessSummary}
                   />
                 ))}
               </Stack>

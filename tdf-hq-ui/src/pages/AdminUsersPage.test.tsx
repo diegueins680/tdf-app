@@ -750,6 +750,8 @@ describe('AdminUsersPage', () => {
         const loneRow = getRowByUserId(container, 101);
         expect(loneRow.querySelectorAll('button')).toHaveLength(1);
         expect(hasLinkWithTextAndHref(loneRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
+        expect(loneRow.textContent).not.toContain('Roles:');
+        expect(loneRow.textContent).not.toContain('Módulos:');
       });
     } finally {
       await cleanup();
@@ -762,6 +764,15 @@ describe('AdminUsersPage', () => {
         userId: 103,
         roles: [' Admin ', '', 'Teacher', 'Admin', 'Teacher'],
         modules: [' admin ', 'crm', 'crm', ''],
+      }),
+      buildUser({
+        userId: 104,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        roles: ['Manager'],
+        modules: ['events'],
       }),
     ]);
 
