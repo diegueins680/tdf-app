@@ -1920,6 +1920,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps passive empty email guidance outside the dossier action row so only real actions stay clickable', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier({ crdCanMarkPaid: true }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+      const emptyHint = document.body.querySelector<HTMLElement>(
+        '[data-testid="course-registration-empty-email-history-hint"]',
+      );
+
+      expect(actions).toBeTruthy();
+      expect(countButtonsByText(actions as HTMLElement, 'Marcar pagado')).toBe(1);
+      expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
+      expect(emptyHint?.textContent?.trim()).toBe(emptySystemEmailHistoryMessage);
+    });
+
+    await cleanup();
+  });
+
   it('localizes dossier activity labels so admins do not see raw internal event jargon', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

@@ -1284,6 +1284,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
+  const showDossierActionRow = canMarkPaid || showSystemEmailHistoryAction;
   const hasReceipts = receipts.length > 0;
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
@@ -2275,31 +2276,44 @@ export default function CourseRegistrationsAdminPage() {
                   <Typography variant="body2" color="text.secondary">
                     {activeRegistrationSummary}
                   </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {canMarkPaid && (
-                      <Button
-                        variant="contained"
-                        color="success"
-                        onClick={handleMarkPaidFromDossier}
-                        disabled={updateStatusMutation.isPending}
-                      >
-                        Marcar pagado
-                      </Button>
-                    )}
-                    {showSystemEmailHistoryAction ? (
-                      <Button
-                        variant="outlined"
-                        onClick={() => setShowEmailHistory((current) => !current)}
-                        aria-expanded={showEmailHistory}
-                      >
-                        {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
-                      </Button>
-                    ) : showEmptySystemEmailHistoryHint ? (
-                      <Typography variant="body2" color="text.secondary">
-                        {emptySystemEmailHistoryMessage}
-                      </Typography>
-                    ) : null}
-                  </Stack>
+                  {showDossierActionRow && (
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                      data-testid="course-registration-dossier-actions"
+                    >
+                      {canMarkPaid && (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          onClick={handleMarkPaidFromDossier}
+                          disabled={updateStatusMutation.isPending}
+                        >
+                          Marcar pagado
+                        </Button>
+                      )}
+                      {showSystemEmailHistoryAction && (
+                        <Button
+                          variant="outlined"
+                          onClick={() => setShowEmailHistory((current) => !current)}
+                          aria-expanded={showEmailHistory}
+                        >
+                          {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
+                        </Button>
+                      )}
+                    </Stack>
+                  )}
+                  {showEmptySystemEmailHistoryHint && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      data-testid="course-registration-empty-email-history-hint"
+                    >
+                      {emptySystemEmailHistoryMessage}
+                    </Typography>
+                  )}
                 </Stack>
               </Paper>
 
