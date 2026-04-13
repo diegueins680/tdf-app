@@ -637,6 +637,10 @@ export default function AdminConsolePage() {
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
   ), [editingUser, selectedRoles]);
   const equivalentRoleWarning = useMemo(() => {
+    if (!hasPendingRoleChanges) {
+      return null;
+    }
+
     const groups = getNavigationEquivalentRoleGroups(selectedRoles);
     if (groups.length === 0) {
       return null;
@@ -645,7 +649,7 @@ export default function AdminConsolePage() {
     return groups
       .map((group) => formatRoleGroupLabel(group))
       .join(' · ');
-  }, [selectedRoles]);
+  }, [hasPendingRoleChanges, selectedRoles]);
   const isRefreshingPanel =
     healthQuery.isFetching
     || auditQuery.isFetching

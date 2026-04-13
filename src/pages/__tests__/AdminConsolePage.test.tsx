@@ -1169,6 +1169,28 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('keeps the role dialog free of equivalent-navigation warnings until the admin makes a change', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser({ roles: ['Admin', 'Manager'] })]);
+
+    renderPage();
+
+    const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
+    await user.click(editButton);
+
+    expect(
+      await screen.findByText(
+        /Roles actuales: Admin, Manager\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Sin cambios pendientes\. Modifica la selección para habilitar Guardar cambios\./i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Estos roles muestran la misma navegación principal en esta app:/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('replaces the single-audit table with a compact first-event summary', async () => {
     mockAuditLogs.mockResolvedValue([
       {
