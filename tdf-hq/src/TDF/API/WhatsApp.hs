@@ -19,6 +19,14 @@ module TDF.API.WhatsApp
 import Servant
 import GHC.Generics (Generic)
 import Data.Aeson
+  ( FromJSON(..)
+  , Value
+  , object
+  , (.=)
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  )
 import Control.Monad (unless)
 import Data.Char (isAlphaNum, isAscii, isAsciiLower, isDigit)
 import Data.Int (Int64)
@@ -96,7 +104,10 @@ type LeadsCompleteApi =
 
 data CompleteReq = CompleteReq { token :: Text, name :: Text, email :: Text }
   deriving (Eq, Show, Generic)
-instance FromJSON CompleteReq
+instance FromJSON CompleteReq where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 leadsCompleteServer :: Connection -> Server LeadsCompleteApi
 leadsCompleteServer conn lid rawReq = do

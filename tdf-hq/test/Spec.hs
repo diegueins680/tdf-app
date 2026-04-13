@@ -1538,6 +1538,15 @@ main = hspec $ do
                 Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
 
     describe "validateLeadCompletionRequest" $ do
+        it "accepts canonical lead-completion request bodies and rejects unexpected keys" $ do
+            case eitherDecode "{\"token\":\"token-123\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical lead completion payload to decode, got: " <> err)
+                Right payload ->
+                    payload `shouldBe` CompleteReq "token-123" "Ada Lovelace" "ada@example.com"
+            (eitherDecode "{\"token\":\"token-123\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"unexpected\":true}" :: Either String CompleteReq)
+                `shouldSatisfy` isLeft
+
         it "trims and canonicalizes meaningful lead-completion payload fields before persistence" $ do
             validateLeadCompletionRequest (CompleteReq " token-123 " " Ada Lovelace " " Ada@Example.com ")
                 `shouldBe` Right (CompleteReq "token-123" "Ada Lovelace" "ada@example.com")
