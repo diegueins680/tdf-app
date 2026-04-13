@@ -272,11 +272,18 @@ function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
 function buildAdminUsersSectionDescription({
   showLastAccessColumn,
   showStatusColumn,
+  includeInlineEditHint,
 }: {
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
+  includeInlineEditHint: boolean;
 }) {
+  const descriptionParts: string[] = [];
   const hiddenColumnSummaries: string[] = [];
+
+  if (includeInlineEditHint) {
+    descriptionParts.push(ADMIN_USERS_INLINE_EDIT_HINT);
+  }
 
   if (!showLastAccessColumn) {
     hiddenColumnSummaries.push(
@@ -290,11 +297,15 @@ function buildAdminUsersSectionDescription({
     );
   }
 
-  if (hiddenColumnSummaries.length === 0) {
+  if (hiddenColumnSummaries.length > 0) {
+    descriptionParts.push(`Vista actual: ${hiddenColumnSummaries.join(' y ')}.`);
+  }
+
+  if (descriptionParts.length === 0) {
     return null;
   }
 
-  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+  return descriptionParts.join(' ');
 }
 
 function buildAuditSectionDescription({
@@ -459,6 +470,7 @@ export default function AdminConsolePage() {
             ? buildAdminUsersSectionDescription({
               showLastAccessColumn: showUsersLastAccessColumn,
               showStatusColumn: showUsersStatusColumn,
+              includeInlineEditHint: showUsersInlineEditHint,
             })
             : null
         )
@@ -706,17 +718,12 @@ export default function AdminConsolePage() {
           <Box>
             <Typography variant="h6">Usuarios y roles</Typography>
             {usersSectionDescription && (
-              <Typography variant="body2" color="text.secondary">
-                {usersSectionDescription}
-              </Typography>
-            )}
-            {showUsersInlineEditHint && (
               <Typography
-                id={ADMIN_USERS_INLINE_EDIT_HINT_ID}
+                id={showUsersInlineEditHint ? ADMIN_USERS_INLINE_EDIT_HINT_ID : undefined}
                 variant="body2"
                 color="text.secondary"
               >
-                {ADMIN_USERS_INLINE_EDIT_HINT}
+                {usersSectionDescription}
               </Typography>
             )}
           </Box>

@@ -670,7 +670,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('shows one shared inline-edit hint for the roles table while hiding empty comparison columns', async () => {
+  it('condenses inline editing guidance and hidden-column notes into one shared helper line', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -687,12 +687,13 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+          /Haz clic sobre un rol para editarlo desde esta misma vista\. Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/^Vista actual:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/^Haz clic sobre un rol para editarlo desde esta misma vista\.$/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Roles/i })).toBeInTheDocument();
       expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
