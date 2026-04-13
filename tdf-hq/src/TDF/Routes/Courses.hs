@@ -26,7 +26,7 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (Day)
@@ -87,7 +87,8 @@ data UTMTags = UTMTags
   , content  :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON UTMTags
+instance FromJSON UTMTags where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON UTMTags
 
 data CourseRegistrationRequest = CourseRegistrationRequest
@@ -99,7 +100,8 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   , utm       :: Maybe UTMTags
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationRequest
+instance FromJSON CourseRegistrationRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationRequest
 
 data CourseRegistrationResponse = CourseRegistrationResponse
@@ -240,3 +242,6 @@ type WhatsAppWebhookAPI =
 type WhatsAppHooksAPI =
        "hooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
   :<|> "hooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+
+strictObjectOptions :: Options
+strictObjectOptions = defaultOptions { rejectUnknownFields = True }
