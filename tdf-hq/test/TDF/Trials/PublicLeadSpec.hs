@@ -45,6 +45,7 @@ import TDF.Trials.Server
   , validatePublicSubjectIdInput
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
+  , validateTeacherSubjectIdsInput
   , validateTrialScheduleInput
   )
 import qualified TDF.Models as Models
@@ -235,6 +236,22 @@ spec = do
                 expectationFailure ("Expected invalid subjectId to be rejected, got " <> show value)
       assertRejected 0
       assertRejected (-3)
+
+  describe "validateTeacherSubjectIdsInput" $ do
+    it "accepts explicit clears and removes duplicate positive ids without changing intent" $ do
+      validateTeacherSubjectIdsInput [] `shouldBe` Right []
+      validateTeacherSubjectIdsInput [7, 3, 7, 5, 3] `shouldBe` Right [7, 3, 5]
+
+    it "rejects non-positive ids instead of silently treating them as a subject clear or partial update" $ do
+      let assertRejected rawSubjectIds =
+            case validateTeacherSubjectIdsInput rawSubjectIds of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "subjectIds must contain only positive integers"
+              Right value ->
+                expectationFailure ("Expected invalid subject ids to be rejected, got " <> show value)
+      assertRejected [0]
+      assertRejected [4, -1]
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $

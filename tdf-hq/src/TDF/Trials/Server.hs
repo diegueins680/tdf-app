@@ -453,6 +453,20 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validateTeacherSubjectIdsInput :: [Int] -> Either ServerError [Int]
+validateTeacherSubjectIdsInput rawSubjectIds
+  | any (<= 0) rawSubjectIds =
+      Left err400 { errBody = "subjectIds must contain only positive integers" }
+  | otherwise =
+      Right (dedupeSubjectIds rawSubjectIds)
+  where
+    dedupeSubjectIds = go Set.empty
+
+    go _ [] = []
+    go seen (subjectIdInt:rest)
+      | subjectIdInt `Set.member` seen = go seen rest
+      | otherwise = subjectIdInt : go (Set.insert subjectIdInt seen) rest
+
 validateTrialAssignInput :: Int -> TrialAssignIn -> Either ServerError (Int, TrialAssignIn)
 validateTrialAssignInput requestIdInt input@TrialAssignIn{..}
   | requestIdInt <= 0 =
@@ -1645,8 +1659,8 @@ privateTrialsServer user@AuthedUser{..} =
     teacherSubjectsUpdateH :: Int -> TeacherSubjectsUpdate -> AppM TeacherDTO
     teacherSubjectsUpdateH teacherId TeacherSubjectsUpdate{..} = do
       ensureSchoolAccess
-      let subjectIdsDistinct = distinct (filter (> 0) subjectIds)
-          teacherKey = intKey teacherId :: PartyId
+      subjectIdsDistinct <- either (liftIO . throwIO) pure (validateTeacherSubjectIdsInput subjectIds)
+      let teacherKey = intKey teacherId :: PartyId
       ensureTeacherOrStaff teacherKey
       mTeacher <- get teacherKey
       case mTeacher of
