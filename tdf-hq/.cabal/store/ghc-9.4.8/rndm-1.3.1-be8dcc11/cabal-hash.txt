@@ -1,0 +1,11 @@
+pkgid: random-1.3.1
+component: ComponentLib
+src: d840ac83f265b0cfa2a678f8ec78627eb50cf9be2f067c52c8a4239c29b71a35
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, mtl-2.2.2, spltmx-0.1.3.2-ccbeb478, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

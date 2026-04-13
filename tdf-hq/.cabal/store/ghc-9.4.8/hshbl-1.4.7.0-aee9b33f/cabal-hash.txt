@@ -1,0 +1,12 @@
+pkgid: hashable-1.4.7.0
+component: ComponentLib
+src: 3baee4c9027a08830d148ec524cbc0471de645e1e8426d46780ef2758df0e8da
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, deepseq-1.4.8.0, filepath-1.4.2.2, ghc-bignum-1.3, ghc-prim-0.9.1, s-strng-2.0.10-18daf51e, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -arch-native +integer-gmp -random-initial-seed
+shared-lib: True
+stripped-exe: False
+debug-info: 0

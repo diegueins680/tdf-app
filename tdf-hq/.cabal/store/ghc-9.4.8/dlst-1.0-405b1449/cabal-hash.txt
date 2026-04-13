@@ -1,0 +1,12 @@
+pkgid: dlist-1.0
+component: ComponentLib
+src: 173d637328bb173fcc365f30d29ff4a94292a1e0e5558aeb3dfc11de81510115
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -werror
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: safe-exceptions-0.1.7.4
+component: ComponentLib
+src: 3c51d8d50c9b60ff8bf94f942fd92e3bea9e62c5afa778dfc9f707b79da41ef6
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, exceptions-0.10.5, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

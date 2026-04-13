@@ -1,0 +1,12 @@
+pkgid: some-1.0.6
+component: ComponentLib
+src: f7a606ad5df4a07459986364f7d739eb653495fbbe1d7158582fb29a4584bfb9
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-rphns-0.9.4-98e58666, deepseq-1.4.8.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +newtype-unsafe
+shared-lib: True
+stripped-exe: False
+debug-info: 0

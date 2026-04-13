@@ -1,0 +1,11 @@
+pkgid: OneTuple-0.4.2.1
+component: ComponentLib
+src: c504132551e9c8f5afe6c8c8d5bf1ed208f4da98b0cb4af59400bd9bd836e03e
+pkg-config-deps: 
+deps: base-4.17.2.1, ghc-prim-0.9.1, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

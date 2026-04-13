@@ -1,0 +1,11 @@
+pkgid: data-default-class-0.2.0.0
+component: ComponentLib
+src: 0ae530c4fb0bd6c8a8ba399429ccd9c75f9c7696049117178f4ceeb2bd08d5b4
+pkg-config-deps: 
+deps: dt-dflt-0.8.0.2-7fb53fa0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

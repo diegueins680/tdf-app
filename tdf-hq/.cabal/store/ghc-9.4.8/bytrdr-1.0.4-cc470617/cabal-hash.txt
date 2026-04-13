@@ -1,0 +1,10 @@
+pkgid: byteorder-1.0.4
+src: bd20bbb586947f99c38a4c93d9d0266f49f6fc581767b51ba568f6d5d52d2919
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

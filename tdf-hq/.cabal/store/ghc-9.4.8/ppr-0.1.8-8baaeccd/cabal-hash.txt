@@ -1,0 +1,10 @@
+pkgid: appar-0.1.8
+src: c4ceeddc26525b58d82c41b6d3e32141371a200a6794aae185b6266ccc81631f
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

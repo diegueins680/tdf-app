@@ -23,6 +23,7 @@ module TDF.ServerAuth
   , signupEmailExists
   , validateRequestedSignupRoles
   , validateOptionalSignupClaimArtistId
+  , validateOptionalSignupPhone
   , validateSignupFanArtistIds
   ) where
 
@@ -191,6 +192,48 @@ validateSignupFanArtistIds (Just rawArtistIds) =
                   (TE.encodeUtf8 "fanArtistIds must contain only positive integers")
             }
 
+validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalSignupPhone Nothing = Right Nothing
+validateOptionalSignupPhone (Just rawPhone) =
+  case cleanOptional (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizeAuthPhoneNumber rawPhone of
+        Just phoneVal -> Right (Just phoneVal)
+        Nothing ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "phone must be a valid phone number")
+            }
+
+normalizeAuthPhoneNumber :: Text -> Maybe Text
+normalizeAuthPhoneNumber raw =
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      digitCount = T.length onlyDigits
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+   in
+    if T.null onlyDigits
+         || digitCount < 8
+         || digitCount > 15
+         || hasInvalidChars
+         || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
+
 sessionServer :: AuthedUser -> ServerT Api.SessionAPI AppM
 sessionServer user =
        currentSession user
@@ -272,7 +315,6 @@ signup SignupRequest
       passwordClean = T.strip rawPassword
       firstClean = T.strip rawFirst
       lastClean = T.strip rawLast
-      phoneClean = fmap T.strip rawPhone
       internshipSkillsClean = cleanOptional rawInternshipSkills
       internshipAreasClean = cleanOptional rawInternshipAreas
   when (T.null emailInput) $ throwBadRequest "Email is required"
@@ -286,6 +328,7 @@ signup SignupRequest
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   when (maybe False (< 0) rawInternshipRequiredHours) $
     throwBadRequest "Internship required hours must be non-negative"
+  phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
   sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)

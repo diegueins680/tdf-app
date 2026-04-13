@@ -1,0 +1,12 @@
+pkgid: tagged-0.8.10
+component: ComponentLib
+src: 17ef791eb4caf314a3b4b158827a0f1f4b695c2a24af0875f09e3d8c10f56c5d
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +deepseq +template-haskell
+shared-lib: True
+stripped-exe: False
+debug-info: 0

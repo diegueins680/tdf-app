@@ -1,0 +1,11 @@
+pkgid: unix-compat-0.7.4.1
+component: ComponentLib
+src: 3f9611624a100c75e672d900e63fe7a0e595615a34e6605662edaff151e44054
+pkg-config-deps: 
+deps: base-4.17.2.1, unix-2.7.3
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

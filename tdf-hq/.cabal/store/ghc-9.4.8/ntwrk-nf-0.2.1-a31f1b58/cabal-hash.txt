@@ -1,0 +1,11 @@
+pkgid: network-info-0.2.1
+component: ComponentLib
+src: 9b2d88312fc8280351d5003200cc07decbb865f85d3aa7b1094b238bd6a8b404
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

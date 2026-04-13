@@ -1,0 +1,12 @@
+pkgid: cereal-0.5.8.3
+component: ComponentLib
+src: 99905220661b26e5bd91130bd9772554938608a5b1d717240a6eb331121e0f6a
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, ghc-prim-0.9.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -bytestring-builder
+shared-lib: True
+stripped-exe: False
+debug-info: 0

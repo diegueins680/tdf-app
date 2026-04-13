@@ -70,6 +70,7 @@ import TDF.ServerAuth
     , runPasswordResetConfirm
     , signupEmailExists
     , validateOptionalSignupClaimArtistId
+    , validateOptionalSignupPhone
     , validateRequestedSignupRoles
     , validateSignupFanArtistIds
     )
@@ -455,6 +456,26 @@ spec = describe "TDF.Server helpers" $ do
                 Right rolesVal ->
                     expectationFailure
                         ("Expected forbidden signup roles to be rejected, got: " <> show rolesVal)
+
+    describe "validateOptionalSignupPhone" $ do
+        it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
+            validateOptionalSignupPhone Nothing `shouldBe` Right Nothing
+            validateOptionalSignupPhone (Just "   ") `shouldBe` Right Nothing
+            validateOptionalSignupPhone (Just " +593 99 123 4567 ")
+                `shouldBe` Right (Just "+593991234567")
+
+        it "rejects malformed or implausible signup phones instead of storing free-form contact text" $ do
+            let assertInvalid rawPhone = case validateOptionalSignupPhone (Just rawPhone) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "phone must be a valid phone number"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid signup phone to be rejected, got: " <> show value)
+            assertInvalid "---"
+            assertInvalid "call me at 099 123 4567"
+            assertInvalid "12345"
+            assertInvalid "+1234567890123456"
 
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $

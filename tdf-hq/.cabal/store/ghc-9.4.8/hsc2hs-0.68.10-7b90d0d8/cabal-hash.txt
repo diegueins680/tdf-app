@@ -1,0 +1,12 @@
+pkgid: hsc2hs-0.68.10
+component: ComponentExe (UnqualComponentName "hsc2hs")
+src: 6f4e34d788fe2ca7091ee0a10307ee8a7c060a1ba890f2bffad16a7d4d5cef76
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, directory-1.3.7.1, filepath-1.4.2.2, process-1.6.18.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -in-ghc-tree
+shared-lib: True
+stripped-exe: False
+debug-info: 0

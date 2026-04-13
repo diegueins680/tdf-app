@@ -1,0 +1,12 @@
+pkgid: integer-logarithms-1.0.5
+component: ComponentLib
+src: 66dff6f1f778fe1ec689139fe125cd4e6a95643734c651c891eafa2c50669459
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -check-bounds +integer-gmp
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,12 @@
+pkgid: ech-config-0.0.1
+component: ComponentLib
+src: b236b6d7ea1385c280b76051edc7d8f6db31c9cb7b35df5c06f5a0bd75b4feba
+pkg-config-deps: 
+deps: base-4.17.2.1, bs16-bytstrng-1.0.2.0-32450f24, bytestring-0.11.5.3, filepath-1.4.2.2, ntwrk-byt-rdr-0.1.7-05ade90a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -devel
+shared-lib: True
+stripped-exe: False
+debug-info: 0

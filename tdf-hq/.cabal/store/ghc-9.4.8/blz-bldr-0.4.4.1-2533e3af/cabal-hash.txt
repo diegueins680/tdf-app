@@ -1,0 +1,11 @@
+pkgid: blaze-builder-0.4.4.1
+component: ComponentLib
+src: 971d360428ac97af9a4e55e4f2c23649f6cedc0ce5d6e94d520e663f33ea5113
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

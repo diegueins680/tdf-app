@@ -1,0 +1,11 @@
+pkgid: base-unicode-symbols-0.2.4.2
+src: 4364d6c403616e9ec0c240c4cb450c66af43ea8483d73c315e96f4ba3cb97062
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +base-4-8 -old-base
+shared-lib: True
+stripped-exe: False
+debug-info: 0
