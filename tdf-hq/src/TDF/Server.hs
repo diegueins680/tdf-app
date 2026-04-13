@@ -4552,13 +4552,24 @@ updateParty user pidI req = do
 addRole :: AuthedUser -> Int64 -> RolePayload -> AppM NoContent
 addRole user pidI (RolePayload roleTxt) = do
   requireModule user ModuleAdmin
-  Env pool _ <- ask
-  let pid  = toSqlKey pidI :: Key Party
   role <- either throwError pure (validateRolePayload roleTxt)
-  liftIO $ flip runSqlPool pool $ void $ upsert
+  pid <- runDB (resolvePartyRoleAssignmentTarget pidI) >>= either throwError pure
+  runDB $ void $ upsert
     (PartyRole pid role True)
     [ PartyRoleActive =. True ]
   pure NoContent
+
+resolvePartyRoleAssignmentTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
+resolvePartyRoleAssignmentTarget rawPartyId =
+  case validatePositiveIdField "partyId" rawPartyId of
+    Left err -> pure (Left err)
+    Right partyId -> do
+      let pid = toSqlKey partyId :: PartyId
+      mParty <- get pid
+      pure $
+        case mParty of
+          Nothing -> Left err404 { errBody = "Party not found" }
+          Just _ -> Right pid
 
 validateRolePayload :: Text -> Either ServerError RoleEnum
 validateRolePayload raw =

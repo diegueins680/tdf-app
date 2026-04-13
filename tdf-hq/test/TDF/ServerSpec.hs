@@ -64,6 +64,7 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validatePublicBookingStartAt
+    , resolvePartyRoleAssignmentTarget
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
@@ -172,6 +173,54 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "resolvePartyRoleAssignmentTarget" $ do
+        it "rejects non-positive party ids before attempting any role assignment" $ do
+            result <- runAuthSqlite $
+                resolvePartyRoleAssignmentTarget 0
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "partyId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid party id to be rejected, got: " <> show value)
+
+        it "returns 404 for unknown parties instead of surfacing a database foreign-key failure" $ do
+            result <- runAuthSqlite $
+                resolvePartyRoleAssignmentTarget 999999
+            case result of
+                Left serverErr ->
+                    errHTTPCode serverErr `shouldBe` 404
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown party role assignment to be rejected, got: " <> show value)
+
+        it "resolves existing parties before the role upsert runs" $ do
+            (expectedPartyId, result) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Role Assignment Target"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "roles@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                resolved <- resolvePartyRoleAssignmentTarget (fromSqlKey partyId)
+                pure (partyId, resolved)
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected existing party role assignment target to resolve, got: " <> show serverErr)
+                Right resolvedKey ->
+                    resolvedKey `shouldBe` expectedPartyId
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $
@@ -1399,6 +1448,16 @@ initializeAuthSchema = do
         \)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party_role\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"role\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"party_id\" INTEGER NOT NULL,\
@@ -1417,16 +1476,6 @@ initializeAuthSchema = do
         \\"label\" VARCHAR NULL,\
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
-        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
-        \)"
-        []
-    rawExecute
-        "CREATE TABLE IF NOT EXISTS \"party_role\" (\
-        \\"id\" INTEGER PRIMARY KEY,\
-        \\"party_id\" INTEGER NOT NULL,\
-        \\"role\" VARCHAR NOT NULL,\
-        \\"active\" BOOLEAN NOT NULL,\
-        \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
