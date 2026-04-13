@@ -90,6 +90,7 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
+const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
 const ADMIN_USERS_PAGE_INTRO =
   'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
@@ -238,6 +239,7 @@ export default function AdminUsersPage() {
   const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
+  const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
@@ -285,8 +287,10 @@ export default function AdminUsersPage() {
       : '';
   }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
   const viewGuidance = useMemo(
-    () => [visibleUsersSummary, activeScopeSummary].filter(Boolean).join(' '),
-    [activeScopeSummary, visibleUsersSummary],
+    () => [visibleUsersSummary, showSearchThresholdGuidance ? SEARCH_THRESHOLD_GUIDANCE : '', activeScopeSummary]
+      .filter(Boolean)
+      .join(' '),
+    [activeScopeSummary, showSearchThresholdGuidance, visibleUsersSummary],
   );
   const generalIntro = hasVisibleWhatsAppAction
     ? ADMIN_USERS_PAGE_INTRO

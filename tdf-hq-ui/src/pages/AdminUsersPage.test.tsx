@@ -513,7 +513,9 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('2 usuarios en esta vista.');
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+        );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-admin');
@@ -547,11 +549,15 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
         );
         expect(countExactText(
           container,
           '2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto.',
+        )).toBe(0);
+        expect(countExactText(
+          container,
+          'La búsqueda aparecerá desde el tercer usuario.',
         )).toBe(0);
         expect(countExactText(
           container,
@@ -891,7 +897,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin, Teacher · Módulos: admin, crm.',
         );
         expect(countExactText(
           container,
@@ -1149,6 +1155,7 @@ describe('AdminUsersPage', () => {
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).toContain('3 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('La búsqueda aparecerá desde el tercer usuario.');
         expect(container.textContent).not.toContain('Busca por identidad');
         expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
       });
