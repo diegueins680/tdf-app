@@ -371,7 +371,13 @@ applyReplyOutcome
   -> SqlPersistT IO ()
 applyReplyOutcome now bodyVal sendResult mReplyToKey mReplyToExternalId =
   case mReplyToKey of
-    Just replyKey -> update replyKey (replyUpdates sendResult bodyVal now)
+    Just replyKey -> do
+      mReplyTarget <- get replyKey
+      case mReplyTarget of
+        Just replyTarget
+          | ME.whatsAppMessageDirection replyTarget == "incoming" ->
+              update replyKey (replyUpdates sendResult bodyVal now)
+        _ -> pure ()
     Nothing ->
       case mReplyToExternalId of
         Nothing -> pure ()

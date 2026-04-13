@@ -7,10 +7,11 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (object)
+import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (entityVal)
+import Database.Persist (entityVal, get, insert)
 import Database.Persist.Sql (SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
@@ -59,6 +60,67 @@ spec = do
       let externalId = ME.whatsAppMessageExternalId (entityVal stored)
       externalId `shouldSatisfy` (\val -> not (T.null (T.strip val)))
       externalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
+
+    it "applies reply outcomes only to incoming reply targets when linked by message id" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incomingReplySendResult =
+            Right SendTextResult
+              { sendTextPayload = object []
+              , sendTextMessageId = Just "outgoing-reply-1"
+              }
+          outgoingReplySendResult =
+            Right SendTextResult
+              { sendTextPayload = object []
+              , sendTextMessageId = Just "outgoing-reply-2"
+              }
+      (mIncomingTarget, mOutgoingTarget) <- runWhatsAppHistorySql $ do
+        incomingKey <- insert (seedWhatsAppMessage now "incoming-target" "incoming")
+        outgoingKey <- insert (seedWhatsAppMessage now "outgoing-target" "outgoing")
+        _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = "+593991234567"
+          , owrRecipientPartyId = Nothing
+          , owrRecipientName = Just "Ada"
+          , owrRecipientEmail = Nothing
+          , owrActorPartyId = Nothing
+          , owrBody = "Gracias por escribirnos"
+          , owrSource = Just "history_spec"
+          , owrReplyToMessageId = Just incomingKey
+          , owrReplyToExternalId = Just "incoming-target"
+          , owrResendOfMessageId = Nothing
+          , owrMetadata = Nothing
+          }
+          incomingReplySendResult
+        _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = "+593991234567"
+          , owrRecipientPartyId = Nothing
+          , owrRecipientName = Just "Ada"
+          , owrRecipientEmail = Nothing
+          , owrActorPartyId = Nothing
+          , owrBody = "Seguimiento interno"
+          , owrSource = Just "history_spec"
+          , owrReplyToMessageId = Just outgoingKey
+          , owrReplyToExternalId = Just "outgoing-target"
+          , owrResendOfMessageId = Nothing
+          , owrMetadata = Nothing
+          }
+          outgoingReplySendResult
+        (,) <$> get incomingKey <*> get outgoingKey
+
+      case mIncomingTarget of
+        Nothing ->
+          expectationFailure "Expected seeded incoming reply target to remain readable"
+        Just incomingTarget -> do
+          ME.whatsAppMessageRepliedAt incomingTarget `shouldSatisfy` isJust
+          ME.whatsAppMessageReplyText incomingTarget `shouldBe` Just "Gracias por escribirnos"
+          ME.whatsAppMessageReplyStatus incomingTarget `shouldBe` "sent"
+
+      case mOutgoingTarget of
+        Nothing ->
+          expectationFailure "Expected seeded outgoing reply target to remain readable"
+        Just outgoingTarget -> do
+          ME.whatsAppMessageRepliedAt outgoingTarget `shouldBe` Nothing
+          ME.whatsAppMessageReplyText outgoingTarget `shouldBe` Nothing
+          ME.whatsAppMessageReplyStatus outgoingTarget `shouldBe` "sent"
 
 runWhatsAppHistorySql :: SqlPersistT IO a -> IO a
 runWhatsAppHistorySql action =
@@ -133,3 +195,38 @@ initializeWhatsAppHistorySchema = do
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
+
+seedWhatsAppMessage :: UTCTime -> Text -> Text -> ME.WhatsAppMessage
+seedWhatsAppMessage now externalId direction =
+  ME.WhatsAppMessage
+    { ME.whatsAppMessageExternalId = externalId
+    , ME.whatsAppMessageSenderId = "+593991234567"
+    , ME.whatsAppMessageSenderName = Just "Ada"
+    , ME.whatsAppMessagePartyId = Nothing
+    , ME.whatsAppMessageActorPartyId = Nothing
+    , ME.whatsAppMessagePhoneE164 = Just "+593991234567"
+    , ME.whatsAppMessageContactEmail = Nothing
+    , ME.whatsAppMessageText = Just "Original message"
+    , ME.whatsAppMessageDirection = direction
+    , ME.whatsAppMessageAdExternalId = Nothing
+    , ME.whatsAppMessageAdName = Nothing
+    , ME.whatsAppMessageCampaignExternalId = Nothing
+    , ME.whatsAppMessageCampaignName = Nothing
+    , ME.whatsAppMessageMetadata = Nothing
+    , ME.whatsAppMessageReplyStatus = if direction == "incoming" then "pending" else "sent"
+    , ME.whatsAppMessageHoldReason = Nothing
+    , ME.whatsAppMessageHoldRequiredFields = Nothing
+    , ME.whatsAppMessageLastAttemptAt = Nothing
+    , ME.whatsAppMessageAttemptCount = 0
+    , ME.whatsAppMessageRepliedAt = Nothing
+    , ME.whatsAppMessageReplyText = Nothing
+    , ME.whatsAppMessageReplyError = Nothing
+    , ME.whatsAppMessageDeliveryStatus = if direction == "incoming" then "received" else "sent"
+    , ME.whatsAppMessageDeliveryUpdatedAt = Nothing
+    , ME.whatsAppMessageDeliveryError = Nothing
+    , ME.whatsAppMessageTransportPayload = Nothing
+    , ME.whatsAppMessageStatusPayload = Nothing
+    , ME.whatsAppMessageSource = Just "history_spec_seed"
+    , ME.whatsAppMessageResendOfMessageId = Nothing
+    , ME.whatsAppMessageCreatedAt = now
+    }
