@@ -353,8 +353,8 @@ function buildAuditSectionDescription({
 
 function formatFirstRunAdditionalModulesActionLabel(count: number) {
   return count === 1
-    ? 'Opcional: ver 1 módulo adicional'
-    : `Opcional: ver ${count} módulos adicionales`;
+    ? 'Opcional: ver 1 módulo adicional fuera del recorrido inicial'
+    : `Opcional: ver ${count} módulos adicionales fuera del recorrido inicial`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -513,9 +513,6 @@ export default function AdminConsolePage() {
             : null
         )
     );
-  const firstRunAdditionalModulesDescription = consoleCards.length === 1
-    ? 'Hay 1 módulo adicional fuera del recorrido inicial. Revísalo solo si ya necesitas ese flujo.'
-    : `Hay ${consoleCards.length} módulos adicionales fuera del recorrido inicial. Revísalos solo si ya necesitas esos flujos.`;
   const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards.length);
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
   const showFirstRunAdditionalModulesShowAction =
@@ -656,11 +653,6 @@ export default function AdminConsolePage() {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                 Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
               </Typography>
-              {consoleCards.length > 0 && !shouldShowAdditionalModuleCards && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  {firstRunAdditionalModulesDescription}
-                </Typography>
-              )}
             </Box>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
               {GETTING_STARTED_ADMIN_SECTIONS.map((section) => (

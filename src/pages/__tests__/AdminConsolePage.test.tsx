@@ -351,16 +351,19 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(
-        screen.getByText(
-          /Hay 1 módulo adicional fuera del recorrido inicial\. Revísalo solo si ya necesitas ese flujo\./i,
+        within(getFirstRunAlert()).getByRole(
+          'button',
+          { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
         ),
-      ).toBeInTheDocument();
-      expect(
-        within(getFirstRunAlert()).getByRole('button', { name: /Opcional: ver 1 módulo adicional/i }),
       ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
+    expect(
+      screen.queryByText(
+        /Hay 1 módulo adicional fuera del recorrido inicial\. Revísalo solo si ya necesitas ese flujo\./i,
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -380,7 +383,10 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
 
     await user.click(
-      within(getFirstRunAlert()).getByRole('button', { name: /Opcional: ver 1 módulo adicional/i }),
+      within(getFirstRunAlert()).getByRole(
+        'button',
+        { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+      ),
     );
 
     expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
@@ -436,14 +442,22 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /Opcional: ver 1 módulo adicional/i }),
+        screen.getByRole(
+          'button',
+          { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+        ),
       ).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Opcional: ver 1 módulo adicional/i }));
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+      ),
+    );
 
     expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
