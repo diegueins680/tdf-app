@@ -252,7 +252,7 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
-  const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
+  const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const activeScopeSummary = showActiveScopeSummary
