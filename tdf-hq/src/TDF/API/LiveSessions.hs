@@ -14,8 +14,10 @@ module TDF.API.LiveSessions
 
 import           Data.Aeson               (FromJSON(..), Object, Value, eitherDecodeStrict', withObject, (.:?))
 import qualified Data.Aeson.Key           as AesonKey
+import qualified Data.Aeson.KeyMap        as AesonKeyMap
 import           Data.Aeson.Types         (Parser)
 import           Data.Char                (isAsciiLower, isDigit, isSpace)
+import           Control.Monad            (unless)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Data.Text.Encoding       (encodeUtf8)
@@ -48,7 +50,22 @@ data LiveSessionMusicianPayload = LiveSessionMusicianPayload
   } deriving (Show, Generic)
 
 instance FromJSON LiveSessionMusicianPayload where
-  parseJSON = withAliasedObject "LiveSessionMusicianPayload" $ \obj ->
+  parseJSON = withAliasedObject "LiveSessionMusicianPayload"
+    [ "partyId"
+    , "lsmPartyId"
+    , "name"
+    , "lsmName"
+    , "email"
+    , "lsmEmail"
+    , "instrument"
+    , "lsmInstrument"
+    , "role"
+    , "lsmRole"
+    , "notes"
+    , "lsmNotes"
+    , "isExisting"
+    , "lsmIsExisting"
+    ] $ \obj ->
     LiveSessionMusicianPayload
       <$> parseAliasedOptionalField obj "partyId" "lsmPartyId"
       <*> parseAliasedRequiredField obj "name" "lsmName"
@@ -67,7 +84,18 @@ data LiveSessionSongPayload = LiveSessionSongPayload
   } deriving (Show, Generic)
 
 instance FromJSON LiveSessionSongPayload where
-  parseJSON = withAliasedObject "LiveSessionSongPayload" $ \obj ->
+  parseJSON = withAliasedObject "LiveSessionSongPayload"
+    [ "title"
+    , "lssTitle"
+    , "bpm"
+    , "lssBpm"
+    , "songKey"
+    , "lssSongKey"
+    , "lyrics"
+    , "lssLyrics"
+    , "sortOrder"
+    , "lssSortOrder"
+    ] $ \obj ->
     LiveSessionSongPayload
       <$> parseAliasedRequiredField obj "title" "lssTitle"
       <*> parseAliasedOptionalField obj "bpm" "lssBpm"
@@ -308,8 +336,19 @@ readMaybeDay txt =
     Right
     (parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack txt) :: Maybe Day)
 
-withAliasedObject :: String -> (Object -> Parser a) -> Value -> Parser a
-withAliasedObject = withObject
+withAliasedObject :: String -> [Text] -> (Object -> Parser a) -> Value -> Parser a
+withAliasedObject label allowedFields parser = withObject label $ \obj -> do
+  let unexpectedFields =
+        filter (`notElem` allowedFields) $
+          map AesonKey.toText (AesonKeyMap.keys obj)
+  unless (null unexpectedFields) $
+    fail
+      ( "Unexpected fields in "
+          <> label
+          <> ": "
+          <> T.unpack (T.intercalate ", " unexpectedFields)
+      )
+  parser obj
 
 parseAliasedRequiredField
   :: (Eq a, FromJSON a)

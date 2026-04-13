@@ -1770,6 +1770,30 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected conflicting musician aliases to be rejected, got: " <> show payload)
 
+        it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"isExisting\":false,\"nickname\":\"Synths\"}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected fields in LiveSessionMusicianPayload: nickname"
+                Right payload ->
+                    expectationFailure ("Expected unexpected musician field to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"tempo\":120}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected fields in LiveSessionSongPayload: tempo"
+                Right payload ->
+                    expectationFailure ("Expected unexpected setlist field to be rejected, got: " <> show payload)
+
         it "rejects accepted terms without a terms version" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
