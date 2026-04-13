@@ -458,6 +458,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
+  it('ignores placeholder-only preview cards so first-run stays focused on real admin workflows', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-placeholder',
+          title: 'Tokens de servicio',
+          body: [
+            'Estamos trabajando en esta vista. Próximamente encontrarás la funcionalidad completa aquí.',
+            'Si necesitas priorizar esta sección, comparte los requisitos con el equipo de producto.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Mostrar 1 módulo adicional/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Estamos trabajando en esta vista\. Próximamente encontrarás la funcionalidad completa aquí\./i,
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows the first-run checklist only when the console is actually empty', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([

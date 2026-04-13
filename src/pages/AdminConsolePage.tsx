@@ -62,6 +62,12 @@ const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'gestion de usuarios',
   'auditoria reciente',
 ]);
+const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
+  'estamos trabajando en esta vista',
+  'proximamente encontraras la funcionalidad completa aqui',
+  'si necesitas priorizar esta seccion',
+  'comparte los requisitos con el equipo de producto',
+] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
   { label: '2. Usuarios y roles', targetId: 'admin-users-and-roles' },
@@ -99,12 +105,20 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
       .map((paragraph) => paragraph.trim())
       .filter((paragraph) => paragraph.length > 0);
 
-    if (title === '' || body.length === 0) {
+    if (title === '' || body.length === 0 || body.every(isPlaceholderAdminConsoleParagraph)) {
       return [];
     }
 
     return [{ ...card, title, body }];
   });
+}
+
+function isPlaceholderAdminConsoleParagraph(paragraph: string) {
+  const normalizedParagraph = normalizeAdminConsoleCardKey(paragraph);
+
+  return ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS.some((fragment) => (
+    normalizedParagraph.includes(fragment)
+  ));
 }
 
 function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
