@@ -413,14 +413,26 @@ normalizeProposalStatus rawStatus =
 
 isValidProposalEmail :: Text -> Bool
 isValidProposalEmail candidate =
-  case T.splitOn "@" candidate of
+  case T.split (== '@') candidate of
     [localPart, domain] ->
-      not (T.null localPart)
+      isValidProposalEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidProposalDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidProposalEmailLocalPart :: Text -> Bool
+isValidProposalEmailLocalPart localPart =
+  not (T.null localPart)
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidProposalEmailLocalChar localPart
+
+isValidProposalEmailLocalChar :: Char -> Bool
+isValidProposalEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidProposalDomainLabel :: Text -> Bool
 isValidProposalDomainLabel label =

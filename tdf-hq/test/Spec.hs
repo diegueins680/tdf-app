@@ -1020,6 +1020,10 @@ main = hspec $ do
             assertInvalid "sales@example..com"
             assertInvalid "sales@-example.com"
             assertInvalid "sales@example-.com"
+            assertInvalid ".sales@example.com"
+            assertInvalid "sales.@example.com"
+            assertInvalid "sales..team@example.com"
+            assertInvalid "sales()@example.com"
 
     describe "validateOptionalProposalClientPartyId" $ do
         it "preserves omitted ids and accepts positive client party ids" $ do
