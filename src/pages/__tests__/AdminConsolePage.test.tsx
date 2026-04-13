@@ -355,7 +355,7 @@ describe('AdminConsolePage', () => {
           /Hay 1 módulo adicional fuera del recorrido inicial\. Revísalo solo si ya necesitas ese flujo\./i,
         ),
       ).toBeInTheDocument();
-      expect(within(getFirstRunAlert()).getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
+      expect(within(getFirstRunAlert()).getByRole('button', { name: /4\. Ver 1 módulo adicional/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
@@ -371,8 +371,9 @@ describe('AdminConsolePage', () => {
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).not.toBeInTheDocument();
+    expect(within(getFirstRunAlert()).queryByRole('button', { name: /Mostrar 1 módulo adicional/i })).not.toBeInTheDocument();
 
-    await user.click(within(getFirstRunAlert()).getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
+    await user.click(within(getFirstRunAlert()).getByRole('button', { name: /4\. Ver 1 módulo adicional/i }));
 
     expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
     expect(
@@ -426,13 +427,13 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /4\. Ver 1 módulo adicional/i })).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Mostrar 1 módulo adicional/i }));
+    await user.click(screen.getByRole('button', { name: /4\. Ver 1 módulo adicional/i }));
 
     expect(await screen.findByText('Módulos adicionales')).toBeInTheDocument();
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
@@ -501,7 +502,7 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Mostrar 1 módulo adicional/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /4\. Ver 1 módulo adicional/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(

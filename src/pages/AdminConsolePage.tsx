@@ -351,6 +351,12 @@ function buildAuditSectionDescription({
   return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
 }
 
+function formatFirstRunAdditionalModulesActionLabel(count: number) {
+  return count === 1
+    ? '4. Ver 1 módulo adicional'
+    : `4. Ver ${count} módulos adicionales`;
+}
+
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   ACTIVE: { label: 'Activo', color: 'success' },
   INVITED: { label: 'Invitado', color: 'info' },
@@ -507,12 +513,10 @@ export default function AdminConsolePage() {
             : null
         )
     );
-  const additionalModulesCountLabel = consoleCards.length === 1
-    ? '1 módulo adicional'
-    : `${consoleCards.length} módulos adicionales`;
   const firstRunAdditionalModulesDescription = consoleCards.length === 1
     ? 'Hay 1 módulo adicional fuera del recorrido inicial. Revísalo solo si ya necesitas ese flujo.'
     : `Hay ${consoleCards.length} módulos adicionales fuera del recorrido inicial. Revísalos solo si ya necesitas esos flujos.`;
+  const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards.length);
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
   const showFirstRunAdditionalModulesShowAction =
     showGettingStartedGuidance
@@ -670,6 +674,16 @@ export default function AdminConsolePage() {
                   href={`#${section.targetId}`}
                 />
               ))}
+              {showFirstRunAdditionalModulesShowAction && (
+                <Chip
+                  clickable
+                  variant="outlined"
+                  label={firstRunAdditionalModulesActionLabel}
+                  onClick={() => setShowFirstRunAdditionalModules(true)}
+                  aria-controls="admin-additional-modules-list"
+                  aria-expanded="false"
+                />
+              )}
             </Stack>
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
@@ -684,17 +698,6 @@ export default function AdminConsolePage() {
               >
                 {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
               </Button>
-              {showFirstRunAdditionalModulesShowAction && (
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={() => setShowFirstRunAdditionalModules((currentValue) => !currentValue)}
-                  aria-controls="admin-additional-modules-list"
-                  aria-expanded="false"
-                >
-                  {`Mostrar ${additionalModulesCountLabel}`}
-                </Button>
-              )}
             </Stack>
           </Stack>
         </Alert>
