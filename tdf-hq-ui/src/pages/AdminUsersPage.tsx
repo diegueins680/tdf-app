@@ -258,6 +258,13 @@ export default function AdminUsersPage() {
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
     : '';
+  const searchEmptyStateMessage = showSearchEmptyState
+    ? (
+      !includeInactive
+        ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.`
+        : `No hay coincidencias para "${activeSearchSummary}".`
+    )
+    : '';
   const visibleUsersSummary = useMemo(() => {
     if (!hasUsers || showSingleUserGuidance || visibleUsers.length === 0) return '';
 
@@ -429,9 +436,7 @@ export default function AdminUsersPage() {
             {showSearchEmptyState ? (
               <Stack spacing={1} alignItems="flex-start">
                 <Typography color="text.secondary">
-                  {activeSearchSummary
-                    ? `No hay coincidencias para "${activeSearchSummary}".`
-                    : 'No hay coincidencias para este filtro.'}
+                  {searchEmptyStateMessage}
                 </Typography>
               </Stack>
             ) : null}

@@ -1010,7 +1010,9 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, 'sin coincidencias');
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.textContent).not.toContain(
@@ -1153,6 +1155,86 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('only mentions the active-only scope inside the empty search state while inactive accounts are still hidden', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              username: 'ada-admin',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 44,
+              username: 'grace-ops',
+              partyName: 'Grace Hopper',
+              active: false,
+              primaryEmail: 'grace@example.com',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-view',
+              partyName: 'Linus QA',
+              primaryEmail: 'linus@example.com',
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              username: 'ada-admin',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-view',
+              partyName: 'Linus QA',
+              primaryEmail: 'linus@example.com',
+            }),
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'bruno-admin',
+              partyName: 'Bruno Ops',
+              primaryEmail: 'bruno@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      const includeInactiveCheckbox = getCheckboxByLabelText(container, 'Incluir inactivos');
+
+      await changeInputValue(searchInput, 'sin coincidencias');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
+      });
+
+      await clickButton(includeInactiveCheckbox);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(container.textContent).not.toContain(
+          'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps search guidance inside the field instead of repeating the same hint in the header summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
@@ -1245,7 +1327,9 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, 'sin coincidencias');
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
