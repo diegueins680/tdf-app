@@ -10,7 +10,7 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
-import           Data.Aeson (FromJSON, ToJSON, eitherDecode)
+import           Data.Aeson (FromJSON (parseJSON), ToJSON, defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -28,7 +28,8 @@ data PaymentCreate = PaymentCreate
   , pcAttachmentUrl:: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON PaymentCreate
+instance FromJSON PaymentCreate where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 instance MimeUnrender LooseJSON PaymentCreate where
   mimeUnrender _ = eitherDecode
 

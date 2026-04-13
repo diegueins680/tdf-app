@@ -10,6 +10,7 @@ import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Either (isLeft)
 import Data.Text (Text)
 import Data.Time (utctDay)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
@@ -22,6 +23,7 @@ import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
 import TDF.API.Inventory (InventoryAPI)
+import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types (AssetCheckinRequest (..), AssetCheckoutDTO)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
@@ -93,6 +95,31 @@ type InventoryTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
 spec = do
+  describe "PaymentCreate FromJSON" $ do
+    it "accepts canonical payment create fields for payment ingestion" $
+      case A.eitherDecode
+        "{\"pcPartyId\":42,\"pcOrderId\":7,\"pcInvoiceId\":9,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcReference\":\"REC-42\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\",\"pcPeriod\":\"2026-04\",\"pcAttachmentUrl\":\"https://files.example.com/receipt.pdf\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical payment create payload to decode, got: " <> err)
+        Right payload -> do
+          pcPartyId payload `shouldBe` 42
+          pcOrderId payload `shouldBe` Just 7
+          pcInvoiceId payload `shouldBe` Just 9
+          pcAmountCents payload `shouldBe` 12500
+          pcCurrency payload `shouldBe` "USD"
+          pcMethod payload `shouldBe` "cash"
+          pcReference payload `shouldBe` Just "REC-42"
+          pcPaidAt payload `shouldBe` "2026-04-13"
+          pcConcept payload `shouldBe` "Studio booking"
+          pcPeriod payload `shouldBe` Just "2026-04"
+          pcAttachmentUrl payload `shouldBe` Just "https://files.example.com/receipt.pdf"
+
+    it "rejects unexpected payment keys so typoed or over-posted writes fail explicitly" $ do
+      (A.eitherDecode
+        "{\"pcPartyId\":42,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\",\"unexpected\":true}"
+          :: Either String PaymentCreate)
+        `shouldSatisfy` isLeft
+
   describe "inventory asset query filtering" $ do
     it "normalizes missing or blank queries to no filter" $ do
       normalizeAssetSearchQuery Nothing `shouldBe` Nothing
