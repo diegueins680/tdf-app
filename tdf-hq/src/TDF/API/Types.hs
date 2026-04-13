@@ -7,7 +7,7 @@
 module TDF.API.Types where
 
 import           Data.Char    (isDigit)
-import           Data.Aeson   (FromJSON(..), ToJSON(..), Value(..), eitherDecode, object, withObject, (.:), (.:?), (.=))
+import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:?), (.=))
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import qualified Data.Text    as T
@@ -20,6 +20,9 @@ import           Network.HTTP.Media ((//))
 import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText)
 
 import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
+
+strictObjectOptions :: Options
+strictObjectOptions = defaultOptions { rejectUnknownFields = True }
 
 data Page a = Page
   { items    :: [a]
@@ -474,14 +477,16 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coConditionOut  :: Maybe Text
   , coNotes         :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON AssetCheckoutRequest
+instance FromJSON AssetCheckoutRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON AssetCheckoutRequest
 
 data AssetCheckinRequest = AssetCheckinRequest
   { ciConditionIn :: Maybe Text
   , ciNotes       :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON AssetCheckinRequest
+instance FromJSON AssetCheckinRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON AssetCheckinRequest
 
 data AssetQrDTO = AssetQrDTO

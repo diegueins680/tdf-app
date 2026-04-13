@@ -24,7 +24,7 @@ import Web.PathPieces (fromPathPiece)
 import qualified TDF.Models as M
 import TDF.API.Inventory (InventoryAPI)
 import TDF.API.Payments (PaymentCreate (..))
-import TDF.API.Types (AssetCheckinRequest (..), AssetCheckoutDTO)
+import TDF.API.Types (AssetCheckinRequest (..), AssetCheckoutDTO, AssetCheckoutRequest (..))
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.ModelsExtra
@@ -118,6 +118,47 @@ spec = do
       (A.eitherDecode
         "{\"pcPartyId\":42,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\",\"unexpected\":true}"
           :: Either String PaymentCreate)
+        `shouldSatisfy` isLeft
+
+  describe "inventory checkout/check-in request JSON" $ do
+    it "accepts canonical inventory checkout keys used by current clients" $
+      case A.eitherDecode
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coConditionOut\":\"Excelente\",\"coNotes\":\"Cableado completo\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical asset checkout payload to decode, got: " <> err)
+        Right payload -> do
+          coTargetKind payload `shouldBe` Just "room"
+          coTargetRoom payload `shouldBe` Just "00000000-0000-0000-0000-000000000042"
+          coConditionOut payload `shouldBe` Just "Excelente"
+          coNotes payload `shouldBe` Just "Cableado completo"
+
+    it "rejects response-shaped or unexpected checkout keys so typos cannot silently fall back to party checkout" $ do
+      (A.eitherDecode
+        "{\"targetKind\":\"room\",\"targetRoom\":\"00000000-0000-0000-0000-000000000042\"}"
+          :: Either String AssetCheckoutRequest)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"unexpected\":true}"
+          :: Either String AssetCheckoutRequest)
+        `shouldSatisfy` isLeft
+
+    it "accepts canonical inventory check-in keys used by current clients" $
+      case A.eitherDecode
+        "{\"ciConditionIn\":\"Returned OK\",\"ciNotes\":\"Cables verified\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical asset check-in payload to decode, got: " <> err)
+        Right payload -> do
+          ciConditionIn payload `shouldBe` Just "Returned OK"
+          ciNotes payload `shouldBe` Just "Cables verified"
+
+    it "rejects response-shaped or unexpected check-in keys so metadata typos fail explicitly" $ do
+      (A.eitherDecode
+        "{\"conditionIn\":\"Returned OK\",\"notes\":\"Cables verified\"}"
+          :: Either String AssetCheckinRequest)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"ciConditionIn\":\"Returned OK\",\"unexpected\":true}"
+          :: Either String AssetCheckinRequest)
         `shouldSatisfy` isLeft
 
   describe "inventory asset query filtering" $ do
