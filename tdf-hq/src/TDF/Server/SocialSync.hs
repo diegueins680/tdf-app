@@ -6,6 +6,8 @@ module TDF.Server.SocialSync
   ( socialSyncServer
   , validateSocialSyncArtistPartyId
   , validateSocialSyncArtistProfileId
+  , validateSocialSyncPlatform
+  , validateSocialSyncExternalPostId
   , validateSocialSyncPostsLimit
   ) where
 
@@ -62,7 +64,8 @@ socialSyncServer user =
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
       results <- forM ssirPosts $ \payload -> do
-        let platform = normalizePlatform (sspPlatform payload)
+        platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
+        externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
         let ingestSrc = fromMaybe "manual" (sspIngestSource payload)
         artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
         artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
@@ -70,7 +73,7 @@ socialSyncServer user =
             summaryTxt = buildSummary (sspCaption payload)
             tagsText = nonEmptyText (T.intercalate "," tagList)
             mediaText = nonEmptyText (T.intercalate "\n" (fromMaybe [] (sspMediaUrls payload)))
-        existing <- withPool $ getBy (UniqueSocialSyncPost platform (sspExternalPostId payload))
+        existing <- withPool $ getBy (UniqueSocialSyncPost platform externalPostId)
         case existing of
           Just (Entity key _) -> do
             let updates = concat
@@ -97,7 +100,7 @@ socialSyncServer user =
             let record = SocialSyncPost
                   { socialSyncPostAccountId = Nothing
                   , socialSyncPostPlatform = platform
-                  , socialSyncPostExternalPostId = sspExternalPostId payload
+                  , socialSyncPostExternalPostId = externalPostId
                   , socialSyncPostArtistPartyId = artistPartyKey
                   , socialSyncPostArtistProfileId = artistProfileKey
                   , socialSyncPostCaption = sspCaption payload
@@ -150,11 +153,12 @@ socialSyncServer user =
       -> m [SocialSyncPostDTO]
     listHandler mPlatform mParty mProfile mTag mLimit = do
       ensureSocialSyncAccess
+      platformFilter <- traverse (either throwError pure . validateSocialSyncPlatform) mPlatform
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
       limitVal <- either throwError pure (validateSocialSyncPostsLimit mLimit)
       let filters = catMaybes
-            [ (SocialSyncPostPlatform ==.) <$> fmap normalizePlatform mPlatform
+            [ (SocialSyncPostPlatform ==.) <$> platformFilter
             , (SocialSyncPostArtistPartyId ==.) . Just <$> partyKey
             , (SocialSyncPostArtistProfileId ==.) . Just <$> profileKey
             ]
@@ -188,6 +192,25 @@ validateSocialSyncArtistPartyId =
 validateSocialSyncArtistProfileId :: Text -> Either ServerError Int64
 validateSocialSyncArtistProfileId =
   validatePositiveSocialSyncId "artistProfileId"
+
+validateSocialSyncPlatform :: Text -> Either ServerError Text
+validateSocialSyncPlatform raw =
+  case normalizePlatform raw of
+    "instagram" -> Right "instagram"
+    "facebook" -> Right "facebook"
+    _ ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "platform must be one of: instagram, facebook")
+        }
+
+validateSocialSyncExternalPostId :: Text -> Either ServerError Text
+validateSocialSyncExternalPostId raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then Left err400
+         { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId is required")
+         }
+       else Right trimmed
 
 validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
 validateSocialSyncPostsLimit Nothing = Right 50

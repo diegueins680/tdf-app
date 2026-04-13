@@ -83,7 +83,9 @@ import TDF.ServerFeedback
       validateOptionalFeedbackContactEmail )
 import TDF.Server.SocialSync
     ( validateSocialSyncArtistPartyId,
+      validateSocialSyncExternalPostId,
       validateSocialSyncArtistProfileId,
+      validateSocialSyncPlatform,
       validateSocialSyncPostsLimit )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -417,6 +419,34 @@ main = hspec $ do
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "abc"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "-1"
+
+    describe "social sync platform validation" $ do
+        it "normalizes supported post platforms before querying or persisting rows" $ do
+            validateSocialSyncPlatform " Instagram " `shouldBe` Right "instagram"
+            validateSocialSyncPlatform "FACEBOOK" `shouldBe` Right "facebook"
+
+        it "rejects blank or unsupported platforms instead of storing typoed post identities" $ do
+            let assertInvalid raw =
+                    case validateSocialSyncPlatform raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "platform must be one of: instagram, facebook"
+                        Right value ->
+                            expectationFailure ("Expected invalid social sync platform to be rejected, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "threads"
+
+    describe "social sync external post id validation" $ do
+        it "trims meaningful external ids before dedupe and storage" $ do
+            validateSocialSyncExternalPostId "  ig-media-42  " `shouldBe` Right "ig-media-42"
+
+        it "rejects blank external ids instead of collapsing distinct posts under an empty key" $ do
+            case validateSocialSyncExternalPostId "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "externalPostId is required"
+                Right value ->
+                    expectationFailure ("Expected blank social sync externalPostId to be rejected, got " <> show value)
 
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
