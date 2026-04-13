@@ -99,6 +99,8 @@ const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
+const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
+const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
   'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO =
@@ -317,6 +319,11 @@ export default function AdminUsersPage() {
   ]);
   const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
+
+    const isDefaultSharedAdminAccess =
+      sharedRolesSummary === DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
+      && sharedModulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY;
+    if (isDefaultSharedAdminAccess) return '';
 
     const sharedAccessSummaryParts: string[] = [];
     if (sharedRolesSummary) sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);

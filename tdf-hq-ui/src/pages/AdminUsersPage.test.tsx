@@ -368,7 +368,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 1 listo para WhatsApp, 1 pendiente de WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 1 listo para WhatsApp, 1 pendiente de WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
       });
     } finally {
@@ -514,7 +514,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
@@ -551,7 +551,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
@@ -562,7 +562,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('collapses the default multi-user guidance into one summary line instead of stacked helper copy', async () => {
+  it('collapses the default multi-user guidance into one summary line and skips the baseline admin access copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -586,7 +586,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
         expect(countExactText(
           container,
@@ -604,10 +604,9 @@ describe('AdminUsersPage', () => {
           container,
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         )).toBe(0);
-        expect(countExactText(
-          container,
+        expect(container.textContent).not.toContain(
           'Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
-        )).toBe(0);
+        );
         expect(countExactText(container, 'Haz clic en el nombre para abrir el perfil.')).toBe(0);
       });
     } finally {
