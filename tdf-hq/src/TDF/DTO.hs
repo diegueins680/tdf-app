@@ -5,7 +5,7 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, rejectUnknownFields)
+import           Data.Aeson (Options, ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, rejectUnknownFields)
 import           Data.Aeson.Types (fieldLabelModifier, omitNothingFields)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -19,6 +19,9 @@ import           Database.Persist.Sql (fromSqlKey)
 import           TDF.Models
 import qualified TDF.Models as M
 import           TDF.API.Types (BandDTO)
+
+strictDecodeOptions :: Options
+strictDecodeOptions = defaultOptions { rejectUnknownFields = True }
 
 -- Parties
 data PartyDTO = PartyDTO
@@ -636,12 +639,14 @@ data LoginRequest = LoginRequest
   { username :: Text
   , password :: Text
   } deriving (Show, Generic)
-instance FromJSON LoginRequest
+instance FromJSON LoginRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
   } deriving (Show, Generic)
-instance FromJSON GoogleLoginRequest
+instance FromJSON GoogleLoginRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data SignupRequest = SignupRequest
   { firstName       :: Text
@@ -661,25 +666,28 @@ data SignupRequest = SignupRequest
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON SignupRequest where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data ChangePasswordRequest = ChangePasswordRequest
   { username        :: Maybe Text
   , currentPassword :: Text
   , newPassword     :: Text
   } deriving (Show, Generic)
-instance FromJSON ChangePasswordRequest
+instance FromJSON ChangePasswordRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data PasswordResetRequest = PasswordResetRequest
   { email :: Text
   } deriving (Show, Generic)
-instance FromJSON PasswordResetRequest
+instance FromJSON PasswordResetRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data PasswordResetConfirmRequest = PasswordResetConfirmRequest
   { token       :: Text
   , newPassword :: Text
   } deriving (Show, Generic)
-instance FromJSON PasswordResetConfirmRequest
+instance FromJSON PasswordResetConfirmRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data LoginResponse = LoginResponse
   { token   :: Text

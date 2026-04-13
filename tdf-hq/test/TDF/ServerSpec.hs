@@ -109,6 +109,21 @@ expectCatalogError result assertErr =
 decodeSignup :: BL8.ByteString -> Either String DTO.SignupRequest
 decodeSignup = eitherDecode
 
+decodeLoginRequest :: BL8.ByteString -> Either String DTO.LoginRequest
+decodeLoginRequest = eitherDecode
+
+decodeGoogleLoginRequest :: BL8.ByteString -> Either String DTO.GoogleLoginRequest
+decodeGoogleLoginRequest = eitherDecode
+
+decodeChangePasswordRequest :: BL8.ByteString -> Either String DTO.ChangePasswordRequest
+decodeChangePasswordRequest = eitherDecode
+
+decodePasswordResetRequest :: BL8.ByteString -> Either String DTO.PasswordResetRequest
+decodePasswordResetRequest = eitherDecode
+
+decodePasswordResetConfirmRequest :: BL8.ByteString -> Either String DTO.PasswordResetConfirmRequest
+decodePasswordResetConfirmRequest = eitherDecode
+
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft (Right _) = False
@@ -498,6 +513,61 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
             decodeSignup
                 "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"supersecret\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "auth request FromJSON" $ do
+        it "accepts canonical login and password-reset payloads" $ do
+            case decodeLoginRequest "{\"username\":\"ada@example.com\",\"password\":\"supersecret\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical login payload to decode, got: " <> decodeErr)
+                Right (DTO.LoginRequest usernameValue passwordValue) -> do
+                    usernameValue `shouldBe` "ada@example.com"
+                    passwordValue `shouldBe` "supersecret"
+
+            case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
+                Right (DTO.GoogleLoginRequest idTokenValue) ->
+                    idTokenValue `shouldBe` "google-id-token"
+
+            case decodeChangePasswordRequest
+                "{\"username\":\"ada@example.com\",\"currentPassword\":\"old-secret\",\"newPassword\":\"new-secret\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical change-password payload to decode, got: " <> decodeErr)
+                Right (DTO.ChangePasswordRequest usernameValue currentPasswordValue newPasswordValue) -> do
+                    usernameValue `shouldBe` Just "ada@example.com"
+                    currentPasswordValue `shouldBe` "old-secret"
+                    newPasswordValue `shouldBe` "new-secret"
+
+            case decodePasswordResetRequest "{\"email\":\"ada@example.com\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical password-reset payload to decode, got: " <> decodeErr)
+                Right (DTO.PasswordResetRequest emailValue) ->
+                    emailValue `shouldBe` "ada@example.com"
+
+            case decodePasswordResetConfirmRequest
+                "{\"token\":\"reset-token\",\"newPassword\":\"supersecret\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical password-reset confirm payload to decode, got: " <> decodeErr)
+                Right (DTO.PasswordResetConfirmRequest tokenValue newPasswordValue) -> do
+                    tokenValue `shouldBe` "reset-token"
+                    newPasswordValue `shouldBe` "supersecret"
+
+        it "rejects unexpected auth keys instead of silently accepting typoed or over-posted payloads" $ do
+            decodeLoginRequest
+                "{\"username\":\"ada@example.com\",\"password\":\"supersecret\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeGoogleLoginRequest
+                "{\"idToken\":\"google-id-token\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeChangePasswordRequest
+                "{\"username\":\"ada@example.com\",\"currentPassword\":\"old-secret\",\"newPassword\":\"new-secret\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodePasswordResetRequest
+                "{\"email\":\"ada@example.com\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodePasswordResetConfirmRequest
+                "{\"token\":\"reset-token\",\"newPassword\":\"supersecret\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
