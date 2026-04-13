@@ -154,7 +154,8 @@ data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
   , nextFollowUpAt :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationFollowUpCreate
+instance FromJSON CourseRegistrationFollowUpCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationFollowUpCreate
 
 data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
@@ -166,7 +167,8 @@ data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
   , nextFollowUpAt :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationFollowUpUpdate
+instance FromJSON CourseRegistrationFollowUpUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationFollowUpUpdate
 
 data CourseSessionIn = CourseSessionIn

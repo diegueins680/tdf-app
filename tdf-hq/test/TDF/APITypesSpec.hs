@@ -69,6 +69,42 @@ spec = do
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
 
+    describe "CourseRegistrationFollowUp payload FromJSON" $ do
+        it "accepts canonical follow-up create and update payloads" $ do
+            case decodeFollowUpCreate
+                "{\"entryType\":\"call\",\"subject\":\"Confirm payment\",\"notes\":\"Client asked to pay tomorrow\",\"attachmentUrl\":\"https://files.example.com/receipt.pdf\",\"attachmentName\":\"receipt.pdf\",\"nextFollowUpAt\":\"2026-05-02T15:00:00Z\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical course follow-up create payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationFollowUpCreate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
+                    entryTypeVal `shouldBe` Just "call"
+                    subjectVal `shouldBe` Just "Confirm payment"
+                    notesVal `shouldBe` "Client asked to pay tomorrow"
+                    attachmentUrlVal `shouldBe` Just "https://files.example.com/receipt.pdf"
+                    attachmentNameVal `shouldBe` Just "receipt.pdf"
+                    nextFollowUpAtVal `shouldBe` Just "2026-05-02T15:00:00Z"
+
+            case decodeFollowUpUpdate
+                "{\"notes\":\"Moved reminder to next week\",\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical course follow-up update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationFollowUpUpdate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
+                    entryTypeVal `shouldBe` Nothing
+                    subjectVal `shouldBe` Nothing
+                    notesVal `shouldBe` Just "Moved reminder to next week"
+                    attachmentUrlVal `shouldBe` Nothing
+                    attachmentNameVal `shouldBe` Nothing
+                    nextFollowUpAtVal `shouldBe` Just "2026-05-09T15:00:00Z"
+
+        it "rejects unexpected keys so malformed follow-up writes fail explicitly" $ do
+            decodeFollowUpCreate
+                "{\"entryType\":\"call\",\"notes\":\"Client asked to pay tomorrow\",\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpUpdate
+                "{\"notes\":\"Moved reminder to next week\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -136,6 +172,10 @@ spec = do
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeCourseRegistration = eitherDecode
+    decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
+    decodeFollowUpCreate = eitherDecode
+    decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate
+    decodeFollowUpUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq
