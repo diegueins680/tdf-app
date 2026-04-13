@@ -15,7 +15,6 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
@@ -236,8 +235,7 @@ export default function AdminUsersPage() {
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
-  const showEmptyStateClearSearchAction = showSearchEmptyState && hasActiveSearch;
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const activeScopeSummary = showActiveScopeSummary
@@ -350,9 +348,14 @@ export default function AdminUsersPage() {
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
-                        <IconButton size="small" aria-label="Limpiar búsqueda" onClick={handleClearSearch}>
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
+                        <Button
+                          size="small"
+                          aria-label="Limpiar búsqueda"
+                          onClick={handleClearSearch}
+                          sx={{ minWidth: 0, px: 0.5, textTransform: 'none' }}
+                        >
+                          Limpiar
+                        </Button>
                       </InputAdornment>
                     ) : null,
                   }}
@@ -411,16 +414,6 @@ export default function AdminUsersPage() {
                     ? `No hay coincidencias para "${activeSearchSummary}".`
                     : 'No hay coincidencias para este filtro.'}
                 </Typography>
-                {showEmptyStateClearSearchAction && (
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={handleClearSearch}
-                    data-testid="admin-users-empty-search-reset"
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                )}
               </Stack>
             ) : null}
             {visibleUsers.length ? (

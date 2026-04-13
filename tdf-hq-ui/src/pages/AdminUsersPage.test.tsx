@@ -1146,7 +1146,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('offers one clear-search action when a query hides every admin user', async () => {
+  it('keeps the search-owned clear action available when a query hides every admin user', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -1192,7 +1192,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).not.toBeNull();
+        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
