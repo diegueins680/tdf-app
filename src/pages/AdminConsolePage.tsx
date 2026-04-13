@@ -551,6 +551,7 @@ export default function AdminConsolePage() {
     || auditQuery.isFetching
     || consoleQuery.isFetching
     || usersQuery.isFetching;
+  const shouldShowHealthLoadingState = healthQuery.isPending && healthQuery.data == null;
   const showCompactHealthyServiceSummary =
     healthQuery.data != null
     && isHealthyHealthIndicator(healthQuery.data.status)
@@ -709,16 +710,23 @@ export default function AdminConsolePage() {
         <Card variant="outlined" id="admin-service-health">
           <CardHeader title="Estado del servicio" />
           <CardContent>
-            {showCompactHealthyServiceSummary ? (
+            {shouldShowHealthLoadingState ? (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <CircularProgress size={18} />
+                <Typography variant="body2" color="text.secondary">
+                  Comprobando API y base de datos…
+                </Typography>
+              </Stack>
+            ) : showCompactHealthyServiceSummary ? (
               <Typography variant="body2">
                 Todo listo: API y base de datos responden correctamente.
               </Typography>
-            ) : (
+            ) : healthQuery.data ? (
               <>
                 <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
                 <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
               </>
-            )}
+            ) : null}
             {healthQuery.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {(healthQuery.error as Error).message}

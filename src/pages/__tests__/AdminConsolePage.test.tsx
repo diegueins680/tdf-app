@@ -171,6 +171,21 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/^Base de datos:/i)).not.toBeInTheDocument();
   });
 
+  it('shows one explicit loading state while the service health check is still pending', async () => {
+    mockHealthFetch.mockImplementation(() => new Promise(() => undefined));
+
+    renderPage();
+
+    expect(await screen.findByText('Estado del servicio')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Comprobando API y base de datos…/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/^API:\s*—$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Base de datos:\s*—$/i)).not.toBeInTheDocument();
+  });
+
   it('keeps detailed service checks visible when one dependency is not healthy', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
 
