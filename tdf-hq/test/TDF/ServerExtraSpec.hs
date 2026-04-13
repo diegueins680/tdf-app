@@ -29,7 +29,7 @@ import TDF.ModelsExtra
   , CheckoutTarget (TargetParty, TargetRoom, TargetSession)
   , MaintenancePolicy (None)
   , Room (..)
-  , Session
+  , Session (..)
   , SessionStatus (InPrep, InSession)
   )
 import TDF.ServerExtra (
@@ -73,6 +73,7 @@ import TDF.ServerExtra (
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateCheckoutTargets,
+    validateCheckoutTargetReferences,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
     validateServiceCatalogTaxBps,
@@ -303,6 +304,46 @@ spec = do
       assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetSession (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetRoom Nothing (Just roomId) (Just sessionId))
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetSession Nothing (Just roomId) (Just sessionId))
+
+  describe "validateCheckoutTargetReferences" $ do
+    let existingRoomId = case (fromPathPiece "00000000-0000-0000-0000-000000000511" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid existing checkout room fixture key"
+        missingRoomId = case (fromPathPiece "00000000-0000-0000-0000-000000000512" :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid missing checkout room fixture key"
+        existingSessionId = case (fromPathPiece "00000000-0000-0000-0000-000000000611" :: Maybe (Key Session)) of
+          Just key -> key
+          Nothing -> error "invalid existing checkout session fixture key"
+        missingSessionId = case (fromPathPiece "00000000-0000-0000-0000-000000000612" :: Maybe (Key Session)) of
+          Just key -> key
+          Nothing -> error "invalid missing checkout session fixture key"
+
+    it "accepts existing room and session checkout targets" $
+      runSessionReferenceValidationSql $ do
+        seedCheckoutTargetReferenceFixture existingRoomId existingSessionId
+        existingRoomResult <- validateCheckoutTargetReferences (Just existingRoomId) Nothing
+        existingSessionResult <- validateCheckoutTargetReferences Nothing (Just existingSessionId)
+        noTargetResult <- validateCheckoutTargetReferences Nothing Nothing
+        liftIO $ do
+          existingRoomResult `shouldBe` Right ()
+          existingSessionResult `shouldBe` Right ()
+          noTargetResult `shouldBe` Right ()
+
+    it "rejects unknown room or session checkout targets before the asset checkout insert can fail ambiguously" $
+      runSessionReferenceValidationSql $ do
+        seedCheckoutTargetReferenceFixture existingRoomId existingSessionId
+        let assertInvalid expectedMessage result = case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid checkout target reference error, got " <> show value)
+        missingRoomResult <- validateCheckoutTargetReferences (Just missingRoomId) Nothing
+        missingSessionResult <- validateCheckoutTargetReferences Nothing (Just missingSessionId)
+        liftIO $ do
+          assertInvalid "targetRoom references an unknown room" missingRoomResult
+          assertInvalid "targetSession references an unknown session" missingSessionResult
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
@@ -859,6 +900,25 @@ initializeSessionReferenceValidationSchema = do
         \\"patchbay_notes\" VARCHAR NULL\
         \)"
         []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"session\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"booking_ref\" VARCHAR NULL,\
+        \\"band_id\" uuid NULL,\
+        \\"client_party_ref\" VARCHAR NULL,\
+        \\"service\" VARCHAR NOT NULL,\
+        \\"start_at\" TIMESTAMP NOT NULL,\
+        \\"end_at\" TIMESTAMP NOT NULL,\
+        \\"engineer_ref\" VARCHAR NOT NULL,\
+        \\"assistant_ref\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"sample_rate\" INTEGER NULL,\
+        \\"bit_depth\" INTEGER NULL,\
+        \\"daw\" VARCHAR NULL,\
+        \\"session_folder_drive_id\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL\
+        \)"
+        []
 
 initializePaymentValidationSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializePaymentValidationSchema = do
@@ -988,6 +1048,37 @@ seedSessionReferenceFixture bandId roomId = do
     , roomChannelCount = Nothing
     , roomDefaultSampleRate = Nothing
     , roomPatchbayNotes = Nothing
+    }
+
+seedCheckoutTargetReferenceFixture
+  :: Key Room
+  -> Key Session
+  -> SqlPersistT (NoLoggingT (ResourceT IO)) ()
+seedCheckoutTargetReferenceFixture roomId sessionId = do
+  insertKey roomId Room
+    { roomName = "Checkout Fixture Room"
+    , roomIsBookable = True
+    , roomCapacity = Nothing
+    , roomChannelCount = Nothing
+    , roomDefaultSampleRate = Nothing
+    , roomPatchbayNotes = Nothing
+    }
+  now <- liftIO getCurrentTime
+  insertKey sessionId Session
+    { sessionBookingRef = Nothing
+    , sessionBandId = Nothing
+    , sessionClientPartyRef = Nothing
+    , sessionService = "Tracking"
+    , sessionStartAt = now
+    , sessionEndAt = addUTCTime 3600 now
+    , sessionEngineerRef = "Engineer"
+    , sessionAssistantRef = Nothing
+    , sessionStatus = InPrep
+    , sessionSampleRate = Nothing
+    , sessionBitDepth = Nothing
+    , sessionDaw = Nothing
+    , sessionSessionFolderDriveId = Nothing
+    , sessionNotes = Nothing
     }
 
 seedPaymentReferenceFixture

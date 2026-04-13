@@ -325,6 +325,7 @@ inventoryServer user =
       either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
       (mTargetParty, mRoom, mSession) <-
         either throwError pure (validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey)
+      either throwError pure =<< withPool (validateCheckoutTargetReferences mRoom mSession)
       recEnt <- withPool $ do
         checkoutId <- insert AssetCheckout
           { assetCheckoutAssetId          = assetKey
@@ -1462,6 +1463,21 @@ validateSessionReferences mBandKey roomKeys = do
       then Left err400 { errBody = "bandId references an unknown band" }
       else if any (`Set.notMember` existingRoomKeys) roomKeys
         then Left err400 { errBody = "roomIds reference one or more unknown rooms" }
+        else Right ()
+
+validateCheckoutTargetReferences
+  :: MonadIO m
+  => Maybe (Key Room)
+  -> Maybe (Key ME.Session)
+  -> SqlPersistT m (Either ServerError ())
+validateCheckoutTargetReferences mRoomKey mSessionKey = do
+  mRoom <- join <$> traverse getEntity mRoomKey
+  mSession <- join <$> traverse getEntity mSessionKey
+  pure $
+    if isJust mRoomKey && isNothing mRoom
+      then Left err400 { errBody = "targetRoom references an unknown room" }
+      else if isJust mSessionKey && isNothing mSession
+        then Left err400 { errBody = "targetSession references an unknown session" }
         else Right ()
 
 validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
