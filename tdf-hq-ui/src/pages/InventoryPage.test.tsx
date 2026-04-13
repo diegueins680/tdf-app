@@ -187,7 +187,7 @@ describe('InventoryPage', () => {
         );
         expect(container.textContent).toContain('Neumann U87');
         expect(container.textContent).toContain('Categoría: Micrófono');
-        expect(container.textContent).toContain('Estado: Active');
+        expect(container.textContent).toContain('Estado: Disponible');
         expect(container.textContent).toContain('Ubicación: Sala A');
         expect(container.textContent).toContain('Condición: Excelente');
         expect(container.querySelector('table')).toBeNull();
@@ -208,6 +208,40 @@ describe('InventoryPage', () => {
             (button) => (button.textContent ?? '').trim() === 'Historial',
           ),
         ).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps repeated table actions compact by localizing status labels and moving history behind an icon action', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Disponible');
+        expect(container.textContent).toContain('Prestado');
+        expect(container.textContent).not.toContain('Active');
+        expect(container.textContent).not.toContain('Booked');
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Historial',
+          ),
+        ).toBe(false);
+        expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir historial de Apollo Twin"]')).not.toBeNull();
       });
     } finally {
       await cleanup();

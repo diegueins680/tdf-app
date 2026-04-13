@@ -16,12 +16,14 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import HistoryIcon from '@mui/icons-material/History';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO, AssetCheckoutDTO, PartyDTO, RoomDTO } from '../api/types';
 import { Inventory, type AssetCheckoutRequest, type AssetCheckinRequest, type AssetQrDTO } from '../api/inventory';
@@ -49,6 +51,15 @@ function getInventoryMovementState(status: string) {
     canCheckout: normalizedStatus === 'active',
     canCheckin: normalizedStatus === 'booked',
   };
+}
+
+function getInventoryStatusLabel(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  if (normalizedStatus === 'active') return 'Disponible';
+  if (normalizedStatus === 'booked') return 'Prestado';
+  if (normalizedStatus === 'retired') return 'Retirado';
+  return status.trim() || 'Estado desconocido';
 }
 
 export default function InventoryPage() {
@@ -249,7 +260,7 @@ export default function InventoryPage() {
                   Categoría: {singleAsset.category}
                 </Typography>
                 <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Estado: {singleAsset.status}
+                  Estado: {getInventoryStatusLabel(singleAsset.status)}
                 </Typography>
                 <Typography variant="body2" color="rgba(226,232,240,0.78)">
                   Ubicación: {singleAsset.location ?? '—'}
@@ -328,7 +339,7 @@ export default function InventoryPage() {
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell>{asset.status}</TableCell>
+                      <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
                       <TableCell>{asset.location ?? '—'}</TableCell>
                       <TableCell align="right">
                         <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
@@ -354,9 +365,15 @@ export default function InventoryPage() {
                             <HowToRegIcon fontSize="small" />
                           </IconButton>
                         )}
-                        <Button size="small" onClick={() => openHistory(asset)}>
-                          Historial
-                        </Button>
+                        <Tooltip title="Historial">
+                          <IconButton
+                            size="small"
+                            onClick={() => openHistory(asset)}
+                            aria-label={`Abrir historial de ${asset.name}`}
+                          >
+                            <HistoryIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   );
