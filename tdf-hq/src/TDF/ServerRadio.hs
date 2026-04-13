@@ -204,12 +204,19 @@ validatePublicRadioHost rawHost
       Left privateRadioHostError
   | isPrivateIpv6 normalized =
       Left privateRadioHostError
+  | requiresExplicitPublicHostname normalized =
+      Left err400 { errBody = "streamUrl host must be a public hostname or IP address" }
   | otherwise =
       Right ()
   where
     normalized = T.toLower rawHost
     privateRadioHostError =
       err400 { errBody = "streamUrl must not target localhost or private network addresses" }
+
+    requiresExplicitPublicHostname host =
+      not (T.any (== '.') host)
+        && not (T.any (== ':') host)
+        && isNothing (parseIpv4Octets host)
 
 parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
 parseIpv4Octets host =

@@ -934,6 +934,19 @@ main = hspec $ do
             assertInvalid "https://radio..example.com/live"
             assertInvalid "https://radio.example.com./live"
 
+        it "rejects single-label hosts that could resolve through private search domains" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "streamUrl host must be a public hostname or IP address"
+                        Right value ->
+                            expectationFailure
+                                ("Expected single-label streamUrl host to be rejected, got " <> show value)
+            assertInvalid "https://radio/live"
+            assertInvalid "https://intranet:8443/live"
+
         it "rejects ambiguous numeric host shortcuts before they can bypass host checks" $ do
             let assertInvalid rawUrl =
                     case validateRadioStreamUrl rawUrl of
