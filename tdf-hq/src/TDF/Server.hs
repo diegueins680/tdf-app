@@ -4719,6 +4719,18 @@ listServiceAds = do
             ]
     pure $ map (toServiceAdDTO providerMap) ads
 
+resolveServiceAdEntity :: Int64 -> SqlPersistT IO (Entity ServiceAd)
+resolveServiceAdEntity rawAdId = do
+  adId <- case validatePositiveIdField "adId" rawAdId of
+    Left serverErr -> liftIO $ throwIO serverErr
+    Right validAdId -> pure validAdId
+  let adKey = toSqlKey adId :: Key ServiceAd
+  mAd <- getEntity adKey
+  maybe
+    (liftIO $ throwIO err404 { errBody = "Service ad not found" })
+    pure
+    mAd
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
@@ -4760,7 +4772,8 @@ listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
 listServiceAdSlots adId = do
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
-    slots <- selectList [ServiceAdSlotAdId ==. toSqlKey adId] [Asc ServiceAdSlotStartsAt]
+    Entity adKey _ <- resolveServiceAdEntity adId
+    slots <- selectList [ServiceAdSlotAdId ==. adKey] [Asc ServiceAdSlotStartsAt]
     pure (map toServiceAdSlotDTO slots)
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
@@ -4768,9 +4781,7 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
   when (sascEndsAt <= sascStartsAt) $ throwError err400 { errBody = "Invalid slot range" }
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
-    let adKey = toSqlKey adId :: Key ServiceAd
-    mAd <- getEntity adKey
-    ad <- maybe (liftIO $ throwIO err404) pure mAd
+    ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
     now <- liftIO getCurrentTime

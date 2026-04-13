@@ -3,6 +3,7 @@
 module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
+import Control.Exception (try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
@@ -16,7 +17,7 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceAd (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MetaBackfillOptions(..)
@@ -27,6 +28,7 @@ import TDF.Server
     , parseCourseRegistrationStatus
     , parseDirectionParam
     , resolveOptionalBookingPartyReference
+    , resolveServiceAdEntity
     , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
@@ -238,6 +240,54 @@ spec = describe "TDF.Server helpers" $ do
                 (validateServiceMarketplaceBookingRefs 0 99)
             assertInvalid "slotId must be a positive integer"
                 (validateServiceMarketplaceBookingRefs 42 (-3))
+
+    describe "resolveServiceAdEntity" $ do
+        it "rejects non-positive ad ids before service slot handlers can treat them as missing ads or empty slot lists" $ do
+            let assertInvalid rawAdId = do
+                    result <- try $ runServiceAdSqlite $
+                        resolveServiceAdEntity rawAdId
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "adId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid service ad id to be rejected, got: " <> show value)
+            assertInvalid 0
+            assertInvalid (-7)
+
+        it "returns 404 for unknown ads instead of collapsing them into an empty slot listing" $ do
+            result <- try $ runServiceAdSqlite $
+                resolveServiceAdEntity 999999
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr) `shouldContain` "Service ad not found"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown service ad lookup to be rejected, got: " <> show value)
+
+        it "resolves existing service ads before downstream slot logic runs" $ do
+            (expectedAdId, result) <- runServiceAdSqlite $ do
+                now <- liftIO getCurrentTime
+                adId <- insert ServiceAd
+                    { serviceAdProviderPartyId = toSqlKey 1
+                    , serviceAdServiceCatalogId = Nothing
+                    , serviceAdRoleTag = "Mixing"
+                    , serviceAdHeadline = "Analog mix"
+                    , serviceAdDescription = Nothing
+                    , serviceAdFeeCents = 12000
+                    , serviceAdCurrency = "USD"
+                    , serviceAdSlotMinutes = 60
+                    , serviceAdActive = True
+                    , serviceAdCreatedAt = now
+                    }
+                resolved <- resolveServiceAdEntity (fromSqlKey adId)
+                pure (adId, resolved)
+            case result of
+                Entity resolvedKey resolvedAd -> do
+                    resolvedKey `shouldBe` expectedAdId
+                    serviceAdHeadline resolvedAd `shouldBe` "Analog mix"
 
     describe "validateChatMessageListLookup" $ do
         it "accepts a positive thread id plus at most one positive pagination cursor" $ do
@@ -1420,6 +1470,32 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the strict-admin matrix for global sync data" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialSyncAccess (mkUser [role]) `shouldBe` hasStrictAdminAccess (mkUser [role])
+
+runServiceAdSqlite :: SqlPersistT IO a -> IO a
+runServiceAdSqlite action =
+    runSqlite ":memory:" $ do
+        backend <- ask
+        liftIO $ runReaderT initializeServiceAdSchema backend
+        liftIO $ runReaderT action backend
+
+initializeServiceAdSchema :: SqlPersistT IO ()
+initializeServiceAdSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_ad\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"provider_party_id\" INTEGER NOT NULL,\
+        \\"service_catalog_id\" INTEGER NULL,\
+        \\"role_tag\" VARCHAR NOT NULL,\
+        \\"headline\" VARCHAR NOT NULL,\
+        \\"description\" VARCHAR NULL,\
+        \\"fee_cents\" INTEGER NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"slot_minutes\" INTEGER NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
 
 runAuthSqlite :: SqlPersistT IO a -> IO a
 runAuthSqlite action =
