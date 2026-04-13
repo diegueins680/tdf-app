@@ -156,6 +156,16 @@ const compareAdminUsers = (left: AdminUser, right: AdminUser) => {
   return left.userId - right.userId;
 };
 
+const dedupeAdminUsers = (users: readonly AdminUser[]) => {
+  const seenUserIds = new Set<number>();
+
+  return users.filter((user) => {
+    if (seenUserIds.has(user.userId)) return false;
+    seenUserIds.add(user.userId);
+    return true;
+  });
+};
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const query = normalizeSearchValue(rawQuery);
   if (!query) return true;
@@ -188,6 +198,10 @@ export default function AdminUsersPage() {
     queryKey: ['admin', 'users', includeInactive],
     queryFn: () => Admin.listUsers(includeInactive),
   });
+  const users = useMemo(
+    () => dedupeAdminUsers(usersQuery.data ?? []),
+    [usersQuery.data],
+  );
 
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
@@ -198,10 +212,10 @@ export default function AdminUsersPage() {
   };
 
   const visibleUsers = useMemo(
-    () => (usersQuery.data ?? [])
+    () => users
       .filter((user) => matchesUserQuery(user, deferredSearchQuery))
       .sort(compareAdminUsers),
-    [deferredSearchQuery, usersQuery.data],
+    [deferredSearchQuery, users],
   );
   const visibleUsersMissingWhatsAppCount = useMemo(
     () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user)).length,
@@ -221,7 +235,7 @@ export default function AdminUsersPage() {
     [visibleUsers],
   );
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
-  const totalUsersCount = usersQuery.data?.length ?? 0;
+  const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
   const showRefreshAction = Boolean(usersQuery.error) || hasUsers;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
@@ -236,7 +250,7 @@ export default function AdminUsersPage() {
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
-  const showSearchEmptyState = Boolean(usersQuery.data?.length) && visibleUsers.length === 0;
+  const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
@@ -407,7 +421,7 @@ export default function AdminUsersPage() {
           <CardContent>
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
             {usersQuery.error && <Typography color="error">Error al cargar usuarios</Typography>}
-            {usersQuery.data?.length === 0 && (
+            {!usersQuery.isLoading && users.length === 0 && (
               <Typography color="text.secondary">
                 No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.
               </Typography>

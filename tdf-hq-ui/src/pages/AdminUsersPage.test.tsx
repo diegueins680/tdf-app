@@ -525,6 +525,43 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('deduplicates repeated user records before showing extra rows or search controls', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas. Acceso compartido en esta vista: Roles: Admin · Módulos: admin.',
+        );
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses the default multi-user guidance into one summary line instead of stacked helper copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
