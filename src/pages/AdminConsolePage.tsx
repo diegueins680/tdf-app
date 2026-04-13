@@ -130,21 +130,37 @@ function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
 }
 
 function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
-  const seenCards = new Set<string>();
+  const cardsByTitle = new Map<string, AdminConsoleCard>();
 
-  return cards.filter((card) => {
-    const fingerprint = [
-      normalizeAdminConsoleCardKey(card.title),
-      card.body.map((paragraph) => normalizeAdminConsoleCardKey(paragraph)).join('|'),
-    ].join('::');
+  cards.forEach((card) => {
+    const titleKey = normalizeAdminConsoleCardKey(card.title);
+    const existingCard = cardsByTitle.get(titleKey);
 
-    if (seenCards.has(fingerprint)) {
-      return false;
+    if (!existingCard) {
+      cardsByTitle.set(titleKey, { ...card, body: [...card.body] });
+      return;
     }
 
-    seenCards.add(fingerprint);
-    return true;
+    const seenParagraphs = new Set(
+      existingCard.body.map((paragraph) => normalizeAdminConsoleCardKey(paragraph)),
+    );
+    const mergedBody = [...existingCard.body];
+
+    card.body.forEach((paragraph) => {
+      const paragraphKey = normalizeAdminConsoleCardKey(paragraph);
+
+      if (seenParagraphs.has(paragraphKey)) {
+        return;
+      }
+
+      seenParagraphs.add(paragraphKey);
+      mergedBody.push(paragraph);
+    });
+
+    cardsByTitle.set(titleKey, { ...existingCard, body: mergedBody });
   });
+
+  return [...cardsByTitle.values()];
 }
 
 function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
