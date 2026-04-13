@@ -443,7 +443,8 @@ data PublicBookingReq = PublicBookingReq
   , pbEngineerName     :: Maybe Text
   , pbResourceIds      :: Maybe [Text]
   } deriving (Show, Generic)
-instance FromJSON PublicBookingReq
+instance FromJSON PublicBookingReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data PublicEngineerDTO = PublicEngineerDTO
   { peId   :: Int64

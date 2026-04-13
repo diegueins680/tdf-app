@@ -14,6 +14,7 @@ import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffT
 import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
+import TDF.API (PublicBookingReq (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
@@ -149,6 +150,9 @@ decodePasswordResetRequest = eitherDecode
 
 decodePasswordResetConfirmRequest :: BL8.ByteString -> Either String DTO.PasswordResetConfirmRequest
 decodePasswordResetConfirmRequest = eitherDecode
+
+decodePublicBookingRequest :: BL8.ByteString -> Either String PublicBookingReq
+decodePublicBookingRequest = eitherDecode
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
@@ -1506,6 +1510,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "not-an-email" Nothing "email inválido"
             assertInvalid "user()@example.com" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
+
+    describe "PublicBookingReq FromJSON" $ do
+        it "accepts canonical public booking payloads used by the public booking form" $
+            case decodePublicBookingRequest
+                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbPhone\":\"+593991234567\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"pbDurationMinutes\":90,\"pbNotes\":\"Needs vocal tuning\",\"pbEngineerPartyId\":7,\"pbEngineerName\":\"Alex\",\"pbResourceIds\":[\"room-a\",\"booth-b\"]}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical public booking payload to decode, got: " <> decodeErr)
+                Right payload -> do
+                    pbFullName payload `shouldBe` "Ana Perez"
+                    pbEmail payload `shouldBe` "ana@example.com"
+                    pbPhone payload `shouldBe` Just "+593991234567"
+                    pbServiceType payload `shouldBe` "mixing"
+                    pbStartsAt payload `shouldBe` UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                    pbDurationMinutes payload `shouldBe` Just 90
+                    pbNotes payload `shouldBe` Just "Needs vocal tuning"
+                    pbEngineerPartyId payload `shouldBe` Just 7
+                    pbEngineerName payload `shouldBe` Just "Alex"
+                    pbResourceIds payload `shouldBe` Just ["room-a", "booth-b"]
+
+        it "rejects unexpected booking keys so typoed public forms cannot create partially-understood bookings" $ do
+            decodePublicBookingRequest
+                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
 
     describe "validatePublicBookingDurationMinutes" $ do
         it "defaults omitted durations to one hour and preserves explicit durations >= 30 minutes" $ do
