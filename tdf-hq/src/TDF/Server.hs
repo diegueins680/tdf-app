@@ -5509,7 +5509,12 @@ validateCourseSessionInputs =
 validateCourseSessionInput :: Int -> CourseSessionIn -> Either ServerError CourseSessionIn
 validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
   case normalizeOptionalInput (Just rawLabel) of
-    Just labelClean -> Right (CourseSessionIn labelClean dayVal orderVal)
+    Just labelClean -> do
+      orderClean <-
+        validateOptionalCourseNonNegativeField
+          ("sessions[" <> T.pack (show idx) <> "].order")
+          orderVal
+      Right (CourseSessionIn labelClean dayVal orderClean)
     Nothing ->
       Left err400
         { errBody =
@@ -5524,9 +5529,13 @@ validateCourseSyllabusInputs =
 validateCourseSyllabusInput :: Int -> CourseSyllabusIn -> Either ServerError CourseSyllabusIn
 validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
   case normalizeOptionalInput (Just rawTitle) of
-    Just titleClean ->
+    Just titleClean -> do
+      orderClean <-
+        validateOptionalCourseNonNegativeField
+          ("syllabus[" <> T.pack (show idx) <> "].order")
+          orderVal
       Right
-        (CourseSyllabusIn titleClean (mapMaybe (normalizeOptionalInput . Just) rawTopics) orderVal)
+        (CourseSyllabusIn titleClean (mapMaybe (normalizeOptionalInput . Just) rawTopics) orderClean)
     Nothing ->
       Left err400
         { errBody =

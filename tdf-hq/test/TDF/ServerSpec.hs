@@ -1204,6 +1204,23 @@ spec = describe "TDF.Server helpers" $ do
                 "syllabus[1].title is required"
                 (validateCourseSyllabusInputs [CourseSyllabusIn "   " ["Ableton"] Nothing])
 
+        it "rejects negative nested ordering values instead of persisting ambiguous sort positions" $ do
+            let sessionDay = fromGregorian 2026 4 20
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid nested course ordering to be rejected, got: " <> show value)
+            assertInvalid
+                "sessions[1].order must be greater than or equal to 0"
+                (validateCourseSessionInputs [CourseSessionIn "Kickoff session" sessionDay (Just (-1))])
+            assertInvalid
+                "syllabus[1].order must be greater than or equal to 0"
+                (validateCourseSyllabusInputs [CourseSyllabusIn "Intro module" ["Ableton"] (Just (-2))])
+
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
             hasOperationsAccess (mkUser [Fan, Customer]) `shouldBe` False

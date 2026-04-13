@@ -1,0 +1,11 @@
+pkgid: case-insensitive-1.2.1.0
+component: ComponentLib
+src: 296dc17e0c5f3dfb3d82ced83e4c9c44c338ecde749b278b6eae512f1d04e406
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

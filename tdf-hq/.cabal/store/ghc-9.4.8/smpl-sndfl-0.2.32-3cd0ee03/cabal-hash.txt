@@ -1,0 +1,12 @@
+pkgid: simple-sendfile-0.2.32
+component: ComponentLib
+src: 9f28d0a67ac3d956d2dd78eb19ea922c0a9192bbbeeeead20d39f561636828a3
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, ntwrk-3.2.8.0-948adf32, unix-2.7.3
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +allow-bsd -fallback
+shared-lib: True
+stripped-exe: False
+debug-info: 0

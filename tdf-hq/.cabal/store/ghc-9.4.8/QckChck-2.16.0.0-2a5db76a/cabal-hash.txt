@@ -1,0 +1,12 @@
+pkgid: QuickCheck-2.16.0.0
+component: ComponentLib
+src: 0b563fa6ea11653d76d57e96625f4a476e02b9fdaeba9c05d2ccc10d8da802c0
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, deepseq-1.4.8.0, rndm-1.3.1-be8dcc11, spltmx-0.1.3.2-ccbeb478, template-haskell-2.19.0.0, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -old-random +templatehaskell
+shared-lib: True
+stripped-exe: False
+debug-info: 0

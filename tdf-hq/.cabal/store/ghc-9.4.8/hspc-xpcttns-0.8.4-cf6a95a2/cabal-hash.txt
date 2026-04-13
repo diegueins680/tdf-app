@@ -1,0 +1,11 @@
+pkgid: hspec-expectations-0.8.4
+component: ComponentLib
+src: 7b8dde7e230ecfda90c95fd80478b244a45e68602fb3dd4a76f4710619be21ff
+pkg-config-deps: 
+deps: HUnt-1.6.2.0-c38e4d65, base-4.17.2.1, cll-stck-0.4.0-31c5656b
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

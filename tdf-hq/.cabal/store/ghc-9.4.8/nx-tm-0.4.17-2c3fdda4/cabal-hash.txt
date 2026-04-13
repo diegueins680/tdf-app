@@ -1,0 +1,10 @@
+pkgid: unix-time-0.4.17
+src: f63a05be5dcc5ac8f72c26c9fef8dcc993638ca9b545b9bd69b8a3924c201f8c
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, bytestring-0.11.5.3, hsc2hs-0.68.10-7b90d0d8, ld-tm-1.1.0.5-ef4af6ad
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

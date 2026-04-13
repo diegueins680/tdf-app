@@ -1,0 +1,11 @@
+pkgid: recv-0.1.1
+component: ComponentLib
+src: 8daf77c57f529503dd3038efc3813a8001032ed810bdddff0acb0faca039b721
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, ntwrk-3.2.8.0-948adf32
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

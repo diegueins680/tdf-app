@@ -1,0 +1,11 @@
+pkgid: time-compat-1.9.8
+component: ComponentLib
+src: 502ef8694a5b131b47c0e5df2e9053d005a3b345b30f5225af04f081d3ef5cf0
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-rphns-0.9.4-98e58666, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f, template-haskell-2.19.0.0, time-1.12.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

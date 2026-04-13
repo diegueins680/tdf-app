@@ -1,0 +1,11 @@
+pkgid: microlens-th-0.4.3.18
+component: ComponentLib
+src: 417ef41008ceab2a67bb008f364376b96224594e6e999499c083cab081b0ed8b
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, mcrlns-0.5.0.0-431b5747, template-haskell-2.19.0.0, th-bstrctn-0.7.2.0-42c8b4a8, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: data-fix-0.3.4
+component: ComponentLib
+src: 8df052d18c047ab9e9200536a8799b5af3997ebecbbb091a7384b6be8416ab37
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

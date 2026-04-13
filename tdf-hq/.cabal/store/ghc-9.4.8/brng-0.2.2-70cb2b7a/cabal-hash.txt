@@ -1,0 +1,12 @@
+pkgid: boring-0.2.2
+component: ComponentLib
+src: 928baf1fff69b17658fb7014a1cc3e220b3b69b52271ae9c0452f82d67b3ef86
+pkg-config-deps: 
+deps: base-4.17.2.1, tggd-0.8.10-632f416a, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +tagged
+shared-lib: True
+stripped-exe: False
+debug-info: 0
