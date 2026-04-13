@@ -1,0 +1,12 @@
+pkgid: attoparsec-0.14.4
+component: ComponentSubLib (UnqualComponentName "attoparsec-internal")
+src: 3f337fe58624565de12426f607c23e60c7b09c86b4e3adfc827ca188c9979e6c
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -developer
+shared-lib: True
+stripped-exe: False
+debug-info: 0

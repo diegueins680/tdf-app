@@ -2483,8 +2483,9 @@ listCourseRegistrations mSlug mStatus mLimit = do
 
 fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
 fetchCourseRegistrationEntity rawSlug regId = do
+  regIdValid <- either throwError pure (validateCourseRegistrationId regId)
   let slugVal = normalizeSlug rawSlug
-      key = toSqlKey regId
+      key = toSqlKey regIdValid
   mRow <- runDB $ getEntity key
   case mRow of
     Nothing -> throwNotFound "Registro no encontrado"
@@ -2829,9 +2830,10 @@ fetchCourseRegistrationReceiptEntity
   -> Int64
   -> AppM (Entity ME.CourseRegistration, Entity ME.CourseRegistrationReceipt)
 fetchCourseRegistrationReceiptEntity rawSlug regId receiptId = do
+  receiptIdValid <- either throwError pure (validateCourseRegistrationReceiptId receiptId)
   ent <- fetchCourseRegistrationEntity rawSlug regId
   let regKey = entityKey ent
-      receiptKey = toSqlKey receiptId
+      receiptKey = toSqlKey receiptIdValid
   mReceipt <- runDB $ getEntity receiptKey
   case mReceipt of
     Nothing -> throwNotFound "Comprobante no encontrado"
@@ -2896,9 +2898,10 @@ fetchCourseRegistrationFollowUpEntity
   -> Int64
   -> AppM (Entity ME.CourseRegistration, Entity ME.CourseRegistrationFollowUp)
 fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId = do
+  followUpIdValid <- either throwError pure (validateCourseRegistrationFollowUpId followUpId)
   ent <- fetchCourseRegistrationEntity rawSlug regId
   let regKey = entityKey ent
-      followUpKey = toSqlKey followUpId
+      followUpKey = toSqlKey followUpIdValid
   mFollowUp <- runDB $ getEntity followUpKey
   case mFollowUp of
     Nothing -> throwNotFound "Seguimiento no encontrado"
@@ -3001,7 +3004,8 @@ listCourseRegistrationEmailEvents
   -> Maybe Int
   -> AppM [DTO.CourseEmailEventDTO]
 listCourseRegistrationEmailEvents regId mLimit = do
-  let regKey = toSqlKey regId :: Key ME.CourseRegistration
+  regIdValid <- either throwError pure (validateCourseRegistrationId regId)
+  let regKey = toSqlKey regIdValid :: Key ME.CourseRegistration
   capped <- either throwError pure (validateCourseRegistrationEmailEventListLimit mLimit)
   mRow <- runDB $ getEntity regKey
   case mRow of
@@ -5463,6 +5467,15 @@ validateOptionalPositiveIdField :: Text -> Maybe Int64 -> Either ServerError (Ma
 validateOptionalPositiveIdField _ Nothing = Right Nothing
 validateOptionalPositiveIdField fieldName (Just rawId)
   | otherwise = Just <$> validatePositiveIdField fieldName rawId
+
+validateCourseRegistrationId :: Int64 -> Either ServerError Int64
+validateCourseRegistrationId = validatePositiveIdField "registrationId"
+
+validateCourseRegistrationReceiptId :: Int64 -> Either ServerError Int64
+validateCourseRegistrationReceiptId = validatePositiveIdField "receiptId"
+
+validateCourseRegistrationFollowUpId :: Int64 -> Either ServerError Int64
+validateCourseRegistrationFollowUpId = validatePositiveIdField "followUpId"
 
 validateChatMessageListLookup
   :: Int64

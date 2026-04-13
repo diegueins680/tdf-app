@@ -66,6 +66,9 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validatePublicBookingStartAt
+    , validateCourseRegistrationId
+    , validateCourseRegistrationReceiptId
+    , validateCourseRegistrationFollowUpId
     , resolvePartyRoleAssignmentTarget
     )
 import TDF.ServerAuth
@@ -175,6 +178,32 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "course registration lookup ids" $ do
+        it "rejects non-positive registration ids before course admin handlers can treat malformed lookups as missing rows" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "registrationId must be a positive integer"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid registration lookup id to be rejected, got: " <> show value)
+            assertInvalid (validateCourseRegistrationId 0)
+            assertInvalid (validateCourseRegistrationId (-7))
+
+        it "rejects non-positive receipt and follow-up ids before nested course admin lookups hit the database" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid nested course registration lookup id to be rejected, got: " <> show value)
+            assertInvalid "receiptId must be a positive integer"
+                (validateCourseRegistrationReceiptId 0)
+            assertInvalid "followUpId must be a positive integer"
+                (validateCourseRegistrationFollowUpId (-3))
 
     describe "resolvePartyRoleAssignmentTarget" $ do
         it "rejects non-positive party ids before attempting any role assignment" $ do

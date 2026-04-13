@@ -1,0 +1,11 @@
+pkgid: constraints-0.14.4
+component: ComponentLib
+src: 808021e217c39eb4aaa76cf85abf43f4e5bf4396143d86bb2275068dd8bb6d39
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, brng-0.2.2-70cb2b7a, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f, mtl-2.2.2, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

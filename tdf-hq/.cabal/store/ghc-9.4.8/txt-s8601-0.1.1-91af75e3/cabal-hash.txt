@@ -1,0 +1,11 @@
+pkgid: text-iso8601-0.1.1
+component: ComponentLib
+src: 9dead2b7ceeae40fe0fc060bd54795c32e9926c9d1aebae8f9b9a621fba88202
+pkg-config-deps: 
+deps: base-4.17.2.1, ntgr-cnvrsn-0.1.1-54863df5, text-2.0.2, time-1.12.2, tm-cmpt-1.9.8-611e216d
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

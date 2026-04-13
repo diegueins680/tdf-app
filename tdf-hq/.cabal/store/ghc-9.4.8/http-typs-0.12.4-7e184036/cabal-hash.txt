@@ -1,0 +1,11 @@
+pkgid: http-types-0.12.4
+component: ComponentLib
+src: 4d4b1bb0cc817e5fef0c9c76c9647f69f4d300c45a105043493eff86381be549
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, cs-nsnstv-1.2.1.0-f05712b6, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0
