@@ -270,6 +270,8 @@ export default function MarketplaceOrdersPage() {
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
   const showActiveFiltersTray = filtersDirty;
+  const showHeaderRefreshAction =
+    Boolean(ordersQuery.error) || (!ordersQuery.isLoading && (orders.length > 1 || filtersDirty));
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -458,11 +460,13 @@ export default function MarketplaceOrdersPage() {
           Órdenes del marketplace
         </Typography>
         <Box flex={1} />
-        <Tooltip title="Recargar">
-          <IconButton aria-label="Recargar órdenes" onClick={handleRefresh}>
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
+        {showHeaderRefreshAction && (
+          <Tooltip title="Recargar">
+            <IconButton aria-label="Recargar órdenes" onClick={handleRefresh}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        )}
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {ordersSummary}

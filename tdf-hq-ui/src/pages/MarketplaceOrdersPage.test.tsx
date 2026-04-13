@@ -215,6 +215,25 @@ describe('MarketplaceOrdersPage', () => {
         expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(queryActionByText(container, 'Ir al marketplace')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the first marketplace load focused on setup instead of a refresh action', async () => {
+    listOrdersMock.mockImplementation(() => new Promise(() => {}));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Cargando órdenes...');
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -242,7 +261,37 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('restores the refresh action once the page has a real order list to revisit', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {
       await cleanup();
