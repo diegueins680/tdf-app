@@ -165,7 +165,12 @@ export default function CmsAdminPage() {
   const slugFieldState = useMemo(() => getCmsSlugFieldState(slugFilter), [slugFilter]);
   const customSlugHelperText = hasSlugSelection
     ? 'Usa el mismo slug que consume la ruta pública.'
-    : 'Completa este slug para habilitar Guardar versión y Abrir página en vivo.';
+    : 'Completa este slug para habilitar el guardado y Abrir página en vivo.';
+  const saveActionLabel = status === 'published' ? 'Guardar y publicar' : 'Guardar borrador';
+  const statusHelperText =
+    status === 'published'
+      ? 'Publicará esta versión al guardar y actualizará la página en vivo.'
+      : 'Guardará esta versión como borrador sin cambiar la página en vivo.';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -816,6 +821,7 @@ export default function CmsAdminPage() {
                     const next = e.target.value.trim();
                     setStatus(isContentStatus(next) ? next : 'draft');
                   }}
+                  helperText={statusHelperText}
                   sx={{ width: 240 }}
                 >
                   <MenuItem value="draft">Borrador</MenuItem>
@@ -827,7 +833,7 @@ export default function CmsAdminPage() {
                     onClick={handleCreate}
                     disabled={createMutation.isPending || !hasSlugSelection}
                   >
-                    Guardar versión
+                    {saveActionLabel}
                   </Button>
                   {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
                   {createMutation.isError && (

@@ -371,9 +371,9 @@ describe('CmsAdminPage', () => {
       expect(getPublicMock).not.toHaveBeenCalled();
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
       expect(container.textContent).toContain(
-        'Completa este slug para habilitar Guardar versión y Abrir página en vivo.',
+        'Completa este slug para habilitar el guardado y Abrir página en vivo.',
       );
-      expect(getButtonByText(container, 'Guardar versión').disabled).toBe(true);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
     });
 
     await cleanup();
@@ -458,6 +458,41 @@ describe('CmsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('makes the primary save action explicit so first-time admins can tell draft saves from live publishes', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let rendered = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Guardar borrador')).toBeTruthy();
+      expect(container.textContent).toContain(
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
+      );
+      expect(container.textContent).not.toContain('Guardar versión');
+    });
+
+    await rendered.cleanup();
+
+    window.localStorage.setItem(
+      'tdf-cms-admin:draft:records-public:es',
+      JSON.stringify({ status: 'published' }),
+    );
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    rendered = await renderPage(secondContainer);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(secondContainer, 'Guardar y publicar')).toBeTruthy();
+      expect(secondContainer.textContent).toContain(
+        'Publicará esta versión al guardar y actualizará la página en vivo.',
+      );
+      expect(secondContainer.textContent).not.toContain('Guardar versión');
+    });
+
+    await rendered.cleanup();
   });
 
   it('keeps the loaded-version context beside save instead of repeating it in the versions header', async () => {
