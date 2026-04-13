@@ -5,7 +5,7 @@ module TDF.ServerAdminSpec (spec) where
 
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.Reader (ReaderT, runReaderT)
-import Data.Aeson (eitherDecode)
+import Data.Aeson (Value, eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Database.Persist.Sql (toSqlKey)
@@ -271,6 +271,44 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Provide only one of externalId or senderId"
                 (validateSocialUnholdLookup (Just "ext-1") (Just "sender-1"))
 
+    describe "social unhold route validation" $ do
+        it "rejects blank channels before surfacing lookup-shape errors" $ do
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "   "
+                        , surExternalId = Nothing
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+
+            result <- runAdminTest (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "channel requerido"
+                    BL8.unpack (errBody err) `shouldNotContain` "Provide externalId or senderId"
+                Right value ->
+                    expectationFailure ("Expected blank channel social unhold to be rejected, got " <> show value)
+
+        it "rejects unsupported channels before any unhold lookup work" $ do
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "telegram"
+                        , surExternalId = Just "ext-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+
+            result <- runAdminTest (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "channel inválido"
+                Right value ->
+                    expectationFailure ("Expected unsupported channel social unhold to be rejected, got " <> show value)
+
     describe "admin logs route authorization" $ do
         it "requires the Admin module before listing or clearing logs" $ do
             let listLogs :<|> clearLogs = logsHandlersFor (mkUser [Fan])
@@ -337,3 +375,23 @@ logsHandlersFor user =
             :<|> _rag
             :<|> _social ->
                 logsRouter
+
+socialHandlersFor
+    :: AuthedUser
+    -> (SocialUnholdRequest -> AdminTestM Value)
+        :<|> AdminTestM Value
+        :<|> (Maybe T.Text -> Maybe Int -> AdminTestM Value)
+socialHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> _artists
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> socialRouter ->
+                socialRouter

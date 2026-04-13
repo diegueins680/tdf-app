@@ -241,7 +241,7 @@ adminServer user =
     socialUnholdHandler SocialUnholdRequest{..} = do
       ensureModule ModuleAdmin user
       now <- liftIO getCurrentTime
-      let channel = T.toLower (T.strip surChannel)
+      channel <- either throwError pure (parseSocialErrorsChannel (Just surChannel))
       lookupMode <- either throwError pure (validateSocialUnholdLookup surExternalId surSenderId)
       case lookupMode of
         SocialUnholdByExternalId extId -> do
