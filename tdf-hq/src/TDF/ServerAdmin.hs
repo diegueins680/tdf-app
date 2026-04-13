@@ -1247,12 +1247,26 @@ isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      not (T.null localPart)
+      isValidAdminEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any isSpace candidate)
+        && not (T.isPrefixOf "." domain)
+        && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
         && all isValidAdminEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+isValidAdminEmailLocalPart :: Text -> Bool
+isValidAdminEmailLocalPart localPart =
+  not (T.null localPart)
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidAdminEmailLocalChar localPart
+
+isValidAdminEmailLocalChar :: Char -> Bool
+isValidAdminEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidAdminEmailDomainLabel :: Text -> Bool
 isValidAdminEmailDomainLabel label =

@@ -49,6 +49,10 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             normalizeAdminEmailAddress "ada.example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@ example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress ".ada@example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada.@example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada..ops@example.com" `shouldBe` Nothing
+            normalizeAdminEmailAddress "ada()@example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example..com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@-example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example-.com" `shouldBe` Nothing
@@ -109,6 +113,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             dedupeAdminEmailRecipients
                 [ ("Ada", " ADA@example.com ")
                 , ("Broken", "not-an-email")
+                , ("Broken local", ".ada@example.com")
                 , ("Broken domain", "ada@example..com")
                 , ("Ignored duplicate", "ada@example.com")
                 , ("Linus", "linus@example.com")
