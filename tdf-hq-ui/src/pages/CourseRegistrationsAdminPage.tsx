@@ -665,6 +665,10 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary
     ? summarizedVisibleSourceLabel
     : '';
+  const combinedSingleChoiceContextSummary = [
+    combinedSingleChoiceSourceSummary,
+    combinedSingleChoiceLimitSummary,
+  ].filter(Boolean).join(' ');
   const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
     ? summarizedVisibleSourceLabel
     : '';
@@ -1736,14 +1740,13 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="body2" fontWeight={600}>
                       {combinedSingleChoiceSummary}
                     </Typography>
-                    {combinedSingleChoiceSourceSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {combinedSingleChoiceSourceSummary}
-                      </Typography>
-                    )}
-                    {combinedSingleChoiceLimitSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {combinedSingleChoiceLimitSummary}
+                    {combinedSingleChoiceContextSummary && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        data-testid="course-registration-single-choice-context"
+                      >
+                        {combinedSingleChoiceContextSummary}
                       </Typography>
                     )}
                     {showFilterOnboardingCopy && (

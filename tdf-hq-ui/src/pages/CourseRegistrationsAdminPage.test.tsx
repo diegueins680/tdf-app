@@ -3329,6 +3329,27 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps shared source and custom limit inside one passive current-view line', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
+      expect(container.textContent).toContain('Vista actual');
+      expect(contextSummary?.textContent?.trim()).toBe('Fuente visible: landing. Límite actual: hasta 50 inscripciones.');
+      expect(container.querySelectorAll('[data-testid="course-registration-single-choice-context"]')).toHaveLength(1);
+      expect(countOccurrences(container, 'Fuente visible: landing.')).toBe(1);
+      expect(countOccurrences(container, 'Límite actual: hasta 50 inscripciones.')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the header comparative by hiding a solitary total chip and redundant single-status totals', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
