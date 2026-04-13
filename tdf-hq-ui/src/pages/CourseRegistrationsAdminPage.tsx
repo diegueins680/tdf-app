@@ -567,7 +567,7 @@ export default function CourseRegistrationsAdminPage() {
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
   }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
-    if (!regsQuery.data || regsQuery.data.length < 2) return '';
+    if (!regsQuery.data || regsQuery.data.length === 0) return '';
     const uniqueSources = Array.from(
       new Set(
         regsQuery.data
@@ -2069,6 +2069,10 @@ export default function CourseRegistrationsAdminPage() {
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
                   const showRowSource = !hasSharedVisibleSource;
+                  const hideMinimalRowContext = loadedRegistrationCount === 1
+                    && !showRowCohort
+                    && !showRowSource
+                    && !hasRowNotes;
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
@@ -2113,11 +2117,13 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                       </Box>
-                      <Box sx={{ minWidth: 180 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {rowContextSummary}
-                        </Typography>
-                      </Box>
+                      {!hideMinimalRowContext && (
+                        <Box sx={{ minWidth: 180 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {rowContextSummary}
+                          </Typography>
+                        </Box>
+                      )}
                       <Button
                         size="small"
                         variant="text"

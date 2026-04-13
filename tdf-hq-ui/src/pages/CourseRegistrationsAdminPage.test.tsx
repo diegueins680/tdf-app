@@ -733,7 +733,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await thirdRender.cleanup();
   });
 
-  it('shows the selected cohort once in the filtered summary instead of repeating it on each row', async () => {
+  it('shows the selected cohort once in the filtered summary and folds a lone shared source into that same header context', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
@@ -748,7 +748,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
-      expect(container.textContent).toContain('Fuente: landing');
+      expect(container.textContent).toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(getButtonByText(container, 'Mostrar todas las cohortes')).toBeTruthy();
     });
 
@@ -1591,6 +1593,24 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('moves single-result source context into the header summary so the row stays focused on identity and actions', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vista actual');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.textContent).toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
     });
 
     await cleanup();
