@@ -306,18 +306,11 @@ function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
 function buildAdminUsersSectionDescription({
   showLastAccessColumn,
   showStatusColumn,
-  includeInlineEditHint,
 }: {
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
-  includeInlineEditHint: boolean;
 }) {
-  const descriptionParts: string[] = [];
   const hiddenColumnSummaries: string[] = [];
-
-  if (includeInlineEditHint) {
-    descriptionParts.push(ADMIN_USERS_INLINE_EDIT_HINT);
-  }
 
   if (!showLastAccessColumn) {
     hiddenColumnSummaries.push(
@@ -332,14 +325,10 @@ function buildAdminUsersSectionDescription({
   }
 
   if (hiddenColumnSummaries.length > 0) {
-    descriptionParts.push(`Vista actual: ${hiddenColumnSummaries.join(' y ')}.`);
+    return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
   }
 
-  if (descriptionParts.length === 0) {
-    return null;
-  }
-
-  return descriptionParts.join(' ');
+  return null;
 }
 
 function buildAuditSectionDescription({
@@ -554,7 +543,7 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
-  const showUsersInlineEditHint = users.length > 0;
+  const showUsersInlineEditHint = singleAdminUser !== null;
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
@@ -588,7 +577,6 @@ export default function AdminConsolePage() {
             ? buildAdminUsersSectionDescription({
               showLastAccessColumn: showUsersLastAccessColumn,
               showStatusColumn: showUsersStatusColumn,
-              includeInlineEditHint: showUsersInlineEditHint,
             })
             : null
         )
@@ -901,7 +889,16 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>Roles</TableCell>
+                  <TableCell>
+                    <Stack spacing={0} component="span">
+                      <Typography component="span" variant="body2" fontWeight={600}>
+                        Roles
+                      </Typography>
+                      <Typography component="span" variant="caption" color="text.secondary">
+                        Clic para editar
+                      </Typography>
+                    </Stack>
+                  </TableCell>
                   {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
                   {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                 </TableRow>
