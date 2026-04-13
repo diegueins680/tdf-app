@@ -353,8 +353,8 @@ function buildAuditSectionDescription({
 
 function formatFirstRunAdditionalModulesActionLabel(count: number) {
   return count === 1
-    ? '4. Ver 1 módulo adicional'
-    : `4. Ver ${count} módulos adicionales`;
+    ? 'Opcional: ver 1 módulo adicional'
+    : `Opcional: ver ${count} módulos adicionales`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -674,17 +674,19 @@ export default function AdminConsolePage() {
                   href={`#${section.targetId}`}
                 />
               ))}
-              {showFirstRunAdditionalModulesShowAction && (
-                <Chip
-                  clickable
-                  variant="outlined"
-                  label={firstRunAdditionalModulesActionLabel}
-                  onClick={() => setShowFirstRunAdditionalModules(true)}
-                  aria-controls="admin-additional-modules-list"
-                  aria-expanded="false"
-                />
-              )}
             </Stack>
+            {showFirstRunAdditionalModulesShowAction && (
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setShowFirstRunAdditionalModules(true)}
+                aria-controls="admin-additional-modules-list"
+                aria-expanded="false"
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                {firstRunAdditionalModulesActionLabel}
+              </Button>
+            )}
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
                 {firstRunDemoActionCopy.description}
