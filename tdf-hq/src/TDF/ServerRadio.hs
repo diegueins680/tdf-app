@@ -6,6 +6,7 @@
 module TDF.ServerRadio
   ( radioServer
   , validateRadioStreamUrl
+  , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
   ) where
@@ -85,6 +86,46 @@ validateRadioStreamUrl rawUrl
       | otherwise = Nothing
     authority =
       maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+
+validateRadioImportSources :: Maybe [Text] -> Either ServerError [Text]
+validateRadioImportSources Nothing = Right defaultRadioImportSources
+validateRadioImportSources (Just rawSources) =
+  case filter (not . T.null) (map (T.strip . canonicalRadioImportSource) rawSources) of
+    [] ->
+      Left err400 { errBody = "sources must include at least one public http(s) URL" }
+    cleanedSources ->
+      traverse validateExplicitSource cleanedSources
+  where
+    validateExplicitSource source =
+      case validateRadioStreamUrl source of
+        Left err -> Left (toRadioImportSourceError err)
+        Right validSource -> Right validSource
+
+    toRadioImportSourceError err =
+      let bodyText =
+            TE.decodeUtf8With lenientDecode (BL.toStrict (errBody err))
+      in err
+          { errBody =
+              BL.fromStrict
+                (TE.encodeUtf8 (T.replace "streamUrl" "source" bodyText))
+          }
+
+defaultRadioImportSources :: [Text]
+defaultRadioImportSources =
+  [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+  , "https://www.rcast.net/dir"
+  , "https://www.internet-radio.com"
+  , "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
+  ]
+
+canonicalRadioImportSource :: Text -> Text
+canonicalRadioImportSource src
+  | "github.com/mikepierce/internet-radio-streams" `T.isInfixOf` src =
+      "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+  | "github.com/junguler/m3u-radio-music-playlists" `T.isInfixOf` src =
+      "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
+  | T.isSuffixOf ".csv" src = src
+  | otherwise = src
 
 validateRadioAuthority :: Text -> Either ServerError ()
 validateRadioAuthority rawAuthority
@@ -282,11 +323,7 @@ radioServer user =
 
     importStreams :: RadioImportRequest -> m RadioImportResult
     importStreams RadioImportRequest{..} = do
-      let rawSources = fromMaybe defaultSources rirSources
-          cleanedSources =
-            case filter (not . T.null) (map (T.strip . canonicalSource) rawSources) of
-              [] -> defaultSources
-              xs -> xs
+      cleanedSources <- either throwError pure (validateRadioImportSources rirSources)
       cap <- either throwError pure (validateRadioImportLimit rirLimit)
       manager <- liftIO $ newManager tlsManagerSettings
       fetchedResults <- liftIO $
@@ -444,32 +481,15 @@ radioServer user =
           _ ->
             Nothing
 
-    defaultSources :: [Text]
-    defaultSources =
-      [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
-      , "https://www.rcast.net/dir"
-      , "https://www.internet-radio.com"
-      , "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
-      ]
-
     fetchSource :: Manager -> Text -> IO [RadioStreamUpsert]
     fetchSource manager src = do
-      req <- parseRequest (T.unpack (canonicalSource src))
+      req <- parseRequest (T.unpack (canonicalRadioImportSource src))
       resp <- httpLbs req manager
       let bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
           csvItems = parseCsvStreams bodyTxt
       if not (null csvItems)
         then pure csvItems
         else pure (map toStreamUpsert (extractUrls bodyTxt))
-
-    canonicalSource :: Text -> Text
-    canonicalSource src
-      | "github.com/mikepierce/internet-radio-streams" `T.isInfixOf` src =
-          "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
-      | "github.com/junguler/m3u-radio-music-playlists" `T.isInfixOf` src =
-          "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
-      | T.isSuffixOf ".csv" src = src
-      | otherwise = src
 
     parseCsvStreams :: Text -> [RadioStreamUpsert]
     parseCsvStreams body =

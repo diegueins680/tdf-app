@@ -49,7 +49,11 @@ import TDF.DTO.SocialEventsDTO
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
-import TDF.ServerRadio (validateRadioImportLimit, validateRadioMetadataRefreshLimit, validateRadioStreamUrl)
+import TDF.ServerRadio
+    ( validateRadioImportLimit,
+      validateRadioImportSources,
+      validateRadioMetadataRefreshLimit,
+      validateRadioStreamUrl )
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
@@ -868,6 +872,32 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
                 Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
+
+    describe "validateRadioImportSources" $ do
+        it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do
+            validateRadioImportSources Nothing
+                `shouldBe` Right
+                    [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+                    , "https://www.rcast.net/dir"
+                    , "https://www.internet-radio.com"
+                    , "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
+                    ]
+            validateRadioImportSources
+                (Just ["  https://github.com/mikepierce/internet-radio-streams/blob/master/streams.csv  "])
+                `shouldBe` Right
+                    [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv" ]
+
+        it "rejects explicit empty or invalid source lists instead of silently falling back to defaults" $ do
+            let assertInvalid rawSources expected = case validateRadioImportSources rawSources of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid radio import sources to be rejected, got " <> show value)
+            assertInvalid (Just []) "sources must include at least one public http(s) URL"
+            assertInvalid (Just ["   "]) "sources must include at least one public http(s) URL"
+            assertInvalid (Just ["ftp://radio.example.com/catalog.csv"]) "source must be http(s)"
+            assertInvalid (Just ["http://127.0.0.1/catalog.csv"]) "source must not target localhost or private network addresses"
 
     describe "validateRadioImportLimit" $ do
         it "uses the import default only when the caller omits the limit and caps explicit requests at the import batch budget" $ do
