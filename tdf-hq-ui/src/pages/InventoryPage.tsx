@@ -185,7 +185,9 @@ export default function InventoryPage() {
   const grouped = useMemo(() => assets, [assets]);
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const singleAsset = grouped.length === 1 ? (grouped[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
+  const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -223,6 +225,75 @@ export default function InventoryPage() {
               <Typography variant="body2" color="rgba(226,232,240,0.68)">
                 Si estás esperando la carga inicial del inventario, usa Actualizar para volver a consultar sin revisar una tabla vacía.
               </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : showSingleAssetSummary && singleAsset ? (
+        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack spacing={0.75}>
+                <Typography variant="h6" fontWeight={700}>
+                  Primer equipo registrado
+                </Typography>
+                <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  Revisa estado, ubicación y el siguiente movimiento desde este resumen. Cuando exista el segundo
+                  equipo, volverá la tabla operativa.
+                </Typography>
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography variant="body1" fontWeight={700}>
+                  {singleAsset.name}
+                </Typography>
+                <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  Categoría: {singleAsset.category}
+                </Typography>
+                <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  Estado: {singleAsset.status}
+                </Typography>
+                <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  Ubicación: {singleAsset.location ?? '—'}
+                </Typography>
+                <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  Condición: {singleAsset.condition ?? '—'}
+                </Typography>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<QrCodeIcon />}
+                  onClick={() => void openQr(singleAsset)}
+                  aria-label={`Abrir QR de ${singleAsset.name}`}
+                >
+                  Ver QR
+                </Button>
+                {getInventoryMovementState(singleAsset.status).canCheckout && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<ExitToAppIcon />}
+                    onClick={() => openCheckout(singleAsset)}
+                    aria-label={`Abrir check-out de ${singleAsset.name}`}
+                  >
+                    Registrar check-out
+                  </Button>
+                )}
+                {getInventoryMovementState(singleAsset.status).canCheckin && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<HowToRegIcon />}
+                    onClick={() => openCheckin(singleAsset)}
+                    aria-label={`Abrir check-in de ${singleAsset.name}`}
+                  >
+                    Registrar check-in
+                  </Button>
+                )}
+                <Button size="small" variant="text" onClick={() => openHistory(singleAsset)}>
+                  Historial
+                </Button>
+              </Stack>
             </Stack>
           </CardContent>
         </Card>

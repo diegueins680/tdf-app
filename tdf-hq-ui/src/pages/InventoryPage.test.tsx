@@ -174,15 +174,65 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps the operations table once at least one asset is available', async () => {
+  it('replaces the one-row inventory table with a first-asset summary card and plain-language actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     try {
       await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primer equipo registrado');
+        expect(container.textContent).toContain(
+          'Revisa estado, ubicación y el siguiente movimiento desde este resumen. Cuando exista el segundo equipo, volverá la tabla operativa.',
+        );
         expect(container.textContent).toContain('Neumann U87');
-        expect(container.textContent).not.toContain('Primeros pasos');
+        expect(container.textContent).toContain('Categoría: Micrófono');
+        expect(container.textContent).toContain('Estado: Active');
+        expect(container.textContent).toContain('Ubicación: Sala A');
+        expect(container.textContent).toContain('Condición: Excelente');
+        expect(container.querySelector('table')).toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Ver QR',
+          ),
+        ).toBe(true);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Registrar check-out',
+          ),
+        ).toBe(true);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Historial',
+          ),
+        ).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the operations table once there is more than one asset to compare', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).not.toContain('Primer equipo registrado');
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
@@ -193,6 +243,15 @@ describe('InventoryPage', () => {
   });
 
   it('keeps category and condition inside the equipment cell instead of restoring extra detail columns', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ]);
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
