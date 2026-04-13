@@ -152,6 +152,18 @@ const setInputValue = async (input: HTMLInputElement, value: string) => {
   });
 };
 
+const clickActionByText = async (root: ParentNode, labelText: string) => {
+  const action = queryActionByText(root, labelText);
+  if (!(action instanceof HTMLElement)) {
+    throw new Error(`Action not found: ${labelText}`);
+  }
+
+  await act(async () => {
+    action.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
@@ -333,6 +345,50 @@ describe('MarketplaceOrdersPage', () => {
         expect(queryActionByText(container, 'Tarjeta pendiente')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides date and payment filters behind one explicit toggle until someone asks for them', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'datafast',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).not.toBeNull();
+        expect(countLabelsByText(container, 'Desde')).toBe(0);
+        expect(countLabelsByText(container, 'Hasta')).toBe(0);
+        expect(container.textContent).not.toContain('Solo con pago registrado');
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Ocultar fechas y pago')).not.toBeNull();
+        expect(countLabelsByText(container, 'Desde')).toBe(1);
+        expect(countLabelsByText(container, 'Hasta')).toBe(1);
+        expect(container.textContent).toContain('Solo con pago registrado');
       });
     } finally {
       await cleanup();

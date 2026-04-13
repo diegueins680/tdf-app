@@ -119,6 +119,7 @@ export default function MarketplaceOrdersPage() {
   const [toDate, setToDate] = useState<string>(defaultFilters.toDate);
   const [search, setSearch] = useState(defaultFilters.search);
   const [paidOnly, setPaidOnly] = useState(defaultFilters.paidOnly);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusInput, setStatusInput] = useState<string>('');
   const [paymentProviderInput, setPaymentProviderInput] = useState<string>('');
@@ -270,6 +271,12 @@ export default function MarketplaceOrdersPage() {
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
   const showActiveFiltersTray = filtersDirty;
+  const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || paidOnly;
+  const advancedFiltersButtonLabel = showAdvancedFilters
+    ? 'Ocultar fechas y pago'
+    : hasAdvancedFiltersActive
+      ? 'Editar fechas y pago'
+      : 'Mostrar fechas y pago';
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && (orders.length > 1 || filtersDirty));
 
@@ -349,6 +356,7 @@ export default function MarketplaceOrdersPage() {
 
   const clearFilters = () => {
     applyFilters(createDefaultMarketplaceOrderFilters());
+    setShowAdvancedFilters(false);
   };
 
   const applyPreset = (preset: QuickViewPreset) => {
@@ -547,33 +555,47 @@ export default function MarketplaceOrdersPage() {
                 </Box>
               )}
             </Grid>
-            <Grid item xs={6} md={6} lg={3}>
-              <TextField
-                label="Desde"
-                type="date"
-                fullWidth
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
+            <Grid item xs={12}>
+              <Button
+                size="small"
+                variant="text"
+                onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                sx={{ px: 0, textTransform: 'none' }}
+              >
+                {advancedFiltersButtonLabel}
+              </Button>
             </Grid>
-            <Grid item xs={6} md={6} lg={3}>
-              <TextField
-                label="Hasta"
-                type="date"
-                fullWidth
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ min: fromDate }}
-              />
-            </Grid>
-            <Grid item xs={12} md={12} lg={3}>
-              <FormControlLabel
-                control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
-                label="Solo con pago registrado"
-              />
-            </Grid>
+            {showAdvancedFilters && (
+              <>
+                <Grid item xs={6} md={6} lg={3}>
+                  <TextField
+                    label="Desde"
+                    type="date"
+                    fullWidth
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={6} md={6} lg={3}>
+                  <TextField
+                    label="Hasta"
+                    type="date"
+                    fullWidth
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: fromDate }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={12} lg={3}>
+                  <FormControlLabel
+                    control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
+                    label="Solo con pago registrado"
+                  />
+                </Grid>
+              </>
+            )}
           </Grid>
           <Stack
             direction={{ xs: 'column', lg: 'row' }}
