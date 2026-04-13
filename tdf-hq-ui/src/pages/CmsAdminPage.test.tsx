@@ -212,6 +212,22 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps editor guidance in one helper block instead of stacking separate autosave and compare lines', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
+      expect(guidance).not.toBeNull();
+      expect(guidance?.textContent?.trim()).toBe(
+        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas. El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('keeps the live-page action in a single primary place instead of duplicating it in the live summary card', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

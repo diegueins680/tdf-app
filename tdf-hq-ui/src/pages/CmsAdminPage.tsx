@@ -467,6 +467,7 @@ export default function CmsAdminPage() {
         ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
         : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
+  const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
 
   return (
@@ -800,11 +801,12 @@ export default function CmsAdminPage() {
                   )}
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
                 </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {draftAutosaveHelperText}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {compareHint}
+                <Typography
+                  data-testid="cms-admin-editor-guidance"
+                  variant="caption"
+                  color="text.secondary"
+                >
+                  {editorGuidance}
                 </Typography>
                 <TextField
                   select
