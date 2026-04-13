@@ -9,6 +9,7 @@ import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
 import TDF.API.Types (LooseJSON, RolePayload (..))
+import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
 import TDF.Trials.DTO (TrialRequestIn (..))
 
@@ -68,6 +69,46 @@ spec = do
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
 
+    describe "Academy request FromJSON" $ do
+        it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
+            case decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"instagram\",\"referralCode\":\"REF-42\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical academy enroll payload to decode, got: " <> err)
+                Right (Academy.EnrollReq emailVal roleVal platformVal referralCodeVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    roleVal `shouldBe` "artist"
+                    platformVal `shouldBe` Just "instagram"
+                    referralCodeVal `shouldBe` Just "REF-42"
+
+            case decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing-basics\",\"day\":3}" of
+                Left err ->
+                    expectationFailure ("Expected canonical academy progress payload to decode, got: " <> err)
+                Right (Academy.ProgressReq emailVal slugVal dayVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    slugVal `shouldBe` "mixing-basics"
+                    dayVal `shouldBe` 3
+
+            case decodeReferralClaim
+                "{\"email\":\"ada@example.com\",\"code\":\"REF-42\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical academy referral-claim payload to decode, got: " <> err)
+                Right (Academy.ReferralClaimReq emailVal codeVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    codeVal `shouldBe` "REF-42"
+
+        it "rejects unexpected keys so malformed academy bodies fail explicitly" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"instagram\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing-basics\",\"day\":3,\"completedAt\":\"2026-05-01\"}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                "{\"email\":\"ada@example.com\",\"code\":\"REF-42\",\"status\":\"claimed\"}"
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
@@ -95,6 +136,12 @@ spec = do
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeCourseRegistration = eitherDecode
+    decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
+    decodeEnroll = eitherDecode
+    decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq
+    decodeProgress = eitherDecode
+    decodeReferralClaim :: BL8.ByteString -> Either String Academy.ReferralClaimReq
+    decodeReferralClaim = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True

@@ -14,7 +14,7 @@ module TDF.Routes.Academy
   , NextCohortDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
 import           Data.Text (Text)
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
@@ -27,8 +27,9 @@ data EnrollReq = EnrollReq
   , referralCode :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON EnrollReq
 instance ToJSON EnrollReq
+instance FromJSON EnrollReq where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ProgressReq = ProgressReq
   { email :: Text
@@ -36,7 +37,8 @@ data ProgressReq = ProgressReq
   , day   :: Int
   } deriving (Show, Generic)
 
-instance FromJSON ProgressReq
+instance FromJSON ProgressReq where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON ProgressReq
 
 data ReferralClaimReq = ReferralClaimReq
@@ -44,7 +46,8 @@ data ReferralClaimReq = ReferralClaimReq
   , code  :: Text
   } deriving (Show, Generic)
 
-instance FromJSON ReferralClaimReq
+instance FromJSON ReferralClaimReq where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON ReferralClaimReq
 
 data LessonDTO = LessonDTO
@@ -81,3 +84,6 @@ type AcademyAPI =
   :<|> "academy" :> "progress" :> ReqBody '[JSON] ProgressReq :> Post '[JSON] NoContent
   :<|> "referrals" :> "claim" :> ReqBody '[JSON] ReferralClaimReq :> Post '[JSON] NoContent
   :<|> "cohorts" :> "next" :> Get '[JSON] NextCohortDTO
+
+strictObjectOptions :: Options
+strictObjectOptions = defaultOptions { rejectUnknownFields = True }
