@@ -31,6 +31,7 @@ import           Servant.Multipart        ( FileData
                                           , Tmp
                                           , fdInputName
                                           )
+import           TDF.WhatsApp.History     (normalizeWhatsAppPhone)
 type LiveSessionsAPI =
   "live-sessions" :>
     ( "intake" :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
@@ -97,7 +98,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
     primaryGenre <- optionalText "primaryGenre" multipart
     inputList <- optionalText "inputList" multipart
     contactEmail <- optionalEmail "contactEmail" multipart
-    contactPhone <- optionalText "contactPhone" multipart
+    contactPhone <- optionalPhone "contactPhone" multipart
     riderFile <- lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
     availability <- optionalText "availability" multipart
@@ -141,6 +142,11 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           Left err -> Left err
           Right Nothing  -> Right Nothing
           Right (Just inp) -> validateOptionalEmailText name (inputValueText inp)
+      optionalPhone name mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just inp) -> validateOptionalPhoneText name (inputValueText inp)
       lookupFile = lookupSingleFile
       optionalDay name mp =
         case lookupSingleInput name mp of
@@ -227,6 +233,20 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
                          <> T.unpack fieldName
                          <> " must be a valid email address"
                      )
+
+      validateOptionalPhoneText :: Text -> Text -> Either String (Maybe Text)
+      validateOptionalPhoneText fieldName raw =
+        case normalizeOptionalText raw of
+          Nothing -> Right Nothing
+          Just phoneVal ->
+            case normalizeWhatsAppPhone phoneVal of
+              Just normalized -> Right (Just normalized)
+              Nothing ->
+                Left
+                  ( "Invalid field: "
+                      <> T.unpack fieldName
+                      <> " must be a valid phone number"
+                  )
 
       isValidEmail :: Text -> Bool
       isValidEmail candidate =

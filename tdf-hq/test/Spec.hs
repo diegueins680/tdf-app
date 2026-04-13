@@ -1638,6 +1638,17 @@ main = hspec $ do
                         musicians ->
                             expectationFailure ("Expected exactly one normalized musician, got: " <> show musicians)
 
+        it "normalizes valid contact phones before the intake reaches persistence" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("contactPhone", " +593 99 123 4567 ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected valid contactPhone to be accepted, got: " <> err)
+                Right payload ->
+                    lsiContactPhone payload `shouldBe` Just "+593991234567"
+
         it "accepts the canonical frontend musician and setlist keys instead of requiring internal prefixes" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -1721,6 +1732,27 @@ main = hspec $ do
                     err `shouldContain` "musician email must be a valid email address"
                 Right payload ->
                     expectationFailure ("Expected invalid musician email to be rejected, got: " <> show payload)
+
+        it "rejects malformed contact phones instead of storing ambiguous free-form contact text" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("contactPhone", "call me at 099 123 4567")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "contactPhone must be a valid phone number"
+                Right payload ->
+                    expectationFailure ("Expected invalid contactPhone to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("contactPhone", "12345")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "contactPhone must be a valid phone number"
+                Right payload ->
+                    expectationFailure ("Expected short contactPhone to be rejected, got: " <> show payload)
 
         it "rejects anonymous musician rows instead of creating placeholder parties" $
             case fromMultipart (mkLiveSessionMultipart
