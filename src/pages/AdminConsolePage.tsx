@@ -61,6 +61,8 @@ const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'datos de demostracion',
   'usuarios y roles',
   'gestion de usuarios',
+  'roles y permisos',
+  'gestion de roles',
   'auditoria reciente',
 ]);
 const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [

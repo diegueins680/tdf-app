@@ -320,6 +320,43 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps the first-run checklist focused when the preview renames user management to roles and permissions', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'access-control',
+          title: 'Roles y permisos',
+          body: [
+            'Administra aquí la asignación de roles y permisos del equipo.',
+            'Próximamente aquí se podrán revisar cambios de acceso recientes.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver módulo adicional/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Roles y permisos')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Administra aquí la asignación de roles y permisos del equipo\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps unique preview cards collapsed during first-run until the admin asks to see them inline', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
