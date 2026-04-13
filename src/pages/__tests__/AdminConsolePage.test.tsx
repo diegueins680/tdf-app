@@ -353,7 +353,7 @@ describe('AdminConsolePage', () => {
       expect(
         within(getFirstRunAlert()).getByRole(
           'button',
-          { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
         ),
       ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
@@ -385,7 +385,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       within(getFirstRunAlert()).getByRole(
         'button',
-        { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
       ),
     );
 
@@ -444,7 +444,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
         ),
       ).toBeInTheDocument();
     });
@@ -455,7 +455,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /Opcional: ver 1 módulo adicional fuera del recorrido inicial/i },
+        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
       ),
     );
 
@@ -468,6 +468,53 @@ describe('AdminConsolePage', () => {
     ).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
+  });
+
+  it('previews the first hidden module names in the first-run CTA before expanding extras', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'integrations',
+          title: 'Integraciones',
+          body: [
+            'Revisa conectores pendientes sin salir de la consola.',
+          ],
+        },
+        {
+          cardId: 'api-access',
+          title: 'Acceso API',
+          body: [
+            'Consulta credenciales técnicas y accesos de servicio.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /Opcional: ver 3 módulos adicionales: Tokens de servicio, Integraciones y 1 más/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
   });
 
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {

@@ -351,10 +351,24 @@ function buildAuditSectionDescription({
   return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
 }
 
-function formatFirstRunAdditionalModulesActionLabel(count: number) {
-  return count === 1
-    ? 'Opcional: ver 1 módulo adicional fuera del recorrido inicial'
-    : `Opcional: ver ${count} módulos adicionales fuera del recorrido inicial`;
+function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+  const count = cards.length;
+
+  if (count === 0) {
+    return 'Opcional: ver módulos adicionales';
+  }
+
+  if (count === 1) {
+    return `Opcional: ver módulo adicional: ${cards[0]?.title ?? ''}`;
+  }
+
+  const [firstTitle = '', secondTitle = ''] = cards.map((card) => card.title);
+
+  if (count === 2) {
+    return `Opcional: ver 2 módulos adicionales: ${firstTitle} y ${secondTitle}`;
+  }
+
+  return `Opcional: ver ${count} módulos adicionales: ${firstTitle}, ${secondTitle} y ${count - 2} más`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -513,7 +527,7 @@ export default function AdminConsolePage() {
             : null
         )
     );
-  const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards.length);
+  const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
   const showFirstRunAdditionalModulesShowAction =
     showGettingStartedGuidance
