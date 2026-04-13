@@ -32,7 +32,6 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
@@ -75,6 +74,8 @@ const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const ADMIN_USERS_INLINE_EDIT_HINT_ID = 'admin-users-inline-edit-hint';
 const ADMIN_USERS_INLINE_EDIT_HINT = 'Haz clic sobre un rol para editarlo desde esta misma vista.';
+const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
+  'Primer usuario administrable. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -436,7 +437,7 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
-  const showUsersInlineEditHint = showUsersTable && users.length > 0;
+  const showUsersInlineEditHint = users.length > 0;
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
@@ -464,7 +465,7 @@ export default function AdminConsolePage() {
     ? null
     : (
       singleAdminUser
-        ? null
+        ? SINGLE_ADMIN_USER_INLINE_EDIT_HINT
         : (
           showUsersTable
             ? buildAdminUsersSectionDescription({
@@ -810,66 +811,58 @@ export default function AdminConsolePage() {
           </TableContainer>
         ) : singleAdminUser && !usersError ? (
           <Box sx={{ px: 2, pb: 2 }}>
-            <Stack spacing={1.25}>
-              <Typography variant="body2" color="text.secondary">
-                Primer usuario administrable. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.
-              </Typography>
-              <Stack
-                spacing={1}
-                direction={{ xs: 'column', md: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', md: 'center' }}
-                sx={{
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  px: 1.5,
-                  py: 1.25,
-                }}
-              >
-                <Stack spacing={0.25}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {singleAdminUserIdentity?.primary}
+            <Stack
+              spacing={1}
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 1.5,
+                py: 1.25,
+              }}
+            >
+              <Stack spacing={0.25}>
+                <Typography variant="body2" fontWeight={600}>
+                  {singleAdminUserIdentity?.primary}
+                </Typography>
+                {singleAdminUserIdentity?.showUsername && (
+                  <Typography variant="caption" color="text.secondary">
+                    Usuario: {singleAdminUserIdentity.username}
                   </Typography>
-                  {singleAdminUserIdentity?.showUsername && (
-                    <Typography variant="caption" color="text.secondary">
-                      Usuario: {singleAdminUserIdentity.username}
-                    </Typography>
-                  )}
-                  {singleAdminUser.partyId ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Party #{singleAdminUser.partyId}
-                    </Typography>
-                  ) : null}
-                </Stack>
-                <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                  <Button
-                    size="small"
-                    endIcon={<EditOutlinedIcon fontSize="inherit" />}
-                    onClick={() => setEditingUser(singleAdminUser)}
-                    aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
-                    sx={{
-                      px: 0,
-                      minWidth: 0,
-                      textTransform: 'none',
-                      '& .MuiButton-endIcon': {
-                        ml: 0.75,
-                      },
-                    }}
-                  >
-                    {formatRoleList(singleAdminUser.roles)}
-                  </Button>
-                  {singleAdminUserLastAccess && (
-                    <Typography variant="body2" color="text.secondary">
-                      Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
-                    </Typography>
-                  )}
-                  {singleAdminUserStatusLabel && (
-                    <Typography variant="body2" color="text.secondary">
-                      Estado: {singleAdminUserStatusLabel}
-                    </Typography>
-                  )}
-                </Stack>
+                )}
+                {singleAdminUser.partyId ? (
+                  <Typography variant="caption" color="text.secondary">
+                    Party #{singleAdminUser.partyId}
+                  </Typography>
+                ) : null}
+              </Stack>
+              <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                <Button
+                  size="small"
+                  onClick={() => setEditingUser(singleAdminUser)}
+                  aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
+                  aria-describedby={ADMIN_USERS_INLINE_EDIT_HINT_ID}
+                  sx={{
+                    px: 0,
+                    minWidth: 0,
+                    textTransform: 'none',
+                  }}
+                >
+                  {formatRoleList(singleAdminUser.roles)}
+                </Button>
+                {singleAdminUserLastAccess && (
+                  <Typography variant="body2" color="text.secondary">
+                    Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
+                  </Typography>
+                )}
+                {singleAdminUserStatusLabel && (
+                  <Typography variant="body2" color="text.secondary">
+                    Estado: {singleAdminUserStatusLabel}
+                  </Typography>
+                )}
               </Stack>
             </Stack>
           </Box>

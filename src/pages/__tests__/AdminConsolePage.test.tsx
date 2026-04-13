@@ -590,16 +590,23 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute(
+        'aria-describedby',
+        'admin-users-inline-edit-hint',
+      );
+      expect(
+        within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).queryByTestId('EditOutlinedIcon'),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText('Editar roles: Admin')).not.toBeInTheDocument();
       expect(screen.queryByText(/^Último acceso:/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
-      expect(screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Revisa esta cuenta aquí/i)).not.toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
@@ -618,7 +625,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
@@ -642,7 +649,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
@@ -663,7 +670,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Primer usuario administrable\. Revisa esta cuenta aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+          /Primer usuario administrable\. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
