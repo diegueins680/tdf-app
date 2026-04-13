@@ -5926,26 +5926,54 @@ createPurchase user req = do
   requireModule user ModulePackages
   Env pool _ <- ask
   now <- liftIO getCurrentTime
-  let buyer = toSqlKey (buyerId req)   :: Key Party
-      prodK = toSqlKey (productId req) :: Key PackageProduct
-  liftIO $ flip runSqlPool pool $ do
-    mp <- get prodK
-    case mp of
-      Nothing -> pure ()
-      Just p -> do
-        let qty    = packageProductUnitsQty p
-            priceC = packageProductPriceCents p
+  result <- liftIO $ flip runSqlPool pool $ do
+    resolved <- resolvePackagePurchaseRefs req
+    case resolved of
+      Left err -> pure (Left err)
+      Right (buyerKey, productKey, productRecord) -> do
+        let qty = packageProductUnitsQty productRecord
+            priceC = packageProductPriceCents productRecord
         _ <- insert PackagePurchase
-              { packagePurchaseBuyerId        = buyer
-              , packagePurchaseProductId      = prodK
+              { packagePurchaseBuyerId        = buyerKey
+              , packagePurchaseProductId      = productKey
               , packagePurchasePurchasedAt    = now
               , packagePurchasePriceCents     = priceC
               , packagePurchaseExpiresAt      = Nothing
               , packagePurchaseRemainingUnits = qty
               , packagePurchaseStatus         = "Active"
               }
-        pure ()
+        pure (Right ())
+  either throwError pure result
   pure NoContent
+
+resolvePackagePurchaseRefs
+  :: PackagePurchaseReq
+  -> SqlPersistT IO (Either ServerError (Key Party, Key PackageProduct, PackageProduct))
+resolvePackagePurchaseRefs PackagePurchaseReq{buyerId = rawBuyerId, productId = rawProductId} =
+  case
+    (,) <$> validatePositiveIdField "buyerId" rawBuyerId
+        <*> validatePositiveIdField "productId" rawProductId of
+    Left err -> pure (Left err)
+    Right (buyerIdValid, productIdValid) -> do
+      let buyerKey = toSqlKey buyerIdValid :: Key Party
+          productKey = toSqlKey productIdValid :: Key PackageProduct
+      mBuyer <- get buyerKey
+      mProduct <- get productKey
+      pure $
+        case mBuyer of
+          Nothing ->
+            Left err422
+              { errBody = "buyerId references an unknown party" }
+          Just _ ->
+            case mProduct of
+              Nothing ->
+                Left err422
+                  { errBody = "productId references an unknown package product" }
+              Just productRecord
+                | not (packageProductActive productRecord) ->
+                    Left err409 { errBody = "Package product is inactive" }
+                | otherwise ->
+                    Right (buyerKey, productKey, productRecord)
 
 -- Invoices
 invoiceServer :: AuthedUser -> ServerT InvoiceAPI AppM

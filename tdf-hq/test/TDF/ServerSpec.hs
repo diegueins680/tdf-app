@@ -17,7 +17,21 @@ import Database.Persist.Sqlite (runSqlite)
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
-import TDF.Models (ApiToken (..), BookingStatus (..), Party (..), PaymentMethod (..), PricingModel (..), RoleEnum (..), ServiceAd (..), ServiceCatalog (..), ServiceKind (..), UserCredential (..))
+import TDF.Models
+    ( ApiToken (..)
+    , BookingStatus (..)
+    , PackageProduct (..)
+    , Party (..)
+    , PaymentMethod (..)
+    , PricingModel (..)
+    , RefundPolicy (..)
+    , RoleEnum (..)
+    , ServiceAd (..)
+    , ServiceCatalog (..)
+    , ServiceKind (..)
+    , UnitsKind (..)
+    , UserCredential (..)
+    )
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MetaBackfillOptions(..)
@@ -69,6 +83,7 @@ import TDF.Server
     , validateCourseRegistrationId
     , validateCourseRegistrationReceiptId
     , validateCourseRegistrationFollowUpId
+    , resolvePackagePurchaseRefs
     , resolvePartyRoleAssignmentTarget
     )
 import TDF.ServerAuth
@@ -434,6 +449,143 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unknown proposal client party id to be rejected, got: " <> show value)
+
+    describe "resolvePackagePurchaseRefs" $ do
+        it "resolves existing active package products for known buyers" $ do
+            (expectedBuyerId, expectedProductId, result) <- runPackageSqlite $ do
+                now <- liftIO getCurrentTime
+                buyerKey <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Package Buyer"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "buyer@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                productKey <- insert PackageProduct
+                    { packageProductName = "10 mixing hours"
+                    , packageProductServiceKind = Mixing
+                    , packageProductUnitsKind = Hours
+                    , packageProductUnitsQty = 10
+                    , packageProductPriceCents = 90000
+                    , packageProductExpiresDays = Nothing
+                    , packageProductTransferable = False
+                    , packageProductRefundPolicy = CreditOnly
+                    , packageProductActive = True
+                    }
+                resolved <- resolvePackagePurchaseRefs
+                    (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))
+                pure (buyerKey, productKey, resolved)
+
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected package purchase refs to resolve, got: " <> show serverErr)
+                Right (buyerKey, productKey, productRecord) -> do
+                    buyerKey `shouldBe` expectedBuyerId
+                    productKey `shouldBe` expectedProductId
+                    packageProductPriceCents productRecord `shouldBe` 90000
+
+        it "rejects malformed, missing, or inactive package purchase references instead of silently no-oping purchases" $ do
+            now <- getCurrentTime
+
+            invalidBuyerId <- runPackageSqlite $
+                resolvePackagePurchaseRefs (DTO.PackagePurchaseReq 0 1)
+            case invalidBuyerId of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "buyerId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid buyer id to be rejected, got: " <> show value)
+
+            missingBuyer <- runPackageSqlite $ do
+                productKey <- insert PackageProduct
+                    { packageProductName = "Starter credits"
+                    , packageProductServiceKind = Classes
+                    , packageProductUnitsKind = Credits
+                    , packageProductUnitsQty = 5
+                    , packageProductPriceCents = 25000
+                    , packageProductExpiresDays = Nothing
+                    , packageProductTransferable = False
+                    , packageProductRefundPolicy = CreditOnly
+                    , packageProductActive = True
+                    }
+                resolvePackagePurchaseRefs
+                    (DTO.PackagePurchaseReq 999999 (fromSqlKey productKey))
+            case missingBuyer of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr) `shouldContain`
+                        "buyerId references an unknown party"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown buyer to be rejected, got: " <> show value)
+
+            missingProduct <- runPackageSqlite $ do
+                buyerKey <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Missing Product Buyer"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "missing-product@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                resolvePackagePurchaseRefs
+                    (DTO.PackagePurchaseReq (fromSqlKey buyerKey) 999999)
+            case missingProduct of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr) `shouldContain`
+                        "productId references an unknown package product"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown package product to be rejected, got: " <> show value)
+
+            inactiveProduct <- runPackageSqlite $ do
+                buyerKey <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Inactive Product Buyer"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "inactive-product@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                productKey <- insert PackageProduct
+                    { packageProductName = "Hidden package"
+                    , packageProductServiceKind = Recording
+                    , packageProductUnitsKind = Sessions
+                    , packageProductUnitsQty = 1
+                    , packageProductPriceCents = 45000
+                    , packageProductExpiresDays = Nothing
+                    , packageProductTransferable = False
+                    , packageProductRefundPolicy = None
+                    , packageProductActive = False
+                    }
+                resolvePackagePurchaseRefs
+                    (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))
+            case inactiveProduct of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr) `shouldContain` "Package product is inactive"
+                Right value ->
+                    expectationFailure
+                        ("Expected inactive package product to be rejected, got: " <> show value)
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts either a unique booking id or broader party filters" $ do
@@ -1533,6 +1685,14 @@ runAuthSqlite action =
         liftIO $ runReaderT initializeAuthSchema backend
         liftIO $ runReaderT action backend
 
+runPackageSqlite :: SqlPersistT IO a -> IO a
+runPackageSqlite action =
+    runSqlite ":memory:" $ do
+        backend <- ask
+        liftIO $ runReaderT initializeAuthSchema backend
+        liftIO $ runReaderT initializePackageSchema backend
+        liftIO $ runReaderT action backend
+
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -1552,6 +1712,7 @@ initializeAuthSchema = do
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
+
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"party_role\" (\
         \\"id\" INTEGER PRIMARY KEY,\
@@ -1582,5 +1743,22 @@ initializeAuthSchema = do
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+initializePackageSchema :: SqlPersistT IO ()
+initializePackageSchema = do
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"package_product\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"service_kind\" VARCHAR NOT NULL,\
+        \\"units_kind\" VARCHAR NOT NULL,\
+        \\"units_qty\" INTEGER NOT NULL,\
+        \\"price_cents\" INTEGER NOT NULL,\
+        \\"expires_days\" INTEGER NULL,\
+        \\"transferable\" BOOLEAN NOT NULL,\
+        \\"refund_policy\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL\
         \)"
         []
