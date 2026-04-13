@@ -115,4 +115,65 @@ describe('SessionsPage', () => {
     expect(screen.queryByText(/No hay sesiones registradas todavía\./i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
   });
+
+  it('replaces the one-row schedule table with a compact first-session summary and one edit action', async () => {
+    mockSessionsList.mockResolvedValue({
+      items: [
+        {
+          sessionId: 'session-1',
+          sBookingRef: 'BK-001',
+          sBandId: null,
+          sClientPartyRef: null,
+          sService: 'Grabación vocal',
+          sStartAt: '2026-04-15T15:00:00.000Z',
+          sEndAt: '2026-04-15T17:00:00.000Z',
+          sEngineerRef: 'ada@tdf',
+          sAssistantRef: null,
+          sRoomIds: ['room-a'],
+          sSampleRate: null,
+          sBitDepth: null,
+          sDaw: null,
+          sSessionFolderDriveId: null,
+          sNotes: null,
+          sInputListRows: [],
+          sStatus: 'InPrep',
+        },
+      ],
+      page: 1,
+      pageSize: 10,
+      total: 1,
+    });
+    mockRoomsList.mockResolvedValue([
+      { roomId: 'room-a', rName: 'Sala A' },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primera sesión registrada.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Revísala aquí; cuando exista la segunda, volverán la tabla, la edición rápida y la paginación para coordinar varias sesiones\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Servicio:\s*Grabación vocal/i)).toBeInTheDocument();
+      expect(screen.getByText(/Booking:\s*BK-001/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ingeniero:\s*ada@tdf/i)).toBeInTheDocument();
+      expect(screen.getByText(/Salas:\s*Sala A/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Editar sesión/i })).toBeInTheDocument();
+      expect(screen.getByText('En preparación')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Horario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Servicio$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Booking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Ingeniero$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Salas$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
+  });
 });

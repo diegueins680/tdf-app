@@ -1061,6 +1061,14 @@ export default function SessionsPage() {
   const sessions = sessionsQuery.data ?? { items: [], page: 1, pageSize, total: 0 };
   const rows: SessionDTO[] = sessions.items;
   const showFirstSessionSetupState = !sessionsQuery.isLoading && !sessionsQuery.isError && sessions.total === 0;
+  const singleSession =
+    !sessionsQuery.isLoading && !sessionsQuery.isError && sessions.total === 1 && rows.length === 1
+      ? (rows[0] ?? null)
+      : null;
+  const showSessionsTable = !showFirstSessionSetupState && singleSession == null;
+  const singleSessionRoomNames = singleSession?.sRoomIds && singleSession.sRoomIds.length > 0
+    ? singleSession.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
+    : '—';
 
   return (
     <Stack spacing={2}>
@@ -1080,7 +1088,58 @@ export default function SessionsPage() {
               </Typography>
             </Stack>
           </Box>
-        ) : (
+        ) : singleSession ? (
+          <Box sx={{ px: 2, py: 2.5 }}>
+            <Stack spacing={1.5} sx={{ maxWidth: 720 }}>
+              <Box>
+                <Typography variant="h6">Primera sesión registrada.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Revísala aquí; cuando exista la segunda, volverán la tabla, la edición rápida y la paginación para coordinar varias sesiones.
+                </Typography>
+              </Box>
+              <Stack
+                spacing={0.75}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
+                <Typography variant="body2">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Horario:</Box> {formatDateRange(singleSession.sStartAt, singleSession.sEndAt)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleSession.sService ?? '—'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleSession.sBookingRef ?? '—'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleSession.sEngineerRef ?? '—'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleSessionRoomNames}
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>
+                  </Typography>
+                  <StatusChip value={singleSession.sStatus} />
+                </Stack>
+              </Stack>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setEditId(singleSession.sessionId)}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Editar sesión
+              </Button>
+            </Stack>
+          </Box>
+        ) : showSessionsTable ? (
           <>
             <TableContainer>
               <Table size="small">
@@ -1142,7 +1201,7 @@ export default function SessionsPage() {
               rowsPerPageOptions={[10, 25, 50]}
             />
           </>
-        )}
+        ) : null}
       </Paper>
 
       <CreateSessionDialog
