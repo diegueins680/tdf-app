@@ -22,6 +22,7 @@ module TDF.Server.SocialEventsHandlers
   , parseEventStatusQueryParamEither
   , validateEventCreateTypeStatus
   , validateEventMetadataUpdate
+  , validateBudgetLineTypeInput
   , normalizeBudgetLineType
   , normalizeFinanceDirection
   , normalizeFinanceSource
@@ -1709,8 +1710,8 @@ socialEventsServer user = eventsServer
       let lineName = T.strip (eblName dto)
       when (T.null lineName) $ throwError err400 { errBody = "budget line name is required" }
       when (eblPlannedCents dto < 0) $ throwError err400 { errBody = "planned cents must be >= 0" }
+      lineTypeVal <- either throwError pure (validateBudgetLineTypeInput (eblType dto))
       let codeVal = normalizeBudgetLineCode (fromMaybe lineName (cleanMaybeText (Just (eblCode dto))))
-          lineTypeVal = normalizeBudgetLineType (Just (eblType dto))
           categoryVal = normalizeCategory (Just (eblCategory dto))
       mInserted <- liftIO $ runSqlPool (insertUnique EventBudgetLine
         { eventBudgetLineEventId = eventKey
@@ -1741,8 +1742,8 @@ socialEventsServer user = eventsServer
       let lineName = T.strip (eblName dto)
       when (T.null lineName) $ throwError err400 { errBody = "budget line name is required" }
       when (eblPlannedCents dto < 0) $ throwError err400 { errBody = "planned cents must be >= 0" }
+      lineTypeVal <- either throwError pure (validateBudgetLineTypeInput (eblType dto))
       let codeVal = normalizeBudgetLineCode (fromMaybe lineName (cleanMaybeText (Just (eblCode dto))))
-          lineTypeVal = normalizeBudgetLineType (Just (eblType dto))
           categoryVal = normalizeCategory (Just (eblCategory dto))
       mCodeOwner <- liftIO $ runSqlPool (getBy (UniqueEventBudgetLineCode eventKey codeVal)) envPool
       case mCodeOwner of
@@ -2338,9 +2339,22 @@ normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrenc
 
 normalizeBudgetLineType :: Maybe T.Text -> T.Text
 normalizeBudgetLineType mType =
-  case fmap (T.toLower . T.strip) mType of
-    Just "income" -> "income"
-    _ -> "expense"
+  case mType >>= parseBudgetLineType of
+    Just lineTypeVal -> lineTypeVal
+    Nothing -> "expense"
+
+parseBudgetLineType :: T.Text -> Maybe T.Text
+parseBudgetLineType raw =
+  case T.toLower (T.strip raw) of
+    "income" -> Just "income"
+    "expense" -> Just "expense"
+    _ -> Nothing
+
+validateBudgetLineTypeInput :: T.Text -> Either ServerError T.Text
+validateBudgetLineTypeInput raw =
+  case parseBudgetLineType raw of
+    Just lineTypeVal -> Right lineTypeVal
+    Nothing -> Left err400 { errBody = "budget line type must be income or expense" }
 
 normalizeBudgetLineCode :: T.Text -> T.Text
 normalizeBudgetLineCode raw =

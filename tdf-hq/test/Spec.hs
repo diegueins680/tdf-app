@@ -121,6 +121,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
+    validateBudgetLineTypeInput,
  )
 import TDF.Auth (extractToken)
 import TDF.Config (appPort, dbConnString, emailConfig, loadConfig, smtpPort)
@@ -1426,6 +1427,18 @@ main = hspec $ do
             normalizeEventType (Just "unknown-type") `shouldBe` Nothing
             normalizeEventStatus (Just "canceled") `shouldBe` Just "cancelled"
             normalizeEventStatus (Just "not-real") `shouldBe` Nothing
+
+        it "rejects invalid explicit budget line types instead of silently rewriting them to expense" $ do
+            validateBudgetLineTypeInput " income " `shouldBe` Right "income"
+            validateBudgetLineTypeInput "EXPENSE" `shouldBe` Right "expense"
+            case validateBudgetLineTypeInput "whatever" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "budget line type must be income or expense"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid budget line type to be rejected, got " <> show value)
 
         it "normalizes budget and accounting dimensions" $ do
             normalizeBudgetLineType (Just "INCOME") `shouldBe` "income"
