@@ -1349,7 +1349,8 @@ privateTrialsServer user@AuthedUser{..} =
     packagesH :: Maybe Int -> AppM [PackageDTO]
     packagesH mSubject = do
       ensureSchoolStaffAccess
-      let filters = [PackageCatalogActive ==. True] ++ maybe [] (\sid -> [PackageCatalogSubjectId ==. intKey sid]) mSubject
+      normalizedSubjectId <- either (liftIO . throwIO) pure (traverse validatePublicSubjectIdInput mSubject)
+      let filters = [PackageCatalogActive ==. True] ++ maybe [] (\sid -> [PackageCatalogSubjectId ==. intKey sid]) normalizedSubjectId
       entities <- selectList filters [Asc PackageCatalogName]
       pure [ PackageDTO
               { packageId   = entityKeyInt pid

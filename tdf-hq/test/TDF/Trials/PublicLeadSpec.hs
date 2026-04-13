@@ -30,6 +30,7 @@ import TDF.Trials.API
   ( ClassSessionIn (..)
   , ClassSessionOut
   , InterestIn (..)
+  , PackageDTO
   , PurchaseIn (..)
   , TrialQueueItem
   )
@@ -417,6 +418,20 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
         Right value ->
           expectationFailure ("Expected inverted availability window to be rejected, got " <> show value)
+
+  describe "private package filtering" $ do
+    it "rejects non-positive subject filters before querying packages" $ do
+      let assertRejected rawSubjectId = do
+            result <- try $ runTrialsInMemory $
+              privatePackagesHandler (Just rawSubjectId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "subjectId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid package subject filter to be rejected"
+      assertRejected 0
+      assertRejected (-3)
 
   describe "private trial availability upserts" $ do
     it "rejects non-room resources instead of publishing impossible availability slots" $ do
@@ -1064,6 +1079,12 @@ privateAvailabilityUpsertHandler :: TrialAvailabilityUpsert -> SqlPersistT IO Tr
 privateAvailabilityUpsertHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> availabilityUpsertH :<|> _ = privateTrialsServer adminUser
   in availabilityUpsertH
+
+privatePackagesHandler :: Maybe Int -> SqlPersistT IO [PackageDTO]
+privatePackagesHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> packagesH :<|> _ =
+        privateTrialsServer adminUser
+  in packagesH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =
