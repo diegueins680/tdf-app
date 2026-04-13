@@ -30,6 +30,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
@@ -377,6 +378,49 @@ const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | '
   DISABLED: { label: 'Suspendido', color: 'default' },
 };
 
+function renderAdditionalModuleCardsGrid({
+  cards,
+  isFetching,
+  isPending,
+  id,
+  sx,
+}: {
+  cards: readonly AdminConsoleCard[];
+  isFetching: boolean;
+  isPending: boolean;
+  id?: string;
+  sx?: SxProps<Theme>;
+}) {
+  return (
+    <Grid container spacing={2} sx={sx} id={id}>
+      {cards.map((card) => (
+        <Grid item xs={12} md={4} key={card.cardId}>
+          <Card variant="outlined">
+            <CardHeader title={card.title} />
+            <CardContent>
+              {card.body.map((paragraph, idx) => (
+                <Typography
+                  key={`${card.cardId}-line-${idx}`}
+                  variant="body2"
+                  color="text.secondary"
+                  paragraph={idx < card.body.length - 1}
+                >
+                  {paragraph}
+                </Typography>
+              ))}
+              {isFetching && !isPending && (
+                <Typography variant="caption" color="text.secondary">
+                  Actualizando…
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
 export default function AdminConsolePage() {
   const qc = useQueryClient();
   const [rotationWarning, setRotationWarning] = useState(false);
@@ -536,6 +580,7 @@ export default function AdminConsolePage() {
   const showFirstRunAdditionalModulesHideAction =
     showGettingStartedGuidance
     && shouldShowAdditionalModuleCards;
+  const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
@@ -692,6 +737,45 @@ export default function AdminConsolePage() {
               >
                 {firstRunAdditionalModulesActionLabel}
               </Button>
+            )}
+            {showFirstRunAdditionalModulesHideAction && (
+              <Stack
+                spacing={1.5}
+                sx={{
+                  pt: 1.5,
+                  borderTop: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">Módulos opcionales</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Revísalos aquí solo si ya necesitas ese flujo extra, sin salir del recorrido inicial.
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setShowFirstRunAdditionalModules(false)}
+                    aria-controls="admin-additional-modules-list"
+                    aria-expanded="true"
+                  >
+                    Ocultar módulos adicionales
+                  </Button>
+                </Stack>
+                {renderAdditionalModuleCardsGrid({
+                  cards: consoleCards,
+                  isFetching: consoleQuery.isFetching,
+                  isPending: consoleQuery.isPending,
+                  id: 'admin-additional-modules-list',
+                })}
+              </Stack>
             )}
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
@@ -1019,7 +1103,7 @@ export default function AdminConsolePage() {
         ) : null}
       </Paper>
 
-      {consoleCards.length > 0 && (!showGettingStartedGuidance || shouldShowAdditionalModuleCards) && (
+      {showStandaloneAdditionalModulesSection && (
         <Paper variant="outlined" id="admin-additional-modules">
           <Box sx={{ px: 2, py: 1 }}>
             <Stack
@@ -1031,52 +1115,18 @@ export default function AdminConsolePage() {
               <Box>
                 <Typography variant="h6">Módulos adicionales</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {showGettingStartedGuidance
-                    ? 'Empiezan ocultos para que el recorrido inicial siga centrado en salud, usuarios y auditoría.'
-                    : 'Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.'}
+                  Tarjetas auxiliares del panel. Revísalas cuando ya confirmaste salud, usuarios y auditoría.
                 </Typography>
               </Box>
-              {showFirstRunAdditionalModulesHideAction && (
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={() => setShowFirstRunAdditionalModules(false)}
-                  aria-controls="admin-additional-modules-list"
-                  aria-expanded="true"
-                >
-                  Ocultar módulos adicionales
-                </Button>
-              )}
             </Stack>
           </Box>
-          {shouldShowAdditionalModuleCards && (
-            <Grid container spacing={2} sx={{ px: 2, pb: 2 }} id="admin-additional-modules-list">
-              {consoleCards.map((card) => (
-                <Grid item xs={12} md={4} key={card.cardId}>
-                  <Card variant="outlined">
-                    <CardHeader title={card.title} />
-                    <CardContent>
-                      {card.body.map((paragraph, idx) => (
-                        <Typography
-                          key={`${card.cardId}-line-${idx}`}
-                          variant="body2"
-                          color="text.secondary"
-                          paragraph={idx < card.body.length - 1}
-                        >
-                          {paragraph}
-                        </Typography>
-                      ))}
-                      {consoleQuery.isFetching && !consoleQuery.isError && (
-                        <Typography variant="caption" color="text.secondary">
-                          {consoleQuery.isPending ? 'Cargando…' : 'Actualizando…'}
-                        </Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
+          {renderAdditionalModuleCardsGrid({
+            cards: consoleCards,
+            isFetching: consoleQuery.isFetching,
+            isPending: consoleQuery.isPending,
+            id: 'admin-additional-modules-list',
+            sx: { px: 2, pb: 2 },
+          })}
         </Paper>
       )}
 
