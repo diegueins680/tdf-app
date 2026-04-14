@@ -248,6 +248,8 @@ spec = do
               expectationFailure ("Expected invalid asset photo URL error, got " <> show value)
       assertInvalid (validateAssetPhotoUrl (Just "roland-juno.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
 
@@ -699,6 +701,8 @@ spec = do
               expectationFailure ("Expected invalid payment attachment URL error, got " <> show value)
       assertInvalid (validatePaymentAttachmentUrl (Just "proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://files.example.com/proof copy.pdf"))
+      assertInvalid (validatePaymentAttachmentUrl (Just "https://files/proof.pdf"))
+      assertInvalid (validatePaymentAttachmentUrl (Just "https://2130706433/proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://256.256.256.256/proof.pdf"))
 
   describe "validatePaymentConcept" $ do

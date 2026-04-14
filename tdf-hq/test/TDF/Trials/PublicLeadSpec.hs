@@ -218,6 +218,8 @@ spec = do
       assertRejected "https://example.com/shared file"
       assertRejected "https://drive..example.com/folder"
       assertRejected "https://drive_example.com/folder"
+      assertRejected "https://drive/folder"
+      assertRejected "https://2130706433/folder"
       assertRejected "http://localhost/folder"
       assertRejected "http://127.0.0.1/folder"
       assertRejected "https://[::1]/folder"

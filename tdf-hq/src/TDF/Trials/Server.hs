@@ -604,8 +604,10 @@ isValidHttpUrl rawUrl
       in not (T.null normalizedHost)
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
+        && not (isAmbiguousNumericHost normalizedHost)
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
         && not (looksLikeInvalidIpv4 normalizedHost)
+        && not (requiresExplicitPublicHostname normalizedHost)
         && not (isPrivateHost normalizedHost)
 
     validateBracketedHost host =
@@ -647,6 +649,15 @@ isValidHttpUrl rawUrl
         [a, b, c, d]
           | all isNumericLabel [a, b, c, d] -> isNothing (parseIpv4Octets host)
         _ -> False
+
+    isAmbiguousNumericHost host =
+      T.all (\c -> isDigit c || c == '.') host
+        && isNothing (parseIpv4Octets host)
+
+    requiresExplicitPublicHostname host =
+      not (T.any (== '.') host)
+        && not (T.any (== ':') host)
+        && isNothing (parseIpv4Octets host)
 
     isNumericLabel label =
       not (T.null label) && T.all isDigit label
