@@ -5,6 +5,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO } from '../api/types';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest } from '../api/inventory';
 
+const REFRESH_STATE_HELP_TEXT =
+  'Si otro operador ya movio este equipo desde otra pantalla, usa Refrescar estado para confirmar que accion sigue aqui.';
+
 export default function InventoryScanPage() {
   const { token } = useParams();
   const qc = useQueryClient();
@@ -76,9 +79,10 @@ export default function InventoryScanPage() {
     checkinMutation.mutate();
   };
 
-const normalizedStatus = asset?.status?.toLowerCase() ?? '';
-const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
-const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
+  const normalizedStatus = asset?.status?.toLowerCase() ?? '';
+  const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
+  const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
+  const isMovementPending = checkoutMutation.isPending || checkinMutation.isPending;
 
   if (!token) {
     return (
@@ -147,14 +151,24 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                   </Stack>
                   <Typography variant="body2">Condición: {asset.condition ?? '—'}</Typography>
                   <Typography variant="body2">Ubicación: {asset.location ?? '—'}</Typography>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1}
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    sx={{ mt: 1 }}
+                  >
+                    <Button variant="text" onClick={() => void loadAsset()} disabled={isMovementPending}>
+                      Refrescar estado
+                    </Button>
+                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                      {REFRESH_STATE_HELP_TEXT}
+                    </Typography>
+                  </Stack>
                   {isUnavailable ? (
                     <Stack spacing={1.5} sx={{ mt: 2 }}>
                       <Alert severity="warning">
                         Este equipo está marcado como {asset.status}. No se permite check-in/out mientras esté fuera de servicio.
                       </Alert>
-                      <Button variant="outlined" onClick={() => void loadAsset()}>
-                        Refrescar estado
-                      </Button>
                     </Stack>
                   ) : isCheckedOut ? (
                     <>
@@ -199,9 +213,6 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                       >
                         {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
                       </Button>
-                      <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkinMutation.isPending}>
-                        Refrescar estado
-                      </Button>
                     </>
                   ) : (
                     <>
@@ -243,9 +254,6 @@ const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStat
                         disabled={checkoutMutation.isPending}
                       >
                         {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
-                      </Button>
-                      <Button variant="text" sx={{ mt: 1 }} onClick={() => void loadAsset()} disabled={checkoutMutation.isPending}>
-                        Refrescar estado
                       </Button>
                     </>
                   )}
