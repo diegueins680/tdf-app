@@ -1,5 +1,7 @@
 TDF HQ uses instagram_business_manage_messages in the Instagram Login review flow to open inbound Instagram conversations and send replies from the app UI.
 
+Customers send booking and support inquiries to the TDF business Instagram account, and the label team replies from the business side inside TDF HQ.
+
 Reviewer flow:
 1. Open /social/instagram?review=1 and complete the full Instagram Login consent flow.
 2. Keep the selected business/professional Instagram messaging asset visible on the setup screen.
@@ -10,6 +12,6 @@ Reviewer flow:
 7. Delete or unsend that same message in the native Instagram client.
 8. Return to /social/inbox?review=1 and keep the review checklist visible until the inbox auto-refresh removes the deleted/unsent message without a manual reload.
 
-This permission is necessary because TDF HQ is the operational inbox used by the label team to reply to inbound Instagram messages and keep the in-app thread state synchronized with the native Instagram conversation lifecycle.
+This permission is necessary because TDF HQ is the operational inbox used by the label team to reply to inbound customer messages sent to the business account and keep the in-app thread state synchronized with the native Instagram conversation lifecycle.
 
 The attached Instagram Login screencast shows the end-to-end use case for instagram_business_manage_messages, including the send from app UI, native-client delivery confirmation, delete/unsend in Instagram, and the deleted-message refresh back in TDF HQ.

@@ -16,6 +16,8 @@ const listFacebookMessagesMock = jest.fn<
 const listWhatsAppMessagesMock = jest.fn<
   (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
 >();
+const getInstagramOAuthProviderMock = jest.fn<() => 'facebook' | 'instagram'>();
+const getInstagramRequestedScopesMock = jest.fn<() => string[]>();
 const getMetaReviewAssetSelectionMock = jest.fn<() => MetaReviewAssetSelection | null>();
 const getStoredInstagramResultMock = jest.fn<() => InstagramOAuthExchangeResponse | null>();
 
@@ -33,6 +35,8 @@ jest.unstable_mockModule('../api/socialInbox', () => ({
 }));
 
 jest.unstable_mockModule('../services/instagramAuth', () => ({
+  getInstagramOAuthProvider: () => getInstagramOAuthProviderMock(),
+  getInstagramRequestedScopes: () => getInstagramRequestedScopesMock(),
   getMetaReviewAssetSelection: () => getMetaReviewAssetSelectionMock(),
   getStoredInstagramResult: () => getStoredInstagramResultMock(),
 }));
@@ -189,12 +193,21 @@ describe('SocialInboxPage', () => {
     listInstagramMessagesMock.mockReset();
     listFacebookMessagesMock.mockReset();
     listWhatsAppMessagesMock.mockReset();
+    getInstagramOAuthProviderMock.mockReset();
+    getInstagramRequestedScopesMock.mockReset();
     getMetaReviewAssetSelectionMock.mockReset();
     getStoredInstagramResultMock.mockReset();
 
     listInstagramMessagesMock.mockResolvedValue([]);
     listFacebookMessagesMock.mockResolvedValue([]);
     listWhatsAppMessagesMock.mockResolvedValue([]);
+    getInstagramOAuthProviderMock.mockReturnValue('facebook');
+    getInstagramRequestedScopesMock.mockReturnValue([
+      'instagram_basic',
+      'instagram_manage_messages',
+      'pages_show_list',
+      'pages_read_engagement',
+    ]);
     getMetaReviewAssetSelectionMock.mockReturnValue(null);
     getStoredInstagramResultMock.mockReturnValue(null);
   });
@@ -206,7 +219,13 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Recording checklist');
-      expect(container.textContent).toContain('No asset selected yet. Go to Instagram setup and select the Page/account first.');
+      expect(container.textContent).toContain('Review run: Facebook Login');
+      expect(container.textContent).toContain(
+        'Requested scopes: instagram_basic, instagram_manage_messages, pages_show_list, pages_read_engagement',
+      );
+      expect(container.textContent).toContain(
+        'No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.',
+      );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Select asset in Instagram setup').getAttribute('href')).toBe('/social/instagram?review=1');
       expect(container.textContent).not.toContain('Open Instagram setup');
@@ -231,6 +250,7 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.textContent).toContain('Review run: Facebook Login');
       expect(container.textContent).toContain(
         'Selected professional/business Instagram messaging asset: TDF Review Page (Page ID: page-1',
       );
@@ -238,7 +258,7 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('IG User ID: ig-user-1');
       expect(container.textContent).toContain('No inbound messages yet.');
       expect(container.textContent).toContain(
-        'Send one test message to the selected asset and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+        'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
       );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
@@ -295,7 +315,9 @@ describe('SocialInboxPage', () => {
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(hasLabel(container, 'Limit')).toBe(false);
       expect(container.textContent).toContain('Recording checklist');
-      expect(container.textContent).toContain('No asset selected yet. Go to Instagram setup and select the Page/account first.');
+      expect(container.textContent).toContain(
+        'No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.',
+      );
       expect(container.textContent).not.toContain('No inbound messages yet.');
       expect(container.textContent).not.toContain(
         'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',

@@ -36,6 +36,8 @@ import { SocialInboxAPI, type SocialChannel, type SocialMessage } from '../api/s
 import { assertNever } from '../utils/assertNever';
 import {
   getMetaReviewAssetSelection,
+  getInstagramOAuthProvider,
+  getInstagramRequestedScopes,
   getStoredInstagramResult,
   type MetaReviewAssetSelection,
 } from '../services/instagramAuth';
@@ -1160,6 +1162,8 @@ export default function SocialInboxPage() {
   const [selection, setSelection] = useState<SelectedMessage | null>(null);
   const [activeAsset, setActiveAsset] = useState<MetaReviewAssetSelection | null>(() => getMetaReviewAssetSelection());
   const [expandedFetchErrorChannels, setExpandedFetchErrorChannels] = useState<SocialChannel[]>([]);
+  const reviewProvider = useMemo(() => getInstagramOAuthProvider(), []);
+  const reviewScopes = useMemo(() => getInstagramRequestedScopes(), []);
 
   useEffect(() => {
     if (!reviewMode) return;
@@ -1382,11 +1386,24 @@ export default function SocialInboxPage() {
       {reviewMode && (
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
           <Stack spacing={1.25}>
+            <Alert severity="info" variant="outlined">
+              <Stack spacing={0.5}>
+                <Typography variant="body2" fontWeight={700}>
+                  Review run: {reviewProvider === 'instagram' ? 'Instagram Login' : 'Facebook Login'}
+                </Typography>
+                <Typography variant="body2">Requested scopes: {reviewScopes.join(', ')}</Typography>
+                <Typography variant="body2">
+                  Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
+                  Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
+                </Typography>
+              </Stack>
+            </Alert>
             <Typography variant="subtitle1" fontWeight={700}>
               Recording checklist
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Keep this panel visible and narrate: selected Instagram Business account asset, inbound message, send action, deleted-message refresh, and native-client delivery confirmation.
+              Keep this panel visible and narrate: the selected professional/business account, the inbound message, the send
+              action, the native-client delivery confirmation, and the deleted-message refresh.
             </Typography>
             {activeAsset ? (
               <Alert severity="success" variant="outlined">
@@ -1396,7 +1413,7 @@ export default function SocialInboxPage() {
               </Alert>
             ) : (
               <Alert severity="warning" variant="outlined">
-                No asset selected yet. Go to Instagram setup and select the Page/account first.
+                No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.
               </Alert>
             )}
             <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
@@ -1417,7 +1434,7 @@ export default function SocialInboxPage() {
             <Typography variant="body2">
               {reviewMode
                 ? activeAsset
-                  ? 'Send one test message to the selected asset and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
+                  ? 'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                 : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.'}
             </Typography>

@@ -12,7 +12,7 @@ const SPOTLIGHT_MS = Number.isFinite(SPOTLIGHT_MS_RAW) && SPOTLIGHT_MS_RAW > 0 ?
 const INBOUND_TEXT_OVERRIDE = process.env.TDF_REVIEW_INBOUND_TEXT?.trim() ?? '';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const setupHeadingMatcher = /Meta App Review:\s*Instagram Setup/i;
+const setupHeadingMatcher = /Meta App Review:\s*(Facebook|Instagram) Login/i;
 const inboxHeadingMatcher = /Meta App Review:\s*Messaging Inbox/i;
 
 /**
@@ -265,10 +265,10 @@ const main = async () => {
     console.log('Connect/Re-authorize clicked. Waiting for manual Meta consent step.');
 
     await pauseForHuman(
-      page,
-      'Complete the full Meta login flow + grant permissions in the browser window.\n' +
+    page,
+    'Complete the full Meta login flow + grant permissions in the browser window.\n' +
         '- Keep the permissions dialog visible for a moment (Meta guideline).\n' +
-        '- Finish consent and return to the app tab.\n'
+        '- Finish consent and return to the app tab with the selected professional/business account visible.\n'
     );
 
     // After human completes auth, return to setup page.
@@ -315,7 +315,8 @@ const main = async () => {
   // We need an inbound message to reply to. If none, operator should send one to the connected asset.
   await pauseForHuman(
     page,
-    'Ensure there is a CLEAN INBOUND Instagram message visible in the Inbox list (from @0iego.saa).\n' +
+    'Ensure there is a CLEAN INBOUND Instagram message visible in the Inbox list from the selected professional/business account.\n' +
+      'If Meta needs a fresh proof thread, use the exact inbound text below.\n' +
       `Preferred inbound text for this run:\n${inboundMarker}\n\n` +
       'Open Instagram and send that exact message to the connected professional/business account.\n' +
       'Wait until that new row appears here, and avoid reusing an older failed thread if a clean new one is available.\n'

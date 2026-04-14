@@ -1,5 +1,10 @@
 # Meta App Review Submission Packet - 2026-03-26
 
+Current operator packet-of-record:
+- `docs/meta-app-review-current-packet.md`
+- `screencast/meta-app-review/submission-packet.current.json`
+- refresh with `npm run meta:review:packet`
+
 ## Goal
 Get Meta approval for the Instagram messaging permissions used by TDF HQ with the smallest possible reviewer ambiguity.
 
@@ -149,7 +154,7 @@ Where older filename-specific checklist lines remain below, treat them as reusab
 ## What the reviewer sees in-app
 Setup flow:
 - `/social/instagram?review=1`
-- explicit review-mode heading
+- explicit review-mode heading that now labels the run as `Meta App Review: Facebook Login` or `Meta App Review: Instagram Login`
 - active provider and requested scope chips
 - connected status
 - selected professional or business messaging asset with Page ID and Instagram User ID

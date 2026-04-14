@@ -63,6 +63,12 @@ export default function InstagramConnectPage() {
     [oauthProvider],
   );
   const requestedScopes = useMemo(() => getInstagramRequestedScopes(), []);
+  const reviewHeading = reviewMode ? `Meta App Review: ${providerLabel(oauthProvider)}` : 'Conectar Instagram';
+  const reviewSubtitle = reviewMode
+    ? oauthProvider === 'facebook'
+      ? 'Use this screen to show Meta login, permission grant, and the selected professional/business Instagram account linked to the visible Facebook Page before the inbox step.'
+      : 'Use this screen to show Meta login, permission grant, and the selected professional/business Instagram account before the inbox step.'
+    : 'Autoriza tu cuenta de Facebook para leer perfiles de Instagram profesionales y mostrar el media más reciente.';
 
   const missingActiveProviderScopes = useMemo(
     () => activeProviderScopes.filter((scope) => !requestedScopes.includes(scope)),
@@ -105,12 +111,10 @@ export default function InstagramConnectPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={800}>
-          {reviewMode ? 'Meta App Review: Instagram Setup' : 'Conectar Instagram'}
+          {reviewHeading}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {reviewMode
-            ? 'Use this screen in the screencast to show Meta login, permission grant, and visible asset selection before sending a message.'
-            : 'Autoriza tu cuenta de Facebook para leer perfiles de Instagram profesionales y mostrar el media más reciente.'}
+          {reviewSubtitle}
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
       </Stack>
@@ -124,10 +128,24 @@ export default function InstagramConnectPage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Start recording before clicking Connect, keep the permissions dialog visible, and return to this page after consent.
+                {oauthProvider === 'facebook'
+                  ? ' Keep the selected professional/business Instagram account linked to the Facebook Page visible before continuing.'
+                  : ' Keep the selected professional/business Instagram account visible before continuing.'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Active provider: {providerLabel(oauthProvider)}. This run requests {activeProviderScopes.join(', ')}.
               </Typography>
+              <Alert severity="info" variant="outlined">
+                <Stack spacing={0.5}>
+                  <Typography variant="body2" fontWeight={700}>
+                    Review proof target
+                  </Typography>
+                  <Typography variant="body2">
+                    Show the same selected professional/business Instagram account on the setup screen before moving to the
+                    inbox. {oauthProvider === 'facebook' ? 'For Facebook Login, keep the linked Facebook Page visible too.' : ''}
+                  </Typography>
+                </Stack>
+              </Alert>
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {META_REVIEW_PERMISSIONS.map(({ scope, provider }) => {
                   const enabled = requestedScopes.includes(scope);

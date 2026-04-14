@@ -143,8 +143,10 @@ describe('InstagramConnectPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.textContent).toContain('Meta App Review: Facebook Login');
+      expect(container.textContent).toContain('Review proof target');
       expect(container.textContent).toContain(
-        'Reviewer proof: the Instagram account below is the professional/business messaging account used in this flow. It is linked to the selected Facebook Page shown here.',
+        'Show the same selected professional/business Instagram account on the setup screen before moving to the inbox. For Facebook Login, keep the linked Facebook Page visible too.',
       );
       expect(container.textContent).toContain('Selected Facebook Page: TDF Studio');
       expect(container.textContent).toContain('Professional/business Instagram account: @tdf.records.label');

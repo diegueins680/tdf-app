@@ -1,0 +1,102 @@
+{
+  "updatedAt": "2026-04-14 America/Guayaquil",
+  "ownerDirection": "Keep tdf-label focused on the Meta permissions lane until the current App Review submission is reworked and resubmitted with the active evidence set.",
+  "app": {
+    "appId": "1098715965613487",
+    "businessId": "171424997819091",
+    "requestsUrl": "https://developers.facebook.com/apps/1098715965613487/app-review/submissions/?business_id=171424997819091",
+    "activeDetailUrl": "https://developers.facebook.com/apps/1098715965613487/app-review/submissions/feedback/?submission_id=1166713985480351&business_id=171424997819091",
+    "activeSubmissionId": "1166713985480351",
+    "historicalSubmissionIds": [
+      "1148115637340186"
+    ]
+  },
+  "reviewState": {
+    "surfaceHeading": "Your request results for April 4, 2026 at 00:38 GMT-5",
+    "status": "Submission not approved",
+    "permissionsNotApproved": [
+      "instagram_business_basic",
+      "instagram_business_manage_messages",
+      "instagram_manage_messages",
+      "instagram_basic"
+    ]
+  },
+  "requestedPermissions": [
+    "instagram_basic",
+    "instagram_manage_messages",
+    "instagram_business_basic",
+    "instagram_business_manage_messages"
+  ],
+  "packetText": [
+    "TDF uses Instagram Direct for customer communication with the business account. Customers send booking and support inquiries to the TDF business Instagram profile, and TDF staff read and respond to those messages from the business side.",
+    "These permissions are used only so TDF can identify the connected Instagram business/professional account, read inbound customer messages sent to that business account, and reply to those customer messages from the business side."
+  ],
+  "artifacts": {
+    "primaryVideo": {
+      "path": "/Users/diegosaa/.openclaw/media/inbound/file_2---f9b3a254-c56b-434b-a00f-31ad19b0c4c8.mp4",
+      "purpose": "Strongest current evidence artifact. Shows the business profile identity, Business chat context, prior TDF-side reply context, and a realistic booking/support message flow.",
+      "proofAnchors": [
+        "00:00:10 -> shows tdf.records.label / TDF Records with category Entrepreneur",
+        "00:00:11 -> shows Business chat"
+      ]
+    },
+    "secondaryVideo": {
+      "path": "/Users/diegosaa/.openclaw/media/inbound/file_0---897b03ee-8915-48b1-94b3-3297b40b05de.mp4",
+      "purpose": "Supporting evidence for the personal-account-to-business-chat flow."
+    },
+    "supportingStill": {
+      "path": "/Users/diegosaa/.openclaw/media/inbound/file_1---50bbbdeb-66c4-46d5-ae57-004bfb20a67b.jpg",
+      "purpose": "Backup screenshot only. Keep available if Meta asks for an extra still."
+    }
+  },
+  "permissions": {
+    "instagram_basic": {
+      "intent": "Read the connected Instagram account identity used by the business before the messaging flow starts.",
+      "noteFile": "screencast/meta-app-review/permission-notes/instagram_basic.txt",
+      "evidenceArtifacts": [
+        "primaryVideo"
+      ],
+      "proofAnchors": [
+        "00:00:10 -> connected Instagram account identity"
+      ]
+    },
+    "instagram_manage_messages": {
+      "intent": "Reply from the TDF business side to customer messages sent to the business account.",
+      "noteFile": "screencast/meta-app-review/permission-notes/instagram_manage_messages.txt",
+      "evidenceArtifacts": [
+        "primaryVideo",
+        "secondaryVideo"
+      ]
+    },
+    "instagram_business_basic": {
+      "intent": "Identify and access the connected TDF Instagram business/professional account.",
+      "noteFile": "screencast/meta-app-review/permission-notes/instagram_business_basic.txt",
+      "evidenceArtifacts": [
+        "primaryVideo"
+      ],
+      "proofAnchors": [
+        "00:00:10 -> profile shows category Entrepreneur"
+      ]
+    },
+    "instagram_business_manage_messages": {
+      "intent": "Read and manage inbound customer messages sent to the TDF business/professional account.",
+      "noteFile": "screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt",
+      "evidenceArtifacts": [
+        "primaryVideo",
+        "secondaryVideo"
+      ],
+      "proofAnchors": [
+        "00:00:11 -> thread header shows Business chat"
+      ]
+    }
+  },
+  "notes": {
+    "combinedReviewerNotesFile": "screencast/meta-app-review/submission-notes.txt",
+    "screencastGuide": "docs/META_APP_REVIEW_SCREENCAST.md",
+    "historicalContext": [
+      "docs/meta-app-review-submission-packet-2026-03-26.md",
+      "docs/meta-app-review-war-room-2026-03-27.md",
+      "/Users/diegosaa/.openclaw/workspace/tdf-label-meta-permissions-handoff.md"
+    ]
+  }
+}

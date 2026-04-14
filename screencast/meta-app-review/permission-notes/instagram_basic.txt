@@ -1,5 +1,7 @@
 TDF HQ uses instagram_basic in the Facebook Login review flow to identify the business/professional Instagram messaging account before the inbox step begins.
 
+The account identified here is the same TDF business account that receives booking and support messages from customers.
+
 Reviewer flow:
 1. Open /social/instagram?review=1 in English review mode.
 2. Complete the full Meta login and consent flow for instagram_basic plus the dependency scopes pages_show_list and pages_read_engagement.
@@ -9,6 +11,6 @@ Reviewer flow:
    - Professional/business Instagram account: @tdf.records.label
    - Instagram User ID: 17841445628242005
 
-This permission is necessary because TDF HQ must read the selected business/professional Instagram account metadata to show the correct messaging asset before any reply is sent. That lets the label operator verify that the inbox flow is using the intended brand account and not the wrong Page/account pairing.
+This permission is necessary because TDF HQ must read the selected business/professional Instagram account metadata to show the correct messaging asset before any reply is sent. That lets the label operator verify that the inbox flow is using the intended customer-facing brand account and not the wrong Page/account pairing.
 
 The attached Facebook Login screencast shows the full Meta login flow, permission grant, return to /social/instagram?review=1, and the selected business/professional Instagram account linked to the visible Facebook Page before the messaging flow continues.

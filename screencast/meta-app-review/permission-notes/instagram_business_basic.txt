@@ -1,11 +1,13 @@
 TDF HQ uses instagram_business_basic in the Instagram Login review flow to identify the business/professional Instagram messaging account before the inbox step begins.
 
+The account identified here is the same TDF business account that receives booking and support messages from customers.
+
 Reviewer flow:
 1. Open /social/instagram?review=1 in English review mode.
 2. Complete the full Instagram Login consent flow for instagram_business_basic.
 3. Return to the setup screen and keep the selected business/professional Instagram messaging asset visible before proceeding to the inbox flow.
 
-This permission is necessary because TDF HQ must read the selected business/professional Instagram account metadata to show the exact messaging account that the label operator will use in the inbox flow. The review screen keeps that selected asset visible so the reviewer can verify the account identity before messaging begins.
+This permission is necessary because TDF HQ must read the selected business/professional Instagram account metadata to show the exact customer-facing messaging account that the label operator will use in the inbox flow. The review screen keeps that selected asset visible so the reviewer can verify the account identity before messaging begins.
 
 The attached reviewer videos show the live business-account flow end-to-end: return to /social/instagram?review=1 with the selected business/professional Instagram messaging asset visible (`@tdf.records.label`), then proceed into the inbox flow with that same account.
 

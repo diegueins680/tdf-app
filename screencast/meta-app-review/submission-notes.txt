@@ -1,5 +1,9 @@
 This file is the combined reviewer narrative for the Meta submission packet. For each permission-specific "Describe how your app uses this permission or feature" field, use the matching file under `screencast/meta-app-review/permission-notes/`.
 
+TDF Records uses Instagram Direct as the customer booking and support inbox for its business account. Customers send real booking and support questions to the TDF business Instagram profile, and TDF staff read and reply to those conversations from the business side inside TDF HQ.
+
+These requested permissions are used only to identify the connected business/professional Instagram account, read inbound messages sent to that business account, and reply from the business side. TDF does not request these permissions for consumer browsing or unrelated account access.
+
 This resubmission includes one refreshed Facebook Login evidence video plus the existing Instagram Login evidence video because TDF HQ supports two Meta login/provider flows for Instagram messaging.
 
 1) Facebook Login evidence

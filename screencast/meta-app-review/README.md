@@ -1,12 +1,14 @@
 # Meta App Review Screencast (Instagram)
 
 This folder automates the **desktop** portion of the Meta App Review screencast:
-- Meta login + consent (human-in-the-loop)
+- Meta login + consent (Facebook Login or Instagram Login, human-in-the-loop)
 - Visible professional/business asset selection
 - Live send from app UI
 - Deleted-message refresh after native-client delete/unsend
 - Automatic spotlight highlights on key UI actions (connect, continue, compose, send)
 - Produces a browser recording (Playwright) you can post-process and stitch with the Android native-client clip
+
+The review-mode screens label the run as `Meta App Review: Facebook Login` or `Meta App Review: Instagram Login`, and the inbox checklist keeps the selected professional/business account visible while you capture the send, native-client delivery, and delete/unsend proof.
 
 Permissions in scope:
 - `instagram_basic`
@@ -33,6 +35,8 @@ Notes:
 - If App Review requires all four permissions, record two runs (one per provider config) and submit both clips or a stitched final video.
 - Set `TDF_REVIEW_SPOTLIGHT=0` to disable on-screen highlights.
 - Set `TDF_REVIEW_SPOTLIGHT_MS=1500` to control highlight duration in milliseconds.
+
+For local operator setup, copy `screencast/meta-app-review/review.env.example` to a private env file or export the values manually before starting the runner.
 
 Output video is saved under:
 
@@ -79,6 +83,8 @@ Then pass it with `--narration-text`.
 ## 5) Submission Packet Helpers
 
 Canonical packet files:
+- `screencast/meta-app-review/submission-packet.current.json`
+- `docs/meta-app-review-current-packet.md`
 - `screencast/meta-app-review/submission-notes.txt`
 - `screencast/meta-app-review/permission-notes/instagram_basic.txt`
 - `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
@@ -88,6 +94,12 @@ Canonical packet files:
 - `docs/meta-app-review-submission-packet-2026-03-26.md`
 
 Use `submission-notes.txt` for the combined reviewer narrative. When Meta asks for a per-permission explanation in the App Review form, paste the matching file from `permission-notes/` into that permission's "Describe how your app uses this permission or feature" field.
+
+Refresh the current packet-of-record and verify every referenced asset before resubmitting:
+
+```bash
+npm run meta:review:packet
+```
 
 Regenerate the evidence manifest after replacing the final videos:
 

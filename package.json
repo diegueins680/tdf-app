@@ -35,6 +35,7 @@
     "audit:ui:static": "node scripts/ui-static-audit.mjs",
     "verify:auto-loop": "node scripts/verify-improvement-loop.mjs",
     "test:auto-loop": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs",
+    "meta:review:packet": "node scripts/meta-app-review-packet.mjs",
     "generate:api": "npm run generate:api:ui && npm run generate:api:mobile",
     "generate:api:ui": "npm run generate:api --workspace=tdf-hq-ui",
     "generate:api:mobile": "if node scripts/mobile-workspace-ready.mjs --quiet; then npm --prefix tdf-mobile run --if-present generate:api; elif [ \"${REQUIRE_MOBILE_WORKSPACE:-0}\" = \"1\" ]; then echo 'Missing or incomplete tdf-mobile install. Run: git submodule update --init --recursive && (cd tdf-mobile && npm install)' >&2; exit 1; else echo 'Skipping mobile API generation: workspace missing or install incomplete'; fi",

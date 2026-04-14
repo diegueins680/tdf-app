@@ -64,6 +64,8 @@ VITE_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_manage_message
 1. Setup screen (Step 1): `/social/instagram?review=1`
 2. Messaging flow (Step 2): `/social/inbox?review=1`
 
+The review-mode app headings now label the run as `Meta App Review: Facebook Login` or `Meta App Review: Instagram Login`, so the recording itself makes the provider scope obvious before the inbox step starts.
+
 ## Exact Recording Script
 
 1. Start recording before clicking **Connect with Meta Login**.
@@ -72,6 +74,7 @@ VITE_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_manage_message
    - Provider + requested scope chips
    - Connected status
    - Selected professional/business messaging asset with Page ID / IG User ID
+   - The review-mode heading for the active provider (`Meta App Review: Facebook Login` or `Meta App Review: Instagram Login`)
 4. Narrate explicitly that the selected Instagram account is the professional/business messaging account being reviewed. In the Facebook Login run, also state that it is linked to the visible Facebook Page.
 5. Click **Continue to message send flow**.
 6. In `/social/inbox?review=1`, keep these items visible:
