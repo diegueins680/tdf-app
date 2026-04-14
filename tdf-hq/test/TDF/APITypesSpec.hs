@@ -8,6 +8,7 @@ import Data.Proxy (Proxy (..))
 import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
+import qualified TDF.API as API
 import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types (LooseJSON, RolePayload (..))
 import qualified TDF.Routes.Academy as Academy
@@ -39,6 +40,33 @@ spec = do
         it "rejects malformed or ambiguous JSON-like bodies instead of treating them as raw role text" $ do
             decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
             decodeLooseRole "{}" `shouldSatisfy` isLeft
+
+    describe "ChatKitSessionRequest FromJSON" $ do
+        it "accepts canonical top-level and nested workflow selectors" $ do
+            case decodeChatKitSession "{\"workflowId\":\" wf_primary \"}" of
+                Left err ->
+                    expectationFailure ("Expected top-level ChatKit workflow selector to decode, got: " <> err)
+                Right (API.ChatKitSessionRequest workflowIdVal) ->
+                    workflowIdVal `shouldBe` Just "wf_primary"
+
+            case decodeChatKitSession "{\"workflow\":{\"id\":\"wf_nested\"}}" of
+                Left err ->
+                    expectationFailure ("Expected nested ChatKit workflow selector to decode, got: " <> err)
+                Right (API.ChatKitSessionRequest workflowIdVal) ->
+                    workflowIdVal `shouldBe` Just "wf_nested"
+
+            case decodeChatKitSession "{\"workflowId\":\"wf_shared\",\"workflow\":{\"id\":\"wf_shared\"}}" of
+                Left err ->
+                    expectationFailure ("Expected matching ChatKit workflow selectors to decode, got: " <> err)
+                Right (API.ChatKitSessionRequest workflowIdVal) ->
+                    workflowIdVal `shouldBe` Just "wf_shared"
+
+        it "rejects blank, conflicting, or malformed workflow selectors instead of silently picking a fallback" $ do
+            decodeChatKitSession "{\"workflowId\":\"   \"}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflow\":{\"id\":\"   \"}}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"workflow\":{\"id\":\"wf_nested\"}}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflow\":true}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflow\":{}}" `shouldSatisfy` isLeft
 
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
@@ -219,6 +247,8 @@ spec = do
   where
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
+    decodeChatKitSession :: BL8.ByteString -> Either String API.ChatKitSessionRequest
+    decodeChatKitSession = eitherDecode
     decodeCourseRegistration = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode

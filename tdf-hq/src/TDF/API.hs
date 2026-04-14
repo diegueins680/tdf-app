@@ -11,6 +11,7 @@ import           Servant
 import           Database.Persist          (Entity)
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Data.Char (toLower)
@@ -584,14 +585,31 @@ data ChatKitSessionRequest = ChatKitSessionRequest
 
 instance FromJSON ChatKitSessionRequest where
   parseJSON = withObject "ChatKitSessionRequest" $ \o -> do
-    workflowId <- o .:? "workflowId"
+    workflowId <- traverse (normalizeWorkflowId "workflowId") =<< o .:? "workflowId"
     workflow <- o .:? "workflow"
     nestedId <- case workflow of
-      Just (Object w) -> w .:? "id"
+      Just (Object w) -> do
+        mWorkflowId <- w .:? "id"
+        case mWorkflowId of
+          Nothing -> fail "workflow.id is required when workflow is provided"
+          Just rawWorkflowId ->
+            Just <$> normalizeWorkflowId "workflow.id" rawWorkflowId
+      Just _ -> fail "workflow must be an object"
       _ -> pure Nothing
+    case (workflowId, nestedId) of
+      (Just topLevelWorkflowId, Just nestedWorkflowId)
+        | topLevelWorkflowId /= nestedWorkflowId ->
+            fail "workflowId and workflow.id must match when both are provided"
+      _ -> pure ()
     pure ChatKitSessionRequest
       { cksWorkflowId = workflowId <|> nestedId
       }
+    where
+      normalizeWorkflowId fieldName rawWorkflowId =
+        let trimmedWorkflowId = T.strip rawWorkflowId
+        in if T.null trimmedWorkflowId
+             then fail (T.unpack fieldName <> " cannot be blank")
+             else pure trimmedWorkflowId
 
 data ChatKitSessionResponse = ChatKitSessionResponse
   { ckrClientSecret :: Text
