@@ -1170,6 +1170,70 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('skips the baseline admin access summary when a single search result already uses the default admin scope', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+        roles: ['Admin'],
+        modules: ['admin'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+        expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'ada-admin');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Mostrando 1 de 3 usuarios.',
+        );
+
+        const resultRow = getRowByUserId(container, 101);
+        expect(resultRow.textContent).toContain('Ada Lovelace');
+        expect(resultRow.textContent).not.toContain('Roles:');
+        expect(resultRow.textContent).not.toContain('Módulos:');
+        expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(1);
+        expect(container.textContent).not.toContain(
+          'Acceso en este resultado: Roles: Admin · Módulos: admin.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses number-setup guidance for an email-only single search result so the header matches the row state', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

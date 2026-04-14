@@ -142,6 +142,17 @@ const buildUserAccessSummary = ({
   ].filter(Boolean).join(' · ');
 };
 
+const isDefaultAdminAccessSummary = ({
+  modulesSummary,
+  rolesSummary,
+}: {
+  modulesSummary: string;
+  rolesSummary: string;
+}) => (
+  rolesSummary === DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
+  && modulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
+);
+
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
   const username = user.username.trim();
@@ -321,9 +332,10 @@ export default function AdminUsersPage() {
   const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
 
-    const isDefaultSharedAdminAccess =
-      sharedRolesSummary === DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
-      && sharedModulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY;
+    const isDefaultSharedAdminAccess = isDefaultAdminAccessSummary({
+      rolesSummary: sharedRolesSummary,
+      modulesSummary: sharedModulesSummary,
+    });
     if (isDefaultSharedAdminAccess) return '';
 
     const sharedAccessSummaryParts: string[] = [];
@@ -359,14 +371,21 @@ export default function AdminUsersPage() {
     )
     : '';
   const singleSearchResultAccessSummary = useMemo(
-    () => (
-      singleSearchResult
-        ? buildUserAccessSummary({
-          roles: singleSearchResult.roles,
-          modules: singleSearchResult.modules,
-        })
-        : ''
-    ),
+    () => {
+      if (!singleSearchResult) return '';
+
+      const rolesSummary = getUserAccessSummary(singleSearchResult.roles);
+      const modulesSummary = getUserAccessSummary(singleSearchResult.modules);
+
+      if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
+        return '';
+      }
+
+      return buildUserAccessSummary({
+        roles: singleSearchResult.roles,
+        modules: singleSearchResult.modules,
+      });
+    },
     [singleSearchResult],
   );
   const primaryGuidance = showSingleUserGuidance
