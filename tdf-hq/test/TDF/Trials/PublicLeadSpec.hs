@@ -20,6 +20,8 @@ import TDF.Trials.DTO
   ( ClassSessionDTO
   , ClassSessionUpdate (..)
   , PreferredSlot (..)
+  , StudentDTO
+  , StudentUpdate (StudentUpdate)
   , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
@@ -868,6 +870,46 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for class updates"
 
+  describe "private student updates" $ do
+    it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        _ <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Existing Student"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "taken@example.com"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Nothing
+          , Models.partyCreatedAt = now
+          }
+        targetStudentId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Target Student"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "target@example.com"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Nothing
+          , Models.partyCreatedAt = now
+          }
+        privateStudentUpdateHandler
+          (fromIntegral (fromSqlKey targetStudentId))
+          (StudentUpdate Nothing (Just " Taken@Example.com ") Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "correo ya está asignado"
+        Right _ ->
+          expectationFailure "Expected duplicate student emails to be rejected"
+
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =
   runStdoutLoggingT $ do
@@ -1109,6 +1151,12 @@ privateUpdateClassHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> updateH :<|> _ =
         privateTrialsServer adminUser
   in updateH
+
+privateStudentUpdateHandler :: Int -> StudentUpdate -> SqlPersistT IO StudentDTO
+privateStudentUpdateHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> studentsH :<|> _ :<|> updateH =
+        privateTrialsServer adminUser
+  in studentsH `seq` updateH
 
 insertPartyFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
 insertPartyFixture displayName now =

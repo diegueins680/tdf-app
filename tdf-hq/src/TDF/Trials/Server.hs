@@ -123,6 +123,14 @@ validateEmailUpdate (Just rawEmail) =
     Nothing -> Right (Just Nothing)
     Just _ -> Just <$> validateOptionalEmail (Just rawEmail)
 
+ensureEmailAvailableForParty :: PartyId -> Maybe (Maybe Text) -> AppM ()
+ensureEmailAvailableForParty _ Nothing = pure ()
+ensureEmailAvailableForParty _ (Just Nothing) = pure ()
+ensureEmailAvailableForParty partyKey (Just (Just emailVal)) = do
+  matches <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] []
+  when (any ((/= partyKey) . entityKey) matches) $
+    liftIO $ throwIO err409 { errBody = "El correo ya está asignado a otra persona." }
+
 validateRequiredEmail :: Maybe Text -> Either ServerError Text
 validateRequiredEmail mEmail =
   case validateOptionalEmail mEmail of
@@ -1826,6 +1834,7 @@ privateTrialsServer user@AuthedUser{..} =
             Just raw -> Just (cleanOptional (Just raw))
       emailUpdate <- either (liftIO . throwIO) pure (validateEmailUpdate email)
       phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
+      ensureEmailAvailableForParty studentKey emailUpdate
 
       when (isJust displayName && isNothing nameUpdate) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
