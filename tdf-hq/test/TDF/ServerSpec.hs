@@ -36,7 +36,8 @@ import TDF.Models
     )
 import qualified TDF.DTO as DTO
 import TDF.Server
-    ( MetaBackfillOptions(..)
+    ( MarketplaceCartTotalsState(..)
+    , MetaBackfillOptions(..)
     , normalizeOptionalInput
     , parseBookingStatus
     , parseBoolParam
@@ -74,7 +75,9 @@ import TDF.Server
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
     , validateMarketplaceBuyerEmail
+    , requireMarketplaceCartTotals
     , parsePayPalCaptureOrderStatus
+    , validateMarketplaceOnlinePaymentTotal
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
@@ -1394,6 +1397,47 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   " "status cannot be blank"
             assertInvalid "refunded" "pending, contact, paid, cancelled"
+
+    describe "requireMarketplaceCartTotals" $ do
+        it "distinguishes missing carts from empty carts before checkout handlers respond" $ do
+            let assertInvalid state expectedCode expectedMessage =
+                    case requireMarketplaceCartTotals state of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` expectedCode
+                            if null expectedMessage
+                                then pure ()
+                                else BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right totals ->
+                            expectationFailure
+                                ( "Expected marketplace cart state to be rejected, got: "
+                                    <> show (totals :: Int)
+                                )
+            assertInvalid (MarketplaceCartMissing :: MarketplaceCartTotalsState Int) 404 ""
+            assertInvalid MarketplaceCartEmpty 400 "El carrito esta vacio."
+
+        it "passes through loaded cart totals for downstream checkout logic" $
+            requireMarketplaceCartTotals (MarketplaceCartTotalsReady (1200 :: Int))
+                `shouldBe` Right 1200
+
+    describe "validateMarketplaceOnlinePaymentTotal" $ do
+        it "accepts positive totals so payable carts can proceed to online gateways" $ do
+            validateMarketplaceOnlinePaymentTotal 1 `shouldBe` Right 1
+            validateMarketplaceOnlinePaymentTotal 2500 `shouldBe` Right 2500
+
+        it "rejects zero or negative totals before online checkout can create invalid payment orders" $ do
+            let assertInvalid rawTotal =
+                    case validateMarketplaceOnlinePaymentTotal rawTotal of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "El carrito debe tener un total mayor a 0 para pagar en linea."
+                        Right totalCents ->
+                            expectationFailure
+                                ( "Expected invalid online payment total to be rejected, got: "
+                                    <> show totalCents
+                                )
+            assertInvalid 0
+            assertInvalid (-500)
 
     describe "parsePayPalCaptureOrderStatus" $ do
         it "maps known PayPal capture statuses onto canonical marketplace order states" $ do

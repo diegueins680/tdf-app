@@ -7620,51 +7620,46 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
+  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  (cartItems, totalCents, currency) <-
+    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
   mOrder <- liftIO $ flip runSqlPool envPool $ do
-    mCart <- get cartKey
-    case mCart of
-      Nothing -> pure Nothing
-      Just _ -> do
-        mTotals <- loadCartTotals cartKey
-        case mTotals of
-          Nothing -> pure Nothing
-          Just (cartItems, totalCents, currency) -> do
-            let statusTxt = if totalCents > 0 then "pending" else "contact"
-            orderId <- insert ME.MarketplaceOrder
-              { ME.marketplaceOrderCartId        = Just cartKey
-              , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
-              , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
-              , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
-              , ME.marketplaceOrderTotalUsdCents = totalCents
-              , ME.marketplaceOrderCurrency      = currency
-              , ME.marketplaceOrderStatus        = statusTxt
-              , ME.marketplaceOrderPaymentProvider = Nothing
-              , ME.marketplaceOrderPaypalOrderId = Nothing
-              , ME.marketplaceOrderPaypalPayerEmail = Nothing
-              , ME.marketplaceOrderDatafastCheckoutId = Nothing
-              , ME.marketplaceOrderDatafastResourcePath = Nothing
-              , ME.marketplaceOrderDatafastPaymentId = Nothing
-              , ME.marketplaceOrderDatafastResultCode = Nothing
-              , ME.marketplaceOrderDatafastResultDescription = Nothing
-              , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-              , ME.marketplaceOrderDatafastAuthCode = Nothing
-              , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-              , ME.marketplaceOrderPaidAt        = Nothing
-              , ME.marketplaceOrderCreatedAt     = now
-              , ME.marketplaceOrderUpdatedAt     = now
-              }
-            forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-              let listing   = entityVal listingEnt
-                  unitPrice = ME.marketplaceListingPriceUsdCents listing
-                  subtotal  = unitPrice * qty
-              void $ insert ME.MarketplaceOrderItem
-                { ME.marketplaceOrderItemOrderId           = orderId
-                , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-                , ME.marketplaceOrderItemQuantity          = qty
-                , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-                , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-                }
-            loadOrderDTO orderId
+    let statusTxt = if totalCents > 0 then "pending" else "contact"
+    orderId <- insert ME.MarketplaceOrder
+      { ME.marketplaceOrderCartId        = Just cartKey
+      , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
+      , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
+      , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+      , ME.marketplaceOrderTotalUsdCents = totalCents
+      , ME.marketplaceOrderCurrency      = currency
+      , ME.marketplaceOrderStatus        = statusTxt
+      , ME.marketplaceOrderPaymentProvider = Nothing
+      , ME.marketplaceOrderPaypalOrderId = Nothing
+      , ME.marketplaceOrderPaypalPayerEmail = Nothing
+      , ME.marketplaceOrderDatafastCheckoutId = Nothing
+      , ME.marketplaceOrderDatafastResourcePath = Nothing
+      , ME.marketplaceOrderDatafastPaymentId = Nothing
+      , ME.marketplaceOrderDatafastResultCode = Nothing
+      , ME.marketplaceOrderDatafastResultDescription = Nothing
+      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+      , ME.marketplaceOrderDatafastAuthCode = Nothing
+      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+      , ME.marketplaceOrderPaidAt        = Nothing
+      , ME.marketplaceOrderCreatedAt     = now
+      , ME.marketplaceOrderUpdatedAt     = now
+      }
+    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+      let listing   = entityVal listingEnt
+          unitPrice = ME.marketplaceListingPriceUsdCents listing
+          subtotal  = unitPrice * qty
+      void $ insert ME.MarketplaceOrderItem
+        { ME.marketplaceOrderItemOrderId           = orderId
+        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+        , ME.marketplaceOrderItemQuantity          = qty
+        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+        }
+    loadOrderDTO orderId
   orderDto <- maybe (throwError err404) pure mOrder
   env <- ask
   -- fire-and-forget email confirmation
@@ -7692,63 +7687,63 @@ createDatafastCheckout rawId payload = do
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  case mTotals of
-    Nothing -> throwError err404
-    Just (cartItems, totalCents, currency) -> do
-      when (totalCents <= 0) $ throwBadRequest "El carrito está vacío."
-      orderKey <- liftIO $ flip runSqlPool envPool $ do
-        oid <- insert ME.MarketplaceOrder
-          { ME.marketplaceOrderCartId        = Just cartKey
-          , ME.marketplaceOrderBuyerName     = nameTxt
-          , ME.marketplaceOrderBuyerEmail    = emailTxt
-          , ME.marketplaceOrderBuyerPhone    = phoneTxt
-          , ME.marketplaceOrderTotalUsdCents = totalCents
-          , ME.marketplaceOrderCurrency      = currency
-          , ME.marketplaceOrderStatus        = "datafast_init"
-          , ME.marketplaceOrderPaymentProvider = Just "datafast"
-          , ME.marketplaceOrderPaypalOrderId = Nothing
-          , ME.marketplaceOrderPaypalPayerEmail = Nothing
-          , ME.marketplaceOrderDatafastCheckoutId = Nothing
-          , ME.marketplaceOrderDatafastResourcePath = Nothing
-          , ME.marketplaceOrderDatafastPaymentId = Nothing
-          , ME.marketplaceOrderDatafastResultCode = Nothing
-          , ME.marketplaceOrderDatafastResultDescription = Nothing
-          , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-          , ME.marketplaceOrderDatafastAuthCode = Nothing
-          , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-          , ME.marketplaceOrderPaidAt        = Nothing
-          , ME.marketplaceOrderCreatedAt     = now
-          , ME.marketplaceOrderUpdatedAt     = now
-          }
-        forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-          let listing   = entityVal listingEnt
-              unitPrice = ME.marketplaceListingPriceUsdCents listing
-              subtotal  = unitPrice * qty
-          void $ insert ME.MarketplaceOrderItem
-            { ME.marketplaceOrderItemOrderId           = oid
-            , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-            , ME.marketplaceOrderItemQuantity          = qty
-            , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-            , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-            }
-        pure oid
-      (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
-      now2 <- liftIO getCurrentTime
-      liftIO $ flip runSqlPool envPool $
-        update orderKey
-          [ ME.MarketplaceOrderStatus =. "datafast_pending"
-          , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
-          , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
-          , ME.MarketplaceOrderUpdatedAt =. now2
-          ]
-      pure DatafastCheckoutDTO
-        { dcOrderId    = toPathPiece orderKey
-        , dcCheckoutId = checkoutId
-        , dcWidgetUrl  = T.pack widgetUrl
-        , dcAmount     = formatUsd totalCents currency
-        , dcCurrency   = currency
+  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  (cartItems, totalCentsRaw, currency) <-
+    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
+  totalCents <-
+    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
+  orderKey <- liftIO $ flip runSqlPool envPool $ do
+    oid <- insert ME.MarketplaceOrder
+      { ME.marketplaceOrderCartId        = Just cartKey
+      , ME.marketplaceOrderBuyerName     = nameTxt
+      , ME.marketplaceOrderBuyerEmail    = emailTxt
+      , ME.marketplaceOrderBuyerPhone    = phoneTxt
+      , ME.marketplaceOrderTotalUsdCents = totalCents
+      , ME.marketplaceOrderCurrency      = currency
+      , ME.marketplaceOrderStatus        = "datafast_init"
+      , ME.marketplaceOrderPaymentProvider = Just "datafast"
+      , ME.marketplaceOrderPaypalOrderId = Nothing
+      , ME.marketplaceOrderPaypalPayerEmail = Nothing
+      , ME.marketplaceOrderDatafastCheckoutId = Nothing
+      , ME.marketplaceOrderDatafastResourcePath = Nothing
+      , ME.marketplaceOrderDatafastPaymentId = Nothing
+      , ME.marketplaceOrderDatafastResultCode = Nothing
+      , ME.marketplaceOrderDatafastResultDescription = Nothing
+      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+      , ME.marketplaceOrderDatafastAuthCode = Nothing
+      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+      , ME.marketplaceOrderPaidAt        = Nothing
+      , ME.marketplaceOrderCreatedAt     = now
+      , ME.marketplaceOrderUpdatedAt     = now
+      }
+    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+      let listing   = entityVal listingEnt
+          unitPrice = ME.marketplaceListingPriceUsdCents listing
+          subtotal  = unitPrice * qty
+      void $ insert ME.MarketplaceOrderItem
+        { ME.marketplaceOrderItemOrderId           = oid
+        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+        , ME.marketplaceOrderItemQuantity          = qty
+        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
         }
+    pure oid
+  (checkoutId, widgetUrl) <- requestDatafastCheckout orderKey totalCents currency nameTxt emailTxt phoneTxt
+  now2 <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool envPool $
+    update orderKey
+      [ ME.MarketplaceOrderStatus =. "datafast_pending"
+      , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
+      , ME.MarketplaceOrderDatafastCheckoutId =. Just checkoutId
+      , ME.MarketplaceOrderUpdatedAt =. now2
+      ]
+  pure DatafastCheckoutDTO
+    { dcOrderId    = toPathPiece orderKey
+    , dcCheckoutId = checkoutId
+    , dcWidgetUrl  = T.pack widgetUrl
+    , dcAmount     = formatUsd totalCents currency
+    , dcCurrency   = currency
+    }
 
 confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
 confirmDatafastPayment mOrderId mResourcePath = do
@@ -7801,54 +7796,55 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  mTotals <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  case mTotals of
-    Nothing -> throwError err404
-    Just (cartItems, totalCents, currency) -> do
-      (cid, sec, baseUrl) <- loadPaypalEnv
-      manager <- liftIO $ newManager tlsManagerSettings
-      (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
-      orderId <- liftIO $ flip runSqlPool envPool $ do
-        oid <- insert ME.MarketplaceOrder
-          { ME.marketplaceOrderCartId        = Just cartKey
-          , ME.marketplaceOrderBuyerName     = nameTxt
-          , ME.marketplaceOrderBuyerEmail    = emailTxt
-          , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
-          , ME.marketplaceOrderTotalUsdCents = totalCents
-          , ME.marketplaceOrderCurrency      = currency
-          , ME.marketplaceOrderStatus        = "paypal_pending"
-          , ME.marketplaceOrderPaymentProvider = Just "paypal"
-          , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
-          , ME.marketplaceOrderPaypalPayerEmail = Nothing
-          , ME.marketplaceOrderDatafastCheckoutId = Nothing
-          , ME.marketplaceOrderDatafastResourcePath = Nothing
-          , ME.marketplaceOrderDatafastPaymentId = Nothing
-          , ME.marketplaceOrderDatafastResultCode = Nothing
-          , ME.marketplaceOrderDatafastResultDescription = Nothing
-          , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-          , ME.marketplaceOrderDatafastAuthCode = Nothing
-          , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-          , ME.marketplaceOrderPaidAt        = Nothing
-          , ME.marketplaceOrderCreatedAt     = now
-          , ME.marketplaceOrderUpdatedAt     = now
-          }
-        forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-          let listing   = entityVal listingEnt
-              unitPrice = ME.marketplaceListingPriceUsdCents listing
-              subtotal  = unitPrice * qty
-          void $ insert ME.MarketplaceOrderItem
-            { ME.marketplaceOrderItemOrderId           = oid
-            , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-            , ME.marketplaceOrderItemQuantity          = qty
-            , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-            , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
-            }
-        pure oid
-      pure PaypalCreateDTO
-        { pcOrderId = toPathPiece orderId
-        , pcPaypalOrderId = ppOrderId
-        , pcApprovalUrl = approvalUrl
+  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  (cartItems, totalCentsRaw, currency) <-
+    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
+  totalCents <-
+    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
+  (cid, sec, baseUrl) <- loadPaypalEnv
+  manager <- liftIO $ newManager tlsManagerSettings
+  (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
+  orderId <- liftIO $ flip runSqlPool envPool $ do
+    oid <- insert ME.MarketplaceOrder
+      { ME.marketplaceOrderCartId        = Just cartKey
+      , ME.marketplaceOrderBuyerName     = nameTxt
+      , ME.marketplaceOrderBuyerEmail    = emailTxt
+      , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+      , ME.marketplaceOrderTotalUsdCents = totalCents
+      , ME.marketplaceOrderCurrency      = currency
+      , ME.marketplaceOrderStatus        = "paypal_pending"
+      , ME.marketplaceOrderPaymentProvider = Just "paypal"
+      , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
+      , ME.marketplaceOrderPaypalPayerEmail = Nothing
+      , ME.marketplaceOrderDatafastCheckoutId = Nothing
+      , ME.marketplaceOrderDatafastResourcePath = Nothing
+      , ME.marketplaceOrderDatafastPaymentId = Nothing
+      , ME.marketplaceOrderDatafastResultCode = Nothing
+      , ME.marketplaceOrderDatafastResultDescription = Nothing
+      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+      , ME.marketplaceOrderDatafastAuthCode = Nothing
+      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+      , ME.marketplaceOrderPaidAt        = Nothing
+      , ME.marketplaceOrderCreatedAt     = now
+      , ME.marketplaceOrderUpdatedAt     = now
+      }
+    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+      let listing   = entityVal listingEnt
+          unitPrice = ME.marketplaceListingPriceUsdCents listing
+          subtotal  = unitPrice * qty
+      void $ insert ME.MarketplaceOrderItem
+        { ME.marketplaceOrderItemOrderId           = oid
+        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+        , ME.marketplaceOrderItemQuantity          = qty
+        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
         }
+    pure oid
+  pure PaypalCreateDTO
+    { pcOrderId = toPathPiece orderId
+    , pcPaypalOrderId = ppOrderId
+    , pcApprovalUrl = approvalUrl
+    }
 
 capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
 capturePaypalOrder PaypalCaptureReq{..} = do
@@ -8052,6 +8048,12 @@ requireMarketplaceAccess user =
   unless (hasOperationsAccess user) $
     throwError err403
 
+data MarketplaceCartTotalsState a
+  = MarketplaceCartMissing
+  | MarketplaceCartEmpty
+  | MarketplaceCartTotalsReady a
+  deriving (Eq, Show)
+
 loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
 loadCartDTO cartId = do
   mCart <- get cartId
@@ -8063,17 +8065,35 @@ loadCartDTO cartId = do
 
 loadCartTotals
   :: Key ME.MarketplaceCart
-  -> SqlPersistT IO (Maybe ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
+  -> SqlPersistT IO (MarketplaceCartTotalsState ([(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)], Int, Text))
 loadCartTotals cartId = do
-  items <- loadCartLines cartId
-  if null items
-    then pure Nothing
-    else do
-      let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                           | (_, listing, _, qty) <- items
-                           ]
-          currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
-      pure (Just (items, totalCents, currency))
+  mCart <- get cartId
+  case mCart of
+    Nothing -> pure MarketplaceCartMissing
+    Just _ -> do
+      items <- loadCartLines cartId
+      if null items
+        then pure MarketplaceCartEmpty
+        else do
+          let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
+                               | (_, listing, _, qty) <- items
+                               ]
+              currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
+          pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+
+requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
+requireMarketplaceCartTotals MarketplaceCartMissing =
+  Left err404
+requireMarketplaceCartTotals MarketplaceCartEmpty =
+  Left err400 { errBody = "El carrito esta vacio." }
+requireMarketplaceCartTotals (MarketplaceCartTotalsReady totals) =
+  Right totals
+
+validateMarketplaceOnlinePaymentTotal :: Int -> Either ServerError Int
+validateMarketplaceOnlinePaymentTotal totalCents
+  | totalCents > 0 = Right totalCents
+  | otherwise =
+      Left err400 { errBody = "El carrito debe tener un total mayor a 0 para pagar en linea." }
 
 loadCartLines
   :: Key ME.MarketplaceCart
