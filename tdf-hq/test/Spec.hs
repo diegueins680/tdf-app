@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Main (main) where
 
@@ -10,6 +11,7 @@ import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
+import Database.Persist (Key)
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
@@ -17,6 +19,7 @@ import Servant (ServerError (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
+import Web.PathPieces (toPathPiece)
 
 import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
@@ -50,6 +53,7 @@ import TDF.DTO.SocialEventsDTO
       vcuPhone,
       vudContactUpdate )
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
+import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import TDF.ServerRadio
@@ -61,7 +65,8 @@ import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
 import TDF.ServerInternships
-    ( validateInternProjectStatusInput,
+    ( parseKey,
+      validateInternProjectStatusInput,
       validateInternPermissionDateRange,
       validateInternProfileDateUpdate,
       validateInternTaskUpdatePermissions,
@@ -1359,6 +1364,26 @@ main = hspec $ do
                 (validateOptionalInternPartyIdInput "assignedTo" (Just (-1)))
             assertInvalid "assignedTo must be a positive integer"
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
+
+    describe "internship path identifier parsing" $ do
+        it "accepts positive persistent ids used by internship capture routes" $
+            case (parseKey @ME.InternProject "42" :: Either ServerError (Key ME.InternProject)) of
+                Left err ->
+                    expectationFailure ("Expected positive internship path id to parse, got " <> show err)
+                Right projectKey ->
+                    toPathPiece projectKey `shouldBe` "42"
+
+        it "rejects zero, negative, or malformed ids before internship handlers hit the database" $ do
+            let assertInvalid rawId expectedMessage =
+                    case (parseKey @ME.InternProject rawId :: Either ServerError (Key ME.InternProject)) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right _ ->
+                            expectationFailure "Expected invalid internship path id to be rejected"
+            assertInvalid "0" "positive integer"
+            assertInvalid "-3" "positive integer"
+            assertInvalid "project-7" "Invalid identifier"
 
     describe "internship permission date validation" $ do
         it "accepts open-ended and same-day permission ranges" $ do

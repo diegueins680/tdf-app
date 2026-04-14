@@ -12,6 +12,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
+import           Data.Char                  (isDigit)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
@@ -728,4 +729,16 @@ parseKey
   => Text
   -> m (Key record)
 parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  let trimmed = T.strip raw
+      isSignedNegativeInt =
+        case T.uncons trimmed of
+          Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
+          _ -> False
+      isNonPositiveDigits =
+        T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
+  in
+    if isSignedNegativeInt || isNonPositiveDigits
+      then
+          throwError err400 { errBody = "identifier must be a positive integer" }
+      else
+        maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece trimmed)
