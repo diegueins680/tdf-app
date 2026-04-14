@@ -569,6 +569,17 @@ validateAvailabilityListFilters rawSubjectId mFrom mTo = do
     _ -> pure ()
   Right (subjectId, mFrom, mTo)
 
+validateTeacherClassesFilters
+  :: Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Either ServerError (Int, Maybe Int, Maybe UTCTime, Maybe UTCTime)
+validateTeacherClassesFilters rawTeacherId rawSubjectId mFrom mTo = do
+  teacherId <- validatePositiveIntField "teacherId" rawTeacherId
+  (subjectId, fromTs, toTs) <- validateAvailabilityListFilters rawSubjectId mFrom mTo
+  Right (teacherId, subjectId, fromTs, toTs)
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
@@ -1664,8 +1675,10 @@ privateTrialsServer user@AuthedUser{..} =
         ]
 
     teacherClassesH :: Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> AppM [ClassSessionDTO]
-    teacherClassesH teacherId mSubject mFrom mTo = do
+    teacherClassesH rawTeacherId rawSubjectId rawFrom rawTo = do
       ensureSchoolAccess
+      (teacherId, mSubject, mFrom, mTo) <-
+        either (liftIO . throwIO) pure (validateTeacherClassesFilters rawTeacherId rawSubjectId rawFrom rawTo)
       let teacherKey = intKey teacherId :: PartyId
           filters =
             [ClassSessionTeacherId ==. teacherKey]

@@ -423,6 +423,32 @@ spec = do
         Right value ->
           expectationFailure ("Expected inverted availability window to be rejected, got " <> show value)
 
+  describe "private teacher class filtering" $ do
+    it "rejects non-positive teacher or subject filters before querying class history" $ do
+      let assertRejected expectedMessage rawTeacherId rawSubjectId = do
+            result <- try $ runTrialsInMemory $
+              privateTeacherClassesHandler rawTeacherId (Just rawSubjectId) Nothing Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid teacher class filters to be rejected, got " <> show value)
+      assertRejected "teacherId must be a positive integer" 0 1
+      assertRejected "teacherId must be a positive integer" (-3) 1
+      assertRejected "subjectId must be a positive integer" 1 0
+      assertRejected "subjectId must be a positive integer" 1 (-7)
+
+    it "rejects inverted teacher class windows instead of silently returning no classes" $ do
+      result <- try $ runTrialsInMemory $
+        privateTeacherClassesHandler 1 Nothing (Just slotEnd) (Just slotStart)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right value ->
+          expectationFailure ("Expected inverted teacher class window to be rejected, got " <> show value)
+
   describe "private package filtering" $ do
     it "rejects non-positive subject filters before querying packages" $ do
       let assertRejected rawSubjectId = do
@@ -1123,6 +1149,18 @@ privateAvailabilityUpsertHandler :: TrialAvailabilityUpsert -> SqlPersistT IO Tr
 privateAvailabilityUpsertHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> availabilityUpsertH :<|> _ = privateTrialsServer adminUser
   in availabilityUpsertH
+
+privateTeacherClassesHandler
+  :: Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> SqlPersistT IO [ClassSessionDTO]
+privateTeacherClassesHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> teacherClassesH :<|> _ =
+          privateTrialsServer adminUser
+  in teacherClassesH
 
 privatePackagesHandler :: Maybe Int -> SqlPersistT IO [PackageDTO]
 privatePackagesHandler =
