@@ -774,7 +774,8 @@ adminServer user =
 
     getUser userId = do
       ensureStrictAdmin user
-      let credKey = toSqlKey userId :: UserCredentialId
+      userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
+      let credKey = toSqlKey userIdValid :: UserCredentialId
       mCred <- withPool $ getEntity credKey
       case mCred of
         Nothing       -> throwError err404
@@ -782,7 +783,8 @@ adminServer user =
 
     updateUser userId UserAccountUpdate{..} = do
       ensureStrictAdmin user
-      let credKey = toSqlKey userId :: UserCredentialId
+      userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
+      let credKey = toSqlKey userIdValid :: UserCredentialId
       usernameUpdate <- either throwError pure (validateOptionalAdminUsername uauUsername)
       passwordHash <- case uauPassword of
         Nothing -> pure Nothing
@@ -817,19 +819,21 @@ adminServer user =
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user
+      userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
       limit <- either throwError pure (validateUserCommunicationHistoryLimit mLimit)
-      mContext <- withPool (loadUserCommunicationContext userId)
+      mContext <- withPool (loadUserCommunicationContext userIdValid)
       case mContext of
         Nothing -> throwError err404
         Just context -> withPool (buildUserCommunicationHistory context limit)
 
     userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
       ensureStrictAdmin user
+      userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
       let body = T.strip awsrMessage
       mode <- either throwError pure (validateAdminWhatsAppSendMode awsrMode awsrReplyToMessageId)
       when (T.null body) $
         throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
-      mContext <- withPool (loadUserCommunicationContext userId)
+      mContext <- withPool (loadUserCommunicationContext userIdValid)
       (_, partyEnt) <- maybe (throwError err404) pure mContext
       let partyKey = entityKey partyEnt
           partyVal = entityVal partyEnt
@@ -868,7 +872,8 @@ adminServer user =
 
     userCommunicationResendHandler messageId AdminWhatsAppResendRequest{..} = do
       ensureStrictAdmin user
-      let msgKey = toSqlKey messageId :: ME.WhatsAppMessageId
+      messageIdValid <- either throwError pure (validatePositiveAdminLookupId "messageId" messageId)
+      let msgKey = toSqlKey messageIdValid :: ME.WhatsAppMessageId
       msgEnt <- withPool (getEntity msgKey) >>= maybe (throwError err404) pure
       let msg = entityVal msgEnt
       when (ME.whatsAppMessageDirection msg /= "outgoing") $
@@ -1094,6 +1099,14 @@ validateUserCommunicationHistoryLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 300 =
       Left err400 { errBody = "limit must be between 1 and 300" }
   | otherwise = Right rawLimit
+
+validatePositiveAdminLookupId :: Text -> Int64 -> Either ServerError Int64
+validatePositiveAdminLookupId fieldName rawId
+  | rawId <= 0 =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+        }
+  | otherwise = Right rawId
 
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
 validateAdminWhatsAppSendMode rawMode mReplyToMessageId =

@@ -18,10 +18,14 @@ import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
 import TDF.API.Admin
-    ( AdminWhatsAppResendRequest (..)
+    ( AdminEmailBroadcastRequest
+    , AdminEmailBroadcastResponse
+    , AdminWhatsAppResendRequest (..)
     , AdminWhatsAppSendRequest (..)
+    , AdminWhatsAppSendResponse
     , EmailTestRequest (..)
     , SocialUnholdRequest (..)
+    , UserCommunicationHistoryDTO
     )
 import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
@@ -264,6 +268,41 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid (validateAdminEmailBroadcastLimit (Just 0))
             assertInvalid (validateAdminEmailBroadcastLimit (Just (-3)))
             assertInvalid (validateAdminEmailBroadcastLimit (Just 5001))
+
+    describe "admin lookup id validation" $ do
+        it "rejects non-positive user ids before admin user lookups can degrade malformed input into 404s" $ do
+            let _listUsers :<|> _createUser :<|> userById = usersHandlersFor (mkUser [Admin])
+                getUserHandler :<|> _updateUserHandler = userById 0
+
+            result <- runAdminTest getUserHandler
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "userId must be a positive integer"
+                Right value ->
+                    expectationFailure ("Expected invalid admin user lookup id to be rejected, got " <> show value)
+
+        it "rejects non-positive communications ids before admin WhatsApp handlers touch the database" $ do
+            let historyHandler :<|> _sendHandler :<|> resendHandler :<|> _broadcastHandler =
+                    communicationsHandlersFor (mkUser [Admin])
+
+            historyResult <- runAdminTest (historyHandler (-7) Nothing)
+            case historyResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "userId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid communication history user id to be rejected, got " <> show value)
+
+            resendResult <- runAdminTest (resendHandler 0 (AdminWhatsAppResendRequest Nothing))
+            case resendResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "messageId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid WhatsApp resend message id to be rejected, got " <> show value)
 
     describe "admin user creation invariants" $ do
         it "rejects creating a second credential for the same party instead of forking login state" $ do
@@ -709,6 +748,27 @@ usersHandlersFor user =
             :<|> _rag
             :<|> _social ->
                 usersRouter
+
+communicationsHandlersFor
+    :: AuthedUser
+    -> (Int64 -> Maybe Int -> AdminTestM UserCommunicationHistoryDTO)
+        :<|> (Int64 -> AdminWhatsAppSendRequest -> AdminTestM AdminWhatsAppSendResponse)
+        :<|> (Int64 -> AdminWhatsAppResendRequest -> AdminTestM AdminWhatsAppSendResponse)
+        :<|> (AdminEmailBroadcastRequest -> AdminTestM AdminEmailBroadcastResponse)
+communicationsHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> communicationsRouter
+            :<|> _roles
+            :<|> _artists
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                communicationsRouter
 
 socialHandlersFor
     :: AuthedUser
