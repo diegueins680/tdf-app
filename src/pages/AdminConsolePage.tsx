@@ -47,6 +47,7 @@ const ADMIN_REFRESH_QUERY_KEYS = [
   ['admin', 'audit'],
 ] as const;
 const BUILT_IN_ADMIN_CARD_IDS = new Set([
+  'access-control',
   'user-management',
   'users',
   'audit',
