@@ -585,7 +585,9 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
 
     const syncedHead = baseSync.remoteExists && baseSync.sha !== baseSync.previousSha;
     const shouldPush = syncedHead || mergedBranches.length > 0 || conflictResolvedBranches.length > 0;
-    const pushResult = shouldPush ? await syncAndPushHead(repoRoot, remoteName, baseBranch) : null;
+    if (shouldPush) {
+      await pushHead(repoRoot, remoteName, baseBranch);
+    }
     const pruneResult = await pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch);
     const summary = {
       startedAt,
@@ -596,9 +598,8 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
       candidateBranches: candidates.map((candidate) => candidate.shortName),
       mergedBranches,
       conflictResolvedBranches,
-      pushed: Boolean(pushResult),
-      pushAttempts: pushResult?.attempts ?? 0,
-      pushSha: pushResult?.sha ?? null,
+      pushed: shouldPush,
+      pushSha: shouldPush ? await getHeadSha(repoRoot) : null,
       pruneCandidateBranches: pruneResult.candidateBranches,
       prunedLocalBranches: pruneResult.prunedLocalBranches,
       prunedRemoteBranches: pruneResult.prunedRemoteBranches,
