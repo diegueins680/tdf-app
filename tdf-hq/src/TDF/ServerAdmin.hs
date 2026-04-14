@@ -245,7 +245,8 @@ adminServer user =
       lookupMode <- either throwError pure (validateSocialUnholdLookup surExternalId surSenderId)
       case lookupMode of
         SocialUnholdByExternalId extId -> do
-          _ <- unholdByExternalId channel extId
+          found <- unholdByExternalId channel extId
+          ensureSocialUnholdTargetFound channel found
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId)
           pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "externalId" .= extId, "ts" .= T.pack (show now)])
         SocialUnholdBySenderId sid -> do
@@ -334,30 +335,62 @@ adminServer user =
 
     unholdByExternalId channel extId =
       case channel of
-        "instagram" -> withPool $ updateWhere
-          [ InstagramMessageExternalId ==. extId ]
-          [ InstagramMessageReplyStatus =. "pending"
-          , InstagramMessageHoldReason =. Nothing
-          , InstagramMessageHoldRequiredFields =. Nothing
-          , InstagramMessageLastAttemptAt =. Nothing
-          , InstagramMessageReplyError =. Nothing
-          ]
-        "facebook" -> withPool $ updateWhere
-          [ ME.FacebookMessageExternalId ==. extId ]
-          [ ME.FacebookMessageReplyStatus =. "pending"
-          , ME.FacebookMessageHoldReason =. Nothing
-          , ME.FacebookMessageHoldRequiredFields =. Nothing
-          , ME.FacebookMessageLastAttemptAt =. Nothing
-          , ME.FacebookMessageReplyError =. Nothing
-          ]
-        "whatsapp" -> withPool $ updateWhere
-          [ ME.WhatsAppMessageExternalId ==. extId ]
-          [ ME.WhatsAppMessageReplyStatus =. "pending"
-          , ME.WhatsAppMessageHoldReason =. Nothing
-          , ME.WhatsAppMessageHoldRequiredFields =. Nothing
-          , ME.WhatsAppMessageLastAttemptAt =. Nothing
-          , ME.WhatsAppMessageReplyError =. Nothing
-          ]
+        "instagram" -> withPool $ do
+          let filters =
+                [ InstagramMessageExternalId ==. extId
+                , InstagramMessageDirection ==. "incoming"
+                , InstagramMessageDeletedAt ==. Nothing
+                ]
+          mRow <- selectFirst filters []
+          case mRow of
+            Nothing -> pure False
+            Just _ -> do
+              updateWhere
+                filters
+                [ InstagramMessageReplyStatus =. "pending"
+                , InstagramMessageHoldReason =. Nothing
+                , InstagramMessageHoldRequiredFields =. Nothing
+                , InstagramMessageLastAttemptAt =. Nothing
+                , InstagramMessageReplyError =. Nothing
+                ]
+              pure True
+        "facebook" -> withPool $ do
+          let filters =
+                [ ME.FacebookMessageExternalId ==. extId
+                , ME.FacebookMessageDirection ==. "incoming"
+                , ME.FacebookMessageDeletedAt ==. Nothing
+                ]
+          mRow <- selectFirst filters []
+          case mRow of
+            Nothing -> pure False
+            Just _ -> do
+              updateWhere
+                filters
+                [ ME.FacebookMessageReplyStatus =. "pending"
+                , ME.FacebookMessageHoldReason =. Nothing
+                , ME.FacebookMessageHoldRequiredFields =. Nothing
+                , ME.FacebookMessageLastAttemptAt =. Nothing
+                , ME.FacebookMessageReplyError =. Nothing
+                ]
+              pure True
+        "whatsapp" -> withPool $ do
+          let filters =
+                [ ME.WhatsAppMessageExternalId ==. extId
+                , ME.WhatsAppMessageDirection ==. "incoming"
+                ]
+          mRow <- selectFirst filters []
+          case mRow of
+            Nothing -> pure False
+            Just _ -> do
+              updateWhere
+                filters
+                [ ME.WhatsAppMessageReplyStatus =. "pending"
+                , ME.WhatsAppMessageHoldReason =. Nothing
+                , ME.WhatsAppMessageHoldRequiredFields =. Nothing
+                , ME.WhatsAppMessageLastAttemptAt =. Nothing
+                , ME.WhatsAppMessageReplyError =. Nothing
+                ]
+              pure True
         _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
     unholdLatestBySender channel senderId = do
@@ -996,6 +1029,19 @@ ensureStrictAdmin
 ensureStrictAdmin user =
   unless (hasStrictAdminAccess user) $
     throwError err403 { errBody = "Admin role required" }
+
+ensureSocialUnholdTargetFound
+  :: MonadError ServerError m
+  => Text
+  -> Bool
+  -> m ()
+ensureSocialUnholdTargetFound channel found =
+  unless found $
+    throwError err404
+      { errBody =
+          BL.fromStrict
+            (TE.encodeUtf8 ("No incoming " <> channel <> " message found for externalId"))
+      }
 
 parseSocialErrorsChannel :: Maybe Text -> Either ServerError Text
 parseSocialErrorsChannel mChannel =

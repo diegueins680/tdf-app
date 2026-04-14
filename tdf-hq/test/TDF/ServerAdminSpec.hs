@@ -4,11 +4,15 @@
 module TDF.ServerAdminSpec (spec) where
 
 import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Data.Aeson (Value, eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
-import Database.Persist.Sql (toSqlKey)
+import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Database.Persist (get, insert)
+import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
@@ -22,6 +26,7 @@ import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.DTO (LogEntryDTO)
 import TDF.Models (RoleEnum (..))
+import qualified TDF.ModelsExtra as ME
 import TDF.ServerAdmin (
     adminServer,
     buildAdminUsernameCandidate,
@@ -314,6 +319,88 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure ("Expected unsupported channel social unhold to be rejected, got " <> show value)
 
+        it "rejects external-id unholds that only match outgoing WhatsApp messages" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeWhatsAppAdminSchema pool
+            let env = dummyEnv { envPool = pool }
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-outgoing-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+                outgoingMsg =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-1" "outgoing")
+                        { ME.whatsAppMessageReplyStatus = "error"
+                        , ME.whatsAppMessageHoldReason = Just "should stay outbound"
+                        , ME.whatsAppMessageReplyError = Just "transport failure"
+                        }
+
+            msgKey <- runSqlPool (insert outgoingMsg) pool
+            result <- runAdminTestWith env (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 404
+                    BL8.unpack (errBody err)
+                        `shouldContain` "No incoming whatsapp message found for externalId"
+                Right value ->
+                    expectationFailure
+                        ("Expected outgoing-only social unhold to be rejected, got " <> show value)
+
+            mStored <- runSqlPool (get msgKey) pool
+            case mStored of
+                Nothing ->
+                    expectationFailure "Expected outgoing WhatsApp message to remain readable"
+                Just stored -> do
+                    ME.whatsAppMessageReplyStatus stored `shouldBe` "error"
+                    ME.whatsAppMessageHoldReason stored `shouldBe` Just "should stay outbound"
+                    ME.whatsAppMessageReplyError stored `shouldBe` Just "transport failure"
+
+        it "resets reply hold fields for matching incoming WhatsApp messages" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeWhatsAppAdminSchema pool
+            let env = dummyEnv { envPool = pool }
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+                socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-incoming-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+                incomingMsg =
+                    (seedWhatsAppAdminMessage now "wa-incoming-1" "incoming")
+                        { ME.whatsAppMessageReplyStatus = "hold"
+                        , ME.whatsAppMessageHoldReason = Just "missing data"
+                        , ME.whatsAppMessageHoldRequiredFields = Just "[\"email\"]"
+                        , ME.whatsAppMessageLastAttemptAt = Just now
+                        , ME.whatsAppMessageReplyError = Just "validation failed"
+                        , ME.whatsAppMessageAttemptCount = 2
+                        }
+
+            msgKey <- runSqlPool (insert incomingMsg) pool
+            result <- runAdminTestWith env (socialUnhold req)
+            case result of
+                Left err ->
+                    expectationFailure
+                        ("Expected incoming social unhold to succeed, got " <> show err)
+                Right _ -> pure ()
+
+            mStored <- runSqlPool (get msgKey) pool
+            case mStored of
+                Nothing ->
+                    expectationFailure "Expected incoming WhatsApp message to remain readable"
+                Just stored -> do
+                    ME.whatsAppMessageReplyStatus stored `shouldBe` "pending"
+                    ME.whatsAppMessageHoldReason stored `shouldBe` Nothing
+                    ME.whatsAppMessageHoldRequiredFields stored `shouldBe` Nothing
+                    ME.whatsAppMessageLastAttemptAt stored `shouldBe` Nothing
+                    ME.whatsAppMessageReplyError stored `shouldBe` Nothing
+
     describe "admin logs route authorization" $ do
         it "requires the Admin module before listing or clearing logs" $ do
             let listLogs :<|> clearLogs = logsHandlersFor (mkUser [Fan])
@@ -358,11 +445,91 @@ mkUser roles =
 runAdminTest :: AdminTestM a -> IO (Either ServerError a)
 runAdminTest action = runExceptT (runReaderT action dummyEnv)
 
+runAdminTestWith :: Env -> AdminTestM a -> IO (Either ServerError a)
+runAdminTestWith env action = runExceptT (runReaderT action env)
+
 dummyEnv :: Env
 dummyEnv =
     Env
         { envPool = error "envPool should be unused in ServerAdminSpec"
         , envConfig = error "envConfig should be unused in ServerAdminSpec"
+        }
+
+initializeWhatsAppAdminSchema :: SqlPersistT IO ()
+initializeWhatsAppAdminSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"whats_app_message\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"external_id\" VARCHAR NOT NULL,\
+        \\"sender_id\" VARCHAR NOT NULL,\
+        \\"sender_name\" VARCHAR NULL,\
+        \\"party_id\" INTEGER NULL,\
+        \\"actor_party_id\" INTEGER NULL,\
+        \\"phone_e164\" VARCHAR NULL,\
+        \\"contact_email\" VARCHAR NULL,\
+        \\"text\" VARCHAR NULL,\
+        \\"direction\" VARCHAR NOT NULL,\
+        \\"ad_external_id\" VARCHAR NULL,\
+        \\"ad_name\" VARCHAR NULL,\
+        \\"campaign_external_id\" VARCHAR NULL,\
+        \\"campaign_name\" VARCHAR NULL,\
+        \\"metadata\" VARCHAR NULL,\
+        \\"reply_status\" VARCHAR NOT NULL,\
+        \\"hold_reason\" VARCHAR NULL,\
+        \\"hold_required_fields\" VARCHAR NULL,\
+        \\"last_attempt_at\" TIMESTAMP NULL,\
+        \\"attempt_count\" INTEGER NOT NULL,\
+        \\"replied_at\" TIMESTAMP NULL,\
+        \\"reply_text\" VARCHAR NULL,\
+        \\"reply_error\" VARCHAR NULL,\
+        \\"delivery_status\" VARCHAR NOT NULL,\
+        \\"delivery_updated_at\" TIMESTAMP NULL,\
+        \\"delivery_error\" VARCHAR NULL,\
+        \\"transport_payload\" VARCHAR NULL,\
+        \\"status_payload\" VARCHAR NULL,\
+        \\"source\" VARCHAR NULL,\
+        \\"resend_of_message_id\" INTEGER NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_whats_app_message\" UNIQUE (\"external_id\")\
+        \)"
+        []
+
+seedWhatsAppAdminMessage :: UTCTime -> T.Text -> T.Text -> ME.WhatsAppMessage
+seedWhatsAppAdminMessage now externalId direction =
+    ME.WhatsAppMessage
+        { ME.whatsAppMessageExternalId = externalId
+        , ME.whatsAppMessageSenderId = "+593999000111"
+        , ME.whatsAppMessageSenderName = Just "Ada"
+        , ME.whatsAppMessagePartyId = Nothing
+        , ME.whatsAppMessageActorPartyId = Nothing
+        , ME.whatsAppMessagePhoneE164 = Just "+593999000111"
+        , ME.whatsAppMessageContactEmail = Nothing
+        , ME.whatsAppMessageText = Just "Original message"
+        , ME.whatsAppMessageDirection = direction
+        , ME.whatsAppMessageAdExternalId = Nothing
+        , ME.whatsAppMessageAdName = Nothing
+        , ME.whatsAppMessageCampaignExternalId = Nothing
+        , ME.whatsAppMessageCampaignName = Nothing
+        , ME.whatsAppMessageMetadata = Nothing
+        , ME.whatsAppMessageReplyStatus =
+            if direction == "incoming" then "pending" else "sent"
+        , ME.whatsAppMessageHoldReason = Nothing
+        , ME.whatsAppMessageHoldRequiredFields = Nothing
+        , ME.whatsAppMessageLastAttemptAt = Nothing
+        , ME.whatsAppMessageAttemptCount = 0
+        , ME.whatsAppMessageRepliedAt = Nothing
+        , ME.whatsAppMessageReplyText = Nothing
+        , ME.whatsAppMessageReplyError = Nothing
+        , ME.whatsAppMessageDeliveryStatus =
+            if direction == "incoming" then "received" else "sent"
+        , ME.whatsAppMessageDeliveryUpdatedAt = Nothing
+        , ME.whatsAppMessageDeliveryError = Nothing
+        , ME.whatsAppMessageTransportPayload = Nothing
+        , ME.whatsAppMessageStatusPayload = Nothing
+        , ME.whatsAppMessageSource = Just "server_admin_spec_seed"
+        , ME.whatsAppMessageResendOfMessageId = Nothing
+        , ME.whatsAppMessageCreatedAt = now
         }
 
 logsHandlersFor :: AuthedUser -> (Maybe Int -> AdminTestM [LogEntryDTO]) :<|> AdminTestM NoContent
