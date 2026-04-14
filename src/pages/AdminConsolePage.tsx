@@ -59,12 +59,16 @@ const BUILT_IN_ADMIN_CARD_IDS = new Set([
 ]);
 const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'estado del servicio',
+  'salud del servicio',
   'datos de demostracion',
   'usuarios y roles',
   'gestion de usuarios',
   'roles y permisos',
   'gestion de roles',
+  'control de acceso',
   'auditoria reciente',
+  'historial de auditoria',
+  'registro de auditoria',
 ]);
 const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'estamos trabajando en esta vista',
