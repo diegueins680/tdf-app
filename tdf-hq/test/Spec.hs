@@ -1033,6 +1033,20 @@ main = hspec $ do
                 `shouldBe` Right
                     [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv" ]
 
+        it "de-duplicates canonical-equivalent explicit sources so the importer does not fetch the same catalog twice" $
+            validateRadioImportSources
+                ( Just
+                    [ "https://github.com/mikepierce/internet-radio-streams/blob/master/streams.csv"
+                    , " https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv "
+                    , "https://www.internet-radio.com"
+                    , "https://WWW.internet-radio.com"
+                    ]
+                )
+                `shouldBe` Right
+                    [ "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+                    , "https://www.internet-radio.com"
+                    ]
+
         it "rejects explicit empty or invalid source lists instead of silently falling back to defaults" $ do
             let assertInvalid rawSources expected = case validateRadioImportSources rawSources of
                     Left err -> do

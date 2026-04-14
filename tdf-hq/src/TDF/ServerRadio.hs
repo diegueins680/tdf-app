@@ -90,7 +90,7 @@ validateRadioStreamUrl rawUrl
 validateRadioImportSources :: Maybe [Text] -> Either ServerError [Text]
 validateRadioImportSources Nothing = Right defaultRadioImportSources
 validateRadioImportSources (Just rawSources) =
-  case filter (not . T.null) (map (T.strip . canonicalRadioImportSource) rawSources) of
+  case dedupeCanonicalSources (filter (not . T.null) (map (T.strip . canonicalRadioImportSource) rawSources)) of
     [] ->
       Left err400 { errBody = "sources must include at least one public http(s) URL" }
     cleanedSources ->
@@ -109,6 +109,17 @@ validateRadioImportSources (Just rawSources) =
               BL.fromStrict
                 (TE.encodeUtf8 (T.replace "streamUrl" "source" bodyText))
           }
+
+    dedupeCanonicalSources =
+      reverse
+        . fst
+        . foldl'
+            (\(deduped, seen) source ->
+               let sourceKey = T.toLower source
+               in if Map.member sourceKey seen
+                    then (deduped, seen)
+                    else (source : deduped, Map.insert sourceKey () seen))
+            ([], Map.empty)
 
 defaultRadioImportSources :: [Text]
 defaultRadioImportSources =
