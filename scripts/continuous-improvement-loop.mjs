@@ -335,6 +335,11 @@ async function getHeadSha(repoRoot) {
   return stdout.trim();
 }
 
+async function getRevisionSha(repoRoot, revision) {
+  const { stdout } = await execText('git', ['rev-parse', revision], repoRoot);
+  return stdout.trim();
+}
+
 async function getGitHubRemote(repoRoot, remoteName) {
   const remoteUrl = await getRemoteUrl(repoRoot, remoteName);
   const remote = parseGitHubRemote(remoteUrl);
@@ -565,11 +570,14 @@ async function syncWithPushBranch(repoRoot, remoteName, branchName) {
         remoteExists: false,
         remoteRef,
         previousSha,
+        remoteSha: null,
         sha: previousSha,
       };
     }
     throw new Error(`Failed to fetch ${remoteName}/${branchName} before push.\n${error.message}`);
   }
+
+  const remoteSha = await getRevisionSha(repoRoot, remoteRef);
 
   try {
     await execText('git', ['rebase', '--autostash', remoteRef], repoRoot);
@@ -588,6 +596,7 @@ async function syncWithPushBranch(repoRoot, remoteName, branchName) {
     remoteExists: true,
     remoteRef,
     previousSha,
+    remoteSha,
     sha: await getHeadSha(repoRoot),
   };
 }
@@ -960,7 +969,7 @@ export async function syncAndPollLatestRemoteCi(repoRoot, config, context = null
   }
 
   const syncResult = await syncWithPushBranch(repoRoot, config.pushRemote, pushBranch);
-  const sha = syncResult.sha;
+  const sha = syncResult.remoteSha || syncResult.sha;
   if (context) {
     context.head_sha = sha;
   }
