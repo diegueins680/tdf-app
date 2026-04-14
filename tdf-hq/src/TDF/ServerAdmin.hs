@@ -702,6 +702,9 @@ adminServer user =
       partyEnt <- do
         mParty <- withPool $ getEntity partyKey
         maybe (throwError err404 { errBody = "Party not found" }) pure mParty
+      existingCredential <- withPool $ selectFirst [UserCredentialPartyId ==. partyKey] []
+      when (isJust existingCredential) $
+        throwError err409 { errBody = "Party already has a user account" }
       emailAddress <- case partyPrimaryEmail (entityVal partyEnt) of
         Nothing -> throwError err400 { errBody = "Party must have a primary email before creating a user" }
         Just addr ->

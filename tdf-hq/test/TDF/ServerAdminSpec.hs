@@ -8,10 +8,11 @@ import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Data.Aeson (Value, eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (get, insert)
-import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist (Entity (..), get, insert, selectList)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
@@ -22,10 +23,12 @@ import TDF.API.Admin
     , EmailTestRequest (..)
     , SocialUnholdRequest (..)
     )
+import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Config (loadConfig)
 import TDF.DB (Env (..))
 import TDF.DTO (LogEntryDTO)
-import TDF.Models (RoleEnum (..))
+import TDF.Models (Party (..), RoleEnum (..), UserCredential (..))
 import qualified TDF.ModelsExtra as ME
 import TDF.ServerAdmin (
     adminServer,
@@ -262,6 +265,66 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid (validateAdminEmailBroadcastLimit (Just (-3)))
             assertInvalid (validateAdminEmailBroadcastLimit (Just 5001))
 
+    describe "admin user creation invariants" $ do
+        it "rejects creating a second credential for the same party instead of forking login state" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeAdminUsersSchema pool
+            cfg <- loadConfig
+            let env = dummyEnv { envPool = pool, envConfig = cfg }
+                _listUsers :<|> createUserHandler :<|> _userById = usersHandlersFor (mkUser [Admin])
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+            partyKey <- runSqlPool
+                (insert
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Ada Existing"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "ada@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                )
+                pool
+            _ <-
+                runSqlPool
+                    (insert
+                        UserCredential
+                            { userCredentialPartyId = partyKey
+                            , userCredentialUsername = "ada.existing"
+                            , userCredentialPasswordHash = "hashed-password"
+                            , userCredentialActive = True
+                            }
+                    )
+                    pool
+
+            result <-
+                runAdminTestWith
+                    env
+                    (createUserHandler
+                        UserAccountCreate
+                            { uacPartyId = fromSqlKey partyKey
+                            , uacUsername = Just "ada.new"
+                            , uacPassword = Just "TempPass123!"
+                            , uacActive = Just True
+                            , uacRoles = Nothing
+                            }
+                    )
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL8.unpack (errBody err) `shouldContain` "Party already has a user account"
+                Right _ ->
+                    expectationFailure "Expected duplicate party credential creation to be rejected"
+
+            credentials <- runSqlPool (selectList [] []) pool :: IO [Entity UserCredential]
+            length credentials `shouldBe` 1
+            map (userCredentialUsername . entityVal) credentials `shouldBe` ["ada.existing"]
+
     describe "validateSocialUnholdLookup" $ do
         it "accepts exactly one lookup key and trims the chosen identifier" $ do
             validateSocialUnholdLookup (Just "  ig-mid-1  ") Nothing
@@ -495,6 +558,37 @@ initializeWhatsAppAdminSchema = do
         \)"
         []
 
+initializeAdminUsersSchema :: SqlPersistT IO ()
+initializeAdminUsersSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"username\" VARCHAR NOT NULL,\
+        \\"password_hash\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_credential_username\" UNIQUE (\"username\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
 seedWhatsAppAdminMessage :: UTCTime -> T.Text -> T.Text -> ME.WhatsAppMessage
 seedWhatsAppAdminMessage now externalId direction =
     ME.WhatsAppMessage
@@ -547,6 +641,26 @@ logsHandlersFor user =
             :<|> _rag
             :<|> _social ->
                 logsRouter
+
+usersHandlersFor
+    :: AuthedUser
+    -> (Maybe Bool -> AdminTestM [UserAccountDTO])
+        :<|> (UserAccountCreate -> AdminTestM UserAccountDTO)
+        :<|> (Int64 -> AdminTestM UserAccountDTO :<|> (UserAccountUpdate -> AdminTestM UserAccountDTO))
+usersHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> usersRouter
+            :<|> _communications
+            :<|> _roles
+            :<|> _artists
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                usersRouter
 
 socialHandlersFor
     :: AuthedUser
