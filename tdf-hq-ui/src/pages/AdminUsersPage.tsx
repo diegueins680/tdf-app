@@ -268,6 +268,7 @@ export default function AdminUsersPage() {
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
+  const hideSingleRowPendingState = showSingleSearchResultGuidance || showSingleUserGuidance;
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
@@ -482,6 +483,7 @@ export default function AdminUsersPage() {
                     sharedModulesSummary={sharedModulesSummary}
                     sharedRolesSummary={sharedRolesSummary}
                     hideAccessSummary={hideRowAccessSummary}
+                    hidePendingStateChip={hideSingleRowPendingState}
                   />
                 ))}
               </Stack>
@@ -505,6 +507,7 @@ function UserRow({
   sharedRolesSummary,
   sharedModulesSummary,
   hideAccessSummary,
+  hidePendingStateChip,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
@@ -512,6 +515,7 @@ function UserRow({
   sharedRolesSummary: string;
   sharedModulesSummary: string;
   hideAccessSummary: boolean;
+  hidePendingStateChip: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
@@ -575,9 +579,9 @@ function UserRow({
           <Button size="small" variant="contained" onClick={onOpenCommunications}>
             WhatsApp
           </Button>
-        ) : (
+        ) : !hidePendingStateChip ? (
           <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
-        )}
+        ) : null}
       </Stack>
     </Box>
   );

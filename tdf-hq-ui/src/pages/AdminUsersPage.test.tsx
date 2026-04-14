@@ -804,7 +804,7 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
-        expect(getRowByUserId(container, 101).textContent).toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
         expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
       });
     } finally {
@@ -836,7 +836,7 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
-        expect(getRowByUserId(container, 101).textContent).toContain('Contacto pendiente');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
         expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
       });
     } finally {
@@ -1222,10 +1222,69 @@ describe('AdminUsersPage', () => {
         const resultRow = getRowByUserId(container, 102);
         expect(resultRow.textContent).toContain('Grace Hopper');
         expect(resultRow.textContent).toContain('grace@example.com');
-        expect(resultRow.textContent).toContain('WhatsApp pendiente');
+        expect(resultRow.textContent).not.toContain('WhatsApp pendiente');
         expect(resultRow.textContent).not.toContain('Contacto pendiente');
         expect(resultRow.textContent).not.toContain('Roles:');
         expect(resultRow.textContent).not.toContain('Módulos:');
+        expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps single-result contact setup guidance in the header instead of repeating a pending chip on the row', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-no-contact',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+
+        const resultRow = getRowByUserId(container, 102);
+        expect(resultRow.textContent).toContain('Grace Hopper');
+        expect(resultRow.textContent).not.toContain('Contacto pendiente');
+        expect(resultRow.textContent).not.toContain('WhatsApp pendiente');
         expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(0);
       });
     } finally {
