@@ -152,6 +152,7 @@ describe('OrdersPage', () => {
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Horario')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
         expect(container.textContent).not.toContain('No hay sesiones registradas todavía.');
         expect(container.textContent).not.toContain('Rows per page');
         expect(
@@ -159,6 +160,29 @@ describe('OrdersPage', () => {
             (button) => buttonText(button) === 'Nueva sesión',
           ),
         ).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the first loading pass focused on setup instead of table chrome and refresh controls', async () => {
+    listBookingsMock.mockImplementation(() => new Promise(() => {}));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Cargando sesiones…');
+        expect(container.textContent).toContain(
+          'La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking, recursos y estado desde una sola vista.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(hasTableHeader(container, 'Horario')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -202,6 +226,7 @@ describe('OrdersPage', () => {
         expect(container.textContent).toContain(
           'Visualiza órdenes de estudio, su horario, recursos asignados y estado operacional. Usa Acciones para editar la sesión o abrir flujos específicos como Live Sessions.',
         );
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).not.toBeNull();
         expect(container.querySelectorAll('button[aria-label^="Abrir acciones para sesión "]')).toHaveLength(2);
         expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Editar');
         expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Crear input list');

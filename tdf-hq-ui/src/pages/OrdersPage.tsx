@@ -182,7 +182,9 @@ export default function OrdersPage() {
 
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
+  const showInitialLoadingState = bookingsQuery.isLoading && bookingsQuery.data == null;
   const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
+  const showRefreshAction = Boolean(bookingsQuery.error) || totalRows > 0;
 
   useEffect(() => {
     if (page > maxPage) {
@@ -264,20 +266,22 @@ export default function OrdersPage() {
           </Typography>
         </Box>
         <Stack direction="row" gap={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
-          <Tooltip title="Actualizar lista">
-            <span>
-              <IconButton
-                onClick={() => {
-                  void bookingsQuery.refetch();
-                }}
-                disabled={bookingsQuery.isFetching}
-                color="primary"
-                aria-label="Actualizar lista de sesiones"
-              >
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          {showRefreshAction && (
+            <Tooltip title="Actualizar lista">
+              <span>
+                <IconButton
+                  onClick={() => {
+                    void bookingsQuery.refetch();
+                  }}
+                  disabled={bookingsQuery.isFetching}
+                  color="primary"
+                  aria-label="Actualizar lista de sesiones"
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
             Nueva sesión
           </Button>
@@ -289,7 +293,17 @@ export default function OrdersPage() {
       )}
 
       <Paper variant="outlined">
-        {showFirstSessionEmptyState ? (
+        {showInitialLoadingState ? (
+          <Stack spacing={1} sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight={700}>
+              Cargando sesiones…
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking,
+              recursos y estado desde una sola vista.
+            </Typography>
+          </Stack>
+        ) : showFirstSessionEmptyState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
               Primeras sesiones
