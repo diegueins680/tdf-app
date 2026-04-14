@@ -7,9 +7,12 @@ module TDF.Trials.API where
 import Servant
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON (parseJSON), Options, ToJSON, defaultOptions, genericParseJSON, rejectUnknownFields)
 import GHC.Generics (Generic)
 import TDF.Trials.DTO
+
+strictRequestObjectOptions :: Options
+strictRequestObjectOptions = defaultOptions { rejectUnknownFields = True }
 
 type PublicTrialsAPI =
        "signup" :> ReqBody '[JSON] SignupIn :> Post '[JSON] SignupOut
@@ -62,7 +65,9 @@ data SignupOut = SignupOut { ok :: Bool } deriving (Generic)
 instance ToJSON SignupOut; instance FromJSON SignupOut
 
 data InterestIn = InterestIn { interestType :: Text, subjectId :: Maybe Int, details :: Maybe Text, driveLink :: Maybe Text } deriving (Generic)
-instance ToJSON InterestIn; instance FromJSON InterestIn
+instance ToJSON InterestIn
+instance FromJSON InterestIn where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 data InterestOut = InterestOut { leadId :: Int } deriving (Generic)
 instance ToJSON InterestOut; instance FromJSON InterestOut
 

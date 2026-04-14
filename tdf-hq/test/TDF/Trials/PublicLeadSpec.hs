@@ -5,7 +5,9 @@ module TDF.Trials.PublicLeadSpec (spec) where
 import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Either (isLeft)
 import Data.Text (Text, pack)
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
@@ -175,6 +177,18 @@ spec = do
           expectationFailure ("Expected invalid trial queue status filter to be rejected, got " <> show value)
 
   describe "validatePublicInterestInput" $ do
+    it "rejects typoed or unexpected JSON keys so subject selections do not silently disappear" $ do
+      isLeft
+        (A.eitherDecode
+          "{\"interestType\":\"workshop\",\"subjectID\":7}"
+            :: Either String InterestIn)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode
+          "{\"interestType\":\"workshop\",\"subjectId\":7,\"unexpected\":true}"
+            :: Either String InterestIn)
+        `shouldBe` True
+
     it "rejects blank interest types instead of creating unusable anonymous lead rows" $
       case validatePublicInterestInput (InterestIn "   " Nothing (Just "Looking for info") (Just "https://example.com")) of
         Left err -> do
