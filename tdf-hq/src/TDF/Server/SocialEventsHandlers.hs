@@ -39,6 +39,7 @@ module TDF.Server.SocialEventsHandlers
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
+  , validateTicketCheckInOrderStatus
   ) where
 
 import           Control.Applicative ((<|>))
@@ -1655,7 +1656,8 @@ socialEventsServer user = eventsServer
           ticketVal = entityVal ticketEntity
       when (eventTicketEventId ticketVal /= eventKey) $ throwError err400 { errBody = "Ticket does not belong to this event" }
       orderRef <- liftIO $ runSqlPool (get (eventTicketOrderRefId ticketVal)) envPool
-      let orderStatus = maybe "pending" (normalizeTicketOrderStatus . Just . eventTicketOrderStatus) orderRef
+      orderStatus <- either throwError pure
+        (validateTicketCheckInOrderStatus (eventTicketOrderStatus <$> orderRef))
       when (orderStatus /= "paid") $ throwError err400 { errBody = "Only paid tickets can be checked in" }
       case normalizeTicketStatus (Just (eventTicketStatus ticketVal)) of
         "cancelled" -> throwError err400 { errBody = "Cancelled tickets cannot be checked in" }
@@ -2201,6 +2203,14 @@ normalizeTicketStatus mStatus =
   case mStatus >>= parseTicketStatus of
     Nothing -> "issued"
     Just s -> s
+
+validateTicketCheckInOrderStatus :: Maybe T.Text -> Either ServerError T.Text
+validateTicketCheckInOrderStatus Nothing =
+  Left err500 { errBody = "Ticket order could not be loaded" }
+validateTicketCheckInOrderStatus (Just rawStatus) =
+  case parseTicketOrderStatus rawStatus of
+    Just statusVal -> Right statusVal
+    Nothing -> Left err500 { errBody = "Stored ticket order status is invalid" }
 
 validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
 validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
