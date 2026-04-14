@@ -679,7 +679,9 @@ export default function CourseRegistrationsAdminPage() {
   });
   const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
   const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
-  const filteredEmptyStateRecoveryHint = 'Usa refrescar si esperabas resultados.';
+  const filteredEmptyStateRecoveryHint = hasManualFilters
+    ? 'Revisa los filtros o restablece la vista si esperabas resultados.'
+    : 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit
       ? 'en la vista actual'
@@ -755,6 +757,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasVisibleRegistrations,
   );
   const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset;
+  const showFilteredEmptyStateRefreshAction = !hasManualFilters;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
       activeViewSummaryMessage,
@@ -2051,14 +2054,16 @@ export default function CourseRegistrationsAdminPage() {
                     <Button color="inherit" size="small" onClick={handleResetFilters}>
                       {resetViewLabel}
                     </Button>
-                    <Button
-                      color="inherit"
-                      size="small"
-                      onClick={handleRefresh}
-                      disabled={regsQuery.isFetching}
-                    >
-                      Refrescar lista
-                    </Button>
+                    {showFilteredEmptyStateRefreshAction && (
+                      <Button
+                        color="inherit"
+                        size="small"
+                        onClick={handleRefresh}
+                        disabled={regsQuery.isFetching}
+                      >
+                        Refrescar lista
+                      </Button>
+                    )}
                   </Stack>
                 )}
               >

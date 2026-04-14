@@ -3241,7 +3241,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps filtered-empty recovery actions inside the empty state instead of duplicating them in the header', async () => {
+  it('keeps a filtered-empty view focused on clearing filters instead of offering duplicate recovery actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -3258,7 +3258,7 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain(
-        'No hay inscripciones en la vista actual: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Usa refrescar si esperabas resultados.',
+        'No hay inscripciones en la vista actual: cohorte Beatmaking 101 (beatmaking-101) · estado pagado · límite 50. Revisa los filtros o restablece la vista si esperabas resultados.',
       );
       expect(container.textContent).not.toContain('Restablece la vista o usa refrescar si esperabas resultados.');
       expect(container.textContent).not.toContain(
@@ -3267,7 +3267,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
-      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
     });
 
@@ -3292,6 +3292,29 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps refresh available when the empty view only comes from a custom limit', async () => {
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(container.textContent).toContain(
+        'No hay inscripciones con el límite actual: límite 50. Usa refrescar si esperabas resultados.',
+      );
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
     });
 
     await cleanup();
