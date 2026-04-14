@@ -102,6 +102,9 @@ const renderPage = async (container: HTMLElement) => {
   };
 };
 
+const hasTableHeader = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
 describe('OrdersPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -128,6 +131,38 @@ describe('OrdersPage', () => {
     updateBookingMock.mockReset();
     listPartiesMock.mockResolvedValue([]);
     updateBookingMock.mockResolvedValue({} as BookingDTO);
+  });
+
+  it('replaces the empty sessions table with first-run guidance instead of table chrome', async () => {
+    listBookingsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primeras sesiones');
+        expect(container.textContent).toContain(
+          'Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.',
+        );
+        expect(container.textContent).toContain(
+          'La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(hasTableHeader(container, 'Horario')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(container.textContent).not.toContain('No hay sesiones registradas todavía.');
+        expect(container.textContent).not.toContain('Rows per page');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Nueva sesión',
+          ),
+        ).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('keeps one actions trigger per row and moves recording-only actions into the overflow menu', async () => {

@@ -182,6 +182,7 @@ export default function OrdersPage() {
 
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
+  const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
 
   useEffect(() => {
     if (page > maxPage) {
@@ -288,83 +289,92 @@ export default function OrdersPage() {
       )}
 
       <Paper variant="outlined">
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Horario</TableCell>
-                <TableCell>Servicio</TableCell>
-                <TableCell>Booking</TableCell>
-                <TableCell>Ingeniero</TableCell>
-                <TableCell>Salas</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {bookingsQuery.isLoading && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    Cargando sesiones…
-                  </TableCell>
-                </TableRow>
-              )}
+        {showFirstSessionEmptyState ? (
+          <Stack spacing={1} sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight={700}>
+              Primeras sesiones
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando
+              necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.
+            </Typography>
+          </Stack>
+        ) : (
+          <>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Horario</TableCell>
+                    <TableCell>Servicio</TableCell>
+                    <TableCell>Booking</TableCell>
+                    <TableCell>Ingeniero</TableCell>
+                    <TableCell>Salas</TableCell>
+                    <TableCell>Estado</TableCell>
+                    <TableCell align="right">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {bookingsQuery.isLoading && (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">
+                        Cargando sesiones…
+                      </TableCell>
+                    </TableRow>
+                  )}
 
-              {!bookingsQuery.isLoading && paginatedRows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    No hay sesiones registradas todavía.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {!bookingsQuery.isLoading && paginatedRows.map((row) => (
-                <TableRow hover key={row.bookingId}>
-                  <TableCell sx={{ minWidth: 240 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      #{row.bookingId}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {row.schedule}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{row.service}</TableCell>
-                  <TableCell sx={{ minWidth: 220 }}>
-                    <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
-                    {row.bookingSecondary && (
-                      <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{row.engineers}</TableCell>
-                  <TableCell>{row.rooms}</TableCell>
-                  <TableCell>{renderStatus(row.status ?? '')}</TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Acciones">
-                      <IconButton
-                        onClick={(event) => openActionsMenu(event, row)}
-                        aria-label={`Abrir acciones para sesión ${row.bookingId}`}
-                        aria-haspopup="menu"
-                        aria-expanded={actionsMenuTarget?.row.bookingId === row.bookingId ? 'true' : undefined}
-                      >
-                        <MoreHorizIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={totalRows}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-          labelRowsPerPage="Rows per page"
-        />
+                  {!bookingsQuery.isLoading && paginatedRows.map((row) => (
+                    <TableRow hover key={row.bookingId}>
+                      <TableCell sx={{ minWidth: 240 }}>
+                        <Typography variant="body2" fontWeight={600}>
+                          #{row.bookingId}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {row.schedule}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{row.service}</TableCell>
+                      <TableCell sx={{ minWidth: 220 }}>
+                        <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
+                        {row.bookingSecondary && (
+                          <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{row.engineers}</TableCell>
+                      <TableCell>{row.rooms}</TableCell>
+                      <TableCell>{renderStatus(row.status ?? '')}</TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Acciones">
+                          <IconButton
+                            onClick={(event) => openActionsMenu(event, row)}
+                            aria-label={`Abrir acciones para sesión ${row.bookingId}`}
+                            aria-haspopup="menu"
+                            aria-expanded={actionsMenuTarget?.row.bookingId === row.bookingId ? 'true' : undefined}
+                          >
+                            <MoreHorizIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              component="div"
+              count={totalRows}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+              labelRowsPerPage="Rows per page"
+            />
+          </>
+        )}
       </Paper>
 
       <Menu
