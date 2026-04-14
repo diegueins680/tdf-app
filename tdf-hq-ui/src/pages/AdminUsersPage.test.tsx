@@ -376,7 +376,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('shows the person name first and only keeps the system username when it adds identity context', async () => {
+  it('shows the person name first and hides internal ids unless the username adds useful context', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -406,17 +406,22 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         const namedRow = getRowByUserId(container, 101);
         expect(hasExactText(namedRow, 'Ada Lovelace')).toBe(true);
-        expect(hasExactText(namedRow, 'Usuario: ada-admin · ID 9')).toBe(true);
+        expect(hasExactText(namedRow, 'Usuario: ada-admin')).toBe(true);
+        expect(namedRow.textContent).not.toContain('ID 9');
 
         const sameIdentityRow = getRowByUserId(container, 102);
         expect(hasExactText(sameIdentityRow, 'grace')).toBe(true);
-        expect(hasExactText(sameIdentityRow, 'ID 10')).toBe(true);
         expect(sameIdentityRow.textContent).not.toContain('Usuario: grace');
+        expect(sameIdentityRow.textContent).not.toContain('ID 10');
 
         const usernameOnlyRow = getRowByUserId(container, 103);
         expect(hasExactText(usernameOnlyRow, 'linus-view')).toBe(true);
-        expect(hasExactText(usernameOnlyRow, 'ID 11')).toBe(true);
         expect(usernameOnlyRow.textContent).not.toContain('Usuario: linus-view');
+        expect(usernameOnlyRow.textContent).not.toContain('ID 11');
+
+        expect(container.textContent).not.toContain('ID 9');
+        expect(container.textContent).not.toContain('ID 10');
+        expect(container.textContent).not.toContain('ID 11');
       });
     } finally {
       await cleanup();

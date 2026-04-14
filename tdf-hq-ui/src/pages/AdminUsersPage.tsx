@@ -153,7 +153,7 @@ const isDefaultAdminAccessSummary = ({
   && modulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
 );
 
-const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | 'username'>) => {
+const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
   const username = user.username.trim();
   const primary = displayName || username;
@@ -161,7 +161,6 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyId' | 'partyName' | '
   const secondaryParts: string[] = [];
 
   if (showUsername) secondaryParts.push(`Usuario: ${username}`);
-  secondaryParts.push(`ID ${user.partyId}`);
 
   return {
     primary,
@@ -574,9 +573,11 @@ function UserRow({
         >
           {identity.primary}
         </Link>
-        <Typography variant="body2" color="text.secondary">
-          {identity.secondary}
-        </Typography>
+        {identity.secondary && (
+          <Typography variant="body2" color="text.secondary">
+            {identity.secondary}
+          </Typography>
+        )}
         {contactSummary && (
           <Typography variant="body2" color="text.secondary">
             {contactSummary}
