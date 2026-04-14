@@ -115,14 +115,18 @@ runBootServer = do
         else next req send
     wrapApp :: Application -> Application
     wrapApp = addCorsFallback . appCors . rootOk
+    bootStartingHeaders =
+      [ ("Content-Type", "application/json")
+      , ("Retry-After", "5")
+      ]
     bootApp :: Application
     bootApp req send =
       case pathInfo req of
         ["health"] ->
           send
-            (responseLBS status200 [("Content-Type", "application/json")] "{\"status\":\"starting\",\"db\":\"starting\"}")
+            (responseLBS status200 bootStartingHeaders "{\"status\":\"starting\",\"db\":\"starting\",\"message\":\"El servicio está arrancando. Intenta de nuevo en unos segundos.\"}")
         _ ->
-          send (responseLBS status503 [("Content-Type", "application/json")] "{\"error\":\"starting\"}")
+          send (responseLBS status503 bootStartingHeaders "{\"error\":\"starting\",\"message\":\"El servicio está arrancando. Intenta de nuevo en unos segundos.\"}")
 
   appRef <- newIORef (wrapApp bootApp)
 
