@@ -3574,7 +3574,30 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the list refresh action scope-labeled so it does not blend into dossier refresh', async () => {
+  it('keeps the minimal single-result view focused on row actions instead of a standalone list refresh', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the list refresh action scope-labeled when the page still needs list-level utilities', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -3582,11 +3605,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
-      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Expediente'));
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
       await flushPromises();
       await flushPromises();
     });

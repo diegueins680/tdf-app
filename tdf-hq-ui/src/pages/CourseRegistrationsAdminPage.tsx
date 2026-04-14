@@ -770,7 +770,7 @@ export default function CourseRegistrationsAdminPage() {
     || cohortsQuery.isError
     || showFilteredEmptyState;
   const showInlineListRefreshAction = !showHeaderRefreshAction
-    && (hasCustomFilters || hasVisibleRegistrations);
+    && (hasCustomFilters || loadedRegistrationCount > 1 || Boolean(copyMessage));
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
