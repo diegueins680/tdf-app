@@ -115,14 +115,16 @@ data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
   { status :: Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationStatusUpdate
+instance FromJSON CourseRegistrationStatusUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationStatusUpdate
 
 data CourseRegistrationNotesUpdate = CourseRegistrationNotesUpdate
   { notes :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationNotesUpdate
+instance FromJSON CourseRegistrationNotesUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationNotesUpdate
 
 data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
@@ -132,7 +134,8 @@ data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
   , notes    :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationReceiptCreate
+instance FromJSON CourseRegistrationReceiptCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationReceiptCreate
 
 data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
@@ -142,7 +145,8 @@ data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
   , notes    :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON CourseRegistrationReceiptUpdate
+instance FromJSON CourseRegistrationReceiptUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseRegistrationReceiptUpdate
 
 data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
@@ -176,7 +180,8 @@ data CourseSessionIn = CourseSessionIn
   , date  :: Day
   , order :: Maybe Int
   } deriving (Show, Generic)
-instance FromJSON CourseSessionIn
+instance FromJSON CourseSessionIn where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseSessionIn
 
 data CourseSyllabusIn = CourseSyllabusIn
@@ -184,7 +189,8 @@ data CourseSyllabusIn = CourseSyllabusIn
   , topics :: [Text]
   , order  :: Maybe Int
   } deriving (Show, Generic)
-instance FromJSON CourseSyllabusIn
+instance FromJSON CourseSyllabusIn where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseSyllabusIn
 
 data CourseUpsert = CourseUpsert
@@ -210,7 +216,8 @@ data CourseUpsert = CourseUpsert
   , sessions             :: [CourseSessionIn]
   , syllabus             :: [CourseSyllabusIn]
   } deriving (Show, Generic)
-instance FromJSON CourseUpsert
+instance FromJSON CourseUpsert where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON CourseUpsert
 
 type CoursesPublicAPI =

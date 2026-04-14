@@ -5,6 +5,7 @@ module TDF.APITypesSpec (spec) where
 import Data.Aeson (eitherDecode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy (..))
+import Data.Time (fromGregorian)
 import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
@@ -132,6 +133,71 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeFollowUpUpdate
                 "{\"notes\":\"Moved reminder to next week\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "Course admin write payload FromJSON" $ do
+        it "accepts canonical status, receipt, and upsert payloads" $ do
+            case decodeCourseRegistrationStatusUpdate "{\"status\":\"paid\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical course status update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
+                    statusVal `shouldBe` "paid"
+
+            case decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical course receipt create payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationReceiptCreate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
+                    fileUrlVal `shouldBe` "https://files.example.com/receipt.pdf"
+                    fileNameVal `shouldBe` Just "receipt.pdf"
+                    mimeTypeVal `shouldBe` Just "application/pdf"
+                    notesVal `shouldBe` Just "Banco Pichincha"
+
+            case decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical course upsert payload to decode, got: " <> err)
+                Right (Courses.CourseUpsert slugVal titleVal _ _ _ priceCentsVal currencyVal capacityVal _ _ _ _ _ _ dawsVal includesVal instructorNameVal _ _ sessionsVal syllabusVal) -> do
+                    slugVal `shouldBe` "production-bootcamp"
+                    titleVal `shouldBe` "Production Bootcamp"
+                    priceCentsVal `shouldBe` 15000
+                    currencyVal `shouldBe` "USD"
+                    capacityVal `shouldBe` 16
+                    dawsVal `shouldBe` ["Ableton"]
+                    includesVal `shouldBe` ["Mentoring"]
+                    instructorNameVal `shouldBe` Just "Ada"
+                    case sessionsVal of
+                        [Courses.CourseSessionIn labelVal dateVal orderVal] -> do
+                            labelVal `shouldBe` "Kickoff"
+                            dateVal `shouldBe` fromGregorian 2026 5 2
+                            orderVal `shouldBe` Just 1
+                        _ ->
+                            expectationFailure ("Expected a single decoded course session, got: " <> show sessionsVal)
+                    case syllabusVal of
+                        [Courses.CourseSyllabusIn titleVal topicsVal orderVal] -> do
+                            titleVal `shouldBe` "Intro"
+                            topicsVal `shouldBe` ["Ableton"]
+                            orderVal `shouldBe` Just 1
+                        _ ->
+                            expectationFailure ("Expected a single decoded course syllabus item, got: " <> show syllabusVal)
+
+        it "rejects unexpected top-level or nested keys so course admin writes fail explicitly" $ do
+            decodeCourseRegistrationStatusUpdate
+                "{\"status\":\"paid\",\"updatedBy\":\"admin\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"status\":\"paid\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"notes\":\"Replaced file\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"unexpected\":true}],\"syllabus\":[],\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"extra\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
     describe "Proposal payload FromJSON" $ do
@@ -273,6 +339,14 @@ spec = do
     decodeFollowUpCreate = eitherDecode
     decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate
     decodeFollowUpUpdate = eitherDecode
+    decodeCourseRegistrationStatusUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationStatusUpdate
+    decodeCourseRegistrationStatusUpdate = eitherDecode
+    decodeCourseRegistrationReceiptCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptCreate
+    decodeCourseRegistrationReceiptCreate = eitherDecode
+    decodeCourseRegistrationReceiptUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptUpdate
+    decodeCourseRegistrationReceiptUpdate = eitherDecode
+    decodeCourseUpsert :: BL8.ByteString -> Either String Courses.CourseUpsert
+    decodeCourseUpsert = eitherDecode
     decodeProposalCreate :: BL8.ByteString -> Either String Proposals.ProposalCreate
     decodeProposalCreate = eitherDecode
     decodeProposalUpdate :: BL8.ByteString -> Either String Proposals.ProposalUpdate

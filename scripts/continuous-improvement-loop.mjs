@@ -356,6 +356,290 @@ function splitLines(stdout) {
     .filter((value) => value.length > 0);
 }
 
+function uniqueValues(values) {
+  return [...new Set(values.map((value) => String(value).trim()).filter(Boolean))];
+}
+
+function normalizeGitBranchShortName(rawBranch) {
+  const raw = String(rawBranch ?? '').trim();
+  if (!raw || raw === 'HEAD' || raw === 'origin' || raw.endsWith('/HEAD')) return '';
+  return raw
+    .replace(/^refs\/heads\//, '')
+    .replace(/^refs\/remotes\/origin\//, '')
+    .replace(/^origin\//, '')
+    .trim();
+}
+
+function isLoopCheckpointBranch(rawBranch) {
+  const shortName = normalizeGitBranchShortName(rawBranch);
+  return shortName.startsWith('continuous-improvement-loop/dirty/');
+}
+
+function buildBranchMergeCandidates({ localBranches = [], remoteBranches = [], baseBranch = 'main' } = {}) {
+  const base = normalizeGitBranchShortName(baseBranch || 'main');
+  const localByShortName = new Map();
+  const remoteByShortName = new Map();
+
+  for (const branch of localBranches) {
+    const shortName = normalizeGitBranchShortName(branch);
+    if (!shortName || shortName === base) continue;
+    localByShortName.set(shortName, String(branch).trim());
+  }
+
+  for (const branch of remoteBranches) {
+    const shortName = normalizeGitBranchShortName(branch);
+    if (!shortName || shortName === base) continue;
+    remoteByShortName.set(shortName, String(branch).trim());
+  }
+
+  return uniqueValues([...localByShortName.keys(), ...remoteByShortName.keys()])
+    .sort((left, right) => left.localeCompare(right))
+    .map((shortName) => ({
+      shortName,
+      ref: localByShortName.get(shortName) || remoteByShortName.get(shortName) || shortName,
+      localRef: localByShortName.get(shortName) || '',
+      remoteRef: remoteByShortName.get(shortName) || '',
+    }));
+}
+
+async function listUnmergedConflictPaths(repoRoot) {
+  const { stdout } = await execText('git', ['diff', '--name-only', '--diff-filter=U'], repoRoot);
+  return uniqueValues(splitLines(stdout));
+}
+
+function buildMainMergeCommitMessage(shortName = '', branchRef = '') {
+  return `continuous-improvement-loop: merge ${shortName || branchRef} into main`;
+}
+
+function buildMainConflictResolutionCommitMessage(shortName = '', branchRef = '') {
+  return `continuous-improvement-loop: resolve conflicts while merging ${shortName || branchRef} into main`;
+}
+
+async function mergeRefOntoMain(repoRoot, branchRef, shortName = normalizeGitBranchShortName(branchRef)) {
+  const headBefore = await getHeadSha(repoRoot);
+  const mergeMessage = buildMainMergeCommitMessage(shortName, branchRef);
+  const conflictMessage = buildMainConflictResolutionCommitMessage(shortName, branchRef);
+  const mergeArgs = isLoopCheckpointBranch(shortName)
+    ? ['merge', '-s', 'ours', '--no-ff', '-m', mergeMessage, branchRef]
+    : ['merge', '--no-ff', '-m', mergeMessage, branchRef];
+
+  try {
+    await execText('git', mergeArgs, repoRoot);
+  } catch (error) {
+    const conflicts = await listUnmergedConflictPaths(repoRoot);
+    if (conflicts.length === 0) {
+      throw error;
+    }
+
+    // Conflict resolution stays fail-closed toward the current main branch.
+    await execText('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts], repoRoot);
+    await execText('git', ['commit', '-m', conflictMessage], repoRoot);
+
+    return {
+      outcome: 'conflict-resolved',
+      ref: branchRef,
+      shortName,
+      headBefore,
+      headAfter: await getHeadSha(repoRoot),
+      conflicts,
+    };
+  }
+
+  const headAfter = await getHeadSha(repoRoot);
+  return {
+    outcome: headAfter === headBefore ? 'noop' : 'merged',
+    ref: branchRef,
+    shortName,
+    headBefore,
+    headAfter,
+    conflicts: [],
+  };
+}
+
+function isIgnorablePruneError(message) {
+  const text = String(message ?? '');
+  return (
+    /remote ref does not exist/i.test(text) ||
+    /remote ref not found/i.test(text) ||
+    /unable to delete .*remote ref does not exist/i.test(text) ||
+    /branch .* not found/i.test(text)
+  );
+}
+
+async function listWorktreeBranches(repoRoot) {
+  const { stdout } = await execText('git', ['worktree', 'list', '--porcelain'], repoRoot);
+  const branches = new Set();
+  for (const line of splitLines(stdout)) {
+    if (!line.startsWith('branch ')) continue;
+    const shortName = normalizeGitBranchShortName(line.slice('branch '.length).trim());
+    if (shortName) branches.add(shortName);
+  }
+  return branches;
+}
+
+async function remoteBranchStillExists(repoRoot, remoteRef) {
+  const { stdout } = await execText('git', ['branch', '-r', '--list', remoteRef], repoRoot);
+  return splitLines(stdout).length > 0;
+}
+
+async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') {
+  await execText('git', ['worktree', 'prune'], repoRoot);
+  const localBranches = splitLines(
+    (await execText('git', ['branch', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
+  );
+  const remoteBranches = splitLines(
+    (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
+  );
+  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
+  const worktreeBranches = await listWorktreeBranches(repoRoot);
+  const prunedLocalBranches = [];
+  const prunedRemoteBranches = [];
+  const skippedWorktreeBranches = [];
+  const pruneErrors = [];
+
+  for (const candidate of candidates) {
+    if (candidate.remoteRef) {
+      try {
+        await execText('git', ['push', remoteName, '--delete', candidate.shortName], repoRoot);
+        prunedRemoteBranches.push(candidate.shortName);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
+        if (!(await remoteBranchStillExists(repoRoot, candidate.remoteRef))) {
+          prunedRemoteBranches.push(candidate.shortName);
+          continue;
+        }
+        if (!isIgnorablePruneError(message)) {
+          pruneErrors.push({ branch: candidate.shortName, scope: 'remote', error: message });
+        }
+      }
+    }
+
+    if (candidate.localRef) {
+      if (worktreeBranches.has(candidate.shortName)) {
+        skippedWorktreeBranches.push(candidate.shortName);
+        continue;
+      }
+      try {
+        await execText('git', ['branch', '-D', candidate.shortName], repoRoot);
+        prunedLocalBranches.push(candidate.shortName);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!isIgnorablePruneError(message)) {
+          pruneErrors.push({ branch: candidate.shortName, scope: 'local', error: message });
+        }
+      }
+    }
+  }
+
+  if (prunedRemoteBranches.length > 0) {
+    await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
+  }
+
+  return {
+    candidateBranches: candidates.map((candidate) => candidate.shortName),
+    prunedLocalBranches,
+    prunedRemoteBranches,
+    skippedWorktreeBranches,
+    pruneErrors,
+  };
+}
+
+export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
+  const remoteName = config.pushRemote || 'origin';
+  const baseBranch = 'main';
+  const startedAt = new Date().toISOString();
+
+  try {
+    await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
+    const currentBranch = (await getCurrentBranch(repoRoot)) || baseBranch;
+    if (currentBranch !== baseBranch) {
+      await execText('git', ['checkout', baseBranch], repoRoot);
+    }
+
+    const baseSync = await syncWithPushBranch(repoRoot, remoteName, baseBranch);
+    const localBranches = splitLines(
+      (await execText('git', ['branch', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
+    );
+    const remoteBranches = splitLines(
+      (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
+    );
+    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
+
+    const mergedBranches = [];
+    const conflictResolvedBranches = [];
+
+    for (const candidate of candidates) {
+      const mergeResult = await mergeRefOntoMain(repoRoot, candidate.ref, candidate.shortName);
+      if (mergeResult.outcome === 'merged') {
+        mergedBranches.push(candidate.shortName);
+        continue;
+      }
+      if (mergeResult.outcome === 'conflict-resolved') {
+        conflictResolvedBranches.push({
+          branch: candidate.shortName,
+          conflicts: mergeResult.conflicts,
+        });
+      }
+    }
+
+    const syncedHead = baseSync.remoteExists && baseSync.sha !== baseSync.previousSha;
+    const shouldPush = syncedHead || mergedBranches.length > 0 || conflictResolvedBranches.length > 0;
+    const pushResult = shouldPush ? await syncAndPushHead(repoRoot, remoteName, baseBranch) : null;
+    const pruneResult = await pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch);
+    const summary = {
+      startedAt,
+      endedAt: new Date().toISOString(),
+      baseBranch,
+      currentBranch,
+      syncedRemote: syncedHead,
+      candidateBranches: candidates.map((candidate) => candidate.shortName),
+      mergedBranches,
+      conflictResolvedBranches,
+      pushed: Boolean(pushResult),
+      pushAttempts: pushResult?.attempts ?? 0,
+      pushSha: pushResult?.sha ?? null,
+      pruneCandidateBranches: pruneResult.candidateBranches,
+      prunedLocalBranches: pruneResult.prunedLocalBranches,
+      prunedRemoteBranches: pruneResult.prunedRemoteBranches,
+      skippedWorktreeBranches: pruneResult.skippedWorktreeBranches,
+      pruneErrors: pruneResult.pruneErrors,
+      head: await getHeadSha(repoRoot),
+    };
+
+    if (pruneResult.pruneErrors.length > 0) {
+      return {
+        ok: false,
+        reason: `merged ref pruning on ${baseBranch} failed`,
+        details: pruneResult.pruneErrors.map((item) => `${item.scope}:${item.branch}: ${item.error}`).slice(0, 40),
+        summary,
+      };
+    }
+
+    return { ok: true, summary };
+  } catch (error) {
+    try {
+      await execText('git', ['merge', '--abort'], repoRoot);
+    } catch {}
+    try {
+      await execText('git', ['rebase', '--abort'], repoRoot);
+    } catch {}
+
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      reason: `branch reconciliation onto main failed`,
+      details: splitLines(message).slice(0, 40),
+      summary: {
+        startedAt,
+        endedAt: new Date().toISOString(),
+        baseBranch,
+        error: message,
+      },
+    };
+  }
+}
+
 function extractPathsFromPorcelainLine(line) {
   const pathSpec = line.slice(3).trim();
   if (!pathSpec) return [];
@@ -1084,6 +1368,13 @@ async function finalizeIteration(repoRoot, config, context) {
 async function runIteration(repoRoot, config, iteration) {
   const contextDir = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-'));
   const context = buildContext(repoRoot, contextDir, iteration);
+  await emitLoopStatus({ state: 'running', phase: 'branch-reconciliation', currentIteration: iteration, contextDir });
+  const branchSweep = await reconcileNonMainBranchesOntoMain(repoRoot, config);
+  if (!branchSweep.ok) {
+    throw new Error(
+      `${branchSweep.reason}${branchSweep.details?.length ? `\n${branchSweep.details.join('\n')}` : ''}`,
+    );
+  }
   const latestRemote = await syncAndPollLatestRemoteCi(repoRoot, config, context);
   config.pushBranch = latestRemote.pushBranch;
 

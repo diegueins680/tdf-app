@@ -17,7 +17,12 @@ import {
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
 import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
-import { syncAndPollLatestRemoteCi, syncSubmodulesRecursively, waitForGreenCi } from '../continuous-improvement-loop.mjs';
+import {
+  reconcileNonMainBranchesOntoMain,
+  syncAndPollLatestRemoteCi,
+  syncSubmodulesRecursively,
+  waitForGreenCi,
+} from '../continuous-improvement-loop.mjs';
 import {
   buildDefaultIdea,
   chooseDiscoveryLane,
@@ -932,6 +937,95 @@ test('continuous-improvement-loop rebases onto the push branch before pushing a 
   }
 });
 
+test('reconcileNonMainBranchesOntoMain merges every non-main branch and prunes merged refs', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-branch-sweep-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  const otherDir = path.join(tempRoot, 'other');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    await git(['push', '-u', 'origin', 'main']);
+
+    await git(['checkout', '-b', 'feature/local']);
+    await fs.writeFile(path.join(repoDir, 'local-only.txt'), 'local\n', 'utf8');
+    await git(['add', 'local-only.txt']);
+    await git(['commit', '-m', 'local branch work']);
+    await git(['checkout', 'main']);
+
+    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
+    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
+    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
+
+    await execFileAsync('git', ['checkout', '-b', 'feat/remote'], { cwd: otherDir });
+    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
+    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
+    await execFileAsync('git', ['commit', '-m', 'remote branch work'], { cwd: otherDir });
+    await execFileAsync('git', ['push', '-u', 'origin', 'feat/remote'], { cwd: otherDir });
+
+    await execFileAsync('git', ['checkout', 'main'], { cwd: otherDir });
+    await execFileAsync(
+      'git',
+      ['checkout', '-b', 'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z'],
+      { cwd: otherDir },
+    );
+    await fs.writeFile(path.join(otherDir, 'dirty-only.txt'), 'do not replay\n', 'utf8');
+    await execFileAsync('git', ['add', 'dirty-only.txt'], { cwd: otherDir });
+    await execFileAsync('git', ['commit', '-m', 'dirty checkpoint'], { cwd: otherDir });
+    await execFileAsync(
+      'git',
+      ['push', '-u', 'origin', 'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z'],
+      { cwd: otherDir },
+    );
+
+    const result = await reconcileNonMainBranchesOntoMain(repoDir, {
+      pushRemote: 'origin',
+      pushBranch: 'main',
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.summary.mergedBranches, [
+      'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
+      'feat/remote',
+      'feature/local',
+    ]);
+    assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
+    assert.equal(await fs.readFile(path.join(repoDir, 'local-only.txt'), 'utf8'), 'local\n');
+    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
+    assert.equal((await git(['branch', '--list', 'feature/local'])).stdout.trim(), '');
+    assert.equal((await git(['branch', '-r', '--list', 'origin/feat/remote'])).stdout.trim(), '');
+    assert.equal(
+      (
+        await git([
+          'branch',
+          '-r',
+          '--list',
+          'origin/continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
+        ])
+      ).stdout.trim(),
+      '',
+    );
+
+    const localHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
+    const remoteHead = (
+      await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], { cwd: tempRoot })
+    ).stdout.trim();
+    assert.equal(localHead, remoteHead);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('syncAndPollLatestRemoteCi uses the fetched remote head for latest-commit polling when local main is ahead', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-latest-remote-ci-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');
@@ -1165,6 +1259,12 @@ test('waitForGreenCi retries transient GitHub polling fetch failures', async () 
 
 test('continuous-improvement-loop repairs the latest remote CI failure before idea discovery', async () => {
   const script = await fs.readFile(loopScriptPath, 'utf8');
+  assert.equal(typeof reconcileNonMainBranchesOntoMain, 'function');
+  assert.match(script, /export async function reconcileNonMainBranchesOntoMain\(repoRoot, config = \{\}\)/);
+  assert.match(script, /function isLoopCheckpointBranch\(rawBranch\)/);
+  assert.match(script, /\['merge', '-s', 'ours', '--no-ff', '-m', mergeMessage, branchRef\]/);
+  assert.match(script, /phase: 'branch-reconciliation'/);
+  assert.match(script, /const branchSweep = await reconcileNonMainBranchesOntoMain\(repoRoot, config\);/);
   assert.equal(typeof syncAndPollLatestRemoteCi, 'function');
   assert.match(script, /export async function syncAndPollLatestRemoteCi\(repoRoot, config, context = null\)/);
   assert.match(script, /const latestRemote = await syncAndPollLatestRemoteCi\(repoRoot, config, context\);/);
