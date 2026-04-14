@@ -181,6 +181,25 @@ spec = do
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
 
+    describe "ServiceMarketplaceBookingReq FromJSON" $ do
+        it "accepts canonical service-marketplace booking payloads" $
+            case decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"title\":\"Mix review\",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\"bank_transfer\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical service-marketplace booking payload to decode, got: " <> err)
+                Right (API.ServiceMarketplaceBookingReq adIdVal slotIdVal titleVal notesVal paymentMethodVal) -> do
+                    adIdVal `shouldBe` 42
+                    slotIdVal `shouldBe` 84
+                    titleVal `shouldBe` Just "Mix review"
+                    notesVal `shouldBe` Just "Need feedback on vocal balance"
+                    paymentMethodVal `shouldBe` Just "bank_transfer"
+
+        it "rejects unexpected booking keys so typoed marketplace forms cannot create partially-understood bookings" $ do
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"title\":\"Mix review\",\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -260,6 +279,8 @@ spec = do
     decodeProposalUpdate = eitherDecode
     decodeProposalVersionCreate :: BL8.ByteString -> Either String Proposals.ProposalVersionCreate
     decodeProposalVersionCreate = eitherDecode
+    decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq
+    decodeServiceMarketplaceBooking = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

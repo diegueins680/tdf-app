@@ -508,7 +508,10 @@ data ServiceMarketplaceBookingReq = ServiceMarketplaceBookingReq
   , smbPaymentMethod :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON ServiceMarketplaceBookingReq where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data ServiceMarketplaceBookingDTO = ServiceMarketplaceBookingDTO
   { smbBookingId         :: Int64
