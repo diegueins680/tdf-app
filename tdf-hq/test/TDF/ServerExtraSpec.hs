@@ -23,8 +23,16 @@ import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
 import TDF.API.Inventory (InventoryAPI)
+import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
-import TDF.API.Types (AssetCheckinRequest (..), AssetCheckoutDTO, AssetCheckoutRequest (..))
+import TDF.API.Types
+  ( AssetCheckinRequest (..)
+  , AssetCheckoutDTO
+  , AssetCheckoutRequest (..)
+  , RoomCreate (..)
+  , RoomDTO
+  , RoomUpdate (..)
+  )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.ModelsExtra
@@ -89,6 +97,7 @@ import TDF.ServerExtra (
     validatePageParams,
     validateSessionReferences,
     inventoryServer,
+    roomsServer,
  )
 
 type InventoryTestM = ReaderT Env (ExceptT ServerError IO)
@@ -283,6 +292,44 @@ spec = do
               expectationFailure ("Expected invalid room name error, got " <> show value)
       assertInvalid (normalizeRoomName "   ")
       assertInvalid (normalizeRoomNameUpdate (Just "   "))
+
+  describe "roomsServer duplicate name handling" $ do
+    let existingRoomId = "00000000-0000-0000-0000-000000000701"
+        otherRoomId = "00000000-0000-0000-0000-000000000702"
+
+    it "rejects duplicate room creates with a 409 instead of bubbling a DB uniqueness failure" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      result <- runRoomCreateHandler
+        (insertKey existingKey (fixtureRoom "Sala A"))
+        (RoomCreate "  Sala A  ")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
+        Right value ->
+          expectationFailure ("Expected duplicate room create to fail, got " <> show value)
+
+    it "rejects room renames that collide with another room instead of failing ambiguously on update" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      otherKey <- case (fromPathPiece otherRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid other room fixture key" >> fail "unreachable"
+      result <- runRoomPatchHandler
+        (do
+            insertKey existingKey (fixtureRoom "Sala A")
+            insertKey otherKey (fixtureRoom "Control Room"))
+        otherRoomId
+        (RoomUpdate (Just " Sala A ") Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
+        Right value ->
+          expectationFailure ("Expected duplicate room patch to fail, got " <> show value)
 
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
@@ -965,6 +1012,39 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runRoomCreateHandler
+  :: SqlPersistT IO ()
+  -> RoomCreate
+  -> IO (Either ServerError RoomDTO)
+runRoomCreateHandler setup req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeRoomSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in room tests"
+            }
+    liftIO $ runExceptT (runReaderT (createRoomHandlerFor inventoryUser req) env)
+
+runRoomPatchHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> RoomUpdate
+  -> IO (Either ServerError RoomDTO)
+runRoomPatchHandler setup rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeRoomSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in room tests"
+            }
+    liftIO $ runExceptT (runReaderT (patchRoomHandlerFor inventoryUser rawId req) env)
+
 inventoryUser :: AuthedUser
 inventoryUser =
   AuthedUser
@@ -988,6 +1068,22 @@ checkinHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           checkinAsset
+
+createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
+createRoomHandlerFor user =
+  case (roomsServer user :: ServerT RoomsAPI InventoryTestM) of
+    _listRooms
+      :<|> createRoom
+      :<|> _patchRoom ->
+          createRoom
+
+patchRoomHandlerFor :: AuthedUser -> Text -> RoomUpdate -> InventoryTestM RoomDTO
+patchRoomHandlerFor user =
+  case (roomsServer user :: ServerT RoomsAPI InventoryTestM) of
+    _listRooms
+      :<|> _createRoom
+      :<|> patchRoom ->
+          patchRoom
 
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
@@ -1106,6 +1202,22 @@ initializeInventoryCheckinSchema = do
         \\"returned_at\" TIMESTAMP NULL,\
         \\"condition_in\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL\
+        \)"
+        []
+
+initializeRoomSchema :: SqlPersistT IO ()
+initializeRoomSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"room\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"is_bookable\" BOOLEAN NOT NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"channel_count\" INTEGER NULL,\
+        \\"default_sample_rate\" INTEGER NULL,\
+        \\"patchbay_notes\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_room_name\" UNIQUE (\"name\")\
         \)"
         []
 
@@ -1465,4 +1577,15 @@ fixtureAsset name category brand model owner notes =
     , assetWarrantyExpires = Nothing
     , assetMaintenancePolicy = None
     , assetNextMaintenanceDue = Nothing
+    }
+
+fixtureRoom :: Text -> Room
+fixtureRoom name =
+  Room
+    { roomName = name
+    , roomIsBookable = True
+    , roomCapacity = Nothing
+    , roomChannelCount = Nothing
+    , roomDefaultSampleRate = Nothing
+    , roomPatchbayNotes = Nothing
     }

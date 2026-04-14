@@ -939,6 +939,7 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
     createRoomH req = do
       ensureModule ModuleScheduling user
       nameClean <- either throwError pure (normalizeRoomName (rcName req))
+      ensureRoomNameAvailable Nothing nameClean
       entity <- withPool $ do
         newRoomId <- insert Room
           { roomName              = nameClean
@@ -955,6 +956,7 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
       ensureModule ModuleScheduling user
       roomKey <- parseKey @Room rawId
       nameUpdate <- either throwError pure (normalizeRoomNameUpdate (ruName req))
+      for_ nameUpdate (ensureRoomNameAvailable (Just roomKey))
       let updates = catMaybes
             [ (RoomName =.)       <$> nameUpdate
             , (RoomIsBookable =.) <$> ruIsBookable req
@@ -967,6 +969,19 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
             unless (null updates) (update roomKey updates)
             getEntity roomKey
       maybe (throwError err404) (pure . toRoomDTO) result
+
+    ensureRoomNameAvailable currentRoomKey nameClean = do
+      duplicate <- withPool $ do
+        existing <- getBy (UniqueRoomName nameClean)
+        pure $
+          case existing of
+            Nothing -> False
+            Just (Entity existingKey _) ->
+              case currentRoomKey of
+                Just currentKey -> existingKey /= currentKey
+                Nothing -> True
+      when duplicate $
+        throwError err409 { errBody = "A room with this name already exists" }
 
 toRoomDTO :: Entity Room -> RoomDTO
 toRoomDTO (Entity key room) = RoomDTO
