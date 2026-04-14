@@ -577,7 +577,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps the active search inside the field instead of repeating it as a tray chip', async () => {
+  it('keeps search-only filtering owned by the field instead of duplicating tray actions', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -606,7 +606,11 @@ describe('MarketplaceOrdersPage', () => {
         expect(searchInput.value).toBe('grace');
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
-        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.textContent).toContain(
+          'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.',
+        );
       });
 
       await clickButtonByAriaLabel(container, 'Limpiar búsqueda');
@@ -616,6 +620,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
@@ -670,7 +675,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('uses the existing reset-filters control when a search hides the current order list', async () => {
+  it('keeps search-empty states tied to the field instead of showing a duplicate tray reset', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -704,14 +709,28 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
+          'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.',
         );
-        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
         expect(container.querySelector('tbody tr')).toBeNull();
+      });
+
+      await clickButtonByAriaLabel(container, 'Limpiar búsqueda');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('tbody tr')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.textContent).toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
       });
     } finally {
       await cleanup();

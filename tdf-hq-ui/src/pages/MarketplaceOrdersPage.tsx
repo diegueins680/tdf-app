@@ -251,6 +251,9 @@ export default function MarketplaceOrdersPage() {
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
   const hasSearchInput = search !== '';
+  const hasNonSearchFiltersActive =
+    statusFilter !== 'all' || providerFilter !== 'all' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
+  const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
   const filtersActiveCount =
     (statusFilter !== 'all' ? 1 : 0) +
     (providerFilter !== 'all' ? 1 : 0) +
@@ -272,7 +275,7 @@ export default function MarketplaceOrdersPage() {
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
-  const showActiveFiltersTray = filtersDirty;
+  const showActiveFiltersTray = hasNonSearchFiltersActive;
   const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || paidOnly;
   const advancedFiltersButtonLabel = showAdvancedFilters
     ? 'Ocultar fechas y pago'
@@ -281,6 +284,12 @@ export default function MarketplaceOrdersPage() {
       : 'Mostrar fechas y pago';
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && (orders.length > 1 || filtersDirty));
+  const emptyOrdersMessage = showSearchOwnedFilterHelper
+    ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
+    : 'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.';
+  const filterTrayHelperText = showSearchOwnedFilterHelper
+    ? 'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.'
+    : 'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.';
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -670,7 +679,7 @@ export default function MarketplaceOrdersPage() {
                 </>
               ) : (
                 <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-                  Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.
+                  {filterTrayHelperText}
                 </Typography>
               )}
             </Stack>
@@ -740,7 +749,7 @@ export default function MarketplaceOrdersPage() {
           )}
           {!showFirstOrderEmptyState && !ordersQuery.isLoading && filtered.length === 0 && (
             <Alert severity="info">
-              No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.
+              {emptyOrdersMessage}
             </Alert>
           )}
           {filtered.length > 0 && (
