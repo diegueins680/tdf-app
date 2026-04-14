@@ -52,6 +52,7 @@ import TDF.DTO.SocialEventsDTO
       iudMessageUpdate,
       vcuPhone,
       vudContactUpdate )
+import TDF.DTO.SocialSyncDTO (SocialSyncIngestRequest)
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
@@ -529,6 +530,18 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "externalPostId is required"
                 Right value ->
                     expectationFailure ("Expected blank social sync externalPostId to be rejected, got " <> show value)
+
+    describe "social sync ingest JSON contract" $ do
+        it "accepts canonical ingest payloads and rejects unexpected keys at both request levels" $ do
+            case (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"caption\":\"New single out now\",\"mediaUrls\":[\"https://cdn.example.com/post.jpg\"],\"likeCount\":12,\"commentCount\":3}]}" :: Either String SocialSyncIngestRequest) of
+                Left err ->
+                    expectationFailure ("Expected canonical social sync ingest payload to decode, got: " <> err)
+                Right _ ->
+                    pure ()
+            (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"caption\":\"New single out now\",\"unexpected\":true}]}" :: Either String SocialSyncIngestRequest)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\"}],\"unexpected\":true}" :: Either String SocialSyncIngestRequest)
+                `shouldSatisfy` isLeft
 
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do

@@ -32,14 +32,20 @@ data SocialSyncPostIn = SocialSyncPostIn
   } deriving (Show, Generic)
 
 instance FromJSON SocialSyncPostIn where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data SocialSyncIngestRequest = SocialSyncIngestRequest
   { ssirPosts :: [SocialSyncPostIn]
   } deriving (Show, Generic)
 
 instance FromJSON SocialSyncIngestRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data SocialSyncIngestResponse = SocialSyncIngestResponse
   { ssirInserted :: Int
