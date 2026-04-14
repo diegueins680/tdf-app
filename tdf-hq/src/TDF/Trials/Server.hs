@@ -1273,7 +1273,15 @@ privateTrialsServer user@AuthedUser{..} =
       let key = intKey sidInt :: SubjectId
       mSubject <- get key
       case mSubject of
-        Nothing -> liftIO $ throwIO err404
+        Nothing -> liftIO $ throwIO err404 { errBody = "Materia no encontrada" }
+        Just _  -> pure key
+
+    ensureStudentExists :: Int -> AppM PartyId
+    ensureStudentExists studentIdInt = do
+      let key = intKey studentIdInt :: PartyId
+      mStudent <- get key
+      case mStudent of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Estudiante no encontrado" }
         Just _  -> pure key
 
     ensureTeacherSelection :: PartyId -> AppM ()
@@ -1445,9 +1453,9 @@ privateTrialsServer user@AuthedUser{..} =
       ensureSchoolAccess
       when (endAt <= startAt) $
         liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
-      let studentKey = intKey studentId
-          teacherKey = intKey teacherId
-          subjectKey = intKey subjectId
+      studentKey <- ensureStudentExists studentId
+      subjectKey <- ensureSubjectExists subjectId
+      let teacherKey = intKey teacherId
           roomKey    = intKey roomId :: ResourceId
           bookingKey = maybeKey bookingId
           durationMinutes = floor (realToFrac (diffUTCTime endAt startAt) / 60 :: Double)
@@ -1500,12 +1508,12 @@ privateTrialsServer user@AuthedUser{..} =
               Nothing -> pure ()
               Just tid | intKey tid /= auPartyId -> liftIO $ throwIO err403
               Just _ -> pure ()
+          newStudent <- maybe (pure (Trials.classSessionStudentId sess)) ensureStudentExists studentId
+          newSubject <- maybe (pure (Trials.classSessionSubjectId sess)) ensureSubjectExists subjectId
           let newStart   = fromMaybe (Trials.classSessionStartAt sess) startAt
               newEnd     = fromMaybe (Trials.classSessionEndAt sess) endAt
               newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
               newRoom    = maybe (Trials.classSessionRoomId sess) intKey roomId
-              newSubject = maybe (Trials.classSessionSubjectId sess) intKey subjectId
-              newStudent = maybe (Trials.classSessionStudentId sess) intKey studentId
           when (newEnd <= newStart) $
             liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
           ensureTeacherSelection newTeacher

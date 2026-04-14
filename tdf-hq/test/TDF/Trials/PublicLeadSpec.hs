@@ -764,6 +764,44 @@ spec = do
           Trials.trialAssignmentEndAt storedAssignment `shouldBe` newEnd
 
   describe "private class session validation" $ do
+    it "rejects creating a class with missing student or subject references before persisting orphaned rows" $ do
+      let assertRejected expectedMessage buildInput = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let classStart = addUTCTime 3600 now
+                  classEnd = addUTCTime 7200 now
+              teacherPartyId <- insertTeacherFixture "Teacher One" now
+              studentPartyId <- insertPartyFixture "Student One" now
+              roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+              subjectKey <- insert (Subject "Piano" True)
+              privateCreateClassHandler (buildInput studentPartyId subjectKey teacherPartyId roomResourceId classStart classEnd)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 404
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected missing class references to be rejected"
+      assertRejected "Estudiante no encontrado" $
+        \_ subjectKey teacherPartyId roomResourceId classStart classEnd ->
+          ClassSessionIn
+            9999
+            (fromIntegral (fromSqlKey teacherPartyId))
+            (fromIntegral (fromSqlKey subjectKey))
+            classStart
+            classEnd
+            (fromIntegral (fromSqlKey roomResourceId))
+            Nothing
+      assertRejected "Materia no encontrada" $
+        \studentPartyId _ teacherPartyId roomResourceId classStart classEnd ->
+          ClassSessionIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            9999
+            classStart
+            classEnd
+            (fromIntegral (fromSqlKey roomResourceId))
+            Nothing
+
     it "rejects creating a class with a non-teacher party instead of storing an invalid teacher assignment" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -895,6 +933,61 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "no es una sala"
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for class updates"
+
+    it "rejects updating a class to missing student or subject references before persisting orphaned rows" $ do
+      let assertRejected expectedMessage buildUpdate = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let classStart = addUTCTime 3600 now
+                  classEnd = addUTCTime 7200 now
+              teacherPartyId <- insertTeacherFixture "Teacher One" now
+              studentPartyId <- insertPartyFixture "Student One" now
+              roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+              subjectKey <- insert (Subject "Piano" True)
+              classSessionKey <- insert Trials.ClassSession
+                { Trials.classSessionStudentId = studentPartyId
+                , Trials.classSessionTeacherId = teacherPartyId
+                , Trials.classSessionSubjectId = subjectKey
+                , Trials.classSessionStartAt = classStart
+                , Trials.classSessionEndAt = classEnd
+                , Trials.classSessionRoomId = roomResourceId
+                , Trials.classSessionBookingId = Nothing
+                , Trials.classSessionAttended = False
+                , Trials.classSessionPurchaseId = Nothing
+                , Trials.classSessionConsumedMinutes = 60
+                , Trials.classSessionNotes = Nothing
+                }
+              privateUpdateClassHandler
+                (fromIntegral (fromSqlKey classSessionKey))
+                (buildUpdate teacherPartyId studentPartyId subjectKey roomResourceId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 404
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected missing class references to be rejected on update"
+      assertRejected "Estudiante no encontrado" $
+        \_ _ _ _ ->
+          ClassSessionUpdate
+            Nothing
+            Nothing
+            (Just 9999)
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+      assertRejected "Materia no encontrada" $
+        \_ _ _ _ ->
+          ClassSessionUpdate
+            Nothing
+            (Just 9999)
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
 
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
