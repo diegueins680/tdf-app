@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type MouseEvent } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import {
   Alert,
@@ -12,6 +12,7 @@ import {
   FormControl,
   IconButton,
   InputLabel,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -31,6 +32,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
 import { Bookings, type BookingUpdatePayload } from '../api/bookings';
@@ -61,7 +63,7 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
   return acc;
 }, {});
 
-const TZ = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+const TZ = import.meta.env?.['VITE_TZ'] ?? 'America/Guayaquil';
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 
 const parseRowsPerPage = (value: string, fallback = 10): number => {
@@ -99,12 +101,28 @@ function dedupeStrings(values: (string | null | undefined)[]) {
   return result;
 }
 
+interface OrderRow {
+  bookingId: number;
+  schedule: string;
+  service: string;
+  isRecording: boolean;
+  bookingPrimary: string;
+  bookingSecondary: string | null;
+  engineers: string;
+  rooms: string;
+  status: string;
+}
+
 export default function OrdersPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const [actionsMenuTarget, setActionsMenuTarget] = useState<{
+    anchorEl: HTMLElement;
+    row: OrderRow;
+  } | null>(null);
 
   const bookingsQuery: UseQueryResult<BookingDTO[], Error> = useQuery<BookingDTO[], Error>({
     queryKey: ['bookings'],
@@ -128,7 +146,7 @@ export default function OrdersPage() {
     [bookings, selectedBookingId],
   );
 
-  const rows = useMemo(() => {
+  const rows = useMemo<OrderRow[]>(() => {
     return bookings.map((booking) => {
       const engineers = filterResources(booking.resources, (role) => role.includes('engineer') || role.includes('ing'));
       const rooms = filterResources(booking.resources, (role) => role.includes('room') || role.includes('sala'));
@@ -187,6 +205,22 @@ export default function OrdersPage() {
     navigate('/estudio/calendario');
   };
 
+  const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, row: OrderRow) => {
+    setActionsMenuTarget({ anchorEl: event.currentTarget, row });
+  };
+
+  const closeActionsMenu = () => {
+    setActionsMenuTarget(null);
+  };
+
+  const runRowAction = (action: (row: OrderRow) => void) => {
+    const row = actionsMenuTarget?.row;
+    closeActionsMenu();
+    if (row) {
+      action(row);
+    }
+  };
+
   const updateMutation = useMutation<BookingDTO, Error, { id: number; payload: BookingUpdatePayload }>({
     mutationFn: ({ id, payload }: { id: number; payload: BookingUpdatePayload }) => Bookings.update(id, payload),
     onSuccess: () => {
@@ -224,7 +258,8 @@ export default function OrdersPage() {
         <Box>
           <Typography variant="h5" fontWeight={600}>Sesiones</Typography>
           <Typography variant="body2" color="text.secondary">
-            Visualiza órdenes de estudio, su horario, recursos asignados y estado operacional.
+            Visualiza órdenes de estudio, su horario, recursos asignados y estado operacional. Usa Acciones para editar
+            la sesión o abrir flujos específicos como Live Sessions.
           </Typography>
         </Box>
         <Stack direction="row" gap={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
@@ -304,20 +339,16 @@ export default function OrdersPage() {
                   <TableCell>{row.rooms}</TableCell>
                   <TableCell>{renderStatus(row.status ?? '')}</TableCell>
                   <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      {row.isRecording && (
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => navigate('/estudio/live-sessions')}
-                        >
-                          Crear input list
-                        </Button>
-                      )}
-                      <Button variant="text" size="small" onClick={() => handleEditClick(row.bookingId)}>
-                        Editar
-                      </Button>
-                    </Stack>
+                    <Tooltip title="Acciones">
+                      <IconButton
+                        onClick={(event) => openActionsMenu(event, row)}
+                        aria-label={`Abrir acciones para sesión ${row.bookingId}`}
+                        aria-haspopup="menu"
+                        aria-expanded={actionsMenuTarget?.row.bookingId === row.bookingId ? 'true' : undefined}
+                      >
+                        <MoreHorizIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
@@ -335,6 +366,21 @@ export default function OrdersPage() {
           labelRowsPerPage="Rows per page"
         />
       </Paper>
+
+      <Menu
+        open={Boolean(actionsMenuTarget)}
+        anchorEl={actionsMenuTarget?.anchorEl ?? null}
+        onClose={closeActionsMenu}
+      >
+        <MenuItem onClick={() => runRowAction((row) => handleEditClick(row.bookingId))}>
+          Editar sesión
+        </MenuItem>
+        {actionsMenuTarget?.row.isRecording && (
+          <MenuItem onClick={() => runRowAction(() => navigate('/estudio/live-sessions'))}>
+            Abrir Live Sessions
+          </MenuItem>
+        )}
+      </Menu>
 
       <OrderEditDialog
         booking={selectedBooking}
