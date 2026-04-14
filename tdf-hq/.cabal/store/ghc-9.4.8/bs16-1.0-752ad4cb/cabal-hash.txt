@@ -1,0 +1,11 @@
+pkgid: base16-1.0
+component: ComponentLib
+src: 86366364910b78609677817cf3f987bf1690e1f75bba04bc91a5ed993d619cde
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, prmtv-0.9.1.0-20c46843, text-2.0.2, txt-shrt-0.1.6.1-a339073d
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

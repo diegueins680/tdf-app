@@ -325,6 +325,54 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             length credentials `shouldBe` 1
             map (userCredentialUsername . entityVal) credentials `shouldBe` ["ada.existing"]
 
+        it "rejects blank explicit passwords instead of silently generating a different credential" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeAdminUsersSchema pool
+            cfg <- loadConfig
+            let env = dummyEnv { envPool = pool, envConfig = cfg }
+                _listUsers :<|> createUserHandler :<|> _userById = usersHandlersFor (mkUser [Admin])
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+            partyKey <-
+                runSqlPool
+                    (insert
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = "Blank Password"
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Just "blank-password@example.com"
+                            , partyPrimaryPhone = Nothing
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = now
+                            }
+                    )
+                    pool
+
+            result <-
+                runAdminTestWith
+                    env
+                    (createUserHandler
+                        UserAccountCreate
+                            { uacPartyId = fromSqlKey partyKey
+                            , uacUsername = Nothing
+                            , uacPassword = Just "   "
+                            , uacActive = Just True
+                            , uacRoles = Nothing
+                            }
+                    )
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "Password must not be empty"
+                Right _ ->
+                    expectationFailure "Expected blank create-user password to be rejected"
+
+            credentials <- runSqlPool (selectList [] []) pool :: IO [Entity UserCredential]
+            length credentials `shouldBe` 0
+
     describe "validateSocialUnholdLookup" $ do
         it "accepts exactly one lookup key and trims the chosen identifier" $ do
             validateSocialUnholdLookup (Just "  ig-mid-1  ") Nothing

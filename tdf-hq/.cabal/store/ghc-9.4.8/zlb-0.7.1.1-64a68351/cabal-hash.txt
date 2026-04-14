@@ -1,0 +1,12 @@
+pkgid: zlib-0.7.1.1
+component: ComponentLib
+src: bf95ab01ed924be800addea195fba5ca97ec69f378368f6ff466bdc29666c1c1
+pkg-config-deps: zlib 1.2.12
+deps: base-4.17.2.1, bytestring-0.11.5.3, hsc2hs-0.68.10-7b90d0d8
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -bundled-c-zlib +non-blocking-ffi +pkg-config
+shared-lib: True
+stripped-exe: False
+debug-info: 0

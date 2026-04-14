@@ -718,9 +718,13 @@ adminServer user =
           Just provided -> pure provided
           Nothing       -> pure (deriveUsername partyEnt emailAddress)
       uniqueUsername <- generateUniqueUsername baseUsername
-      let providedPassword =
-            uacPassword >>= (\txt -> let trimmed = T.strip txt in if T.null trimmed then Nothing else Just trimmed)
-      tempPassword <- maybe (liftIO Email.generateTempPassword) pure providedPassword
+      tempPassword <- case uacPassword of
+        Nothing -> liftIO Email.generateTempPassword
+        Just rawPassword ->
+          let trimmed = T.strip rawPassword
+          in if T.null trimmed
+               then throwError err400 { errBody = "Password must not be empty" }
+               else pure trimmed
       hashed <- liftIO (hashPasswordText tempPassword)
       credId <- withPool $ insert UserCredential
         { userCredentialPartyId      = partyKey
