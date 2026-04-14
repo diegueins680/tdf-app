@@ -431,6 +431,43 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps the first-run checklist focused when a built-in title differs only by punctuation', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'permissions-overview-v2',
+          title: 'Control de acceso:',
+          body: [
+            'Administra accesos y permisos del equipo desde esta vista.',
+            'Próximamente aquí se podrán revisar cambios de autorización recientes.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver módulo adicional/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Control de acceso:')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Administra accesos y permisos del equipo desde esta vista\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps unique preview cards collapsed during first-run until the admin asks to see them inline', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
@@ -620,6 +657,61 @@ describe('AdminConsolePage', () => {
 
     expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Programa una rotación semanal sin salir de esta consola\./i),
+    ).toBeInTheDocument();
+  });
+
+  it('merges repeated module titles when fallback discovery only changes punctuation', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-overview',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'service-tokens-rotation',
+          title: 'Tokens de servicio:',
+          body: [
+            'Programa una rotación semanal sin salir de esta consola.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(screen.queryByText('Tokens de servicio:')).not.toBeInTheDocument();
     expect(
       screen.getByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,

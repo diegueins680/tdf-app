@@ -46,7 +46,7 @@ const ADMIN_REFRESH_QUERY_KEYS = [
   ['admin', 'users'],
   ['admin', 'audit'],
 ] as const;
-const BUILT_IN_ADMIN_CARD_IDS = new Set([
+const BUILT_IN_ADMIN_CARD_IDS = [
   'access-control',
   'user-management',
   'users',
@@ -56,8 +56,8 @@ const BUILT_IN_ADMIN_CARD_IDS = new Set([
   'health',
   'demo-seed',
   'seed',
-]);
-const BUILT_IN_ADMIN_CARD_TITLES = new Set([
+] as const;
+const BUILT_IN_ADMIN_CARD_TITLES = [
   'estado del servicio',
   'salud del servicio',
   'datos de demostracion',
@@ -69,7 +69,7 @@ const BUILT_IN_ADMIN_CARD_TITLES = new Set([
   'auditoria reciente',
   'historial de auditoria',
   'registro de auditoria',
-]);
+] as const;
 const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'estamos trabajando en esta vista',
   'proximamente encontraras la funcionalidad completa aqui',
@@ -106,6 +106,20 @@ function normalizeAdminConsoleCardKey(value: string) {
     .trim();
 }
 
+function normalizeAdminConsoleSectionKey(value: string) {
+  return normalizeAdminConsoleCardKey(value)
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
+  BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeAdminConsoleSectionKey(value)),
+);
+const BUILT_IN_ADMIN_CARD_TITLE_KEYS = new Set(
+  BUILT_IN_ADMIN_CARD_TITLES.map((value) => normalizeAdminConsoleSectionKey(value)),
+);
+
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
     const title = card.title.trim();
@@ -130,17 +144,17 @@ function isPlaceholderAdminConsoleParagraph(paragraph: string) {
 }
 
 function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
-  const normalizedId = normalizeAdminConsoleCardKey(card.cardId);
-  const normalizedTitle = normalizeAdminConsoleCardKey(card.title);
+  const normalizedId = normalizeAdminConsoleSectionKey(card.cardId);
+  const normalizedTitle = normalizeAdminConsoleSectionKey(card.title);
 
-  return BUILT_IN_ADMIN_CARD_IDS.has(normalizedId) || BUILT_IN_ADMIN_CARD_TITLES.has(normalizedTitle);
+  return BUILT_IN_ADMIN_CARD_ID_KEYS.has(normalizedId) || BUILT_IN_ADMIN_CARD_TITLE_KEYS.has(normalizedTitle);
 }
 
 function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   const cardsByTitle = new Map<string, AdminConsoleCard>();
 
   cards.forEach((card) => {
-    const titleKey = normalizeAdminConsoleCardKey(card.title);
+    const titleKey = normalizeAdminConsoleSectionKey(card.title);
     const existingCard = cardsByTitle.get(titleKey);
 
     if (!existingCard) {
