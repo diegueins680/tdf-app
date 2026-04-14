@@ -3241,7 +3241,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('shows a single contextual empty state when filters hide every registration', async () => {
+  it('keeps filtered-empty recovery actions inside the empty state instead of duplicating them in the header', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -3268,7 +3268,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
-      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
     });
 
     listRegistrationsMock.mockClear();

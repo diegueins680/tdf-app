@@ -767,8 +767,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && !hasVisibleRegistrations;
   const showHeaderRefreshAction = regsQuery.isError
-    || cohortsQuery.isError
-    || showFilteredEmptyState;
+    || cohortsQuery.isError;
   const showInlineListRefreshAction = !showHeaderRefreshAction
     && (hasCustomFilters || loadedRegistrationCount > 1 || Boolean(copyMessage));
   const showFilteredUtilityRow = hasCustomFilters
@@ -2048,9 +2047,19 @@ export default function CourseRegistrationsAdminPage() {
               <Alert
                 severity="info"
                 action={(
-                  <Button color="inherit" size="small" onClick={handleResetFilters}>
-                    {resetViewLabel}
-                  </Button>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Button color="inherit" size="small" onClick={handleResetFilters}>
+                      {resetViewLabel}
+                    </Button>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={handleRefresh}
+                      disabled={regsQuery.isFetching}
+                    >
+                      Refrescar lista
+                    </Button>
+                  </Stack>
                 )}
               >
                 {filteredEmptyStateMessage}
