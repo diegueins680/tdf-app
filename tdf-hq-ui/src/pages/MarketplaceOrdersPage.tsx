@@ -17,6 +17,7 @@ import {
   FormControl,
   Grid,
   IconButton,
+  InputAdornment,
   InputLabel,
   Link,
   MenuItem,
@@ -249,6 +250,7 @@ export default function MarketplaceOrdersPage() {
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
+  const hasSearchInput = search !== '';
   const filtersActiveCount =
     (statusFilter !== 'all' ? 1 : 0) +
     (providerFilter !== 'all' ? 1 : 0) +
@@ -489,6 +491,20 @@ export default function MarketplaceOrdersPage() {
                 label="Buscar por comprador, email o ID"
                 value={search}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                InputProps={{
+                  endAdornment: hasSearchInput ? (
+                    <InputAdornment position="end">
+                      <Button
+                        size="small"
+                        aria-label="Limpiar búsqueda"
+                        onClick={() => setSearch('')}
+                        sx={{ minWidth: 0, px: 0.5, textTransform: 'none' }}
+                      >
+                        Limpiar
+                      </Button>
+                    </InputAdornment>
+                  ) : undefined,
+                }}
               />
             </Grid>
             <Grid item xs={12} md={3} lg={3}>
@@ -645,7 +661,6 @@ export default function MarketplaceOrdersPage() {
                       onDelete={() => setProviderFilter('all')}
                     />
                   )}
-                  {search.trim() && <Chip size="small" label={`Busca: ${search}`} onDelete={() => setSearch('')} />}
                   {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
                   {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
                   {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}

@@ -164,6 +164,18 @@ const clickActionByText = async (root: ParentNode, labelText: string) => {
   });
 };
 
+const clickButtonByAriaLabel = async (root: ParentNode, ariaLabel: string) => {
+  const button = root.querySelector<HTMLElement>(`button[aria-label="${ariaLabel}"]`);
+  if (!(button instanceof HTMLElement)) {
+    throw new Error(`Action not found for aria-label: ${ariaLabel}`);
+  }
+
+  await act(async () => {
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
@@ -559,6 +571,55 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain('1 pendientes');
         expect(container.textContent).not.toContain('0 pendientes');
         expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the active search inside the field instead of repeating it as a tray chip', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(searchInput.value).toBe('grace');
+        expect(container.textContent).not.toContain('Busca: grace');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+      });
+
+      await clickButtonByAriaLabel(container, 'Limpiar búsqueda');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Busca: grace');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.textContent).toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
       });
     } finally {
       await cleanup();
