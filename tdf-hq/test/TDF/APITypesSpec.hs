@@ -8,6 +8,7 @@ import Data.Proxy (Proxy (..))
 import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
+import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types (LooseJSON, RolePayload (..))
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
@@ -105,6 +106,53 @@ spec = do
                 "{\"notes\":\"Moved reminder to next week\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "Proposal payload FromJSON" $ do
+        it "accepts canonical create, update, and version payloads" $ do
+            case decodeProposalCreate
+                "{\"pcTitle\":\"Live session package\",\"pcStatus\":\"draft\",\"pcContactEmail\":\"sales@example.com\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":\"Initial draft\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical proposal create payload to decode, got: " <> err)
+                Right (Proposals.ProposalCreate titleVal statusVal _ _ _ contactEmailVal _ _ _ latexVal templateKeyVal versionNotesVal) -> do
+                    titleVal `shouldBe` "Live session package"
+                    statusVal `shouldBe` Just "draft"
+                    contactEmailVal `shouldBe` Just "sales@example.com"
+                    latexVal `shouldBe` Nothing
+                    templateKeyVal `shouldBe` Just "tdf_live_sessions"
+                    versionNotesVal `shouldBe` Just "Initial draft"
+
+            case decodeProposalUpdate
+                "{\"puTitle\":\"Updated package\",\"puStatus\":\"sent\",\"puClientPartyId\":42,\"puNotes\":\"Waiting on signature\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical proposal update payload to decode, got: " <> err)
+                Right (Proposals.ProposalUpdate titleVal statusVal _ clientPartyIdVal _ _ _ _ notesVal) -> do
+                    titleVal `shouldBe` Just "Updated package"
+                    statusVal `shouldBe` Just "sent"
+                    clientPartyIdVal `shouldBe` Just (Just 42)
+                    notesVal `shouldBe` Just (Just "Waiting on signature")
+
+            case decodeProposalVersionCreate
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":\"Regenerated PDF\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical proposal version payload to decode, got: " <> err)
+                Right (Proposals.ProposalVersionCreate latexVal templateKeyVal notesVal) -> do
+                    latexVal `shouldBe` Nothing
+                    templateKeyVal `shouldBe` Just "tdf_live_sessions"
+                    notesVal `shouldBe` Just "Regenerated PDF"
+
+        it "rejects unexpected keys so malformed proposal writes fail explicitly" $ do
+            decodeProposalCreate
+                "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":\"tdf_live_sessions\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeProposalUpdate
+                "{\"puStatus\":\"draft\",\"unknownField\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeProposalVersionCreate
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -176,6 +224,12 @@ spec = do
     decodeFollowUpCreate = eitherDecode
     decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate
     decodeFollowUpUpdate = eitherDecode
+    decodeProposalCreate :: BL8.ByteString -> Either String Proposals.ProposalCreate
+    decodeProposalCreate = eitherDecode
+    decodeProposalUpdate :: BL8.ByteString -> Either String Proposals.ProposalUpdate
+    decodeProposalUpdate = eitherDecode
+    decodeProposalVersionCreate :: BL8.ByteString -> Either String Proposals.ProposalVersionCreate
+    decodeProposalVersionCreate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

@@ -14,7 +14,8 @@ module TDF.API.Proposals
   , ProposalVersionCreate(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson (FromJSON (parseJSON), Options (rejectUnknownFields), ToJSON,
+                             defaultOptions, genericParseJSON)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (UTCTime)
@@ -75,7 +76,8 @@ data ProposalCreate = ProposalCreate
   , pcVersionNotes   :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON ProposalCreate
+instance FromJSON ProposalCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ProposalUpdate = ProposalUpdate
   { puTitle          :: Maybe Text
@@ -89,7 +91,8 @@ data ProposalUpdate = ProposalUpdate
   , puNotes          :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 
-instance FromJSON ProposalUpdate
+instance FromJSON ProposalUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ProposalVersionSummaryDTO = ProposalVersionSummaryDTO
   { versionId :: Text
@@ -119,4 +122,8 @@ data ProposalVersionCreate = ProposalVersionCreate
   , pvcNotes       :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON ProposalVersionCreate
+instance FromJSON ProposalVersionCreate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+strictObjectOptions :: Options
+strictObjectOptions = defaultOptions { rejectUnknownFields = True }
