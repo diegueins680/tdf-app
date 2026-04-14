@@ -6,7 +6,8 @@ import { env } from '../utils/env';
 const API_BASE = env.read('VITE_API_BASE') ?? '';
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
 const RETRYABLE_UNAVAILABLE_STATUS = 503;
-const LOGIN_RETRY_DELAYS_MS = [1000, 2000];
+const LOGIN_RETRY_DELAYS_MS = [1000, 2000, 5000];
+const MAX_RETRY_DELAY_MS = 15_000;
 const STARTING_ERROR_TOKENS = new Set(['starting', 'service unavailable']);
 
 type LoginRequestDTO = components['schemas']['LoginRequest'];
@@ -16,6 +17,23 @@ export type LoginResponseDTO = components['schemas']['LoginResponse'];
 const wait = (ms: number) => new Promise<void>((resolve) => {
   setTimeout(resolve, ms);
 });
+
+const readRetryDelayMs = (res: Response, fallbackMs: number): number => {
+  const retryAfter = res.headers.get('retry-after')?.trim();
+  if (!retryAfter) return fallbackMs;
+
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(Math.round(seconds * 1000), MAX_RETRY_DELAY_MS);
+  }
+
+  const retryAt = Date.parse(retryAfter);
+  if (!Number.isNaN(retryAt)) {
+    return Math.min(Math.max(retryAt - Date.now(), 0), MAX_RETRY_DELAY_MS);
+  }
+
+  return fallbackMs;
+};
 
 const isStartupFallbackCandidate = (message: string): boolean => {
   const normalized = message.trim().toLowerCase();
@@ -55,7 +73,8 @@ async function postAuthJson<T>(
     }
 
     if (res.status === RETRYABLE_UNAVAILABLE_STATUS && attempt < retryDelaysMs.length) {
-      await wait(retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0);
+      const fallbackDelayMs = retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
+      await wait(readRetryDelayMs(res, fallbackDelayMs));
       continue;
     }
 

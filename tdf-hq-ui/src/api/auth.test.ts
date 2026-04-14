@@ -11,8 +11,12 @@ jest.unstable_mockModule('../utils/env', () => ({
 const { confirmPasswordReset } = await import('./auth');
 const { loginRequest } = await import('./auth');
 
-const createHeaders = (contentType?: string) => ({
-  get: jest.fn((name: string) => (name.toLowerCase() === 'content-type' ? contentType ?? null : null)),
+const createHeaders = (contentType?: string, extra: Record<string, string | null> = {}) => ({
+  get: jest.fn((name: string) => {
+    const normalized = name.toLowerCase();
+    if (normalized === 'content-type') return contentType ?? null;
+    return extra[normalized] ?? null;
+  }),
 }) as unknown as Headers;
 
 describe('auth api', () => {
@@ -74,14 +78,14 @@ describe('auth api', () => {
     ).rejects.toThrow('Invalid or expired token');
   });
 
-  it('retries transient startup responses for login and succeeds once the backend is ready', async () => {
+  it('retries transient startup responses for login using the backend retry-after hint', async () => {
     jest.useFakeTimers();
 
     fetchMock
       .mockResolvedValueOnce({
         ok: false,
         status: 503,
-        headers: createHeaders('application/json'),
+        headers: createHeaders('application/json', { 'retry-after': '5' }),
         text: jest.fn<() => Promise<string>>().mockResolvedValue('{"error":"starting"}'),
       } as unknown as Response)
       .mockResolvedValueOnce({
@@ -100,7 +104,9 @@ describe('auth api', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    await jest.advanceTimersByTimeAsync(1000);
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
 
     await expect(promise).resolves.toEqual({
       token: 'session-token',
@@ -118,7 +124,7 @@ describe('auth api', () => {
       Promise.resolve({
         ok: false,
         status: 503,
-        headers: createHeaders('application/json'),
+        headers: createHeaders('application/json', { 'retry-after': '5' }),
         text: jest.fn<() => Promise<string>>().mockResolvedValue('{"error":"starting"}'),
       } as unknown as Response),
     );
@@ -129,11 +135,12 @@ describe('auth api', () => {
     });
     const rejection = expect(promise).rejects.toThrow('El servicio está arrancando. Intenta de nuevo en unos segundos.');
 
-    await jest.advanceTimersByTimeAsync(1000);
-    await jest.advanceTimersByTimeAsync(2000);
+    await jest.advanceTimersByTimeAsync(5000);
+    await jest.advanceTimersByTimeAsync(5000);
+    await jest.advanceTimersByTimeAsync(5000);
 
     await rejection;
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it('extracts structured JSON error messages for login failures', async () => {

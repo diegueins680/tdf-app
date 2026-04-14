@@ -45,6 +45,7 @@ import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-ro
 import { type SessionUser, useSession } from '../session/SessionContext';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
+import { Meta } from '../api/meta';
 import { loadSessionSnapshot } from '../api/session';
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
@@ -155,6 +156,7 @@ const parseNonNegativeSafeInt = (value: string): number | undefined => {
 };
 
 export default function LoginPage() {
+  const servicePreparingMessage = 'Estamos activando el servicio. Apenas termine podrás iniciar sesión.';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -274,9 +276,23 @@ export default function LoginPage() {
   const signupMutation = useMutation({
     mutationFn: signupRequest,
   });
+  const healthQuery = useQuery({
+    queryKey: ['meta', 'health', 'login'],
+    queryFn: Meta.health,
+    staleTime: 0,
+    retry: 1,
+    refetchInterval: (query) => {
+      const status = String(query.state.data?.status ?? '').toLowerCase();
+      return status === 'ok' ? false : 5000;
+    },
+  });
   const redirectPath = useMemo(() => {
     return readSafeRedirectPath(location.search);
   }, [location.search]);
+  const serviceStatus = String(healthQuery.data?.status ?? '').toLowerCase();
+  const serviceChecking = healthQuery.isLoading && !healthQuery.data;
+  const servicePreparing = serviceChecking || (serviceStatus !== '' && serviceStatus !== 'ok');
+  const loginDisabled = loginMutation.isPending || servicePreparing;
 
   const signupPreset = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -413,6 +429,11 @@ export default function LoginPage() {
     event.preventDefault();
     setFormError(null);
 
+    if (servicePreparing) {
+      setFormError(servicePreparingMessage);
+      return;
+    }
+
     const normalizedIdentifier = identifier.trim();
     const normalizedPassword = password.trim();
     if (!normalizedIdentifier || !normalizedPassword) {
@@ -449,6 +470,15 @@ export default function LoginPage() {
 
   const handleGoogleCredential = useCallback(
     async (credentialResponse: { credential?: string }) => {
+      if (servicePreparing) {
+        const message = servicePreparingMessage;
+        if (signupDialogOpen) {
+          setSignupFeedback({ type: 'error', message });
+        } else {
+          setFormError(message);
+        }
+        return;
+      }
       const credential = credentialResponse?.credential;
       const parsed = credential ? parseGoogleIdToken(credential) : null;
       const fallbackName = parsed?.name ?? parsed?.email ?? 'Cuenta Google';
@@ -492,8 +522,17 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, signupDialogOpen],
+    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, servicePreparing, signupDialogOpen],
   );
+
+  useEffect(() => {
+    if (serviceStatus === 'ok') {
+      setFormError((current) => (current === servicePreparingMessage ? null : current));
+      setSignupFeedback((current) => (
+        current?.message === servicePreparingMessage ? null : current
+      ));
+    }
+  }, [servicePreparingMessage, serviceStatus]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -596,6 +635,11 @@ export default function LoginPage() {
   };
 
   const handleResetSubmit = async () => {
+    if (servicePreparing) {
+      setResetFeedback({ type: 'error', message: servicePreparingMessage });
+      return;
+    }
+
     const emailValue = resetEmail.trim();
     if (!emailValue) {
       setResetFeedback({ type: 'error', message: 'Ingresa el correo asociado a tu cuenta.' });
@@ -655,6 +699,11 @@ export default function LoginPage() {
   };
 
   const handleSignupSubmit = async () => {
+    if (servicePreparing) {
+      setSignupFeedback({ type: 'error', message: servicePreparingMessage });
+      return;
+    }
+
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
       setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
@@ -870,7 +919,15 @@ export default function LoginPage() {
                   </Stack>
                 </Stack>
 
-                {googleClientId && (
+                {servicePreparing && (
+                  <Alert severity="info">
+                    {serviceChecking
+                      ? 'Estamos preparando el panel y despertando la API. En unos segundos habilitamos el acceso.'
+                      : servicePreparingMessage}
+                  </Alert>
+                )}
+
+                {googleClientId && !servicePreparing && (
                   <Stack spacing={1} alignItems="center">
                     <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                       O continúa con Google
@@ -890,6 +947,11 @@ export default function LoginPage() {
                       </Alert>
                     )}
                   </Stack>
+                )}
+                {googleClientId && servicePreparing && (
+                  <Alert severity="info">
+                    Activaremos Google cuando el servicio termine de arrancar.
+                  </Alert>
                 )}
 
                 <FormControlLabel
@@ -913,10 +975,10 @@ export default function LoginPage() {
                       variant="contained"
                       type="submit"
                       size="large"
-                      disabled={loginMutation.isPending}
+                      disabled={loginDisabled}
                       sx={{ textTransform: 'none' }}
                     >
-                      {loginMutation.isPending ? 'Ingresando…' : 'Ingresar'}
+                      {loginMutation.isPending ? 'Ingresando…' : servicePreparing ? 'Preparando servicio…' : 'Ingresar'}
                     </Button>
                     <Button
                       variant="outlined"
@@ -1205,8 +1267,8 @@ export default function LoginPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeResetDialog}>Cerrar</Button>
-          <Button onClick={() => { void handleResetSubmit(); }} disabled={resetMutation.isPending}>
-            {resetMutation.isPending ? 'Enviando…' : 'Enviar enlace'}
+          <Button onClick={() => { void handleResetSubmit(); }} disabled={resetMutation.isPending || servicePreparing}>
+            {resetMutation.isPending ? 'Enviando…' : servicePreparing ? 'Preparando servicio…' : 'Enviar enlace'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1495,8 +1557,8 @@ export default function LoginPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeSignupDialog}>Cancelar</Button>
-          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending}>
-            {signupMutation.isPending ? 'Creando…' : 'Crear e ingresar'}
+          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing}>
+            {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
           </Button>
         </DialogActions>
       </Dialog>
