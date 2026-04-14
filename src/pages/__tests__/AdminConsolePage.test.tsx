@@ -1241,7 +1241,7 @@ describe('AdminConsolePage', () => {
     expect(within(invitedRow).getByText('Invitado')).toBeInTheDocument();
   });
 
-  it('keeps save disabled in the role dialog until the admin makes a real change', async () => {
+  it('summarizes the exact pending role change before enabling save', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
@@ -1267,7 +1267,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(saveButton).toBeEnabled();
-      expect(screen.getByText(/Puedes asignar múltiples roles para combinar permisos\./i)).toBeInTheDocument();
+      expect(screen.getByText(/Cambio pendiente: agregar Manager\./i)).toBeInTheDocument();
     });
   });
 

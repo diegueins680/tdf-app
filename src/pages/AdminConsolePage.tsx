@@ -307,6 +307,31 @@ function formatRoleGroupLabel(roles: readonly RoleKey[]) {
   return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
 }
 
+function buildPendingRoleChangesSummary(
+  currentRoles?: readonly RoleKey[] | null,
+  nextRoles?: readonly RoleKey[] | null,
+) {
+  const normalizedCurrentRoles = normalizeRoleSelection(currentRoles);
+  const normalizedNextRoles = normalizeRoleSelection(nextRoles);
+  const rolesToAdd = normalizedNextRoles.filter((role) => !normalizedCurrentRoles.includes(role));
+  const rolesToRemove = normalizedCurrentRoles.filter((role) => !normalizedNextRoles.includes(role));
+  const actions: string[] = [];
+
+  if (rolesToAdd.length > 0) {
+    actions.push(`agregar ${formatRoleGroupLabel(rolesToAdd)}`);
+  }
+
+  if (rolesToRemove.length > 0) {
+    actions.push(`quitar ${formatRoleGroupLabel(rolesToRemove)}`);
+  }
+
+  if (actions.length === 0) {
+    return null;
+  }
+
+  return `${actions.length === 1 ? 'Cambio pendiente' : 'Cambios pendientes'}: ${actions.join(' · ')}.`;
+}
+
 function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
   const groupedByNavigationProfile = new Map<string, RoleKey[]>();
 
@@ -638,6 +663,9 @@ export default function AdminConsolePage() {
   ), [editingUser]);
   const hasPendingRoleChanges = useMemo(() => (
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
+  ), [editingUser, selectedRoles]);
+  const pendingRoleChangesSummary = useMemo(() => (
+    editingUser ? buildPendingRoleChangesSummary(editingUser.roles, selectedRoles) : null
   ), [editingUser, selectedRoles]);
   const equivalentRoleWarning = useMemo(() => {
     if (!hasPendingRoleChanges) {
@@ -1227,7 +1255,7 @@ export default function AdminConsolePage() {
             </Select>
             <FormHelperText>
               {hasPendingRoleChanges
-                ? 'Puedes asignar múltiples roles para combinar permisos.'
+                ? (pendingRoleChangesSummary ?? 'Hay cambios pendientes. Revisa la selección antes de guardar.')
                 : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
             </FormHelperText>
           </FormControl>
