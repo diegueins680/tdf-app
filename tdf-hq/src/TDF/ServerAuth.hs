@@ -24,6 +24,7 @@ module TDF.ServerAuth
   , validateRequestedSignupRoles
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
+  , validateSignupInternshipFields
   , validateSignupFanArtistIds
   ) where
 
@@ -192,6 +193,33 @@ validateSignupFanArtistIds (Just rawArtistIds) =
                   (TE.encodeUtf8 "fanArtistIds must contain only positive integers")
             }
 
+validateSignupInternshipFields
+  :: [RoleEnum]
+  -> Maybe Day
+  -> Maybe Day
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError ()
+validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
+  | null providedFields = Right ()
+  | Intern `elem` rolesVal = Right ()
+  | otherwise =
+      let fieldList = T.intercalate ", " providedFields
+          msg = "Internship fields require requesting the Intern role: " <> fieldList
+      in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+  where
+    providedFields =
+      catMaybes
+        [ present "internshipStartAt" (isJust startAt)
+        , present "internshipEndAt" (isJust endAt)
+        , present "internshipRequiredHours" (isJust requiredHours)
+        , present "internshipSkills" (isJust (cleanOptional skills))
+        , present "internshipAreas" (isJust (cleanOptional areas))
+        ]
+    present fieldName isProvided =
+      if isProvided then Just fieldName else Nothing
+
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
 validateOptionalSignupPhone (Just rawPhone) =
@@ -332,6 +360,14 @@ signup SignupRequest
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
   sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)
+  either throwError pure $
+    validateSignupInternshipFields
+      sanitizedRoles
+      rawInternshipStartAt
+      rawInternshipEndAt
+      rawInternshipRequiredHours
+      rawInternshipSkills
+      rawInternshipAreas
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg

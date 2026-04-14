@@ -98,6 +98,7 @@ import TDF.ServerAuth
     , signupEmailExists
     , validateOptionalSignupClaimArtistId
     , validateOptionalSignupPhone
+    , validateSignupInternshipFields
     , validateRequestedSignupRoles
     , validateSignupFanArtistIds
     )
@@ -974,6 +975,36 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid fanArtistIds to be rejected, got: " <> show value)
             assertInvalid (validateSignupFanArtistIds (Just [7, 0, 13]))
             assertInvalid (validateSignupFanArtistIds (Just [-5]))
+
+    describe "validateSignupInternshipFields" $ do
+        it "allows internship metadata only when the Intern role is part of signup intent" $ do
+            let startAt = Just (fromGregorian 2026 4 1)
+            validateSignupInternshipFields [Customer, Fan] Nothing Nothing Nothing (Just "   ") Nothing
+                `shouldBe` Right ()
+            validateSignupInternshipFields [Customer, Fan, Intern] startAt Nothing (Just 120)
+                (Just "Production, marketing") (Just "Events")
+                `shouldBe` Right ()
+
+        it "rejects internship-only fields when the signup is not requesting the Intern role" $ do
+            let result =
+                    validateSignupInternshipFields
+                        [Customer, Fan]
+                        (Just (fromGregorian 2026 4 1))
+                        Nothing
+                        (Just 120)
+                        (Just "  Production support  ")
+                        Nothing
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Internship fields require requesting the Intern role"
+                    BL8.unpack (errBody serverErr) `shouldContain` "internshipStartAt"
+                    BL8.unpack (errBody serverErr) `shouldContain` "internshipRequiredHours"
+                    BL8.unpack (errBody serverErr) `shouldContain` "internshipSkills"
+                Right value ->
+                    expectationFailure
+                        ("Expected internship-only signup fields to be rejected, got: " <> show value)
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers and preserves the raw-token fallback" $ do
