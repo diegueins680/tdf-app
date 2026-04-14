@@ -276,7 +276,7 @@ export default function AdminUsersPage() {
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
   const activeScopeSummary = showActiveScopeSummary
-    ? 'Vista actual: solo usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.'
+    ? 'Vista actual: solo usuarios activos.'
     : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
