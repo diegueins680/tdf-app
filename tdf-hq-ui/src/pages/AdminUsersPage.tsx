@@ -272,13 +272,22 @@ export default function AdminUsersPage() {
   const singleVisibleUser = showSingleUserGuidance ? (visibleUsers[0] ?? null) : null;
   const singleVisibleUserReadiness = singleVisibleUser ? getUserContactReadiness(singleVisibleUser) : null;
   const visibleUsersAllNeedContact = visibleUsers.length > 0 && visibleUsersMissingContactCount === visibleUsers.length;
+  const visibleUsersAllNeedWhatsApp =
+    visibleUsers.length > 1
+    && visibleUsersPendingWhatsAppCount === visibleUsers.length;
   const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
-  const hideSingleRowPendingState = showSingleSearchResultGuidance || showSingleUserGuidance;
+  const hideRepeatedPendingStateChips =
+    showGeneralIntro
+    && (visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
+  const hideSingleRowPendingState =
+    showSingleSearchResultGuidance
+    || showSingleUserGuidance
+    || hideRepeatedPendingStateChips;
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;

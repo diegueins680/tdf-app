@@ -688,7 +688,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('hides the page-level missing-contact warning when every visible row already needs the same fix', async () => {
+  it('keeps the shared missing-contact fix in the header instead of repeating the same chip on every row', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 201,
@@ -730,15 +730,15 @@ describe('AdminUsersPage', () => {
 
         const firstRow = getRowByUserId(container, 201);
         const secondRow = getRowByUserId(container, 202);
-        expect(firstRow.textContent).toContain('Contacto pendiente');
-        expect(secondRow.textContent).toContain('Contacto pendiente');
+        expect(firstRow.textContent).not.toContain('Contacto pendiente');
+        expect(secondRow.textContent).not.toContain('Contacto pendiente');
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('uses number-setup guidance when visible users already have contact info but still lack WhatsApp', async () => {
+  it('keeps the shared number-setup fix in the header instead of repeating the same chip on every row', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 201,
@@ -773,8 +773,8 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
-        expect(getRowByUserId(container, 201).textContent).toContain('WhatsApp pendiente');
-        expect(getRowByUserId(container, 202).textContent).toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 201).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 202).textContent).not.toContain('WhatsApp pendiente');
         expect(container.textContent).not.toContain('Contacto pendiente');
       });
     } finally {
