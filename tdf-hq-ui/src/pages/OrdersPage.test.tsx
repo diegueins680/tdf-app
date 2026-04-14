@@ -217,6 +217,8 @@ describe('OrdersPage', () => {
           'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.',
         );
         expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).not.toBeNull();
+        expect(container.textContent).not.toContain('Filas por página');
+        expect(container.textContent).not.toContain('Rows per page');
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(hasTableHeader(container, 'Live Sessions')).toBe(true);
         expect(container.querySelectorAll('button[aria-label^="Abrir Live Sessions para sesión "]')).toHaveLength(1);
@@ -230,6 +232,36 @@ describe('OrdersPage', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar sesión #102');
         expect(document.body.textContent).not.toContain('Editar sesión #101');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps pagination hidden until the sessions list actually needs a second page and localizes it when it does', async () => {
+    listBookingsMock.mockResolvedValue(
+      Array.from({ length: 11 }, (_, index) => ({
+        bookingId: 301 + index,
+        title: `Sesion ${index + 1}`,
+        startsAt: `2026-04-${String((index % 9) + 10).padStart(2, '0')}T10:00:00-05:00`,
+        endsAt: `2026-04-${String((index % 9) + 10).padStart(2, '0')}T11:00:00-05:00`,
+        status: index % 2 === 0 ? 'Confirmed' : 'Tentative',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: `studio-${index + 1}`, brRoomName: `Studio ${index + 1}`, brRole: 'room' },
+        ],
+      } satisfies BookingDTO)),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Filas por página');
+        expect(container.textContent).toContain('1-10 de 11');
+        expect(container.textContent).not.toContain('Rows per page');
       });
     } finally {
       await cleanup();

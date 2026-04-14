@@ -71,6 +71,16 @@ const parseRowsPerPage = (value: string, fallback = 10): number => {
   return ROWS_PER_PAGE_OPTIONS.some((option) => option === parsed) ? parsed : fallback;
 };
 
+const formatDisplayedRowsLabel = ({
+  from,
+  to,
+  count,
+}: {
+  from: number;
+  to: number;
+  count: number;
+}) => `${from}-${to} de ${count === -1 ? `más de ${to}` : count}`;
+
 function formatScheduleRange(start: string, end: string) {
   const s = DateTime.fromISO(start, { zone: TZ });
   const e = DateTime.fromISO(end, { zone: TZ });
@@ -192,6 +202,7 @@ export default function OrdersPage() {
     const end = start + rowsPerPage;
     return rows.slice(start, end);
   }, [rows, page, rowsPerPage]);
+  const showPagination = totalRows > rowsPerPage;
   const showLiveSessionsColumn = paginatedRows.some((row) => row.isRecording);
   const rowActionSummary = rows.some((row) => row.isRecording)
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
@@ -383,16 +394,19 @@ export default function OrdersPage() {
                 </TableBody>
               </Table>
             </TableContainer>
-            <TablePagination
-              component="div"
-              count={totalRows}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-              labelRowsPerPage="Rows per page"
-            />
+            {showPagination ? (
+              <TablePagination
+                component="div"
+                count={totalRows}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                labelRowsPerPage="Filas por página"
+                labelDisplayedRows={formatDisplayedRowsLabel}
+              />
+            ) : null}
           </>
         )}
       </Paper>
