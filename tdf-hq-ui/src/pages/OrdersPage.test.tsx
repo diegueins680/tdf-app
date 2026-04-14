@@ -44,24 +44,6 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
-const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
-  const button = root.querySelector(`button[aria-label="${labelText}"]`);
-  if (!(button instanceof HTMLButtonElement)) {
-    throw new Error(`Button not found: ${labelText}`);
-  }
-  return button;
-};
-
-const getMenuItemByText = (root: ParentNode, labelText: string) => {
-  const item = Array.from(root.querySelectorAll('[role="menuitem"]')).find(
-    (element) => buttonText(element) === labelText,
-  );
-  if (!(item instanceof HTMLElement)) {
-    throw new Error(`Menu item not found: ${labelText}`);
-  }
-  return item;
-};
-
 const clickButton = async (button: HTMLElement) => {
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -104,6 +86,14 @@ const renderPage = async (container: HTMLElement) => {
 
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
+const getRowByBookingId = (root: ParentNode, bookingId: number) => {
+  const row = root.querySelector<HTMLElement>(`[data-testid="orders-row-${bookingId}"]`);
+  if (!(row instanceof HTMLElement)) {
+    throw new Error(`Row not found: ${bookingId}`);
+  }
+  return row;
+};
 
 describe('OrdersPage', () => {
   beforeAll(() => {
@@ -189,7 +179,7 @@ describe('OrdersPage', () => {
     }
   });
 
-  it('keeps one actions trigger per row and moves recording-only actions into the overflow menu', async () => {
+  it('uses row click for editing and only shows the Live Sessions shortcut on recording rows', async () => {
     listBookingsMock.mockResolvedValue([
       {
         bookingId: 101,
@@ -224,30 +214,66 @@ describe('OrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Visualiza órdenes de estudio, su horario, recursos asignados y estado operacional. Usa Acciones para editar la sesión o abrir flujos específicos como Live Sessions.',
+          'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.',
         );
         expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).not.toBeNull();
-        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para sesión "]')).toHaveLength(2);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(hasTableHeader(container, 'Live Sessions')).toBe(true);
+        expect(container.querySelectorAll('button[aria-label^="Abrir Live Sessions para sesión "]')).toHaveLength(1);
         expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Editar');
         expect(Array.from(container.querySelectorAll('button')).map(buttonText)).not.toContain('Crear input list');
+        expect(container.querySelector('button[aria-label="Abrir Live Sessions para sesión 102"]')).toBeNull();
       });
 
-      await clickButton(getButtonByAriaLabel(container, 'Abrir acciones para sesión 101'));
+      await clickButton(getRowByBookingId(container, 102));
 
       await waitForExpectation(() => {
-        expect(getMenuItemByText(document.body, 'Editar sesión')).toBeTruthy();
-        expect(getMenuItemByText(document.body, 'Abrir Live Sessions')).toBeTruthy();
+        expect(document.body.textContent).toContain('Editar sesión #102');
+        expect(document.body.textContent).not.toContain('Editar sesión #101');
       });
+    } finally {
+      await cleanup();
+    }
+  });
 
-      await clickButton(getButtonByAriaLabel(container, 'Abrir acciones para sesión 102'));
+  it('hides the extra Live Sessions column when no visible row can use it', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 201,
+        title: 'Mezcla EP',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 202,
+        title: 'Master final',
+        startsAt: '2026-04-15T11:00:00-05:00',
+        endsAt: '2026-04-15T13:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mastering',
+        resources: [
+          { brRoomId: 'studio-c', brRoomName: 'Studio C', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
 
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
       await waitForExpectation(() => {
-        expect(getMenuItemByText(document.body, 'Editar sesión')).toBeTruthy();
-        expect(
-          Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
-            (element) => buttonText(element) === 'Abrir Live Sessions',
-          ),
-        ).toBe(false);
+        expect(container.textContent).toContain(
+          'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.',
+        );
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(hasTableHeader(container, 'Live Sessions')).toBe(false);
+        expect(container.querySelectorAll('button[aria-label^="Abrir Live Sessions para sesión "]')).toHaveLength(0);
       });
     } finally {
       await cleanup();
