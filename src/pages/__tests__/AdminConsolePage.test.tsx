@@ -1289,6 +1289,9 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText(/Detalle:\s*Admin -> Admin, Manager/i)).toBeInTheDocument();
     });
 
+    expect(
+      screen.queryByText(/Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();

@@ -597,11 +597,7 @@ export default function AdminConsolePage() {
           })
           ?? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
         )
-        : (
-          hasAuditSectionData
-            ? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
-            : null
-        )
+        : null
     );
   const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);
   const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
