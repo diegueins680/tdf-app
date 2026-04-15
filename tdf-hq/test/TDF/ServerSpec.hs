@@ -34,6 +34,7 @@ import TDF.Models
     , UnitsKind (..)
     , UserCredential (..)
     )
+import qualified TDF.ModelsExtra as ME
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
@@ -109,8 +110,11 @@ import TDF.ServerAuth
     )
 import TDF.ServerProposals
     ( resolveOptionalProposalClientPartyReference
+    , resolveOptionalProposalPipelineCardReference
+    , resolveOptionalProposalPipelineCardReferenceUpdate
     )
 import Test.Hspec
+import Web.PathPieces (toPathPiece)
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
@@ -615,6 +619,74 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unknown proposal client party id to be rejected, got: " <> show value)
+
+    describe "resolveOptionalProposalPipelineCardReference" $ do
+        it "preserves omitted refs and resolves existing proposal pipeline cards" $ do
+            (expectedPipelineCardId, omittedResult, resolvedResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                pipelineCardId <- insert ME.PipelineCard
+                    { ME.pipelineCardServiceKind = Recording
+                    , ME.pipelineCardTitle = "Proposal pipeline card"
+                    , ME.pipelineCardArtist = Just "Ada"
+                    , ME.pipelineCardStage = "discovery"
+                    , ME.pipelineCardSortOrder = 1
+                    , ME.pipelineCardNotes = Just "Inbound lead"
+                    , ME.pipelineCardCreatedAt = now
+                    , ME.pipelineCardUpdatedAt = now
+                    }
+                omitted <- resolveOptionalProposalPipelineCardReference Nothing
+                resolved <- resolveOptionalProposalPipelineCardReference (Just (toPathPiece pipelineCardId))
+                pure (pipelineCardId, omitted, resolved)
+
+            omittedResult `shouldBe` Right Nothing
+            resolvedResult `shouldBe` Right (Just expectedPipelineCardId)
+
+        it "rejects invalid or unknown proposal pipeline card ids before proposals can persist dangling references" $ do
+            invalidResult <- runAuthSqlite $
+                resolveOptionalProposalPipelineCardReference (Just "not-a-uuid")
+            case invalidResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "pipelineCardId must be a valid identifier"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid proposal pipeline card id to be rejected, got: " <> show value)
+
+            unknownResult <- runAuthSqlite $
+                resolveOptionalProposalPipelineCardReference
+                    (Just "00000000-0000-0000-0000-000000000999")
+            case unknownResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "pipelineCardId references an unknown pipeline card"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown proposal pipeline card id to be rejected, got: " <> show value)
+
+    describe "resolveOptionalProposalPipelineCardReferenceUpdate" $ do
+        it "preserves omitted and clear operations while resolving explicit proposal pipeline card updates" $ do
+            (pipelineCardId, omittedResult, clearResult, resolvedResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                insertedPipelineCardId <- insert ME.PipelineCard
+                    { ME.pipelineCardServiceKind = Mixing
+                    , ME.pipelineCardTitle = "Updated pipeline card"
+                    , ME.pipelineCardArtist = Nothing
+                    , ME.pipelineCardStage = "quoted"
+                    , ME.pipelineCardSortOrder = 2
+                    , ME.pipelineCardNotes = Nothing
+                    , ME.pipelineCardCreatedAt = now
+                    , ME.pipelineCardUpdatedAt = now
+                    }
+                omitted <- resolveOptionalProposalPipelineCardReferenceUpdate Nothing
+                cleared <- resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing)
+                resolved <- resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just (toPathPiece insertedPipelineCardId)))
+                pure (insertedPipelineCardId, omitted, cleared, resolved)
+
+            omittedResult `shouldBe` Right Nothing
+            clearResult `shouldBe` Right (Just Nothing)
+            resolvedResult `shouldBe` Right (Just (Just pipelineCardId))
 
     describe "resolvePackagePurchaseRefs" $ do
         it "resolves existing active package products for known buyers" $ do
@@ -2057,6 +2129,19 @@ initializeAuthSchema = do
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"pipeline_card\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"service_kind\" VARCHAR NOT NULL,\
+        \\"title\" VARCHAR NOT NULL,\
+        \\"artist\" VARCHAR NULL,\
+        \\"stage\" VARCHAR NOT NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
         []
 

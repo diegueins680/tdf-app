@@ -8,6 +8,8 @@ module TDF.ServerProposals
   ( proposalsServer
   , ProposalContentSource(..)
   , resolveOptionalProposalClientPartyReference
+  , resolveOptionalProposalPipelineCardReference
+  , resolveOptionalProposalPipelineCardReferenceUpdate
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
   , validateOptionalProposalClientPartyId
@@ -107,8 +109,9 @@ proposalsServer user =
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
       clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
         >>= either throwError pure
+      pipelineCardKey <- withPool (resolveOptionalProposalPipelineCardReference pcPipelineCardId)
+        >>= either throwError pure
       now <- liftIO getCurrentTime
-      pipelineCardKey <- parseOptionalKey @ME.PipelineCard pcPipelineCardId
       let proposalRecord = ME.Proposal
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
@@ -152,7 +155,8 @@ proposalsServer user =
             Just rawClientPartyId -> do
               resolvedClientParty <- withPool (resolveOptionalProposalClientPartyReference rawClientPartyId)
               Just <$> either throwError pure resolvedClientParty
-          pipelineCardUpdate <- parseOptionalKeyUpdate @ME.PipelineCard puPipelineCardId
+          pipelineCardUpdate <- withPool (resolveOptionalProposalPipelineCardReferenceUpdate puPipelineCardId)
+            >>= either throwError pure
           let updates = catMaybes
                 [ fmap (ME.ProposalTitle =.) titleUpdate
                 , fmap (ME.ProposalStatus =.) statusUpdate
@@ -404,6 +408,36 @@ resolveOptionalProposalClientPartyReference rawClientPartyId =
               { errBody = encodeUtf8Lazy "clientPartyId references an unknown party" }
           Just _ -> Right (Just partyKey)
 
+resolveOptionalProposalPipelineCardReference
+  :: Maybe Text
+  -> SqlPersistT IO (Either ServerError (Maybe ME.PipelineCardId))
+resolveOptionalProposalPipelineCardReference Nothing = pure (Right Nothing)
+resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId) = do
+  case fromPathPiece rawPipelineCardId of
+    Nothing ->
+      pure
+        (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be a valid identifier" })
+    Just pipelineCardKey -> do
+      mPipelineCard <- getEntity pipelineCardKey
+      pure $
+        case mPipelineCard of
+          Nothing ->
+            Left err422
+              { errBody = encodeUtf8Lazy "pipelineCardId references an unknown pipeline card" }
+          Just _ ->
+            Right (Just pipelineCardKey)
+
+resolveOptionalProposalPipelineCardReferenceUpdate
+  :: Maybe (Maybe Text)
+  -> SqlPersistT IO (Either ServerError (Maybe (Maybe ME.PipelineCardId)))
+resolveOptionalProposalPipelineCardReferenceUpdate Nothing =
+  pure (Right Nothing)
+resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing) =
+  pure (Right (Just Nothing))
+resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId)) = do
+  resolved <- resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId)
+  pure (fmap Just resolved)
+
 normalizeProposalStatus :: Text -> Maybe Text
 normalizeProposalStatus rawStatus =
   case T.toLower (T.strip rawStatus) of
@@ -464,26 +498,6 @@ isSentStatus =
   (== "sent") . T.toLower . T.filter (not . isSpace)
   where
     isSpace c = c == ' ' || c == '_' || c == '-'
-
-parseOptionalKey
-  :: forall record m.
-     ( PathPiece (Key record)
-     , MonadError ServerError m
-     )
-  => Maybe Text
-  -> m (Maybe (Key record))
-parseOptionalKey = traverse (parseKey @record)
-
-parseOptionalKeyUpdate
-  :: forall record m.
-     ( PathPiece (Key record)
-     , MonadError ServerError m
-     )
-  => Maybe (Maybe Text)
-  -> m (Maybe (Maybe (Key record)))
-parseOptionalKeyUpdate Nothing = pure Nothing
-parseOptionalKeyUpdate (Just Nothing) = pure (Just Nothing)
-parseOptionalKeyUpdate (Just (Just raw)) = Just . Just <$> parseKey @record raw
 
 parseKey
   :: forall record m.
