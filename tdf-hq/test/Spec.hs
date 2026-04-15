@@ -119,6 +119,7 @@ import TDF.Server.SocialEventsHandlers (
     parseEventStatusQueryParamEither,
     parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
+    parseVenueIdEither,
     validateEventCreateUpdateDimensions,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
@@ -817,6 +818,24 @@ main = hspec $ do
                             expectationFailure ("Expected invalid event artist id to be rejected, got " <> show value)
             assertInvalid "   "
             assertInvalid "artist-42"
+            assertInvalid "0"
+            assertInvalid "-5"
+
+    describe "parseVenueIdEither" $ do
+        it "canonicalizes positive venue ids before social event lookups and writes" $ do
+            fmap fromSqlKey (parseVenueIdEither " 0042 ")
+                `shouldBe` Right 42
+
+        it "rejects blank, non-numeric, or non-positive venue ids instead of issuing ambiguous event queries" $ do
+            let assertInvalid rawVenueId =
+                    case parseVenueIdEither rawVenueId of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "Invalid venue id"
+                        Right value ->
+                            expectationFailure ("Expected invalid venue id to be rejected, got " <> show (fromSqlKey value))
+            assertInvalid "   "
+            assertInvalid "venue-42"
             assertInvalid "0"
             assertInvalid "-5"
 

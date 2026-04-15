@@ -12,6 +12,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
+  , parseVenueIdEither
   , parseFollowerQueryParamEither
   , parseNearQueryEither
   , followArtistDb
@@ -468,9 +469,9 @@ socialEventsServer user = eventsServer
       venueFilter <- case fmap T.strip mVenueId of
         Nothing -> pure []
         Just "" -> pure []
-        Just raw -> case readMaybe (T.unpack raw) :: Maybe Int64 of
-          Nothing -> throwError err400 { errBody = "Invalid venue id" }
-          Just vnum -> pure [SocialEventVenueId ==. Just (toSqlKey vnum)]
+        Just raw -> do
+          venueKey <- either throwError pure (parseVenueIdEither raw)
+          pure [SocialEventVenueId ==. Just venueKey]
       artistFilter <- case fmap T.strip mArtistId of
         Nothing -> pure []
         Just "" -> pure []
@@ -520,9 +521,7 @@ socialEventsServer user = eventsServer
           createdMetadata = decodeEventMetadata metadataVal
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
-        Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
-          Nothing -> throwError err400 { errBody = "Invalid venue id" }
-          Just vnum -> pure (Just (toSqlKey vnum))
+        Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
       key <- liftIO $ runSqlPool (insert SocialEvent
         { socialEventOrganizerPartyId = Just currentPartyId
         , socialEventTitle = eventTitle dto
@@ -587,9 +586,7 @@ socialEventsServer user = eventsServer
           mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
-        Just txt -> case readMaybe (T.unpack txt) :: Maybe Int64 of
-          Nothing -> throwError err400 { errBody = "Invalid venue id" }
-          Just vnum -> pure (Just (toSqlKey vnum))
+        Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
       liftIO $ runSqlPool (update eventKey
         [ SocialEventTitle =. eventTitle dto
         , SocialEventDescription =. eventDescription dto
@@ -2545,6 +2542,10 @@ parseInvitationIdsEither eventIdStr invitationIdStr =
   case (parseInt64Either "event" eventIdStr, parseInt64Either "invitation" invitationIdStr) of
     (Right eventNum, Right invitationNum) -> Right (toSqlKey eventNum, toSqlKey invitationNum)
     _ -> Left err400 { errBody = "Invalid event or invitation id" }
+
+parseVenueIdEither :: T.Text -> Either ServerError VenueId
+parseVenueIdEither =
+  fmap toSqlKey . parseInt64Either "venue"
 
 parseInt64Either :: T.Text -> T.Text -> Either ServerError Int64
 parseInt64Either label raw =
