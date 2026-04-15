@@ -1317,17 +1317,17 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected internship-only signup fields to be rejected, got: " <> show value)
 
     describe "parsePasswordChangeAuthToken" $ do
-        it "accepts standard bearer headers and preserves the raw-token fallback" $ do
+        it "accepts standard bearer headers" $ do
             parsePasswordChangeAuthToken " Bearer session-token " `shouldBe` Right "session-token"
-            parsePasswordChangeAuthToken "raw-session-token" `shouldBe` Right "raw-session-token"
 
-        it "rejects malformed authorization headers instead of misreporting them as invalid tokens" $ do
+        it "rejects malformed or non-bearer authorization headers instead of misreporting them as invalid tokens" $ do
             let assertInvalid rawHeader = case parsePasswordChangeAuthToken rawHeader of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 400
                         BL8.unpack (errBody serverErr) `shouldContain` "Authorization header must be Bearer <token>"
                     Right tokenVal ->
                         expectationFailure ("Expected malformed authorization header to be rejected, got: " <> show tokenVal)
+            assertInvalid "raw-session-token"
             assertInvalid "Bearer"
             assertInvalid "Basic session-token"
             assertInvalid "Bearer too many parts"

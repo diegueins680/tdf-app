@@ -467,8 +467,6 @@ parsePasswordChangeAuthToken rawHeader =
   case T.words (T.strip rawHeader) of
     [scheme, value]
       | T.toLower scheme == "bearer" -> Right value
-    [value]
-      | T.toLower value /= "bearer" -> Right value
     _ ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>") }
 
