@@ -2143,6 +2143,25 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected invalid musician partyId to be rejected, got: " <> show payload)
 
+        it "rejects contradictory existing-musician identity flags instead of guessing whether the row references an existing party" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[{\"lsmName\":\"Existing musician\",\"lsmIsExisting\":true}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "existing musicians must include a positive partyId"
+                Right payload ->
+                    expectationFailure ("Expected isExisting=true without partyId to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[{\"lsmPartyId\":42,\"lsmName\":\"Existing musician\",\"lsmIsExisting\":false}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musician partyId requires isExisting=true"
+                Right payload ->
+                    expectationFailure ("Expected partyId with isExisting=false to be rejected, got: " <> show payload)
+
         it "rejects duplicate scalar fields instead of silently taking the first multipart value" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

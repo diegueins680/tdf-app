@@ -224,8 +224,13 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               lsmPartyId normalizedMusician == Nothing
                 && T.null (lsmName normalizedMusician)
                 && maybe True T.null (lsmEmail normalizedMusician)
+            hasPartyReference = maybe False (> 0) (lsmPartyId normalizedMusician)
         if maybe False (<= 0) (lsmPartyId musician)
           then Left "musician partyId must be a positive integer"
+          else if lsmIsExisting normalizedMusician && not hasPartyReference
+          then Left "existing musicians must include a positive partyId"
+          else if hasPartyReference && not (lsmIsExisting normalizedMusician)
+            then Left "musician partyId requires isExisting=true"
           else if noReferenceProvided
             then Left "each musician must include a non-blank name, email, or partyId"
             else Right normalizedMusician
