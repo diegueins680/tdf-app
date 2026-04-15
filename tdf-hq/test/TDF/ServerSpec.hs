@@ -1088,6 +1088,24 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "Production, marketing") (Just "Events")
                 `shouldBe` Right ()
 
+        it "rejects reversed internship signup dates instead of persisting impossible availability windows" $ do
+            let result =
+                    validateSignupInternshipFields
+                        [Customer, Fan, Intern]
+                        (Just (fromGregorian 2026 4 10))
+                        (Just (fromGregorian 2026 4 1))
+                        Nothing
+                        Nothing
+                        Nothing
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "internshipEndAt must be on or after internshipStartAt"
+                Right value ->
+                    expectationFailure
+                        ("Expected reversed internship signup dates to be rejected, got: " <> show value)
+
         it "rejects internship-only fields when the signup is not requesting the Intern role" $ do
             let result =
                     validateSignupInternshipFields

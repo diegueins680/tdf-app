@@ -206,7 +206,7 @@ validateSignupInternshipFields
   -> Either ServerError ()
 validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
   | null providedFields = Right ()
-  | Intern `elem` rolesVal = Right ()
+  | Intern `elem` rolesVal = validateSignupInternshipDateRange startAt endAt
   | otherwise =
       let fieldList = T.intercalate ", " providedFields
           msg = "Internship fields require requesting the Intern role: " <> fieldList
@@ -222,6 +222,12 @@ validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
         ]
     present fieldName isProvided =
       if isProvided then Just fieldName else Nothing
+
+validateSignupInternshipDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
+validateSignupInternshipDateRange (Just startAt) (Just endAt)
+  | endAt < startAt =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "internshipEndAt must be on or after internshipStartAt") }
+validateSignupInternshipDateRange _ _ = Right ()
 
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
