@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
     && (hasVisibleLinkedProfile || hasActiveSearch);
   const showSharedContactStateGuidance = visibleUsers.length > 1
     && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
-  const showInactiveUsersGroup = includeInactive && visibleInactiveUsersCount > 1;
+  const showInactiveUsersGroup = includeInactive && visibleInactiveUsersCount > 0;
   const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
     showSingleSearchResultGuidance

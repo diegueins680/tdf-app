@@ -851,7 +851,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('summarizes the default active-only scope once and only marks inactive rows when inactive accounts are included', async () => {
+  it('summarizes the default active-only scope once and groups even a lone inactive row under one inactive section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -913,7 +913,10 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('1 usuario inactivo');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Inactivo');
       });
     } finally {
       await cleanup();
