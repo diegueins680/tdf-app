@@ -14,7 +14,7 @@ import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffT
 import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
-import TDF.API (AdsInquiry (..), PublicBookingReq (..))
+import TDF.API (AdsInquiry (..), CreateBookingReq (..), PublicBookingReq (..), UpdateBookingReq (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
@@ -164,6 +164,12 @@ decodePasswordResetConfirmRequest = eitherDecode
 
 decodePublicBookingRequest :: BL8.ByteString -> Either String PublicBookingReq
 decodePublicBookingRequest = eitherDecode
+
+decodeCreateBookingRequest :: BL8.ByteString -> Either String CreateBookingReq
+decodeCreateBookingRequest = eitherDecode
+
+decodeUpdateBookingRequest :: BL8.ByteString -> Either String UpdateBookingReq
+decodeUpdateBookingRequest = eitherDecode
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
@@ -1859,6 +1865,52 @@ spec = describe "TDF.Server helpers" $ do
         it "rejects unexpected booking keys so typoed public forms cannot create partially-understood bookings" $ do
             decodePublicBookingRequest
                 "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "CreateBookingReq / UpdateBookingReq FromJSON" $ do
+        it "accepts canonical HQ booking create and update payloads" $ do
+            case decodeCreateBookingRequest
+                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"cbNotes\":\"Bring synth rack\",\"cbPartyId\":12,\"cbEngineerPartyId\":7,\"cbEngineerName\":\"Alex\",\"cbServiceType\":\"recording\",\"cbResourceIds\":[\"room-a\",\"booth-b\"]}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical create-booking payload to decode, got: " <> decodeErr)
+                Right payload -> do
+                    cbTitle payload `shouldBe` "Studio booking"
+                    cbStartsAt payload `shouldBe` UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                    cbEndsAt payload `shouldBe` UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+                    cbStatus payload `shouldBe` "Confirmed"
+                    cbNotes payload `shouldBe` Just "Bring synth rack"
+                    cbPartyId payload `shouldBe` Just 12
+                    cbEngineerPartyId payload `shouldBe` Just 7
+                    cbEngineerName payload `shouldBe` Just "Alex"
+                    cbServiceType payload `shouldBe` Just "recording"
+                    cbResourceIds payload `shouldBe` Just ["room-a", "booth-b"]
+
+            case decodeUpdateBookingRequest
+                "{\"ubTitle\":\"Updated title\",\"ubServiceType\":\"mixing\",\"ubStatus\":\"Planned\",\"ubNotes\":\"Move to later slot\",\"ubStartsAt\":\"2026-04-21T16:00:00Z\",\"ubEndsAt\":\"2026-04-21T18:00:00Z\",\"ubEngineerPartyId\":9,\"ubEngineerName\":\"Sam\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical update-booking payload to decode, got: " <> decodeErr)
+                Right payload -> do
+                    ubTitle payload `shouldBe` Just "Updated title"
+                    ubServiceType payload `shouldBe` Just "mixing"
+                    ubStatus payload `shouldBe` Just "Planned"
+                    ubNotes payload `shouldBe` Just "Move to later slot"
+                    ubStartsAt payload `shouldBe` Just (UTCTime (fromGregorian 2026 4 21) (secondsToDiffTime 57600))
+                    ubEndsAt payload `shouldBe` Just (UTCTime (fromGregorian 2026 4 21) (secondsToDiffTime 64800))
+                    ubEngineerPartyId payload `shouldBe` Just 9
+                    ubEngineerName payload `shouldBe` Just "Sam"
+
+        it "rejects unexpected booking write keys so typoed HQ forms do not create partially-understood updates" $ do
+            decodeCreateBookingRequest
+                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"status\":\"Booked\"}"
+                `shouldSatisfy` isLeft
+            decodeCreateBookingRequest
+                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeUpdateBookingRequest
+                "{\"ubTitle\":\"Updated title\",\"ubStatus\":\"Planned\",\"engineerName\":\"Sam\"}"
+                `shouldSatisfy` isLeft
+            decodeUpdateBookingRequest
+                "{\"ubTitle\":\"Updated title\",\"ubStatus\":\"Planned\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "validatePublicBookingDurationMinutes" $ do

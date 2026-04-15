@@ -421,7 +421,8 @@ data CreateBookingReq = CreateBookingReq
   , cbServiceType :: Maybe Text
   , cbResourceIds :: Maybe [Text]
   } deriving (Show, Generic)
-instance FromJSON CreateBookingReq
+instance FromJSON CreateBookingReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data UpdateBookingReq = UpdateBookingReq
   { ubTitle       :: Maybe Text
@@ -433,7 +434,8 @@ data UpdateBookingReq = UpdateBookingReq
   , ubEngineerPartyId :: Maybe Int64
   , ubEngineerName :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON UpdateBookingReq
+instance FromJSON UpdateBookingReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data PublicBookingReq = PublicBookingReq
   { pbFullName         :: Text
