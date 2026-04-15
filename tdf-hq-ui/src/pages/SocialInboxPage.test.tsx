@@ -218,7 +218,9 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Recording checklist');
+      expect(container.textContent).toContain(
+        'Step 1/3: select the exact Page + professional/business account for this review run.',
+      );
       expect(container.textContent).toContain('Review run: Facebook Login');
       expect(container.textContent).toContain(
         'Requested scopes: instagram_basic, instagram_manage_messages, pages_show_list, pages_read_engagement',
@@ -228,6 +230,8 @@ describe('SocialInboxPage', () => {
       );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Select asset in Instagram setup').getAttribute('href')).toBe('/social/instagram?review=1');
+      expect(container.textContent).not.toContain('Recording checklist');
+      expect(container.textContent).not.toContain('App Review mode auto-refreshes every 5 seconds');
       expect(container.textContent).not.toContain('Open Instagram setup');
       expect(container.textContent).not.toContain('Re-select asset');
       expect(container.textContent).not.toContain('Change selected asset');
@@ -250,7 +254,11 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Step 2/3: send a live reply from app UI, then show the same message in native client.',
+      );
       expect(container.textContent).toContain('Review run: Facebook Login');
+      expect(container.textContent).toContain('Recording checklist');
       expect(container.textContent).toContain(
         'Selected professional/business Instagram messaging asset: TDF Review Page (Page ID: page-1',
       );
@@ -259,6 +267,9 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('No inbound messages yet.');
       expect(container.textContent).toContain(
         'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+      );
+      expect(container.textContent).toContain(
+        'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
@@ -270,13 +281,16 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('relies on the built-in App Review auto-refresh instead of showing a duplicate Refresh button', async () => {
+  it('keeps first-time App Review setup focused on asset selection instead of duplicate refresh guidance', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
+        'Step 1/3: select the exact Page + professional/business account for this review run.',
+      );
+      expect(container.textContent).not.toContain(
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       );
       expect(countButtonsByText(container, 'Refresh')).toBe(0);
@@ -314,10 +328,13 @@ describe('SocialInboxPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(hasLabel(container, 'Limit')).toBe(false);
-      expect(container.textContent).toContain('Recording checklist');
+      expect(container.textContent).toContain(
+        'Step 1/3: select the exact Page + professional/business account for this review run.',
+      );
       expect(container.textContent).toContain(
         'No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.',
       );
+      expect(container.textContent).not.toContain('Recording checklist');
       expect(container.textContent).not.toContain('No inbound messages yet.');
       expect(container.textContent).not.toContain(
         'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',

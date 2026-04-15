@@ -1289,6 +1289,7 @@ export default function SocialInboxPage() {
   const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
+  const showReviewChecklist = reviewMode && Boolean(activeAsset);
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showManualRefresh = !reviewMode;
@@ -1349,7 +1350,9 @@ export default function SocialInboxPage() {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {reviewMode
-              ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+              ? activeAsset
+                ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+                : 'Step 1/3: select the exact Page + professional/business account for this review run.'
               : 'Auto respuestas registradas por el cron diario.'}
           </Typography>
         </Stack>
@@ -1399,13 +1402,6 @@ export default function SocialInboxPage() {
                 </Typography>
               </Stack>
             </Alert>
-            <Typography variant="subtitle1" fontWeight={700}>
-              Recording checklist
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Keep this panel visible and narrate: the selected professional/business account, the inbound message, the send
-              action, the native-client delivery confirmation, and the deleted-message refresh.
-            </Typography>
             {activeAsset ? (
               <Alert severity="success" variant="outlined">
                 Selected professional/business Instagram messaging asset: {activeAsset.pageName} (Page ID: {activeAsset.pageId}
@@ -1420,9 +1416,20 @@ export default function SocialInboxPage() {
             <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
               {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
             </Button>
-            <Typography variant="caption" color="text.secondary">
-              App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
-            </Typography>
+            {showReviewChecklist && (
+              <>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Recording checklist
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Keep this panel visible and narrate: the selected professional/business account, the inbound message, the send
+                  action, the native-client delivery confirmation, and the deleted-message refresh.
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
+                </Typography>
+              </>
+            )}
           </Stack>
         </Paper>
       )}
