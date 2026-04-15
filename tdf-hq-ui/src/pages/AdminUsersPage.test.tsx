@@ -1044,7 +1044,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps active users first and alphabetizes the visible list so inactive exceptions stay grouped at the bottom', async () => {
+  it('keeps active users first and groups repeated inactive rows under one section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -1107,8 +1107,11 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
-        expect(getRowByUserId(container, 203).textContent).toContain('Inactivo');
-        expect(getRowByUserId(container, 204).textContent).toContain('Inactivo');
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('2 usuarios inactivos');
+        expect(getRowByUserId(container, 203).textContent).not.toContain('Inactivo');
+        expect(getRowByUserId(container, 204).textContent).not.toContain('Inactivo');
       });
     } finally {
       await cleanup();

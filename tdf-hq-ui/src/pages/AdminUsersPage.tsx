@@ -99,6 +99,7 @@ const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
+const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
@@ -289,6 +290,10 @@ export default function AdminUsersPage() {
     () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user)).length,
     [visibleUsers],
   );
+  const visibleInactiveUsersCount = useMemo(
+    () => visibleUsers.filter((user) => !user.active).length,
+    [visibleUsers],
+  );
   const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
   const hasVisibleLinkedProfile = visibleUsers.some((user) => hasLinkedAdminUserProfile(user));
   const sharedRolesSummary = useMemo(
@@ -324,6 +329,7 @@ export default function AdminUsersPage() {
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSharedContactStateGuidance = visibleUsers.length > 1
     && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
+  const showInactiveUsersGroup = includeInactive && visibleInactiveUsersCount > 1;
   const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
     showSingleSearchResultGuidance
@@ -342,6 +348,14 @@ export default function AdminUsersPage() {
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
+  const activeVisibleUsers = useMemo(
+    () => (showInactiveUsersGroup ? visibleUsers.filter((user) => user.active) : visibleUsers),
+    [showInactiveUsersGroup, visibleUsers],
+  );
+  const inactiveVisibleUsers = useMemo(
+    () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
+    [showInactiveUsersGroup, visibleUsers],
+  );
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
@@ -564,7 +578,7 @@ export default function AdminUsersPage() {
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>
-                {visibleUsers.map((user) => (
+                {activeVisibleUsers.map((user) => (
                   <UserRow
                     key={user.userId}
                     user={user}
@@ -577,6 +591,30 @@ export default function AdminUsersPage() {
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                   />
                 ))}
+                {showInactiveUsersGroup ? (
+                  <>
+                    <Typography
+                      data-testid="admin-users-inactive-group-label"
+                      variant="overline"
+                      color="text.secondary"
+                    >
+                      {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
+                    </Typography>
+                    {inactiveVisibleUsers.map((user) => (
+                      <UserRow
+                        key={user.userId}
+                        user={user}
+                        showInactiveStatusChip={false}
+                        onOpenCommunications={() => setSelectedUser(user)}
+                        sharedModulesSummary={sharedModulesSummary}
+                        sharedRolesSummary={sharedRolesSummary}
+                        hideAccessSummary={hideRowAccessSummary}
+                        hidePendingStateChip={hideSingleRowPendingState}
+                        hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                      />
+                    ))}
+                  </>
+                ) : null}
               </Stack>
             ) : null}
           </CardContent>
