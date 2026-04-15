@@ -230,6 +230,7 @@ server env =
        versionServer
   :<|> health
   :<|> mcpServer
+  :<|> AuthServer.sessionServer
   :<|> AuthServer.login
   :<|> AuthServer.googleLogin
   :<|> AuthServer.signup
@@ -1739,8 +1740,7 @@ countriesServer = do
 
 protectedServer :: AuthedUser -> ServerT ProtectedAPI AppM
 protectedServer user =
-       AuthServer.sessionServer user
-  :<|> partyServer user
+       partyServer user
   :<|> bookingServer user
   :<|> serviceMarketplaceServer user
   :<|> proposalsServer user

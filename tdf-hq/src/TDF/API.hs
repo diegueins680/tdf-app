@@ -322,12 +322,11 @@ type FanSecureAPI =
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
 type SessionAPI =
-       "session" :> Get '[JSON] SessionResponse
+       Header "Authorization" Text :> Header "Cookie" Text :> "session" :> Get '[JSON] (Maybe SessionResponse)
   :<|> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
 
 type ProtectedAPI =
-       SessionAPI
-  :<|> "parties"  :> PartyAPI
+       "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
   :<|> ServiceMarketplaceAPI
   :<|> ProposalsAPI
@@ -375,6 +374,7 @@ type API =
        VersionAPI
   :<|> "health" :> HealthAPI
   :<|> "mcp" :> McpAPI
+  :<|> SessionAPI
   :<|> "login"  :> LoginAPI
   :<|> "login"  :> "google" :> GoogleLoginAPI
   :<|> "signup" :> SignupAPI

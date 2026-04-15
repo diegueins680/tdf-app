@@ -586,7 +586,6 @@ export default function LoginPage() {
         };
         if (googleButtonRef.current) {
           renderGoogleButton(googleButtonRef.current, 'continue_with');
-          google.prompt();
         }
         if (signupDialogOpen && googleSignupButtonRef.current) {
           renderGoogleButton(googleSignupButtonRef.current, 'signup_with');

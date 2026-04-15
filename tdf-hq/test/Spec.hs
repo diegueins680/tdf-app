@@ -131,7 +131,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventMetadataUpdate,
     validateBudgetLineTypeInput,
  )
-import TDF.Auth (extractToken)
+import TDF.Auth (extractToken, extractTokenFromHeaders)
 import TDF.Config (appPort, dbConnString, emailConfig, loadConfig, smtpPort)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -339,6 +339,26 @@ main = hspec $ do
                     [ ("Authorization", "Token header-token")
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
+                `shouldBe` Left "Invalid Authorization header"
+
+    describe "extractTokenFromHeaders" $ do
+        let loadAuthConfig =
+                withEnvOverrides [("SESSION_COOKIE_NAME", Just "tdf_session_test")] loadConfig
+
+        it "uses the provided cookie header for anonymous-safe session lookups" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                Nothing
+                (Just "other=1; tdf_session_test = cookie-token ; foo=bar")
+                `shouldBe` Right "cookie-token"
+
+        it "keeps malformed authorization headers authoritative over cookies" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                (Just "Token header-token")
+                (Just "tdf_session_test=cookie-token")
                 `shouldBe` Left "Invalid Authorization header"
 
     describe "WhatsApp consent payloads" $ do

@@ -66,6 +66,7 @@ import qualified TDF.API as Api
 import TDF.Auth (
     AuthedUser (..),
     clearSessionCookieHeader,
+    extractTokenFromHeaders,
     loadAuthedUser,
     lookupUsernameFromToken,
     moduleName,
@@ -264,30 +265,39 @@ normalizeAuthPhoneNumber raw =
       then Nothing
       else Just ("+" <> onlyDigits)
 
-sessionServer :: AuthedUser -> ServerT Api.SessionAPI AppM
-sessionServer user =
-       currentSession user
+sessionServer :: ServerT Api.SessionAPI AppM
+sessionServer =
+       currentSessionMaybe
   :<|> logoutSession
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword
 
-currentSession :: AuthedUser -> AppM SessionResponse
-currentSession AuthedUser{..} = do
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mParty <- get auPartyId
-    mCredential <- selectFirst [UserCredentialPartyId ==. auPartyId, UserCredentialActive ==. True] [Asc UserCredentialId]
-    let fallbackUsername = "party-" <> T.pack (show (fromSqlKey auPartyId))
-        usernameText = maybe fallbackUsername (userCredentialUsername . entityVal) mCredential
-        displayNameText = fromMaybe usernameText (cleanOptional (M.partyDisplayName <$> mParty))
-    pure SessionResponse
-      { sessionUsername = usernameText
-      , sessionDisplayName = displayNameText
-      , sessionPartyId = fromSqlKey auPartyId
-      , sessionRoles = auRoles
-      , sessionModules = map moduleName (Set.toList auModules)
-      }
+buildSessionResponse :: AuthedUser -> SqlPersistT IO SessionResponse
+buildSessionResponse AuthedUser{..} = do
+  mParty <- get auPartyId
+  mCredential <- selectFirst [UserCredentialPartyId ==. auPartyId, UserCredentialActive ==. True] [Asc UserCredentialId]
+  let fallbackUsername = "party-" <> T.pack (show (fromSqlKey auPartyId))
+      usernameText = maybe fallbackUsername (userCredentialUsername . entityVal) mCredential
+      displayNameText = fromMaybe usernameText (cleanOptional (M.partyDisplayName <$> mParty))
+  pure SessionResponse
+    { sessionUsername = usernameText
+    , sessionDisplayName = displayNameText
+    , sessionPartyId = fromSqlKey auPartyId
+    , sessionRoles = auRoles
+    , sessionModules = map moduleName (Set.toList auModules)
+    }
+
+currentSessionMaybe :: Maybe Text -> Maybe Text -> AppM (Maybe SessionResponse)
+currentSessionMaybe mAuthorizationHeader mCookieHeader = do
+  Env pool cfg <- ask
+  case extractTokenFromHeaders cfg mAuthorizationHeader mCookieHeader of
+    Left _ -> pure Nothing
+    Right token ->
+      liftIO $
+        flip runSqlPool pool $ do
+          mUser <- loadAuthedUser token
+          traverse buildSessionResponse mUser
 
 logoutSession :: AppM (Api.SessionCookieHeaders NoContent)
 logoutSession = do

@@ -113,7 +113,7 @@ export interface paths {
         };
         /**
          * Get current session
-         * @description Returns the authenticated user snapshot resolved by the backend, including published modules.
+         * @description Returns the authenticated user snapshot resolved by the backend, including published modules, or null when there is no valid session.
          */
         get: operations["getSession"];
         put?: never;
@@ -1578,21 +1578,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current authenticated session */
+            /** @description Current authenticated session, or null when the request is anonymous */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["SessionResponse"] | null;
                 };
-            };
-            /** @description Missing or invalid session */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

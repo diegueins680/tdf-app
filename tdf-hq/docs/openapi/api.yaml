@@ -114,26 +114,22 @@ paths:
   /session:
     get:
       summary: Get current session
-      description: Returns the authenticated user snapshot resolved by the backend, including published modules.
+      description: Returns the authenticated user snapshot resolved by the backend, including published modules, or null when there is no valid session.
       operationId: getSession
-      security:
-        - bearerAuth: [ ]
       responses:
         '200':
-          description: Current authenticated session
+          description: Current authenticated session, or null when the request is anonymous
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionResponse'
-        '401':
-          description: Missing or invalid session
+                allOf:
+                  - $ref: '#/components/schemas/SessionResponse'
+                nullable: true
   /session/logout:
     post:
       summary: Clear current session
       description: Clears the browser session cookie for the current user.
       operationId: logoutSession
-      security:
-        - bearerAuth: [ ]
       responses:
         '200':
           description: Session cleared

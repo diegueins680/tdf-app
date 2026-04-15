@@ -19,6 +19,7 @@ module TDF.Auth
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
+  , extractTokenFromHeaders
   , sessionCookieHeader
   , clearSessionCookieHeader
   ) where
@@ -212,7 +213,9 @@ extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =
   case lookup "Authorization" (requestHeaders req) of
     Just rawHeader ->
-      parseAuthHeaderValue rawHeader
+      case TE.decodeUtf8' rawHeader of
+        Left _ -> Left "Invalid Authorization header"
+        Right txt -> extractTokenFromHeaders cfg (Just txt) Nothing
     Nothing ->
       case extractCookieToken cfg req of
         Just token -> Right token
@@ -222,14 +225,18 @@ extractToken cfg req =
       lookup "Cookie" (requestHeaders request)
         >>= either (const Nothing) (lookupCookie sessionCookieName) . TE.decodeUtf8'
 
-    parseAuthHeaderValue rawHeader =
-      case TE.decodeUtf8' rawHeader of
-        Left _ -> Left "Invalid Authorization header"
-        Right txt ->
-          case T.words txt of
-            [scheme, value]
-              | T.toLower scheme == "bearer" -> Right value
-            _ -> Left "Invalid Authorization header"
+extractTokenFromHeaders :: AppConfig -> Maybe Text -> Maybe Text -> Either Text Text
+extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCookieHeader =
+  case mAuthorizationHeader of
+    Just rawHeader ->
+      case T.words rawHeader of
+        [scheme, value]
+          | T.toLower scheme == "bearer" -> Right value
+        _ -> Left "Invalid Authorization header"
+    Nothing ->
+      case mCookieHeader >>= lookupCookie sessionCookieName of
+        Just token -> Right token
+        Nothing -> Left "Missing or invalid auth token"
 
 lookupCookie :: Text -> Text -> Maybe Text
 lookupCookie cookieName rawHeader =
