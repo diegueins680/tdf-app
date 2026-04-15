@@ -575,6 +575,8 @@ describe('AdminUsersPage', () => {
         );
         expect(getRowByUserId(container, 101).querySelectorAll('a')).toHaveLength(0);
         expect(getRowByUserId(container, 102).querySelectorAll('a')).toHaveLength(0);
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Perfil pendiente');
       });
     } finally {
       await cleanup();
@@ -955,7 +957,9 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
-        expect(getRowByUserId(container, 101).querySelectorAll('a')).toHaveLength(0);
+        const loneRow = getRowByUserId(container, 101);
+        expect(loneRow.querySelectorAll('a')).toHaveLength(0);
+        expect(loneRow.textContent).not.toContain('Perfil pendiente');
       });
     } finally {
       await cleanup();
@@ -1584,8 +1588,10 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios.',
         );
-        expect(getRowByUserId(container, 102).querySelectorAll('a')).toHaveLength(0);
-        expect(getButtonsByText(getRowByUserId(container, 102), 'WhatsApp')).toHaveLength(0);
+        const resultRow = getRowByUserId(container, 102);
+        expect(resultRow.querySelectorAll('a')).toHaveLength(0);
+        expect(resultRow.textContent).not.toContain('Perfil pendiente');
+        expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(0);
       });
     } finally {
       await cleanup();

@@ -318,6 +318,8 @@ export default function AdminUsersPage() {
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
+  const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
+  const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSharedContactStateGuidance = visibleUsers.length > 1
@@ -327,13 +329,19 @@ export default function AdminUsersPage() {
     showSingleSearchResultGuidance
     || showSingleUserGuidance
     || hideRepeatedPendingStateChips;
+  const hideRepeatedPendingProfileLabel =
+    (showGeneralIntro && !hasVisibleLinkedProfile)
+    || Boolean(singleVisibleUser && showSingleUserGuidance && !hasLinkedAdminUserProfile(singleVisibleUser))
+    || Boolean(
+      singleSearchResult
+      && showSingleSearchResultGuidance
+      && !hasLinkedAdminUserProfile(singleSearchResult),
+    );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
-  const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
-  const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
@@ -566,6 +574,7 @@ export default function AdminUsersPage() {
                     sharedRolesSummary={sharedRolesSummary}
                     hideAccessSummary={hideRowAccessSummary}
                     hidePendingStateChip={hideSingleRowPendingState}
+                    hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                   />
                 ))}
               </Stack>
@@ -590,6 +599,7 @@ function UserRow({
   sharedModulesSummary,
   hideAccessSummary,
   hidePendingStateChip,
+  hidePendingProfileLabel,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
@@ -598,6 +608,7 @@ function UserRow({
   sharedModulesSummary: string;
   hideAccessSummary: boolean;
   hidePendingStateChip: boolean;
+  hidePendingProfileLabel: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
@@ -649,7 +660,7 @@ function UserRow({
             {identity.secondary}
           </Typography>
         )}
-        {!hasLinkedProfile && (
+        {!hasLinkedProfile && !hidePendingProfileLabel && (
           <Typography variant="caption" color="text.secondary">
             Perfil pendiente
           </Typography>
