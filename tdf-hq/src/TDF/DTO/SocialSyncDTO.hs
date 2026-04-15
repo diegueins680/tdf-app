@@ -3,6 +3,7 @@
 
 module TDF.DTO.SocialSyncDTO where
 
+import           Control.Monad (when)
 import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON)
 import           Data.Aeson.Types (Options(..))
 import           Data.Char (toLower)
@@ -42,10 +43,14 @@ data SocialSyncIngestRequest = SocialSyncIngestRequest
   } deriving (Show, Generic)
 
 instance FromJSON SocialSyncIngestRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 4
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    request <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 4
+      , rejectUnknownFields = True
+      } value
+    when (null (ssirPosts request)) $
+      fail "posts must contain at least one post"
+    pure request
 
 data SocialSyncIngestResponse = SocialSyncIngestResponse
   { ssirInserted :: Int

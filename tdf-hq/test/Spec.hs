@@ -643,6 +643,13 @@ main = hspec $ do
             (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\"}],\"unexpected\":true}" :: Either String SocialSyncIngestRequest)
                 `shouldSatisfy` isLeft
 
+        it "rejects empty ingest batches so the server cannot record misleading no-op sync runs" $ do
+            case (eitherDecode "{\"posts\":[]}" :: Either String SocialSyncIngestRequest) of
+                Left err ->
+                    err `shouldContain` "posts must contain at least one post"
+                Right value ->
+                    expectationFailure ("Expected empty social sync ingest batch to be rejected, got: " <> show value)
+
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
             validateSocialSyncPostsLimit Nothing `shouldBe` Right 50
