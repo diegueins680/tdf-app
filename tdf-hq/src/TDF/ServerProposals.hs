@@ -185,6 +185,7 @@ proposalsServer user =
     listVersionsH rawId = do
       ensureCRM
       proposalKey <- parseKey @ME.Proposal rawId
+      ensureProposalExists proposalKey
       versions <- withPool $ selectList
         [ ME.ProposalVersionProposalId ==. proposalKey ]
         [ Desc ME.ProposalVersionVersion ]
@@ -254,7 +255,7 @@ ensureProposalExists
 ensureProposalExists proposalKey = do
   mProposal <- withPool $ getEntity proposalKey
   case mProposal of
-    Nothing -> throwError err404
+    Nothing -> throwError err404 { errBody = "Proposal not found" }
     Just _  -> pure ()
 
 fetchVersion

@@ -229,6 +229,7 @@ test-suite tdf-hq-test
     TDF.ServerRadio
     TDF.ServerSpec
     TDF.ServerAdminSpec
+    TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
     TDF.Social.FollowSpec
     TDF.Services

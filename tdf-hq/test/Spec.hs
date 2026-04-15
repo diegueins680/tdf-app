@@ -58,6 +58,7 @@ import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId,
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( validateRadioImportLimit,
       validateRadioImportSources,
@@ -2278,6 +2279,7 @@ main = hspec $ do
     ArtistSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
+    ServerProposalsSpec.spec
     ServerExtraSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
