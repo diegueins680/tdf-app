@@ -88,7 +88,7 @@ const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
-  'Primer usuario administrable. Cuando exista una segunda cuenta, volverá la tabla comparativa.';
+  'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -278,6 +278,10 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   const showUsername = displayName !== '' && displayName.toLowerCase() !== username.toLowerCase();
 
   return { primary, username, showUsername };
+}
+
+function buildAdminUserRoleEditLabel(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
+  return `Editar roles de ${summarizeAdminUserIdentity(user).primary}`;
 }
 
 function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
@@ -1012,6 +1016,7 @@ export default function AdminConsolePage() {
                 )}
                 {users.map((user) => {
                   const identity = summarizeAdminUserIdentity(user);
+                  const editRoleLabel = buildAdminUserRoleEditLabel(user);
                   const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
                   return (
                     <TableRow key={user.userId} hover>
@@ -1037,7 +1042,8 @@ export default function AdminConsolePage() {
                           size="small"
                           endIcon={<EditOutlinedIcon fontSize="small" />}
                           onClick={() => setEditingUser(user)}
-                          aria-label={`Editar roles de ${identity.primary}`}
+                          aria-label={editRoleLabel}
+                          title={editRoleLabel}
                           sx={{
                             px: 0,
                             minWidth: 0,
@@ -1091,7 +1097,8 @@ export default function AdminConsolePage() {
                   size="small"
                   endIcon={<EditOutlinedIcon fontSize="small" />}
                   onClick={() => setEditingUser(singleAdminUser)}
-                  aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
+                  aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
+                  title={buildAdminUserRoleEditLabel(singleAdminUser)}
                   sx={{
                     px: 0,
                     minWidth: 0,
