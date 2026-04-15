@@ -91,6 +91,8 @@ import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateOptionalFeedbackContactEmail )
+import TDF.ServerLiveSessions
+    ( buildLiveSessionUsernameCollisionCandidate )
 import TDF.Server.SocialSync
     ( validateSocialSyncArtistPartyId,
       validateSocialSyncExternalPostId,
@@ -1930,6 +1932,14 @@ main = hspec $ do
                     :: Either String DTO.GenerateSessionInvoiceReq
                 )
                 `shouldBe` True
+
+    describe "buildLiveSessionUsernameCollisionCandidate" $ do
+        it "preserves the collision suffix within the 60-character username budget" $ do
+            let base = Data.Text.replicate 60 "a"
+                candidate = buildLiveSessionUsernameCollisionCandidate base "12"
+            Data.Text.length candidate `shouldBe` 60
+            candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
+            candidate `shouldNotBe` base
 
     describe "live session intake multipart parsing" $ do
         it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do

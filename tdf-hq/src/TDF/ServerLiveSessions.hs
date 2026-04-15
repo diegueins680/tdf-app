@@ -5,6 +5,7 @@
 
 module TDF.ServerLiveSessions
   ( liveSessionsServer
+  , buildLiveSessionUsernameCollisionCandidate
   ) where
 
 import           Control.Monad              (forM, forM_, void, when)
@@ -33,6 +34,9 @@ import           TDF.DB                     (Env(..))
 import           TDF.Models
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
+
+liveSessionUsernameCollisionBudget :: Int
+liveSessionUsernameCollisionBudget = 60
 
 liveSessionsServer
   :: forall m.
@@ -185,10 +189,16 @@ liveSessionsServer user = intakeHandler
       conflict <- getBy (UniqueCredentialUsername base)
       case conflict of
         Nothing -> pure base
-        Just _  -> do
-          suffix <- liftIO (T.pack . show . toText <$> nextRandom)
-          let candidate = T.take 60 (base <> "-" <> suffix)
-          generateUniqueUsername candidate
+        Just _  -> generateCollisionUsername base
+
+    generateCollisionUsername :: Text -> SqlPersistT IO Text
+    generateCollisionUsername base = do
+      suffix <- liftIO (T.pack . show . toText <$> nextRandom)
+      let candidate = buildLiveSessionUsernameCollisionCandidate base suffix
+      conflict <- getBy (UniqueCredentialUsername candidate)
+      case conflict of
+        Nothing -> pure candidate
+        Just _  -> generateCollisionUsername base
 
     hashPasswordText :: Text -> IO Text
     hashPasswordText pwd = do
@@ -213,6 +223,22 @@ liveSessionsServer user = intakeHandler
 
     sanitize :: Text -> Text
     sanitize = T.filter (\c -> c /= '/' && c /= '\\')
+
+buildLiveSessionUsernameCollisionCandidate :: Text -> Text -> Text
+buildLiveSessionUsernameCollisionCandidate base suffix =
+  let trimmedBase = T.strip base
+      trimmedSuffix = T.strip suffix
+      suffixPart =
+        if T.null trimmedSuffix
+          then ""
+          else "-" <> trimmedSuffix
+      baseBudget =
+        max 0 (liveSessionUsernameCollisionBudget - T.length suffixPart)
+      basePrefix =
+        if T.null suffixPart
+          then T.take liveSessionUsernameCollisionBudget trimmedBase
+          else T.take baseBudget trimmedBase
+  in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
 
 
 withPool
