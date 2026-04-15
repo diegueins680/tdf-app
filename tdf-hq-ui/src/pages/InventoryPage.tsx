@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import {
   Alert,
   Box,
@@ -10,6 +10,8 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -23,7 +25,6 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import HistoryIcon from '@mui/icons-material/History';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO, AssetCheckoutDTO, PartyDTO, RoomDTO } from '../api/types';
 import { Inventory, type AssetCheckoutRequest, type AssetCheckinRequest, type AssetQrDTO } from '../api/inventory';
@@ -87,6 +88,7 @@ export default function InventoryPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const [historyViewMode, setHistoryViewMode] = useState<'panel' | 'embedded' | null>(null);
+  const [actionsMenuTarget, setActionsMenuTarget] = useState<{ anchorEl: HTMLButtonElement; asset: AssetDTO } | null>(null);
   const [currentCheckout, setCurrentCheckout] = useState<AssetCheckoutDTO | null>(null);
   const [dialogOpen, setDialogOpen] = useState<'checkout' | 'checkin' | 'qr' | null>(null);
   const [form, setForm] = useState<AssetCheckoutRequest>({
@@ -195,6 +197,20 @@ export default function InventoryPage() {
     setHistoryViewMode(null);
     setHistory([]);
     setCurrentCheckout(null);
+  };
+
+  const openActionsMenu = (event: MouseEvent<HTMLButtonElement>, asset: AssetDTO) => {
+    setActionsMenuTarget({ anchorEl: event.currentTarget, asset });
+  };
+
+  const closeActionsMenu = () => {
+    setActionsMenuTarget(null);
+  };
+
+  const runAssetMenuAction = (action: (asset: AssetDTO) => void) => {
+    const asset = actionsMenuTarget?.asset;
+    closeActionsMenu();
+    if (asset) action(asset);
   };
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
@@ -330,6 +346,10 @@ export default function InventoryPage() {
                   La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.
                 </Typography>
               )}
+              <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                Usa el botón de check-out o check-in cuando esté disponible para registrar el siguiente movimiento.
+                Abre Acciones para ver QR o historial.
+              </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -361,38 +381,39 @@ export default function InventoryPage() {
                         <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
                         {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
                         <TableCell align="right">
-                          <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
-                            <QrCodeIcon fontSize="small" />
-                          </IconButton>
-                          {movementState.canCheckout && (
-                            <IconButton
+                          <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+                            {movementState.canCheckout && (
+                              <Tooltip title="Registrar check-out">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => openCheckout(asset)}
+                                  aria-label={`Abrir check-out de ${asset.name}`}
+                                >
+                                  <ExitToAppIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {movementState.canCheckin && (
+                              <Tooltip title="Registrar check-in">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => openCheckin(asset)}
+                                  aria-label={`Abrir check-in de ${asset.name}`}
+                                >
+                                  <HowToRegIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            <Button
                               size="small"
-                              onClick={() => openCheckout(asset)}
-                              title="Check-out"
-                              aria-label={`Abrir check-out de ${asset.name}`}
+                              variant="text"
+                              onClick={(event) => openActionsMenu(event, asset)}
+                              aria-label={`Abrir acciones para ${asset.name}`}
+                              sx={{ textTransform: 'none' }}
                             >
-                              <ExitToAppIcon fontSize="small" />
-                            </IconButton>
-                          )}
-                          {movementState.canCheckin && (
-                            <IconButton
-                              size="small"
-                              onClick={() => openCheckin(asset)}
-                              title="Check-in"
-                              aria-label={`Abrir check-in de ${asset.name}`}
-                            >
-                              <HowToRegIcon fontSize="small" />
-                            </IconButton>
-                          )}
-                          <Tooltip title="Historial">
-                            <IconButton
-                              size="small"
-                              onClick={() => openHistory(asset)}
-                              aria-label={`Abrir historial de ${asset.name}`}
-                            >
-                              <HistoryIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                              Acciones
+                            </Button>
+                          </Stack>
                         </TableCell>
                       </TableRow>
                     );
@@ -448,6 +469,19 @@ export default function InventoryPage() {
           <Button onClick={() => setDialogOpen(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
+
+      <Menu
+        anchorEl={actionsMenuTarget?.anchorEl ?? null}
+        open={Boolean(actionsMenuTarget)}
+        onClose={closeActionsMenu}
+      >
+        <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
+          Ver QR
+        </MenuItem>
+        <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
+          Historial
+        </MenuItem>
+      </Menu>
 
       {historyViewMode === 'panel' && selected && (
         <Card sx={{ mt: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>

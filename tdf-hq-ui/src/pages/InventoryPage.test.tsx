@@ -239,7 +239,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps repeated table actions compact by localizing status labels and moving history behind an icon action', async () => {
+  it('keeps repeated table actions compact by moving QR and history into one row actions menu', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
       buildAsset({
@@ -260,13 +260,28 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Prestado');
         expect(container.textContent).not.toContain('Active');
         expect(container.textContent).not.toContain('Booked');
+        expect(container.textContent).toContain(
+          'Usa el botón de check-out o check-in cuando esté disponible para registrar el siguiente movimiento. Abre Acciones para ver QR o historial.',
+        );
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).toBeNull();
         expect(
           Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Historial',
           ),
         ).toBe(false);
-        expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).not.toBeNull();
-        expect(container.querySelector('button[aria-label="Abrir historial de Apollo Twin"]')).not.toBeNull();
+      });
+
+      await act(async () => {
+        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir acciones para Neumann U87"]');
+        actionsButton?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Ver QR');
+        expect(document.body.textContent).toContain('Historial');
       });
     } finally {
       await cleanup();
