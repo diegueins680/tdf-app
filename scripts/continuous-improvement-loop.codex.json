@@ -10,5 +10,6 @@
   "pollIntervalSeconds": 30,
   "ciTimeoutMinutes": 45,
   "stopOnNoChanges": false,
-  "iterationDelaySeconds": 20
+  "iterationDelaySeconds": 20,
+  "allowPushToMain": true
 }
