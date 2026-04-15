@@ -446,7 +446,9 @@ describe('PartiesPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain('1 coincidencia para "ada@example.com"');
+        expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
         expect(container.textContent).not.toContain('No hay contactos que coincidan con');
@@ -485,7 +487,7 @@ describe('PartiesPage', () => {
     }
   });
 
-  it('replaces generic table guidance with active-search context when the list is narrowed', async () => {
+  it('replaces a one-result CRM search table with a compact contact summary', async () => {
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -522,13 +524,19 @@ describe('PartiesPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Mostrando 1 de 2 contactos para "ada@example.com".');
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain('1 coincidencia para "ada@example.com"');
+        expect(container.textContent).toContain(
+          'La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.',
+        );
         expect(container.textContent).not.toContain(
           'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
         expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
+        expect(container.textContent).toContain('Acciones de Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
       });
     } finally {

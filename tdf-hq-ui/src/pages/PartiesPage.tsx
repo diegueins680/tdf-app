@@ -363,10 +363,10 @@ export default function PartiesPage() {
   const showSearchField = !showInitialLoadingState && (parties.length > 1 || trimmedSearch !== '');
   const showClearSearchAction = showSearchField && trimmedSearch !== '';
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
-  const showSingleContactSummary = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
+  const showSingleContactSummary = !partiesQuery.isLoading && filtered.length === 1;
   const singleContact = showSingleContactSummary ? (filtered[0] ?? null) : null;
   const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactSummary;
-  const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
+  const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 1 && trimmedSearch !== '';
   const visibleContactsWithUserAccountCount = filtered.filter((party) => party.hasUserAccount).length;
   const allVisibleContactsHaveUserAccount = canManageRoles
     && filtered.length > 1
@@ -390,6 +390,12 @@ export default function PartiesPage() {
       : hasPartyPrimaryEmail(singleContact)
         ? 'Todavía no tiene usuario. Usa Acciones para crearlo cuando haga falta.'
         : 'Completa el correo desde Acciones antes de crear el usuario.';
+  const singleContactSummaryTitle = trimmedSearch === ''
+    ? 'Primer contacto registrado'
+    : `1 coincidencia para "${trimmedSearch}"`;
+  const singleContactSummaryDescription = trimmedSearch === ''
+    ? 'Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el buscador y la tabla para comparar contactos.'
+    : 'La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.';
   const baseTableGuidanceText = 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
   const tableGuidanceText = [
     baseTableGuidanceText,
@@ -501,11 +507,10 @@ export default function PartiesPage() {
             <Stack spacing={2}>
               <Stack spacing={0.75}>
                 <Typography variant="subtitle1" fontWeight={700}>
-                  Primer contacto registrado
+                  {singleContactSummaryTitle}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el
-                  buscador y la tabla para comparar contactos.
+                  {singleContactSummaryDescription}
                 </Typography>
               </Stack>
 
