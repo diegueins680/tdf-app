@@ -87,9 +87,8 @@ const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const ADMIN_USERS_INLINE_EDIT_HINT_ID = 'admin-users-inline-edit-hint';
-const ADMIN_USERS_INLINE_EDIT_HINT = 'Haz clic sobre un rol para editarlo desde esta misma vista.';
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
-  'Primer usuario administrable. Haz clic en el rol para editarlo aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.';
+  'Primer usuario administrable. Cuando exista una segunda cuenta, volverá la tabla comparativa.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -954,7 +953,6 @@ export default function AdminConsolePage() {
             <Typography variant="h6">Usuarios y roles</Typography>
             {usersSectionDescription && (
               <Typography
-                id={showUsersInlineEditHint ? ADMIN_USERS_INLINE_EDIT_HINT_ID : undefined}
                 variant="body2"
                 color="text.secondary"
               >
@@ -1084,6 +1082,9 @@ export default function AdminConsolePage() {
                 ) : null}
               </Stack>
               <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                <Typography id={ADMIN_USERS_INLINE_EDIT_HINT_ID} variant="caption" color="text.secondary">
+                  Roles · Clic para editar
+                </Typography>
                 <Button
                   size="small"
                   onClick={() => setEditingUser(singleAdminUser)}
