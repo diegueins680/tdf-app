@@ -481,6 +481,7 @@ export default function MarketplaceOrdersPage() {
     }
     return null;
   })();
+  const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus);
 
   return (
     <Box p={2}>
@@ -1029,9 +1030,11 @@ export default function MarketplaceOrdersPage() {
                           </Alert>
                         )}
                         <Stack direction="row" spacing={1}>
-                          <Button variant="outlined" onClick={markPaidNow} startIcon={<CheckCircleIcon />}>
-                            Marcar pagado ahora
-                          </Button>
+                          {showMarkPaidShortcut && (
+                            <Button variant="outlined" onClick={markPaidNow} startIcon={<CheckCircleIcon />}>
+                              Marcar pagado ahora
+                            </Button>
+                          )}
                           <Button
                             variant="contained"
                             onClick={() => {

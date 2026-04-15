@@ -726,6 +726,68 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps the payment shortcut available for non-paid orders that still need that action', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides the payment shortcut once a paid order already has payment data recorded', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-03T12:30:00.000Z',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
+        expect(queryActionByText(document.body, 'Registrar fecha de pago ahora')).toBeNull();
+        expect(queryActionByText(document.body, 'Guardar cambios')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps search-empty states tied to the field instead of showing a duplicate tray reset', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
