@@ -466,6 +466,7 @@ export default function CourseRegistrationsAdminPage() {
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
   const [selectedDossier, setSelectedDossier] = useState<DossierTarget | null>(null);
   const [hasUsedRowAction, setHasUsedRowAction] = useState(false);
+  const [hasUsedFilterControl, setHasUsedFilterControl] = useState(false);
   const [showEmailHistory, setShowEmailHistory] = useState(false);
   const [statusMenuTarget, setStatusMenuTarget] = useState<{
     anchorEl: HTMLElement;
@@ -705,7 +706,7 @@ export default function CourseRegistrationsAdminPage() {
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const useCompactStatusActionLabel = showSingleStatusSummary;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
-  const showFilterOnboardingCopy = !hasUsedRowAction;
+  const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1007,6 +1008,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleResetFilters = () => {
+    setHasUsedFilterControl(true);
     setSlug('');
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
@@ -1807,7 +1809,10 @@ export default function CourseRegistrationsAdminPage() {
                         select
                         label="Curso / cohorte"
                         value={slug}
-                        onChange={(e) => setSlug(e.target.value)}
+                        onChange={(e) => {
+                          setHasUsedFilterControl(true);
+                          setSlug(e.target.value);
+                        }}
                         fullWidth
                         size="small"
                         error={cohortsQuery.isError}
@@ -1876,7 +1881,10 @@ export default function CourseRegistrationsAdminPage() {
                               variant={status === value ? 'filled' : 'outlined'}
                               aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
                               aria-pressed={status === value}
-                              onClick={() => setStatus(value)}
+                              onClick={() => {
+                                setHasUsedFilterControl(true);
+                                setStatus(value);
+                              }}
                             />
                           ))}
                         </Stack>
@@ -1896,7 +1904,10 @@ export default function CourseRegistrationsAdminPage() {
                 <Button
                   size="small"
                   variant="text"
-                  onClick={() => setShowAdvancedFilters((current) => !current)}
+                  onClick={() => {
+                    setHasUsedFilterControl(true);
+                    setShowAdvancedFilters((current) => !current);
+                  }}
                   aria-expanded={showAdvancedFilters}
                 >
                   {limitToggleLabel}
@@ -1910,7 +1921,10 @@ export default function CourseRegistrationsAdminPage() {
                   type="number"
                   inputProps={{ min: 1 }}
                   value={limit}
-                  onChange={(e) => setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT))}
+                  onChange={(e) => {
+                    setHasUsedFilterControl(true);
+                    setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
+                  }}
                   helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."
                   fullWidth
                   size="small"

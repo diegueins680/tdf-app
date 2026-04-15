@@ -1449,7 +1449,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses a status chip group instead of a dropdown and keeps the filter resettable', async () => {
+  it('uses a status chip group instead of a dropdown and drops filter onboarding copy after that first filter action', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
       crId: 102,
@@ -1514,7 +1514,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Katherine Johnson');
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
       );
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
@@ -1542,6 +1542,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Katherine Johnson');
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).not.toContain(
+        'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
+      );
     });
 
     await cleanup();
