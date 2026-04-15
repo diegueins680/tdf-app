@@ -1281,6 +1281,65 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('hides the generic refresh action while search is active so the field owns the reset flow', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps mixed filtered results focused by summarizing contact blockers once in the header', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
