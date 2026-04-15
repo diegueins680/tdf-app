@@ -730,7 +730,7 @@ lookupByEmail emailAddress = do
   let query =
         "SELECT ?? FROM user_credential \
         \ JOIN party ON user_credential.party_id = party.id \
-        \ WHERE lower(party.primary_email) = lower(?) \
+        \ WHERE lower(trim(COALESCE(party.primary_email, ''))) = lower(trim(?)) \
         \ LIMIT 1"
   creds <- rawSql query [PersistText emailAddress]
   pure (listToMaybe creds)

@@ -1494,6 +1494,51 @@ spec = describe "TDF.Server helpers" $ do
             updatedHash `shouldNotBe` Just "old-hash"
             tokenActive `shouldBe` Just False
 
+        it "accepts email-labeled reset tokens when the stored party email has surrounding whitespace" $ do
+            (result, updatedHash, tokenActive) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Reset User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "  user@example.com  "
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                credId <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "custom-handle"
+                    , userCredentialPasswordHash = "old-hash"
+                    , userCredentialActive = True
+                    }
+                tokenId <- insert ApiToken
+                    { apiTokenToken = "reset-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-reset:user@example.com"
+                    , apiTokenActive = True
+                    }
+                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                updatedCred <- get credId
+                updatedToken <- get tokenId
+                pure
+                    ( result
+                    , fmap userCredentialPasswordHash updatedCred
+                    , fmap apiTokenActive updatedToken
+                    )
+
+            case result of
+                Left _ ->
+                    expectationFailure
+                        "Expected password reset confirmation to resolve a whitespace-padded stored email"
+                Right _ -> pure ()
+            updatedHash `shouldNotBe` Just "old-hash"
+            tokenActive `shouldBe` Just False
+
     describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
             parseBookingStatus "  InProgress   " `shouldBe` Right InProgress
