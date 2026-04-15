@@ -30,7 +30,7 @@ import Data.Aeson
 import Control.Monad (unless)
 import Data.Char (isAlphaNum, isAscii, isAsciiLower, isDigit)
 import Data.Int (Int64)
-import Data.Maybe (listToMaybe)
+import Data.Maybe (isNothing, listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (liftIO)
@@ -203,10 +203,20 @@ validateLeadCompletionLookup _ Nothing =
 validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
   | T.toUpper (T.strip status) == "COMPLETED" =
       Left err409 { errBody = "Lead already completed" }
-  | mStoredToken /= Just suppliedToken =
+  | isNothing storedTokenValue =
+      Left err409 { errBody = "Lead completion is not available" }
+  | storedTokenValue /= Just suppliedToken =
       Left err403 { errBody = "Invalid completion token" }
   | otherwise =
       Right ()
+  where
+    storedTokenValue = nonBlank mStoredToken
+
+    nonBlank :: Maybe Text -> Maybe Text
+    nonBlank mTxt =
+      case fmap T.strip mTxt of
+        Just txt | not (T.null txt) -> Just txt
+        _ -> Nothing
 
 ensureLeadCompletionUpdated :: Int64 -> Either ServerError ()
 ensureLeadCompletionUpdated updatedRows
