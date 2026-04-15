@@ -276,6 +276,46 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('hides the empty location column until at least one asset has a registered location', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: '   ',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        location: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(true);
+        expect(container.textContent).toContain(
+          'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.',
+        );
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps category and condition inside the equipment cell instead of restoring extra detail columns', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),

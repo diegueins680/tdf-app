@@ -62,6 +62,11 @@ function getInventoryStatusLabel(status: string) {
   return status.trim() || 'Estado desconocido';
 }
 
+function normalizeInventoryField(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
 export default function InventoryPage() {
   const qc = useQueryClient();
   const assetsQuery = useQuery({
@@ -199,6 +204,8 @@ export default function InventoryPage() {
   const singleAsset = grouped.length === 1 ? (grouped[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
+  const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
+  const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -311,75 +318,82 @@ export default function InventoryPage() {
       ) : (
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Equipo</TableCell>
-                  <TableCell>Estado</TableCell>
-                  <TableCell>Ubicación</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {grouped.map((asset) => {
-                  const movementState = getInventoryMovementState(asset.status);
+            <Stack spacing={1.5}>
+              {showLocationSetupGuidance && (
+                <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                  La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.
+                </Typography>
+              )}
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Equipo</TableCell>
+                    <TableCell>Estado</TableCell>
+                    {showLocationColumn && <TableCell>Ubicación</TableCell>}
+                    <TableCell align="right">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {grouped.map((asset) => {
+                    const movementState = getInventoryMovementState(asset.status);
 
-                  return (
-                    <TableRow key={asset.assetId} hover>
-                      <TableCell>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={700}>
-                            {asset.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {asset.category}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Condición: {asset.condition ?? '—'}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
-                      <TableCell>{asset.location ?? '—'}</TableCell>
-                      <TableCell align="right">
-                        <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
-                          <QrCodeIcon fontSize="small" />
-                        </IconButton>
-                        {movementState.canCheckout && (
-                          <IconButton
-                            size="small"
-                            onClick={() => openCheckout(asset)}
-                            title="Check-out"
-                            aria-label={`Abrir check-out de ${asset.name}`}
-                          >
-                            <ExitToAppIcon fontSize="small" />
+                    return (
+                      <TableRow key={asset.assetId} hover>
+                        <TableCell>
+                          <Stack spacing={0.25}>
+                            <Typography variant="body2" fontWeight={700}>
+                              {asset.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {asset.category}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Condición: {asset.condition ?? '—'}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
+                        {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => void openQr(asset)} title="QR" aria-label={`Abrir QR de ${asset.name}`}>
+                            <QrCodeIcon fontSize="small" />
                           </IconButton>
-                        )}
-                        {movementState.canCheckin && (
-                          <IconButton
-                            size="small"
-                            onClick={() => openCheckin(asset)}
-                            title="Check-in"
-                            aria-label={`Abrir check-in de ${asset.name}`}
-                          >
-                            <HowToRegIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                        <Tooltip title="Historial">
-                          <IconButton
-                            size="small"
-                            onClick={() => openHistory(asset)}
-                            aria-label={`Abrir historial de ${asset.name}`}
-                          >
-                            <HistoryIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                          {movementState.canCheckout && (
+                            <IconButton
+                              size="small"
+                              onClick={() => openCheckout(asset)}
+                              title="Check-out"
+                              aria-label={`Abrir check-out de ${asset.name}`}
+                            >
+                              <ExitToAppIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          {movementState.canCheckin && (
+                            <IconButton
+                              size="small"
+                              onClick={() => openCheckin(asset)}
+                              title="Check-in"
+                              aria-label={`Abrir check-in de ${asset.name}`}
+                            >
+                              <HowToRegIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          <Tooltip title="Historial">
+                            <IconButton
+                              size="small"
+                              onClick={() => openHistory(asset)}
+                              aria-label={`Abrir historial de ${asset.name}`}
+                            >
+                              <HistoryIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Stack>
           </CardContent>
         </Card>
       )}
