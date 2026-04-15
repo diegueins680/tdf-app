@@ -14,7 +14,7 @@ import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffT
 import Database.Persist (Entity(..), get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
-import TDF.API (PublicBookingReq (..))
+import TDF.API (AdsInquiry (..), PublicBookingReq (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
@@ -95,6 +95,7 @@ import TDF.Server
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , resolvePartyRoleAssignmentTarget
+    , validateAdsInquiry
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
@@ -1118,6 +1119,65 @@ spec = describe "TDF.Server helpers" $ do
             decodePasswordResetConfirmRequest
                 "{\"token\":\"reset-token\",\"newPassword\":\"supersecret\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+    describe "validateAdsInquiry" $ do
+        it "normalizes contactable public ads inquiries before lead creation and auto-replies" $ do
+            let inquiry =
+                    AdsInquiry
+                        { aiName = Just "  Ada Lovelace  "
+                        , aiEmail = Just " ADA@Example.com "
+                        , aiPhone = Just " +593 99 123 4567 "
+                        , aiCourse = Just "  Ableton  "
+                        , aiMessage = Just "  Quiero info  "
+                        , aiChannel = Just "  Instagram  "
+                        }
+            case validateAdsInquiry inquiry of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected ads inquiry to normalize successfully, got: " <> show serverErr)
+                Right normalized -> do
+                    aiName normalized `shouldBe` Just "Ada Lovelace"
+                    aiEmail normalized `shouldBe` Just "ada@example.com"
+                    aiPhone normalized `shouldBe` Just "+593991234567"
+                    aiCourse normalized `shouldBe` Just "Ableton"
+                    aiMessage normalized `shouldBe` Just "Quiero info"
+                    aiChannel normalized `shouldBe` Just "instagram"
+
+        it "rejects anonymous or unreachable inquiries instead of creating unusable ad leads" $ do
+            let inquiry =
+                    AdsInquiry
+                        { aiName = Just "  "
+                        , aiEmail = Just "  "
+                        , aiPhone = Just "  "
+                        , aiCourse = Just "Ableton"
+                        , aiMessage = Just "Quiero info"
+                        , aiChannel = Just "instagram"
+                        }
+            case validateAdsInquiry inquiry of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "email o phone requerido"
+                Right normalized ->
+                    expectationFailure
+                        ("Expected anonymous ads inquiry to be rejected, got: " <> show normalized)
+
+        it "rejects invalid phone numbers instead of storing leads with unreachable contact details" $ do
+            let inquiry =
+                    AdsInquiry
+                        { aiName = Just "Ada Lovelace"
+                        , aiEmail = Nothing
+                        , aiPhone = Just "call me maybe"
+                        , aiCourse = Just "Ableton"
+                        , aiMessage = Just "Quiero info"
+                        , aiChannel = Just "instagram"
+                        }
+            case validateAdsInquiry inquiry of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "phone inválido"
+                Right normalized ->
+                    expectationFailure
+                        ("Expected invalid ads inquiry phone to be rejected, got: " <> show normalized)
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do

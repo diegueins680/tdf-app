@@ -108,6 +108,26 @@ spec = do
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
 
+    describe "AdsInquiry FromJSON" $ do
+        it "accepts canonical public ads inquiry payloads" $
+            case decodeAdsInquiry
+                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"course\":\"Ableton\",\"message\":\"Quiero info\",\"channel\":\"instagram\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical ads inquiry payload to decode, got: " <> err)
+                Right (API.AdsInquiry nameVal emailVal phoneVal courseVal messageVal channelVal) -> do
+                    nameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    phoneVal `shouldBe` Just "+593991234567"
+                    courseVal `shouldBe` Just "Ableton"
+                    messageVal `shouldBe` Just "Quiero info"
+                    channelVal `shouldBe` Just "instagram"
+
+        it "rejects unexpected keys so public ads inquiries fail explicitly instead of silently dropping input" $ do
+            decodeAdsInquiry
+                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"message\":\"Quiero info\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "CourseRegistrationFollowUp payload FromJSON" $ do
         it "accepts canonical follow-up create and update payloads" $ do
             case decodeFollowUpCreate
@@ -437,6 +457,8 @@ spec = do
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeChatKitSession :: BL8.ByteString -> Either String API.ChatKitSessionRequest
     decodeChatKitSession = eitherDecode
+    decodeAdsInquiry :: BL8.ByteString -> Either String API.AdsInquiry
+    decodeAdsInquiry = eitherDecode
     decodeCourseRegistration = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode

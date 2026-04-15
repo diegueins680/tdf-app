@@ -536,7 +536,10 @@ data AdsInquiry = AdsInquiry
   , aiChannel :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AdsInquiry where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 2
+    , rejectUnknownFields = True
+    }
 
 data AdsInquiryDTO = AdsInquiryDTO
   { aidInquiryId :: Int

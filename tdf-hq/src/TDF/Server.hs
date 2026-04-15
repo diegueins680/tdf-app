@@ -3502,6 +3502,23 @@ validateCourseRegistrationPhoneE164 (Just rawPhone) =
         Just phoneClean -> Right (Just phoneClean)
         Nothing -> Left err400 { errBody = "phoneE164 inválido" }
 
+validateAdsInquiryPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdsInquiryPhone Nothing = Right Nothing
+validateAdsInquiryPhone (Just rawPhone) =
+  case normalizeOptionalInput (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizeCourseRegistrationPhoneInput rawPhone of
+        Just phoneClean -> Right (Just phoneClean)
+        Nothing -> Left err400 { errBody = "phone inválido" }
+
+validateAdsInquiryContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
+validateAdsInquiryContactChannels mEmail mPhone
+  | isNothing mEmail && isNothing mPhone =
+      Left err400 { errBody = "email o phone requerido" }
+  | otherwise =
+      Right ()
+
 validateWhatsAppPhoneInput :: Text -> Either ServerError Text
 validateWhatsAppPhoneInput rawPhone =
   case cleanOptional (Just rawPhone) of
@@ -6646,8 +6663,23 @@ applyRoles partyKey rolesList = do
 adsPublicServer :: ServerT AdsPublicAPI AppM
 adsPublicServer = adsInquiryPublic :<|> adsAssistPublic
 
+validateAdsInquiry :: AdsInquiry -> Either ServerError AdsInquiry
+validateAdsInquiry AdsInquiry{..} = do
+  emailClean <- validateCourseRegistrationEmail aiEmail
+  phoneClean <- validateAdsInquiryPhone aiPhone
+  validateAdsInquiryContactChannels emailClean phoneClean
+  pure AdsInquiry
+    { aiName = normalizeOptionalInput aiName
+    , aiEmail = emailClean
+    , aiPhone = phoneClean
+    , aiCourse = normalizeOptionalInput aiCourse
+    , aiMessage = normalizeOptionalInput aiMessage
+    , aiChannel = fmap T.toLower (normalizeOptionalInput aiChannel)
+    }
+
 adsInquiryPublic :: AdsInquiry -> AppM AdsInquiryOut
-adsInquiryPublic inquiry = do
+adsInquiryPublic rawInquiry = do
+  inquiry <- either throwError pure (validateAdsInquiry rawInquiry)
   env <- ask
   now <- liftIO getCurrentTime
   partyId <- runDB $ ensurePartyForInquiry inquiry now
