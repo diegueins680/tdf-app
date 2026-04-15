@@ -307,7 +307,6 @@ export default function AdminUsersPage() {
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
-  const showRefreshAction = Boolean(usersQuery.error) || hasUsers;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
   const activeSearchSummary = searchQuery.trim();
   const hasMultipleUsers = totalUsersCount > 1;
@@ -345,6 +344,7 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
+  const showRefreshAction = Boolean(usersQuery.error) || (hasUsers && !showSearchEmptyState);
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
