@@ -33,6 +33,7 @@ import {
 import type { SxProps, Theme } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
@@ -87,7 +88,7 @@ const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
-  'Primer usuario administrable. Edita sus roles aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.';
+  'Primer usuario administrable. Cuando exista una segunda cuenta, volverá la tabla comparativa.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -1096,6 +1097,7 @@ export default function AdminConsolePage() {
               <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                 <Button
                   size="small"
+                  endIcon={<EditOutlinedIcon fontSize="small" />}
                   onClick={() => setEditingUser(singleAdminUser)}
                   aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
                   sx={{
