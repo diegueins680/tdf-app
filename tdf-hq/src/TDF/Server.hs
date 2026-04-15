@@ -6354,11 +6354,21 @@ prepareLine CreateInvoiceLineReq{..} = do
   when (cilUnitCents < 0) $ Left "Line item unit amount must be zero or greater"
   let taxBpsVal = fromMaybe 0 cilTaxBps
   when (taxBpsVal < 0) $ Left "Line item tax basis points must be zero or greater"
+  when (isJust cilServiceOrderId && isJust cilPackagePurchaseId) $
+    Left "Line item may reference either serviceOrderId or packagePurchaseId, not both"
+  serviceOrderKey <- case cilServiceOrderId of
+    Nothing -> Right Nothing
+    Just rawRef
+      | rawRef > 0 -> Right (Just (toSqlKey rawRef :: Key ServiceOrder))
+      | otherwise -> Left "serviceOrderId must be a positive integer"
+  packagePurchaseKey <- case cilPackagePurchaseId of
+    Nothing -> Right Nothing
+    Just rawRef
+      | rawRef > 0 -> Right (Just (toSqlKey rawRef :: Key PackagePurchase))
+      | otherwise -> Left "packagePurchaseId must be a positive integer"
   let subtotal = cilQuantity * cilUnitCents
       tax      = (subtotal * taxBpsVal) `div` 10000
       total    = subtotal + tax
-      serviceOrderKey = (toSqlKey <$> cilServiceOrderId) :: Maybe (Key ServiceOrder)
-      packagePurchaseKey = (toSqlKey <$> cilPackagePurchaseId) :: Maybe (Key PackagePurchase)
   pure PreparedLine
     { plDescription       = desc
     , plQuantity          = cilQuantity

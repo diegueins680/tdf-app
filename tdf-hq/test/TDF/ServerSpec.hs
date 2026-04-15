@@ -43,10 +43,12 @@ import TDF.Models
     , UserCredential (..)
     )
 import qualified TDF.ModelsExtra as ME
+import TDF.DTO (CreateInvoiceLineReq (..))
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , MetaBackfillOptions(..)
+    , PreparedLine(..)
     , normalizeOptionalInput
     , parseBookingStatus
     , parseBoolParam
@@ -87,6 +89,7 @@ import TDF.Server
     , validateMarketplaceBuyerEmail
     , requireMarketplaceCartTotals
     , parsePayPalCaptureOrderStatus
+    , prepareLine
     , validateMarketplaceOnlinePaymentTotal
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
@@ -280,6 +283,70 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected existing invoice customer to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
+
+    describe "prepareLine" $ do
+        it "accepts a single positive provenance reference and preserves it on the prepared invoice line" $
+            case prepareLine
+                CreateInvoiceLineReq
+                    { cilDescription = "  Mixing session  "
+                    , cilQuantity = 1
+                    , cilUnitCents = 12000
+                    , cilTaxBps = Just 1200
+                    , cilServiceOrderId = Just 42
+                    , cilPackagePurchaseId = Nothing
+                    } of
+                Left errMsg ->
+                    expectationFailure ("Expected valid invoice line to prepare, got: " <> T.unpack errMsg)
+                Right preparedLine -> do
+                    plDescription preparedLine `shouldBe` "Mixing session"
+                    fmap fromSqlKey (plServiceOrderId preparedLine) `shouldBe` Just 42
+                    plPackagePurchaseId preparedLine `shouldBe` Nothing
+                    plTotal preparedLine `shouldBe` 13440
+
+        it "rejects non-positive provenance references before invoice creation can hit ambiguous foreign-key errors" $ do
+            let assertInvalid expectedMessage request =
+                    case prepareLine request of
+                        Left errMsg ->
+                            errMsg `shouldBe` expectedMessage
+                        Right preparedLine ->
+                            expectationFailure
+                                ("Expected invalid invoice line reference to be rejected, got: " <> show (plServiceOrderId preparedLine, plPackagePurchaseId preparedLine))
+            assertInvalid
+                "serviceOrderId must be a positive integer"
+                CreateInvoiceLineReq
+                    { cilDescription = "Session"
+                    , cilQuantity = 1
+                    , cilUnitCents = 1000
+                    , cilTaxBps = Nothing
+                    , cilServiceOrderId = Just 0
+                    , cilPackagePurchaseId = Nothing
+                    }
+            assertInvalid
+                "packagePurchaseId must be a positive integer"
+                CreateInvoiceLineReq
+                    { cilDescription = "Package"
+                    , cilQuantity = 1
+                    , cilUnitCents = 1000
+                    , cilTaxBps = Nothing
+                    , cilServiceOrderId = Nothing
+                    , cilPackagePurchaseId = Just (-3)
+                    }
+
+        it "rejects line items that try to point at both a service order and a package purchase" $
+            case prepareLine
+                CreateInvoiceLineReq
+                    { cilDescription = "Bundle"
+                    , cilQuantity = 1
+                    , cilUnitCents = 1000
+                    , cilTaxBps = Nothing
+                    , cilServiceOrderId = Just 11
+                    , cilPackagePurchaseId = Just 22
+                    } of
+                Left errMsg ->
+                    errMsg `shouldBe` "Line item may reference either serviceOrderId or packagePurchaseId, not both"
+                Right preparedLine ->
+                    expectationFailure
+                        ("Expected contradictory invoice line provenance to be rejected, got: " <> show (plServiceOrderId preparedLine, plPackagePurchaseId preparedLine))
 
     describe "course registration lookup ids" $ do
         it "rejects non-positive registration ids before course admin handlers can treat malformed lookups as missing rows" $ do
