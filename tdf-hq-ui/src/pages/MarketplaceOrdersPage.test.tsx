@@ -643,12 +643,17 @@ describe('MarketplaceOrdersPage', () => {
     const { cleanup } = await renderPage(container);
 
     try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
+      });
+
       const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
         expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
         expect(searchInput.value).toBe('grace');
+        expect(countLabelsByText(container, 'Vista rápida')).toBe(0);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
@@ -663,6 +668,7 @@ describe('MarketplaceOrdersPage', () => {
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();

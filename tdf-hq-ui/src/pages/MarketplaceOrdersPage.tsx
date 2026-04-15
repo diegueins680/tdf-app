@@ -288,6 +288,7 @@ export default function MarketplaceOrdersPage() {
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
+  const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
   const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || paidOnly;
   const advancedFiltersButtonLabel = showAdvancedFilters
@@ -660,29 +661,31 @@ export default function MarketplaceOrdersPage() {
             mb={2}
             alignItems={{ xs: 'stretch', lg: 'flex-start' }}
           >
-            <TextField
-              select
-              size="small"
-              label="Vista rápida"
-              value=""
-              onChange={(event) => {
-                const nextPreset = event.target.value as QuickViewPreset | '';
-                if (!nextPreset) return;
-                applyPreset(nextPreset);
-              }}
-              helperText="Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados."
-              sx={{ minWidth: { xs: '100%', sm: 280 }, flexShrink: 0 }}
-              SelectProps={{ displayEmpty: true }}
-            >
-              <MenuItem value="" disabled>
-                Elegir…
-              </MenuItem>
-              {QUICK_VIEW_PRESETS.map((preset) => (
-                <MenuItem key={preset.value} value={preset.value}>
-                  {preset.label}
+            {showQuickViewControl ? (
+              <TextField
+                select
+                size="small"
+                label="Vista rápida"
+                value=""
+                onChange={(event) => {
+                  const nextPreset = event.target.value as QuickViewPreset | '';
+                  if (!nextPreset) return;
+                  applyPreset(nextPreset);
+                }}
+                helperText="Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados."
+                sx={{ minWidth: { xs: '100%', sm: 280 }, flexShrink: 0 }}
+                SelectProps={{ displayEmpty: true }}
+              >
+                <MenuItem value="" disabled>
+                  Elegir…
                 </MenuItem>
-              ))}
-            </TextField>
+                {QUICK_VIEW_PRESETS.map((preset) => (
+                  <MenuItem key={preset.value} value={preset.value}>
+                    {preset.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : null}
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
               {showActiveFiltersTray ? (
                 <>
