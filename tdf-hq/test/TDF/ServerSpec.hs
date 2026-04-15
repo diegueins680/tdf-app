@@ -1390,6 +1390,37 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing ->
                     expectationFailure "Expected password reset delivery to resolve by primary email"
 
+        it "falls back to the resolved recipient email when the party display name is blank" $ do
+            resolved <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "   "
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "Reset.User@Example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = "custom-handle"
+                    , userCredentialPasswordHash = "hashed"
+                    , userCredentialActive = True
+                    }
+                resolvePasswordResetDelivery "reset.user@example.com"
+            case resolved of
+                Just (Entity _ cred, recipientEmail, displayName) -> do
+                    userCredentialUsername cred `shouldBe` "custom-handle"
+                    recipientEmail `shouldBe` "Reset.User@Example.com"
+                    displayName `shouldBe` "Reset.User@Example.com"
+                Nothing ->
+                    expectationFailure "Expected password reset delivery to keep a non-blank display label"
+
         it "ignores inactive credentials for password reset delivery" $ do
             resolved <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime

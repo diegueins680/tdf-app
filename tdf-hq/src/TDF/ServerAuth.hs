@@ -542,8 +542,16 @@ resolvePasswordResetDelivery rawEmail = do
         Just cred@(Entity _ credential) -> do
           mParty <- get (userCredentialPartyId credential)
           let mRecipientEmail = mParty >>= cleanOptional . M.partyPrimaryEmail
-              displayName = maybe emailQuery M.partyDisplayName mParty
-          pure ((\recipientEmail -> (cred, recipientEmail, displayName)) <$> mRecipientEmail)
+              mDisplayName = cleanOptional (M.partyDisplayName <$> mParty)
+          pure
+            ( (\recipientEmail ->
+                  ( cred
+                  , recipientEmail
+                  , fromMaybe recipientEmail mDisplayName
+                  )
+              )
+                <$> mRecipientEmail
+            )
 
 normalizeAuthEmailAddress :: Text -> Maybe Text
 normalizeAuthEmailAddress raw =
