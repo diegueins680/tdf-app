@@ -864,6 +864,9 @@ export default function PartiesPage() {
   const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState<string | null>(null);
+  const hasContacts = data.length > 0;
+  const hasPeople = data.some((party) => !party.isOrg);
+  const showFirstContactSetup = !isLoading && !error && !hasContacts;
 
   const convertToStudentMutation = useMutation({
     mutationFn: (party: PartyDTO) => convertPartyToStudent(party),
@@ -930,47 +933,91 @@ export default function PartiesPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h5">Personas / CRM</Typography>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => setBandOpen(true)}>Nueva Banda</Button>
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+      <Stack spacing={1.5} sx={{ mb: 2 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5">Personas / CRM</Typography>
+          <Stack direction="row" spacing={1}>
+            {!showFirstContactSetup && (
+              <Button
+                variant="outlined"
+                onClick={() => setBandOpen(true)}
+                disabled={!hasPeople}
+              >
+                Nueva Banda
+              </Button>
+            )}
+            <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva Persona</Button>
+          </Stack>
         </Stack>
+        {showFirstContactSetup ? (
+          <Typography variant="body2" color="text.secondary">
+            Empieza con Nueva Persona. La búsqueda, el detalle y la creación de bandas aparecerán cuando exista el primer contacto.
+          </Typography>
+        ) : !hasPeople ? (
+          <Typography variant="body2" color="text.secondary">
+            Nueva Banda se habilita cuando exista al menos una persona para asignarla como integrante.
+          </Typography>
+        ) : null}
       </Stack>
 
-      <TextField
-        placeholder="Buscar…"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        size="small"
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
-        sx={{ mb: 1 }}
-      />
+      {showFirstContactSetup ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            minHeight: 280,
+            px: 3,
+            py: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
+            <Typography variant="h6">Todavía no hay contactos cargados.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Usa Nueva Persona para registrar el primer cliente, proveedor o colaborador.
+              Cuando exista el primero, aquí podrás buscarlo, abrir su ficha y crear bandas sin atajos duplicados.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : (
+        <>
+          <TextField
+            placeholder="Buscar…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            size="small"
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+            sx={{ mb: 1 }}
+          />
 
-      <Paper variant="outlined">
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {table.getHeaderGroups().map(hg => hg.headers.map(h => (
-                  <TableCell key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
-                )))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {table.getRowModel().rows.map(r => (
-                <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
-                  {r.getVisibleCells().map(c => (
-                    <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
+          <Paper variant="outlined">
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    {table.getHeaderGroups().map(hg => hg.headers.map(h => (
+                      <TableCell key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
+                    )))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {table.getRowModel().rows.map(r => (
+                    <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
+                      {r.getVisibleCells().map(c => (
+                        <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
-        {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
-      </Paper>
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
+            {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
+          </Paper>
+        </>
+      )}
 
       <CreateBandDialog open={bandOpen} onClose={() => setBandOpen(false)} parties={data} />
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
