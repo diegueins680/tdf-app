@@ -1977,6 +1977,26 @@ main = hspec $ do
                     <> "\"dryrun\":false}"
             isLeft (eitherDecode payload :: Either String AdminEmailBroadcastRequest) `shouldBe` True
 
+    describe "FanProfileUpdate" $ do
+        it "accepts canonical fan profile update payloads and rejects typoed keys" $ do
+            case eitherDecode
+                "{\"fpuDisplayName\":\"Ada\",\"fpuCity\":\"Quito\"}" :: Either String DTO.FanProfileUpdate of
+                Left err ->
+                    expectationFailure ("Expected canonical fan profile update payload to decode, got: " <> err)
+                Right payload -> do
+                    DTO.fpuDisplayName payload `shouldBe` Just "Ada"
+                    DTO.fpuCity payload `shouldBe` Just "Quito"
+                    DTO.fpuAvatarUrl payload `shouldBe` Nothing
+                    DTO.fpuFavoriteGenres payload `shouldBe` Nothing
+                    DTO.fpuBio payload `shouldBe` Nothing
+
+            isLeft
+                ( eitherDecode
+                    "{\"fpuDisplayName\":\"Ada\",\"fpuDisplayname\":\"Quito\"}"
+                    :: Either String DTO.FanProfileUpdate
+                )
+                `shouldBe` True
+
     describe "GenerateSessionInvoiceReq" $ do
         it "accepts canonical session-invoice payloads used by the invoicing flow" $
             case

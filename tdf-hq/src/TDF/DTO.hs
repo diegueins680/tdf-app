@@ -133,7 +133,8 @@ data FanProfileUpdate = FanProfileUpdate
   , fpuBio           :: Maybe Text
   , fpuCity          :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON FanProfileUpdate
+instance FromJSON FanProfileUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data CountryDTO = CountryDTO
   { countryCode :: Text
