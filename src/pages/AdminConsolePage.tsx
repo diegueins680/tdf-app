@@ -411,7 +411,7 @@ function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminCo
   }
 
   if (count === 1) {
-    return 'Opcional: ver 1 módulo adicional';
+    return `Opcional: ver ${cards[0]?.title ?? 'módulo adicional'}`;
   }
 
   return `Opcional: ver ${count} módulos adicionales`;
@@ -425,7 +425,7 @@ function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<Admin
   }
 
   if (count === 1) {
-    return 'Ver 1 módulo adicional';
+    return `Ver ${cards[0]?.title ?? 'módulo adicional'}`;
   }
 
   return `Ver ${count} módulos adicionales`;

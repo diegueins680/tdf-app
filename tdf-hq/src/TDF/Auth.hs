@@ -28,7 +28,7 @@ import           Control.Monad              (forM_, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.List                  (foldl')
-import           Data.Maybe                 (maybeToList)
+import           Data.Maybe                 (listToMaybe, maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
@@ -140,11 +140,16 @@ loadAuthedUser token = do
 lookupUsernameFromToken :: Text -> SqlPersistT IO (Maybe Text)
 lookupUsernameFromToken token = do
   mToken <- getBy (UniqueApiToken token)
-  pure $ do
-    Entity _ tok <- mToken
-    guard (apiTokenActive tok)
-    label <- apiTokenLabel tok
-    resolveUsernameFromLabel label
+  case mToken of
+    Just (Entity _ tok)
+      | apiTokenActive tok -> do
+          case apiTokenLabel tok >>= resolveUsernameFromLabel of
+            Just username -> pure (Just username)
+            Nothing -> do
+              creds <- selectList [UserCredentialPartyId ==. apiTokenPartyId tok, UserCredentialActive ==. True] []
+              pure (userCredentialUsername . entityVal <$> listToMaybe creds)
+      | otherwise -> pure Nothing
+    Nothing -> pure Nothing
 
 resolveUsernameFromLabel :: Text -> Maybe Text
 resolveUsernameFromLabel rawLabel =

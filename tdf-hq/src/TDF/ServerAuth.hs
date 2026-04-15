@@ -30,6 +30,7 @@ module TDF.ServerAuth
 
 import Control.Applicative ((<|>))
 import Control.Exception (SomeException, displayException, try)
+import Control.Exception.Safe (catch, throwM)
 import Control.Monad (forM_, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
@@ -51,6 +52,7 @@ import Data.Time (Day, UTCTime, getCurrentTime)
 import Data.UUID (toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.))
+import Database.PostgreSQL.Simple (SqlError (..))
 import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
@@ -631,7 +633,7 @@ completeGoogleLogin GoogleProfile{..} = do
       | not (userCredentialActive cred) ->
           pure (Left "Cuenta deshabilitada. Contacta a soporte.")
       | otherwise -> do
-          sessionToken <- createTokenWithLabel (userCredentialPartyId cred) (Just ("google-login:" <> gpEmail))
+          sessionToken <- createReusableSessionToken (userCredentialPartyId cred) (Just ("google-login:" <> gpEmail))
           mUser <- loadAuthedUser sessionToken
           case mUser of
             Nothing -> pure (Left "No pudimos cargar tu perfil.")
@@ -663,7 +665,7 @@ completeGoogleLogin GoogleProfile{..} = do
         , userCredentialPasswordHash = hashed
         , userCredentialActive = True
         }
-      sessionToken <- createTokenWithLabel pid (Just ("google-login:" <> gpEmail))
+      sessionToken <- createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
       mUser <- loadAuthedUser sessionToken
       case mUser of
         Nothing -> pure (Left "No pudimos cargar tu perfil.")
@@ -928,11 +930,29 @@ generateTemporaryPassword = do
 
 createSessionToken :: PartyId -> Text -> SqlPersistT IO Text
 createSessionToken pid uname =
-  createTokenWithLabel pid (Just ("password-login:" <> uname))
+  createReusableSessionToken pid (Just ("password-login:" <> uname))
 
 createPasswordResetToken :: PartyId -> Text -> SqlPersistT IO Text
 createPasswordResetToken pid emailVal =
   createTokenWithLabel pid (Just ("password-reset:" <> emailVal))
+
+createReusableSessionToken :: PartyId -> Maybe Text -> SqlPersistT IO Text
+createReusableSessionToken pid label = do
+  tokenValue <- liftIO (toText <$> nextRandom)
+  insertResult <-
+    (Right <$> insertUnique (ApiToken tokenValue pid label True))
+      `catch` \sqlErr ->
+        if isReadOnlySqlError sqlErr
+          then pure (Left sqlErr)
+          else throwM sqlErr
+  case insertResult of
+    Right (Just _) -> pure tokenValue
+    Right Nothing -> createReusableSessionToken pid label
+    Left sqlErr -> do
+      mExisting <- findReusableActiveToken pid label
+      case mExisting of
+        Just existing -> pure existing
+        Nothing -> throwM sqlErr
 
 createTokenWithLabel :: PartyId -> Maybe Text -> SqlPersistT IO Text
 createTokenWithLabel pid label = do
@@ -941,6 +961,26 @@ createTokenWithLabel pid label = do
   case inserted of
     Nothing -> createTokenWithLabel pid label
     Just _ -> pure tokenValue
+
+findReusableActiveToken :: PartyId -> Maybe Text -> SqlPersistT IO (Maybe Text)
+findReusableActiveToken pid preferredLabel = do
+  preferred <- case preferredLabel of
+    Just lbl ->
+      selectFirst
+        [ ApiTokenPartyId ==. pid
+        , ApiTokenActive ==. True
+        , ApiTokenLabel ==. Just lbl
+        ]
+        [Asc ApiTokenId]
+    Nothing -> pure Nothing
+  case preferred of
+    Just (Entity _ tok) -> pure (Just (apiTokenToken tok))
+    Nothing -> do
+      fallback <- selectFirst [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] [Asc ApiTokenId]
+      pure (apiTokenToken . entityVal <$> fallback)
+
+isReadOnlySqlError :: SqlError -> Bool
+isReadOnlySqlError sqlErr = sqlState sqlErr == BS8.pack "25006"
 
 deactivatePasswordTokens :: PartyId -> SqlPersistT IO ()
 deactivatePasswordTokens pid = do

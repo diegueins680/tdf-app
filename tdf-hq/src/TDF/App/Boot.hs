@@ -26,13 +26,12 @@ import Database.Persist.Sql (
     toSqlKey,
   )
 import Database.Persist.Types (PersistValue (PersistText))
-import Network.HTTP.Types (RequestHeaders, status200, status500, status503)
+import Network.HTTP.Types (status200, status500, status503)
 import Network.Wai (
     Application,
     Middleware,
     mapResponseHeaders,
     pathInfo,
-    requestHeaders,
     responseHeaders,
     responseLBS,
   )
@@ -92,29 +91,19 @@ runBootServer = do
           Warp.setOnExceptionResponse addCorsToExceptionResponse Warp.defaultSettings
     addCorsFallback :: Middleware
     addCorsFallback next req send =
-      let originHeader = lookup "origin" (requestHeaders req :: RequestHeaders)
-          originValue = maybe "*" id originHeader
-          extra =
-            [ ("Access-Control-Allow-Origin", originValue)
-            , ("Vary", "Origin")
-            ]
-          applyHeaders res =
-            let hs = responseHeaders res
-                merged = extra ++ filter (\(k, _) -> k /= "Access-Control-Allow-Origin" && k /= "Vary") hs
-             in mapResponseHeaders (const merged) res
-       in handle
+      handle
             ( \(ex :: SomeException) -> do
                 hPutStrLn stderr ("Unhandled exception: " <> displayException ex)
-                send (responseLBS status500 extra "Internal server error")
+                send (responseLBS status500 [("Content-Type", "text/plain; charset=utf-8")] "Internal server error")
             )
-            $ next req (\res -> send (applyHeaders res))
+            $ next req send
     rootOk :: Middleware
     rootOk next req send =
       if null (pathInfo req)
         then send (responseLBS status200 [("Content-Type", "text/plain")] "ok")
         else next req send
     wrapApp :: Application -> Application
-    wrapApp = addCorsFallback . appCors . rootOk
+    wrapApp = appCors . addCorsFallback . rootOk
     bootStartingHeaders =
       [ ("Content-Type", "application/json")
       , ("Retry-After", "5")

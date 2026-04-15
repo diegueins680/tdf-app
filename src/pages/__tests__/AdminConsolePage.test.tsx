@@ -501,9 +501,15 @@ describe('AdminConsolePage', () => {
       expect(
         within(getFirstRunAlert()).getByRole(
           'button',
-          { name: /^Opcional: ver 1 módulo adicional$/i },
+          { name: /^Opcional: ver Tokens de servicio$/i },
         ),
       ).toBeInTheDocument();
+      expect(
+        within(getFirstRunAlert()).queryByRole(
+          'button',
+          { name: /^Opcional: ver 1 módulo adicional$/i },
+        ),
+      ).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
@@ -524,19 +530,19 @@ describe('AdminConsolePage', () => {
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).not.toBeInTheDocument();
-    expect(within(getFirstRunAlert()).queryByRole('button', { name: /Mostrar 1 módulo adicional/i })).not.toBeInTheDocument();
+    expect(within(getFirstRunAlert()).queryByRole('button', { name: /Mostrar Tokens de servicio/i })).not.toBeInTheDocument();
 
     expect(
-      within(getFirstRunAlert()).queryByRole('button', { name: /4\. Ver 1 módulo adicional/i }),
+      within(getFirstRunAlert()).queryByRole('button', { name: /4\. Ver Tokens de servicio/i }),
     ).not.toBeInTheDocument();
     expect(
-      within(getFirstRunAlert()).queryByRole('button', { name: /Tokens de servicio/i }),
+      within(getFirstRunAlert()).queryByText(/^Tokens de servicio$/i),
     ).not.toBeInTheDocument();
 
     await user.click(
       within(getFirstRunAlert()).getByRole(
         'button',
-        { name: /^Opcional: ver 1 módulo adicional$/i },
+        { name: /^Opcional: ver Tokens de servicio$/i },
       ),
     );
 
@@ -590,7 +596,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /^Opcional: ver 1 módulo adicional$/i },
+          { name: /^Opcional: ver Tokens de servicio$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -601,7 +607,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /^Opcional: ver 1 módulo adicional$/i },
+        { name: /^Opcional: ver Tokens de servicio$/i },
       ),
     );
 
@@ -646,7 +652,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /^Opcional: ver 1 módulo adicional$/i },
+          { name: /^Opcional: ver Tokens de servicio$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -654,7 +660,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /^Opcional: ver 1 módulo adicional$/i },
+        { name: /^Opcional: ver Tokens de servicio$/i },
       ),
     );
 
@@ -700,7 +706,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /^Opcional: ver 1 módulo adicional$/i },
+          { name: /^Opcional: ver Tokens de servicio$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -708,7 +714,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /^Opcional: ver 1 módulo adicional$/i },
+        { name: /^Opcional: ver Tokens de servicio$/i },
       ),
     );
 
@@ -881,7 +887,7 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /4\. Ver 1 módulo adicional/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /4\. Ver Tokens de servicio/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(
@@ -939,7 +945,8 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Ver 1 módulo adicional/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver Tokens de servicio/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Ver 1 módulo adicional/i })).not.toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     });
 
@@ -949,7 +956,7 @@ describe('AdminConsolePage', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Ver 1 módulo adicional/i }),
+      screen.getByRole('button', { name: /Ver Tokens de servicio/i }),
     ).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(
@@ -958,7 +965,7 @@ describe('AdminConsolePage', () => {
       ),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Ver 1 módulo adicional/i }));
+    await user.click(screen.getByRole('button', { name: /Ver Tokens de servicio/i }));
 
     expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
     expect(
