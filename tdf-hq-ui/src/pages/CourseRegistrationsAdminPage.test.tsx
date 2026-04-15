@@ -2582,6 +2582,64 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps existing system-email history out of the mark-paid workflow so the pay action stays primary', async () => {
+    const registration = buildRegistration();
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registration,
+        crdReceipts: [buildReceipt({ crrRegistrationId: registration.crId })],
+        crdCanMarkPaid: true,
+      }),
+    );
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    listRegistrationEmailsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+
+      expect(document.body.textContent).toContain('Confirmar pago de inscripción');
+      expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+      expect(countButtonsByText(actions as HTMLElement, 'Marcar pagado')).toBe(1);
+      expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
+      expect(document.body.textContent).not.toContain(hideSystemEmailsLabel);
+      expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
+      expect(document.body.textContent).not.toContain('Recordatorio de pago enviado.');
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(listRegistrationEmailsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps empty internal notes collapsed until the admin explicitly opens them', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

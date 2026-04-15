@@ -598,7 +598,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const emailEventsQuery = useQuery<CourseEmailEventDTO[]>({
     queryKey: ['admin', 'course-registration-email-events', selectedDossierId],
-    enabled: selectedDossierId != null,
+    enabled: selectedDossierId != null && selectedDossier?.intent !== 'markPaid',
     queryFn: () => {
       if (selectedDossierId == null) return Promise.resolve([]);
       return Courses.listRegistrationEmails(selectedDossierId, 200);
@@ -817,12 +817,14 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
-  const hasSystemEmailHistory = (emailEventsQuery.data?.length ?? 0) > 0;
-  const showSystemEmailHistoryAction = showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError;
-  const showEmptySystemEmailHistoryHint = !showSystemEmailHistoryAction
+  const canReviewSystemEmails = selectedDossier?.intent !== 'markPaid';
+  const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
+  const showSystemEmailHistoryAction = canReviewSystemEmails
+    && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
+  const showEmptySystemEmailHistoryHint = canReviewSystemEmails
+    && !showSystemEmailHistoryAction
     && !emailEventsQuery.isLoading
-    && selectedDossierId != null
-    && selectedDossier?.intent !== 'markPaid';
+    && selectedDossierId != null;
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -976,7 +978,7 @@ export default function CourseRegistrationsAdminPage() {
   const handleRefreshDossier = () => {
     if (!selectedDossier) return;
     const requests: Promise<unknown>[] = [dossierQuery.refetch()];
-    if (selectedDossierId != null) {
+    if (selectedDossierId != null && selectedDossier.intent !== 'markPaid' && showEmailHistory) {
       requests.push(emailEventsQuery.refetch());
     }
     void Promise.all(requests);
@@ -1386,8 +1388,10 @@ export default function CourseRegistrationsAdminPage() {
     && !activeRegistration?.crEmail?.trim()
     && !activeRegistration?.crPhoneE164?.trim(),
   );
-  const isRefreshingDossier = dossierQuery.isFetching || (showEmailHistory && emailEventsQuery.isFetching);
-  const dossierRefreshLabel = showEmailHistory ? 'Refrescar expediente y correos' : 'Refrescar expediente';
+  const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
+  const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
+    ? 'Refrescar expediente y correos'
+    : 'Refrescar expediente';
 
   useEffect(() => {
     if (selectedDossier?.intent !== 'markPaid' || !canMarkPaid) return;
@@ -2348,7 +2352,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Stack>
               </Paper>
 
-              <Collapse in={showEmailHistory} unmountOnExit>
+              <Collapse in={showSystemEmailHistoryAction && showEmailHistory} unmountOnExit>
                 <Card variant="outlined">
                   <CardContent>
                     <Stack spacing={1.5}>

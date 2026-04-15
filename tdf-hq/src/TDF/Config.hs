@@ -29,6 +29,7 @@ data AppConfig = AppConfig
   , dbPass          :: String
   , dbName          :: String
   , dbConnUrl       :: Maybe String
+  , dbSslMode       :: Maybe String
   , appPort         :: Int
   , resetDb         :: Bool
   , seedDatabase    :: Bool
@@ -90,11 +91,46 @@ dbConnString cfg =
   ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
   where
     keywordStyle =
-      "host="    <> dbHost cfg    <>
-      " port="   <> dbPort cfg    <>
-      " user="   <> dbUser cfg    <>
-      " password=" <> dbPass cfg  <>
-      " dbname=" <> dbName cfg    -- no 'pool=' here; pooling is managed by createPostgresqlPool
+      appendKeywordOption "sslmode" (dbSslMode cfg) $
+        "host="    <> dbHost cfg    <>
+        " port="   <> dbPort cfg    <>
+        " user="   <> dbUser cfg    <>
+        " password=" <> dbPass cfg  <>
+        " dbname=" <> dbName cfg    -- no 'pool=' here; pooling is managed by createPostgresqlPool
+
+appendKeywordOption :: String -> Maybe String -> String -> String
+appendKeywordOption option mValue rawConn =
+  case mValue >>= normalizeConnOption of
+    Just value -> rawConn <> " " <> option <> "=" <> value
+    Nothing -> rawConn
+
+normalizeConnOption :: String -> Maybe String
+normalizeConnOption raw =
+  let trimmed = T.unpack (T.strip (T.pack raw))
+  in if null trimmed then Nothing else Just trimmed
+
+extractConnUrlParam :: String -> String -> Maybe String
+extractConnUrlParam rawKey connUrl =
+  case dropWhile (/= '?') connUrl of
+    [] -> Nothing
+    (_:query) -> listToMaybe
+      [ value
+      | pair <- splitOn '&' query
+      , let (key, rest) = break (== '=') pair
+      , map toLower key == map toLower rawKey
+      , not (null rest)
+      , value <- maybeToList (normalizeConnOption (drop 1 rest))
+      ]
+  where
+    splitOn _ [] = []
+    splitOn delim input =
+      let (chunk, rest) = break (== delim) input
+      in chunk : case rest of
+        [] -> []
+        (_:remaining) -> splitOn delim remaining
+
+    maybeToList Nothing = []
+    maybeToList (Just value) = [value]
 
 ensureReadWriteTargetSession :: String -> String
 ensureReadWriteTargetSession rawConn
@@ -119,14 +155,14 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  connUrl    <- if keywordDbEnvConfigured
-    then pure Nothing
-    else lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  fallbackConnUrl <- lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
   h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
   p          <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
   u          <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
   w          <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
   d          <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
+  sslModeEnv <- lookupFirstEnv ["DB_SSLMODE", "PGSSLMODE"]
   ap         <- get "APP_PORT" "8080"
   rdb        <- get "RESET_DB" "false"
   sdb        <- get "SEED_DB" "false"
@@ -196,6 +232,7 @@ loadConfig = do
     , dbPass = w
     , dbName = d
     , dbConnUrl = connUrl
+    , dbSslMode = sslModeEnv <|> (fallbackConnUrl >>= extractConnUrlParam "sslmode")
     , appPort = parseInt 8080 (Just ap)
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb
