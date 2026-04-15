@@ -75,6 +75,7 @@ import TDF.ServerExtra (
     parseSocialBoolParam,
     parseSocialDirectionParam,
     validateSocialReplyExternalId,
+    socialReplyOutcomeFields,
     validateSocialReplySenderId,
     validateInventoryPageParams,
     validatePaymentAmountCents,
@@ -947,6 +948,15 @@ spec = do
               expectationFailure ("Expected invalid social reply input error, got " <> show value)
       assertInvalid "senderId is required" (validateSocialReplySenderId "   ")
       assertInvalid "externalId must be omitted or a non-empty string" (validateSocialReplyExternalId (Just "   "))
+
+  describe "social reply outcome persistence" $ do
+    it "marks failed manual sends as error rows instead of leaving ambiguous sent status behind" $
+      socialReplyOutcomeFields (Left "Meta API timeout" :: Either Text A.Value)
+        `shouldBe` ("error", Just "Meta API timeout")
+
+    it "marks successful manual sends as sent rows without a reply error" $
+      socialReplyOutcomeFields (Right (A.object ["ok" .= True]) :: Either Text A.Value)
+        `shouldBe` ("sent", Nothing)
 
   describe "normalizeServiceCatalogNameUpdate" $ do
     it "preserves omitted names and trims meaningful updates" $ do

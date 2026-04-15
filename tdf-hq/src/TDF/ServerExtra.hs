@@ -2329,6 +2329,7 @@ instagramServer user =
           flip runSqlPool envPool $
             resolveInstagramReplyContext mExternalId
       sendResult <- liftIO $ sendInstagramTextWithContext envConfig mTargetAccessToken mTargetAccountId recipient body
+      let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
         insert_ (M.InstagramMessage (recipient <> "-out-" <> T.pack (show now))
                   recipient
@@ -2340,14 +2341,14 @@ instagramServer user =
                   Nothing
                   Nothing
                   Nothing
-                  "sent"
+                  replyStatusValue
                   Nothing
                   Nothing
                   (Just now)
                   1
                   Nothing
                   Nothing
-                  (either Just (const Nothing) sendResult)
+                  replyErrorValue
                   Nothing
                   now)
         for_ mExternalId $ \extId -> do
@@ -2360,11 +2361,13 @@ instagramServer user =
           case sendResult of
             Left err ->
               updateWhere baseFilters
-                [ M.InstagramMessageReplyError =. Just err
+                [ M.InstagramMessageReplyStatus =. replyStatusValue
+                , M.InstagramMessageReplyError =. Just err
                 ]
             Right _ ->
               updateWhere baseFilters
-                [ M.InstagramMessageRepliedAt =. Just now
+                [ M.InstagramMessageReplyStatus =. replyStatusValue
+                , M.InstagramMessageRepliedAt =. Just now
                 , M.InstagramMessageReplyText =. Just body
                 , M.InstagramMessageReplyError =. Nothing
                 ]
@@ -2445,6 +2448,7 @@ facebookServer user =
       when (T.null body) $
         throwError err400 { errBody = "Empty message" }
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
+      let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
         insert_ (ME.FacebookMessage (recipient <> "-out-" <> T.pack (show now))
                   recipient
@@ -2456,14 +2460,14 @@ facebookServer user =
                   Nothing
                   Nothing
                   Nothing
-                  "sent"
+                  replyStatusValue
                   Nothing
                   Nothing
                   (Just now)
                   1
                   Nothing
                   Nothing
-                  (either Just (const Nothing) sendResult)
+                  replyErrorValue
                   Nothing
                   now)
         for_ mExternalId $ \extId -> do
@@ -2476,11 +2480,13 @@ facebookServer user =
           case sendResult of
             Left err ->
               updateWhere baseFilters
-                [ ME.FacebookMessageReplyError =. Just err
+                [ ME.FacebookMessageReplyStatus =. replyStatusValue
+                , ME.FacebookMessageReplyError =. Just err
                 ]
             Right _ ->
               updateWhere baseFilters
-                [ ME.FacebookMessageRepliedAt =. Just now
+                [ ME.FacebookMessageReplyStatus =. replyStatusValue
+                , ME.FacebookMessageRepliedAt =. Just now
                 , ME.FacebookMessageReplyText =. Just body
                 , ME.FacebookMessageReplyError =. Nothing
                 ]
@@ -2746,6 +2752,12 @@ validateSocialReplyExternalId (Just rawExternalId) =
   case normalizeOptionalTextField (Just rawExternalId) of
     Just externalId -> Right (Just externalId)
     Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
+
+socialReplyOutcomeFields :: Either Text a -> (Text, Maybe Text)
+socialReplyOutcomeFields sendResult =
+  case sendResult of
+    Left err -> ("error", Just err)
+    Right _ -> ("sent", Nothing)
 
 parseSocialBoolParam :: MonadError ServerError m => Maybe Text -> m Bool
 parseSocialBoolParam Nothing = pure False
