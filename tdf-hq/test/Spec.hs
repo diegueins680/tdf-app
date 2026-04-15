@@ -1097,6 +1097,8 @@ main = hspec $ do
             assertInvalid "https://127.1/live"
             assertInvalid "https://127.0.1/live"
             assertInvalid "https://2130706433/live"
+            assertInvalid "https://0177.0.0.1/live"
+            assertInvalid "https://[::ffff:0177.0.0.1]/live"
 
         it "rejects localhost and private-network targets before the server fetches them" $ do
             let assertPrivateTarget rawUrl =

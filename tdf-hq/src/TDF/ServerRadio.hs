@@ -210,6 +210,8 @@ validatePublicRadioHost rawHost
   | Just octets <- parseIpv4Octets normalized
   , isPrivateIpv4 octets =
       Left privateRadioHostError
+  | hasAmbiguousTrailingIpv4 normalized =
+      Left err400 { errBody = "streamUrl must include a valid host" }
   | Just octets <- trailingIpv4Octets normalized
   , isPrivateIpv4 octets =
       Left privateRadioHostError
@@ -229,6 +231,13 @@ validatePublicRadioHost rawHost
         && not (T.any (== ':') host)
         && isNothing (parseIpv4Octets host)
 
+hasAmbiguousTrailingIpv4 :: Text -> Bool
+hasAmbiguousTrailingIpv4 host =
+  let suffix = T.takeWhileEnd (/= ':') host
+  in T.any (== '.') suffix
+      && T.all (\c -> isDigit c || c == '.') suffix
+      && isNothing (parseIpv4Octets suffix)
+
 parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
 parseIpv4Octets host =
   case T.splitOn "." host of
@@ -242,6 +251,7 @@ parseIpv4Octets host =
   where
     parseOctet octet
       | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
           if value >= 0 && value <= 255
