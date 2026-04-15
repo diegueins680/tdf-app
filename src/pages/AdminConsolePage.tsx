@@ -111,6 +111,10 @@ function normalizeAdminConsoleSectionKey(value: string) {
     .trim();
 }
 
+function normalizeAdminConsoleParagraphKey(value: string) {
+  return normalizeAdminConsoleSectionKey(value);
+}
+
 const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
   BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeAdminConsoleSectionKey(value)),
 );
@@ -121,10 +125,21 @@ const BUILT_IN_ADMIN_CARD_TITLE_KEYS = new Set(
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
     const title = card.title.trim();
+    const seenParagraphs = new Set<string>();
     const body = card.body
       .map((paragraph) => paragraph.trim())
       .filter((paragraph) => paragraph.length > 0)
-      .filter((paragraph) => !isPlaceholderAdminConsoleParagraph(paragraph));
+      .filter((paragraph) => !isPlaceholderAdminConsoleParagraph(paragraph))
+      .filter((paragraph) => {
+        const paragraphKey = normalizeAdminConsoleParagraphKey(paragraph);
+
+        if (paragraphKey === '' || seenParagraphs.has(paragraphKey)) {
+          return false;
+        }
+
+        seenParagraphs.add(paragraphKey);
+        return true;
+      });
 
     if (title === '' || body.length === 0) {
       return [];
@@ -162,12 +177,12 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
     }
 
     const seenParagraphs = new Set(
-      existingCard.body.map((paragraph) => normalizeAdminConsoleCardKey(paragraph)),
+      existingCard.body.map((paragraph) => normalizeAdminConsoleParagraphKey(paragraph)),
     );
     const mergedBody = [...existingCard.body];
 
     card.body.forEach((paragraph) => {
-      const paragraphKey = normalizeAdminConsoleCardKey(paragraph);
+      const paragraphKey = normalizeAdminConsoleParagraphKey(paragraph);
 
       if (seenParagraphs.has(paragraphKey)) {
         return;

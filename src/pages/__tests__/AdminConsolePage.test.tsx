@@ -735,6 +735,61 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('deduplicates repeated module copy when fallback discovery only changes punctuation', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-overview',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios',
+          ],
+        },
+        {
+          cardId: 'service-tokens-rotation',
+          title: 'Tokens de servicio',
+          body: [
+            'Programa una rotación semanal sin salir de esta consola.',
+            'Programa una rotación semanal sin salir de esta consola',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Opcional: ver Tokens de servicio$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Opcional: ver Tokens de servicio$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(
+      screen.getAllByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.?/i,
+      ),
+    ).toHaveLength(1);
+    expect(
+      screen.getAllByText(/Programa una rotación semanal sin salir de esta consola\.?/i),
+    ).toHaveLength(1);
+  });
+
   it('keeps the first-run CTA focused on the hidden module count before expanding extras', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
