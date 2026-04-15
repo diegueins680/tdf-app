@@ -125,9 +125,10 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
     const title = card.title.trim();
     const body = card.body
       .map((paragraph) => paragraph.trim())
-      .filter((paragraph) => paragraph.length > 0);
+      .filter((paragraph) => paragraph.length > 0)
+      .filter((paragraph) => !isPlaceholderAdminConsoleParagraph(paragraph));
 
-    if (title === '' || body.length === 0 || body.every(isPlaceholderAdminConsoleParagraph)) {
+    if (title === '' || body.length === 0) {
       return [];
     }
 
