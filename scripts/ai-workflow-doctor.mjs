@@ -128,8 +128,11 @@ async function main() {
     add(results, 'warn', 'Mobile workspace', 'tdf-mobile/package.json not found');
   }
 
-  const ghAuthStored = await run(process.env.SHELL || '/bin/zsh', ['-lc', 'GH_TOKEN= GITHUB_TOKEN= GITHUB_PAT= gh auth token']);
-  const ghAuth = ghAuthStored.ok ? { ok: true, detail: 'authenticated' } : await run('gh', ['auth', 'status']);
+  const sanitizedGhStatus = await run(process.env.SHELL || '/bin/zsh', [
+    '-lc',
+    'GH_TOKEN= GITHUB_TOKEN= GITHUB_PAT= gh auth status',
+  ]);
+  const ghAuth = sanitizedGhStatus.ok ? { ok: true, detail: 'authenticated' } : sanitizedGhStatus;
   add(
     results,
     ghAuth.ok ? 'ok' : 'warn',
