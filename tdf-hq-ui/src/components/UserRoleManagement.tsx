@@ -111,9 +111,11 @@ const hasRoleSelectionChanged = (
 const buildRoleManagementSummary = ({
   showContactColumn,
   showStatusColumn,
+  showMixedStatusSummary,
 }: {
   showContactColumn: boolean;
   showStatusColumn: boolean;
+  showMixedStatusSummary: boolean;
 }) => {
   const hiddenColumnSummaries: string[] = [];
 
@@ -126,6 +128,10 @@ const buildRoleManagementSummary = ({
   if (!showStatusColumn) {
     hiddenColumnSummaries.push(
       'la columna de estado sigue oculta mientras todas las cuentas sigan activas',
+    );
+  } else if (showMixedStatusSummary) {
+    hiddenColumnSummaries.push(
+      'la columna Estado solo marca las cuentas inactivas; las activas quedan implícitas',
     );
   }
 
@@ -143,7 +149,13 @@ export default function UserRoleManagement() {
   const [saving, setSaving] = useState(false);
   const showContactColumn = users.some((user) => getContactSummary(user) != null);
   const showStatusColumn = users.some((user) => user.status === 'Inactive');
-  const roleManagementSummary = buildRoleManagementSummary({ showContactColumn, showStatusColumn });
+  const inactiveUsersCount = users.filter((user) => user.status === 'Inactive').length;
+  const showMixedStatusSummary = showStatusColumn && inactiveUsersCount < users.length;
+  const roleManagementSummary = buildRoleManagementSummary({
+    showContactColumn,
+    showStatusColumn,
+    showMixedStatusSummary,
+  });
   const singleUser = users.length === 1 ? users[0] : null;
   const singleUserContactSummary = singleUser ? getContactSummary(singleUser) : null;
   const showComparisonTable = users.length > 1;
@@ -362,7 +374,9 @@ export default function UserRoleManagement() {
                         )}
                         {showStatusColumn && (
                           <TableCell>
-                            <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                            {user.status === 'Inactive' ? (
+                              <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                            ) : null}
                           </TableCell>
                         )}
                         <TableCell>

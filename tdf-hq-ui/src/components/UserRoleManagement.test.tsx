@@ -395,7 +395,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('shows the status column only when at least one administrable user is inactive', async () => {
+  it('uses the status column as an exception marker when a mixed roster includes inactive accounts', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 401,
@@ -418,10 +418,13 @@ describe('UserRoleManagement', () => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles Editar aquí']);
         expect(countExactText(container, 'Editar aquí')).toBe(1);
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
-        expect(container.textContent).not.toContain('Vista actual:');
+        expect(container.textContent).toContain(
+          'Vista actual: la columna Estado solo marca las cuentas inactivas; las activas quedan implícitas.',
+        );
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
-        expect(adaRow.textContent).toContain('Active');
+        expect(adaRow.textContent).not.toContain('Active');
+        expect(adaRow.textContent).not.toContain('Inactive');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
         expect(graceRow.textContent).toContain('Inactive');
