@@ -9,6 +9,7 @@ const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
 const canAccessPathMock = jest.fn<() => boolean>();
+const createUserMock = jest.fn<(payload: { partyId: number; username?: string; roles?: string[] }) => Promise<null>>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
@@ -20,7 +21,7 @@ jest.unstable_mockModule('../api/parties', () => ({
 
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
-    createUser: jest.fn(() => Promise.resolve(null)),
+    createUser: (payload: { partyId: number; username?: string; roles?: string[] }) => createUserMock(payload),
   },
 }));
 
@@ -67,6 +68,30 @@ const getSearchInput = (root: ParentNode) => {
     throw new Error('Search input not found');
   }
   return input;
+};
+
+const getInputByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => buttonText(element).replace('*', '').trim() === labelText,
+  );
+  if (!label) {
+    throw new Error(`Input label not found: ${labelText}`);
+  }
+
+  const inputId = label.htmlFor;
+  if (inputId) {
+    const input = label.ownerDocument.getElementById(inputId);
+    if (input instanceof HTMLInputElement) {
+      return input;
+    }
+  }
+
+  const nestedInput = label.parentElement?.querySelector('input');
+  if (!(nestedInput instanceof HTMLInputElement)) {
+    throw new Error(`Input not found for label: ${labelText}`);
+  }
+
+  return nestedInput;
 };
 
 const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
@@ -172,6 +197,7 @@ describe('PartiesPage', () => {
     createPartyMock.mockReset();
     updatePartyMock.mockReset();
     canAccessPathMock.mockReset();
+    createUserMock.mockReset();
     listPartiesMock.mockResolvedValue([]);
     createPartyMock.mockResolvedValue({
       partyId: 1,
@@ -180,6 +206,7 @@ describe('PartiesPage', () => {
     } satisfies PartyDTO);
     updatePartyMock.mockResolvedValue(null);
     canAccessPathMock.mockReturnValue(false);
+    createUserMock.mockResolvedValue(null);
   });
 
   it('keeps the first CRM load focused on a single loading notice instead of showing search and table chrome early', async () => {
@@ -727,6 +754,76 @@ describe('PartiesPage', () => {
           'Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.',
         );
         expect(getButtonsByText(document.body, 'Guardar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the optional username empty until the admin asks for a custom login', async () => {
+    listPartiesMock.mockResolvedValue([
+      {
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        primaryEmail: 'ada@example.com',
+        instagram: '@ada',
+        hasUserAccount: false,
+      } satisfies PartyDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primer contacto registrado');
+        expect(container.textContent).toContain('Ada Lovelace');
+      });
+
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Acciones de Ada Lovelace')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, 'Crear usuario y enviar contraseña')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, 'Crear usuario y enviar contraseña'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Crear usuario para Ada Lovelace');
+        expect(getInputByLabelText(document.body, 'Correo del contacto').value).toBe('ada@example.com');
+        expect(getInputByLabelText(document.body, 'Usuario (opcional)').value).toBe('');
+        expect(getInputByLabelText(document.body, 'Usuario (opcional)').getAttribute('placeholder')).toBe('ada@example.com');
+        expect(document.body.textContent).toContain(
+          'Déjalo vacío para usar ada@example.com como usuario de acceso.',
+        );
+      });
+
+      await act(async () => {
+        clickButton(getButtonsByText(document.body, 'Crear usuario')[0]!);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(createUserMock).toHaveBeenCalledWith({
+          partyId: 1,
+          username: undefined,
+          roles: undefined,
+        });
+        expect(updatePartyMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain(
+          'Se creó la cuenta y se envió la contraseña temporal por correo.',
+        );
       });
     } finally {
       await cleanup();

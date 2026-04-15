@@ -209,7 +209,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setUsername(party?.primaryEmail ?? '');
+    setUsername('');
     setEmail(party?.primaryEmail ?? '');
     setRoles([]);
     setError(null);
@@ -217,6 +217,10 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   }, [party, open]);
 
   const needsPrimaryEmail = !hasPartyPrimaryEmail(party);
+  const trimmedEmail = email.trim();
+  const usernameHelperText = trimmedEmail
+    ? `Déjalo vacío para usar ${trimmedEmail} como usuario de acceso.`
+    : 'Déjalo vacío y usaremos el correo del contacto cuando lo completes arriba.';
 
   const selectRoles = (value: string | string[]) => normalizeRolesInput(value, ALL_ROLES);
 
@@ -274,7 +278,8 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
             label="Usuario (opcional)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            helperText="Si lo dejas vacío se usará el correo principal."
+            helperText={usernameHelperText}
+            placeholder={trimmedEmail || 'Se completará con el correo principal'}
             fullWidth
           />
           <FormControl fullWidth>
