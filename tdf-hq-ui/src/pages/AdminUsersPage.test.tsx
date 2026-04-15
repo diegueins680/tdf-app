@@ -743,6 +743,62 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('merges duplicate user records so the surviving row keeps the strongest admin actions', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        partyName: 'Ada Lovelace',
+        username: 'ada-admin',
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+        roles: ['Admin'],
+        modules: ['admin'],
+      }),
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        partyName: '   ',
+        username: 'ada-admin',
+        primaryEmail: null,
+        primaryPhone: '+593999000111',
+        whatsapp: '+593999000222',
+        roles: ['Teacher'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const mergedRow = getRowByUserId(container, 101);
+
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(hasLinkWithTextAndHref(mergedRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
+        expect(mergedRow.textContent).toContain('+593999000222 · ada@example.com');
+        expect(hasExactText(mergedRow, 'Roles: Admin, Teacher · Módulos: admin, crm')).toBe(true);
+        expect(getButtonsByText(mergedRow, 'WhatsApp')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses the default multi-user guidance into one summary line and skips the baseline admin access copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

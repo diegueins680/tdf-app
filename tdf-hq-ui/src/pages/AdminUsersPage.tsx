@@ -27,6 +27,35 @@ const normalizeContactValue = (value?: string | null) => {
   return trimmed;
 };
 
+const normalizeAccessValues = (values: readonly string[]) =>
+  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
+    .sort((left, right) => left.localeCompare(right));
+
+const preferNonEmptyText = (primary?: string | null, fallback?: string | null) => {
+  const normalizedPrimary = normalizeContactValue(primary);
+  if (normalizedPrimary) return normalizedPrimary;
+  return normalizeContactValue(fallback);
+};
+
+const preferLinkedProfileId = (primary?: number | null, fallback?: number | null) => {
+  if (typeof primary === 'number' && Number.isInteger(primary) && primary > 0) return primary;
+  if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback > 0) return fallback;
+  return primary ?? fallback ?? null;
+};
+
+const mergeAdminUserRecords = (primary: AdminUser, fallback: AdminUser): AdminUser => ({
+  ...primary,
+  partyId: preferLinkedProfileId(primary.partyId, fallback.partyId),
+  partyName: preferNonEmptyText(primary.partyName, fallback.partyName) ?? '',
+  username: preferNonEmptyText(primary.username, fallback.username) ?? '',
+  primaryEmail: preferNonEmptyText(primary.primaryEmail, fallback.primaryEmail),
+  primaryPhone: preferNonEmptyText(primary.primaryPhone, fallback.primaryPhone),
+  whatsapp: preferNonEmptyText(primary.whatsapp, fallback.whatsapp),
+  active: primary.active || fallback.active,
+  roles: normalizeAccessValues([...primary.roles, ...fallback.roles]),
+  modules: normalizeAccessValues([...primary.modules, ...fallback.modules]),
+});
+
 const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
   const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
   const email = normalizeContactValue(user.primaryEmail);
@@ -88,8 +117,7 @@ const buildPendingProfileSummary = (count: number) => (
 );
 
 const getUserAccessSummary = (values: string[]) =>
-  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
-    .sort((left, right) => left.localeCompare(right))
+  normalizeAccessValues(values)
     .join(', ');
 
 const getSharedAccessSummary = (values: string[]) => {
@@ -237,13 +265,19 @@ const compareAdminUsers = (left: AdminUser, right: AdminUser) => {
 };
 
 const dedupeAdminUsers = (users: readonly AdminUser[]) => {
-  const seenUserIds = new Set<number>();
+  const usersById = new Map<number, AdminUser>();
 
-  return users.filter((user) => {
-    if (seenUserIds.has(user.userId)) return false;
-    seenUserIds.add(user.userId);
-    return true;
+  users.forEach((user) => {
+    const existingUser = usersById.get(user.userId);
+    if (!existingUser) {
+      usersById.set(user.userId, user);
+      return;
+    }
+
+    usersById.set(user.userId, mergeAdminUserRecords(existingUser, user));
   });
+
+  return [...usersById.values()];
 };
 
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {

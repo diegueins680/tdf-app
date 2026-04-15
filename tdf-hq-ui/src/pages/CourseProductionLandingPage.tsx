@@ -414,7 +414,7 @@ function Hero({
   dateRangeLabel?: string;
 }) {
   const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
-  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: último sábado de abril';
+  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 2 de mayo';
   const primaryCta = heroOverride?.cta ?? 'Inscribirme';
   const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
   const badgeDate = heroOverride?.badge3 ?? dateRangeLabel ?? 'Fechas por confirmar';

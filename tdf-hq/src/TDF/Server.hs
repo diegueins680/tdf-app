@@ -56,7 +56,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Database.Persist.Postgresql ()
 
 import           TDF.API
@@ -2180,12 +2180,12 @@ courseMetadataFor cfg mWaContact slugVal =
   in if normalizeSlug slugVal /= fallbackSlug
     then Nothing
     else
-      let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
+          let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
           sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 4 25)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 5 2)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 5 9)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 5 16)
+            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 5 2)
+            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 5 9)
+            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 5 16)
+            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 5 23)
             ]
           syllabus =
             [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]
@@ -2196,7 +2196,7 @@ courseMetadataFor cfg mWaContact slugVal =
       in Just CourseMetadata
         { slug = fallbackSlug
         , title = "Curso de Producción Musical"
-        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: último sábado de abril"
+        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 2 de mayo"
         , format = "Presencial"
         , duration = "Cuatro sábados (16 horas en total)"
         , price = productionCoursePrice
@@ -2367,6 +2367,17 @@ saveCourse Courses.CourseUpsert{..} = do
           [] -> Nothing
           ys -> Just ys
       withOrder fallbackIdx mOrder = fromMaybe fallbackIdx mOrder
+      -- Persistent is misencoding text[] here, so store course arrays through SQL.
+      persistTextArrayField courseId columnName Nothing =
+        rawExecute
+          ("UPDATE course SET " <> columnName <> " = NULL WHERE id = ?")
+          [PersistInt64 (fromSqlKey courseId)]
+      persistTextArrayField courseId columnName (Just values) =
+        rawExecute
+          ("UPDATE course SET " <> columnName <> " = ARRAY(SELECT jsonb_array_elements_text(?::jsonb)) WHERE id = ?")
+          [ PersistText (TE.decodeUtf8 (BL.toStrict (encode values)))
+          , PersistInt64 (fromSqlKey courseId)
+          ]
   runDB $ do
     mExisting <- getBy (Trials.UniqueCourseSlug slugVal)
     courseId <- case mExisting of
@@ -2385,8 +2396,8 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseLocationMapUrl = locationMapUrlClean
         , Trials.courseWhatsappCtaUrl = Just whatsappResolved
         , Trials.courseLandingUrl = Just landingResolved
-        , Trials.courseDaws = dawsClean
-        , Trials.courseIncludes = includesClean
+        , Trials.courseDaws = Nothing
+        , Trials.courseIncludes = Nothing
         , Trials.courseInstructorName = instructorNameClean
         , Trials.courseInstructorBio = instructorBioClean
         , Trials.courseInstructorAvatarUrl = instructorAvatarClean
@@ -2409,14 +2420,17 @@ saveCourse Courses.CourseUpsert{..} = do
           , Trials.CourseLocationMapUrl =. locationMapUrlClean
           , Trials.CourseWhatsappCtaUrl =. Just whatsappResolved
           , Trials.CourseLandingUrl =. Just landingResolved
-          , Trials.CourseDaws =. dawsClean
-          , Trials.CourseIncludes =. includesClean
+          , Trials.CourseDaws =. Nothing
+          , Trials.CourseIncludes =. Nothing
           , Trials.CourseInstructorName =. instructorNameClean
           , Trials.CourseInstructorBio =. instructorBioClean
           , Trials.CourseInstructorAvatarUrl =. instructorAvatarClean
           , Trials.CourseUpdatedAt =. now
           ]
         pure cid
+
+    persistTextArrayField courseId "daws" dawsClean
+    persistTextArrayField courseId "includes" includesClean
 
     deleteWhere [Trials.CourseSessionModelCourseId ==. courseId]
     deleteWhere [Trials.CourseSyllabusItemCourseId ==. courseId]
