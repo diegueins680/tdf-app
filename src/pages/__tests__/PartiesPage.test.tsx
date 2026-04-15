@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import PartiesPage from '../PartiesPage';
+import type { PartyDTO } from '../../api/types';
 
 const mockPartiesList = vi.fn();
 const mockPartiesCreate = vi.fn();
@@ -49,6 +51,23 @@ function renderPage() {
       <PartiesPage />
     </QueryClientProvider>,
   );
+}
+
+function buildParty(overrides: Partial<PartyDTO> = {}): PartyDTO {
+  return {
+    partyId: 101,
+    displayName: 'Acme Studios',
+    isOrg: true,
+    legalName: 'Acme Studios S.A.',
+    primaryEmail: 'booking@acme.test',
+    primaryPhone: '+593999000111',
+    whatsapp: null,
+    instagram: '@acmestudios',
+    taxId: null,
+    emergencyContact: null,
+    notes: null,
+    ...overrides,
+  };
 }
 
 describe('PartiesPage', () => {
@@ -111,5 +130,43 @@ describe('PartiesPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Email$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Instagram$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+  });
+
+  it('collapses the first contact into a compact summary with one actions entry point', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([buildParty()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primer contacto registrado.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Revísalo aquí; cuando exista el segundo, volverán la búsqueda y la tabla para gestionar varios contactos sin acciones duplicadas\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Acme Studios')).toBeInTheDocument();
+      expect(screen.getByText('Tipo: Organización')).toBeInTheDocument();
+      expect(screen.getByText('Correo: booking@acme.test')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Acciones de Acme Studios/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(/Nueva Banda se habilita cuando exista al menos una persona para asignarla como integrante\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Nueva Banda/i })).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/Buscar…/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Nombre$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Abrir ficha/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Editar contacto/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Acciones de Acme Studios/i }));
+
+    expect(await screen.findByRole('menuitem', { name: /Abrir ficha/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Editar contacto/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
   });
 });

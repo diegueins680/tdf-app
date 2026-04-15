@@ -8,16 +8,15 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert, Box, CircularProgress, Divider, Typography, Paper, Stack, TextField, Button, IconButton, Dialog, DialogTitle,
-  DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead,
+  DialogContent, DialogActions, Menu, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
-  InputLabel, Select, MenuItem, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip, Snackbar
+  InputLabel, Select, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip, Snackbar
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SchoolIcon from '@mui/icons-material/School';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
@@ -864,9 +863,15 @@ export default function PartiesPage() {
   const [detail, setDetail] = useState<PartyDTO | null>(null);
   const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState<string | null>(null);
+  const [singleContactActionsAnchorEl, setSingleContactActionsAnchorEl] = useState<HTMLElement | null>(null);
   const hasContacts = data.length > 0;
   const hasPeople = data.some((party) => !party.isOrg);
   const showFirstContactSetup = !isLoading && !error && !hasContacts;
+  const singleContact =
+    !showFirstContactSetup && !isLoading && !error && data.length === 1
+      ? (data[0] ?? null)
+      : null;
+  const showContactsTable = !showFirstContactSetup && singleContact == null;
 
   const convertToStudentMutation = useMutation({
     mutationFn: (party: PartyDTO) => convertPartyToStudent(party),
@@ -878,6 +883,48 @@ export default function PartiesPage() {
       setSnackbar(`Error: ${err.message}`);
     },
   });
+
+  const handleConvertToStudent = (party: PartyDTO) => {
+    if (!confirm(`¿Convertir a ${party.displayName} en estudiante?`)) {
+      return;
+    }
+
+    convertToStudentMutation.mutate(party);
+  };
+
+  const handleCloseSingleContactActions = () => {
+    setSingleContactActionsAnchorEl(null);
+  };
+
+  const handleOpenSingleContactDetail = () => {
+    if (!singleContact) return;
+
+    handleCloseSingleContactActions();
+    setDetail(singleContact);
+  };
+
+  const handleEditSingleContact = () => {
+    if (!singleContact) return;
+
+    handleCloseSingleContactActions();
+    setEditing(singleContact);
+  };
+
+  const handleConvertSingleContact = () => {
+    if (!singleContact) return;
+
+    handleCloseSingleContactActions();
+    handleConvertToStudent(singleContact);
+  };
+
+  const singleContactSummaryRows = singleContact
+    ? [
+        ['Tipo', singleContact.isOrg ? 'Organización' : 'Persona'],
+        ['Correo', singleContact.primaryEmail?.trim() || '—'],
+        ['Teléfono / WhatsApp', singleContact.whatsapp?.trim() || singleContact.primaryPhone?.trim() || '—'],
+        ['Instagram', singleContact.instagram?.trim() || '—'],
+      ]
+    : [];
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
     { header: 'Nombre', accessorKey: 'displayName' },
@@ -904,9 +951,7 @@ export default function PartiesPage() {
                 size="small"
                 onClick={(event) => {
                   event.stopPropagation();
-                  if (confirm(`¿Convertir a ${row.original.displayName} en estudiante?`)) {
-                    convertToStudentMutation.mutate(row.original);
-                  }
+                  handleConvertToStudent(row.original);
                 }}
               >
                 <SchoolIcon fontSize="small" />
@@ -916,7 +961,7 @@ export default function PartiesPage() {
         </Stack>
       )
     }
-  ], [convertToStudentMutation]);
+  ], [handleConvertToStudent]);
 
   const table = useReactTable({
     data,
@@ -937,11 +982,10 @@ export default function PartiesPage() {
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h5">Personas / CRM</Typography>
           <Stack direction="row" spacing={1}>
-            {!showFirstContactSetup && (
+            {!showFirstContactSetup && hasPeople && (
               <Button
                 variant="outlined"
                 onClick={() => setBandOpen(true)}
-                disabled={!hasPeople}
               >
                 Nueva Banda
               </Button>
@@ -981,7 +1025,67 @@ export default function PartiesPage() {
             </Typography>
           </Stack>
         </Paper>
-      ) : (
+      ) : singleContact ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            minHeight: 280,
+            px: 3,
+            py: 4,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Stack spacing={2} sx={{ maxWidth: 640, width: '100%' }}>
+            <Box>
+              <Typography variant="h6">Primer contacto registrado.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Revísalo aquí; cuando exista el segundo, volverán la búsqueda y la tabla para gestionar varios contactos sin acciones duplicadas.
+              </Typography>
+            </Box>
+            <Stack
+              spacing={0.75}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Typography variant="subtitle1">{singleContact.displayName}</Typography>
+              {singleContactSummaryRows.map(([label, value]) => (
+                <Typography key={label} variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>{label}:</Box> {value}
+                </Typography>
+              ))}
+            </Stack>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={(event) => setSingleContactActionsAnchorEl(event.currentTarget)}
+              aria-controls={singleContactActionsAnchorEl ? 'single-contact-actions-menu' : undefined}
+              aria-expanded={singleContactActionsAnchorEl ? 'true' : undefined}
+              aria-haspopup="menu"
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Acciones de {singleContact.displayName}
+            </Button>
+            <Menu
+              id="single-contact-actions-menu"
+              anchorEl={singleContactActionsAnchorEl}
+              open={!!singleContactActionsAnchorEl}
+              onClose={handleCloseSingleContactActions}
+            >
+              <MenuItem onClick={handleOpenSingleContactDetail}>Abrir ficha</MenuItem>
+              <MenuItem onClick={handleEditSingleContact}>Editar contacto</MenuItem>
+              {!singleContact.isOrg && (
+                <MenuItem onClick={handleConvertSingleContact}>Convertir a estudiante</MenuItem>
+              )}
+            </Menu>
+          </Stack>
+        </Paper>
+      ) : showContactsTable ? (
         <>
           <TextField
             placeholder="Buscar…"
@@ -1017,7 +1121,7 @@ export default function PartiesPage() {
             {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
           </Paper>
         </>
-      )}
+      ) : null}
 
       <CreateBandDialog open={bandOpen} onClose={() => setBandOpen(false)} parties={data} />
       <CreatePartyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
