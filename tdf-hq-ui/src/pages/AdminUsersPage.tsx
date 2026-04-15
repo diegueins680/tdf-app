@@ -95,6 +95,8 @@ const getSharedAccessSummary = (values: string[]) => {
 };
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
+const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
+  typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
@@ -195,13 +197,15 @@ const dedupeAdminUsers = (users: readonly AdminUser[]) => {
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const query = normalizeSearchValue(rawQuery);
   if (!query) return true;
+  const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
+    ? [String(user.partyId), `id ${user.partyId}`]
+    : [];
 
   const searchSpace = [
     user.username,
     user.partyName,
     String(user.userId),
-    String(user.partyId),
-    `id ${user.partyId}`,
+    ...partyIdSearchSpace,
     getUserContactSummary(user) ?? '',
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
@@ -554,7 +558,8 @@ function UserRow({
     sharedModulesSummary,
   });
   const identity = summarizeUserIdentity(user);
-  const profilePath = `/perfil/${user.partyId}`;
+  const hasLinkedProfile = hasLinkedAdminUserProfile(user);
+  const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
 
   return (
@@ -571,20 +576,31 @@ function UserRow({
       }}
     >
       <Box sx={{ minWidth: 180 }}>
-        <Link
-          component={RouterLink}
-          to={profilePath}
-          underline="hover"
-          color="primary"
-          variant="subtitle1"
-          aria-label={`Abrir perfil de ${identity.primary}`}
-          sx={{ display: 'inline-flex', width: 'fit-content', fontWeight: 700 }}
-        >
-          {identity.primary}
-        </Link>
+        {profilePath ? (
+          <Link
+            component={RouterLink}
+            to={profilePath}
+            underline="hover"
+            color="primary"
+            variant="subtitle1"
+            aria-label={`Abrir perfil de ${identity.primary}`}
+            sx={{ display: 'inline-flex', width: 'fit-content', fontWeight: 700 }}
+          >
+            {identity.primary}
+          </Link>
+        ) : (
+          <Typography variant="subtitle1" fontWeight={700}>
+            {identity.primary}
+          </Typography>
+        )}
         {identity.secondary && (
           <Typography variant="body2" color="text.secondary">
             {identity.secondary}
+          </Typography>
+        )}
+        {!hasLinkedProfile && (
+          <Typography variant="caption" color="text.secondary">
+            Perfil pendiente
           </Typography>
         )}
         {contactSummary && (

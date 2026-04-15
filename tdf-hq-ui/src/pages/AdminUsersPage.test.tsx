@@ -497,6 +497,53 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps users without a linked profile as plain text so the row does not imply a broken action', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        username: 'solo-sin-party',
+        primaryEmail: 'solo@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const missingProfileRow = getRowByUserId(container, 101);
+        expect(hasExactText(missingProfileRow, 'Ada Lovelace')).toBe(true);
+        expect(missingProfileRow.textContent).toContain('Perfil pendiente');
+        expect(hasLinkWithTextAndHref(missingProfileRow, 'Ada Lovelace', '/perfil/null')).toBe(false);
+        expect(
+          Array.from(missingProfileRow.querySelectorAll<HTMLAnchorElement>('a')).some(
+            (link) => (link.getAttribute('href') ?? '').startsWith('/perfil/'),
+          ),
+        ).toBe(false);
+        expect(missingProfileRow.textContent).toContain('solo@example.com');
+
+        const linkedProfileRow = getRowByUserId(container, 102);
+        expect(hasLinkWithTextAndHref(linkedProfileRow, 'Grace Hopper', '/perfil/10')).toBe(true);
+        expect(linkedProfileRow.textContent).not.toContain('Perfil pendiente');
+        expect(container.innerHTML).not.toContain('/perfil/null');
+        expect(container.innerHTML).not.toContain('/perfil/undefined');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps two-user rosters focused by waiting to show search until the list is denser', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

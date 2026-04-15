@@ -24,7 +24,7 @@ export interface LogEntry {
 
 export interface AdminUser {
   userId: number;
-  partyId: number;
+  partyId?: number | null;
   partyName: string;
   username: string;
   primaryEmail?: string | null;
