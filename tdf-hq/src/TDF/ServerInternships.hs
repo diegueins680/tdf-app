@@ -109,6 +109,20 @@ validateOptionalInternPartyIdUpdate _ (Just Nothing) = Right (Just Nothing)
 validateOptionalInternPartyIdUpdate fieldName (Just (Just rawPartyId)) =
   Just . Just <$> validatePositiveInternPartyId fieldName rawPartyId
 
+validateInternTodoText :: Text -> Either ServerError Text
+validateInternTodoText rawText
+  | T.null normalized =
+      Left err400 { errBody = "todo text is required" }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawText
+
+validateInternTodoTextUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateInternTodoTextUpdate Nothing = Right Nothing
+validateInternTodoTextUpdate (Just rawText) =
+  Just <$> validateInternTodoText rawText
+
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
   | isAdminUser = Right ()
@@ -422,11 +436,12 @@ internshipsServer user =
     createTodoH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => InternTodoCreate -> m InternTodoDTO
     createTodoH InternTodoCreate{..} = do
       ensureInternAccess
+      todoText <- either throwError pure (validateInternTodoText itdcText)
       now <- liftIO getCurrentTime
       ent <- withPool $ do
         newId <- insert ME.InternTodo
           { ME.internTodoOwnerPartyId = auPartyId user
-          , ME.internTodoText         = itdcText
+          , ME.internTodoText         = todoText
           , ME.internTodoDone         = False
           , ME.internTodoCreatedAt    = now
           , ME.internTodoUpdatedAt    = now
@@ -438,6 +453,7 @@ internshipsServer user =
     updateTodoH rawId InternTodoUpdate{..} = do
       ensureInternAccess
       todoKey <- parseKey @ME.InternTodo rawId
+      todoTextUpdate <- either throwError pure (validateInternTodoTextUpdate itduText)
       now <- liftIO getCurrentTime
       mEntity <- withPool $ getEntity todoKey
       ent <- maybe (throwError err404) pure mEntity
@@ -445,7 +461,7 @@ internshipsServer user =
       when (ME.internTodoOwnerPartyId todo /= auPartyId user) $
         throwError err403 { errBody = "Cannot edit another user's todo" }
       let updates = catMaybes
-            [ fmap (ME.InternTodoText =.) itduText
+            [ fmap (ME.InternTodoText =.) todoTextUpdate
             , fmap (ME.InternTodoDone =.) itduDone
             ]
       result <- withPool $ do

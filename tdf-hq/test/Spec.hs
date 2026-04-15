@@ -71,6 +71,8 @@ import TDF.ServerInternships
       validateInternProjectStatusInput,
       validateInternPermissionDateRange,
       validateInternProfileDateUpdate,
+      validateInternTodoText,
+      validateInternTodoTextUpdate,
       validateInternTaskUpdatePermissions,
       validateOptionalInternPermissionStatusInput,
       validateOptionalInternPartyIdInput,
@@ -1445,6 +1447,24 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship task progress to be rejected, got " <> show value)
             assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
             assertInvalid (validateInternTaskProgressUpdate (Just 101))
+
+    describe "internship todo text validation" $ do
+        it "trims meaningful todo text while preserving omitted update payloads" $ do
+            validateInternTodoText "  Confirm drum mics  "
+                `shouldBe` Right "Confirm drum mics"
+            validateInternTodoTextUpdate Nothing `shouldBe` Right Nothing
+            validateInternTodoTextUpdate (Just "  Export stems  ")
+                `shouldBe` Right (Just "Export stems")
+
+        it "rejects blank todo text instead of persisting whitespace-only records" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "todo text is required"
+                    Right value ->
+                        expectationFailure ("Expected invalid internship todo text to be rejected, got " <> show value)
+            assertInvalid (validateInternTodoText "   ")
+            assertInvalid (validateInternTodoTextUpdate (Just "   "))
 
     describe "internship party id validation" $ do
         it "preserves omitted optional ids, clear operations, and positive party references" $ do
