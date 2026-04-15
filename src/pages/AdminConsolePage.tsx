@@ -86,9 +86,8 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
 const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
-const ADMIN_USERS_INLINE_EDIT_HINT_ID = 'admin-users-inline-edit-hint';
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
-  'Primer usuario administrable. Cuando exista una segunda cuenta, volverá la tabla comparativa.';
+  'Primer usuario administrable. Edita sus roles aquí; cuando exista una segunda cuenta, volverá la tabla comparativa.';
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -628,7 +627,6 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
-  const showUsersInlineEditHint = singleAdminUser !== null;
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
   const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
@@ -1032,7 +1030,6 @@ export default function AdminConsolePage() {
                           size="small"
                           onClick={() => setEditingUser(user)}
                           aria-label={`Editar roles de ${identity.primary}`}
-                          aria-describedby={showUsersInlineEditHint ? ADMIN_USERS_INLINE_EDIT_HINT_ID : undefined}
                           sx={{
                             px: 0,
                             minWidth: 0,
@@ -1082,14 +1079,10 @@ export default function AdminConsolePage() {
                 ) : null}
               </Stack>
               <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                <Typography id={ADMIN_USERS_INLINE_EDIT_HINT_ID} variant="caption" color="text.secondary">
-                  Roles · Clic para editar
-                </Typography>
                 <Button
                   size="small"
                   onClick={() => setEditingUser(singleAdminUser)}
                   aria-label={`Editar roles de ${singleAdminUserIdentity?.primary ?? singleAdminUser.username}`}
-                  aria-describedby={ADMIN_USERS_INLINE_EDIT_HINT_ID}
                   sx={{
                     px: 0,
                     minWidth: 0,
