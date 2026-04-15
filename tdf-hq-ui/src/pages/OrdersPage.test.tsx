@@ -135,6 +135,9 @@ describe('OrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Revisa horario, servicio, booking, recursos y estado desde una sola tabla.',
+        );
         expect(container.textContent).toContain('Primeras sesiones');
         expect(container.textContent).toContain(
           'Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.',
@@ -142,6 +145,7 @@ describe('OrdersPage', () => {
         expect(container.textContent).toContain(
           'La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.',
         );
+        expect(countOccurrencesIgnoringCase(container.textContent ?? '', 'Usa Nueva sesión')).toBe(1);
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Horario')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);

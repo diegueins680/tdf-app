@@ -64,6 +64,8 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
 
 const TZ = import.meta.env?.['VITE_TZ'] ?? 'America/Guayaquil';
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
+const ORDERS_PAGE_OVERVIEW_SUMMARY =
+  'Revisa horario, servicio, booking, recursos y estado desde una sola tabla.';
 
 const parseRowsPerPage = (value: string, fallback = 10): number => {
   const parsed = Number(value);
@@ -230,7 +232,7 @@ export default function OrdersPage() {
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
   const pageSummary = totalRows === 0
-    ? 'Usa Nueva sesión para cargar la primera. Cuando exista más de una, aquí podrás comparar horario, servicio, recursos y estado.'
+    ? ORDERS_PAGE_OVERVIEW_SUMMARY
     : rowActionSummary;
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
