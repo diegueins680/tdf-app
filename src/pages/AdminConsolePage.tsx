@@ -411,16 +411,10 @@ function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminCo
   }
 
   if (count === 1) {
-    return `Opcional: ver módulo adicional: ${cards[0]?.title ?? ''}`;
+    return 'Opcional: ver 1 módulo adicional';
   }
 
-  const [firstTitle = '', secondTitle = ''] = cards.map((card) => card.title);
-
-  if (count === 2) {
-    return `Opcional: ver 2 módulos adicionales: ${firstTitle} y ${secondTitle}`;
-  }
-
-  return `Opcional: ver ${count} módulos adicionales: ${firstTitle}, ${secondTitle} y ${count - 2} más`;
+  return `Opcional: ver ${count} módulos adicionales`;
 }
 
 function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
@@ -431,16 +425,10 @@ function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<Admin
   }
 
   if (count === 1) {
-    return `Ver 1 módulo adicional: ${cards[0]?.title ?? ''}`;
+    return 'Ver 1 módulo adicional';
   }
 
-  const [firstTitle = '', secondTitle = ''] = cards.map((card) => card.title);
-
-  if (count === 2) {
-    return `Ver 2 módulos adicionales: ${firstTitle} y ${secondTitle}`;
-  }
-
-  return `Ver ${count} módulos adicionales: ${firstTitle}, ${secondTitle} y ${count - 2} más`;
+  return `Ver ${count} módulos adicionales`;
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {

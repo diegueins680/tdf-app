@@ -501,7 +501,7 @@ describe('AdminConsolePage', () => {
       expect(
         within(getFirstRunAlert()).getByRole(
           'button',
-          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+          { name: /^Opcional: ver 1 módulo adicional$/i },
         ),
       ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
@@ -529,11 +529,14 @@ describe('AdminConsolePage', () => {
     expect(
       within(getFirstRunAlert()).queryByRole('button', { name: /4\. Ver 1 módulo adicional/i }),
     ).not.toBeInTheDocument();
+    expect(
+      within(getFirstRunAlert()).queryByRole('button', { name: /Tokens de servicio/i }),
+    ).not.toBeInTheDocument();
 
     await user.click(
       within(getFirstRunAlert()).getByRole(
         'button',
-        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+        { name: /^Opcional: ver 1 módulo adicional$/i },
       ),
     );
 
@@ -587,7 +590,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+          { name: /^Opcional: ver 1 módulo adicional$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -598,7 +601,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+        { name: /^Opcional: ver 1 módulo adicional$/i },
       ),
     );
 
@@ -643,7 +646,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+          { name: /^Opcional: ver 1 módulo adicional$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -651,7 +654,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+        { name: /^Opcional: ver 1 módulo adicional$/i },
       ),
     );
 
@@ -697,7 +700,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+          { name: /^Opcional: ver 1 módulo adicional$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -705,7 +708,7 @@ describe('AdminConsolePage', () => {
     await user.click(
       screen.getByRole(
         'button',
-        { name: /Opcional: ver módulo adicional: Tokens de servicio/i },
+        { name: /^Opcional: ver 1 módulo adicional$/i },
       ),
     );
 
@@ -722,7 +725,7 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('previews the first hidden module names in the first-run CTA before expanding extras', async () => {
+  it('keeps the first-run CTA focused on the hidden module count before expanding extras', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -758,7 +761,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Opcional: ver 3 módulos adicionales: Tokens de servicio, Integraciones y 1 más/i },
+          { name: /^Opcional: ver 3 módulos adicionales$/i },
         ),
       ).toBeInTheDocument();
     });
@@ -767,9 +770,12 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
     expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Tokens de servicio|Integraciones|Acceso API/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it('previews the first hidden module names in the standalone CTA before expanding extras', async () => {
+  it('keeps the standalone CTA focused on the hidden module count before expanding extras', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
@@ -806,7 +812,7 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole(
           'button',
-          { name: /Ver 3 módulos adicionales: Tokens de servicio, Integraciones y 1 más/i },
+          { name: /^Ver 3 módulos adicionales$/i },
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
@@ -814,6 +820,9 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Tokens de servicio|Integraciones|Acceso API/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
