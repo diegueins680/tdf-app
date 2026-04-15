@@ -8,6 +8,7 @@ module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , validateRsvpStatus
   , validateInvitationToPartyId
+  , validateInvitationStatusInput
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
@@ -1163,7 +1164,7 @@ socialEventsServer user = eventsServer
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
       toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
-      let statusVal = normalizeInvitationStatus (invitationStatus dto)
+      statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
       key <- liftIO $ runSqlPool (insert EventInvitation
         { eventInvitationEventId = eventKey
         , eventInvitationFromPartyId = cleanMaybeText (invitationFromPartyId dto)
@@ -1197,7 +1198,7 @@ socialEventsServer user = eventsServer
         Just inv -> do
           let dto = iudInvitation
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
-          let statusVal = normalizeInvitationStatus (invitationStatus dto)
+          statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
           let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
           toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
           liftIO $ runSqlPool (update invitationKey
@@ -2169,6 +2170,27 @@ validateRsvpStatus raw =
     "maybe" -> Right "maybe"
     _ -> Left err400 { errBody = "rsvpStatus must be one of: accepted, declined, maybe" }
 
+parseInvitationStatus :: T.Text -> Maybe T.Text
+parseInvitationStatus raw =
+  case T.toLower (T.strip raw) of
+    "pending" -> Just "pending"
+    "accepted" -> Just "accepted"
+    "declined" -> Just "declined"
+    _ -> Nothing
+
+validateInvitationStatusInput :: Maybe T.Text -> Either ServerError T.Text
+validateInvitationStatusInput Nothing = Right "pending"
+validateInvitationStatusInput (Just rawStatus) =
+  case T.strip rawStatus of
+    "" -> Right "pending"
+    _ ->
+      case parseInvitationStatus rawStatus of
+        Just statusVal -> Right statusVal
+        Nothing ->
+          Left err400
+            { errBody = "invitationStatus must be one of: pending, accepted, declined"
+            }
+
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
 validateEventArtistIds =
   fmap catMaybes . traverse validateArtistId
@@ -2187,9 +2209,8 @@ validateEventArtistIds =
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
 normalizeInvitationStatus mStatus =
-  case fmap (T.toLower . T.strip) mStatus of
+  case mStatus >>= parseInvitationStatus of
     Nothing -> "pending"
-    Just s | T.null s -> "pending"
     Just s -> s
 
 normalizeTicketOrderStatus :: Maybe T.Text -> T.Text

@@ -126,6 +126,7 @@ import TDF.Server.SocialEventsHandlers (
     parseInvitationIdsEither,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
+    validateInvitationStatusInput,
     validateEventArtistIds,
     validateRsvpStatus,
     validateTicketCheckInLookup,
@@ -522,11 +523,28 @@ main = hspec $ do
         it "falls back to pending when missing" $ do
             normalizeInvitationStatus Nothing `shouldBe` "pending"
 
-        it "trims and lowercases non-empty statuses" $ do
+        it "trims and canonicalizes supported invitation statuses" $ do
             normalizeInvitationStatus (Just "  Accepted ") `shouldBe` "accepted"
+            normalizeInvitationStatus (Just "DECLINED") `shouldBe` "declined"
 
-        it "treats blank strings as pending" $ do
+        it "treats blank or invalid stored statuses as pending" $ do
             normalizeInvitationStatus (Just "   ") `shouldBe` "pending"
+            normalizeInvitationStatus (Just "later") `shouldBe` "pending"
+
+    describe "validateInvitationStatusInput" $ do
+        it "defaults omitted or blank invitation statuses to pending and canonicalizes supported values" $ do
+            validateInvitationStatusInput Nothing `shouldBe` Right "pending"
+            validateInvitationStatusInput (Just "   ") `shouldBe` Right "pending"
+            validateInvitationStatusInput (Just " Accepted ") `shouldBe` Right "accepted"
+            validateInvitationStatusInput (Just "DECLINED") `shouldBe` Right "declined"
+
+        it "rejects unsupported invitation statuses instead of persisting arbitrary labels" $ do
+            case validateInvitationStatusInput (Just "later") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "pending, accepted, declined"
+                Right value ->
+                    expectationFailure ("Expected invalid invitation status to be rejected, got " <> show value)
 
     describe "validateInvitationToPartyId" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do
