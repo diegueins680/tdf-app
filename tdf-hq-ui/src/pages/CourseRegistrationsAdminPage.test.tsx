@@ -3362,7 +3362,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps refresh available when the empty view only comes from a custom limit', async () => {
+  it('keeps the limit-only empty view focused on refresh instead of a useless reset action', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -3378,7 +3378,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'No hay inscripciones con el límite actual: límite 50. Usa refrescar si esperabas resultados.',
       );
-      expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
     });
 

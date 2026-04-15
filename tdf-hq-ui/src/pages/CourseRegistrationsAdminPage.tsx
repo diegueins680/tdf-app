@@ -762,6 +762,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset && !statusFilterCanSelfReset;
+  const showFilteredEmptyStateResetAction = hasManualFilters;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
@@ -2078,9 +2079,11 @@ export default function CourseRegistrationsAdminPage() {
                 severity="info"
                 action={(
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Button color="inherit" size="small" onClick={handleResetFilters}>
-                      {resetViewLabel}
-                    </Button>
+                    {showFilteredEmptyStateResetAction && (
+                      <Button color="inherit" size="small" onClick={handleResetFilters}>
+                        {resetViewLabel}
+                      </Button>
+                    )}
                     {showFilteredEmptyStateRefreshAction && (
                       <Button
                         color="inherit"
