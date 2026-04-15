@@ -180,6 +180,7 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const dossierScopeHint =
   'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 
@@ -1508,23 +1509,23 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(1);
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
-      expect(container.textContent).not.toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
-      );
+      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(container.textContent).toContain(activeStatusFilterHelperText);
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
-      expect(getButtonByText(container, 'Mostrar todos los estados')).toBeTruthy();
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Mostrar todos los estados'));
+      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado'));
       await flushPromises();
       await flushPromises();
     });
@@ -1540,6 +1541,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
+      expect(container.textContent).not.toContain(activeStatusFilterHelperText);
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).not.toContain(
@@ -1585,12 +1587,14 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pagado');
+      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(container.textContent).toContain(activeStatusFilterHelperText);
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
-      expect(getButtonByText(container, 'Mostrar todos los estados')).toBeTruthy();
-      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
-      expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).not.toBeNull();
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',

@@ -68,6 +68,7 @@ const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para reg
 const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -640,9 +641,7 @@ export default function CourseRegistrationsAdminPage() {
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
   }, [hasVisibleRegistrations, visibleStatusFilters]);
 
-  const showSingleStatusSummary = Boolean(
-    singleVisibleStatus && (status === 'all' || status === singleVisibleStatus),
-  );
+  const showSingleStatusSummary = Boolean(singleVisibleStatus && status === 'all');
   const hasSlugFilter = slug.trim() !== '';
   const hasStatusFilter = status !== 'all';
   const hasManualFilters = hasSlugFilter || hasStatusFilter;
@@ -707,6 +706,7 @@ export default function CourseRegistrationsAdminPage() {
   const useCompactStatusActionLabel = showSingleStatusSummary;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
+  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -717,7 +717,9 @@ export default function CourseRegistrationsAdminPage() {
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
-    const statusAlreadyExplained = Boolean(combinedSingleChoiceSummary || showSingleStatusSummary);
+    const statusAlreadyExplained = Boolean(
+      combinedSingleChoiceSummary || showSingleStatusSummary || statusAlreadyVisibleInFilterStrip,
+    );
     const limitAlreadyExplained = Boolean(combinedSingleChoiceLimitSummary);
     if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
     if (status !== 'all' && !statusAlreadyExplained) parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
@@ -730,6 +732,7 @@ export default function CourseRegistrationsAdminPage() {
     limit,
     showSingleStatusSummary,
     singleAvailableCohortLabel,
+    statusAlreadyVisibleInFilterStrip,
     status,
   ]);
   const activeViewSummaryMessage = useMemo(() => {
@@ -757,7 +760,8 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && hasVisibleRegistrations,
   );
-  const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset;
+  const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasSlugFilter && !hasCustomLimit;
+  const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset && !statusFilterCanSelfReset;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
@@ -814,6 +818,11 @@ export default function CourseRegistrationsAdminPage() {
     showSingleStatusSummary,
     singleAvailableCohortLabel,
   });
+  const statusFilterHelperText = statusFilterCanSelfReset
+    ? activeStatusFilterHelperText
+    : hasHiddenStatusFilters
+      ? 'Solo aparecen estados con inscripciones en esta vista.'
+      : '';
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
@@ -1887,14 +1896,14 @@ export default function CourseRegistrationsAdminPage() {
                               aria-pressed={status === value}
                               onClick={() => {
                                 setHasUsedFilterControl(true);
-                                setStatus(value);
+                                setStatus((current) => (current === value ? 'all' : value));
                               }}
                             />
                           ))}
                         </Stack>
-                        {hasHiddenStatusFilters && (
+                        {statusFilterHelperText && (
                           <Typography variant="caption" color="text.secondary">
-                            Solo aparecen estados con inscripciones en esta vista.
+                            {statusFilterHelperText}
                           </Typography>
                         )}
                       </Stack>
