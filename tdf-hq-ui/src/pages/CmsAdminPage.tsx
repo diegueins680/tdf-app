@@ -779,18 +779,19 @@ export default function CmsAdminPage() {
                   >
                     Limpiar
                   </Button>
-                  {showExampleAction && (
-                    <Button
-                      variant="text"
-                      onClick={() => {
-                        if (samplePayload.locale) setLocaleFilter(samplePayload.locale);
-                        setPayload(JSON.stringify(samplePayload, null, 2));
-                        if (samplePayload.heroTitle) setTitle(samplePayload.heroTitle);
-                      }}
-                    >
-                      Cargar ejemplo
-                    </Button>
-                  )}
+	                  {showExampleAction && (
+	                    <Button
+	                      variant="text"
+	                      onClick={() => {
+	                        if (!samplePayload) return;
+	                        if (samplePayload.locale) setLocaleFilter(samplePayload.locale);
+	                        setPayload(JSON.stringify(samplePayload, null, 2));
+	                        if (samplePayload.heroTitle) setTitle(samplePayload.heroTitle);
+	                      }}
+	                    >
+	                      Cargar ejemplo
+	                    </Button>
+	                  )}
                   {liveContent && (
                     <Button
                       variant="outlined"

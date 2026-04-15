@@ -661,6 +661,18 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected empty social sync ingest batch to be rejected, got: " <> show value)
 
+        it "rejects negative engagement metrics instead of persisting impossible social analytics" $ do
+            let assertInvalid fieldName payload =
+                    case (eitherDecode payload :: Either String SocialSyncIngestRequest) of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be greater than or equal to 0")
+                        Right value ->
+                            expectationFailure ("Expected invalid social sync metric payload to be rejected, got: " <> show value)
+            assertInvalid "likeCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"likeCount\":-1}]}"
+            assertInvalid "commentCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"commentCount\":-1}]}"
+            assertInvalid "shareCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"shareCount\":-1}]}"
+            assertInvalid "viewCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"viewCount\":-1}]}"
+
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
             validateSocialSyncPostsLimit Nothing `shouldBe` Right 50
