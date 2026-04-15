@@ -117,4 +117,6 @@ COPY --from=builder /app/assets /app/assets
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080
+# Production Docker/Fly deploys use the pre-initialized schema path.
+ENV RUN_MIGRATIONS=false
 CMD ["/bin/sh","-c","APP_PORT=${PORT:-8080} /app/tdf-hq-exe"]
