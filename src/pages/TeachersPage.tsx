@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  IconButton,
   LinearProgress,
   Paper,
   Snackbar,
@@ -179,24 +178,28 @@ export default function TeachersPage() {
                     <TableCell>{contact || '—'}</TableCell>
                     <TableCell>{party.notes || '—'}</TableCell>
                     <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        {inRoster && (
+                      <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                        {inRoster ? (
                           <Tooltip title="Este contacto ya está en el roster de profesores">
-                            <CheckCircleIcon color="success" fontSize="small" />
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <CheckCircleIcon color="success" fontSize="small" />
+                              <Typography variant="body2" sx={{ color: 'success.main' }}>
+                                Ya en roster
+                              </Typography>
+                            </Stack>
                           </Tooltip>
+                        ) : (
+                          <Button
+                            size="small"
+                            color="primary"
+                            disabled={addRoleMutation.isPending}
+                            onClick={() => addRoleMutation.mutate(party.partyId)}
+                            startIcon={<PersonAddAltIcon fontSize="small" />}
+                            sx={{ textTransform: 'none' }}
+                          >
+                            Agregar al roster
+                          </Button>
                         )}
-                        <Tooltip title="Agregar rol Teacher">
-                          <span>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              disabled={addRoleMutation.isPending}
-                              onClick={() => addRoleMutation.mutate(party.partyId)}
-                            >
-                              <PersonAddAltIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
                       </Stack>
                     </TableCell>
                   </TableRow>
