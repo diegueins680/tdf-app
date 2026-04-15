@@ -3955,20 +3955,37 @@ chatListMessages user threadId mLimit mBeforeId mAfterId = do
       Nothing -> throwError err404
       Just t  -> pure t
   requireChatThreadParticipant user thread
+  beforeCursorKey <- resolveChatMessageCursorInThread tid "beforeId" mBeforeIdValid
+  afterCursorKey <- resolveChatMessageCursorInThread tid "afterId" mAfterIdValid
   let baseFilters = [ChatMessageThreadId ==. tid]
   messages <- runDB $
-    case (mBeforeIdValid, mAfterIdValid) of
-      (Just beforeId, Nothing) -> do
-        let beforeKey = toSqlKey beforeId :: ChatMessageId
+    case (beforeCursorKey, afterCursorKey) of
+      (Just beforeKey, Nothing) -> do
         rows <- selectList (baseFilters ++ [ChatMessageId <. beforeKey]) [Desc ChatMessageId, LimitTo limit]
         pure (reverse rows)
-      (Nothing, Just afterId) -> do
-        let afterKey = toSqlKey afterId :: ChatMessageId
+      (Nothing, Just afterKey) -> do
         selectList (baseFilters ++ [ChatMessageId >. afterKey]) [Asc ChatMessageId, LimitTo limit]
       _ -> do
         rows <- selectList baseFilters [Desc ChatMessageId, LimitTo limit]
         pure (reverse rows)
   pure (map chatMessageToDTO messages)
+
+resolveChatMessageCursorInThread
+  :: ChatThreadId
+  -> Text
+  -> Maybe Int64
+  -> AppM (Maybe ChatMessageId)
+resolveChatMessageCursorInThread _ _ Nothing = pure Nothing
+resolveChatMessageCursorInThread threadKey fieldName (Just rawCursorId) = do
+  let cursorKey = toSqlKey rawCursorId :: ChatMessageId
+  mCursor <- runDB $ get cursorKey
+  case mCursor of
+    Just ChatMessage{chatMessageThreadId}
+      | chatMessageThreadId == threadKey -> pure (Just cursorKey)
+    _ ->
+      throwError err404
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " not found in this thread"))
+        }
 
 chatSendMessage :: AuthedUser -> Int64 -> ChatSendMessageRequest -> AppM ChatMessageDTO
 chatSendMessage user threadId ChatSendMessageRequest{..} = do

@@ -5,6 +5,7 @@ module TDF.ServerSpec (spec) where
 import Control.Monad (forM_)
 import Control.Exception (try)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
@@ -12,16 +13,20 @@ import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), Key, get, insert)
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
-import Database.Persist.Sqlite (runSqlite)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API (AdsInquiry (..), CreateBookingReq (..), PublicBookingReq (..), UpdateBookingReq (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
+import Servant.Server.Internal.Handler (runHandler)
+import TDF.DB (Env (..))
 import TDF.Models
     ( ApiToken (..)
     , ArtistProfile (..)
     , BookingStatus (..)
+    , ChatMessage (..)
+    , ChatThread (..)
     , PackageProduct (..)
     , Party (..)
     , PaymentMethod (..)
@@ -100,6 +105,7 @@ import TDF.Server
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , resolvePartyRoleAssignmentTarget
+    , chatListMessages
     , validateAdsInquiry
     )
 import TDF.ServerAuth
@@ -598,6 +604,101 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected contradictory chat cursors to be rejected, got: " <> show value)
+
+    describe "chatListMessages" $ do
+        it "rejects cursors from a different thread instead of silently skewing the page window" $ do
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeAuthSchema pool
+            runSqlPool initializeChatSchema pool
+            now <- getCurrentTime
+            (threadId, foreignMessageId) <- runSqlPool
+                (do
+                    userPartyId <- insert Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Chat User"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "chat-user@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                    friendPartyId <- insert Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Chat Friend"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "chat-friend@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                    outsiderPartyId <- insert Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Chat Outsider"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "chat-outsider@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                    threadId <- insert ChatThread
+                        { chatThreadDmPartyA = userPartyId
+                        , chatThreadDmPartyB = friendPartyId
+                        , chatThreadCreatedAt = now
+                        , chatThreadUpdatedAt = now
+                        }
+                    _ <- insert ChatMessage
+                        { chatMessageThreadId = threadId
+                        , chatMessageSenderPartyId = friendPartyId
+                        , chatMessageBody = "Visible thread message"
+                        , chatMessageCreatedAt = now
+                        }
+                    foreignThreadId <- insert ChatThread
+                        { chatThreadDmPartyA = friendPartyId
+                        , chatThreadDmPartyB = outsiderPartyId
+                        , chatThreadCreatedAt = now
+                        , chatThreadUpdatedAt = now
+                        }
+                    foreignMessageId <- insert ChatMessage
+                        { chatMessageThreadId = foreignThreadId
+                        , chatMessageSenderPartyId = outsiderPartyId
+                        , chatMessageBody = "Foreign cursor message"
+                        , chatMessageCreatedAt = addUTCTime 60 now
+                        }
+                    pure (fromSqlKey threadId, fromSqlKey foreignMessageId)
+                )
+                pool
+            let env =
+                    Env
+                        { envPool = pool
+                        , envConfig = error "envConfig should be unused in chat message tests"
+                        }
+
+            result <-
+                runHandler
+                    (runReaderT
+                        (chatListMessages (mkUser [Fan]) threadId Nothing (Just foreignMessageId) Nothing)
+                        env
+                    )
+
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr) `shouldContain` "beforeId not found in this thread"
+                Right messages ->
+                    expectationFailure
+                        ("Expected foreign-thread cursor to be rejected, got: " <> show messages)
 
     describe "resolveOptionalBookingPartyReference" $ do
         it "preserves omitted refs and resolves existing booking parties" $ do
@@ -2554,6 +2655,33 @@ initializeAuthSchema = do
         \\"notes\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+
+initializeChatSchema :: SqlPersistT IO ()
+initializeChatSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"chat_thread\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"dm_party_a\" INTEGER NOT NULL,\
+        \\"dm_party_b\" INTEGER NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_chat_thread\" UNIQUE (\"dm_party_a\", \"dm_party_b\"),\
+        \FOREIGN KEY(\"dm_party_a\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"dm_party_b\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"chat_message\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"thread_id\" INTEGER NOT NULL,\
+        \\"sender_party_id\" INTEGER NOT NULL,\
+        \\"body\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"thread_id\") REFERENCES \"chat_thread\"(\"id\"),\
+        \FOREIGN KEY(\"sender_party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 
