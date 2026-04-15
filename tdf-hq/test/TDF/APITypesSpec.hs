@@ -68,6 +68,8 @@ spec = do
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"workflow\":{\"id\":\"wf_nested\"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":true}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{}}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"unexpected\":true}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflow\":{\"id\":\"wf_nested\",\"label\":\"default\"}}" `shouldSatisfy` isLeft
 
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $

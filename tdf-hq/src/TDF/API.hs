@@ -10,13 +10,16 @@ import           Control.Applicative ((<|>))
 import           Servant
 import           Database.Persist          (Entity)
 import           Data.Int (Int64)
+import           Data.List (sort)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Data.Char (toLower)
-import           Data.Aeson (ToJSON(..), FromJSON(..), Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, rejectUnknownFields)
-import           Data.Aeson.Types (camelTo2, withObject, (.:?))
+import           Data.Aeson (ToJSON(..), FromJSON(..), Object, Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, rejectUnknownFields)
+import           Data.Aeson.Types (Parser, camelTo2, withObject, (.:?))
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.ByteString.Lazy as BL
 
 import           TDF.API.Admin     (AdminAPI)
@@ -588,10 +591,12 @@ data ChatKitSessionRequest = ChatKitSessionRequest
 
 instance FromJSON ChatKitSessionRequest where
   parseJSON = withObject "ChatKitSessionRequest" $ \o -> do
+    rejectUnexpectedObjectFields "ChatKitSessionRequest" ["workflowId", "workflow"] o
     workflowId <- traverse (normalizeWorkflowId "workflowId") =<< o .:? "workflowId"
     workflow <- o .:? "workflow"
     nestedId <- case workflow of
       Just (Object w) -> do
+        rejectUnexpectedObjectFields "ChatKitSessionRequest.workflow" ["id"] w
         mWorkflowId <- w .:? "id"
         case mWorkflowId of
           Nothing -> fail "workflow.id is required when workflow is provided"
@@ -613,6 +618,21 @@ instance FromJSON ChatKitSessionRequest where
         in if T.null trimmedWorkflowId
              then fail (T.unpack fieldName <> " cannot be blank")
              else pure trimmedWorkflowId
+
+rejectUnexpectedObjectFields :: String -> [Text] -> Object -> Parser ()
+rejectUnexpectedObjectFields objectName allowedFields rawObject =
+  case unexpectedFields of
+    [] -> pure ()
+    _ ->
+      fail
+        ( objectName
+            <> " contains unexpected field(s): "
+            <> T.unpack (T.intercalate ", " unexpectedFields)
+        )
+  where
+    allowedSet = sort allowedFields
+    presentFields = sort (map AesonKey.toText (AesonKeyMap.keys rawObject))
+    unexpectedFields = filter (`notElem` allowedSet) presentFields
 
 data ChatKitSessionResponse = ChatKitSessionResponse
   { ckrClientSecret :: Text
