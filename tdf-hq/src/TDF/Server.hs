@@ -6009,6 +6009,21 @@ resolvePackagePurchaseRefs PackagePurchaseReq{buyerId = rawBuyerId, productId = 
                 | otherwise ->
                     Right (buyerKey, productKey, productRecord)
 
+resolveInvoiceCustomerId :: Int64 -> SqlPersistT IO (Either ServerError (Key Party))
+resolveInvoiceCustomerId rawCustomerId =
+  case validatePositiveIdField "customerId" rawCustomerId of
+    Left err -> pure (Left err)
+    Right customerIdValid -> do
+      let customerKey = toSqlKey customerIdValid :: Key Party
+      mCustomer <- get customerKey
+      pure $
+        case mCustomer of
+          Nothing ->
+            Left err422
+              { errBody = "customerId references an unknown party" }
+          Just _ ->
+            Right customerKey
+
 -- Invoices
 invoiceServer :: AuthedUser -> ServerT InvoiceAPI AppM
 invoiceServer user =
@@ -6121,9 +6136,11 @@ createInvoice user CreateInvoiceReq{..} = do
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
+  customerKey <- do
+    resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
+    either throwError pure resolved
   now <- liftIO getCurrentTime
   let day      = utctDay now
-      cid      = toSqlKey ciCustomerId :: Key Party
       currency = normalizeCurrency ciCurrency
       notes    = normalizeOptionalText ciNotes
       number   = normalizeOptionalText ciNumber
@@ -6131,7 +6148,7 @@ createInvoice user CreateInvoiceReq{..} = do
       taxTotal = sum (map plTax preparedLines)
       grand    = sum (map plTotal preparedLines)
       invoiceRecord = Invoice
-        { invoiceCustomerId    = cid
+        { invoiceCustomerId    = customerKey
         , invoiceIssueDate     = day
         , invoiceDueDate       = day
         , invoiceNumber        = number

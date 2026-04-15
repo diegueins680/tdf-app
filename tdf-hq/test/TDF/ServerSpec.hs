@@ -92,6 +92,7 @@ import TDF.Server
     , validateCourseRegistrationReceiptId
     , validateCourseRegistrationFollowUpId
     , resolvePackagePurchaseRefs
+    , resolveInvoiceCustomerId
     , resolvePartyRoleAssignmentTarget
     )
 import TDF.ServerAuth
@@ -205,6 +206,56 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "resolveInvoiceCustomerId" $ do
+        it "rejects non-positive customer ids before invoice creation can hit persistence" $ do
+            result <- runAuthSqlite $
+                resolveInvoiceCustomerId 0
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "customerId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid invoice customer id to be rejected, got: " <> show value)
+
+        it "returns 422 for unknown customers instead of surfacing a database foreign-key failure" $ do
+            result <- runAuthSqlite $
+                resolveInvoiceCustomerId 999999
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "customerId references an unknown party"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown invoice customer to be rejected, got: " <> show value)
+
+        it "resolves existing customers before invoice creation proceeds" $ do
+            (expectedPartyId, result) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Invoice Customer"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "invoice-customer@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                resolved <- resolveInvoiceCustomerId (fromSqlKey partyId)
+                pure (partyId, resolved)
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected existing invoice customer to resolve, got: " <> show serverErr)
+                Right resolvedKey ->
+                    resolvedKey `shouldBe` expectedPartyId
 
     describe "course registration lookup ids" $ do
         it "rejects non-positive registration ids before course admin handlers can treat malformed lookups as missing rows" $ do
