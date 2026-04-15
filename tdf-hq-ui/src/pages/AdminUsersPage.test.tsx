@@ -1210,7 +1210,10 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Mostrando 1 de 3');
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+        expect(container.textContent).not.toContain('Mostrando 1 de 3');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.querySelector('[data-testid="admin-user-row-101"]')).toBeNull();
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
@@ -1344,7 +1347,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Mostrando 1 de 3 usuarios. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
         );
 
         const resultRow = getRowByUserId(container, 102);
@@ -1406,7 +1409,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Mostrando 1 de 3 usuarios.',
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
         );
 
         const resultRow = getRowByUserId(container, 101);
@@ -1469,7 +1472,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+          'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
         );
 
         const resultRow = getRowByUserId(container, 102);
@@ -1531,7 +1534,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+          'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
         );
 
         const resultRow = getRowByUserId(container, 102);
@@ -1586,10 +1589,10 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios.',
+          'Resultado único. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain(
-          'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios.',
+          'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.',
         );
         const resultRow = getRowByUserId(container, 102);
         expect(resultRow.querySelectorAll('a')).toHaveLength(0);
@@ -1650,7 +1653,8 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
-        expect(container.textContent).toContain('Mostrando 1 de 3 usuarios.');
+        expect(container.textContent).toContain('Resultado único.');
+        expect(container.textContent).not.toContain('Mostrando 1 de 3 usuarios.');
         expect(container.textContent).not.toContain(
           'Vista actual: solo usuarios activos.',
         );

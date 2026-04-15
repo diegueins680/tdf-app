@@ -367,7 +367,7 @@ export default function AdminUsersPage() {
     )
     : '';
   const visibleUsersSummary = useMemo(() => {
-    if (!hasUsers || showSingleUserGuidance || visibleUsers.length === 0) return '';
+    if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || visibleUsers.length === 0) return '';
 
     const parts: string[] = [];
 
@@ -391,6 +391,7 @@ export default function AdminUsersPage() {
     hasUsers,
     isFiltered,
     showMixedContactStateGuidance,
+    showSingleSearchResultGuidance,
     showSingleUserGuidance,
     totalUsersCount,
     visibleUsers.length,
