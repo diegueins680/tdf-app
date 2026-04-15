@@ -27,7 +27,7 @@ import TDF.API.Admin
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
-import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate)
+import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate (..))
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (loadConfig)
 import TDF.DB (Env (..))
@@ -200,6 +200,43 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "rejects prefixed or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
             decodeWhatsAppResend "{\"awrrMessage\":\"Hola\"}" `shouldSatisfy` isLeft
             decodeWhatsAppResend "{\"message\":\"Hola\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
+    describe "UserAccount payload FromJSON" $ do
+        it "accepts canonical admin wire keys for user create and update payloads" $ do
+            case decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"uacPassword\":\"TempPass123!\",\"uacActive\":true,\"uacRoles\":[\"Admin\",\"Teacher\"]}" of
+                Left err ->
+                    expectationFailure ("Expected canonical user create payload to decode, got: " <> err)
+                Right payload -> do
+                    uacPartyId payload `shouldBe` 42
+                    uacUsername payload `shouldBe` Just "ada.example"
+                    uacPassword payload `shouldBe` Just "TempPass123!"
+                    uacActive payload `shouldBe` Just True
+                    uacRoles payload `shouldBe` Just [Admin, Teacher]
+
+            case decodeUserAccountUpdate
+                "{\"uauUsername\":\"ada.ops\",\"uauPassword\":\"NextPass123!\",\"uauActive\":false,\"uauRoles\":[\"ReadOnly\"]}" of
+                Left err ->
+                    expectationFailure ("Expected canonical user update payload to decode, got: " <> err)
+                Right payload -> do
+                    uauUsername payload `shouldBe` Just "ada.ops"
+                    uauPassword payload `shouldBe` Just "NextPass123!"
+                    uauActive payload `shouldBe` Just False
+                    uauRoles payload `shouldBe` Just [ReadOnly]
+
+        it "rejects mixed-prefix or unexpected keys so admin user writes fail explicitly" $ do
+            decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"roles\":[\"Admin\"]}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauUsername\":\"ada.ops\",\"active\":false}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
 
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
@@ -579,6 +616,10 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeWhatsAppSend = eitherDecode
     decodeWhatsAppResend :: BL8.ByteString -> Either String AdminWhatsAppResendRequest
     decodeWhatsAppResend = eitherDecode
+    decodeUserAccountCreate :: BL8.ByteString -> Either String UserAccountCreate
+    decodeUserAccountCreate = eitherDecode
+    decodeUserAccountUpdate :: BL8.ByteString -> Either String UserAccountUpdate
+    decodeUserAccountUpdate = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
 

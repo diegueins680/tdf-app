@@ -100,7 +100,8 @@ data UserAccountCreate = UserAccountCreate
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountCreate
-instance FromJSON UserAccountCreate
+instance FromJSON UserAccountCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data UserAccountUpdate = UserAccountUpdate
   { uauUsername :: Maybe Text
@@ -110,7 +111,8 @@ data UserAccountUpdate = UserAccountUpdate
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountUpdate
-instance FromJSON UserAccountUpdate
+instance FromJSON UserAccountUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data AccountStatusDTO = AccountStatusActive | AccountStatusInactive
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
