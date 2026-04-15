@@ -486,7 +486,10 @@ data ServiceAdCreateReq = ServiceAdCreateReq
   , sacSlotMinutes      :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON ServiceAdCreateReq where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data ServiceAdSlotDTO = ServiceAdSlotDTO
   { sasId       :: Int64
@@ -503,7 +506,10 @@ data ServiceAdSlotCreateReq = ServiceAdSlotCreateReq
   , sascEndsAt   :: UTCTime
   } deriving (Show, Generic)
 instance FromJSON ServiceAdSlotCreateReq where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 4 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data ServiceMarketplaceBookingReq = ServiceMarketplaceBookingReq
   { smbAdId         :: Int64

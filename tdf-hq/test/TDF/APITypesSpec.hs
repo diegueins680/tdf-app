@@ -372,6 +372,39 @@ spec = do
                 "{\"adId\":42,\"slotId\":84,\"title\":\"Mix review\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
+    describe "Service marketplace ad write payloads FromJSON" $ do
+        it "accepts canonical service ad and slot creation payloads" $ do
+            case decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"description\":\"Detailed feedback\",\"feeCents\":5000,\"currency\":\"USD\",\"slotMinutes\":90}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical service ad create payload to decode, got: " <> err)
+                Right (API.ServiceAdCreateReq serviceCatalogIdVal roleTagVal headlineVal descriptionVal feeCentsVal currencyVal slotMinutesVal) -> do
+                    serviceCatalogIdVal `shouldBe` Just 9
+                    roleTagVal `shouldBe` "mixing"
+                    headlineVal `shouldBe` "Mix critique"
+                    descriptionVal `shouldBe` Just "Detailed feedback"
+                    feeCentsVal `shouldBe` 5000
+                    currencyVal `shouldBe` Just "USD"
+                    slotMinutesVal `shouldBe` Just 90
+
+            case decodeServiceAdSlotCreate
+                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical service ad slot create payload to decode, got: " <> err)
+                Right (API.ServiceAdSlotCreateReq startsAtVal endsAtVal) -> do
+                    show startsAtVal `shouldBe` "2026-05-01 15:00:00 UTC"
+                    show endsAtVal `shouldBe` "2026-05-01 16:30:00 UTC"
+
+        it "rejects unexpected keys so service ad writes cannot silently ignore caller intent" $ do
+            decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"feeCents\":5000,\"active\":false}"
+                `shouldSatisfy` isLeft
+            decodeServiceAdSlotCreate
+                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\",\"status\":\"closed\"}"
+                `shouldSatisfy` isLeft
+
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads" $
             case decodeMarketplaceCheckout
@@ -484,6 +517,10 @@ spec = do
     decodePipelineCardUpdate = eitherDecode
     decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
     decodeInstagramOAuthExchange = eitherDecode
+    decodeServiceAdCreate :: BL8.ByteString -> Either String API.ServiceAdCreateReq
+    decodeServiceAdCreate = eitherDecode
+    decodeServiceAdSlotCreate :: BL8.ByteString -> Either String API.ServiceAdSlotCreateReq
+    decodeServiceAdSlotCreate = eitherDecode
     decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq
     decodeServiceMarketplaceBooking = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
