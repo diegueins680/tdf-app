@@ -551,7 +551,10 @@ data GenerateSessionInvoiceLineReq = GenerateSessionInvoiceLineReq
   , gsilSriIvaCode        :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceLineReq where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 4 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = dtoCamelDrop 4
+    , rejectUnknownFields = True
+    }
 
 data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   { gsiCustomerId          :: Maybe Int64
@@ -564,7 +567,10 @@ data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   , gsiCertificatePassword :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceReq where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = dtoCamelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data SriIssueBuyerDTO = SriIssueBuyerDTO
   { sibRuc       :: Text

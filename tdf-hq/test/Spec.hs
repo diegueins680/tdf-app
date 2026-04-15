@@ -38,6 +38,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
+import qualified TDF.DTO as DTO
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
       EventMetadataUpdateDTO (..),
@@ -1814,6 +1815,46 @@ main = hspec $ do
                     <> "\"dryRun\":true,"
                     <> "\"dryrun\":false}"
             isLeft (eitherDecode payload :: Either String AdminEmailBroadcastRequest) `shouldBe` True
+
+    describe "GenerateSessionInvoiceReq" $ do
+        it "accepts canonical session-invoice payloads used by the invoicing flow" $
+            case
+                ( eitherDecode
+                    "{\"customerId\":42,\"currency\":\"USD\",\"number\":\"INV-2026-001\",\"notes\":\"  April session  \",\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000,\"taxBps\":1500,\"serviceOrderId\":7,\"sriCode\":\"SRV-001\"}],\"generateReceipt\":true,\"issueSri\":false}"
+                    :: Either String DTO.GenerateSessionInvoiceReq
+                ) of
+                Left err ->
+                    expectationFailure ("Expected canonical generate-session-invoice payload to decode, got: " <> err)
+                Right payload -> do
+                    DTO.gsiCustomerId payload `shouldBe` Just 42
+                    DTO.gsiCurrency payload `shouldBe` Just "USD"
+                    DTO.gsiNumber payload `shouldBe` Just "INV-2026-001"
+                    DTO.gsiGenerateReceipt payload `shouldBe` Just True
+                    DTO.gsiIssueSri payload `shouldBe` Just False
+                    case DTO.gsiLineItems payload of
+                        [lineItem] -> do
+                            DTO.gsilDescription lineItem `shouldBe` "Studio session"
+                            DTO.gsilQuantity lineItem `shouldBe` 1
+                            DTO.gsilUnitCents lineItem `shouldBe` 9000
+                            DTO.gsilTaxBps lineItem `shouldBe` Just 1500
+                            DTO.gsilServiceOrderId lineItem `shouldBe` Just 7
+                            DTO.gsilSriCode lineItem `shouldBe` Just "SRV-001"
+                        lineItems ->
+                            expectationFailure ("Expected one canonical invoice line item, got: " <> show lineItems)
+
+        it "rejects unexpected top-level or nested line-item keys so typoed invoice writes fail explicitly" $ do
+            isLeft
+                ( eitherDecode
+                    "{\"customerId\":42,\"currency\":\"USD\",\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000}],\"generateReceipt\":true,\"generate_receipt\":false}"
+                    :: Either String DTO.GenerateSessionInvoiceReq
+                )
+                `shouldBe` True
+            isLeft
+                ( eitherDecode
+                    "{\"customerId\":42,\"currency\":\"USD\",\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000,\"unitAmountCents\":9500}]}"
+                    :: Either String DTO.GenerateSessionInvoiceReq
+                )
+                `shouldBe` True
 
     describe "live session intake multipart parsing" $ do
         it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
