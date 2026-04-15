@@ -373,7 +373,7 @@ describe('PartiesPage', () => {
     }
   });
 
-  it('keeps the first CRM contact focused on the row instead of showing list search chrome', async () => {
+  it('replaces the first CRM row with a compact first-contact summary and one action entry point', async () => {
     listPartiesMock.mockResolvedValue([
       {
         partyId: 1,
@@ -391,16 +391,18 @@ describe('PartiesPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.querySelector('input[aria-label="Buscar contactos"]')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+        expect(getColumnHeaders(container)).toEqual([]);
+        expect(container.textContent).toContain('Primer contacto registrado');
         expect(container.textContent).toContain(
-          'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.',
+          'Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el buscador y la tabla para comparar contactos.',
         );
-        expect(container.textContent).not.toContain(
-          'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.',
-        );
-        expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
+        expect(container.textContent).toContain('Acciones de Ada Lovelace');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(0);
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -678,14 +680,15 @@ describe('PartiesPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primer contacto registrado');
         expect(container.textContent).toContain('Grace Hopper');
         expect(container.textContent).toContain(
-          'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.',
+          'Completa el correo desde Acciones antes de crear el usuario.',
         );
       });
 
       await act(async () => {
-        clickButton(getButtonByAriaLabel(container, 'Abrir acciones para Grace Hopper'));
+        clickButton(getButtonsByText(document.body, 'Acciones de Grace Hopper')[0]!);
         await flushPromises();
         await flushPromises();
       });

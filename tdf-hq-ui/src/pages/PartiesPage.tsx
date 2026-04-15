@@ -363,8 +363,9 @@ export default function PartiesPage() {
   const showSearchField = !showInitialLoadingState && (parties.length > 1 || trimmedSearch !== '');
   const showClearSearchAction = showSearchField && trimmedSearch !== '';
   const showSearchEmptyState = !partiesQuery.isLoading && hasContacts && filtered.length === 0 && trimmedSearch !== '';
-  const showSingleContactGuidance = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
-  const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactGuidance;
+  const showSingleContactSummary = !partiesQuery.isLoading && parties.length === 1 && trimmedSearch === '';
+  const singleContact = showSingleContactSummary ? (filtered[0] ?? null) : null;
+  const showTableGuidance = !partiesQuery.isLoading && filtered.length > 0 && !showSingleContactSummary;
   const showSearchContextSummary = !partiesQuery.isLoading && hasContacts && filtered.length > 0 && trimmedSearch !== '';
   const visibleContactsWithUserAccountCount = filtered.filter((party) => party.hasUserAccount).length;
   const allVisibleContactsHaveUserAccount = canManageRoles
@@ -382,7 +383,13 @@ export default function PartiesPage() {
         sharedUserAccountGuidanceText,
       ].filter(Boolean).join(' ')
     : '';
-  const singleContactGuidanceText = 'Solo hay un contacto por ahora. Usa su nombre para ver relaciones y abre Acciones para editarlo o gestionar su acceso. El buscador aparecerá cuando exista el segundo contacto.';
+  const singleContactAccessGuidanceText = singleContact == null
+    ? ''
+    : singleContact.hasUserAccount
+      ? (canManageRoles ? 'Acceso listo. Usa Acciones para revisar el usuario o abrir Roles y accesos.' : '')
+      : hasPartyPrimaryEmail(singleContact)
+        ? 'Todavía no tiene usuario. Usa Acciones para crearlo cuando haga falta.'
+        : 'Completa el correo desde Acciones antes de crear el usuario.';
   const baseTableGuidanceText = 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
   const tableGuidanceText = [
     baseTableGuidanceText,
@@ -481,13 +488,68 @@ export default function PartiesPage() {
           <Alert severity="info" variant="outlined">
             {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
           </Alert>
+        ) : showSingleContactSummary && singleContact ? (
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: 2,
+              bgcolor: 'background.default',
+            }}
+          >
+            <Stack spacing={2}>
+              <Stack spacing={0.75}>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Primer contacto registrado
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el
+                  buscador y la tabla para comparar contactos.
+                </Typography>
+              </Stack>
+
+              <Stack spacing={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                  <Button
+                    variant="text"
+                    onClick={(event) => {
+                      setRelatedParty(singleContact);
+                      setRelatedAnchor(event.currentTarget);
+                    }}
+                    sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
+                  >
+                    <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                      {singleContact.displayName}
+                    </Typography>
+                  </Button>
+                  {singleContact.isOrg && <Chip label="Empresa" size="small" />}
+                  {singleContact.hasUserAccount && <Chip label="Usuario creado" size="small" color="success" variant="outlined" />}
+                </Stack>
+
+                <Typography variant="body2">
+                  Contacto: {getPartyContactSummary(singleContact)}
+                </Typography>
+
+                {singleContactAccessGuidanceText !== '' && (
+                  <Typography variant="body2" color="text.secondary">
+                    {singleContactAccessGuidanceText}
+                  </Typography>
+                )}
+              </Stack>
+
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={(event) => openActionsMenu(event, singleContact)}
+                >
+                  {`Acciones de ${singleContact.displayName}`}
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
         ) : (
           <>
-            {showSingleContactGuidance && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                {singleContactGuidanceText}
-              </Typography>
-            )}
             {showTableGuidance && (
               showSearchContextSummary ? (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
