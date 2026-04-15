@@ -75,6 +75,7 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 };
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
+const EDITABLE_ROLES_LABEL = 'Roles editables';
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
@@ -297,7 +298,7 @@ export default function UserRoleManagement() {
                     )}
                     <Stack spacing={0.25} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                       <Typography variant="caption" color="text.secondary">
-                        Roles
+                        {EDITABLE_ROLES_LABEL}
                       </Typography>
                       <ButtonBase
                         onClick={() => handleEditClick(singleUser)}
@@ -330,17 +331,7 @@ export default function UserRoleManagement() {
                     <TableCell>Usuario</TableCell>
                     {showContactColumn && <TableCell>Contacto</TableCell>}
                     {showStatusColumn && <TableCell>Estado</TableCell>}
-                    <TableCell>
-                      <Stack spacing={0}>
-                        <Typography component="span" variant="body2" fontWeight={600}>
-                          Roles
-                        </Typography>
-                        {'\n'}
-                        <Typography component="span" variant="caption" color="text.secondary">
-                          Editar aquí
-                        </Typography>
-                      </Stack>
-                    </TableCell>
+                    <TableCell>{EDITABLE_ROLES_LABEL}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
