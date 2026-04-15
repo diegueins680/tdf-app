@@ -907,7 +907,8 @@ data RadioImportRequest = RadioImportRequest
   , rirLimit   :: Maybe Int
   } deriving (Show, Generic)
 instance ToJSON RadioImportRequest
-instance FromJSON RadioImportRequest
+instance FromJSON RadioImportRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioImportResult = RadioImportResult
   { rirProcessed :: Int
@@ -925,7 +926,8 @@ data RadioMetadataRefreshRequest = RadioMetadataRefreshRequest
   , rmrOnlyMissing :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON RadioMetadataRefreshRequest
-instance FromJSON RadioMetadataRefreshRequest
+instance FromJSON RadioMetadataRefreshRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioMetadataRefreshResult = RadioMetadataRefreshResult
   { rmrProcessed :: Int

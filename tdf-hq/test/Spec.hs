@@ -34,7 +34,10 @@ import TDF.API.LiveSessions
       LiveSessionMusicianPayload (..),
       LiveSessionSongPayload (..) )
 import TDF.API.SocialSyncAPI (SocialSyncAPI)
-import TDF.API.Types (InternTaskUpdate (..))
+import TDF.API.Types
+    ( InternTaskUpdate (..),
+      RadioImportRequest (..),
+      RadioMetadataRefreshRequest (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
@@ -1290,6 +1293,35 @@ main = hspec $ do
                             expectationFailure ("Expected invalid radio refresh limit to be rejected, got " <> show value)
             assertRejected 0
             assertRejected 401
+
+    describe "radio request JSON contracts" $ do
+        it "accepts canonical radio import and metadata refresh payloads used by current handlers" $ do
+            case eitherDecode "{\"rirSources\":[\"https://radio.example.com/catalog.csv\"],\"rirLimit\":25}" of
+                Left err ->
+                    expectationFailure ("Expected canonical radio import payload to decode, got: " <> err)
+                Right payload -> do
+                    rirSources payload `shouldBe` Just ["https://radio.example.com/catalog.csv"]
+                    rirLimit payload `shouldBe` Just 25
+
+            case eitherDecode "{\"rmrLimit\":10,\"rmrOnlyMissing\":true}" of
+                Left err ->
+                    expectationFailure ("Expected canonical radio metadata refresh payload to decode, got: " <> err)
+                Right payload -> do
+                    rmrLimit payload `shouldBe` Just 10
+                    rmrOnlyMissing payload `shouldBe` Just True
+
+        it "rejects typoed radio request keys instead of silently falling back to default import or refresh behavior" $ do
+            ( eitherDecode
+                "{\"sources\":[\"https://radio.example.com/catalog.csv\"],\"limit\":25}"
+                    :: Either String RadioImportRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"limit\":10,\"onlyMissing\":true}"
+                    :: Either String RadioMetadataRefreshRequest
+                )
+                `shouldSatisfy` isLeft
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do
