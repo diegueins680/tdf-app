@@ -330,7 +330,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('hides zero-result inbox filters once inbound statuses are known', async () => {
+  it('keeps zero-result filters hidden while reserving per-channel status chips for the all-messages view', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
     ]);
@@ -359,11 +359,22 @@ describe('SocialInboxPage', () => {
       expect(queryFilterChip(container, 'Replied')?.textContent).toContain('Replied (1)');
       expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
       expect(container.textContent).toContain('Inbound: 1');
-      expect(container.textContent).toContain('Pending: 1');
-      expect(container.textContent).toContain('Replied: 1');
+      expect(container.textContent).not.toContain('Pending: 1');
+      expect(container.textContent).not.toContain('Replied: 1');
       expect(container.textContent).not.toContain('Pending: 0');
       expect(container.textContent).not.toContain('Replied: 0');
       expect(container.textContent).not.toContain('Failed: 0');
+    });
+
+    await act(async () => {
+      queryFilterChip(container, 'All')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).toContain('Replied: 1');
     });
 
     await cleanup();

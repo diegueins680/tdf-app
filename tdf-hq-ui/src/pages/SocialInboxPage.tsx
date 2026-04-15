@@ -1229,6 +1229,7 @@ export default function SocialInboxPage() {
   }, [filterCounts]);
   const showSingleFilterSummary = Boolean(singleVisibleFilter) && (filter === 'all' || filter === singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
+  const showChannelStatusChips = filter === 'all' && !showSingleFilterSummary;
   const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
   const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
@@ -1525,7 +1526,7 @@ export default function SocialInboxPage() {
                 messages={panel.messages}
                 loading={panel.loading}
                 reviewMode={reviewMode}
-                showStatusChips={!showSingleFilterSummary}
+                showStatusChips={showChannelStatusChips}
                 onSelect={(next) => setSelection(next)}
               />
             ))}
