@@ -105,10 +105,16 @@ const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
   'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.';
+const ADMIN_USERS_PAGE_PROFILE_PENDING_INTRO =
+  'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado.';
 const ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO =
   'Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
+const ADMIN_USERS_PAGE_PROFILE_PENDING_NUMBER_SETUP_INTRO =
+  'Estos usuarios todavía no tienen un perfil vinculado. Cuando lo tengan, podrás abrirlos desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
   'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO =
+  'Estos usuarios todavía no tienen un perfil vinculado. Cuando lo tengan, podrás abrirlos desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_USER_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const SINGLE_USER_NUMBER_SETUP_GUIDANCE =
@@ -121,6 +127,34 @@ const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+
+type UserContactReadiness = ReturnType<typeof getUserContactReadiness>;
+
+const buildPendingProfileGuidance = ({
+  scope,
+  readiness,
+}: {
+  scope: 'single-user' | 'single-result';
+  readiness: UserContactReadiness;
+}) => {
+  const scopePrefix = scope === 'single-user' ? 'Solo hay un usuario por ahora.' : 'Resultado único.';
+  const scopeSuffix =
+    scope === 'single-user'
+      ? ' Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.'
+      : '';
+  const missingProfileMessage =
+    ' Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil.';
+
+  if (readiness === 'whatsapp-ready') {
+    return `${scopePrefix}${missingProfileMessage} Usa WhatsApp si ya tiene un número disponible.${scopeSuffix}`;
+  }
+
+  if (readiness === 'contact-ready') {
+    return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+  }
+
+  return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+};
 
 const buildUserAccessSummary = ({
   modules,
@@ -256,6 +290,7 @@ export default function AdminUsersPage() {
     [visibleUsers],
   );
   const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
+  const hasVisibleLinkedProfile = visibleUsers.some((user) => hasLinkedAdminUserProfile(user));
   const sharedRolesSummary = useMemo(
     () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.roles))),
     [visibleUsers],
@@ -364,22 +399,38 @@ export default function AdminUsersPage() {
     [activeScopeSummary, showSearchThresholdGuidance, visibleUsersSummary],
   );
   const generalIntro = hasVisibleWhatsAppAction
-    ? ADMIN_USERS_PAGE_INTRO
+    ? hasVisibleLinkedProfile
+      ? ADMIN_USERS_PAGE_INTRO
+      : ADMIN_USERS_PAGE_PROFILE_PENDING_INTRO
     : visibleUsersAllNeedContact
-      ? ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO
-      : ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO;
-  const singleUserGuidance = singleVisibleUserReadiness === 'whatsapp-ready'
-    ? SINGLE_USER_GUIDANCE
-    : singleVisibleUserReadiness === 'contact-ready'
-      ? SINGLE_USER_NUMBER_SETUP_GUIDANCE
-      : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+      ? hasVisibleLinkedProfile
+        ? ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO
+        : ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO
+      : hasVisibleLinkedProfile
+        ? ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO
+        : ADMIN_USERS_PAGE_PROFILE_PENDING_NUMBER_SETUP_INTRO;
+  const singleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
+    ? buildPendingProfileGuidance({
+        scope: 'single-user',
+        readiness: singleVisibleUserReadiness ?? 'missing-contact',
+      })
+    : singleVisibleUserReadiness === 'whatsapp-ready'
+      ? SINGLE_USER_GUIDANCE
+      : singleVisibleUserReadiness === 'contact-ready'
+        ? SINGLE_USER_NUMBER_SETUP_GUIDANCE
+        : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
   const singleSearchResultGuidance = showSingleSearchResultGuidance
     ? (
-      singleSearchResultReadiness === 'whatsapp-ready'
-        ? SINGLE_SEARCH_RESULT_GUIDANCE
-        : singleSearchResultReadiness === 'contact-ready'
-          ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
-        : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
+      singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
+        ? buildPendingProfileGuidance({
+            scope: 'single-result',
+            readiness: singleSearchResultReadiness ?? 'missing-contact',
+          })
+        : singleSearchResultReadiness === 'whatsapp-ready'
+          ? SINGLE_SEARCH_RESULT_GUIDANCE
+          : singleSearchResultReadiness === 'contact-ready'
+            ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
+            : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
     )
     : '';
   const singleSearchResultAccessSummary = useMemo(

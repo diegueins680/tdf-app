@@ -544,6 +544,43 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the multi-user intro focused on available actions when no visible user has a linked profile', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        username: 'ada-no-profile',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: null,
+        partyName: 'Grace Hopper',
+        username: 'grace-no-profile',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+        );
+        expect(container.textContent).not.toContain(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+        expect(getRowByUserId(container, 101).querySelectorAll('a')).toHaveLength(0);
+        expect(getRowByUserId(container, 102).querySelectorAll('a')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps two-user rosters focused by waiting to show search until the list is denser', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
@@ -890,6 +927,35 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
         expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
         expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the lone-user intro honest when the first admin still has no linked profile', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        username: 'solo-no-profile',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(container.textContent).not.toContain(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
+        expect(getRowByUserId(container, 101).querySelectorAll('a')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -1466,6 +1532,60 @@ describe('AdminUsersPage', () => {
         expect(resultRow.textContent).not.toContain('Contacto pendiente');
         expect(resultRow.textContent).not.toContain('WhatsApp pendiente');
         expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps single-result guidance honest when the matched user still has no linked profile', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: null,
+        username: 'grace-no-profile',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'grace-no-profile');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios.',
+        );
+        expect(container.textContent).not.toContain(
+          'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. Mostrando 1 de 3 usuarios.',
+        );
+        expect(getRowByUserId(container, 102).querySelectorAll('a')).toHaveLength(0);
+        expect(getButtonsByText(getRowByUserId(container, 102), 'WhatsApp')).toHaveLength(0);
       });
     } finally {
       await cleanup();
