@@ -986,16 +986,7 @@ export default function AdminConsolePage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Usuario</TableCell>
-                  <TableCell>
-                    <Stack spacing={0} component="span">
-                      <Typography component="span" variant="body2" fontWeight={600}>
-                        Roles
-                      </Typography>
-                      <Typography component="span" variant="caption" color="text.secondary">
-                        Clic para editar
-                      </Typography>
-                    </Stack>
-                  </TableCell>
+                  <TableCell>Roles</TableCell>
                   {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
                   {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                 </TableRow>
@@ -1044,6 +1035,7 @@ export default function AdminConsolePage() {
                       <TableCell>
                         <Button
                           size="small"
+                          endIcon={<EditOutlinedIcon fontSize="small" />}
                           onClick={() => setEditingUser(user)}
                           aria-label={`Editar roles de ${identity.primary}`}
                           sx={{

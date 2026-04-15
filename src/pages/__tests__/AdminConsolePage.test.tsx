@@ -1392,7 +1392,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('moves the inline edit affordance into the roles header and keeps the helper line for hidden columns only', async () => {
+  it('moves the inline edit affordance onto each role button and keeps the helper line for hidden columns only', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -1409,14 +1409,14 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      const rolesHeader = screen.getByRole('columnheader', { name: /Roles/i });
       expect(
         screen.getByText(
           /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.queryByText(/^Haz clic sobre un rol para editarlo desde esta misma vista\.$/i)).not.toBeInTheDocument();
-      expect(within(rolesHeader).getByText(/Clic para editar/i)).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
@@ -1424,10 +1424,10 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).not.toHaveAttribute('aria-describedby');
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Activo$/i)).not.toBeInTheDocument();
@@ -1460,10 +1460,12 @@ describe('AdminConsolePage', () => {
           /Vista actual:/i,
         ),
       ).not.toBeInTheDocument();
-      expect(screen.getByText(/Clic para editar/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Último acceso/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
+      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
     });
 
     const activeRow = screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }).closest('tr');
