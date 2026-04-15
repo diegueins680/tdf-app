@@ -26,7 +26,7 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
-import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
+import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (Day)
@@ -168,12 +168,41 @@ data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
   , notes          :: Maybe Text
   , attachmentUrl  :: Maybe Text
   , attachmentName :: Maybe Text
-  , nextFollowUpAt :: Maybe Text
+  , nextFollowUpAt :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationFollowUpUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object o) = do
+    CourseRegistrationFollowUpUpdateParsed
+      { entryType = parsedEntryType
+      , subject = parsedSubject
+      , notes = parsedNotes
+      , attachmentUrl = parsedAttachmentUrl
+      , attachmentName = parsedAttachmentName
+      } <- genericParseJSON strictObjectOptions value
+    nextFollowUpAtUpdate <- o .:! "nextFollowUpAt"
+    pure CourseRegistrationFollowUpUpdate
+      { entryType = parsedEntryType
+      , subject = parsedSubject
+      , notes = parsedNotes
+      , attachmentUrl = parsedAttachmentUrl
+      , attachmentName = parsedAttachmentName
+      , nextFollowUpAt = nextFollowUpAtUpdate
+      }
+  parseJSON _ = fail "CourseRegistrationFollowUpUpdate must be an object"
 instance ToJSON CourseRegistrationFollowUpUpdate
+
+data CourseRegistrationFollowUpUpdateParsed = CourseRegistrationFollowUpUpdateParsed
+  { entryType      :: Maybe Text
+  , subject        :: Maybe Text
+  , notes          :: Maybe Text
+  , attachmentUrl  :: Maybe Text
+  , attachmentName :: Maybe Text
+  , nextFollowUpAt :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseRegistrationFollowUpUpdateParsed where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data CourseSessionIn = CourseSessionIn
   { label :: Text

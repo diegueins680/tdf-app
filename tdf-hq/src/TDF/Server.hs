@@ -2961,7 +2961,7 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
     Just rawUrl -> either throwError pure (validateCourseRegistrationUrlField "attachmentUrl" (Just rawUrl))
   mNextFollowUpAt <- case nextFollowUpAt of
     Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
-    Just raw -> parseOptionalUtcText "nextFollowUpAt" (Just raw)
+    Just raw -> parseOptionalUtcText "nextFollowUpAt" raw
   now <- liftIO getCurrentTime
   let updated =
         followUp

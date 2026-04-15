@@ -128,7 +128,20 @@ spec = do
                     notesVal `shouldBe` Just "Moved reminder to next week"
                     attachmentUrlVal `shouldBe` Nothing
                     attachmentNameVal `shouldBe` Nothing
-                    nextFollowUpAtVal `shouldBe` Just "2026-05-09T15:00:00Z"
+                    nextFollowUpAtVal `shouldBe` Just (Just "2026-05-09T15:00:00Z")
+
+        it "distinguishes omitted follow-up reminder updates from explicit null clears" $ do
+            case decodeFollowUpUpdate "{\"notes\":\"Keep note only\"}" of
+                Left err ->
+                    expectationFailure ("Expected omitted follow-up reminder update to decode, got: " <> err)
+                Right (Courses.CourseRegistrationFollowUpUpdate _ _ _ _ _ nextFollowUpAtVal) ->
+                    nextFollowUpAtVal `shouldBe` Nothing
+
+            case decodeFollowUpUpdate "{\"notes\":\"Clear reminder\",\"nextFollowUpAt\":null}" of
+                Left err ->
+                    expectationFailure ("Expected explicit follow-up reminder clear to decode, got: " <> err)
+                Right (Courses.CourseRegistrationFollowUpUpdate _ _ _ _ _ nextFollowUpAtVal) ->
+                    nextFollowUpAtVal `shouldBe` Just Nothing
 
         it "rejects unexpected keys so malformed follow-up writes fail explicitly" $ do
             decodeFollowUpCreate
