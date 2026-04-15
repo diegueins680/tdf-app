@@ -73,6 +73,7 @@ import TDF.Server
     , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
     , validateOptionalCourseRegistrationStatusFilter
+    , validateOptionalCourseSessionStartHour
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
@@ -2390,7 +2391,6 @@ spec = describe "TDF.Server helpers" $ do
         it "accepts non-negative required and optional values" $ do
             validateCourseNonNegativeField "priceCents" 0 `shouldBe` Right 0
             validateCourseNonNegativeField "capacity" 25 `shouldBe` Right 25
-            validateOptionalCourseNonNegativeField "sessionStartHour" Nothing `shouldBe` Right Nothing
             validateOptionalCourseNonNegativeField "sessionDurationHours" (Just 3) `shouldBe` Right (Just 3)
 
         it "rejects negative values instead of silently clamping them to zero" $ do
@@ -2402,8 +2402,23 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected a negative " <> fieldName <> " error, got: " <> show value)
             assertInvalid (validateCourseNonNegativeField "priceCents" (-1)) "priceCents"
             assertInvalid (validateCourseNonNegativeField "capacity" (-5)) "capacity"
-            assertInvalid (validateOptionalCourseNonNegativeField "sessionStartHour" (Just (-1))) "sessionStartHour"
             assertInvalid (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2))) "sessionDurationHours"
+
+    describe "course upsert sessionStartHour validation" $ do
+        it "accepts omitted or in-range session start hours" $ do
+            validateOptionalCourseSessionStartHour Nothing `shouldBe` Right Nothing
+            validateOptionalCourseSessionStartHour (Just 0) `shouldBe` Right (Just 0)
+            validateOptionalCourseSessionStartHour (Just 23) `shouldBe` Right (Just 23)
+
+        it "rejects impossible session start hours instead of exposing invalid public schedule data" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "sessionStartHour must be between 0 and 23"
+                    Right value ->
+                        expectationFailure ("Expected an invalid sessionStartHour error, got: " <> show value)
+            assertInvalid (validateOptionalCourseSessionStartHour (Just (-1)))
+            assertInvalid (validateOptionalCourseSessionStartHour (Just 24))
 
     describe "course upsert nested text validation" $ do
         it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do

@@ -2342,7 +2342,7 @@ saveCourse Courses.CourseUpsert{..} = do
     throwBadRequest "titulo requerido"
   capacityClean <- either throwError pure (validateCourseNonNegativeField "capacity" capacity)
   priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
-  startHourClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionStartHour" sessionStartHour)
+  startHourClean <- either throwError pure (validateOptionalCourseSessionStartHour sessionStartHour)
   durationHoursClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionDurationHours" sessionDurationHours)
   sessionsClean <- either throwError pure (validateCourseSessionInputs sessions)
   syllabusClean <- either throwError pure (validateCourseSyllabusInputs syllabus)
@@ -5614,6 +5614,19 @@ validateCourseNonNegativeField fieldName value
 validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
 validateOptionalCourseNonNegativeField fieldName =
   traverse (validateCourseNonNegativeField fieldName)
+
+validateOptionalCourseSessionStartHour :: Maybe Int -> Either ServerError (Maybe Int)
+validateOptionalCourseSessionStartHour =
+  traverse validateCourseSessionStartHour
+
+validateCourseSessionStartHour :: Int -> Either ServerError Int
+validateCourseSessionStartHour value
+  | value < 0 || value > 23 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "sessionStartHour must be between 0 and 23")
+        }
+  | otherwise = Right value
 
 validateCourseSessionInputs :: [CourseSessionIn] -> Either ServerError [CourseSessionIn]
 validateCourseSessionInputs =
