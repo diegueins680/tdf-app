@@ -12,7 +12,13 @@ import Test.Hspec
 import qualified TDF.API as API
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
-import TDF.API.Types (LooseJSON, MarketplaceCheckoutReq (..), RolePayload (..))
+import TDF.API.Types
+    ( LooseJSON
+    , MarketplaceCheckoutReq (..)
+    , PipelineCardCreate (..)
+    , PipelineCardUpdate (..)
+    , RolePayload (..)
+    )
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
 import TDF.Trials.DTO (TrialRequestIn (..))
@@ -263,6 +269,43 @@ spec = do
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
 
+    describe "PipelineCard payload FromJSON" $ do
+        it "accepts canonical pipeline create and patch payloads" $ do
+            case decodePipelineCardCreate
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"stage\":\"Inquiry\",\"sortOrder\":2,\"notes\":\"Needs quote\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical pipeline card create payload to decode, got: " <> err)
+                Right (PipelineCardCreate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                    titleVal `shouldBe` "Demo Lead"
+                    artistVal `shouldBe` Just "Ada"
+                    stageVal `shouldBe` Just "Inquiry"
+                    sortOrderVal `shouldBe` Just 2
+                    notesVal `shouldBe` Just "Needs quote"
+
+            case decodePipelineCardUpdate
+                "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical pipeline card patch payload to decode, got: " <> err)
+                Right (PipelineCardUpdate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                    titleVal `shouldBe` Just "Final Quote"
+                    artistVal `shouldBe` Just Nothing
+                    stageVal `shouldBe` Nothing
+                    sortOrderVal `shouldBe` Nothing
+                    notesVal `shouldBe` Just Nothing
+
+        it "rejects unexpected keys so typoed pipeline writes cannot turn into partial creates or silent no-op patches" $ do
+            decodePipelineCardCreate
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"title\":\"Final Quote\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
         it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do
             case decodeInstagramOAuthExchange
@@ -413,6 +456,10 @@ spec = do
     decodeProposalUpdate = eitherDecode
     decodeProposalVersionCreate :: BL8.ByteString -> Either String Proposals.ProposalVersionCreate
     decodeProposalVersionCreate = eitherDecode
+    decodePipelineCardCreate :: BL8.ByteString -> Either String PipelineCardCreate
+    decodePipelineCardCreate = eitherDecode
+    decodePipelineCardUpdate :: BL8.ByteString -> Either String PipelineCardUpdate
+    decodePipelineCardUpdate = eitherDecode
     decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
     decodeInstagramOAuthExchange = eitherDecode
     decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq

@@ -6,8 +6,8 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isDigit)
-import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:?), (.=))
+import           Data.Char    (isDigit, toLower)
+import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import qualified Data.Text    as T
@@ -23,6 +23,19 @@ import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+prefixedStrictObjectOptions :: Int -> Options
+prefixedStrictObjectOptions prefixLen =
+  defaultOptions
+    { fieldLabelModifier = camelDrop prefixLen
+    , rejectUnknownFields = True
+    }
+
+camelDrop :: Int -> String -> String
+camelDrop prefixLen fieldName =
+  case drop prefixLen fieldName of
+    (firstChar:rest) -> toLower firstChar : rest
+    []               -> []
 
 data Page a = Page
   { items    :: [a]
@@ -567,13 +580,7 @@ data PipelineCardCreate = PipelineCardCreate
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardCreate where
-  parseJSON = withObject "PipelineCardCreate" $ \o ->
-    PipelineCardCreate
-      <$> o .:  "title"
-      <*> o .:? "artist"
-      <*> o .:? "stage"
-      <*> o .:? "sortOrder"
-      <*> o .:? "notes"
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 3)
 
 data PipelineCardUpdate = PipelineCardUpdate
   { pcuTitle     :: Maybe Text
@@ -584,13 +591,33 @@ data PipelineCardUpdate = PipelineCardUpdate
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardUpdate where
-  parseJSON = withObject "PipelineCardUpdate" $ \o ->
-    PipelineCardUpdate
-      <$> o .:? "title"
-      <*> o .:? "artist"
-      <*> o .:? "stage"
-      <*> o .:? "sortOrder"
-      <*> o .:? "notes"
+  parseJSON value@(Object o) = do
+    PipelineCardUpdateParsed
+      { pcupTitle = titleValue
+      , pcupStage = stageValue
+      , pcupSortOrder = sortOrderValue
+      } <- genericParseJSON (prefixedStrictObjectOptions 4) value
+    artistValue <- o .:! "artist"
+    notesValue <- o .:! "notes"
+    pure PipelineCardUpdate
+      { pcuTitle = titleValue
+      , pcuArtist = artistValue
+      , pcuStage = stageValue
+      , pcuSortOrder = sortOrderValue
+      , pcuNotes = notesValue
+      }
+  parseJSON _ = fail "PipelineCardUpdate must be an object"
+
+data PipelineCardUpdateParsed = PipelineCardUpdateParsed
+  { pcupTitle     :: Maybe Text
+  , pcupArtist    :: Maybe Text
+  , pcupStage     :: Maybe Text
+  , pcupSortOrder :: Maybe Int
+  , pcupNotes     :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON PipelineCardUpdateParsed where
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 4)
 
 data SessionInputRow = SessionInputRow
   { channelNumber    :: Int
