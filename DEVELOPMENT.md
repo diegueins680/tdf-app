@@ -70,9 +70,9 @@ npm run dev:mobile
 When you modify the OpenAPI spec or add endpoints:
 
 ```bash
-# 1. Update backend code and OpenAPI spec
+# 1. Update backend code and keep the canonical spec in sync
 cd tdf-hq
-# Edit docs/openapi/*.yaml
+# Edit docs/openapi/api.yaml
 
 # 2. Regenerate frontend clients
 npm run generate:api:ui
@@ -148,7 +148,7 @@ tdf-mobile/
 ### Backend Tests
 ```bash
 cd tdf-hq
-stack test  # (Not yet implemented - add Hspec specs)
+stack test
 ```
 
 ### Frontend Tests
@@ -197,7 +197,7 @@ curl -H "Authorization: Bearer <token>" \
 
 2. **Update OpenAPI spec:**
    ```yaml
-   # docs/openapi/main.yaml
+   # tdf-hq/docs/openapi/api.yaml
    /entities:
      get:
        summary: List entities
@@ -254,7 +254,7 @@ cd tdf-hq
 - Verify API is running and accessible
 
 **API generation fails:**
-- Ensure OpenAPI spec is valid: `npx @stoplight/spectral-cli lint tdf-hq/docs/openapi/*.yaml`
+- Ensure the canonical OpenAPI spec is valid: `npx @stoplight/spectral-cli lint tdf-hq/docs/openapi/api.yaml`
 - Check path to spec in package.json scripts
 - Verify openapi-typescript is installed
 

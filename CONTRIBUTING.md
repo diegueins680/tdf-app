@@ -11,7 +11,8 @@ Thank you for contributing! This guide will help you get started.
 
 2. **Set up your environment:**
    - Follow the setup in DEVELOPMENT.md
-   - Ensure all tests pass: `npm run test:ui`
+   - Run the repo preflight: `npm run ai:doctor`
+   - Ensure relevant tests pass for your change
    - Backend builds: `cd tdf-hq && stack build`
 
 3. **Check existing issues/PRs:**
@@ -70,7 +71,7 @@ git commit -m "refactor: simplify booking validation logic"
 # Backend
 cd tdf-hq
 stack build
-stack test  # (when tests exist)
+stack test
 
 # Frontend
 npm run test:ui
@@ -84,7 +85,7 @@ npm run dev:ui
 ### 4. Update Documentation
 
 - Update README if adding features
-- Document API changes in OpenAPI specs
+- Document API changes in `tdf-hq/docs/openapi/api.yaml`
 - Add code comments for complex logic
 - Update DEVELOPMENT.md for workflow changes
 
@@ -133,7 +134,7 @@ Brief description of changes
 1. Define route in `src/TDF/API.hs`
 2. Implement handler in `src/TDF/Server*.hs`
 3. Add database model if needed in `src/TDF/Models*.hs`
-4. Update OpenAPI spec in `tdf-hq/docs/openapi/`
+4. Update the canonical OpenAPI spec in `tdf-hq/docs/openapi/api.yaml`
 5. Add to route composition in `src/TDF/Server.hs`
 
 **Database changes:**
@@ -155,7 +156,7 @@ Brief description of changes
 
 **API changes:**
 
-1. Backend updates OpenAPI spec
+1. Backend updates `tdf-hq/docs/openapi/api.yaml`
 2. Run `npm run generate:api:ui`
 3. Update type imports
 4. Test API integration

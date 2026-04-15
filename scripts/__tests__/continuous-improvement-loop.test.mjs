@@ -19,8 +19,10 @@ import {
 import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
 import {
   reconcileNonMainBranchesOntoMain,
+  resolveLoopPushBranch,
   syncAndPollLatestRemoteCi,
   syncSubmodulesRecursively,
+  validateLoopConfig,
   waitForGreenCi,
 } from '../continuous-improvement-loop.mjs';
 import {
@@ -38,6 +40,7 @@ import { installKoyebCli } from '../install-koyeb-cli.mjs';
 const execFileAsync = promisify(execFile);
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 const loopScriptPath = path.resolve(testDir, '..', 'continuous-improvement-loop.mjs');
+const loopPollingScriptPath = path.resolve(testDir, '..', 'set-loop-github-polling.mjs');
 
 test('expandTemplate substitutes known placeholders and leaves unknown ones intact', () => {
   const rendered = expandTemplate('idea={idea_file} missing={unknown}', {
@@ -122,6 +125,77 @@ test('buildCommitContext ignores generic idea titles and uses target plus reason
   assert.equal(context.commit_type, 'fix');
   assert.equal(context.commit_summary, 'label icon buttons in label artists page');
   assert.equal(context.commit_message, 'fix: label icon buttons in label artists page');
+});
+
+test('resolveLoopPushBranch prefers configured pushBranch and otherwise uses the current branch', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-branch-resolve-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '-b', 'feature/test']);
+    assert.equal(await resolveLoopPushBranch(repoDir, {}), 'feature/test');
+    assert.equal(await resolveLoopPushBranch(repoDir, { pushBranch: 'origin/release/train' }), 'release/train');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('validateLoopConfig blocks main by default and allows explicit overrides', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-config-guard-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '-b', 'main']);
+
+    await assert.rejects(() => validateLoopConfig(repoDir, {}), /refuses to target main by default/);
+
+    const configOverride = await validateLoopConfig(repoDir, { allowPushToMain: true });
+    assert.equal(configOverride.pushBranch, 'main');
+    assert.equal(configOverride.allowPushToMain, true);
+
+    process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN = '1';
+    const envOverride = await validateLoopConfig(repoDir, {});
+    assert.equal(envOverride.pushBranch, 'main');
+    assert.equal(envOverride.allowPushToMain, true);
+    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
+  } finally {
+    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('set-loop-github-polling toggles pollGitHub in a target config file', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-polling-toggle-test-'));
+  const configPath = path.join(tempRoot, 'loop-config.json');
+
+  try {
+    await fs.writeFile(
+      configPath,
+      `${JSON.stringify({ pushRemote: 'origin', pollGitHub: false, iterationDelaySeconds: 0 }, null, 2)}\n`,
+      'utf8',
+    );
+
+    await execFileAsync('node', [loopPollingScriptPath, 'on', '--config', configPath], { cwd: tempRoot });
+    let config = JSON.parse(await fs.readFile(configPath, 'utf8'));
+    assert.equal(config.pollGitHub, true);
+
+    const status = await execFileAsync('node', [loopPollingScriptPath, 'status', '--config', configPath], {
+      cwd: tempRoot,
+    });
+    assert.match(status.stdout, /pollGitHub=true/);
+
+    await execFileAsync('node', [loopPollingScriptPath, 'off', '--config', configPath], { cwd: tempRoot });
+    config = JSON.parse(await fs.readFile(configPath, 'utf8'));
+    assert.equal(config.pollGitHub, false);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('summarizeWorkflowRuns separates pending, successful, and failed workflow runs', () => {
@@ -725,6 +799,7 @@ test('continuous-improvement-loop honors --allow-dirty for tracked baseline chan
       configPath,
       JSON.stringify(
         {
+          allowPushToMain: true,
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand: "printf '# Dirty baseline test\\nSource: test\\nTarget: new-file.txt:1\\nReason: verify allow-dirty tracked baselines stay out of loop commits.\\n'",
@@ -844,6 +919,7 @@ test('continuous-improvement-loop stages tracked files modified during an iterat
       configPath,
       JSON.stringify(
         {
+          allowPushToMain: true,
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -906,6 +982,7 @@ test('continuous-improvement-loop rebases onto the push branch before pushing a 
       configPath,
       JSON.stringify(
         {
+          allowPushToMain: true,
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -1103,6 +1180,7 @@ test('continuous-improvement-loop blocks custom UI audit failures even when find
       configPath,
       JSON.stringify(
         {
+          allowPushToMain: true,
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -1154,6 +1232,7 @@ test('continuous-improvement-loop blocks custom formal failures even when findin
       configPath,
       JSON.stringify(
         {
+          allowPushToMain: true,
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -1281,9 +1360,25 @@ test('continuous-improvement-loop repairs the latest remote CI failure before id
 test('continuous-improvement-loop prefers the stored gh login over a stale GH_TOKEN environment value', async () => {
   const script = await fs.readFile(loopScriptPath, 'utf8');
   assert.match(script, /function buildSanitizedGhAuthEnv\(\)/);
+  assert.match(script, /function envGitHubToken\(\)/);
+  assert.match(script, /function envGitHubTokenLooksInvalid\(statusOutput = ''\)/);
   assert.match(script, /env: buildSanitizedGhAuthEnv\(\),/);
   assert.match(script, /execFileSync\('gh', \['auth', 'token'\], \{/);
-  assert.match(script, /cachedGitHubToken = process\.env\.GITHUB_TOKEN \?\? process\.env\.GH_TOKEN \?\? process\.env\.GITHUB_PAT \?\? '';/);
+  assert.match(script, /execFileSync\('gh', \['auth', 'status'\], \{/);
+  assert.match(script, /if \(envGitHubTokenLooksInvalid\(statusOutput\)\) \{/);
+});
+
+test('loop start path validates config before launching the supervisor', async () => {
+  const startScript = await fs.readFile(path.resolve(testDir, '..', 'start-continuous-improvement-loop.sh'), 'utf8');
+  const supervisorScript = await fs.readFile(
+    path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh'),
+    'utf8',
+  );
+
+  assert.match(startScript, /--validate-config-only/);
+  assert.match(supervisorScript, /--validate-config-only/);
+  assert.match(supervisorScript, /gh_auth_token_available\(\)/);
+  assert.match(supervisorScript, /GH_TOKEN= GITHUB_TOKEN= GITHUB_PAT= gh auth token/);
 });
 
 test('tdf-hq-ui Jest config keeps preset as a preset root specifier', () => {

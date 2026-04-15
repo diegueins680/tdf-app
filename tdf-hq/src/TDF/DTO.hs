@@ -90,7 +90,8 @@ data ArtistProfileUpsert = ArtistProfileUpsert
   , apuGenres          :: Maybe Text
   , apuHighlights      :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON ArtistProfileUpsert
+instance FromJSON ArtistProfileUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data ArtistReleaseDTO = ArtistReleaseDTO
   { arArtistId     :: Int64

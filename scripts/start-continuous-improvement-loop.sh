@@ -55,6 +55,8 @@ start() {
     return 0
   fi
 
+  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only
+
   rm -f "$STOP_FILE" "$PID_FILE"
   nohup "$SUPERVISOR" "$CONFIG" >> "$LOG_FILE" 2>&1 < /dev/null &
   local supervisor_pid=$!

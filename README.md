@@ -215,6 +215,10 @@ The repo now includes a guarded automation harness for the workflow:
 Useful commands:
 
 ```bash
+npm run ai:doctor
+npm run loop:ci-polling-status
+npm run loop:enable-ci-polling
+npm run loop:disable-ci-polling
 npm run loop:idea
 npm run audit:ui:static
 npm run verify:auto-loop
@@ -240,6 +244,9 @@ Notes:
 - `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
 - `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.
 - GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.
+- The checked-in `scripts/continuous-improvement-loop.codex.json` now keeps `pollGitHub` off by default; enable it deliberately once GitHub auth is healthy.
+- Use `npm run loop:enable-ci-polling` and `npm run loop:disable-ci-polling` instead of hand-editing the JSON when switching modes.
+- The default loop config now inherits the current branch; `loop:start` and direct loop runs refuse `main` unless you explicitly set `allowPushToMain: true` or `CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN=1`.
 - Tuning knobs for the forever runner: `CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS`, `CONTINUOUS_LOOP_RESTART_DELAY_SECONDS`, `CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS`, `CONTINUOUS_LOOP_LOG_FILE`, and `CONTINUOUS_LOOP_STATE_DIR`.
 
 ### Build for Production
@@ -351,6 +358,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 **[→ Complete Documentation Index](DOCUMENTATION.md)** - Your starting point for all documentation
 
 ### Essential Guides
+- **[AI_WORKFLOW.md](AI_WORKFLOW.md)** - Canonical AI workflow, preflight, and loop guardrails
 - **[QUICKSTART.md](QUICKSTART.md)** - Get up and running in minutes
 - **[QUICK_START_REFERENCE.md](QUICK_START_REFERENCE.md)** - Command cheat sheet
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Detailed development workflows

@@ -23,6 +23,7 @@ const execFileAsync = promisify(execFile);
 const GITHUB_LOG_LINE_LIMIT = 200;
 const GITHUB_LOG_CHAR_LIMIT = 24_000;
 const PUSH_SYNC_MAX_ATTEMPTS = 2;
+const ALLOW_PUSH_TO_MAIN_ENV = 'CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN';
 
 class GitHubHttpError extends Error {
   constructor(status, statusText, payload) {
@@ -91,6 +92,14 @@ function buildSanitizedGhAuthEnv() {
   };
 }
 
+function envGitHubToken() {
+  return process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
+}
+
+function envGitHubTokenLooksInvalid(statusOutput = '') {
+  return /token .* is invalid/i.test(String(statusOutput));
+}
+
 function getGitHubToken() {
   if (cachedGitHubToken !== null) {
     return cachedGitHubToken;
@@ -110,8 +119,30 @@ function getGitHubToken() {
     cachedGitHubToken = null;
   }
 
-  // Prefer the stored gh login when local shells leak a stale GH_TOKEN.
-  cachedGitHubToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? process.env.GITHUB_PAT ?? '';
+  const fallbackToken = envGitHubToken();
+  if (!fallbackToken) {
+    cachedGitHubToken = '';
+    return cachedGitHubToken;
+  }
+
+  try {
+    execFileSync('gh', ['auth', 'status'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    cachedGitHubToken = fallbackToken;
+    return cachedGitHubToken;
+  } catch (error) {
+    const statusOutput = [error.stdout, error.stderr].filter(Boolean).join('\n');
+    if (envGitHubTokenLooksInvalid(statusOutput)) {
+      cachedGitHubToken = '';
+      return cachedGitHubToken;
+    }
+  }
+
+  // Fall back to env tokens for headless contexts where gh auth is intentionally absent.
+  cachedGitHubToken = fallbackToken;
   return cachedGitHubToken;
 }
 
@@ -148,6 +179,10 @@ async function readConfig(configPath) {
   if (!configPath) return {};
   const raw = await fs.readFile(configPath, 'utf8');
   return JSON.parse(raw);
+}
+
+function isTruthyFlag(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value ?? '').trim().toLowerCase());
 }
 
 async function execText(command, args, cwd) {
@@ -323,6 +358,43 @@ function findingKey(finding) {
 async function getCurrentBranch(repoRoot) {
   const { stdout } = await execText('git', ['branch', '--show-current'], repoRoot);
   return stdout.trim();
+}
+
+export async function resolveLoopPushBranch(repoRoot, config = {}) {
+  const configuredBranch = normalizeGitBranchShortName(config.pushBranch);
+  if (configuredBranch) {
+    return configuredBranch;
+  }
+
+  return normalizeGitBranchShortName(await getCurrentBranch(repoRoot));
+}
+
+function isPushToMainOverrideEnabled(config = {}) {
+  return Boolean(config.allowPushToMain) || isTruthyFlag(process.env[ALLOW_PUSH_TO_MAIN_ENV]);
+}
+
+export async function validateLoopConfig(repoRoot, config = {}) {
+  const pushBranch = await resolveLoopPushBranch(repoRoot, config);
+  const pushingEnabled = !config.dryRun;
+  const allowPushToMain = isPushToMainOverrideEnabled(config);
+
+  if (!pushBranch && pushingEnabled) {
+    throw new Error(
+      'Unable to determine pushBranch for the continuous improvement loop. Set pushBranch in config or run from a named branch.',
+    );
+  }
+
+  if (pushingEnabled && pushBranch === 'main' && !allowPushToMain) {
+    throw new Error(
+      `Continuous improvement loop refuses to target main by default. Switch to a non-main branch, set "pushBranch" to a non-main branch, or explicitly override with "allowPushToMain": true or ${ALLOW_PUSH_TO_MAIN_ENV}=1.`,
+    );
+  }
+
+  return {
+    pushBranch,
+    pushingEnabled,
+    allowPushToMain,
+  };
 }
 
 async function getRemoteUrl(repoRoot, remoteName) {
@@ -1487,6 +1559,7 @@ Options:
   --max-iterations <n>      0 means infinite. Default: 0.
   --allow-dirty             Allow starting from a dirty worktree.
   --dry-run                 Run the loop without committing or pushing.
+  --validate-config-only    Validate config and exit without running an iteration.
   --help                    Show this help.
 
 Placeholders available inside command hooks:
@@ -1507,6 +1580,7 @@ async function main() {
       'max-iterations': { type: 'string' },
       'allow-dirty': { type: 'boolean' },
       'dry-run': { type: 'boolean' },
+      'validate-config-only': { type: 'boolean' },
       help: { type: 'boolean' },
     },
   });
@@ -1532,6 +1606,14 @@ async function main() {
   }
   if (values['dry-run']) {
     config.dryRun = true;
+  }
+
+  const validatedConfig = await validateLoopConfig(repoRoot, config);
+  if (values['validate-config-only']) {
+    console.log(
+      `Continuous improvement loop config OK. pushBranch=${validatedConfig.pushBranch || 'none'} pushingEnabled=${String(validatedConfig.pushingEnabled)} allowPushToMain=${String(validatedConfig.allowPushToMain)}`,
+    );
+    return;
   }
 
   if (!Number.isFinite(Number(config.maxIterations)) || Number(config.maxIterations) < 0) {

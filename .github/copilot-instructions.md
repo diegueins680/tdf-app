@@ -1,5 +1,7 @@
 # TDF Records Platform - AI Agent Guidelines
 
+See `AI_WORKFLOW.md` for the current repo-wide AI workflow and preflight checks.
+
 ## Architecture Overview
 This is a **monorepo** with three main applications serving TDF Records' business management platform:
 - **`tdf-hq/`** - Haskell backend (Servant API + PostgreSQL + Persistent ORM)
@@ -10,7 +12,7 @@ This is a **monorepo** with three main applications serving TDF Records' busines
 
 ### API Development Pattern
 1. **Backend changes**: Update `TDF.API` types → implement handlers in `TDF.Server` → add DTOs in `TDF.DTO` → DB logic in `TDF.DB`/`TDF.Models`
-2. **Generate OpenAPI**: Haskell backend auto-generates `docs/openapi/lessons-and-receipts.yaml`
+2. **Keep the contract in sync**: Update `tdf-hq/docs/openapi/api.yaml` when routes or payloads change
 3. **Generate clients**: Run `npm run generate:api:ui` and `npm run generate:api:mobile` from root to update TypeScript clients
 4. **Never edit generated files**: All files in `*/api/generated/` are auto-generated from OpenAPI specs
 
@@ -113,10 +115,10 @@ npm install         # Install all workspace dependencies
 - **Shift management**: Opening/closing procedures with over/short tracking
 
 ## Testing & Quality
-- **Web UI**: Vitest + React Testing Library (`npm run test:ui`)
+- **Web UI**: Jest + React Testing Library (`npm run test:ui`)
 - **Test patterns**: See `tdf-hq-ui/src/pages/bar/__tests__/SellPage.test.tsx` for examples
-- **Backend**: No test suite yet; use `stack ghci` for interactive testing
-- **Mobile**: Manual testing with Expo Go; no automated suite configured
+- **Backend**: Hspec test suite under `tdf-hq/test/` (`cd tdf-hq && stack test`)
+- **Mobile**: Jest test suite via the repo root (`npm run test:mobile`) or from `tdf-mobile/` with `npm run test`
 - **API testing**: Use `curl` commands documented in `tdf-hq/AGENTS.md`
 
 ## Security & Configuration

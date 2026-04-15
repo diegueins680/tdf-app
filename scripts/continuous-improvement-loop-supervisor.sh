@@ -41,6 +41,14 @@ log() {
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
 }
 
+gh_auth_token_available() {
+  if gh auth token >/dev/null 2>&1; then
+    return 0
+  fi
+
+  GH_TOKEN= GITHUB_TOKEN= GITHUB_PAT= gh auth token >/dev/null 2>&1
+}
+
 json_update() {
   local state="$1"
   local phase="$2"
@@ -187,6 +195,12 @@ json_update "starting" "startup" "Supervisor booting" "" "" "$restart_count" "$s
 log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG"
 
 preflight_block_reason() {
+  local config_check=""
+  if ! config_check="$(node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only 2>&1)"; then
+    echo "blocked: ${config_check}"
+    return 0
+  fi
+
   if grep -q 'codex-loop-worker\\|\\bcodex\\b' "$CONFIG" 2>/dev/null && ! command -v codex >/dev/null 2>&1; then
     echo 'blocked: Codex CLI is required by the configured worker but is not available in PATH'
     return 0
@@ -199,7 +213,7 @@ with open(sys.argv[1], 'r', encoding='utf-8') as fh:
 raise SystemExit(0 if config.get('pollGitHub', True) else 1)
 PY
   then
-    if [ -z "${GITHUB_TOKEN:-${GH_TOKEN:-${GITHUB_PAT:-}}}" ] && ! gh auth token >/dev/null 2>&1; then
+    if ! gh_auth_token_available; then
       echo 'blocked: GitHub polling is enabled but neither token env vars nor `gh auth token` are available'
       return 0
     fi

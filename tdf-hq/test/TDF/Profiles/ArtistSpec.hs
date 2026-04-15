@@ -2,6 +2,8 @@
 
 module TDF.Profiles.ArtistSpec (spec) where
 
+import qualified Data.Aeson as A
+import Data.Either (isLeft)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (NoLoggingT)
 import Control.Monad.Trans.Reader (ReaderT)
@@ -21,82 +23,106 @@ import TDF.Profiles.Artist (
  )
 
 spec :: Spec
-spec = describe "Artist profile helpers" $ do
-    it "returns an initialized profile when none exists" $ do
-        dto <- runInMemory $ do
-            partyId <- insertParty "Aurora"
-            loadOrCreateArtistProfileDTO partyId
-        apDisplayName dto `shouldBe` "Aurora"
-        apFollowerCount dto `shouldBe` 0
-        apSlug dto `shouldBe` Nothing
-        apHasUserAccount dto `shouldBe` False
+spec = do
+    describe "ArtistProfileUpsert FromJSON" $ do
+        it "accepts canonical artist profile write payloads" $
+            case A.eitherDecode
+                "{\"apuArtistId\":42,\"apuDisplayName\":\"Los Mentores\",\"apuSlug\":\"los-mentores\",\"apuBio\":\"Fusionando ritmos latinos con neo soul.\",\"apuCity\":\"Quito\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical artist profile payload to decode, got: " <> err)
+                Right payload -> do
+                    apuArtistId payload `shouldBe` 42
+                    apuDisplayName payload `shouldBe` Just "Los Mentores"
+                    apuSlug payload `shouldBe` Just "los-mentores"
+                    apuBio payload `shouldBe` Just "Fusionando ritmos latinos con neo soul."
+                    apuCity payload `shouldBe` Just "Quito"
 
-    it "upserts profile data and reports follower counts" $ do
-        dto <- runInMemory $ do
-            now <- liftIO getCurrentTime
-            artistId <- insertParty "Los Mentores"
-            insertFanFollow artistId "Carla"
-            insertFanFollow artistId "Edu"
-            let payload =
-                    ArtistProfileUpsert
-                        { apuArtistId = fromSqlKey artistId
-                        , apuDisplayName = Just "Los Mentores"
-                        , apuSlug = Just "los-mentores"
-                        , apuBio = Just "Fusionando ritmos latinos con neo soul."
-                        , apuCity = Just "Quito"
-                        , apuHeroImageUrl = Just "https://cdn.tdf/hero.jpg"
-                        , apuSpotifyArtistId = Just "spotify-123"
-                        , apuSpotifyUrl = Just "https://open.spotify.com/artist/spotify-123"
-                        , apuYoutubeChannelId = Just "yt-chan"
-                        , apuYoutubeUrl = Just "https://youtube.com/@tdf"
-                        , apuWebsiteUrl = Just "https://tdfrecords.com/mentores"
-                        , apuFeaturedVideoUrl = Just "https://youtube.com/watch?v=123"
-                        , apuGenres = Just "Latin,Soul"
-                        , apuHighlights = Just "Ganadores del IMAGINE 2024"
-                        }
-            upsertArtistProfileRecord artistId payload now
-        apSlug dto `shouldBe` Just "los-mentores"
-        apCity dto `shouldBe` Just "Quito"
-        apFollowerCount dto `shouldBe` 2
-        apSpotifyUrl dto `shouldBe` Just "https://open.spotify.com/artist/spotify-123"
-        apHasUserAccount dto `shouldBe` False
+        it "rejects unexpected artist profile keys so typoed writes fail explicitly" $ do
+            (A.eitherDecode
+                "{\"apuArtistId\":42,\"apuDisplayName\":\"Los Mentores\",\"displayName\":\"ignored by mistake\"}"
+                    :: Either String ArtistProfileUpsert)
+                `shouldSatisfy` isLeft
+            (A.eitherDecode
+                "{\"apuArtistId\":42,\"apuDisplayName\":\"Los Mentores\",\"unexpected\":true}"
+                    :: Either String ArtistProfileUpsert)
+                `shouldSatisfy` isLeft
 
-    it "trims optional artist profile text fields and drops explicit blanks instead of storing whitespace-only data" $ do
-        dto <- runInMemory $ do
-            now <- liftIO getCurrentTime
-            artistId <- insertParty "   Mentores del Aire   "
-            let payload =
-                    ArtistProfileUpsert
-                        { apuArtistId = fromSqlKey artistId
-                        , apuDisplayName = Just "  Mentores del Aire  "
-                        , apuSlug = Just "  mentores-del-aire  "
-                        , apuBio = Just "   "
-                        , apuCity = Just "  Quito  "
-                        , apuHeroImageUrl = Just "  https://cdn.tdf/hero.jpg  "
-                        , apuSpotifyArtistId = Just "  spotify-456  "
-                        , apuSpotifyUrl = Just "   "
-                        , apuYoutubeChannelId = Just "  yt-mentores  "
-                        , apuYoutubeUrl = Just " https://youtube.com/@mentores "
-                        , apuWebsiteUrl = Just "   "
-                        , apuFeaturedVideoUrl = Just "  https://youtube.com/watch?v=456  "
-                        , apuGenres = Just "  Latin Pop  "
-                        , apuHighlights = Just "   "
-                        }
-            upsertArtistProfileRecord artistId payload now
+    describe "Artist profile helpers" $ do
+        it "returns an initialized profile when none exists" $ do
+            dto <- runInMemory $ do
+                partyId <- insertParty "Aurora"
+                loadOrCreateArtistProfileDTO partyId
+            apDisplayName dto `shouldBe` "Aurora"
+            apFollowerCount dto `shouldBe` 0
+            apSlug dto `shouldBe` Nothing
+            apHasUserAccount dto `shouldBe` False
 
-        apDisplayName dto `shouldBe` "Mentores del Aire"
-        apSlug dto `shouldBe` Just "mentores-del-aire"
-        apBio dto `shouldBe` Nothing
-        apCity dto `shouldBe` Just "Quito"
-        apHeroImageUrl dto `shouldBe` Just "https://cdn.tdf/hero.jpg"
-        apSpotifyArtistId dto `shouldBe` Just "spotify-456"
-        apSpotifyUrl dto `shouldBe` Nothing
-        apYoutubeChannelId dto `shouldBe` Just "yt-mentores"
-        apYoutubeUrl dto `shouldBe` Just "https://youtube.com/@mentores"
-        apWebsiteUrl dto `shouldBe` Nothing
-        apFeaturedVideoUrl dto `shouldBe` Just "https://youtube.com/watch?v=456"
-        apGenres dto `shouldBe` Just "Latin Pop"
-        apHighlights dto `shouldBe` Nothing
+        it "upserts profile data and reports follower counts" $ do
+            dto <- runInMemory $ do
+                now <- liftIO getCurrentTime
+                artistId <- insertParty "Los Mentores"
+                insertFanFollow artistId "Carla"
+                insertFanFollow artistId "Edu"
+                let payload =
+                        ArtistProfileUpsert
+                            { apuArtistId = fromSqlKey artistId
+                            , apuDisplayName = Just "Los Mentores"
+                            , apuSlug = Just "los-mentores"
+                            , apuBio = Just "Fusionando ritmos latinos con neo soul."
+                            , apuCity = Just "Quito"
+                            , apuHeroImageUrl = Just "https://cdn.tdf/hero.jpg"
+                            , apuSpotifyArtistId = Just "spotify-123"
+                            , apuSpotifyUrl = Just "https://open.spotify.com/artist/spotify-123"
+                            , apuYoutubeChannelId = Just "yt-chan"
+                            , apuYoutubeUrl = Just "https://youtube.com/@tdf"
+                            , apuWebsiteUrl = Just "https://tdfrecords.com/mentores"
+                            , apuFeaturedVideoUrl = Just "https://youtube.com/watch?v=123"
+                            , apuGenres = Just "Latin,Soul"
+                            , apuHighlights = Just "Ganadores del IMAGINE 2024"
+                            }
+                upsertArtistProfileRecord artistId payload now
+            apSlug dto `shouldBe` Just "los-mentores"
+            apCity dto `shouldBe` Just "Quito"
+            apFollowerCount dto `shouldBe` 2
+            apSpotifyUrl dto `shouldBe` Just "https://open.spotify.com/artist/spotify-123"
+            apHasUserAccount dto `shouldBe` False
+
+        it "trims optional artist profile text fields and drops explicit blanks instead of storing whitespace-only data" $ do
+            dto <- runInMemory $ do
+                now <- liftIO getCurrentTime
+                artistId <- insertParty "   Mentores del Aire   "
+                let payload =
+                        ArtistProfileUpsert
+                            { apuArtistId = fromSqlKey artistId
+                            , apuDisplayName = Just "  Mentores del Aire  "
+                            , apuSlug = Just "  mentores-del-aire  "
+                            , apuBio = Just "   "
+                            , apuCity = Just "  Quito  "
+                            , apuHeroImageUrl = Just "  https://cdn.tdf/hero.jpg  "
+                            , apuSpotifyArtistId = Just "  spotify-456  "
+                            , apuSpotifyUrl = Just "   "
+                            , apuYoutubeChannelId = Just "  yt-mentores  "
+                            , apuYoutubeUrl = Just " https://youtube.com/@mentores "
+                            , apuWebsiteUrl = Just "   "
+                            , apuFeaturedVideoUrl = Just "  https://youtube.com/watch?v=456  "
+                            , apuGenres = Just "  Latin Pop  "
+                            , apuHighlights = Just "   "
+                            }
+                upsertArtistProfileRecord artistId payload now
+
+            apDisplayName dto `shouldBe` "Mentores del Aire"
+            apSlug dto `shouldBe` Just "mentores-del-aire"
+            apBio dto `shouldBe` Nothing
+            apCity dto `shouldBe` Just "Quito"
+            apHeroImageUrl dto `shouldBe` Just "https://cdn.tdf/hero.jpg"
+            apSpotifyArtistId dto `shouldBe` Just "spotify-456"
+            apSpotifyUrl dto `shouldBe` Nothing
+            apYoutubeChannelId dto `shouldBe` Just "yt-mentores"
+            apYoutubeUrl dto `shouldBe` Just "https://youtube.com/@mentores"
+            apWebsiteUrl dto `shouldBe` Nothing
+            apFeaturedVideoUrl dto `shouldBe` Just "https://youtube.com/watch?v=456"
+            apGenres dto `shouldBe` Just "Latin Pop"
+            apHighlights dto `shouldBe` Nothing
 
 -- Helpers
 

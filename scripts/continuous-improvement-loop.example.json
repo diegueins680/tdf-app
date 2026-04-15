@@ -6,8 +6,7 @@
   "ciRepairCommand": "./scripts/replace-with-your-implementer.sh {ci_report_file}",
   "commitMessageTemplate": "{commit_message}",
   "pushRemote": "origin",
-  "pushBranch": "main",
-  "pollGitHub": true,
+  "pollGitHub": false,
   "pollIntervalSeconds": 30,
   "ciTimeoutMinutes": 30
 }
