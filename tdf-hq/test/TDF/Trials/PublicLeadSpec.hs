@@ -36,6 +36,7 @@ import TDF.Trials.API
   , InterestIn (..)
   , PackageDTO
   , PurchaseIn (..)
+  , SubjectUpdate (..)
   , TrialQueueItem
   )
 import TDF.Trials.Server
@@ -240,6 +241,26 @@ spec = do
       assertRejected "http://127.0.0.1/folder"
       assertRejected "https://[::1]/folder"
       assertRejected "https://example.com:70000/folder"
+
+  describe "SubjectUpdate request decoding" $ do
+    it "rejects typoed or unexpected JSON keys so subject patches cannot degrade into silent no-ops" $ do
+      case (A.eitherDecode "{\"active\":false}" :: Either String SubjectUpdate) of
+        Left err ->
+          expectationFailure ("Expected canonical subject update payload to decode, got " <> err)
+        Right (SubjectUpdate nameValue activeValue) -> do
+          nameValue `shouldBe` Nothing
+          activeValue `shouldBe` Just False
+
+      isLeft
+        (A.eitherDecode
+          "{\"activee\":false}"
+            :: Either String SubjectUpdate)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode
+          "{\"active\":false,\"unexpected\":true}"
+            :: Either String SubjectUpdate)
+        `shouldBe` True
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $

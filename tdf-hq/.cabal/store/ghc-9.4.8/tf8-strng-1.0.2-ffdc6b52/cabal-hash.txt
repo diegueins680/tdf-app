@@ -1,0 +1,11 @@
+pkgid: utf8-string-1.0.2
+component: ComponentLib
+src: ee48deada7600370728c4156cb002441de770d0121ae33a68139a9ed9c19b09a
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

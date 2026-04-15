@@ -1,0 +1,11 @@
+pkgid: persistent-2.18.1.0
+component: ComponentLib
+src: d3d42f8db94936847c53942ae0ed66f49a343095d761736dbaf9104690723e7a
+pkg-config-deps: 
+deps: base-4.17.2.1, blz-html-0.9.2.0-545cf39d, bs64-bytstrng-1.2.1.0-27d3adad, bytestring-0.11.5.3, cndt-1.3.6.1-daea310a, containers-0.6.7, deepseq-1.4.8.0, fst-lggr-3.2.6-2d7b1df2, http-p-dt-0.6.3-9f22ee0f, lft-typ-0.1.2.0-6db4a468, mgprsc-9.7.0-00002c19, mnd-lggr-0.3.42-4d22d5bd, mtl-2.2.2, nlft-0.2.25.1-c33945a3, nlft-cr-0.2.1.0-296fc7fc, nrdrd-cntnrs-0.2.21-a93a7ffd, pth-pcs-0.2.1-6bf5f971, rplc-mgprsc-1.5.0.1-f3b40e54, rsrc-pl-0.5.0.0-631ae79d, rsrct-1.3.0-327267a4, scntfc-0.3.8.1-8b1b5acf, slntly-1.2.5.4-ce99249b, smgrpds-6.0.2-4bc20059, sn-2.2.3.0-eed95da1, template-haskell-2.19.0.0, text-2.0.2, th-lft-nstncs-0.1.20-4bd564bd, time-1.12.2, transformers-0.5.6.2, ttprsc-0.14.4-7021719c, ttprsc-sn-2.2.2.0-c9d74ee1, vctr-0.13.2.0-0fc0d17a, vlt-0.3.1.6-47242241
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

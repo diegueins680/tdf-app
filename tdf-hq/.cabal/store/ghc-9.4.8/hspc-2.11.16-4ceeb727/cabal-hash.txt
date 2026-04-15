@@ -1,0 +1,11 @@
+pkgid: hspec-2.11.16
+component: ComponentLib
+src: fafde05ad9bab8488713cd3228864f2b0597429fda26a3caf9b266cc15b032af
+pkg-config-deps: 
+deps: QckChck-2.16.0.0-2a5db76a, base-4.17.2.1, hspc-cr-2.11.16-acd7c257, hspc-dscvr-2.11.16-fd857082, hspc-xpcttns-0.8.4-cf6a95a2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

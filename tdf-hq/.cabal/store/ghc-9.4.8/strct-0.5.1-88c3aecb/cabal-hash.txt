@@ -1,0 +1,11 @@
+pkgid: strict-0.5.1
+component: ComponentLib
+src: 77719280c2a86312e748227bfa732eeaae0e7df48d57acc3c2e5b7b07afe2f8b
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, bytestring-0.11.5.3, deepseq-1.4.8.0, ghc-prim-0.9.1, hshbl-1.4.7.0-aee9b33f, ssc-1.1.1-b9b71592, text-2.0.2, ths-1.2.1-774c1fa7, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

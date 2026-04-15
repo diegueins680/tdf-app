@@ -1,0 +1,11 @@
+pkgid: mono-traversable-1.0.21.0
+component: ComponentLib
+src: 4dd93ea334c0169500402f07aa39c98dbb7bffe55dc63fdf228da2cc22c7c5cd
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, hshbl-1.4.7.0-aee9b33f, nrdrd-cntnrs-0.2.21-a93a7ffd, splt-0.2.5-12bd68f4, text-2.0.2, transformers-0.5.6.2, vctr-0.13.2.0-0fc0d17a, vctr-lgrthms-0.9.1.0-28b80c0c
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

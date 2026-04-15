@@ -1,0 +1,12 @@
+pkgid: vector-0.13.2.0
+component: ComponentLib
+src: 28f203c786cbf8ac6dc3fea3378ec36f34173d505fb4a1dd60fc8418ad91c423
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, prmtv-0.9.1.0-20c46843, vctr-strm-0.1.0.1-f8bd1ed9
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +boundschecks -internalchecks -unsafechecks -wall
+shared-lib: True
+stripped-exe: False
+debug-info: 0

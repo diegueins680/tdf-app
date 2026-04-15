@@ -1,0 +1,11 @@
+pkgid: resource-pool-0.5.0.0
+component: ComponentLib
+src: fa750ab7e7ecb56154a08f5785208bb08c1313a77e9f5f0ac4344afe9c1114d0
+pkg-config-deps: 
+deps: base-4.17.2.1, hshbl-1.4.7.0-aee9b33f, prmtv-0.9.1.0-20c46843, stm-2.5.1.0, text-2.0.2, time-1.12.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

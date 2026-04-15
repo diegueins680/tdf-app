@@ -1,0 +1,12 @@
+pkgid: bitvec-1.1.5.0
+component: ComponentLib
+src: 83d27cee5be1d5342ddbf39999d0c8ea54cb433d0891eea5471fbfaa29f8dec5
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, ghc-bignum-1.3, prmtv-0.9.1.0-20c46843, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +simd
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: crypton-asn1-parse-0.10.0
+component: ComponentLib
+src: 35c0f278d8fcb720b4ad89c2a7f256f7fb098b9f71a0aeb493a4c3c0fe7728d9
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, cryptn-sn1-typs-0.4.1-48c1c377
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

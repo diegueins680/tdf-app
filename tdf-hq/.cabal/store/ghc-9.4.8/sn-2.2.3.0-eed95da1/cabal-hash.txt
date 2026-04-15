@@ -1,0 +1,12 @@
+pkgid: aeson-2.2.3.0
+component: ComponentLib
+src: daa25cf428256ad05d21f2bfa44077c1b14d6c784b7930a202ee901f11cc6baa
+pkg-config-deps: 
+deps: OnTpl-0.4.2.1-9cd96cae, QckChck-2.16.0.0-2a5db76a, base-4.17.2.1, bytestring-0.11.5.3, chrctr-ps-0.1-efb6e8b9, containers-0.6.7, d-typs-1.0.6-948bb3eb, deepseq-1.4.8.0, dlst-1.0-405b1449, dt-fx-0.3.4-0aaf5513, exceptions-0.10.5, ghc-prim-0.9.1, gnrclly-0.1.1-dd7a07aa, hshbl-1.4.7.0-aee9b33f, ndxd-trvrsbl-0.1.4-2ac1418a, nrdrd-cntnrs-0.2.21-a93a7ffd, ntgr-cnvrsn-0.1.1-54863df5, ntgr-lgrthms-1.0.5-560ae328, ntwrk-r-2.6.4.2-15df2479, prmtv-0.9.1.0-20c46843, scntfc-0.3.8.1-8b1b5acf, smlgn-1.3.1-27c8aa91, strct-0.5.1-88c3aecb, template-haskell-2.19.0.0, text-2.0.2, tggd-0.8.10-632f416a, th-bstrctn-0.7.2.0-42c8b4a8, ths-1.2.1-774c1fa7, time-1.12.2, tm-cmpt-1.9.8-611e216d, txt-s8601-0.1.1-91af75e3, txt-shrt-0.1.6.1-a339073d, vctr-0.13.2.0-0fc0d17a, wthrbl-0.5-6593b895
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +ordered-keymap
+shared-lib: True
+stripped-exe: False
+debug-info: 0

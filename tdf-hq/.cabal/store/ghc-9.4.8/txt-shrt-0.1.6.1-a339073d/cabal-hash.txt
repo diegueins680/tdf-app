@@ -1,0 +1,12 @@
+pkgid: text-short-0.1.6.1
+component: ComponentLib
+src: 83669f402354274fbcdc75126443af733267b955e451f72c0c6d86ae8da87416
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, bytestring-0.11.5.3, deepseq-1.4.8.0, ghc-prim-0.9.1, hshbl-1.4.7.0-aee9b33f, template-haskell-2.19.0.0, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -asserts
+shared-lib: True
+stripped-exe: False
+debug-info: 0

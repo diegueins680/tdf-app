@@ -1,0 +1,12 @@
+pkgid: monad-loops-0.4.3
+component: ComponentLib
+src: 7eaaaf6bc43661e9e86e310ff8c56fbea16eb6bf13c31a2e28103138ac164c18
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +base4
+shared-lib: True
+stripped-exe: False
+debug-info: 0

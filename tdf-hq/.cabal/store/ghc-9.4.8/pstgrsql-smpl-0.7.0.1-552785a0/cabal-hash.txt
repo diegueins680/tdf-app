@@ -1,0 +1,11 @@
+pkgid: postgresql-simple-0.7.0.1
+component: ComponentLib
+src: 597cf320650318d6033ee538b19eb28e43f02b88590baae7272bc21275f3ab99
+pkg-config-deps: 
+deps: Only-0.1-1670b868, base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, cs-nsnstv-1.2.1.0-f05712b6, d-typs-1.0.6-948bb3eb, hshbl-1.4.7.0-aee9b33f, pstgrsql-lbpq-0.11.0.0-82a1d0bc, scntfc-0.3.8.1-8b1b5acf, sn-2.2.3.0-eed95da1, template-haskell-2.19.0.0, text-2.0.2, tm-cmpt-1.9.8-611e216d, transformers-0.5.6.2, ttprsc-0.14.4-7021719c, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

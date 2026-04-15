@@ -1,0 +1,11 @@
+pkgid: auto-update-0.2.6
+component: ComponentLib
+src: 9a25cc5c9de2a20981ffe981ffcd51fee88597c802c1555dd08fa9c5c64e0e54
+pkg-config-deps: 
+deps: base-4.17.2.1, stm-2.5.1.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,12 @@
+pkgid: semialign-1.3.1
+component: ComponentLib
+src: 66e87bc254ffec2ee908bf625c42d3b7363238d6ab1cfba8934bbee7590c9df7
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, hshbl-1.4.7.0-aee9b33f, ndxd-trvrsbl-0.1.4-2ac1418a, ndxd-trvrsbl-nstncs-0.1.2-e2ba6e25, nrdrd-cntnrs-0.2.21-a93a7ffd, smgrpds-6.0.2-4bc20059, tggd-0.8.10-632f416a, ths-1.2.1-774c1fa7, transformers-0.5.6.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +semigroupoids
+shared-lib: True
+stripped-exe: False
+debug-info: 0

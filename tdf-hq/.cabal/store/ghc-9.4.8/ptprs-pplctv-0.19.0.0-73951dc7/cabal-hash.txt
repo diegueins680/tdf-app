@@ -1,0 +1,12 @@
+pkgid: optparse-applicative-0.19.0.0
+component: ComponentLib
+src: cf16aeefd821730c7738447fa7c6b7ada7ca1c9cc25400d64ef283294d345871
+pkg-config-deps: 
+deps: base-4.17.2.1, process-1.6.18.0, prttyprntr-1.7.1-959680cf, prttyprntr-ns-trmnl-1.1.3-58e22cea, text-2.0.2, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +process
+shared-lib: True
+stripped-exe: False
+debug-info: 0

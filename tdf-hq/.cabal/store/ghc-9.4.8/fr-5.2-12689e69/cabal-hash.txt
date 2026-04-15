@@ -1,0 +1,11 @@
+pkgid: free-5.2
+component: ComponentLib
+src: 72867f7c89173263765736e8d395e94291f1aaea626ecb1d673d72ce90b94f89
+pkg-config-deps: 
+deps: base-4.17.2.1, cmnd-5.0.10-640722d8, containers-0.6.7, dstrbtv-0.6.3-7dee684b, exceptions-0.10.5, mtl-2.2.2, ndxd-trvrsbl-0.1.4-2ac1418a, prfnctrs-5.6.3-4895d642, smgrpds-6.0.2-4bc20059, template-haskell-2.19.0.0, th-bstrctn-0.7.2.0-42c8b4a8, transformers-0.5.6.2, trnsfrmrs-bs-0.4.6-e2e2be60
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

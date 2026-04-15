@@ -1,0 +1,11 @@
+pkgid: witherable-0.5
+component: ComponentLib
+src: 48434cc1e465b13cbc0133a90c3ec0d827c93b77ce95807fe0a38b65f4918cd1
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-rphns-0.9.4-98e58666, containers-0.6.7, hshbl-1.4.7.0-aee9b33f, ndxd-trvrsbl-0.1.4-2ac1418a, ndxd-trvrsbl-nstncs-0.1.2-e2ba6e25, nrdrd-cntnrs-0.2.21-a93a7ffd, transformers-0.5.6.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: crypton-x509-validation-1.8.0
+component: ComponentLib
+src: c3d52c7944912357ee7ed04c59db44508c0db26d0da03c0ec102806efe5a4947
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, cryptn-1.0.6-150359d9, cryptn-pm-0.3.0-31c07f16, cryptn-sn1-ncdng-0.10.0-a8bd35cd, cryptn-sn1-typs-0.4.1-48c1c377, cryptn-x509-1.8.0-5055e35d, cryptn-x509-str-1.8.0-318ab99e, dt-dflt-0.8.0.2-7fb53fa0, mmry-0.18.0-e767045c, mtl-2.2.2, prt-1.7.15-77e8e14b, tm-hrglss-0.3.0-e39e5e68
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

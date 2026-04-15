@@ -1,0 +1,11 @@
+pkgid: monad-control-1.0.3.1
+component: ComponentLib
+src: ae0baea04d99375ef788140367179994a7178d400a8ce0d9026846546772713c
+pkg-config-deps: 
+deps: base-4.17.2.1, stm-2.5.1.0, transformers-0.5.6.2, trnsfrmrs-bs-0.4.6-e2e2be60, trnsfrmrs-cmpt-0.7.2-8a6d2e60
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

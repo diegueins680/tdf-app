@@ -1,0 +1,11 @@
+pkgid: th-compat-0.1.7
+component: ComponentLib
+src: 9e26f12230d38ae56dcf94f8c139799dc3b7376f3434d35ce74847a0a24fd5ff
+pkg-config-deps: 
+deps: base-4.17.2.1, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

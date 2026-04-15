@@ -1,0 +1,11 @@
+pkgid: base-orphans-0.9.4
+component: ComponentLib
+src: 08cc283a31350f7bd28b2a5d31af693ee337f2593d3e7222999b72dd4954c72b
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

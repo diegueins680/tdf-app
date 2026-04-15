@@ -1,0 +1,12 @@
+pkgid: lens-5.3.6
+component: ComponentLib
+src: d345dcf1fda4d4a127b84d42638b62f783cf52750bd8fd14ab1637510c1023c2
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bfnctrs-5.6.3-d1e10fd2, bs-rphns-0.9.4-98e58666, bytestring-0.11.5.3, cll-stck-0.4.0-31c5656b, cmnd-5.0.10-640722d8, cntrvrnt-1.5.6-8e0d0196, containers-0.6.7, dstrbtv-0.6.3-7dee684b, exceptions-0.10.5, filepath-1.4.2.2, fr-5.2-12689e69, hshbl-1.4.7.0-aee9b33f, kn-xtnsns-5.2.8-d5d37fa6, mtl-2.2.2, ndxd-trvrsbl-0.1.4-2ac1418a, ndxd-trvrsbl-nstncs-0.1.2-e2ba6e25, nrdrd-cntnrs-0.2.21-a93a7ffd, prfnctrs-5.6.3-4895d642, prlll-3.3.0.0-9ebaba93, rflctn-2.1.9-44cc812e, smgrpds-6.0.2-4bc20059, ssc-1.1.1-b9b71592, strct-0.5.1-88c3aecb, template-haskell-2.19.0.0, text-2.0.2, tggd-0.8.10-632f416a, th-bstrctn-0.7.2.0-42c8b4a8, ths-1.2.1-774c1fa7, transformers-0.5.6.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -benchmark-uniplate -dump-splices +inlining -j +test-hunit +test-properties +test-templates +trustworthy
+shared-lib: True
+stripped-exe: False
+debug-info: 0

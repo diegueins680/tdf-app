@@ -102,7 +102,9 @@ data SubjectUpdate = SubjectUpdate
   { name   :: Maybe Text
   , active :: Maybe Bool
   } deriving (Generic)
-instance ToJSON SubjectUpdate; instance FromJSON SubjectUpdate
+instance ToJSON SubjectUpdate
+instance FromJSON SubjectUpdate where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 
 data PackageDTO = PackageDTO { packageId :: Int, name :: Text, hoursQty :: Int, priceCents :: Int, expiresDays :: Int } deriving (Generic)
 instance ToJSON PackageDTO; instance FromJSON PackageDTO

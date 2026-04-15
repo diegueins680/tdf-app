@@ -1,0 +1,12 @@
+pkgid: memory-0.18.0
+component: ComponentLib
+src: fd4eb6f638e24b81b4e6cdd68772a531726f2f67686c8969d3407d82f7862e3e
+pkg-config-deps: 
+deps: base-4.17.2.1, bsmnt-0.0.16-62ea47ca, bytestring-0.11.5.3, deepseq-1.4.8.0, ghc-prim-0.9.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +support_bytestring +support_deepseq
+shared-lib: True
+stripped-exe: False
+debug-info: 0

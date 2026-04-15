@@ -1,0 +1,11 @@
+pkgid: th-lift-instances-0.1.20
+component: ComponentLib
+src: f533c3f95addcca461a0ccd1aafef75dd801bfa6599c0d1184d54bfffb61d870
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, template-haskell-2.19.0.0, text-2.0.2, th-lft-0.8.7-ac643fb2, transformers-0.5.6.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

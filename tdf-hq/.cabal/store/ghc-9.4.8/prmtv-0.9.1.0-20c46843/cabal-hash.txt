@@ -1,0 +1,11 @@
+pkgid: primitive-0.9.1.0
+component: ComponentLib
+src: 44b4de41813c7bc5db8a57f87c3612a069b65086946268ba165097252ebd3d76
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, template-haskell-2.19.0.0, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

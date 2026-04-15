@@ -1,0 +1,12 @@
+pkgid: scientific-0.3.8.1
+component: ComponentLib
+src: ad3781be149dfc7936e62eb9c3ad78ded0e9985b4dae16d2f62d9ba957ccdcfe
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, bytestring-0.11.5.3, containers-0.6.7, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f, ntgr-lgrthms-1.0.5-560ae328, prmtv-0.9.1.0-20c46843, template-haskell-2.19.0.0, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -integer-simple
+shared-lib: True
+stripped-exe: False
+debug-info: 0

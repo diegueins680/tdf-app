@@ -1,0 +1,11 @@
+pkgid: StateVar-1.2.2
+component: ComponentLib
+src: 5e4b39da395656a59827b0280508aafdc70335798b50e5d6fd52596026251825
+pkg-config-deps: 
+deps: base-4.17.2.1, stm-2.5.1.0, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

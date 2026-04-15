@@ -1,0 +1,11 @@
+pkgid: word8-0.1.3
+component: ComponentLib
+src: 2630934c75728bfbf390c1f0206b225507b354f68d4047b06c018a36823b5d8a
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

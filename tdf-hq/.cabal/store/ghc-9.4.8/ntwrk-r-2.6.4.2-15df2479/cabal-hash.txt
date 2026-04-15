@@ -1,0 +1,11 @@
+pkgid: network-uri-2.6.4.2
+component: ComponentLib
+src: 9c188973126e893250b881f20e8811dca06c223c23402b06f7a1f2e995797228
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, parsec-3.1.16.1, template-haskell-2.19.0.0, th-cmpt-0.1.7-1cbb04c0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

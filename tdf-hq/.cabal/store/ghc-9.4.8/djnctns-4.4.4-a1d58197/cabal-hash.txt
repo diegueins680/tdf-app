@@ -1,0 +1,11 @@
+pkgid: adjunctions-4.4.4
+component: ComponentLib
+src: 21408d9bd3c74331b557ce86281e592f56466e19d2a7e3f37e4065203a663145
+pkg-config-deps: 
+deps: base-4.17.2.1, cmnd-5.0.10-640722d8, containers-0.6.7, dstrbtv-0.6.3-7dee684b, fr-5.2-12689e69, mtl-2.2.2, prfnctrs-5.6.3-4895d642, smgrpds-6.0.2-4bc20059, tggd-0.8.10-632f416a, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

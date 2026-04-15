@@ -1,0 +1,12 @@
+pkgid: vector-algorithms-0.9.1.0
+component: ComponentLib
+src: d2b674676802670d8a682b357da6b6b5741b4a33b191f0ffe5f2b2bc40558eb2
+pkg-config-deps: 
+deps: base-4.17.2.1, btvc-1.1.5.0-319759d2, bytestring-0.11.5.3, prmtv-0.9.1.0-20c46843, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +bench +boundschecks -internalchecks -llvm -unsafechecks
+shared-lib: True
+stripped-exe: False
+debug-info: 0

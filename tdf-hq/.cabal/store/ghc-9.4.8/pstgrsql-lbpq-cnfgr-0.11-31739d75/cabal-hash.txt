@@ -1,0 +1,10 @@
+pkgid: postgresql-libpq-configure-0.11
+src: 8d4fe34b5475dd0c8339b5c05506111a10214ea18a10cd366e5440eaac95b2d8
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

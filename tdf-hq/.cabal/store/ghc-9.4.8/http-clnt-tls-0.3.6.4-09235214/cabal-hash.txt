@@ -1,0 +1,11 @@
+pkgid: http-client-tls-0.3.6.4
+component: ComponentLib
+src: 7756006fee8ab924c521372e0f9d6705579016b9fab0b0312d1b9a335cfc18a3
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, cryptn-1.0.6-150359d9, cryptn-cnnctn-0.4.5-94176754, cs-nsnstv-1.2.1.0-f05712b6, dt-dflt-0.8.0.2-7fb53fa0, exceptions-0.10.5, http-clnt-0.7.19-a3c8b1d1, http-typs-0.12.4-7e184036, mmry-0.18.0-e767045c, ntwrk-3.2.8.0-948adf32, ntwrk-r-2.6.4.2-15df2479, text-2.0.2, tls-2.2.2-95985346, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: http-date-0.0.11
+component: ComponentLib
+src: 32f923ac1ad9bdfeadce7c52a03c9ba6225ba60dc14137cb1cdf32ea84ccf4d3
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, time-1.12.2, ttprsc-0.14.4-7021719c
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

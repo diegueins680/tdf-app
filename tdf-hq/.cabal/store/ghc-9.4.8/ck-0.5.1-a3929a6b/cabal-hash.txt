@@ -1,0 +1,11 @@
+pkgid: cookie-0.5.1
+component: ComponentLib
+src: 1adde62726e3a3bbe147c02514fe0c4f5f2c5a2ff63842deac10c451a2a6f7a0
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, dt-dflt-clss-0.2.0.0-8a8c5052, text-2.0.2, time-1.12.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

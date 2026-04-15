@@ -1,0 +1,11 @@
+pkgid: iproute-1.7.15
+component: ComponentLib
+src: 18a331a7e0e6f9dc89a2da95577b0d76bd2690b8f832b72b46d6cc9b667b4ba5
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, bytrdr-1.0.4-cc470617, containers-0.6.7, ntwrk-3.2.8.0-948adf32, ppr-0.1.8-8baaeccd
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

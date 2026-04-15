@@ -1,0 +1,11 @@
+pkgid: Only-0.1
+component: ComponentLib
+src: ab7aa193e8c257d3bda6b0b3c1cbcf74cdaa85ab08cb20c2dd62ba248c1ab265
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

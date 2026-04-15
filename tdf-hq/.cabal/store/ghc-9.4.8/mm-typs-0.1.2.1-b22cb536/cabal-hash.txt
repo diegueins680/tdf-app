@@ -1,0 +1,11 @@
+pkgid: mime-types-0.1.2.1
+component: ComponentLib
+src: 1cca5a2e861f9ba1b879dc0f6295afb8c4f436b67916ab8d07e386006c076359
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: wai-cors-0.2.7
+component: ComponentLib
+src: 2597beb56ebd7148f9755ae2661c065a6c532e0a286717061861b149a51cfb81
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-ncd-symbls-0.2.4.2-5f6386f4, bytestring-0.11.5.3, cs-nsnstv-1.2.1.0-f05712b6, http-typs-0.12.4-7e184036, mtl-2.2.2, transformers-0.5.6.2, ttprsc-0.14.4-7021719c, w-3.2.4-d80ca33f
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

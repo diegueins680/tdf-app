@@ -1,0 +1,11 @@
+pkgid: lift-type-0.1.2.0
+component: ComponentLib
+src: 6c65f29c7470e60b30a4dd4bdb4ed3506343cad05efca34985f2223e46bf83c4
+pkg-config-deps: 
+deps: base-4.17.2.1, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

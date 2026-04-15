@@ -1,0 +1,11 @@
+pkgid: lifted-base-0.2.3.12
+component: ComponentLib
+src: c134a95f56750aae806e38957bb03c59627cda16034af9e00a02b699474317c5
+pkg-config-deps: 
+deps: base-4.17.2.1, mnd-cntrl-1.0.3.1-ad11ff08, trnsfrmrs-bs-0.4.6-e2e2be60
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

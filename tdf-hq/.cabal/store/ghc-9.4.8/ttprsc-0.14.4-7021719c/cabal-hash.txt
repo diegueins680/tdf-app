@@ -1,0 +1,12 @@
+pkgid: attoparsec-0.14.4
+component: ComponentLib
+src: 3f337fe58624565de12426f607c23e60c7b09c86b4e3adfc827ca188c9979e6c
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, containers-0.6.7, deepseq-1.4.8.0, ghc-prim-0.9.1, scntfc-0.3.8.1-8b1b5acf, text-2.0.2, transformers-0.5.6.2, ttprsc-0.14.4-6caaa161
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -developer
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,12 @@
+pkgid: http-client-0.7.19
+component: ComponentLib
+src: a02c1be082e8f48c959ac7150a48a405f8d4383e0942639481e84b220f29ad61
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, blz-bldr-0.4.4.1-2533e3af, bs64-bytstrng-1.2.1.0-27d3adad, bytestring-0.11.5.3, ck-0.5.1-a3929a6b, containers-0.6.7, cs-nsnstv-1.2.1.0-f05712b6, deepseq-1.4.8.0, exceptions-0.10.5, filepath-1.4.2.2, ghc-prim-0.9.1, http-typs-0.12.4-7e184036, mm-typs-0.1.2.1-b22cb536, ntwrk-3.2.8.0-948adf32, ntwrk-r-2.6.4.2-15df2479, prt-1.7.15-77e8e14b, rndm-1.3.1-be8dcc11, stm-2.5.1.0, strmng-cmmns-0.2.3.1-d44e564e, sync-2.2.6-1114405e, text-2.0.2, time-1.12.2, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +network-uri
+shared-lib: True
+stripped-exe: False
+debug-info: 0

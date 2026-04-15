@@ -1,0 +1,12 @@
+pkgid: tls-2.2.2
+component: ComponentLib
+src: d9536a25925fdd6872c80fa550691636167efda482cd1085e3ab81c91cd332e1
+pkg-config-deps: 
+deps: base-4.17.2.1, bs16-bytstrng-1.0.2.0-32450f24, bytestring-0.11.5.3, ch-cnfg-0.0.1-ec4d6f24, crl-0.5.8.3-cdc34e90, cryptn-1.0.6-150359d9, cryptn-sn1-ncdng-0.10.0-a8bd35cd, cryptn-sn1-typs-0.4.1-48c1c377, cryptn-x509-1.8.0-5055e35d, cryptn-x509-str-1.8.0-318ab99e, cryptn-x509-vldtn-1.8.0-5f391aa8, dt-dflt-0.8.0.2-7fb53fa0, hpk-0.0.0-884e35bb, mmry-0.18.0-e767045c, mtl-2.2.2, ntwrk-3.2.8.0-948adf32, nx-tm-0.4.17-2c3fdda4, rndm-1.3.1-be8dcc11, srls-0.2.6.1-199f0b80, transformers-0.5.6.2, zlb-0.7.1.1-64a68351
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -devel
+shared-lib: True
+stripped-exe: False
+debug-info: 0

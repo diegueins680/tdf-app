@@ -1,0 +1,11 @@
+pkgid: smtp-mail-0.5.0.0
+component: ComponentLib
+src: 92ad8f7b23a5d4296fb7489ec577f50ef11fb4d4dbc91774b514ab43a6d995ea
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bs16-bytstrng-1.0.2.0-32450f24, bs64-bytstrng-1.2.1.0-27d3adad, bytestring-0.11.5.3, cryptn-1.0.6-150359d9, cryptn-cnnctn-0.4.5-94176754, dt-dflt-clss-0.2.0.0-8a8c5052, filepath-1.4.2.2, mm-ml-0.5.1-08eaa7aa, mmry-0.18.0-e767045c, ntwrk-3.2.8.0-948adf32, ntwrk-bsd-2.8.1.0-156d2d49, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

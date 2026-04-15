@@ -1,0 +1,12 @@
+pkgid: semigroupoids-6.0.2
+component: ComponentLib
+src: e48258e49542245ef6c58d7f419a83d1d1ab91b013d92c3b5c8c7c048daaa12e
+pkg-config-deps: 
+deps: base-4.17.2.1, bfnctrs-5.6.3-d1e10fd2, bs-rphns-0.9.4-98e58666, cmnd-5.0.10-640722d8, cntrvrnt-1.5.6-8e0d0196, containers-0.6.7, fldbl1-clsss-cmpt-0.1.3-a49ae156, hshbl-1.4.7.0-aee9b33f, nrdrd-cntnrs-0.2.21-a93a7ffd, template-haskell-2.19.0.0, tggd-0.8.10-632f416a, transformers-0.5.6.2, trnsfrmrs-cmpt-0.7.2-8a6d2e60
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +comonad +containers +contravariant +tagged +unordered-containers
+shared-lib: True
+stripped-exe: False
+debug-info: 0

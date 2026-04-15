@@ -1,0 +1,12 @@
+pkgid: postgresql-simple-interval-1.0.1.2
+component: ComponentLib
+src: f7a71ea024781f894df5e704621f1add01f9ca65974a1618b976d097a86d524d
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, prsstnt-2.18.1.0-0ab7a579, pstgrsql-smpl-0.7.0.1-552785a0, scntfc-0.3.8.1-8b1b5acf, template-haskell-2.19.0.0, text-2.0.2, time-1.12.2, ttprsc-0.14.4-7021719c
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -pedantic
+shared-lib: True
+stripped-exe: False
+debug-info: 0

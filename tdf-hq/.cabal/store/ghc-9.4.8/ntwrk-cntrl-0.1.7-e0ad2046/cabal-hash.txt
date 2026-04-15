@@ -1,0 +1,11 @@
+pkgid: network-control-0.1.7
+component: ComponentLib
+src: 05d40d381e5c72beefb209b7e82877b457fbca2880e60ed849bad480b6795b10
+pkg-config-deps: 
+deps: base-4.17.2.1, nx-tm-0.4.17-2c3fdda4, psqs-0.2.8.3-4a42198c
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

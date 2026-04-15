@@ -1,0 +1,12 @@
+pkgid: serialise-0.2.6.1
+component: ComponentLib
+src: 63949799ffd10675ef70ea701c1eb63e618629b3b2f7b25f07c5a966e24e77f4
+pkg-config-deps: 
+deps: array-0.5.4.0, base-4.17.2.1, bytestring-0.11.5.3, cbrg-0.2.10.0-a263a54e, containers-0.6.7, ghc-prim-0.9.1, hlf-0.3.3-775a25c2, hshbl-1.4.7.0-aee9b33f, nrdrd-cntnrs-0.2.21-a93a7ffd, prmtv-0.9.1.0-20c46843, strct-0.5.1-88c3aecb, text-2.0.2, ths-1.2.1-774c1fa7, time-1.12.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +newtime15
+shared-lib: True
+stripped-exe: False
+debug-info: 0

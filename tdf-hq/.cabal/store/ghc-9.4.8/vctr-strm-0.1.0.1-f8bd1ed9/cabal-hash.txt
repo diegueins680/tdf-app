@@ -1,0 +1,11 @@
+pkgid: vector-stream-0.1.0.1
+component: ComponentLib
+src: d0f507334bdea5431a2f07f525a97f29e76522c32210f5de6d5a2b4f1d42bf7c
+pkg-config-deps: 
+deps: base-4.17.2.1, ghc-prim-0.9.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

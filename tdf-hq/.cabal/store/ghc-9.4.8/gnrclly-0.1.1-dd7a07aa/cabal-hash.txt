@@ -1,0 +1,11 @@
+pkgid: generically-0.1.1
+component: ComponentLib
+src: 04c5a436bec4b041f71a733f56a1bd7f435f63dde8d3eb5c1f48d55b4dbc43cf
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-rphns-0.9.4-98e58666
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

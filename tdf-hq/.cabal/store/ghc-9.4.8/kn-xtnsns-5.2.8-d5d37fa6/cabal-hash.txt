@@ -1,0 +1,11 @@
+pkgid: kan-extensions-5.2.8
+component: ComponentLib
+src: f76daa44a80d423c849d5fb552e2a20b1e2f47b638c889a34cb1a5bd1ab08d21
+pkg-config-deps: 
+deps: base-4.17.2.1, cmnd-5.0.10-640722d8, cntrvrnt-1.5.6-8e0d0196, djnctns-4.4.4-a1d58197, dstrbtv-0.6.3-7dee684b, exceptions-0.10.5, fr-5.2-12689e69, mtl-2.2.2, nvrnt-0.6.5-e159635d, prfnctrs-5.6.3-4895d642, smgrpds-6.0.2-4bc20059, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

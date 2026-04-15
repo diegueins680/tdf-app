@@ -1,0 +1,11 @@
+pkgid: data-default-0.8.0.2
+component: ComponentLib
+src: fa7d5de70ccef7381a7f17cd64948de1c24b620de13e1cd55c36c26949870799
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

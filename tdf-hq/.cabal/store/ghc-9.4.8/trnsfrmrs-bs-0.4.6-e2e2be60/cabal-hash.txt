@@ -1,0 +1,12 @@
+pkgid: transformers-base-0.4.6
+component: ComponentLib
+src: 323bf8689eb691b122661cffa41a25e00fea7a768433fe2dde35d3da7d32cf90
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-rphns-0.9.4-98e58666, stm-2.5.1.0, transformers-0.5.6.2, trnsfrmrs-cmpt-0.7.2-8a6d2e60
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +orphaninstances
+shared-lib: True
+stripped-exe: False
+debug-info: 0

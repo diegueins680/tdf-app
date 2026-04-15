@@ -1,0 +1,12 @@
+pkgid: crypton-1.0.6
+component: ComponentLib
+src: 9c6523e7f46df0bda731e5007a1f6b43b1ee1f0dcd159bed870abbff752b82e6
+pkg-config-deps: 
+deps: base-4.17.2.1, bsmnt-0.0.16-62ea47ca, bytestring-0.11.5.3, deepseq-1.4.8.0, integer-gmp-1.1, mmry-0.18.0-e767045c
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -check_alignment +integer-gmp -old_toolchain_inliner +support_aesni +support_deepseq +support_pclmuldq +support_rdrand -support_sse +use_target_attributes
+shared-lib: True
+stripped-exe: False
+debug-info: 0

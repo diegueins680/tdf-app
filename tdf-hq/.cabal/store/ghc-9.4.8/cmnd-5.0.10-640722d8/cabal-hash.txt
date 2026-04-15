@@ -1,0 +1,12 @@
+pkgid: comonad-5.0.10
+component: ComponentLib
+src: e9739df2bf5944958062a4ea73bde3bf35c0879cee0944edf7f05bebf993f9c1
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, dstrbtv-0.6.3-7dee684b, ndxd-trvrsbl-0.1.4-2ac1418a, tggd-0.8.10-632f416a, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +containers +distributive +indexed-traversable
+shared-lib: True
+stripped-exe: False
+debug-info: 0

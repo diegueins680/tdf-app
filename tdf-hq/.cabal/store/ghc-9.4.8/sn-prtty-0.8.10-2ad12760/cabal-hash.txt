@@ -1,0 +1,12 @@
+pkgid: aeson-pretty-0.8.10
+component: ComponentLib
+src: 2a21f2cd78adcb149ceba770239ed664519552911e7680172b18ff695cfa7ae5
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-cmpt-0.14.1-9b8f3ff8, bytestring-0.11.5.3, nrdrd-cntnrs-0.2.21-a93a7ffd, scntfc-0.3.8.1-8b1b5acf, sn-2.2.3.0-eed95da1, text-2.0.2, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -lib-only
+shared-lib: True
+stripped-exe: False
+debug-info: 0

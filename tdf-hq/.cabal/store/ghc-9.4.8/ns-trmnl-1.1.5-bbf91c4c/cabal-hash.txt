@@ -1,0 +1,12 @@
+pkgid: ansi-terminal-1.1.5
+component: ComponentLib
+src: 9cf083cef2e2ba88a425f132c8a82bfa931eb4b0c38232b2017f8fcea2e23073
+pkg-config-deps: 
+deps: base-4.17.2.1, clr-2.3.6-b26c82ae, ns-trmnl-typs-1.1.3-ae83e049
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -example
+shared-lib: True
+stripped-exe: False
+debug-info: 0

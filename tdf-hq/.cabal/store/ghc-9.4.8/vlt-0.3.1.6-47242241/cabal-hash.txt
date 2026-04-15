@@ -1,0 +1,12 @@
+pkgid: vault-0.3.1.6
+component: ComponentLib
+src: 37a4b169bf95120193c03c1039d0cdc21a7c44382281c8c4cff4f861b1d09766
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, hshbl-1.4.7.0-aee9b33f, nrdrd-cntnrs-0.2.21-a93a7ffd
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: +useghc
+shared-lib: True
+stripped-exe: False
+debug-info: 0

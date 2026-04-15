@@ -1,0 +1,10 @@
+pkgid: old-time-1.1.0.5
+src: 09167684b7f8db126aad59463303d2aae7b474dd65e6b016b3ea0439ad36a99f
+pkg-config-deps: 
+deps: base-4.17.2.1, hsc2hs-0.68.10-7b90d0d8, ld-lcl-1.0.0.7-c6647814
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

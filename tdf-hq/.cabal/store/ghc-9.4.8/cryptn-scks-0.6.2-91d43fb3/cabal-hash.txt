@@ -1,0 +1,12 @@
+pkgid: crypton-socks-0.6.2
+component: ComponentLib
+src: a836087e5c277413c79e6d94a7bf346bfb61eaffb2f55555875c76dfeca69f3b
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, crl-0.5.8.3-cdc34e90, ntwrk-3.2.8.0-948adf32
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -example +network-3-0-0-0
+shared-lib: True
+stripped-exe: False
+debug-info: 0

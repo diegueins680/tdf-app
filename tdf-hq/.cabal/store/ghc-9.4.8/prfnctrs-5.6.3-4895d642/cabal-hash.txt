@@ -1,0 +1,11 @@
+pkgid: profunctors-5.6.3
+component: ComponentLib
+src: b9c6f427368d2e811e4c48b59005218672458fd2f00a02cbefb8be9c751c0ef3
+pkg-config-deps: 
+deps: base-4.17.2.1, bfnctrs-5.6.3-d1e10fd2, bs-rphns-0.9.4-98e58666, cmnd-5.0.10-640722d8, cntrvrnt-1.5.6-8e0d0196, dstrbtv-0.6.3-7dee684b, tggd-0.8.10-632f416a, transformers-0.5.6.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

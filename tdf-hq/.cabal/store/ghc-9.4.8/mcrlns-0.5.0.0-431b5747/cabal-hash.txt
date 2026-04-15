@@ -1,0 +1,11 @@
+pkgid: microlens-0.5.0.0
+component: ComponentLib
+src: 04608e891112af94eb218b602e5edd5efa58bee9016764df914fa0bdb814bf65
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

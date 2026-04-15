@@ -1,0 +1,11 @@
+pkgid: indexed-traversable-instances-0.1.2
+component: ComponentLib
+src: 3c2bb62fba141d6696177070d63b88bc56b194bc60f6b73d2263b0244e2fc7c1
+pkg-config-deps: 
+deps: OnTpl-0.4.2.1-9cd96cae, base-4.17.2.1, ndxd-trvrsbl-0.1.4-2ac1418a, nrdrd-cntnrs-0.2.21-a93a7ffd, tggd-0.8.10-632f416a, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

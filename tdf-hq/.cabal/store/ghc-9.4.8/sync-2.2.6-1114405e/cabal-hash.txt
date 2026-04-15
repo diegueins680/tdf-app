@@ -1,0 +1,12 @@
+pkgid: async-2.2.6
+component: ComponentLib
+src: 148571bc188003101241da6c49131d07324e63a88ed283a84def2e9694599619
+pkg-config-deps: 
+deps: base-4.17.2.1, hshbl-1.4.7.0-aee9b33f, nrdrd-cntnrs-0.2.21-a93a7ffd, stm-2.5.1.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -bench -debug-auto-label
+shared-lib: True
+stripped-exe: False
+debug-info: 0

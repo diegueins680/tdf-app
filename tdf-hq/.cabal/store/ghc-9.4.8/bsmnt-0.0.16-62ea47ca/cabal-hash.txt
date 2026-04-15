@@ -1,0 +1,11 @@
+pkgid: basement-0.0.16
+component: ComponentLib
+src: 7fb77e249aef76ba5aed3059d556800ce02b614597c488ba01f0a16449146300
+pkg-config-deps: 
+deps: base-4.17.2.1, ghc-prim-0.9.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

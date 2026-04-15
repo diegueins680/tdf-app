@@ -1,0 +1,12 @@
+pkgid: prettyprinter-1.7.1
+component: ComponentLib
+src: 5e6ea6903114fa118fcc359633dfb7ecddecb92c06c853d02a77b72b251f0b45
+pkg-config-deps: 
+deps: base-4.17.2.1, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -buildreadme +text
+shared-lib: True
+stripped-exe: False
+debug-info: 0

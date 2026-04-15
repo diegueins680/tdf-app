@@ -1,0 +1,11 @@
+pkgid: these-1.2.1
+component: ComponentLib
+src: 17d6d933365edabf801a16842c1403bdd37cc5300faa2fcca980decdab22e4de
+pkg-config-deps: 
+deps: base-4.17.2.1, binary-0.8.9.1, deepseq-1.4.8.0, fldbl1-clsss-cmpt-0.1.3-a49ae156, hshbl-1.4.7.0-aee9b33f, ssc-1.1.1-b9b71592
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

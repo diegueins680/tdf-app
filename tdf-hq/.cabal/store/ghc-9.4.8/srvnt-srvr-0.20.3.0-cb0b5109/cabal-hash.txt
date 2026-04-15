@@ -1,0 +1,11 @@
+pkgid: servant-server-0.20.3.0
+component: ComponentLib
+src: 30560af5d2597ae361711de8302617de3bfb3e01f10180ff48a331bbe8e49915
+pkg-config-deps: 
+deps: base-4.17.2.1, bs64-bytstrng-1.2.1.0-27d3adad, bytestring-0.11.5.3, cnstrnts-0.14.4-63d698ce, containers-0.6.7, exceptions-0.10.5, filepath-1.4.2.2, http-md-0.8.1.1-39b0c608, http-p-dt-0.6.3-9f22ee0f, http-typs-0.12.4-7e184036, mnd-cntrl-1.0.3.1-ad11ff08, mtl-2.2.2, ntwrk-3.2.8.0-948adf32, rsrct-1.3.0-327267a4, sp-cr-0.5.0.2-40f2eaf1, srvnt-0.20.3.0-b498cd20, text-2.0.2, tggd-0.8.10-632f416a, transformers-0.5.6.2, trnsfrmrs-bs-0.4.6-e2e2be60, w-3.2.4-d80ca33f, w-pp-sttc-3.1.9-82318c33, wrd8-0.1.3-da64fc5a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,11 @@
+pkgid: network-3.2.8.0
+src: 51788e5eeb7d77264f260acd48df8055a4dbc2477e8d634a8493677bb15c5fc8
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, directory-1.3.7.1, hsc2hs-0.68.10-7b90d0d8, stm-2.5.1.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -devel
+shared-lib: True
+stripped-exe: False
+debug-info: 0

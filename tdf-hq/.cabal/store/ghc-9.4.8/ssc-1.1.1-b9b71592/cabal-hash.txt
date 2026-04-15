@@ -1,0 +1,12 @@
+pkgid: assoc-1.1.1
+component: ComponentLib
+src: 231149b7fef09f5dd95af51228615e3b296dbd0faadeca053e0644a4b13b0ff6
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -tagged
+shared-lib: True
+stripped-exe: False
+debug-info: 0

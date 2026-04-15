@@ -1,0 +1,11 @@
+pkgid: split-0.2.5
+component: ComponentLib
+src: 52da404e8397c1ab238354c8d4fd9a7e9c5cac8849cc2ce2e45facc85e74a913
+pkg-config-deps: 
+deps: base-4.17.2.1
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

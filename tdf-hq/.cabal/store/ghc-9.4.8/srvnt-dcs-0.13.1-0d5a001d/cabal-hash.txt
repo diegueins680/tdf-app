@@ -1,0 +1,11 @@
+pkgid: servant-docs-0.13.1
+component: ComponentLib
+src: 9efc327605bfc831d834d7e2c528d7363842df912ed98caa224b3bdcb22fbbbd
+pkg-config-deps: 
+deps: base-4.17.2.1, bs-cmpt-0.14.1-9b8f3ff8, bytestring-0.11.5.3, cs-nsnstv-1.2.1.0-f05712b6, hshbl-1.4.7.0-aee9b33f, http-md-0.8.1.1-39b0c608, http-typs-0.12.4-7e184036, lns-5.3.6-02bce39e, nrdrd-cntnrs-0.2.21-a93a7ffd, nvrs-bs-1.1.4-0d239147, sn-2.2.3.0-eed95da1, sn-prtty-0.8.10-2ad12760, srvnt-0.20.3.0-b498cd20, strng-cnvrsns-0.4.0.1-0c16a4a5, text-2.0.2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

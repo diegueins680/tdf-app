@@ -1,0 +1,11 @@
+pkgid: os-string-2.0.10
+component: ComponentLib
+src: f682b8a6121a09fc820ce69d99e33bfa9b1a959505663ef2fedebe7b95c75aa5
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, deepseq-1.4.8.0, exceptions-0.10.5, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

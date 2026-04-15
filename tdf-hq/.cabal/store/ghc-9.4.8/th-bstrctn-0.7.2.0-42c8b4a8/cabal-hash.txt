@@ -1,0 +1,11 @@
+pkgid: th-abstraction-0.7.2.0
+component: ComponentLib
+src: 946654bcd8ea2dff7d0058061861a8c898be9addf20c92d3cfa53b679e737622
+pkg-config-deps: 
+deps: base-4.17.2.1, containers-0.6.7, template-haskell-2.19.0.0
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

@@ -1,0 +1,12 @@
+pkgid: wai-extra-3.1.18
+component: ComponentLib
+src: ee63740b8dd478b01196f8968603b1bc0ee00aa5502d17edae579abfd0f150f7
+pkg-config-deps: 
+deps: HUnt-1.6.2.0-c38e4d65, base-4.17.2.1, bs64-bytstrng-1.2.1.0-27d3adad, bytestring-0.11.5.3, ck-0.5.1-a3929a6b, cll-stck-0.4.0-31c5656b, containers-0.6.7, cs-nsnstv-1.2.1.0-f05712b6, directory-1.3.7.1, dt-dflt-0.8.0.2-7fb53fa0, fst-lggr-3.2.6-2d7b1df2, http-typs-0.12.4-7e184036, ns-trmnl-1.1.5-bbf91c4c, ntwrk-3.2.8.0-948adf32, prt-1.7.15-77e8e14b, rsrct-1.3.0-327267a4, sn-2.2.3.0-eed95da1, strmng-cmmns-0.2.3.1-d44e564e, text-2.0.2, time-1.12.2, transformers-0.5.6.2, unix-2.7.3, vlt-0.3.1.6-47242241, w-3.2.4-d80ca33f, w-lggr-2.5.0-a37e07c3, wrd8-0.1.3-da64fc5a, wrp-3.4.6-1e60ebe2
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+flags: -build-example
+shared-lib: True
+stripped-exe: False
+debug-info: 0

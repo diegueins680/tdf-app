@@ -1,0 +1,11 @@
+pkgid: attoparsec-aeson-2.2.2.0
+component: ComponentLib
+src: fe9b2c23a16fe1ff8f41c329940cccc80aca7ac6a9ea314f7a77cf142d8f9edd
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, chrctr-ps-0.1-efb6e8b9, ntgr-cnvrsn-0.1.1-54863df5, prmtv-0.9.1.0-20c46843, scntfc-0.3.8.1-8b1b5acf, sn-2.2.3.0-eed95da1, text-2.0.2, ttprsc-0.14.4-7021719c, vctr-0.13.2.0-0fc0d17a
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

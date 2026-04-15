@@ -1,0 +1,11 @@
+pkgid: psqueues-0.2.8.3
+component: ComponentLib
+src: 10bcbe9aeb3ca00d72e86d940cf91b021b83f908885375120d4d51d0240ad076
+pkg-config-deps: 
+deps: base-4.17.2.1, deepseq-1.4.8.0, hshbl-1.4.7.0-aee9b33f
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0

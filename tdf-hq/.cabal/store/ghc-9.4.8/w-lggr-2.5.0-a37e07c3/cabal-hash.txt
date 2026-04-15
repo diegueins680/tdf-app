@@ -1,0 +1,11 @@
+pkgid: wai-logger-2.5.0
+component: ComponentLib
+src: 5cfbd3076b1f94aca3bd2def06b136b36a22d37974f31c7732b8526ebec3e184
+pkg-config-deps: 
+deps: base-4.17.2.1, bytestring-0.11.5.3, bytrdr-1.0.4-cc470617, fst-lggr-3.2.6-2d7b1df2, http-typs-0.12.4-7e184036, ntwrk-3.2.8.0-948adf32, w-3.2.4-d80ca33f
+compilerid: ghc-9.4.8
+compilerabi: 
+platform: x86_64-osx
+shared-lib: True
+stripped-exe: False
+debug-info: 0
