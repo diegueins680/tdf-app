@@ -244,6 +244,33 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   return { primary, username, showUsername };
 }
 
+function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
+  const identity = summarizeAdminUserIdentity(user);
+
+  return [
+    identity.primary.trim().toLowerCase(),
+    identity.showUsername ? identity.username.trim().toLowerCase() : '',
+  ].join('::');
+}
+
+function getAdminUserIdsRequiringPartyId(
+  users: readonly Pick<AdminUserDTO, 'userId' | 'displayName' | 'username' | 'partyId'>[],
+) {
+  const visibleIdentityCounts = new Map<string, number>();
+
+  users.forEach((user) => {
+    const identityKey = getAdminUserVisibleIdentityKey(user);
+    visibleIdentityCounts.set(identityKey, (visibleIdentityCounts.get(identityKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    users
+      .filter((user) => user.partyId != null)
+      .filter((user) => (visibleIdentityCounts.get(getAdminUserVisibleIdentityKey(user)) ?? 0) > 1)
+      .map((user) => user.userId),
+  );
+}
+
 function formatAuditActor(
   actorId: number | null | undefined,
   usersById: ReadonlyMap<number, Pick<AdminUserDTO, 'displayName' | 'username'>>,
@@ -564,6 +591,10 @@ export default function AdminConsolePage() {
   const users = dedupeAdminUsers(usersQuery.data ?? []);
   const usersById = useMemo(
     () => new Map(users.map((user) => [user.userId, user])),
+    [users],
+  );
+  const userIdsRequiringPartyId = useMemo(
+    () => getAdminUserIdsRequiringPartyId(users),
     [users],
   );
   const isUsersLoading = usersQuery.isLoading;
@@ -956,6 +987,7 @@ export default function AdminConsolePage() {
                 )}
                 {users.map((user) => {
                   const identity = summarizeAdminUserIdentity(user);
+                  const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
                   return (
                     <TableRow key={user.userId} hover>
                       <TableCell>
@@ -968,7 +1000,7 @@ export default function AdminConsolePage() {
                               Usuario: {identity.username}
                             </Typography>
                           )}
-                          {user.partyId ? (
+                          {shouldShowPartyId ? (
                             <Typography variant="caption" color="text.secondary">
                               Party #{user.partyId}
                             </Typography>
@@ -1023,7 +1055,7 @@ export default function AdminConsolePage() {
                     Usuario: {singleAdminUserIdentity.username}
                   </Typography>
                 )}
-                {singleAdminUser.partyId ? (
+                {singleAdminUser.partyId != null && userIdsRequiringPartyId.has(singleAdminUser.userId) ? (
                   <Typography variant="caption" color="text.secondary">
                     Party #{singleAdminUser.partyId}
                   </Typography>

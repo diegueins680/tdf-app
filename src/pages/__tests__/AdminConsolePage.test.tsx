@@ -1143,6 +1143,7 @@ describe('AdminConsolePage', () => {
         'aria-describedby',
         'admin-users-inline-edit-hint',
       );
+      expect(screen.queryByText('Party #9')).not.toBeInTheDocument();
       expect(
         within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).queryByTestId('EditOutlinedIcon'),
       ).not.toBeInTheDocument();
@@ -1156,6 +1157,60 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+  });
+
+  it('hides internal party ids unless two admin rows would otherwise look identical', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Party #9')).not.toBeInTheDocument();
+    expect(screen.queryByText('Party #10')).not.toBeInTheDocument();
+  });
+
+  it('shows party ids again when duplicate admin identities need a disambiguator', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        username: 'ana-admin',
+        displayName: 'Ana Admin',
+        partyId: 9,
+      }),
+      buildAdminUser({
+        userId: 102,
+        username: 'ana-admin',
+        displayName: 'Ana Admin',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Ana Admin')).toHaveLength(2);
+      expect(screen.getAllByText('Usuario: ana-admin')).toHaveLength(2);
+    });
+
+    expect(screen.getByText('Party #9')).toBeInTheDocument();
+    expect(screen.getByText('Party #10')).toBeInTheDocument();
   });
 
   it('deduplicates repeated users before deciding whether the page needs the full comparison table', async () => {
