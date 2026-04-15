@@ -281,7 +281,8 @@ data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   , mcrBuyerPhone :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON MarketplaceCheckoutReq
+instance FromJSON MarketplaceCheckoutReq where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON MarketplaceCheckoutReq
 
 data MarketplaceOrderItemDTO = MarketplaceOrderItemDTO

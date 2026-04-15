@@ -11,7 +11,7 @@ import Test.Hspec
 
 import qualified TDF.API as API
 import qualified TDF.API.Proposals as Proposals
-import TDF.API.Types (LooseJSON, RolePayload (..))
+import TDF.API.Types (LooseJSON, MarketplaceCheckoutReq (..), RolePayload (..))
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
 import TDF.Trials.DTO (TrialRequestIn (..))
@@ -268,6 +268,23 @@ spec = do
                 "{\"adId\":42,\"slotId\":84,\"title\":\"Mix review\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
+    describe "MarketplaceCheckoutReq FromJSON" $ do
+        it "accepts canonical marketplace checkout payloads" $
+            case decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical marketplace checkout payload to decode, got: " <> err)
+                Right payload -> do
+                    mcrBuyerName payload `shouldBe` "Ada Lovelace"
+                    mcrBuyerEmail payload `shouldBe` "ada@example.com"
+                    mcrBuyerPhone payload `shouldBe` Just "+593991234567"
+
+        it "rejects unexpected checkout keys so malformed public checkout bodies fail explicitly" $ do
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -357,6 +374,8 @@ spec = do
     decodeProposalVersionCreate = eitherDecode
     decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq
     decodeServiceMarketplaceBooking = eitherDecode
+    decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
+    decodeMarketplaceCheckout = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

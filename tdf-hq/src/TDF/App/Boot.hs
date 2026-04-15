@@ -177,11 +177,11 @@ resetSchema = do
 
 runAllMigrations :: AppConfig -> SqlPersistT IO ()
 runAllMigrations cfg = do
-  rawExecute "CREATE EXTENSION IF NOT EXISTS pgcrypto" []
+  ensureExtensionInstalled "pgcrypto"
   vectorAvailable <- hasVectorExtension
   if vectorAvailable
     then do
-      rawExecute "CREATE EXTENSION IF NOT EXISTS vector" []
+      ensureExtensionInstalled "vector"
       let embeddingDim = ragEmbeddingDim cfg
       rawExecute
         ( T.concat
@@ -234,6 +234,22 @@ hasVectorExtension = do
       [] ::
       SqlPersistT IO [Single Int]
   pure (not (null rows))
+
+extensionInstalled :: Text -> SqlPersistT IO Bool
+extensionInstalled extensionName = do
+  rows <-
+    rawSql
+      "SELECT 1 FROM pg_extension WHERE extname = ? LIMIT 1"
+      [PersistText extensionName] ::
+      SqlPersistT IO [Single Int]
+  pure (not (null rows))
+
+ensureExtensionInstalled :: Text -> SqlPersistT IO ()
+ensureExtensionInstalled extensionName = do
+  installed <- extensionInstalled extensionName
+  if installed
+    then liftIO $ putStrLn ("Extension " <> T.unpack extensionName <> " already installed; skipping CREATE EXTENSION.")
+    else rawExecute (T.concat ["CREATE EXTENSION IF NOT EXISTS ", extensionName]) []
 
 ensureBrainTagsArray :: SqlPersistT IO ()
 ensureBrainTagsArray = do
