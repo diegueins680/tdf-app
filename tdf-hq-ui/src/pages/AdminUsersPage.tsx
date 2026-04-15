@@ -81,6 +81,12 @@ const buildContactStateSummary = ({
   return joinSpanishSummaryParts(parts);
 };
 
+const buildPendingProfileSummary = (count: number) => (
+  count === 1
+    ? '1 usuario todavía sin perfil vinculado; su nombre no abre un perfil.'
+    : `${count} usuarios todavía sin perfil vinculado; sus nombres no abren un perfil.`
+);
+
 const getUserAccessSummary = (values: string[]) =>
   Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
     .sort((left, right) => left.localeCompare(right))
@@ -294,6 +300,10 @@ export default function AdminUsersPage() {
     () => visibleUsers.filter((user) => !user.active).length,
     [visibleUsers],
   );
+  const visibleUsersPendingProfileCount = useMemo(
+    () => visibleUsers.filter((user) => !hasLinkedAdminUserProfile(user)).length,
+    [visibleUsers],
+  );
   const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
   const hasVisibleLinkedProfile = visibleUsers.some((user) => hasLinkedAdminUserProfile(user));
   const sharedRolesSummary = useMemo(
@@ -326,6 +336,9 @@ export default function AdminUsersPage() {
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
+  const showSharedPendingProfileGuidance = visibleUsers.length > 1
+    && visibleUsersPendingProfileCount > 1
+    && (hasVisibleLinkedProfile || hasActiveSearch);
   const showSharedContactStateGuidance = visibleUsers.length > 1
     && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
   const showInactiveUsersGroup = includeInactive && visibleInactiveUsersCount > 1;
@@ -335,7 +348,8 @@ export default function AdminUsersPage() {
     || showSingleUserGuidance
     || hideRepeatedPendingStateChips;
   const hideRepeatedPendingProfileLabel =
-    (showGeneralIntro && !hasVisibleLinkedProfile)
+    showSharedPendingProfileGuidance
+    || (showGeneralIntro && !hasVisibleLinkedProfile)
     || Boolean(singleVisibleUser && showSingleUserGuidance && !hasLinkedAdminUserProfile(singleVisibleUser))
     || Boolean(
       singleSearchResult
@@ -377,6 +391,10 @@ export default function AdminUsersPage() {
       parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
     }
 
+    if (showSharedPendingProfileGuidance) {
+      parts.push(buildPendingProfileSummary(visibleUsersPendingProfileCount));
+    }
+
     if (showMixedContactStateGuidance) {
       parts.push(`${buildContactStateSummary({
         readyForWhatsAppCount: visibleUsersWithWhatsAppCount,
@@ -390,12 +408,14 @@ export default function AdminUsersPage() {
     hasMultipleUsers,
     hasUsers,
     isFiltered,
+    showSharedPendingProfileGuidance,
     showMixedContactStateGuidance,
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
     totalUsersCount,
     visibleUsers.length,
     visibleUsersMissingContactCount,
+    visibleUsersPendingProfileCount,
     visibleUsersPendingWhatsAppCount,
     visibleUsersWithWhatsAppCount,
   ]);

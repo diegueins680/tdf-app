@@ -544,6 +544,49 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('summarizes repeated pending-profile rows once when the roster mixes linked and unlinked admins', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        username: 'ada-no-profile',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: null,
+        partyName: 'Grace Hopper',
+        username: 'grace-no-profile',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 10,
+        partyName: 'Linus Ops',
+        username: 'linus-ops',
+        primaryEmail: 'linus@example.com',
+        primaryPhone: '+593999000333',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 2 usuarios todavía sin perfil vinculado; sus nombres no abren un perfil. Vista actual: solo usuarios activos.',
+        );
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Perfil pendiente');
+        expect(hasLinkWithTextAndHref(getRowByUserId(container, 103), 'Linus Ops', '/perfil/10')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the multi-user intro focused on available actions when no visible user has a linked profile', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
