@@ -130,9 +130,15 @@ describe('AdminDiagnosticsPage', () => {
         expect(listInstagramMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
         expect(listFacebookMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
         expect(listWhatsAppMessagesMock).toHaveBeenCalledWith({ direction: 'incoming' });
+        expect(container.querySelector('[data-testid="admin-diagnostics-social-quiet-summary"]')).not.toBeNull();
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(0);
         expect(container.textContent).toContain(
           'Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal.',
         );
+        expect(container.textContent).not.toContain('Entrantes: 0');
+        expect(container.textContent).not.toContain('Respondidos: 0');
+        expect(container.textContent).not.toContain('Pendientes: 0');
+        expect(container.textContent).not.toContain('Fallidos: 0');
         expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(0);
         expect(container.querySelectorAll('thead')).toHaveLength(0);
         expect(container.textContent).not.toContain('Sin mensajes respondidos.');
@@ -151,6 +157,7 @@ describe('AdminDiagnosticsPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(3);
         expect(container.querySelectorAll('thead')).toHaveLength(1);
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Claro, te comparto los detalles.');

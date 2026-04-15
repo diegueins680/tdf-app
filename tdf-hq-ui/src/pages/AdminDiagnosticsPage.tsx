@@ -136,6 +136,7 @@ export default function AdminDiagnosticsPage() {
     && !facebookQuery.isError
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
+  const showSocialChannelCards = !showGlobalSocialQuietGuidance;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -213,14 +214,20 @@ export default function AdminDiagnosticsPage() {
             </Button>
           </Stack>
           {showGlobalSocialQuietGuidance && (
-            <Typography variant="body2" color="text.secondary">
+            <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-quiet-summary">
               Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp.
               Cuando llegue el primero, aquí verás el historial respondido por canal.
-            </Typography>
+            </Alert>
           )}
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
-            {socialChannels.map(({ label, stats, loading }) => (
-              <Paper key={label} variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
+          {showSocialChannelCards && (
+            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
+              {socialChannels.map(({ label, stats, loading }) => (
+                <Paper
+                  key={label}
+                  variant="outlined"
+                  sx={{ p: 2, flex: 1, minWidth: 0 }}
+                  data-testid="admin-diagnostics-social-channel-card"
+                >
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                     <Typography variant="subtitle1" fontWeight={700}>
@@ -296,9 +303,10 @@ export default function AdminDiagnosticsPage() {
                     </TableContainer>
                   )}
                 </Stack>
-              </Paper>
-            ))}
-          </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          )}
         </Stack>
       </Paper>
     </Stack>
