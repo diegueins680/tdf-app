@@ -281,9 +281,9 @@ export default function AdminUsersPage() {
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const showMixedContactStateGuidance = hasVisibleWhatsAppAction
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
-  const hideRepeatedPendingStateChips =
-    showGeneralIntro
-    && (visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
+  const showSharedContactStateGuidance = visibleUsers.length > 1
+    && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
+  const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
     showSingleSearchResultGuidance
     || showSingleUserGuidance

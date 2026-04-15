@@ -266,7 +266,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('shows the WhatsApp CTA only for users with a phone-backed channel so email-only rows stay accurate', async () => {
+  it('keeps mixed contact-state work in the header so rows only show the available WhatsApp action', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -308,7 +308,7 @@ describe('AdminUsersPage', () => {
         expect(emailOnlyRow.textContent).toContain('email@example.com');
         expect(emailOnlyRow.textContent).not.toContain('Sin teléfono');
         expect(emailOnlyRow.textContent).not.toContain('Sin correo');
-        expect(emailOnlyRow.textContent).toContain('WhatsApp pendiente');
+        expect(emailOnlyRow.textContent).not.toContain('WhatsApp pendiente');
         expect(getButtonsByText(emailOnlyRow, 'WhatsApp')).toHaveLength(0);
 
         const phoneOnlyRow = getRowByUserId(container, 102);
@@ -326,7 +326,7 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('Sin teléfono');
         expect(noContactRow.textContent).not.toContain('Sin correo');
         expect(noContactRow.textContent).not.toContain('Sin WhatsApp, teléfono ni correo.');
-        expect(noContactRow.textContent).toContain('Contacto pendiente');
+        expect(noContactRow.textContent).not.toContain('Contacto pendiente');
         expect(noContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
         expect(getButtonsByText(noContactRow, 'WhatsApp')).toHaveLength(0);
@@ -471,7 +471,7 @@ describe('AdminUsersPage', () => {
         expect(hasLinkWithTextAndHref(readyContactRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
 
         const missingContactRow = getRowByUserId(container, 102);
-        expect(missingContactRow.textContent).toContain('Contacto pendiente');
+        expect(missingContactRow.textContent).not.toContain('Contacto pendiente');
         expect(missingContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(missingContactRow.textContent).not.toContain('Abrir perfil');
         expect(missingContactRow.textContent).not.toContain('Falta contacto');
@@ -1109,6 +1109,70 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps mixed filtered results focused by summarizing contact blockers once in the header', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        modules: ['admin'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-crm',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'bruno-crm',
+        partyName: 'Bruno Ops',
+        primaryEmail: null,
+        primaryPhone: '+593999000555',
+        whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+        expect(getRowByUserId(container, 102).textContent).toContain('grace-crm');
+        expect(getRowByUserId(container, 103).textContent).toContain('bruno-crm');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'crm');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Mostrando 2 de 3 usuarios. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Acceso compartido en esta vista: Roles: Manager · Módulos: crm.',
+        );
+
+        const emailOnlyRow = getRowByUserId(container, 102);
+        const phoneReadyRow = getRowByUserId(container, 103);
+        expect(emailOnlyRow.textContent).toContain('grace@example.com');
+        expect(emailOnlyRow.textContent).not.toContain('WhatsApp pendiente');
+        expect(emailOnlyRow.textContent).not.toContain('Contacto pendiente');
+        expect(getButtonsByText(emailOnlyRow, 'WhatsApp')).toHaveLength(0);
+        expect(getButtonsByText(phoneReadyRow, 'WhatsApp')).toHaveLength(1);
       });
     } finally {
       await cleanup();
