@@ -142,7 +142,8 @@ data ClassSessionUpdate = ClassSessionUpdate
   , notes     :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClassSessionUpdate
-instance FromJSON ClassSessionUpdate
+instance FromJSON ClassSessionUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data StudentCreate = StudentCreate
   { fullName :: Text

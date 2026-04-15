@@ -145,6 +145,7 @@ import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
+import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
@@ -2034,6 +2035,28 @@ main = hspec $ do
                 ( eitherDecode
                     "{\"customerId\":42,\"currency\":\"USD\",\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000,\"unitAmountCents\":9500}]}"
                     :: Either String DTO.GenerateSessionInvoiceReq
+                )
+                `shouldBe` True
+
+    describe "ClassSessionUpdate" $ do
+        it "accepts canonical patch payloads and rejects typo-only bodies so class-session updates cannot silently no-op" $ do
+            case (eitherDecode "{\"teacherId\":12}" :: Either String TrialsDTO.ClassSessionUpdate) of
+                Left err ->
+                    expectationFailure ("Expected canonical class-session patch payload to decode, got: " <> err)
+                Right (TrialsDTO.ClassSessionUpdate teacherIdValue subjectIdValue studentIdValue startAtValue endAtValue roomIdValue bookingIdValue notesValue) -> do
+                    teacherIdValue `shouldBe` Just 12
+                    subjectIdValue `shouldBe` Nothing
+                    studentIdValue `shouldBe` Nothing
+                    startAtValue `shouldBe` Nothing
+                    endAtValue `shouldBe` Nothing
+                    roomIdValue `shouldBe` Nothing
+                    bookingIdValue `shouldBe` Nothing
+                    notesValue `shouldBe` Nothing
+
+            isLeft
+                ( eitherDecode
+                    "{\"teacherID\":12}"
+                    :: Either String TrialsDTO.ClassSessionUpdate
                 )
                 `shouldBe` True
 
