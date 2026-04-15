@@ -659,7 +659,29 @@ data TidalAgentRequest = TidalAgentRequest
   } deriving (Show, Generic)
 
 instance FromJSON TidalAgentRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 2 }
+  parseJSON = withObject "TidalAgentRequest" $ \o -> do
+    rejectUnexpectedObjectFields "TidalAgentRequest" ["prompt", "model"] o
+    prompt <- normalizeRequiredTextField "prompt" =<< o .:? "prompt"
+    model <- traverse (normalizeOptionalTextField "model") =<< o .:? "model"
+    pure TidalAgentRequest
+      { taPrompt = prompt
+      , taModel = model
+      }
+    where
+      normalizeRequiredTextField fieldName mRawValue =
+        case mRawValue of
+          Nothing -> fail (T.unpack fieldName <> " is required")
+          Just rawValue ->
+            let trimmedValue = T.strip rawValue
+            in if T.null trimmedValue
+                 then fail (T.unpack fieldName <> " cannot be blank")
+                 else pure trimmedValue
+
+      normalizeOptionalTextField fieldName rawValue =
+        let trimmedValue = T.strip rawValue
+        in if T.null trimmedValue
+             then fail (T.unpack fieldName <> " cannot be blank")
+             else pure trimmedValue
 
 data TidalAgentResponse = TidalAgentResponse
   { taContent :: Text

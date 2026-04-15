@@ -78,6 +78,27 @@ spec = do
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"unexpected\":true}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"wf_nested\",\"label\":\"default\"}}" `shouldSatisfy` isLeft
 
+    describe "TidalAgentRequest FromJSON" $ do
+        it "accepts canonical requests and trims explicit prompt/model selectors" $ do
+            case decodeTidalAgentRequest "{\"prompt\":\"  make a mellow bassline  \",\"model\":\" gpt-4o-mini \"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical tidal-agent payload to decode, got: " <> err)
+                Right (API.TidalAgentRequest promptVal modelVal) -> do
+                    promptVal `shouldBe` "make a mellow bassline"
+                    modelVal `shouldBe` Just "gpt-4o-mini"
+
+            case decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\"}" of
+                Left err ->
+                    expectationFailure ("Expected tidal-agent payload without model to decode, got: " <> err)
+                Right (API.TidalAgentRequest promptVal modelVal) -> do
+                    promptVal `shouldBe` "play a broken beat"
+                    modelVal `shouldBe` Nothing
+
+        it "rejects blank or unexpected fields instead of silently falling back" $ do
+            decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
+            decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":\"   \"}" `shouldSatisfy` isLeft
+            decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
@@ -490,6 +511,8 @@ spec = do
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeChatKitSession :: BL8.ByteString -> Either String API.ChatKitSessionRequest
     decodeChatKitSession = eitherDecode
+    decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
+    decodeTidalAgentRequest = eitherDecode
     decodeAdsInquiry :: BL8.ByteString -> Either String API.AdsInquiry
     decodeAdsInquiry = eitherDecode
     decodeCourseRegistration = eitherDecode
