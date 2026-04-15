@@ -4,6 +4,10 @@
 module Main (main) where
 
 import Control.Exception (bracket)
+import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
@@ -11,11 +15,12 @@ import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Key)
-import Database.Persist.Sql (fromSqlKey, toSqlKey)
+import Database.Persist (Key, insert_)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sqlite (createSqlitePool)
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
-import Servant (ServerError (..))
+import Servant (ServerError (..), ServerT, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
@@ -28,6 +33,7 @@ import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
       LiveSessionSongPayload (..) )
+import TDF.API.SocialSyncAPI (SocialSyncAPI)
 import TDF.API.Types (InternTaskUpdate (..))
 import TDF.API.WhatsApp
     ( CompleteReq (..),
@@ -38,6 +44,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cron (Directive (..), parseDirective)
+import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
@@ -53,8 +60,10 @@ import TDF.DTO.SocialEventsDTO
       iudMessageUpdate,
       vcuPhone,
       vudContactUpdate )
-import TDF.DTO.SocialSyncDTO (SocialSyncIngestRequest)
+import TDF.DTO.SocialSyncDTO (SocialSyncIngestRequest, SocialSyncPostDTO (..))
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Models (RoleEnum (..), SocialSyncPost (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
@@ -97,7 +106,8 @@ import TDF.ServerFeedback
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate )
 import TDF.Server.SocialSync
-    ( validateSocialSyncArtistPartyId,
+    ( socialSyncServer,
+      validateSocialSyncArtistPartyId,
       validateSocialSyncExternalPostId,
       validateSocialSyncArtistProfileId,
       validateSocialSyncPlatform,
@@ -667,6 +677,32 @@ main = hspec $ do
             assertInvalid 0
             assertInvalid (-5)
             assertInvalid 501
+
+    describe "social sync posts list handler" $ do
+        it "applies the tag filter before the response limit so tagged queries do not miss older matches" $ do
+            let setup = do
+                    let now = currentSocialSyncTestTime
+                    insert_ (mkSocialSyncPost "instagram" "ig-general-newest" (Just "show") now)
+                    insert_ (mkSocialSyncPost "instagram" "ig-release-match" (Just "release") (addUTCTime (-60) now))
+                    insert_ (mkSocialSyncPost "instagram" "ig-general-older" Nothing (addUTCTime (-120) now))
+            result <- runSocialSyncListHandler setup Nothing Nothing Nothing (Just " release ") (Just 1)
+            case result of
+                Left err ->
+                    expectationFailure ("Expected tagged social sync query to succeed, got: " <> show err)
+                Right posts ->
+                    map sspdExternalPostId posts `shouldBe` ["ig-release-match"]
+
+        it "treats blank tag filters as omitted instead of returning an accidental empty result set" $ do
+            let setup = do
+                    let now = currentSocialSyncTestTime
+                    insert_ (mkSocialSyncPost "instagram" "ig-general-newest" Nothing now)
+                    insert_ (mkSocialSyncPost "instagram" "ig-release-older" (Just "release") (addUTCTime (-60) now))
+            result <- runSocialSyncListHandler setup Nothing Nothing Nothing (Just "   ") (Just 1)
+            case result of
+                Left err ->
+                    expectationFailure ("Expected blank-tag social sync query to succeed, got: " <> show err)
+                Right posts ->
+                    map sspdExternalPostId posts `shouldBe` ["ig-general-newest"]
 
     describe "social events update payload parsing" $ do
         it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
@@ -2389,4 +2425,104 @@ mkFeedbackAttachment fileName =
         , fdFileName = fileName
         , fdFileCType = "image/png"
         , fdPayload = "/tmp/mock-feedback-upload"
+        }
+
+type SocialSyncTestM = ReaderT Env (ExceptT ServerError IO)
+
+currentSocialSyncTestTime :: UTCTime
+currentSocialSyncTestTime =
+    UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 3600)
+
+runSocialSyncListHandler
+    :: SqlPersistT IO ()
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Int
+    -> IO (Either ServerError [SocialSyncPostDTO])
+runSocialSyncListHandler setup mPlatform mParty mProfile mTag mLimit =
+    runNoLoggingT $ do
+        pool <- createSqlitePool ":memory:" 1
+        liftIO $ runSqlPool initializeSocialSyncSchema pool
+        liftIO $ runSqlPool setup pool
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused in social sync list tests"
+                    }
+        liftIO $ runExceptT (runReaderT (socialSyncListHandlerFor socialSyncAdminUser mPlatform mParty mProfile mTag mLimit) env)
+
+socialSyncAdminUser :: AuthedUser
+socialSyncAdminUser =
+    AuthedUser
+        { auPartyId = toSqlKey 1
+        , auRoles = [Admin]
+        , auModules = modulesForRoles [Admin]
+        }
+
+socialSyncListHandlerFor
+    :: AuthedUser
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Text
+    -> Maybe Int
+    -> SocialSyncTestM [SocialSyncPostDTO]
+socialSyncListHandlerFor user =
+    case (socialSyncServer user :: ServerT SocialSyncAPI SocialSyncTestM) of
+        _ingest :<|> listPosts ->
+            listPosts
+
+initializeSocialSyncSchema :: SqlPersistT IO ()
+initializeSocialSyncSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"social_sync_post\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"account_id\" INTEGER NULL,\
+        \\"platform\" VARCHAR NOT NULL,\
+        \\"external_post_id\" VARCHAR NOT NULL,\
+        \\"artist_party_id\" INTEGER NULL,\
+        \\"artist_profile_id\" INTEGER NULL,\
+        \\"caption\" VARCHAR NULL,\
+        \\"permalink\" VARCHAR NULL,\
+        \\"media_urls\" VARCHAR NULL,\
+        \\"posted_at\" TIMESTAMP NULL,\
+        \\"fetched_at\" TIMESTAMP NOT NULL,\
+        \\"tags\" VARCHAR NULL,\
+        \\"summary\" VARCHAR NULL,\
+        \\"ingest_source\" VARCHAR NOT NULL,\
+        \\"like_count\" INTEGER NULL,\
+        \\"comment_count\" INTEGER NULL,\
+        \\"share_count\" INTEGER NULL,\
+        \\"view_count\" INTEGER NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \UNIQUE(\"platform\", \"external_post_id\")\
+        \)"
+        []
+
+mkSocialSyncPost :: Text -> Text -> Maybe Text -> UTCTime -> SocialSyncPost
+mkSocialSyncPost platform externalPostId tags postedAt =
+    SocialSyncPost
+        { socialSyncPostAccountId = Nothing
+        , socialSyncPostPlatform = platform
+        , socialSyncPostExternalPostId = externalPostId
+        , socialSyncPostArtistPartyId = Nothing
+        , socialSyncPostArtistProfileId = Nothing
+        , socialSyncPostCaption = Just ("caption for " <> externalPostId)
+        , socialSyncPostPermalink = Nothing
+        , socialSyncPostMediaUrls = Nothing
+        , socialSyncPostPostedAt = Just postedAt
+        , socialSyncPostFetchedAt = postedAt
+        , socialSyncPostTags = tags
+        , socialSyncPostSummary = Nothing
+        , socialSyncPostIngestSource = "manual"
+        , socialSyncPostLikeCount = Nothing
+        , socialSyncPostCommentCount = Nothing
+        , socialSyncPostShareCount = Nothing
+        , socialSyncPostViewCount = Nothing
+        , socialSyncPostCreatedAt = postedAt
+        , socialSyncPostUpdatedAt = postedAt
         }

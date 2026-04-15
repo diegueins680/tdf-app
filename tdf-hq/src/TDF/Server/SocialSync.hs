@@ -157,16 +157,18 @@ socialSyncServer user =
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
       limitVal <- either throwError pure (validateSocialSyncPostsLimit mLimit)
+      let normalizedTag = normalizeSocialSyncTagFilter mTag
       let filters = catMaybes
             [ (SocialSyncPostPlatform ==.) <$> platformFilter
             , (SocialSyncPostArtistPartyId ==.) . Just <$> partyKey
             , (SocialSyncPostArtistProfileId ==.) . Just <$> profileKey
             ]
-      rows <- withPool $ selectList filters [Desc SocialSyncPostPostedAt, Desc SocialSyncPostCreatedAt, LimitTo limitVal]
-      let mapped = map toDTO rows
-      pure $ maybe mapped (\tag -> filter (hasTag tag) mapped) mTag
-      where
-        hasTag tag dto = T.toLower tag `elem` map T.toLower (sspdTags dto)
+      let selectOpts =
+            [Desc SocialSyncPostPostedAt, Desc SocialSyncPostCreatedAt]
+              <> maybe [LimitTo limitVal] (const []) normalizedTag
+      rows <- withPool $ selectList filters selectOpts
+      let visibleRows = filterSocialSyncRows normalizedTag limitVal rows
+      pure (map toDTO visibleRows)
 
     withPool :: (MonadReader Env m, MonadIO m) => SqlPersistT IO a -> m a
     withPool action = do
@@ -244,6 +246,23 @@ nonEmptyText t =
   let trimmed = T.strip t
   in if T.null trimmed then Nothing else Just trimmed
 
+normalizeSocialSyncTagFilter :: Maybe Text -> Maybe Text
+normalizeSocialSyncTagFilter mTag = T.toLower <$> (mTag >>= nonEmptyText)
+
+filterSocialSyncRows :: Maybe Text -> Int -> [Entity SocialSyncPost] -> [Entity SocialSyncPost]
+filterSocialSyncRows Nothing _ rows = rows
+filterSocialSyncRows (Just tag) limitVal rows =
+  take limitVal (filter (socialSyncPostMatchesTag tag . entityVal) rows)
+
+socialSyncPostMatchesTag :: Text -> SocialSyncPost -> Bool
+socialSyncPostMatchesTag tag SocialSyncPost{..} =
+  tag `elem` map T.toLower (parseSocialSyncTags socialSyncPostTags)
+
+parseSocialSyncTags :: Maybe Text -> [Text]
+parseSocialSyncTags rawTags =
+  let tagList = maybe [] (filter (not . T.null) . map T.strip . T.splitOn ",") rawTags
+  in if null tagList then ["general"] else tagList
+
 classifyTags :: Maybe Text -> [Text]
 classifyTags mCaption =
   let base = T.toLower (fromMaybe "" mCaption)
@@ -269,7 +288,7 @@ setMaybe field (Just v) = [field =. Just v]
 toDTO :: Entity SocialSyncPost -> SocialSyncPostDTO
 toDTO (Entity key SocialSyncPost{..}) =
   let mediaList = maybe [] (filter (not . T.null) . map T.strip . T.splitOn "\n") socialSyncPostMediaUrls
-      tagList = maybe [] (filter (not . T.null) . map T.strip . T.splitOn ",") socialSyncPostTags
+      tagList = parseSocialSyncTags socialSyncPostTags
       metrics = SocialSyncMetricsDTO
         { ssmLikes = socialSyncPostLikeCount
         , ssmComments = socialSyncPostCommentCount
@@ -288,7 +307,7 @@ toDTO (Entity key SocialSyncPost{..}) =
     , sspdPostedAt = socialSyncPostPostedAt
     , sspdFetchedAt = socialSyncPostFetchedAt
     , sspdSummary = socialSyncPostSummary
-    , sspdTags = if null tagList then ["general"] else tagList
+    , sspdTags = tagList
     , sspdIngestSource = socialSyncPostIngestSource
     , sspdMetrics = metrics
     }
