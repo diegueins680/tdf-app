@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), get, insert)
+import Database.Persist (Entity(..), Key, get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, toSqlKey)
 import Database.Persist.Sqlite (runSqlite)
 import TDF.API (AdsInquiry (..), CreateBookingReq (..), PublicBookingReq (..), UpdateBookingReq (..))
@@ -25,6 +25,8 @@ import TDF.Models
     , Party (..)
     , PaymentMethod (..)
     , PricingModel (..)
+    , Resource (..)
+    , ResourceType (..)
     , RefundPolicy (..)
     , RoleEnum (..)
     , ServiceAd (..)
@@ -93,6 +95,7 @@ import TDF.Server
     , validateCourseRegistrationId
     , validateCourseRegistrationReceiptId
     , validateCourseRegistrationFollowUpId
+    , resolveResourcesForBooking
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , resolvePartyRoleAssignmentTarget
@@ -1994,6 +1997,42 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "resolveResourcesForBooking" $ do
+        it "resolves explicit room slugs from booking payloads instead of silently dropping them" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            (liveRoomId, controlRoomId, resolved) <- runResourceSqlite $ do
+                liveRoomId <- insertBookingResourceFixture "Live Room" "room-live"
+                controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
+                resolved <- resolveResourcesForBooking
+                    (Just "mixing")
+                    ["room-live", "room-control"]
+                    startsAt
+                    endsAt
+                pure (liveRoomId, controlRoomId, resolved)
+
+            resolved `shouldBe` [liveRoomId, controlRoomId]
+
+        it "rejects unknown explicit room ids instead of silently falling back to default room selection" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            result <- try $
+                runResourceSqlite $ do
+                    _ <- insertBookingResourceFixture "Control Room" "room-control"
+                    resolveResourcesForBooking
+                        (Just "mixing")
+                        ["missing-room"]
+                        startsAt
+                        endsAt
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "resourceIds contain unknown or unavailable rooms: missing-room"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected invalid explicit booking room ids to be rejected, got: " <> show resourceKeys)
+
     describe "CreateBookingReq / UpdateBookingReq FromJSON" $ do
         it "accepts canonical HQ booking create and update payloads" $ do
             case decodeCreateBookingRequest
@@ -2318,6 +2357,13 @@ runPackageSqlite action =
         liftIO $ runReaderT initializePackageSchema backend
         liftIO $ runReaderT action backend
 
+runResourceSqlite :: SqlPersistT IO a -> IO a
+runResourceSqlite action =
+    runSqlite ":memory:" $ do
+        backend <- ask
+        liftIO $ runReaderT initializeResourceSchema backend
+        liftIO $ runReaderT action backend
+
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -2383,6 +2429,31 @@ initializeAuthSchema = do
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
         []
+
+initializeResourceSchema :: SqlPersistT IO ()
+initializeResourceSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"resource\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"slug\" VARCHAR NOT NULL,\
+        \\"resource_type\" VARCHAR NOT NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \CONSTRAINT \"unique_resource_slug\" UNIQUE (\"slug\")\
+        \)"
+        []
+
+insertBookingResourceFixture :: T.Text -> T.Text -> SqlPersistT IO (Key Resource)
+insertBookingResourceFixture name slug =
+    insert Resource
+        { resourceName = name
+        , resourceSlug = slug
+        , resourceResourceType = Room
+        , resourceCapacity = Nothing
+        , resourceActive = True
+        }
 
 initializePackageSchema :: SqlPersistT IO ()
 initializePackageSchema = do

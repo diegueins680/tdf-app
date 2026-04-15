@@ -5864,25 +5864,50 @@ notifyEngineerIfNeeded booking = do
         Right () -> pure ()
 
 resolveResourcesForBooking :: Maybe Text -> [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
-resolveResourcesForBooking service requested start end = do
-  explicit <- resolveRequestedResources requested
-  if not (null explicit)
-    then pure explicit
-    else defaultResourcesForService service start end
+resolveResourcesForBooking service requested start end =
+  case normalizeRequestedResourceIds requested of
+    Left err -> liftIO (throwIO err)
+    Right [] -> defaultResourcesForService service start end
+    Right explicit -> resolveRequestedResources explicit
+
+normalizeRequestedResourceIds :: [Text] -> Either ServerError [Text]
+normalizeRequestedResourceIds rawIds =
+  let normalized = map T.strip rawIds
+  in if any T.null normalized
+       then Left err400 { errBody = "resourceIds must not contain blank entries" }
+       else Right (dedupeStable normalized)
 
 resolveRequestedResources :: [Text] -> SqlPersistT IO [Key Resource]
-resolveRequestedResources rawIds = do
+resolveRequestedResources requestedIds = do
   rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
   let indexById = Map.fromList $ map (\(Entity k room) -> (k, room)) rooms
+      indexBySlug = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceSlug room), k)) rooms
       indexByName = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceName room), k)) rooms
       resolveOne rid =
         case fromPathPiece rid of
           Just key | Map.member key indexById -> Just key
           _ ->
-            let normalized = T.toLower (T.strip rid)
-            in Map.lookup normalized indexByName
-      dedupKeys = Set.toList . Set.fromList
-  pure $ dedupKeys (mapMaybe resolveOne rawIds)
+            let normalized = T.toLower rid
+            in Map.lookup normalized indexBySlug <|> Map.lookup normalized indexByName
+      unresolved = [rid | rid <- requestedIds, isNothing (resolveOne rid)]
+  case dedupeStable unresolved of
+    [] -> pure (dedupeStable (mapMaybe resolveOne requestedIds))
+    invalidIds ->
+      liftIO . throwIO $
+        err400
+          { errBody =
+              BL.fromStrict . TE.encodeUtf8 $
+                "resourceIds contain unknown or unavailable rooms: "
+                  <> T.intercalate ", " invalidIds
+          }
+
+dedupeStable :: Ord a => [a] -> [a]
+dedupeStable = go Set.empty
+  where
+    go _ [] = []
+    go seen (x:xs)
+      | Set.member x seen = go seen xs
+      | otherwise = x : go (Set.insert x seen) xs
 
 defaultResourcesForService :: Maybe Text -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 defaultResourcesForService Nothing _ _ = pure []
