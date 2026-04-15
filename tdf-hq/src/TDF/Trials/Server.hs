@@ -683,6 +683,7 @@ isValidHttpUrl rawUrl
 
     parseOctet octet
       | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
           if value >= (0 :: Int) && value <= 255
