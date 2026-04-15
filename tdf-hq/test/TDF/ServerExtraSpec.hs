@@ -27,8 +27,10 @@ import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
+  , AssetCreate (..)
   , AssetCheckoutDTO
   , AssetCheckoutRequest (..)
+  , AssetUpdate (..)
   , RoomCreate (..)
   , RoomDTO
   , RoomUpdate (..)
@@ -130,6 +132,39 @@ spec = do
         `shouldSatisfy` isLeft
 
   describe "inventory checkout/check-in request JSON" $ do
+    it "accepts canonical asset create and patch keys used by current clients" $ do
+      case A.eitherDecode
+        "{\"cName\":\"Roland Juno-106\",\"cCategory\":\"Synth\",\"cPhotoUrl\":\"https://cdn.example.com/juno.jpg\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical asset create payload to decode, got: " <> err)
+        Right payload -> do
+          cName payload `shouldBe` "Roland Juno-106"
+          cCategory payload `shouldBe` "Synth"
+          cPhotoUrl payload `shouldBe` Just "https://cdn.example.com/juno.jpg"
+
+      case A.eitherDecode
+        "{\"uName\":\"Roland Juno-60\",\"uNotes\":\"Freshly serviced\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical asset patch payload to decode, got: " <> err)
+        Right payload -> do
+          uName payload `shouldBe` Just "Roland Juno-60"
+          uNotes payload `shouldBe` Just "Freshly serviced"
+          uCategory payload `shouldBe` Nothing
+
+    it "rejects response-shaped or unexpected asset create and patch keys so typoed inventory writes fail explicitly" $ do
+      (A.eitherDecode
+        "{\"cName\":\"Roland Juno-106\",\"cCategory\":\"Synth\",\"status\":\"Active\"}"
+          :: Either String AssetCreate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"name\":\"Roland Juno-106\",\"category\":\"Synth\"}"
+          :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"uName\":\"Roland Juno-106\",\"unexpected\":true}"
+          :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
         "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coConditionOut\":\"Excelente\",\"coNotes\":\"Cableado completo\"}" of

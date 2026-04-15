@@ -399,7 +399,8 @@ data AssetCreate = AssetCreate
   } deriving (Show, Generic)
 
 instance ToJSON AssetCreate
-instance FromJSON AssetCreate
+instance FromJSON AssetCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data AssetUpdate = AssetUpdate
   { uName       :: Maybe Text
@@ -410,7 +411,8 @@ data AssetUpdate = AssetUpdate
   , uPhotoUrl   :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON AssetUpdate
+instance FromJSON AssetUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON AssetUpdate
 
 data AssetCheckoutDTO = AssetCheckoutDTO
