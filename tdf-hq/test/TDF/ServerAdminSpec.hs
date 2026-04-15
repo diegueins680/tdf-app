@@ -33,7 +33,13 @@ import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (loadConfig)
 import TDF.DB (Env (..))
-import TDF.DTO (LogEntryDTO)
+import TDF.DTO
+    ( ArtistProfileDTO
+    , ArtistProfileUpsert (..)
+    , ArtistReleaseDTO
+    , ArtistReleaseUpsert (..)
+    , LogEntryDTO
+    )
 import TDF.Models (Party (..), RoleEnum (..), UserCredential (..))
 import qualified TDF.ModelsExtra as ME
 import TDF.ServerAdmin (
@@ -373,6 +379,67 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid WhatsApp resend message id to be rejected, got " <> show value)
+
+        it "rejects non-positive artist and release ids before admin artist writes hit the database" $ do
+            let artistProfiles :<|> artistReleases = artistsHandlersFor (mkUser [Admin])
+                _listProfiles :<|> upsertArtistProfile = artistProfiles
+                createArtistRelease :<|> updateArtistRelease = artistReleases
+                invalidArtistProfilePayload =
+                    ArtistProfileUpsert
+                        { apuArtistId = 0
+                        , apuDisplayName = Just "Ada Artist"
+                        , apuSlug = Nothing
+                        , apuBio = Nothing
+                        , apuCity = Nothing
+                        , apuHeroImageUrl = Nothing
+                        , apuSpotifyArtistId = Nothing
+                        , apuSpotifyUrl = Nothing
+                        , apuYoutubeChannelId = Nothing
+                        , apuYoutubeUrl = Nothing
+                        , apuWebsiteUrl = Nothing
+                        , apuFeaturedVideoUrl = Nothing
+                        , apuGenres = Nothing
+                        , apuHighlights = Nothing
+                        }
+                invalidArtistReleasePayload =
+                    ArtistReleaseUpsert
+                        { aruArtistId = 0
+                        , aruTitle = "Debut"
+                        , aruReleaseDate = Nothing
+                        , aruDescription = Nothing
+                        , aruCoverImageUrl = Nothing
+                        , aruSpotifyUrl = Nothing
+                        , aruYoutubeUrl = Nothing
+                        }
+                validArtistReleasePayload =
+                    invalidArtistReleasePayload { aruArtistId = 7 }
+
+            profileResult <- runAdminTest (upsertArtistProfile invalidArtistProfilePayload)
+            case profileResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "artistId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist profile artist id to be rejected, got " <> show value)
+
+            createReleaseResult <- runAdminTest (createArtistRelease invalidArtistReleasePayload)
+            case createReleaseResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "artistId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist release artist id to be rejected, got " <> show value)
+
+            updateReleaseResult <- runAdminTest (updateArtistRelease 0 validArtistReleasePayload)
+            case updateReleaseResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "releaseId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist release id to be rejected, got " <> show value)
 
     describe "admin user creation invariants" $ do
         it "rejects creating a second credential for the same party instead of forking login state" $ do
@@ -826,6 +893,27 @@ usersHandlersFor user =
             :<|> _rag
             :<|> _social ->
                 usersRouter
+
+artistsHandlersFor
+    :: AuthedUser
+    -> ((AdminTestM [ArtistProfileDTO]
+        :<|> (ArtistProfileUpsert -> AdminTestM ArtistProfileDTO))
+        :<|> ((ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)
+        :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)))
+artistsHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> artistsRouter
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                artistsRouter
 
 communicationsHandlersFor
     :: AuthedUser

@@ -544,7 +544,8 @@ adminServer user =
 
     upsertArtistProfileAdmin payload@ArtistProfileUpsert{..} = do
       ensureModule ModuleAdmin user
-      let artistKey = toSqlKey apuArtistId
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" apuArtistId)
+      let artistKey = toSqlKey artistId
       mParty <- withPool $ get artistKey
       case mParty of
         Nothing -> throwError err404
@@ -556,7 +557,8 @@ adminServer user =
     createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
       now <- liftIO getCurrentTime
-      let artistKey = toSqlKey aruArtistId
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" aruArtistId)
+      let artistKey = toSqlKey artistId
       dto <- withPool $ do
         mProfile <- getBy (UniqueArtistProfile artistKey)
         case mProfile of
@@ -578,8 +580,10 @@ adminServer user =
 
     updateArtistReleaseAdmin releaseId ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
-      let releaseKey = toSqlKey releaseId
-          artistKey  = toSqlKey aruArtistId
+      releaseIdValid <- either throwError pure (validatePositiveAdminLookupId "releaseId" releaseId)
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" aruArtistId)
+      let releaseKey = toSqlKey releaseIdValid
+          artistKey  = toSqlKey artistId
       mRelease <- withPool $ get releaseKey
       case mRelease of
         Nothing -> throwError err404
