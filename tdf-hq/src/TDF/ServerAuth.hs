@@ -53,7 +53,7 @@ import Data.UUID (toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, SqlPersistT)
+import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -939,6 +939,7 @@ createPasswordResetToken pid emailVal =
 createReusableSessionToken :: PartyId -> Maybe Text -> SqlPersistT IO Text
 createReusableSessionToken pid label = do
   tokenValue <- liftIO (toText <$> nextRandom)
+  transactionSave
   insertResult <-
     (Right <$> insertUnique (ApiToken tokenValue pid label True))
       `catch` \sqlErr ->
@@ -949,6 +950,7 @@ createReusableSessionToken pid label = do
     Right (Just _) -> pure tokenValue
     Right Nothing -> createReusableSessionToken pid label
     Left sqlErr -> do
+      transactionUndo
       mExisting <- findReusableActiveToken pid label
       case mExisting of
         Just existing -> pure existing

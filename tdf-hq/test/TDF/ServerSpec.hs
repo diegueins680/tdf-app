@@ -82,6 +82,7 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateServiceMarketplaceBookingRefs
+    , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
     , validateRequiredCmsField
     , validateServiceMarketplaceCatalog
@@ -295,6 +296,54 @@ spec = describe "TDF.Server helpers" $ do
                 (validateServiceMarketplaceBookingRefs 0 99)
             assertInvalid "slotId must be a positive integer"
                 (validateServiceMarketplaceBookingRefs 42 (-3))
+
+    describe "validateServiceMarketplaceBookingSlot" $ do
+        it "accepts open slots that belong to the requested service ad" $ do
+            let adKey = toSqlKey 42
+                slot =
+                    ServiceAdSlot
+                        { serviceAdSlotAdId = adKey
+                        , serviceAdSlotStartsAt = UTCTime (fromGregorian 2026 4 14) 0
+                        , serviceAdSlotEndsAt = UTCTime (fromGregorian 2026 4 14) 3600
+                        , serviceAdSlotStatus = " open "
+                        , serviceAdSlotCreatedAt = UTCTime (fromGregorian 2026 4 13) 0
+                        }
+            validateServiceMarketplaceBookingSlot adKey slot `shouldBe` Right ()
+
+        it "rejects mismatched ad-slot pairs before booking creation can report a misleading availability error" $ do
+            let slot =
+                    ServiceAdSlot
+                        { serviceAdSlotAdId = toSqlKey 99
+                        , serviceAdSlotStartsAt = UTCTime (fromGregorian 2026 4 14) 0
+                        , serviceAdSlotEndsAt = UTCTime (fromGregorian 2026 4 14) 3600
+                        , serviceAdSlotStatus = "open"
+                        , serviceAdSlotCreatedAt = UTCTime (fromGregorian 2026 4 13) 0
+                        }
+            case validateServiceMarketplaceBookingSlot (toSqlKey 42) slot of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "slotId does not belong to adId"
+                Right value ->
+                    expectationFailure
+                        ("Expected mismatched service marketplace slot to be rejected, got: " <> show value)
+
+        it "rejects non-open slots with the existing availability conflict response" $ do
+            let adKey = toSqlKey 42
+                slot =
+                    ServiceAdSlot
+                        { serviceAdSlotAdId = adKey
+                        , serviceAdSlotStartsAt = UTCTime (fromGregorian 2026 4 14) 0
+                        , serviceAdSlotEndsAt = UTCTime (fromGregorian 2026 4 14) 3600
+                        , serviceAdSlotStatus = "booked"
+                        , serviceAdSlotCreatedAt = UTCTime (fromGregorian 2026 4 13) 0
+                        }
+            case validateServiceMarketplaceBookingSlot adKey slot of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr) `shouldContain` "Slot is not available"
+                Right value ->
+                    expectationFailure
+                        ("Expected unavailable service marketplace slot to be rejected, got: " <> show value)
 
     describe "resolveServiceAdEntity" $ do
         it "rejects non-positive ad ids before service slot handlers can treat them as missing ads or empty slot lists" $ do

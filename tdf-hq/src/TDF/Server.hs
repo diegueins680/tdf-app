@@ -4824,8 +4824,9 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
         slot = entityVal slotEnt
         providerId = serviceAdProviderPartyId ad
     when (not (serviceAdActive ad)) $ liftIO $ throwIO err409 { errBody = "Service ad is inactive" }
-    when (serviceAdSlotAdId slot /= adKey || serviceAdSlotStatus slot /= "open") $
-      liftIO $ throwIO err409 { errBody = "Slot is not available" }
+    case validateServiceMarketplaceBookingSlot adKey slot of
+      Left serverErr -> liftIO $ throwIO serverErr
+      Right () -> pure ()
     when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
     let orderTitle = fromMaybe (serviceAdHeadline ad) (normalizeOptionalInput smbTitle)
     catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
@@ -5517,6 +5518,18 @@ validateServiceMarketplaceBookingRefs rawAdId rawSlotId = do
   adId <- validatePositiveIdField "adId" rawAdId
   slotId <- validatePositiveIdField "slotId" rawSlotId
   pure (adId, slotId)
+
+validateServiceMarketplaceBookingSlot
+  :: Key ServiceAd
+  -> ServiceAdSlot
+  -> Either ServerError ()
+validateServiceMarketplaceBookingSlot adKey slot
+  | serviceAdSlotAdId slot /= adKey =
+      Left err400 { errBody = "slotId does not belong to adId" }
+  | T.toCaseFold (T.strip (serviceAdSlotStatus slot)) /= "open" =
+      Left err409 { errBody = "Slot is not available" }
+  | otherwise =
+      Right ()
 
 normalizeOptionalCmsFilter :: Maybe Text -> Maybe Text
 normalizeOptionalCmsFilter = normalizeOptionalInput
