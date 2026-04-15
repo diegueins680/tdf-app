@@ -169,7 +169,8 @@ data StudentUpdate = StudentUpdate
   , notes       :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON StudentUpdate
-instance FromJSON StudentUpdate
+instance FromJSON StudentUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data TeacherStudentLinkIn = TeacherStudentLinkIn
   { studentId :: Int

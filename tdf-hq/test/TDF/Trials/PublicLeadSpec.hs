@@ -263,6 +263,28 @@ spec = do
             :: Either String SubjectUpdate)
         `shouldBe` True
 
+  describe "StudentUpdate request decoding" $ do
+    it "rejects typoed or unexpected JSON keys so student patches cannot degrade into silent no-ops" $ do
+      case (A.eitherDecode "{\"displayName\":\"Ada\",\"phone\":\"+593991234567\"}" :: Either String StudentUpdate) of
+        Left err ->
+          expectationFailure ("Expected canonical student update payload to decode, got " <> err)
+        Right (StudentUpdate displayNameValue emailValue phoneValue notesValue) -> do
+          displayNameValue `shouldBe` Just "Ada"
+          emailValue `shouldBe` Nothing
+          phoneValue `shouldBe` Just "+593991234567"
+          notesValue `shouldBe` Nothing
+
+      isLeft
+        (A.eitherDecode
+          "{\"displayNam\":\"Ada\"}"
+            :: Either String StudentUpdate)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode
+          "{\"displayName\":\"Ada\",\"unexpected\":true}"
+            :: Either String StudentUpdate)
+        `shouldBe` True
+
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
       validatePublicSubjectIdInput 7 `shouldBe` Right 7
