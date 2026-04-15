@@ -337,6 +337,41 @@ spec = do
       assertInvalid (normalizeRoomName "   ")
       assertInvalid (normalizeRoomNameUpdate (Just "   "))
 
+  describe "room write request JSON" $ do
+    it "accepts canonical room create and patch keys used by current clients" $ do
+      case A.eitherDecode
+        "{\"rcName\":\"Sala A\"}" of
+        Left err ->
+          expectationFailure ("Expected canonical room create payload to decode, got: " <> err)
+        Right payload ->
+          rcName payload `shouldBe` "Sala A"
+
+      case A.eitherDecode
+        "{\"ruName\":\"Control Room\",\"ruIsBookable\":false}" of
+        Left err ->
+          expectationFailure ("Expected canonical room patch payload to decode, got: " <> err)
+        Right payload -> do
+          ruName payload `shouldBe` Just "Control Room"
+          ruIsBookable payload `shouldBe` Just False
+
+    it "rejects response-shaped or unexpected room keys so typoed patches fail explicitly" $ do
+      (A.eitherDecode
+        "{\"name\":\"Sala A\"}"
+          :: Either String RoomCreate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"rcName\":\"Sala A\",\"unexpected\":true}"
+          :: Either String RoomCreate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"name\":\"Control Room\",\"isBookable\":false}"
+          :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"ruName\":\"Control Room\",\"unexpected\":true}"
+          :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+
   describe "roomsServer duplicate name handling" $ do
     let existingRoomId = "00000000-0000-0000-0000-000000000701"
         otherRoomId = "00000000-0000-0000-0000-000000000702"

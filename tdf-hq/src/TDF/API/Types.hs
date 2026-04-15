@@ -528,7 +528,8 @@ data RoomCreate = RoomCreate
   } deriving (Show, Generic)
 
 instance ToJSON RoomCreate
-instance FromJSON RoomCreate
+instance FromJSON RoomCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RoomUpdate = RoomUpdate
   { ruName       :: Maybe Text
@@ -536,7 +537,8 @@ data RoomUpdate = RoomUpdate
   } deriving (Show, Generic)
 
 instance ToJSON RoomUpdate
-instance FromJSON RoomUpdate
+instance FromJSON RoomUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data PipelineCardDTO = PipelineCardDTO
   { pcId        :: Text
