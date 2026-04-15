@@ -17,8 +17,9 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
                                 )
-import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, rejectUnknownFields, withObject, (.:?))
-import           Data.Aeson.Types (Parser)
+import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, rejectUnknownFields, withObject, (.:!), (.:?))
+import qualified Data.Aeson.Key as Key
+import qualified Data.Aeson.KeyMap as KeyMap
 import           Data.Char      (toLower)
 import           GHC.Generics (Generic)
 import           Data.Int      (Int64)
@@ -263,7 +264,8 @@ data BrainEntryCreate = BrainEntryCreate
   , becTags     :: Maybe [Text]
   , becActive   :: Maybe Bool
   } deriving (Show, Generic)
-instance FromJSON BrainEntryCreate
+instance FromJSON BrainEntryCreate where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 
 data BrainEntryUpdate = BrainEntryUpdate
   { beuTitle    :: Maybe Text
@@ -274,13 +276,13 @@ data BrainEntryUpdate = BrainEntryUpdate
   } deriving (Show, Generic)
 instance FromJSON BrainEntryUpdate where
   parseJSON = withObject "BrainEntryUpdate" $ \o -> do
+    case filter (`notElem` brainEntryUpdateAllowedKeys) (map Key.toString (KeyMap.keys o)) of
+      [] -> pure ()
+      unexpected ->
+        fail ("Unexpected BrainEntryUpdate keys: " <> show unexpected)
     titleVal <- o .:? "beuTitle"
     bodyVal <- o .:? "beuBody"
-    mCategory <- (o .:? "beuCategory" :: Parser (Maybe Value))
-    categoryVal <- case mCategory of
-      Nothing -> pure Nothing
-      Just Null -> pure (Just Nothing)
-      Just value -> Just <$> parseJSON value
+    categoryVal <- o .:! "beuCategory"
     tagsVal <- o .:? "beuTags"
     activeVal <- o .:? "beuActive"
     pure BrainEntryUpdate
@@ -290,6 +292,14 @@ instance FromJSON BrainEntryUpdate where
       , beuTags = tagsVal
       , beuActive = activeVal
       }
+    where
+      brainEntryUpdateAllowedKeys =
+        [ "beuTitle"
+        , "beuBody"
+        , "beuCategory"
+        , "beuTags"
+        , "beuActive"
+        ]
 
 data RagIndexStatus = RagIndexStatus
   { risCount     :: Int

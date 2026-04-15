@@ -20,6 +20,8 @@ import Test.Hspec
 import TDF.API.Admin
     ( AdminEmailBroadcastRequest
     , AdminEmailBroadcastResponse
+    , BrainEntryCreate (..)
+    , BrainEntryUpdate (..)
     , AdminWhatsAppResendRequest (..)
     , AdminWhatsAppSendRequest (..)
     , AdminWhatsAppSendResponse
@@ -236,6 +238,37 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 `shouldSatisfy` isLeft
             decodeUserAccountUpdate
                 "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "BrainEntry payload FromJSON" $ do
+        it "accepts canonical brain entry create and update keys while preserving explicit null clears" $ do
+            case decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becCategory\":\"ops\",\"becTags\":[\"docs\",\"incident\"],\"becActive\":true}" of
+                Left err ->
+                    expectationFailure ("Expected canonical brain entry create payload to decode, got: " <> err)
+                Right payload -> do
+                    becTitle payload `shouldBe` "Runbook"
+                    becBody payload `shouldBe` "Keep this handy"
+                    becCategory payload `shouldBe` Just "ops"
+                    becTags payload `shouldBe` Just ["docs", "incident"]
+                    becActive payload `shouldBe` Just True
+
+            case decodeBrainEntryUpdate
+                "{\"beuTitle\":\"Updated runbook\",\"beuCategory\":null,\"beuTags\":[\"ops\"],\"beuActive\":false}" of
+                Left err ->
+                    expectationFailure ("Expected canonical brain entry update payload to decode, got: " <> err)
+                Right payload -> do
+                    beuTitle payload `shouldBe` Just "Updated runbook"
+                    beuCategory payload `shouldBe` Just Nothing
+                    beuTags payload `shouldBe` Just ["ops"]
+                    beuActive payload `shouldBe` Just False
+
+        it "rejects unexpected brain entry keys so admin writes fail before turning into silent partial updates" $ do
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate
+                "{\"beuTitle\":\"Updated runbook\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "validateAdminWhatsAppSendMode" $ do
@@ -620,6 +653,10 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeUserAccountCreate = eitherDecode
     decodeUserAccountUpdate :: BL8.ByteString -> Either String UserAccountUpdate
     decodeUserAccountUpdate = eitherDecode
+    decodeBrainEntryCreate :: BL8.ByteString -> Either String BrainEntryCreate
+    decodeBrainEntryCreate = eitherDecode
+    decodeBrainEntryUpdate :: BL8.ByteString -> Either String BrainEntryUpdate
+    decodeBrainEntryUpdate = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
 
