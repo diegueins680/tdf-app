@@ -4073,37 +4073,31 @@ socialListSuggestedFriends user = do
 
 socialAddFriend :: AuthedUser -> Int64 -> AppM [PartyFollowDTO]
 socialAddFriend user targetId = do
-  when (targetId <= 0) $ throwBadRequest "Invalid party id"
   let followerKey = auPartyId user
-      targetKey   = toSqlKey targetId :: PartyId
+  targetKey <- runDB (resolveSocialTargetPartyId targetId) >>= either throwError pure
   when (followerKey == targetKey) $
     throwBadRequest "No puedes agregarte como amigo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mTarget <- get targetKey
-    case mTarget of
-      Nothing -> pure []
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        _ <- upsert PartyFollow
-          { partyFollowFollowerPartyId  = followerKey
-          , partyFollowFollowingPartyId = targetKey
-          , partyFollowViaNfc           = False
-          , partyFollowCreatedAt        = now
-          }
-          [ PartyFollowViaNfc =. False ]
-        _ <- upsert PartyFollow
-          { partyFollowFollowerPartyId  = targetKey
-          , partyFollowFollowingPartyId = followerKey
-          , partyFollowViaNfc           = False
-          , partyFollowCreatedAt        = now
-          }
-          [ PartyFollowViaNfc =. False ]
-        rows <- selectList
-          [ PartyFollowFollowerPartyId ==. followerKey
-          , PartyFollowFollowingPartyId ==. targetKey
-          ] []
-        pure (map partyFollowEntityToDTO rows)
+  now <- liftIO getCurrentTime
+  rows <- runDB $ do
+    _ <- upsert PartyFollow
+      { partyFollowFollowerPartyId  = followerKey
+      , partyFollowFollowingPartyId = targetKey
+      , partyFollowViaNfc           = False
+      , partyFollowCreatedAt        = now
+      }
+      [ PartyFollowViaNfc =. False ]
+    _ <- upsert PartyFollow
+      { partyFollowFollowerPartyId  = targetKey
+      , partyFollowFollowingPartyId = followerKey
+      , partyFollowViaNfc           = False
+      , partyFollowCreatedAt        = now
+      }
+      [ PartyFollowViaNfc =. False ]
+    selectList
+      [ PartyFollowFollowerPartyId ==. followerKey
+      , PartyFollowFollowingPartyId ==. targetKey
+      ] []
+  pure (map partyFollowEntityToDTO rows)
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
 socialRemoveFriend user targetId = do
@@ -4120,42 +4114,49 @@ socialRemoveFriend user targetId = do
 
 vcardExchange :: AuthedUser -> VCardExchangeRequest -> AppM [PartyFollowDTO]
 vcardExchange user VCardExchangeRequest{..} = do
-  when (vcerPartyId <= 0) $ throwBadRequest "Invalid party id"
   let followerKey = auPartyId user
-      targetKey   = toSqlKey vcerPartyId :: PartyId
+  targetKey <- runDB (resolveSocialTargetPartyId vcerPartyId) >>= either throwError pure
   when (followerKey == targetKey) $
     throwBadRequest "No puedes compartir tu vCard contigo mismo"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mTarget <- get targetKey
-    case mTarget of
-      Nothing -> pure []
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        -- Create mutual follows; mark as NFC-sourced.
-        _ <- upsert PartyFollow
-          { partyFollowFollowerPartyId  = followerKey
-          , partyFollowFollowingPartyId = targetKey
-          , partyFollowViaNfc           = True
-          , partyFollowCreatedAt        = now
-          }
-          [ PartyFollowViaNfc =. True ]
-        _ <- upsert PartyFollow
-          { partyFollowFollowerPartyId  = targetKey
-          , partyFollowFollowingPartyId = followerKey
-          , partyFollowViaNfc           = True
-          , partyFollowCreatedAt        = now
-          }
-          [ PartyFollowViaNfc =. True ]
-        rowsAB <- selectList
-          [ PartyFollowFollowerPartyId ==. followerKey
-          , PartyFollowFollowingPartyId ==. targetKey
-          ] [Desc PartyFollowCreatedAt]
-        rowsBA <- selectList
-          [ PartyFollowFollowerPartyId ==. targetKey
-          , PartyFollowFollowingPartyId ==. followerKey
-          ] [Desc PartyFollowCreatedAt]
-        pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+  now <- liftIO getCurrentTime
+  (rowsAB, rowsBA) <- runDB $ do
+    -- Create mutual follows; mark as NFC-sourced.
+    _ <- upsert PartyFollow
+      { partyFollowFollowerPartyId  = followerKey
+      , partyFollowFollowingPartyId = targetKey
+      , partyFollowViaNfc           = True
+      , partyFollowCreatedAt        = now
+      }
+      [ PartyFollowViaNfc =. True ]
+    _ <- upsert PartyFollow
+      { partyFollowFollowerPartyId  = targetKey
+      , partyFollowFollowingPartyId = followerKey
+      , partyFollowViaNfc           = True
+      , partyFollowCreatedAt        = now
+      }
+      [ PartyFollowViaNfc =. True ]
+    rowsAB <- selectList
+      [ PartyFollowFollowerPartyId ==. followerKey
+      , PartyFollowFollowingPartyId ==. targetKey
+      ] [Desc PartyFollowCreatedAt]
+    rowsBA <- selectList
+      [ PartyFollowFollowerPartyId ==. targetKey
+      , PartyFollowFollowingPartyId ==. followerKey
+      ] [Desc PartyFollowCreatedAt]
+    pure (rowsAB, rowsBA)
+  pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+
+resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
+resolveSocialTargetPartyId rawPartyId =
+  case validatePositiveIdField "partyId" rawPartyId of
+    Left err -> pure (Left err)
+    Right partyId -> do
+      let targetKey = toSqlKey partyId :: PartyId
+      mTarget <- get targetKey
+      pure $
+        case mTarget of
+          Nothing -> Left err404 { errBody = "Party not found" }
+          Just _ -> Right targetKey
 
 socialListProfiles :: AuthedUser -> [Int64] -> AppM [SocialPartyProfileDTO]
 socialListProfiles _ rawPartyIds = do

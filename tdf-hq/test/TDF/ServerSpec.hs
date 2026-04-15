@@ -82,6 +82,7 @@ import TDF.Server
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
+    , resolveSocialTargetPartyId
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
@@ -339,6 +340,56 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected existing party role assignment target to resolve, got: " <> show serverErr)
+                Right resolvedKey ->
+                    resolvedKey `shouldBe` expectedPartyId
+
+    describe "resolveSocialTargetPartyId" $ do
+        it "rejects non-positive party ids before social follow creation attempts any lookup" $ do
+            result <- runAuthSqlite $
+                resolveSocialTargetPartyId 0
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "partyId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid social target party id to be rejected, got: " <> show value)
+
+        it "returns 404 for unknown social targets instead of pretending friend or vCard follow creation succeeded" $ do
+            result <- runAuthSqlite $
+                resolveSocialTargetPartyId 999999
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Party not found"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown social target party to be rejected, got: " <> show value)
+
+        it "resolves existing social targets before the follow upsert runs" $ do
+            (expectedPartyId, result) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Social Target"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "social-target@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                resolved <- resolveSocialTargetPartyId (fromSqlKey partyId)
+                pure (partyId, resolved)
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected existing social target party to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
 
