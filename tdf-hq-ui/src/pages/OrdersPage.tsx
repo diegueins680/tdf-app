@@ -103,11 +103,33 @@ function dedupeStrings(values: (string | null | undefined)[]) {
   values.forEach((value) => {
     if (!value) return;
     const trimmed = value.trim();
-    if (!trimmed || seen.has(trimmed)) return;
-    seen.add(trimmed);
+    const normalized = trimmed.toLocaleLowerCase();
+    if (!trimmed || seen.has(normalized)) return;
+    seen.add(normalized);
     result.push(trimmed);
   });
   return result;
+}
+
+const normalizeComparableString = (value: string | null | undefined) => value?.trim().toLocaleLowerCase() ?? '';
+
+function buildBookingSecondarySummary({
+  bookingPrimary,
+  partyNames,
+  serviceOrderId,
+}: {
+  bookingPrimary: string;
+  partyNames: string[];
+  serviceOrderId?: number | null;
+}) {
+  const normalizedPrimary = normalizeComparableString(bookingPrimary);
+  const secondaryParts = partyNames.filter((name) => normalizeComparableString(name) !== normalizedPrimary);
+
+  if (serviceOrderId) {
+    secondaryParts.push(`SO #${serviceOrderId}`);
+  }
+
+  return secondaryParts.join(' · ');
 }
 
 interface OrderRow {
@@ -157,10 +179,6 @@ export default function OrdersPage() {
       const rooms = filterResources(booking.resources, (role) => role.includes('room') || role.includes('sala'));
       const party = booking.partyId ? partyLookup.get(booking.partyId) : undefined;
       const partyNames = dedupeStrings([booking.customerName, booking.partyDisplayName, party?.displayName]);
-      const bookingSecondaryParts = [...partyNames];
-      if (booking.serviceOrderId) {
-        bookingSecondaryParts.push(`SO #${booking.serviceOrderId}`);
-      }
       const serviceTitle = booking.serviceType ?? booking.title ?? '—';
       const isRecording = serviceTitle.toLowerCase().includes('grab');
       const bookingPrimary =
@@ -169,7 +187,11 @@ export default function OrdersPage() {
         booking.partyDisplayName ??
         party?.displayName ??
         `Booking #${booking.bookingId}`;
-      const bookingSecondaryJoined = bookingSecondaryParts.join(' · ');
+      const bookingSecondarySummary = buildBookingSecondarySummary({
+        bookingPrimary,
+        partyNames,
+        serviceOrderId: booking.serviceOrderId,
+      });
 
       return {
         bookingId: booking.bookingId,
@@ -177,7 +199,7 @@ export default function OrdersPage() {
         service: serviceTitle,
         isRecording,
         bookingPrimary,
-        bookingSecondary: bookingSecondaryJoined.length > 0 ? bookingSecondaryJoined : null,
+        bookingSecondary: bookingSecondarySummary.length > 0 ? bookingSecondarySummary : null,
         engineers: engineers.length ? engineers.join(', ') : '—',
         rooms: rooms.length ? rooms.join(', ') : '—',
         status: booking.status,

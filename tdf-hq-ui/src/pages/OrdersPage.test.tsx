@@ -95,6 +95,9 @@ const getRowByBookingId = (root: ParentNode, bookingId: number) => {
   return row;
 };
 
+const countOccurrencesIgnoringCase = (value: string, fragment: string) =>
+  value.toLocaleLowerCase().split(fragment.toLocaleLowerCase()).length - 1;
+
 describe('OrdersPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -306,6 +309,41 @@ describe('OrdersPage', () => {
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(hasTableHeader(container, 'Live Sessions')).toBe(false);
         expect(container.querySelectorAll('button[aria-label^="Abrir Live Sessions para sesión "]')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('removes repeated booking identity from the secondary summary so the row only shows new context once', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 401,
+        title: 'Sesion de voz',
+        startsAt: '2026-04-16T09:00:00-05:00',
+        endsAt: '2026-04-16T10:00:00-05:00',
+        status: 'Confirmed',
+        customerName: 'Ada Client',
+        partyDisplayName: 'ada client',
+        serviceOrderId: 88,
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const row = getRowByBookingId(container, 401);
+        const rowText = row.textContent ?? '';
+
+        expect(rowText).toContain('Ada Client');
+        expect(rowText).toContain('SO #88');
+        expect(countOccurrencesIgnoringCase(rowText, 'Ada Client')).toBe(1);
       });
     } finally {
       await cleanup();
