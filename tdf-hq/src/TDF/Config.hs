@@ -4,6 +4,7 @@ module TDF.Config where
 import           Control.Applicative ((<|>))
 import           Control.Monad      (filterM)
 import           Data.Char          (toLower)
+import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
@@ -86,7 +87,7 @@ ragEmbeddingDim cfg = fromMaybe 1536 (openAiEmbedDimensions (openAiEmbedModel cf
 
 dbConnString :: AppConfig -> String
 dbConnString cfg =
-  fromMaybe keywordStyle (dbConnUrl cfg)
+  ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
   where
     keywordStyle =
       "host="    <> dbHost cfg    <>
@@ -94,6 +95,18 @@ dbConnString cfg =
       " user="   <> dbUser cfg    <>
       " password=" <> dbPass cfg  <>
       " dbname=" <> dbName cfg    -- no 'pool=' here; pooling is managed by createPostgresqlPool
+
+ensureReadWriteTargetSession :: String -> String
+ensureReadWriteTargetSession rawConn
+  | hasTargetSessionAttrs normalized = rawConn
+  | isPostgresUrl normalized =
+      rawConn <> if '?' `elem` rawConn then "&target_session_attrs=read-write" else "?target_session_attrs=read-write"
+  | otherwise = rawConn <> " target_session_attrs=read-write"
+  where
+    normalized = map toLower rawConn
+    hasTargetSessionAttrs conn = "target_session_attrs=" `isInfixOf` conn
+    isPostgresUrl conn =
+      "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
 
 loadConfig :: IO AppConfig
 loadConfig = do

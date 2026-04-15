@@ -186,7 +186,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq"
+                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
 
         it "uses DATABASE_URL-style connection strings when keyword-style DB env vars are absent" $
             withEnvOverrides
@@ -207,7 +207,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
 
         it "keeps DATABASE_URL authoritative when only partial keyword DB env vars exist" $
             withEnvOverrides
@@ -228,7 +228,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
 
         it "falls back to standard PG* env vars when DB_* vars are not configured" $
             withEnvOverrides
@@ -249,7 +249,28 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb"
+                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write"
+
+        it "preserves an explicit target_session_attrs setting on DATABASE_URL" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any"
 
     describe "extractToken" $ do
         let loadAuthConfig =
