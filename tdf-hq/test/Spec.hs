@@ -188,6 +188,40 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
 
+        it "inherits sslmode from DATABASE_URL when DB_* vars stay authoritative" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=disable")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Just "tdf-hq-db.flycast")
+                , ("DB_PORT", Just "5432")
+                , ("DB_USER", Just "tdf_hq")
+                , ("DB_PASS", Just "secret")
+                , ("DB_NAME", Just "tdf_hq")
+                , ("PGSSLMODE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
+
+        it "prefers explicit PGSSLMODE over the DATABASE_URL sslmode fallback" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Just "tdf-hq-db.flycast")
+                , ("DB_PORT", Just "5432")
+                , ("DB_USER", Just "tdf_hq")
+                , ("DB_PASS", Just "secret")
+                , ("DB_NAME", Just "tdf_hq")
+                , ("PGSSLMODE", Just "disable")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
+
         it "uses DATABASE_URL-style connection strings when keyword-style DB env vars are absent" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
