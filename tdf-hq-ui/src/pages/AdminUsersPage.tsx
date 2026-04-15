@@ -136,6 +136,11 @@ const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 
 type UserContactReadiness = ReturnType<typeof getUserContactReadiness>;
+const CONTACT_READINESS_SORT_ORDER: Record<UserContactReadiness, number> = {
+  'whatsapp-ready': 0,
+  'contact-ready': 1,
+  'missing-contact': 2,
+};
 
 const buildPendingProfileGuidance = ({
   scope,
@@ -213,6 +218,12 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) 
 
 const compareAdminUsers = (left: AdminUser, right: AdminUser) => {
   if (left.active !== right.active) return left.active ? -1 : 1;
+
+  const leftReadinessOrder = CONTACT_READINESS_SORT_ORDER[getUserContactReadiness(left)];
+  const rightReadinessOrder = CONTACT_READINESS_SORT_ORDER[getUserContactReadiness(right)];
+  if (leftReadinessOrder !== rightReadinessOrder) {
+    return leftReadinessOrder - rightReadinessOrder;
+  }
 
   const leftIdentity = summarizeUserIdentity(left).primary.trim();
   const rightIdentity = summarizeUserIdentity(right).primary.trim();

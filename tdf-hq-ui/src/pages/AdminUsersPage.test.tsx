@@ -376,6 +376,53 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('orders mixed-readiness rows by the next available admin action before falling back to name', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 21,
+        partyName: 'Ana Missing',
+        username: 'ana-missing',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 22,
+        partyName: 'Luis Email',
+        username: 'luis-email',
+        primaryEmail: 'luis@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 23,
+        partyName: 'Zoe Ready',
+        username: 'zoe-ready',
+        primaryEmail: 'zoe@example.com',
+        primaryPhone: '+593999000333',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([103, 102, 101]);
+        expect(getRowByUserId(container, 103).textContent).toContain('Zoe Ready');
+        expect(getRowByUserId(container, 102).textContent).toContain('Luis Email');
+        expect(getRowByUserId(container, 101).textContent).toContain('Ana Missing');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows the person name first and hides internal ids unless the username adds useful context', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
