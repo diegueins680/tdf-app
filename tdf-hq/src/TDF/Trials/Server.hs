@@ -1285,6 +1285,17 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404 { errBody = "Estudiante no encontrado" }
         Just _  -> pure key
 
+    ensureBookingExists :: Int -> AppM Models.BookingId
+    ensureBookingExists bookingIdInt
+      | bookingIdInt <= 0 =
+          liftIO $ throwIO err400 { errBody = "bookingId debe ser un entero positivo" }
+      | otherwise = do
+          let key = intKey bookingIdInt :: Models.BookingId
+          mBooking <- get key
+          case mBooking of
+            Nothing -> liftIO $ throwIO err404 { errBody = "Reserva no encontrada" }
+            Just _  -> pure key
+
     ensureTeacherSelection :: PartyId -> AppM ()
     ensureTeacherSelection teacherKey = do
       mTeacher <- get teacherKey
@@ -1456,9 +1467,9 @@ privateTrialsServer user@AuthedUser{..} =
         liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
       studentKey <- ensureStudentExists studentId
       subjectKey <- ensureSubjectExists subjectId
+      bookingKey <- traverse ensureBookingExists bookingId
       let teacherKey = intKey teacherId
           roomKey    = intKey roomId :: ResourceId
-          bookingKey = maybeKey bookingId
           durationMinutes = floor (realToFrac (diffUTCTime endAt startAt) / 60 :: Double)
           isSelfTeacher = teacherKey == auPartyId
       unless (isSchoolStaff || isSelfTeacher) $
@@ -1511,6 +1522,7 @@ privateTrialsServer user@AuthedUser{..} =
               Just _ -> pure ()
           newStudent <- maybe (pure (Trials.classSessionStudentId sess)) ensureStudentExists studentId
           newSubject <- maybe (pure (Trials.classSessionSubjectId sess)) ensureSubjectExists subjectId
+          newBooking <- traverse ensureBookingExists bookingId
           let newStart   = fromMaybe (Trials.classSessionStartAt sess) startAt
               newEnd     = fromMaybe (Trials.classSessionEndAt sess) endAt
               newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
@@ -1538,7 +1550,7 @@ privateTrialsServer user@AuthedUser{..} =
                 , maybe [] (\v   -> [ClassSessionStartAt   =. v])         startAt
                 , maybe [] (\v   -> [ClassSessionEndAt     =. v])         endAt
                 , maybe [] (\rid -> [ClassSessionRoomId    =. intKey rid]) roomId
-                , maybe [] (\bid -> [ClassSessionBookingId =. maybeKey (Just bid)]) bookingId
+                , maybe [] (\bid -> [ClassSessionBookingId =. Just bid])  newBooking
                 , maybe [] (\txt -> [ClassSessionNotes     =. Just txt])  notes
                 ]
           unless (null updates) $

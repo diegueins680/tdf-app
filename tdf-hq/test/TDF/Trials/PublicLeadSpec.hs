@@ -910,6 +910,34 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for class creation"
 
+    it "rejects creating a class with non-positive or missing booking references instead of storing dangling booking links" $ do
+      let assertRejected expectedStatus expectedMessage rawBookingId = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let classStart = addUTCTime 3600 now
+                  classEnd = addUTCTime 7200 now
+              teacherPartyId <- insertTeacherFixture "Teacher One" now
+              studentPartyId <- insertPartyFixture "Student One" now
+              roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+              subjectKey <- insert (Subject "Piano" True)
+              privateCreateClassHandler
+                (ClassSessionIn
+                  (fromIntegral (fromSqlKey studentPartyId))
+                  (fromIntegral (fromSqlKey teacherPartyId))
+                  (fromIntegral (fromSqlKey subjectKey))
+                  classStart
+                  classEnd
+                  (fromIntegral (fromSqlKey roomResourceId))
+                  (Just rawBookingId))
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` expectedStatus
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid class booking references to be rejected on create"
+      assertRejected 400 "bookingId" 0
+      assertRejected 404 "Reserva no encontrada" 9999
+
     it "rejects updating a class to a non-teacher party instead of storing an invalid teacher assignment" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -1046,6 +1074,49 @@ spec = do
             Nothing
             Nothing
             Nothing
+
+    it "rejects updating a class with non-positive or missing booking references instead of keeping dangling booking links" $ do
+      let assertRejected expectedStatus expectedMessage rawBookingId = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let classStart = addUTCTime 3600 now
+                  classEnd = addUTCTime 7200 now
+              teacherPartyId <- insertTeacherFixture "Teacher One" now
+              studentPartyId <- insertPartyFixture "Student One" now
+              roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+              subjectKey <- insert (Subject "Piano" True)
+              classSessionKey <- insert Trials.ClassSession
+                { Trials.classSessionStudentId = studentPartyId
+                , Trials.classSessionTeacherId = teacherPartyId
+                , Trials.classSessionSubjectId = subjectKey
+                , Trials.classSessionStartAt = classStart
+                , Trials.classSessionEndAt = classEnd
+                , Trials.classSessionRoomId = roomResourceId
+                , Trials.classSessionBookingId = Nothing
+                , Trials.classSessionAttended = False
+                , Trials.classSessionPurchaseId = Nothing
+                , Trials.classSessionConsumedMinutes = 60
+                , Trials.classSessionNotes = Nothing
+                }
+              privateUpdateClassHandler
+                (fromIntegral (fromSqlKey classSessionKey))
+                (ClassSessionUpdate
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  Nothing
+                  (Just rawBookingId)
+                  Nothing)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` expectedStatus
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid class booking references to be rejected on update"
+      assertRejected 400 "bookingId" 0
+      assertRejected 404 "Reserva no encontrada" 9999
 
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
