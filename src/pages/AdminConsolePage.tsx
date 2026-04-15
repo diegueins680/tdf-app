@@ -185,6 +185,28 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return [...cardsByTitle.values()];
 }
 
+function compareAdminConsoleCards(left: Pick<AdminConsoleCard, 'cardId' | 'title'>, right: Pick<AdminConsoleCard, 'cardId' | 'title'>) {
+  const leftTitleKey = normalizeAdminConsoleSectionKey(left.title);
+  const rightTitleKey = normalizeAdminConsoleSectionKey(right.title);
+
+  if (leftTitleKey !== rightTitleKey) {
+    return leftTitleKey < rightTitleKey ? -1 : 1;
+  }
+
+  const leftIdKey = normalizeAdminConsoleSectionKey(left.cardId);
+  const rightIdKey = normalizeAdminConsoleSectionKey(right.cardId);
+
+  if (leftIdKey !== rightIdKey) {
+    return leftIdKey < rightIdKey ? -1 : 1;
+  }
+
+  return 0;
+}
+
+function sortAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
+  return [...cards].sort(compareAdminConsoleCards);
+}
+
 function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
   const seenUserIds = new Set<number>();
 
@@ -581,11 +603,11 @@ export default function AdminConsolePage() {
   }, [editingUser]);
 
   const audits = dedupeAuditEntries(auditQuery.data ?? []);
-  const previewCards = dedupeAdminConsoleCards(
+  const previewCards = sortAdminConsoleCards(dedupeAdminConsoleCards(
     sanitizeAdminConsoleCards(
       consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
     ),
-  );
+  ));
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
   const users = dedupeAdminUsers(usersQuery.data ?? []);

@@ -71,6 +71,10 @@ function getMenuItemByText(labelText: string) {
   return item;
 }
 
+function expectToAppearBefore(first: HTMLElement, second: HTMLElement) {
+  expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+}
+
 describe('AdminConsolePage', () => {
   beforeAll(() => {
     if (!window.matchMedia) {
@@ -829,6 +833,64 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByRole('button', { name: /Tokens de servicio|Integraciones|Acceso API/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it('sorts standalone additional modules by title so fallback discovery stays easy to scan', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'api-access',
+          title: 'Acceso API',
+          body: [
+            'Consulta credenciales técnicas y accesos de servicio.',
+          ],
+        },
+        {
+          cardId: 'integrations',
+          title: 'Integraciones',
+          body: [
+            'Revisa conectores pendientes sin salir de la consola.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Ver 3 módulos adicionales$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Ver 3 módulos adicionales$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Acceso API')).toBeInTheDocument();
+    expect(screen.getByText('Integraciones')).toBeInTheDocument();
+    expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+
+    expectToAppearBefore(screen.getByText('Acceso API'), screen.getByText('Integraciones'));
+    expectToAppearBefore(screen.getByText('Integraciones'), screen.getByText('Tokens de servicio'));
   });
 
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
