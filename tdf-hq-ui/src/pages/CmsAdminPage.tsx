@@ -460,11 +460,14 @@ export default function CmsAdminPage() {
     : schemaHints[normalizedSlugFilter]
       ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
-  const samplePayloadGuidance = samplePayload
-    ? 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
-    : hasSlugSelection
-      ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
-      : 'Elige un slug sugerido o escribe uno para empezar a editar.';
+  const showExampleAction = Boolean(samplePayload) && !liveContent;
+  const samplePayloadGuidance = liveContent
+    ? 'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.'
+    : samplePayload
+      ? 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
+      : hasSlugSelection
+        ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
+        : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const compareHint = livePayloadPretty
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
@@ -776,7 +779,7 @@ export default function CmsAdminPage() {
                   >
                     Limpiar
                   </Button>
-                  {samplePayload && (
+                  {showExampleAction && (
                     <Button
                       variant="text"
                       onClick={() => {

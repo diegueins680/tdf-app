@@ -261,6 +261,25 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('drops the generic example action when a live version already exists so the editor keeps one real starting point', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(container.textContent).toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+      );
+      expect(container.textContent).not.toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('replaces the duplicate payload preview grid with one compare hint inside the editor', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
