@@ -704,7 +704,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const useCompactStatusActionLabel = showSingleStatusSummary;
-  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction;
+  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const visibleRegistrationsSummary = hasCustomFilters

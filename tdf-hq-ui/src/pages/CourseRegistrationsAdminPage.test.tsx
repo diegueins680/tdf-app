@@ -652,6 +652,75 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('drops the first-time dossier hint after the admin uses a filter control once', async () => {
+    listRegistrationsMock.mockImplementation((params) => {
+      if (params?.status === 'paid') {
+        return Promise.resolve([
+          buildRegistration({
+            crId: 102,
+            crFullName: 'Grace Hopper',
+            crEmail: 'grace@example.com',
+            crStatus: 'paid',
+          }),
+          buildRegistration({
+            crId: 103,
+            crFullName: 'Katherine Johnson',
+            crEmail: 'katherine@example.com',
+            crStatus: 'paid',
+          }),
+        ]);
+      }
+
+      return Promise.resolve([
+        buildRegistration(),
+        buildRegistration({
+          crId: 102,
+          crFullName: 'Grace Hopper',
+          crEmail: 'grace@example.com',
+          crStatus: 'paid',
+        }),
+        buildRegistration({
+          crId: 103,
+          crFullName: 'Katherine Johnson',
+          crEmail: 'katherine@example.com',
+          crStatus: 'paid',
+        }),
+      ]);
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierScopeHint,
+      );
+      expect(countOccurrences(container, dossierScopeHint)).toBe(1);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (2)');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
+      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('reveals the limit toggle only when the current batch reaches its cap or a custom limit is active', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
