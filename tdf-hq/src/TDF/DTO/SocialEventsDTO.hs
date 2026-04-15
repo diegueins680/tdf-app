@@ -36,7 +36,11 @@ module TDF.DTO.SocialEventsDTO
   ) where
 
 import           Data.Aeson (FromJSON, ToJSON, Value(..), withObject, (.:), (.:!), (.:?), (.=), object, toJSON, parseJSON)
+import           Data.Aeson.Types (Object, Parser)
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Text  (Text)
+import qualified Data.Text  as T
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
 
@@ -50,6 +54,13 @@ nullableFieldFromParsed :: Maybe (Maybe a) -> NullableFieldUpdate a
 nullableFieldFromParsed Nothing = FieldMissing
 nullableFieldFromParsed (Just Nothing) = FieldNull
 nullableFieldFromParsed (Just (Just value)) = FieldValue value
+
+rejectUnknownObjectFields :: String -> [Text] -> Object -> Parser ()
+rejectUnknownObjectFields typeName allowedKeys obj =
+  case filter (`notElem` allowedKeys) (map AesonKey.toText (AesonKeyMap.keys obj)) of
+    [] -> pure ()
+    unexpected ->
+      fail (typeName <> " contains unknown fields: " <> T.unpack (T.intercalate ", " unexpected))
 
 data ArtistSocialLinksDTO = ArtistSocialLinksDTO
   { aslSpotify    :: Maybe Text
@@ -235,7 +246,8 @@ data EventUpdateDTO = EventUpdateDTO
   } deriving (Show, Eq, Generic)
 
 instance FromJSON EventUpdateDTO where
-  parseJSON value@(Object o) =
+  parseJSON value@(Object o) = do
+    rejectUnknownObjectFields "EventUpdateDTO" eventUpdateAllowedKeys o
     EventUpdateDTO
       <$> parseJSON value
       <*> (EventMetadataUpdateDTO
@@ -247,6 +259,29 @@ instance FromJSON EventUpdateDTO where
             <*> (nullableFieldFromParsed <$> (o .:! "eventCurrency"))
             <*> (nullableFieldFromParsed <$> (o .:! "eventBudgetCents")))
   parseJSON _ = fail "EventUpdateDTO must be an object"
+
+eventUpdateAllowedKeys :: [Text]
+eventUpdateAllowedKeys =
+  [ "eventId"
+  , "eventOrganizerPartyId"
+  , "eventTitle"
+  , "eventDescription"
+  , "eventStart"
+  , "eventEnd"
+  , "eventVenueId"
+  , "eventPriceCents"
+  , "eventCapacity"
+  , "eventTicketUrl"
+  , "eventImageUrl"
+  , "eventIsPublic"
+  , "eventType"
+  , "eventStatus"
+  , "eventCurrency"
+  , "eventBudgetCents"
+  , "eventCreatedAt"
+  , "eventUpdatedAt"
+  , "eventArtists"
+  ]
 
 data RsvpDTO = RsvpDTO
   { rsvpId        :: Maybe Text

@@ -676,6 +676,15 @@ main = hspec $ do
                     emuTicketUrl (eudMetadataUpdate parsed) `shouldBe` FieldNull
                     emuBudgetCents (eudMetadataUpdate parsed) `shouldBe` FieldValue 4500
 
+        it "rejects unexpected event update keys so typoed writes fail instead of silently no-oping" $
+            case eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventTicketUrl\":null,\"unexpected\":true}"
+                :: Either String EventUpdateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected event update keys to be rejected, got " <> show parsed)
+
         it "captures venue contact nulls and invitation message nulls in update payloads" $ do
             let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
                 invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
