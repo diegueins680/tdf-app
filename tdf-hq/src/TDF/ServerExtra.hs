@@ -832,16 +832,19 @@ pipelinesServer user rawType =
 
     createCard kind req = do
       ensureModule ModuleScheduling user
+      titleClean <- either throwError pure (normalizePipelineCardTitle (pccTitle req))
       stageValue <- resolveStage kind (pccStage req)
+      let artistValue = normalizeOptionalTextField (pccArtist req)
+          notesValue = normalizeOptionalTextField (pccNotes req)
       now <- liftIO getCurrentTime
       entity <- withPool $ do
         newId <- insert ME.PipelineCard
           { ME.pipelineCardServiceKind = kind
-          , ME.pipelineCardTitle       = pccTitle req
-          , ME.pipelineCardArtist      = pccArtist req
+          , ME.pipelineCardTitle       = titleClean
+          , ME.pipelineCardArtist      = artistValue
           , ME.pipelineCardStage       = stageValue
           , ME.pipelineCardSortOrder   = fromMaybe 0 (pccSortOrder req)
-          , ME.pipelineCardNotes       = pccNotes req
+          , ME.pipelineCardNotes       = notesValue
           , ME.pipelineCardCreatedAt   = now
           , ME.pipelineCardUpdatedAt   = now
           }
@@ -867,9 +870,12 @@ pipelinesServer user rawType =
     updateCard kind rawId req = do
       ensureModule ModuleScheduling user
       cardKey <- parseKey @ME.PipelineCard rawId
+      titleUpdate <- either throwError pure (normalizePipelineCardTitleUpdate (pcuTitle req))
       stageUpdate <- case pcuStage req of
         Nothing   -> pure Nothing
         Just raw  -> Just <$> resolveStage kind (Just raw)
+      let artistUpdate = normalizeOptionalTextFieldUpdate (pcuArtist req)
+          notesUpdate = normalizeOptionalTextFieldUpdate (pcuNotes req)
       now <- liftIO getCurrentTime
       result <- withPool $ do
         mEntity <- getEntity cardKey
@@ -879,11 +885,11 @@ pipelinesServer user rawType =
             | ME.pipelineCardServiceKind card /= kind -> pure Nothing
             | otherwise -> do
                 let updates = catMaybes
-                      [ fmap (ME.PipelineCardTitle =.) (pcuTitle req)
-                      , fmap (ME.PipelineCardArtist =.) (pcuArtist req)
+                      [ fmap (ME.PipelineCardTitle =.) titleUpdate
+                      , fmap (ME.PipelineCardArtist =.) artistUpdate
                       , fmap (ME.PipelineCardStage =.) stageUpdate
                       , fmap (ME.PipelineCardSortOrder =.) (pcuSortOrder req)
-                      , fmap (ME.PipelineCardNotes =.) (pcuNotes req)
+                      , fmap (ME.PipelineCardNotes =.) notesUpdate
                       ]
                     updates' = if null updates
                       then []
@@ -1001,6 +1007,21 @@ normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeRoomNameUpdate Nothing = Right Nothing
 normalizeRoomNameUpdate (Just rawName) =
   Just <$> normalizeRoomName rawName
+
+normalizePipelineCardTitle :: Text -> Either ServerError Text
+normalizePipelineCardTitle rawTitle =
+  let trimmed = T.strip rawTitle
+  in if T.null trimmed
+       then Left err400 { errBody = "Pipeline card title is required" }
+       else Right trimmed
+
+normalizePipelineCardTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+normalizePipelineCardTitleUpdate Nothing = Right Nothing
+normalizePipelineCardTitleUpdate (Just rawTitle) =
+  Just <$> normalizePipelineCardTitle rawTitle
+
+normalizeOptionalTextFieldUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
+normalizeOptionalTextFieldUpdate = fmap normalizeOptionalTextField
 
 normalizeAssetName :: Text -> Either ServerError Text
 normalizeAssetName rawName =

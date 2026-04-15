@@ -23,6 +23,7 @@ import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
 import TDF.API.Inventory (InventoryAPI)
+import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
@@ -31,12 +32,16 @@ import TDF.API.Types
   , AssetCheckoutDTO
   , AssetCheckoutRequest (..)
   , AssetUpdate (..)
+  , PipelineCardCreate (..)
+  , PipelineCardDTO (..)
+  , PipelineCardUpdate (..)
   , RoomCreate (..)
   , RoomDTO
   , RoomUpdate (..)
   )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
+import qualified TDF.ModelsExtra as ME
 import TDF.ModelsExtra
   ( Asset (..)
   , AssetCondition (Good)
@@ -99,6 +104,7 @@ import TDF.ServerExtra (
     validatePageParams,
     validateSessionReferences,
     inventoryServer,
+    pipelinesServer,
     roomsServer,
  )
 
@@ -367,6 +373,92 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
         Right value ->
           expectationFailure ("Expected duplicate room patch to fail, got " <> show value)
+
+  describe "pipeline card write normalization" $ do
+    let pipelineType = "recording"
+        existingPipelineCardId = "00000000-0000-0000-0000-000000000801"
+
+    it "trims create fields before persistence so CRM cards do not store padded text" $ do
+      result <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate "  Demo Lead  " (Just "  Ada  ") Nothing (Just 2) (Just "  Needs quote  "))
+      case result of
+        Left err ->
+          expectationFailure ("Expected trimmed pipeline card create to succeed, got " <> show err)
+        Right card -> do
+          pcTitle card `shouldBe` "Demo Lead"
+          pcArtist card `shouldBe` Just "Ada"
+          pcStage card `shouldBe` "Inquiry"
+          pcSortOrder card `shouldBe` 2
+          pcNotes card `shouldBe` Just "Needs quote"
+
+    it "maps blank optional patch text to explicit clears instead of persisting whitespace-only CRM metadata" $ do
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      result <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Just "Ada"
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 3
+              , ME.pipelineCardNotes = Just "Needs quote"
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate (Just "  Final Quote  ") (Just (Just "   ")) Nothing Nothing (Just (Just "   ")))
+      case result of
+        Left err ->
+          expectationFailure ("Expected pipeline card patch normalization to succeed, got " <> show err)
+        Right card -> do
+          pcTitle card `shouldBe` "Final Quote"
+          pcArtist card `shouldBe` Nothing
+          pcNotes card `shouldBe` Nothing
+          pcSortOrder card `shouldBe` 3
+
+    it "rejects blank titles on create and patch instead of creating unlabeled pipeline cards" $ do
+      createResult <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate "   " Nothing Nothing Nothing Nothing)
+      case createResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
+        Right value ->
+          expectationFailure ("Expected blank pipeline card create title to fail, got " <> show value)
+
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      patchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Nothing
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 0
+              , ME.pipelineCardNotes = Nothing
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate (Just "   ") Nothing Nothing Nothing Nothing)
+      case patchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
+        Right value ->
+          expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
 
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
@@ -1084,6 +1176,41 @@ runRoomPatchHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (patchRoomHandlerFor inventoryUser rawId req) env)
 
+runPipelineCreateHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> PipelineCardCreate
+  -> IO (Either ServerError PipelineCardDTO)
+runPipelineCreateHandler setup rawType req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializePipelineSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in pipeline tests"
+            }
+    liftIO $ runExceptT (runReaderT (createPipelineHandlerFor inventoryUser rawType req) env)
+
+runPipelinePatchHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> Text
+  -> PipelineCardUpdate
+  -> IO (Either ServerError PipelineCardDTO)
+runPipelinePatchHandler setup rawType rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializePipelineSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in pipeline tests"
+            }
+    liftIO $ runExceptT (runReaderT (patchPipelineHandlerFor inventoryUser rawType rawId req) env)
+
 inventoryUser :: AuthedUser
 inventoryUser =
   AuthedUser
@@ -1123,6 +1250,30 @@ patchRoomHandlerFor user =
       :<|> _createRoom
       :<|> patchRoom ->
           patchRoom
+
+createPipelineHandlerFor :: AuthedUser -> Text -> PipelineCardCreate -> InventoryTestM PipelineCardDTO
+createPipelineHandlerFor user rawType =
+  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
+    pipelineRoutes ->
+      case pipelineRoutes rawType of
+        _listCards
+          :<|> _listStages
+          :<|> createCard
+          :<|> _cardServer ->
+              createCard
+
+patchPipelineHandlerFor :: AuthedUser -> Text -> Text -> PipelineCardUpdate -> InventoryTestM PipelineCardDTO
+patchPipelineHandlerFor user rawType rawId =
+  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
+    pipelineRoutes ->
+      case pipelineRoutes rawType of
+        _listCards
+          :<|> _listStages
+          :<|> _createCard
+          :<|> cardRoutes ->
+              case cardRoutes rawId of
+                _getCard :<|> patchCard :<|> _deleteCard ->
+                  patchCard
 
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
@@ -1257,6 +1408,23 @@ initializeRoomSchema = do
         \\"default_sample_rate\" INTEGER NULL,\
         \\"patchbay_notes\" VARCHAR NULL,\
         \CONSTRAINT \"unique_room_name\" UNIQUE (\"name\")\
+        \)"
+        []
+
+initializePipelineSchema :: SqlPersistT IO ()
+initializePipelineSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"pipeline_card\" (\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
+        \\"service_kind\" VARCHAR NOT NULL,\
+        \\"title\" VARCHAR NOT NULL,\
+        \\"artist\" VARCHAR NULL,\
+        \\"stage\" VARCHAR NOT NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
         []
 
