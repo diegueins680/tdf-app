@@ -529,6 +529,51 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('combines shared status and payment context into one helper block when neither filter needs to render', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moStatus: 'pending',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(container.textContent).toContain(
+          'Todos los pedidos visibles comparten el estado Pendiente y usan PayPal. Los filtros de estado y método aparecerán cuando esta vista mezcle más de un estado o canal de pago.',
+        );
+        expect(container.textContent).not.toContain(
+          'Todos los pedidos visibles comparten el estado Pendiente. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.',
+        );
+        expect(container.textContent).not.toContain(
+          'Todos los pedidos visibles usan PayPal. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.',
+        );
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the header breakdown tied to the visible order list and hides it once search leaves one bucket', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

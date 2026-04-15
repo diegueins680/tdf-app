@@ -202,9 +202,13 @@ export default function MarketplaceOrdersPage() {
   );
 
   const showStatusFilter = statusFilter !== 'all' || availableStatusFilters.length > 1;
+  const singleVisibleStatusLabel =
+    !showStatusFilter && statusContextOrders.length > 0
+      ? statusLabel(availableStatusFilters[0] ?? '')
+      : '';
   const statusFilterHelperText = (() => {
     if (statusFilter !== 'all' || statusContextOrders.length === 0 || showStatusFilter) return null;
-    return `Todos los pedidos visibles comparten el estado ${statusLabel(availableStatusFilters[0] ?? '')}. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.`;
+    return `Todos los pedidos visibles comparten el estado ${singleVisibleStatusLabel}. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.`;
   })();
 
   const providerContextOrders = useMemo(() => {
@@ -231,6 +235,11 @@ export default function MarketplaceOrdersPage() {
     providerFilter !== 'all' ||
     availableProviderFilters.length > 1 ||
     (availableProviderFilters.length === 1 && hasOrdersWithoutProvider);
+  const singleVisibleProviderSummary = (() => {
+    if (showProviderFilter || providerContextOrders.length === 0) return '';
+    if (availableProviderFilters.length === 0) return 'todavía no tienen método de pago registrado';
+    return `usan ${getMarketplacePaymentProviderLabel(availableProviderFilters[0] ?? '')}`;
+  })();
   const providerFilterHelperText = (() => {
     if (providerFilter !== 'all' || providerContextOrders.length === 0 || showProviderFilter) return null;
     if (availableProviderFilters.length === 0) {
@@ -238,6 +247,10 @@ export default function MarketplaceOrdersPage() {
     }
     return `Todos los pedidos visibles usan ${getMarketplacePaymentProviderLabel(availableProviderFilters[0] ?? '')}. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.`;
   })();
+  const combinedFilterContextHelperText =
+    statusFilterHelperText && providerFilterHelperText && singleVisibleStatusLabel && singleVisibleProviderSummary
+      ? `Todos los pedidos visibles comparten el estado ${singleVisibleStatusLabel} y ${singleVisibleProviderSummary}. Los filtros de estado y método aparecerán cuando esta vista mezcle más de un estado o canal de pago.`
+      : null;
   const filtered = useMemo(() => {
     return baseContextOrders.filter((order) => {
       if (statusFilter !== 'all' && order.moStatus !== statusFilter) return false;
@@ -516,25 +529,8 @@ export default function MarketplaceOrdersPage() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={3} lg={3}>
-              {showStatusFilter ? (
-                <FormControl fullWidth>
-                  <InputLabel id="status-filter-label">Estado del listado</InputLabel>
-                  <Select
-                    labelId="status-filter-label"
-                    label="Estado del listado"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <MenuItem value="all">Todos</MenuItem>
-                    {STATUS_PRESETS.map((st) => (
-                      <MenuItem key={st.value} value={st.value}>
-                        {st.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              ) : (
+            {combinedFilterContextHelperText ? (
+              <Grid item xs={12} md={7} lg={6}>
                 <Box
                   sx={{
                     height: '100%',
@@ -544,42 +540,78 @@ export default function MarketplaceOrdersPage() {
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {statusFilterHelperText}
+                    {combinedFilterContextHelperText}
                   </Typography>
                 </Box>
-              )}
-            </Grid>
-            <Grid item xs={12} md={4} lg={3}>
-              {showProviderFilter ? (
-                <FormControl fullWidth>
-                  <InputLabel id="provider-filter-label">Método de pago</InputLabel>
-                  <Select
-                    labelId="provider-filter-label"
-                    label="Método de pago"
-                    value={providerFilter}
-                    onChange={(e) => setProviderFilter(e.target.value)}
-                  >
-                    <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="paypal">PayPal</MenuItem>
-                    <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
-                    <MenuItem value="contact">Manual/otros</MenuItem>
-                  </Select>
-                </FormControl>
-              ) : (
-                <Box
-                  sx={{
-                    height: '100%',
-                    minHeight: 56,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {providerFilterHelperText}
-                  </Typography>
-                </Box>
-              )}
-            </Grid>
+              </Grid>
+            ) : (
+              <>
+                <Grid item xs={12} md={3} lg={3}>
+                  {showStatusFilter ? (
+                    <FormControl fullWidth>
+                      <InputLabel id="status-filter-label">Estado del listado</InputLabel>
+                      <Select
+                        labelId="status-filter-label"
+                        label="Estado del listado"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">Todos</MenuItem>
+                        {STATUS_PRESETS.map((st) => (
+                          <MenuItem key={st.value} value={st.value}>
+                            {st.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Box
+                      sx={{
+                        height: '100%',
+                        minHeight: 56,
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {statusFilterHelperText}
+                      </Typography>
+                    </Box>
+                  )}
+                </Grid>
+                <Grid item xs={12} md={4} lg={3}>
+                  {showProviderFilter ? (
+                    <FormControl fullWidth>
+                      <InputLabel id="provider-filter-label">Método de pago</InputLabel>
+                      <Select
+                        labelId="provider-filter-label"
+                        label="Método de pago"
+                        value={providerFilter}
+                        onChange={(e) => setProviderFilter(e.target.value)}
+                      >
+                        <MenuItem value="all">Todos</MenuItem>
+                        <MenuItem value="paypal">PayPal</MenuItem>
+                        <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
+                        <MenuItem value="contact">Manual/otros</MenuItem>
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Box
+                      sx={{
+                        height: '100%',
+                        minHeight: 56,
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {providerFilterHelperText}
+                      </Typography>
+                    </Box>
+                  )}
+                </Grid>
+              </>
+            )}
             <Grid item xs={12}>
               <Button
                 size="small"
