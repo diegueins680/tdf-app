@@ -20,6 +20,7 @@ import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
 import TDF.Models
     ( ApiToken (..)
+    , ArtistProfile (..)
     , BookingStatus (..)
     , PackageProduct (..)
     , Party (..)
@@ -112,6 +113,7 @@ import TDF.ServerAuth
     , validateSignupInternshipFields
     , validateRequestedSignupRoles
     , validateSignupFanArtistIds
+    , validateSignupFanArtistTargets
     )
 import TDF.ServerProposals
     ( resolveOptionalProposalClientPartyReference
@@ -1271,6 +1273,109 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateSignupFanArtistIds (Just [7, 0, 13]))
             assertInvalid (validateSignupFanArtistIds (Just [-5]))
 
+    describe "validateSignupFanArtistTargets" $ do
+        it "accepts fan follows that reference existing artist profiles" $ do
+            (expectedArtistId, result) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                artistPartyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Artist Signup Target"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "artist-target@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert ArtistProfile
+                    { artistProfileArtistPartyId = artistPartyId
+                    , artistProfileSlug = Just "artist-signup-target"
+                    , artistProfileBio = Nothing
+                    , artistProfileCity = Nothing
+                    , artistProfileHeroImageUrl = Nothing
+                    , artistProfileSpotifyArtistId = Nothing
+                    , artistProfileSpotifyUrl = Nothing
+                    , artistProfileYoutubeChannelId = Nothing
+                    , artistProfileYoutubeUrl = Nothing
+                    , artistProfileWebsiteUrl = Nothing
+                    , artistProfileFeaturedVideoUrl = Nothing
+                    , artistProfileGenres = Nothing
+                    , artistProfileHighlights = Nothing
+                    , artistProfileCreatedAt = now
+                    , artistProfileUpdatedAt = Nothing
+                    }
+                resolved <- validateSignupFanArtistTargets [fromSqlKey artistPartyId]
+                pure (fromSqlKey artistPartyId, resolved)
+            result `shouldBe` Right [expectedArtistId]
+
+        it "rejects missing or non-artist follow targets before signup reaches fan-follow inserts" $ do
+            (nonArtistId, result) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                artistPartyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Known Artist"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "known-artist@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert ArtistProfile
+                    { artistProfileArtistPartyId = artistPartyId
+                    , artistProfileSlug = Just "known-artist"
+                    , artistProfileBio = Nothing
+                    , artistProfileCity = Nothing
+                    , artistProfileHeroImageUrl = Nothing
+                    , artistProfileSpotifyArtistId = Nothing
+                    , artistProfileSpotifyUrl = Nothing
+                    , artistProfileYoutubeChannelId = Nothing
+                    , artistProfileYoutubeUrl = Nothing
+                    , artistProfileWebsiteUrl = Nothing
+                    , artistProfileFeaturedVideoUrl = Nothing
+                    , artistProfileGenres = Nothing
+                    , artistProfileHighlights = Nothing
+                    , artistProfileCreatedAt = now
+                    , artistProfileUpdatedAt = Nothing
+                    }
+                nonArtistPartyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Non Artist"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "non-artist@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                validateSignupFanArtistTargets
+                    [ fromSqlKey artistPartyId
+                    , fromSqlKey nonArtistPartyId
+                    , 999999
+                    ]
+                    >>= \resolved -> pure (fromSqlKey nonArtistPartyId, resolved)
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 422
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "fanArtistIds reference unavailable artist profiles"
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` show nonArtistId
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "999999"
+                Right value ->
+                    expectationFailure
+                        ("Expected unavailable fanArtistIds to be rejected, got: " <> show value)
+
     describe "validateSignupInternshipFields" $ do
         it "allows internship metadata only when the Intern role is part of signup intent" $ do
             let startAt = Just (fromGregorian 2026 4 1)
@@ -2392,6 +2497,28 @@ initializeAuthSchema = do
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"slug\" VARCHAR NULL,\
+        \\"bio\" VARCHAR NULL,\
+        \\"city\" VARCHAR NULL,\
+        \\"hero_image_url\" VARCHAR NULL,\
+        \\"spotify_artist_id\" VARCHAR NULL,\
+        \\"spotify_url\" VARCHAR NULL,\
+        \\"youtube_channel_id\" VARCHAR NULL,\
+        \\"youtube_url\" VARCHAR NULL,\
+        \\"website_url\" VARCHAR NULL,\
+        \\"featured_video_url\" VARCHAR NULL,\
+        \\"genres\" VARCHAR NULL,\
+        \\"highlights\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NULL,\
+        \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
     rawExecute

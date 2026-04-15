@@ -26,6 +26,7 @@ module TDF.ServerAuth
   , validateOptionalSignupPhone
   , validateSignupInternshipFields
   , validateSignupFanArtistIds
+  , validateSignupFanArtistTargets
   ) where
 
 import Control.Applicative ((<|>))
@@ -51,7 +52,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (Day, UTCTime, getCurrentTime)
 import Data.UUID (toText)
 import Data.UUID.V4 (nextRandom)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.))
+import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
 import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
@@ -195,6 +196,33 @@ validateSignupFanArtistIds (Just rawArtistIds) =
                 BL.fromStrict
                   (TE.encodeUtf8 "fanArtistIds must contain only positive integers")
             }
+
+validateSignupFanArtistTargets :: [Int64] -> SqlPersistT IO (Either ServerError [Int64])
+validateSignupFanArtistTargets artistIds =
+  if null artistIds
+    then pure (Right [])
+    else do
+      let artistKeys = map (toSqlKey . fromIntegral) artistIds :: [Key Party]
+      profiles <- selectList [ArtistProfileArtistPartyId <-. artistKeys] []
+      let knownArtistIds =
+            Set.fromList
+              (map (fromSqlKey . artistProfileArtistPartyId . entityVal) profiles)
+          missingArtistIds =
+            filter (`Set.notMember` knownArtistIds) artistIds
+      if null missingArtistIds
+        then pure (Right artistIds)
+        else do
+          let missingList =
+                T.intercalate ", " (map (T.pack . show) missingArtistIds)
+              msg =
+                "fanArtistIds reference unavailable artist profiles: "
+                  <> missingList
+          pure
+            ( Left
+                err422
+                  { errBody = BL.fromStrict (TE.encodeUtf8 msg)
+                  }
+            )
 
 validateSignupInternshipFields
   :: [RoleEnum]
@@ -388,6 +416,9 @@ signup SignupRequest
       rawInternshipAreas
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
+  validatedFanArtistIds <-
+    liftIO (flip runSqlPool pool (validateSignupFanArtistTargets sanitizedFanArtists))
+      >>= either throwError pure
   let emailSvc = EmailSvc.mkEmailService cfg
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb
@@ -396,7 +427,7 @@ signup SignupRequest
       displayNameText
       phoneClean
       sanitizedRoles
-      sanitizedFanArtists
+      validatedFanArtistIds
       claimArtistIdClean
       rawInternshipStartAt
       rawInternshipEndAt
