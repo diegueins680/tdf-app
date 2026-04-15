@@ -2346,22 +2346,22 @@ saveCourse Courses.CourseUpsert{..} = do
   durationHoursClean <- either throwError pure (validateOptionalCourseNonNegativeField "sessionDurationHours" sessionDurationHours)
   sessionsClean <- either throwError pure (validateCourseSessionInputs sessions)
   syllabusClean <- either throwError pure (validateCourseSyllabusInputs syllabus)
+  locationMapUrlClean <- either throwError pure (validateCoursePublicUrlField "locationMapUrl" locationMapUrl)
+  landingUrlClean <- either throwError pure (validateCoursePublicUrlField "landingUrl" landingUrl)
+  whatsappClean <- either throwError pure (validateCoursePublicUrlField "whatsappCtaUrl" whatsappCtaUrl)
+  instructorAvatarClean <- either throwError pure (validateCoursePublicUrlField "instructorAvatarUrl" instructorAvatarUrl)
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
       durationClean = cleanOptional duration
       currencyClean = let cur = T.strip currency in if T.null cur then "USD" else cur
       locationLabelClean = cleanOptional locationLabel
-      locationMapUrlClean = cleanOptional locationMapUrl
-      landingUrlClean = cleanOptional landingUrl
       landingResolved = fromMaybe (buildLandingUrlFor envConfig slugVal) landingUrlClean
-      whatsappClean = cleanOptional whatsappCtaUrl
       whatsappResolved = fromMaybe (buildWhatsappCtaFor (waContactNumber waEnv) titleClean landingResolved) whatsappClean
       dawsClean = normalizeList daws
       includesClean = normalizeList includes
       instructorNameClean = cleanOptional instructorName
       instructorBioClean = cleanOptional instructorBio
-      instructorAvatarClean = cleanOptional instructorAvatarUrl
       normalizeList xs =
         case filter (not . T.null) (map T.strip xs) of
           [] -> Nothing
@@ -3609,6 +3609,9 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute http(s) URL"
             }
+
+validateCoursePublicUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateCoursePublicUrlField = validateCourseRegistrationUrlField
 
 isValidCourseRegistrationEmail :: Text -> Bool
 isValidCourseRegistrationEmail candidate =
