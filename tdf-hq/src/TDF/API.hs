@@ -580,7 +580,10 @@ data CmsContentIn = CmsContentIn
   , cciPayload :: Maybe Value
   } deriving (Show, Generic)
 instance FromJSON CmsContentIn where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON = genericParseJSON defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
 
 data CmsContentDTO = CmsContentDTO
   { ccdId        :: Int

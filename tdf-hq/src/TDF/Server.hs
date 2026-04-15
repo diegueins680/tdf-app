@@ -2180,7 +2180,7 @@ courseMetadataFor cfg mWaContact slugVal =
   in if normalizeSlug slugVal /= fallbackSlug
     then Nothing
     else
-          let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
+      let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
           sessions =
             [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 5 2)
             , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 5 9)

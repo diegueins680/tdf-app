@@ -2,7 +2,7 @@
 
 module TDF.APITypesSpec (spec) where
 
-import Data.Aeson (eitherDecode)
+import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy (..))
 import Data.Time (fromGregorian)
@@ -147,6 +147,25 @@ spec = do
         it "rejects unexpected keys so public ads inquiries fail explicitly instead of silently dropping input" $ do
             decodeAdsInquiry
                 "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"message\":\"Quiero info\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "CmsContentIn FromJSON" $ do
+        it "accepts canonical CMS content payloads" $
+            case decodeCmsContent
+                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical CMS content payload to decode, got: " <> err)
+                Right (API.CmsContentIn slugVal localeVal titleVal statusVal payloadVal) -> do
+                    slugVal `shouldBe` "homepage-hero"
+                    localeVal `shouldBe` "en"
+                    titleVal `shouldBe` Just "Hero"
+                    statusVal `shouldBe` Just "draft"
+                    payloadVal `shouldBe` Just (object ["headline" .= ("Create faster" :: String)])
+
+        it "rejects unexpected fields so typoed CMS writes fail explicitly instead of becoming partial updates" $ do
+            decodeCmsContent
+                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "CourseRegistrationFollowUp payload FromJSON" $ do
@@ -515,6 +534,8 @@ spec = do
     decodeTidalAgentRequest = eitherDecode
     decodeAdsInquiry :: BL8.ByteString -> Either String API.AdsInquiry
     decodeAdsInquiry = eitherDecode
+    decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
+    decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode
