@@ -5,9 +5,12 @@
 
 module TDF.API.InstagramOAuth where
 
-import           Data.Aeson (FromJSON(..), ToJSON(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, omitNothingFields)
+import           Data.Aeson (FromJSON(..), Options(rejectUnknownFields), ToJSON(..),
+                             defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON,
+                             omitNothingFields)
 import           Data.Char (toLower)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
@@ -23,7 +26,13 @@ data InstagramOAuthExchangeRequest = InstagramOAuthExchangeRequest
   } deriving (Show, Generic)
 
 instance FromJSON InstagramOAuthExchangeRequest where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelDrop 3 }
+  parseJSON value = do
+    request <- genericParseJSON strictObjectOptions value
+    code <- maybe (fail "code cannot be blank") pure (nonEmptyText (ioeCode request))
+    pure request
+      { ioeCode = code
+      , ioeRedirectUri = ioeRedirectUri request >>= nonEmptyText
+      }
 
 data InstagramOAuthPage = InstagramOAuthPage
   { iopPageId              :: Text
@@ -63,3 +72,15 @@ instance ToJSON InstagramOAuthExchangeResponse where
 type InstagramOAuthAPI =
   "instagram" :> "oauth" :>
     "exchange" :> ReqBody '[JSON] InstagramOAuthExchangeRequest :> Post '[JSON] InstagramOAuthExchangeResponse
+
+strictObjectOptions :: Options
+strictObjectOptions =
+  defaultOptions
+    { fieldLabelModifier = camelDrop 3
+    , rejectUnknownFields = True
+    }
+
+nonEmptyText :: Text -> Maybe Text
+nonEmptyText rawText =
+  let trimmed = T.strip rawText
+  in if T.null trimmed then Nothing else Just trimmed

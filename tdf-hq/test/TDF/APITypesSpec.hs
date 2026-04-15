@@ -10,6 +10,7 @@ import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
 import qualified TDF.API as API
+import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types (LooseJSON, MarketplaceCheckoutReq (..), RolePayload (..))
 import qualified TDF.Routes.Academy as Academy
@@ -249,6 +250,33 @@ spec = do
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InstagramOAuthExchangeRequest FromJSON" $ do
+        it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do
+            case decodeInstagramOAuthExchange
+                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical Instagram OAuth exchange payload to decode, got: " <> err)
+                Right (InstagramOAuth.InstagramOAuthExchangeRequest codeVal redirectUriVal) -> do
+                    codeVal `shouldBe` "oauth-code-123"
+                    redirectUriVal `shouldBe` Just "https://tdf-app.pages.dev/oauth/instagram/callback"
+
+            case decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected blank Instagram OAuth redirectUri to decode as omitted, got: " <> err)
+                Right (InstagramOAuth.InstagramOAuthExchangeRequest _ redirectUriVal) ->
+                    redirectUriVal `shouldBe` Nothing
+
+        it "rejects blank or typoed request bodies before the handler reaches Facebook with ambiguous input" $ do
+            decodeInstagramOAuthExchange
+                "{\"code\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
         it "accepts canonical service-marketplace booking payloads" $
             case decodeServiceMarketplaceBooking
@@ -372,6 +400,8 @@ spec = do
     decodeProposalUpdate = eitherDecode
     decodeProposalVersionCreate :: BL8.ByteString -> Either String Proposals.ProposalVersionCreate
     decodeProposalVersionCreate = eitherDecode
+    decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
+    decodeInstagramOAuthExchange = eitherDecode
     decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq
     decodeServiceMarketplaceBooking = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
