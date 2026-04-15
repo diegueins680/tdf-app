@@ -214,6 +214,31 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('hides empty optional metadata in the single-asset summary so first-run stays focused on real context', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        location: '   ',
+        condition: '',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primer equipo registrado');
+        expect(container.textContent).toContain('Categoría: Micrófono');
+        expect(container.textContent).toContain('Estado: Disponible');
+        expect(container.textContent).not.toContain('Ubicación:');
+        expect(container.textContent).not.toContain('Condición:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps repeated table actions compact by localizing status labels and moving history behind an icon action', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),

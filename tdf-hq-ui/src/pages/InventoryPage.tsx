@@ -204,6 +204,8 @@ export default function InventoryPage() {
   const singleAsset = grouped.length === 1 ? (grouped[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
+  const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
+  const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
 
@@ -269,12 +271,16 @@ export default function InventoryPage() {
                 <Typography variant="body2" color="rgba(226,232,240,0.78)">
                   Estado: {getInventoryStatusLabel(singleAsset.status)}
                 </Typography>
-                <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Ubicación: {singleAsset.location ?? '—'}
-                </Typography>
-                <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Condición: {singleAsset.condition ?? '—'}
-                </Typography>
+                {singleAssetLocation && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                    Ubicación: {singleAssetLocation}
+                  </Typography>
+                )}
+                {singleAssetCondition && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                    Condición: {singleAssetCondition}
+                  </Typography>
+                )}
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                 <Button
