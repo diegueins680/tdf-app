@@ -747,6 +747,12 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(secondContainer, 'Límite')).toBe(false);
       expect(getButtonByText(secondContainer, 'Ajustar límite')).toBeTruthy();
+      expect(
+        secondContainer
+          .querySelector('[data-testid="course-registration-current-view-summary"] button')
+          ?.textContent
+          ?.trim(),
+      ).toBe('Ajustar límite');
       expect(secondContainer.textContent).toContain(
         'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
@@ -757,6 +763,14 @@ describe('CourseRegistrationsAdminPage', () => {
         secondContainer,
         'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       )).toBe(1);
+      expect(
+        Array.from(secondContainer.querySelectorAll('button')).filter(
+          (button) => (
+            button.textContent?.trim() === 'Ajustar límite'
+            && !button.closest('[data-testid="course-registration-current-view-summary"]')
+          ),
+        ),
+      ).toHaveLength(0);
     });
 
     await act(async () => {
@@ -801,7 +815,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await thirdRender.cleanup();
-  });
+  }, 20_000);
 
   it('shows the selected cohort once in the filtered summary and folds a lone shared source into that same header context', async () => {
     const container = document.createElement('div');

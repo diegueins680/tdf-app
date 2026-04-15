@@ -760,6 +760,8 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && hasVisibleRegistrations,
   );
+  const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
+    && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummary);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset && !statusFilterCanSelfReset;
   const showFilteredEmptyStateResetAction = hasManualFilters;
@@ -1025,6 +1027,11 @@ export default function CourseRegistrationsAdminPage() {
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
     setShowAdvancedFilters(false);
+  };
+
+  const handleToggleAdvancedFilters = () => {
+    setHasUsedFilterControl(true);
+    setShowAdvancedFilters((current) => !current);
   };
 
   const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
@@ -1741,6 +1748,7 @@ export default function CourseRegistrationsAdminPage() {
               {combinedSingleChoiceSummary ? (
                 <Grid item xs={12}>
                   <Stack
+                    data-testid="course-registration-current-view-summary"
                     spacing={0.5}
                     sx={{
                       minHeight: 40,
@@ -1783,6 +1791,17 @@ export default function CourseRegistrationsAdminPage() {
                         {resetViewLabel}
                       </Button>
                     )}
+                    {showInlineSingleChoiceLimitToggle && (
+                      <Button
+                        size="small"
+                        variant="text"
+                        sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                        onClick={handleToggleAdvancedFilters}
+                        aria-expanded={showAdvancedFilters}
+                      >
+                        {limitToggleLabel}
+                      </Button>
+                    )}
                   </Stack>
                 </Grid>
               ) : (
@@ -1790,6 +1809,7 @@ export default function CourseRegistrationsAdminPage() {
                   <Grid item xs={12} md={6}>
                     {singleAvailableCohortLabel ? (
                       <Stack
+                        data-testid="course-registration-single-cohort-summary"
                         spacing={0.5}
                         sx={{
                           minHeight: 40,
@@ -1816,6 +1836,17 @@ export default function CourseRegistrationsAdminPage() {
                           <Typography variant="caption" color="text.secondary">
                             {singleAvailableCohortHelperText}
                           </Typography>
+                        )}
+                        {showInlineSingleChoiceLimitToggle && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                            onClick={handleToggleAdvancedFilters}
+                            aria-expanded={showAdvancedFilters}
+                          >
+                            {limitToggleLabel}
+                          </Button>
                         )}
                       </Stack>
                     ) : (
@@ -1850,6 +1881,7 @@ export default function CourseRegistrationsAdminPage() {
                   <Grid item xs={12} md={6}>
                     {showSingleStatusSummary && singleVisibleStatus ? (
                       <Stack
+                        data-testid="course-registration-single-status-summary"
                         spacing={0.5}
                         sx={{
                           minHeight: 40,
@@ -1876,6 +1908,17 @@ export default function CourseRegistrationsAdminPage() {
                           <Typography variant="caption" color="text.secondary">
                             {singleVisibleStatusHelperText}
                           </Typography>
+                        )}
+                        {showInlineSingleChoiceLimitToggle && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                            onClick={handleToggleAdvancedFilters}
+                            aria-expanded={showAdvancedFilters}
+                          >
+                            {limitToggleLabel}
+                          </Button>
                         )}
                       </Stack>
                     ) : (
@@ -1913,15 +1956,12 @@ export default function CourseRegistrationsAdminPage() {
                 </>
               )}
             </Grid>
-            {showAdvancedLimitControl && (
+            {showAdvancedLimitControl && !showInlineSingleChoiceLimitToggle && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
                   variant="text"
-                  onClick={() => {
-                    setHasUsedFilterControl(true);
-                    setShowAdvancedFilters((current) => !current);
-                  }}
+                  onClick={handleToggleAdvancedFilters}
                   aria-expanded={showAdvancedFilters}
                 >
                   {limitToggleLabel}
