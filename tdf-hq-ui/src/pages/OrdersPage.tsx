@@ -213,6 +213,10 @@ export default function OrdersPage() {
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
   const showInitialLoadingState = bookingsQuery.isLoading && bookingsQuery.data == null;
   const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
+  const singleRow = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 1
+    ? (rows[0] ?? null)
+    : null;
+  const showSingleSessionSummary = singleRow != null;
   const showRefreshAction = Boolean(bookingsQuery.error) || totalRows > 0;
 
   useEffect(() => {
@@ -233,7 +237,9 @@ export default function OrdersPage() {
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
   const pageSummary = totalRows === 0
     ? ORDERS_PAGE_OVERVIEW_SUMMARY
-    : rowActionSummary;
+    : showSingleSessionSummary
+      ? 'Revisa la primera sesión desde un resumen simple. La tabla volverá cuando exista una segunda.'
+      : rowActionSummary;
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -342,6 +348,63 @@ export default function OrdersPage() {
             <Typography variant="body2" color="text.secondary">
               La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.
             </Typography>
+          </Stack>
+        ) : showSingleSessionSummary && singleRow ? (
+          <Stack spacing={2} sx={{ p: 3 }}>
+            <Stack spacing={0.75}>
+              <Typography variant="h6" fontWeight={700}>
+                Primera sesión registrada
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Revísala aquí sin tabla ni paginación. Cuando exista la segunda, volverá la vista comparativa para
+                revisar horario, servicio, booking, recursos y estado lado a lado.
+              </Typography>
+            </Stack>
+            <Stack
+              spacing={0.75}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 2,
+                py: 1.5,
+                maxWidth: 720,
+              }}
+            >
+              <Typography variant="body2">
+                <Box component="span" sx={{ fontWeight: 600 }}>Horario:</Box> {singleRow.schedule}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
+              </Typography>
+              {singleRow.bookingSecondary && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleRow.bookingSecondary}
+                </Typography>
+              )}
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleRow.engineers}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleRow.rooms}
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>
+                </Typography>
+                {renderStatus(singleRow.status ?? '')}
+              </Stack>
+            </Stack>
+            <Button
+              variant="outlined"
+              onClick={() => handleEditClick(singleRow.bookingId)}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Editar sesión
+            </Button>
           </Stack>
         ) : (
           <>

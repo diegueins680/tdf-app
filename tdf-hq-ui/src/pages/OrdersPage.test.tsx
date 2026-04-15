@@ -186,6 +186,60 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('replaces the one-row sessions table with a first-session summary and one edit action', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 101,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        serviceOrderId: 88,
+        customerName: 'Ada Sessions',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Revisa la primera sesión desde un resumen simple. La tabla volverá cuando exista una segunda.',
+        );
+        expect(container.textContent).toContain('Primera sesión registrada');
+        expect(container.textContent).toContain(
+          'Revísala aquí sin tabla ni paginación. Cuando exista la segunda, volverá la vista comparativa para revisar horario, servicio, booking, recursos y estado lado a lado.',
+        );
+        expect(container.textContent).toContain('Horario:');
+        expect(container.textContent).toContain('Servicio: Mixing');
+        expect(container.textContent).toContain('Booking: Ada Sessions');
+        expect(container.textContent).toContain('Detalle: SO #88');
+        expect(container.textContent).toContain('Ingeniero: Vale');
+        expect(container.textContent).toContain('Salas: Studio A');
+        expect(container.textContent).toContain('Confirmada');
+        expect(container.querySelector('table')).toBeNull();
+        expect(hasTableHeader(container, 'Horario')).toBe(false);
+        expect(hasTableHeader(container, 'Live Sessions')).toBe(false);
+        expect(container.textContent).not.toContain('Filas por página');
+        expect(container.textContent).not.toContain('Rows per page');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Editar sesión',
+          ),
+        ).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses row click for editing and only shows the Live Sessions shortcut on recording rows', async () => {
     listBookingsMock.mockResolvedValue([
       {
@@ -319,7 +373,7 @@ describe('OrdersPage', () => {
     }
   });
 
-  it('removes repeated booking identity from the secondary summary so the row only shows new context once', async () => {
+  it('removes repeated booking identity from the first-session summary so the booking context only appears once', async () => {
     listBookingsMock.mockResolvedValue([
       {
         bookingId: 401,
@@ -342,12 +396,12 @@ describe('OrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        const row = getRowByBookingId(container, 401);
-        const rowText = row.textContent ?? '';
+        const summaryText = container.textContent ?? '';
 
-        expect(rowText).toContain('Ada Client');
-        expect(rowText).toContain('SO #88');
-        expect(countOccurrencesIgnoringCase(rowText, 'Ada Client')).toBe(1);
+        expect(summaryText).toContain('Primera sesión registrada');
+        expect(summaryText).toContain('Booking: Ada Client');
+        expect(summaryText).toContain('Detalle: SO #88');
+        expect(countOccurrencesIgnoringCase(summaryText, 'Ada Client')).toBe(1);
       });
     } finally {
       await cleanup();
