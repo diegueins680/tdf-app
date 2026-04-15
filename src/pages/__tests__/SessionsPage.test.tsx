@@ -176,4 +176,48 @@ describe('SessionsPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
   });
+
+  it('hides empty optional metadata rows in the single-session summary so first-run stays focused on real context', async () => {
+    mockSessionsList.mockResolvedValue({
+      items: [
+        {
+          sessionId: 'session-1',
+          sBookingRef: null,
+          sBandId: null,
+          sClientPartyRef: null,
+          sService: 'Producción',
+          sStartAt: '2026-04-15T15:00:00.000Z',
+          sEndAt: '2026-04-15T17:00:00.000Z',
+          sEngineerRef: '   ',
+          sAssistantRef: null,
+          sRoomIds: [],
+          sSampleRate: null,
+          sBitDepth: null,
+          sDaw: null,
+          sSessionFolderDriveId: null,
+          sNotes: null,
+          sInputListRows: [],
+          sStatus: 'InPrep',
+        },
+      ],
+      page: 1,
+      pageSize: 10,
+      total: 1,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primera sesión registrada.')).toBeInTheDocument();
+      expect(screen.getByText(/Servicio:\s*Producción/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Editar sesión/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Booking:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ingeniero:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Salas:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
 });

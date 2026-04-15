@@ -172,6 +172,8 @@ const cleanString = (value?: string) => {
   return trimmed.length ? trimmed : undefined;
 };
 
+const hasPresentValue = (value?: string | null) => (value?.trim().length ?? 0) > 0;
+
 const stringOrNull = (value?: string) => {
   if (value === undefined) return undefined;
   const trimmed = value.trim();
@@ -1066,6 +1068,8 @@ export default function SessionsPage() {
       ? (rows[0] ?? null)
       : null;
   const showSessionsTable = !showFirstSessionSetupState && singleSession == null;
+  const singleSessionBookingRef = singleSession?.sBookingRef?.trim() ?? '';
+  const singleSessionEngineerRef = singleSession?.sEngineerRef?.trim() ?? '';
   const singleSessionRoomNames = singleSession?.sRoomIds && singleSession.sRoomIds.length > 0
     ? singleSession.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
     : '—';
@@ -1113,15 +1117,21 @@ export default function SessionsPage() {
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleSession.sService ?? '—'}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleSession.sBookingRef ?? '—'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleSession.sEngineerRef ?? '—'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleSessionRoomNames}
-                </Typography>
+                {hasPresentValue(singleSessionBookingRef) && (
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleSessionBookingRef}
+                  </Typography>
+                )}
+                {hasPresentValue(singleSessionEngineerRef) && (
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleSessionEngineerRef}
+                  </Typography>
+                )}
+                {singleSessionRoomNames !== '—' && (
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleSessionRoomNames}
+                  </Typography>
+                )}
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Typography variant="body2" color="text.secondary">
                     <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>
