@@ -2692,6 +2692,7 @@ describe('CourseRegistrationsAdminPage', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Registrar pago de inscripción');
         expect(getButtonByText(document.body, 'Cerrar pago')).toBeTruthy();
+        expect(countButtonsByText(document.body, 'Cerrar')).toBe(0);
         expect(countButtonsByText(document.body, 'Cancelar comprobante')).toBe(0);
         expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
         expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);

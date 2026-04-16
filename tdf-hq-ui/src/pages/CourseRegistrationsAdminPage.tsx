@@ -1471,6 +1471,7 @@ export default function CourseRegistrationsAdminPage() {
   }, [canMarkPaid, selectedDossier?.intent]);
 
   const prioritizePaymentSection = selectedDossier?.intent === 'markPaid';
+  const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
   const dossierDialogTitle = selectedDossier?.intent === 'markPaid'
     ? canMarkPaid
       ? 'Confirmar pago de inscripción'
@@ -2789,9 +2790,11 @@ export default function CourseRegistrationsAdminPage() {
             </Stack>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedDossier(null)}>Cerrar</Button>
-        </DialogActions>
+        {showDossierFooterCloseAction && (
+          <DialogActions>
+            <Button onClick={() => setSelectedDossier(null)}>Cerrar</Button>
+          </DialogActions>
+        )}
       </Dialog>
 
     </Stack>
