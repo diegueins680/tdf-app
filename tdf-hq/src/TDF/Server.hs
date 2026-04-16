@@ -785,10 +785,12 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
   when (T.null recipientRaw) $ throwBadRequest "Remitente requerido"
   recipient <- either throwError pure (validateWhatsAppPhoneInput recipientRaw)
   when (T.null body) $ throwBadRequest "Mensaje vacío"
-  sendResult <- sendWhatsAppText waEnv recipient body
-  mReplyTarget <- case mExternalId of
+  mReplyTargetRaw <- case mExternalId of
     Nothing -> pure Nothing
     Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
+  mReplyTarget <- either throwError pure $
+    validateWhatsAppReplyTarget recipient mExternalId mReplyTargetRaw
+  sendResult <- sendWhatsAppText waEnv recipient body
   sentEntity <- runDB $
     recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
       { owrRecipientPhone = recipient
@@ -1050,6 +1052,31 @@ parseDirectionParam (Just raw) =
   where
     invalidDirection =
       Left err400 { errBody = "direction must be omitted or one of: all, incoming, outgoing" }
+
+validateWhatsAppReplyTarget
+  :: Text
+  -> Maybe Text
+  -> Maybe (Entity ME.WhatsAppMessage)
+  -> Either ServerError (Maybe (Entity ME.WhatsAppMessage))
+validateWhatsAppReplyTarget _ Nothing _ = Right Nothing
+validateWhatsAppReplyTarget _ (Just _) Nothing =
+  Left err404 { errBody = "WhatsApp reply target not found" }
+validateWhatsAppReplyTarget recipient (Just _) (Just target@(Entity _ row))
+  | ME.whatsAppMessageDirection row /= "incoming" =
+      Left err400 { errBody = "WhatsApp reply target must be an incoming message" }
+  | not (replyTargetMatchesRecipient recipient row) =
+      Left err400 { errBody = "WhatsApp reply target does not match recipient" }
+  | otherwise = Right (Just target)
+
+replyTargetMatchesRecipient :: Text -> ME.WhatsAppMessage -> Bool
+replyTargetMatchesRecipient recipient row =
+  recipient `elem` normalizedCandidates
+  where
+    normalizedCandidates =
+      mapMaybe normalizeWhatsAppPhone
+        [ ME.whatsAppMessageSenderId row
+        , fromMaybe "" (ME.whatsAppMessagePhoneE164 row)
+        ]
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Show, Eq)

@@ -125,6 +125,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
+    , validateWhatsAppReplyTarget
     , validatePublicBookingStartAt
     , validateCourseRegistrationId
     , validateCourseRegistrationReceiptId
@@ -2499,6 +2500,40 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "12345"
             assertInvalid "+1234567890123456"
 
+    describe "validateWhatsAppReplyTarget" $ do
+        it "requires manual replies to target an incoming message for the same recipient" $ do
+            let now = UTCTime (fromGregorian 2026 4 16) (secondsToDiffTime 0)
+                incomingTarget =
+                    fixtureWhatsAppMessage 1 now "inbound-1" "incoming" "+593991234567"
+                outgoingTarget =
+                    fixtureWhatsAppMessage 2 now "outbound-1" "outgoing" "+593991234567"
+                otherRecipientTarget =
+                    fixtureWhatsAppMessage 3 now "inbound-2" "incoming" "+593998765432"
+
+            case validateWhatsAppReplyTarget "+593991234567" (Just "inbound-1") (Just incomingTarget) of
+                Right (Just (Entity targetKey _)) -> targetKey `shouldBe` toSqlKey 1
+                other ->
+                    expectationFailure
+                        ("Expected matching incoming WhatsApp reply target, got: " <> show other)
+
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldSatisfy` (`elem` [400, 404])
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid WhatsApp reply target to be rejected, got: " <> show value)
+
+            assertInvalid
+                "not found"
+                (validateWhatsAppReplyTarget "+593991234567" (Just "missing") Nothing)
+            assertInvalid
+                "incoming"
+                (validateWhatsAppReplyTarget "+593991234567" (Just "outbound-1") (Just outgoingTarget))
+            assertInvalid
+                "does not match recipient"
+                (validateWhatsAppReplyTarget "+593991234567" (Just "inbound-2") (Just otherRecipientTarget))
+
     describe "whatsAppConsentStatusFromRow" $ do
         it "omits stored display names from public consent status responses" $ do
             let now = UTCTime (fromGregorian 2026 4 16) (secondsToDiffTime 0)
@@ -3406,6 +3441,44 @@ insertBookingResourceFixture name slug =
         , resourceResourceType = Room
         , resourceCapacity = Nothing
         , resourceActive = True
+        }
+
+fixtureWhatsAppMessage
+    :: Int -> UTCTime -> T.Text -> T.Text -> T.Text -> Entity ME.WhatsAppMessage
+fixtureWhatsAppMessage keyVal now externalId direction phone =
+    Entity (toSqlKey (fromIntegral keyVal)) ME.WhatsAppMessage
+        { ME.whatsAppMessageExternalId = externalId
+        , ME.whatsAppMessageSenderId = phone
+        , ME.whatsAppMessageSenderName = Just "Ada"
+        , ME.whatsAppMessagePartyId = Nothing
+        , ME.whatsAppMessageActorPartyId = Nothing
+        , ME.whatsAppMessagePhoneE164 = Just phone
+        , ME.whatsAppMessageContactEmail = Nothing
+        , ME.whatsAppMessageText = Just "Original message"
+        , ME.whatsAppMessageDirection = direction
+        , ME.whatsAppMessageAdExternalId = Nothing
+        , ME.whatsAppMessageAdName = Nothing
+        , ME.whatsAppMessageCampaignExternalId = Nothing
+        , ME.whatsAppMessageCampaignName = Nothing
+        , ME.whatsAppMessageMetadata = Nothing
+        , ME.whatsAppMessageReplyStatus =
+            if direction == "incoming" then "pending" else "sent"
+        , ME.whatsAppMessageHoldReason = Nothing
+        , ME.whatsAppMessageHoldRequiredFields = Nothing
+        , ME.whatsAppMessageLastAttemptAt = Nothing
+        , ME.whatsAppMessageAttemptCount = 0
+        , ME.whatsAppMessageRepliedAt = Nothing
+        , ME.whatsAppMessageReplyText = Nothing
+        , ME.whatsAppMessageReplyError = Nothing
+        , ME.whatsAppMessageDeliveryStatus =
+            if direction == "incoming" then "received" else "sent"
+        , ME.whatsAppMessageDeliveryUpdatedAt = Nothing
+        , ME.whatsAppMessageDeliveryError = Nothing
+        , ME.whatsAppMessageTransportPayload = Nothing
+        , ME.whatsAppMessageStatusPayload = Nothing
+        , ME.whatsAppMessageSource = Just "server_spec_seed"
+        , ME.whatsAppMessageResendOfMessageId = Nothing
+        , ME.whatsAppMessageCreatedAt = now
         }
 
 initializePackageSchema :: SqlPersistT IO ()
