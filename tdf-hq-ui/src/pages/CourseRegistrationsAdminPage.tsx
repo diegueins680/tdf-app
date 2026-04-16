@@ -222,9 +222,8 @@ const registrationStatusLabel = (status: string) =>
 
 const registrationStatusButtonLabel = (
   status: string,
-  statusAlreadySummarized: boolean,
   useCompactActionLabel: boolean,
-) => (statusAlreadySummarized && useCompactActionLabel ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
+) => (useCompactActionLabel ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
 
 const registrationStatusChipColor = (
   status: string,
@@ -703,10 +702,10 @@ export default function CourseRegistrationsAdminPage() {
       : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
-  const useCompactStatusActionLabel = showSingleStatusSummary;
+  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
+  const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
   const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
-  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -2222,7 +2221,7 @@ export default function CourseRegistrationsAdminPage() {
                         disabled={isUpdating}
                         onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
                       >
-                        {registrationStatusButtonLabel(reg.crStatus, showSingleStatusSummary, useCompactStatusActionLabel)}
+                        {registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
                       </Button>
                       <Box sx={{ flexGrow: 1 }} />
                     </Box>

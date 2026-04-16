@@ -1688,6 +1688,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps status-filtered rows action-first once the filter already states the shared status', async () => {
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+    const secondPaidRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crStatus: 'paid',
+    });
+    const cancelledRegistration = buildRegistration({
+      crId: 104,
+      crFullName: 'Annie Easley',
+      crEmail: 'annie@example.com',
+      crStatus: 'cancelled',
+    });
+
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration, secondPaidRegistration]
+        : params?.status === 'cancelled'
+          ? [cancelledRegistration]
+          : [paidRegistration, secondPaidRegistration, cancelledRegistration],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (2)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);
+      expect(countOccurrences(container, 'Estado: Pagado')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('moves single-result source context into the header summary so the row stays focused on identity and actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
