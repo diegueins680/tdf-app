@@ -470,6 +470,15 @@ export default function MarketplaceOrdersPage() {
   const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
   const blockSave =
     isPaidOrderStatus(effectiveStatus) && (warnMissingProvider || warnMissingPaidAt);
+  const selectedPaidAtInput = selectedOrder ? formatInputDate(selectedOrder.moPaidAt) : '';
+  const hasOrderUpdateChange = Boolean(
+    selectedOrder
+      && (
+        (statusInput.trim() !== '' && statusInput.trim() !== selectedOrder.moStatus)
+        || paymentProviderInput.trim() !== (selectedOrder.moPaymentProvider ?? '')
+        || paidAtInput !== selectedPaidAtInput
+      ),
+  );
   const statusHint = (() => {
     if (!effectiveStatus) return null;
     if (effectiveStatus === 'datafast_pending') {
@@ -1044,7 +1053,7 @@ export default function MarketplaceOrdersPage() {
                             onClick={() => {
                               void handleSave();
                             }}
-                            disabled={updateMutation.isPending || blockSave}
+                            disabled={updateMutation.isPending || blockSave || !hasOrderUpdateChange}
                           >
                             Guardar cambios
                           </Button>

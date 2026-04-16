@@ -820,6 +820,46 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps save disabled until the order editor has a real change', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: 'paypal',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+      });
+
+      const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
+      await setInputValue(providerInput, 'datafast');
+
+      await waitForExpectation(() => {
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides the payment shortcut once a paid order already has payment data recorded', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
