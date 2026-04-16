@@ -3594,10 +3594,17 @@ validatePublicBookingContactDetails rawEmail rawPhone = do
 validatePublicBookingDurationMinutes :: Maybe Int -> Either ServerError Int
 validatePublicBookingDurationMinutes Nothing = Right 60
 validatePublicBookingDurationMinutes (Just durationMinutes)
-  | durationMinutes < 30 =
-      Left err400 { errBody = "durationMinutes must be at least 30" }
+  | durationMinutes < publicBookingMinDurationMinutes
+      || durationMinutes > publicBookingMaxDurationMinutes =
+      Left err400 { errBody = "durationMinutes must be between 30 and 480" }
   | otherwise =
       Right durationMinutes
+
+publicBookingMinDurationMinutes :: Int
+publicBookingMinDurationMinutes = 30
+
+publicBookingMaxDurationMinutes :: Int
+publicBookingMaxDurationMinutes = 480
 
 validatePublicBookingStartAt :: UTCTime -> UTCTime -> Either ServerError UTCTime
 validatePublicBookingStartAt now startsAt

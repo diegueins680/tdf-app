@@ -2409,22 +2409,24 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
 
     describe "validatePublicBookingDurationMinutes" $ do
-        it "defaults omitted durations to one hour and preserves explicit durations >= 30 minutes" $ do
+        it "defaults omitted durations to one hour and preserves explicit durations inside the public window" $ do
             validatePublicBookingDurationMinutes Nothing `shouldBe` Right 60
             validatePublicBookingDurationMinutes (Just 30) `shouldBe` Right 30
             validatePublicBookingDurationMinutes (Just 90) `shouldBe` Right 90
+            validatePublicBookingDurationMinutes (Just 480) `shouldBe` Right 480
 
-        it "rejects explicit durations below the booking minimum instead of silently rewriting them to 30 minutes" $ do
+        it "rejects explicit durations outside the public window instead of creating ambiguous holds" $ do
             let assertInvalid rawDuration =
                     case validatePublicBookingDurationMinutes (Just rawDuration) of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` "durationMinutes must be at least 30"
+                            BL8.unpack (errBody serverErr) `shouldContain` "durationMinutes must be between 30 and 480"
                         Right durationVal ->
                             expectationFailure ("Expected invalid booking duration to be rejected, got: " <> show durationVal)
             assertInvalid (-15)
             assertInvalid 0
             assertInvalid 29
+            assertInvalid 481
 
     describe "validatePublicBookingStartAt" $ do
         it "accepts public bookings whose requested start time is still in the future" $ do
