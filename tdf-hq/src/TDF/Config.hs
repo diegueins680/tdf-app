@@ -272,13 +272,15 @@ loadConfig = do
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
+  appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
+  assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
   courseDefaultSlugVal <- validateConfiguredCourseSlug courseSlugEnv
   courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
       igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
-      normalizedAppBase = fmap (T.strip . T.pack) baseUrlEnv >>= nonEmpty
+      normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
       cookieSecure = maybe cookieSecureDefault asBool sessionCookieSecureEnv
@@ -302,7 +304,7 @@ loadConfig = do
     , runMigrations = asBool mig
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = normalizedAppBase
-    , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
+    , assetsBaseUrl = assetsBaseUrlVal
     , assetsRootDir = assetsRoot
     , courseDefaultSlug = courseDefaultSlugVal
     , courseDefaultMapUrl = courseMapUrl
@@ -450,6 +452,13 @@ validateConfiguredHttpsUrl envName (Just rawUrl) =
     Left msg -> fail msg
     Right urlVal -> pure urlVal
 
+validateConfiguredBaseUrl :: String -> Maybe String -> IO (Maybe Text)
+validateConfiguredBaseUrl _ Nothing = pure Nothing
+validateConfiguredBaseUrl envName (Just rawUrl) =
+  case normalizeConfiguredBaseUrl envName rawUrl of
+    Left msg -> fail msg
+    Right urlVal -> pure urlVal
+
 validateConfiguredCourseSlug :: Maybe String -> IO Text
 validateConfiguredCourseSlug rawSlug =
   case normalizeConfiguredCourseSlug rawSlug of
@@ -473,6 +482,100 @@ normalizeConfiguredCourseSlug (Just rawSlug)
 
 defaultCourseSlug :: Text
 defaultCourseSlug = "produccion-musical-abr-2026"
+
+normalizeConfiguredBaseUrl :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredBaseUrl envName rawUrl
+  | T.null trimmed = Right Nothing
+  | T.any isSpace trimmed =
+      invalid
+  | "https://" `T.isPrefixOf` lowerUrl =
+      validateRemainder (T.drop 8 trimmed)
+  | "http://" `T.isPrefixOf` lowerUrl =
+      validateRemainder (T.drop 7 trimmed)
+  | otherwise =
+      invalid
+  where
+    trimmed = T.strip (T.pack rawUrl)
+    lowerUrl = T.toLower trimmed
+    invalid = Left (envName <> " must be an absolute http(s) URL")
+
+    validateRemainder remainder =
+      if hasValidAuthority remainder
+        then Right (Just trimmed)
+        else invalid
+
+    hasValidAuthority remainder =
+      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+      in validateAuthority authority
+
+    validateAuthority rawAuthority
+      | T.null rawAuthority = False
+      | T.any (== '@') rawAuthority = False
+      | "[" `T.isPrefixOf` rawAuthority =
+          let (hostPart, rest) = T.breakOn "]" rawAuthority
+              host = T.drop 1 hostPart
+          in not (T.null rest)
+            && validateBracketedHost host
+            && validatePortSuffix (T.drop 1 rest)
+      | T.count ":" rawAuthority > 1 = False
+      | otherwise =
+          let (host, portSuffix) = T.breakOn ":" rawAuthority
+          in validateHost host && validatePortSuffix portSuffix
+
+    validateHost host =
+      let normalizedHost = T.toLower host
+      in not (T.null normalizedHost)
+        && not (T.isPrefixOf "." normalizedHost)
+        && not (T.isSuffixOf "." normalizedHost)
+        && not (isAmbiguousNumericHost normalizedHost)
+        && all isValidHostLabel (T.splitOn "." normalizedHost)
+
+    validateBracketedHost host =
+      not (T.null host)
+        && T.any (== ':') host
+        && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
+
+    validatePortSuffix suffix
+      | T.null suffix = True
+      | ":" `T.isPrefixOf` suffix =
+          let port = T.drop 1 suffix
+          in not (T.null port)
+            && T.all (\ch -> ch >= '0' && ch <= '9') port
+            && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
+                (readMaybe (T.unpack port))
+      | otherwise = False
+
+    isValidHostLabel label =
+      not (T.null label)
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all isHostChar label
+
+    isHostChar ch =
+      (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
+
+    isAmbiguousNumericHost host =
+      T.all (\ch -> isDigit ch || ch == '.') host
+        && isNothing (parseIpv4Octets host)
+
+    parseIpv4Octets host =
+      case T.splitOn "." host of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet octet
+      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
+      | otherwise = do
+          value <- readMaybe (T.unpack octet)
+          if value >= (0 :: Int) && value <= 255
+            then Just value
+            else Nothing
 
 normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredHttpsUrl envName rawUrl

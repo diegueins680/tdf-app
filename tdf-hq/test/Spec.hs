@@ -173,6 +173,8 @@ import TDF.Config
       dbConnString,
       emailConfig,
       loadConfig,
+      resolveConfiguredAppBase,
+      resolveConfiguredAssetsBase,
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
@@ -258,6 +260,39 @@ main = hspec $ do
             assertInvalid "/hq; Secure"
             assertInvalid "/hq admin"
             assertInvalid "/hq,admin"
+
+        it "normalizes configured backend public base URLs before generating fallback links" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Just " https://hq.example.com/app/ ")
+                , ("HQ_ASSETS_BASE_URL", Just " https://cdn.example.com/assets/ ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    resolveConfiguredAppBase cfg `shouldBe` "https://hq.example.com/app"
+                    resolveConfiguredAssetsBase cfg `shouldBe` "https://cdn.example.com/assets"
+
+        it "rejects malformed backend public base URLs at startup" $ do
+            let assertInvalid envName rawUrl expectedMessage =
+                    withEnvOverrides
+                        [ (envName, Just rawUrl) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "HQ_APP_URL"
+                "javascript:alert(1)"
+                "HQ_APP_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_APP_URL"
+                "/hq"
+                "HQ_APP_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets copy"
+                "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://files_example.com/assets"
+                "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
 
         it "normalizes configured public course fallback URLs before serving metadata" $
             withEnvOverrides
