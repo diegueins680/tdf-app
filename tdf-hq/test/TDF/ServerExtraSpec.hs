@@ -1018,6 +1018,25 @@ spec = do
       assertInvalid "senderId is required" (validateSocialReplySenderId "   ")
       assertInvalid "externalId must be omitted or a non-empty string" (validateSocialReplyExternalId (Just "   "))
 
+    it "rejects malformed reply identifiers before dispatching to Meta" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure
+                ("Expected malformed social reply identifier error, got " <> show value)
+          longSenderId = mconcat (replicate 257 ("x" :: Text))
+      assertInvalid
+        "senderId must not contain whitespace"
+        (validateSocialReplySenderId "178414 000000")
+      assertInvalid
+        "externalId must not contain whitespace"
+        (validateSocialReplyExternalId (Just "mid.abc 123"))
+      assertInvalid
+        "senderId must be 256 characters or fewer"
+        (validateSocialReplySenderId longSenderId)
+
   describe "social reply outcome persistence" $ do
     it "marks failed manual sends as error rows instead of leaving ambiguous sent status behind" $
       socialReplyOutcomeFields (Left "Meta API timeout" :: Either Text A.Value)

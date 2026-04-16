@@ -2750,15 +2750,29 @@ validateSocialLimit (Just rawLimit)
 validateSocialReplySenderId :: Text -> Either ServerError Text
 validateSocialReplySenderId rawSenderId =
   case normalizeOptionalTextField (Just rawSenderId) of
-    Just senderId -> Right senderId
     Nothing -> Left err400 { errBody = "senderId is required" }
+    Just senderId -> validateSocialReplyIdentifier "senderId" senderId
 
 validateSocialReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialReplyExternalId Nothing = Right Nothing
 validateSocialReplyExternalId (Just rawExternalId) =
   case normalizeOptionalTextField (Just rawExternalId) of
-    Just externalId -> Right (Just externalId)
     Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
+    Just externalId -> Just <$> validateSocialReplyIdentifier "externalId" externalId
+
+validateSocialReplyIdentifier :: Text -> Text -> Either ServerError Text
+validateSocialReplyIdentifier fieldName value
+  | T.any isSpace value =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain whitespace")) }
+  | T.length value > 256 =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be 256 characters or fewer"))
+        }
+  | otherwise =
+      Right value
 
 socialReplyOutcomeFields :: Either Text a -> (Text, Maybe Text)
 socialReplyOutcomeFields sendResult =
