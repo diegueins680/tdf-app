@@ -550,21 +550,26 @@ main = hspec $ do
             assertInvalid "user()@example.com"
 
     describe "validateCoursePublicUrlField" $ do
-        it "accepts omitted or trimmed absolute http(s) course URLs" $ do
+        it "accepts omitted or trimmed absolute HTTPS course URLs" $ do
             validateCoursePublicUrlField "landingUrl" Nothing `shouldBe` Right Nothing
             validateCoursePublicUrlField "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")
                 `shouldBe` Right (Just "https://tdf.example.com/curso/produccion")
-            validateCoursePublicUrlField "whatsappCtaUrl" (Just "http://wa.me/593991234567")
-                `shouldBe` Right (Just "http://wa.me/593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me/593991234567")
+                `shouldBe` Right (Just "https://wa.me/593991234567")
 
-        it "rejects non-http course URLs instead of persisting broken public links" $ do
+        it "rejects non-HTTPS course URLs instead of persisting insecure or broken public links" $ do
             let assertInvalid fieldName rawValue =
                     case validateCoursePublicUrlField fieldName (Just rawValue) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` (Data.Text.unpack fieldName <> " must be an absolute http(s) URL")
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    ( Data.Text.unpack fieldName
+                                        <> " must be an absolute https URL"
+                                    )
                         Right value ->
                             expectationFailure ("Expected invalid course URL to be rejected, got " <> show value)
+            assertInvalid "whatsappCtaUrl" "http://wa.me/593991234567"
             assertInvalid "landingUrl" "javascript:alert(1)"
             assertInvalid "locationMapUrl" "/curso/produccion"
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"

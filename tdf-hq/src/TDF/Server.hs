@@ -3655,7 +3655,20 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
             }
 
 validateCoursePublicUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
-validateCoursePublicUrlField = validateCourseRegistrationUrlField
+validateCoursePublicUrlField _ Nothing = Right Nothing
+validateCoursePublicUrlField fieldName (Just rawUrl) =
+  case cleanOptional (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just urlVal ->
+      if "https://" `T.isPrefixOf` T.toLower urlVal
+          && TrialsServer.isValidHttpUrl urlVal
+        then Right (Just urlVal)
+        else
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must be an absolute https URL"
+            }
 
 isValidCourseRegistrationEmail :: Text -> Bool
 isValidCourseRegistrationEmail candidate =
