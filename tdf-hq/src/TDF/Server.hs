@@ -292,11 +292,20 @@ mcpTools =
   ]
 
 parseMcpRequest :: Value -> Maybe McpRequest
-parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o ->
-  McpRequest
-    <$> o .:? "id"
-    <*> o .: "method"
-    <*> o .:? "params"
+parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
+  version <- o .: "jsonrpc"
+  when (version /= ("2.0" :: Text)) $
+    fail "jsonrpc must be 2.0"
+  reqId <- o .:? "id"
+  case reqId of
+    Just (Object _) -> fail "id must be a string, number, or null"
+    Just (Array _)  -> fail "id must be a string, number, or null"
+    Just (Bool _)   -> fail "id must be a string, number, or null"
+    _               -> pure ()
+  method <- o .: "method"
+  when (T.null (T.strip method)) $
+    fail "method is required"
+  McpRequest reqId method <$> o .:? "params"
 
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do

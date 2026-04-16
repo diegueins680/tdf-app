@@ -56,6 +56,7 @@ import TDF.Server
     , MetaBackfillOptions(..)
     , PreparedLine(..)
     , normalizeOptionalInput
+    , parseMcpRequest
     , parseBookingStatus
     , parseBoolParam
     , parseCourseFollowUpType
@@ -258,6 +259,46 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "parseMcpRequest" $ do
+        it "accepts canonical JSON-RPC 2.0 MCP requests" $
+            case parseMcpRequest
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= (1 :: Int)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                ) of
+                Just _ -> pure ()
+                Nothing -> expectationFailure "Expected canonical MCP request to parse"
+
+        it "rejects malformed JSON-RPC envelopes before MCP method fallback handling" $ do
+            let assertInvalid payload =
+                    case parseMcpRequest payload of
+                        Nothing -> pure ()
+                        Just value ->
+                            expectationFailure
+                                ("Expected malformed MCP request to be rejected, got: " <> show value)
+            assertInvalid (object ["method" .= ("tools/list" :: T.Text)])
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("1.0" :: T.Text)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("   " :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= object ["nested" .= True]
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
 
     describe "resolveInvoiceCustomerId" $ do
         it "rejects non-positive customer ids before invoice creation can hit persistence" $ do
