@@ -2573,6 +2573,7 @@ spec = describe "TDF.Server helpers" $ do
         it "defaults omitted durations to one hour and preserves explicit durations inside the public window" $ do
             validatePublicBookingDurationMinutes Nothing `shouldBe` Right 60
             validatePublicBookingDurationMinutes (Just 30) `shouldBe` Right 30
+            validatePublicBookingDurationMinutes (Just 45) `shouldBe` Right 45
             validatePublicBookingDurationMinutes (Just 90) `shouldBe` Right 90
             validatePublicBookingDurationMinutes (Just 480) `shouldBe` Right 480
 
@@ -2588,6 +2589,18 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid 0
             assertInvalid 29
             assertInvalid 481
+
+        it "rejects off-grid public durations before they create odd-length calendar holds" $ do
+            let assertInvalid rawDuration =
+                    case validatePublicBookingDurationMinutes (Just rawDuration) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "durationMinutes must be a multiple of 15"
+                        Right durationVal ->
+                            expectationFailure ("Expected off-grid booking duration to be rejected, got: " <> show durationVal)
+            assertInvalid 31
+            assertInvalid 44
+            assertInvalid 479
 
     describe "validatePublicBookingStartAt" $ do
         it "accepts public bookings whose requested start time is still in the future" $ do

@@ -3631,6 +3631,8 @@ validatePublicBookingDurationMinutes (Just durationMinutes)
   | durationMinutes < publicBookingMinDurationMinutes
       || durationMinutes > publicBookingMaxDurationMinutes =
       Left err400 { errBody = "durationMinutes must be between 30 and 480" }
+  | durationMinutes `mod` publicBookingDurationStepMinutes /= 0 =
+      Left err400 { errBody = "durationMinutes must be a multiple of 15" }
   | otherwise =
       Right durationMinutes
 
@@ -3639,6 +3641,9 @@ publicBookingMinDurationMinutes = 30
 
 publicBookingMaxDurationMinutes :: Int
 publicBookingMaxDurationMinutes = 480
+
+publicBookingDurationStepMinutes :: Int
+publicBookingDurationStepMinutes = 15
 
 validatePublicBookingStartAt :: UTCTime -> UTCTime -> Either ServerError UTCTime
 validatePublicBookingStartAt now startsAt
