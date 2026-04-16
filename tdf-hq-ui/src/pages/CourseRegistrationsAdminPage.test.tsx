@@ -1082,7 +1082,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('condenses row cohort, source, and created metadata into one summary line', async () => {
+  it('condenses row cohort and meaningful source metadata into one summary line', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1105,12 +1105,13 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(
         container,
-        `Cohorte: Beatmaking 101 (beatmaking-101) · Fuente: landing · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       )).toBe(true);
       expect(hasExactText(
         container,
         `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Fuente: referral · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       )).toBe(true);
+      expect(container.textContent).not.toContain('Fuente: landing');
     });
 
     await cleanup();
@@ -1567,13 +1568,13 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps known row source details visible while omitting empty source placeholders', async () => {
+  it('keeps custom row source details visible while omitting default and empty source placeholders', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
     ]);
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
+      buildRegistration({ crSource: 'referral' }),
       buildRegistration({
         crId: 102,
         crCourseSlug: 'mixing-bootcamp',
@@ -1590,7 +1591,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).not.toContain('Mostrando una sola fuente:');
       expect(container.textContent).not.toContain('Todas las inscripciones visibles están sin fuente registrada.');
-      expect(container.textContent).toContain('Fuente: landing');
+      expect(container.textContent).toContain('Fuente: referral');
+      expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
