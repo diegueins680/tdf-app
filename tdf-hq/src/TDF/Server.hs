@@ -21,7 +21,7 @@ import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isInfixOf, isPrefixOf, sortOn)
+import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
 import           Data.Char (isDigit, isAlphaNum, isAsciiLower, isAsciiUpper, isSpace, toLower)
@@ -8102,9 +8102,7 @@ createDatafastCheckout rawId payload = do
 
 confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
 confirmDatafastPayment mOrderId mResourcePath = do
-  resourcePathTxt <- case fmap T.strip mResourcePath of
-    Just rp | not (T.null rp) -> pure rp
-    _ -> throwBadRequest "resourcePath requerido"
+  resourcePathTxt <- either throwError pure (validateDatafastResourcePath mResourcePath)
   orderKey <- case mOrderId of
     Just oid -> parseOrderId oid
     Nothing  -> throwBadRequest "orderId requerido"
@@ -8277,13 +8275,11 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
 
 datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
 datafastPaymentStatus dfEnv resourcePathTxt = do
+  resourcePath <- either throwError pure (validateDatafastResourcePath (Just resourcePathTxt))
   manager <- liftIO $ newManager tlsManagerSettings
-  let rp = T.unpack (T.strip resourcePathTxt)
+  let rp = T.unpack resourcePath
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
-      basePath =
-        if "http" `isPrefixOf` rp
-          then rp
-          else baseUrlClean ++ rp
+      basePath = baseUrlClean ++ rp
       sep = if '?' `elem` basePath then "&" else "?"
       fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (dfEntityId dfEnv)
   req0 <- liftIO $ parseRequest fullUrl
@@ -8297,6 +8293,48 @@ datafastPaymentStatus dfEnv resourcePathTxt = do
   case eitherDecode (responseBody resp) of
     Left _ -> throwError err502 { errBody = "No pudimos leer el estado del pago de Datafast." }
     Right statusResp -> pure statusResp
+
+validateDatafastResourcePath :: Maybe Text -> Either ServerError Text
+validateDatafastResourcePath Nothing =
+  Left err400 { errBody = "resourcePath requerido" }
+validateDatafastResourcePath (Just rawResourcePath)
+  | T.null resourcePath =
+      Left err400 { errBody = "resourcePath requerido" }
+  | T.length resourcePath > 512 =
+      invalidDatafastResourcePath
+  | T.isPrefixOf "http://" lowered
+      || T.isPrefixOf "https://" lowered
+      || T.isPrefixOf "//" resourcePath =
+      invalidDatafastResourcePath
+  | T.any (not . isDatafastResourcePathChar) resourcePath =
+      invalidDatafastResourcePath
+  | any invalidSegment segments =
+      invalidDatafastResourcePath
+  | not (isDatafastCheckoutPaymentPath segments) =
+      invalidDatafastResourcePath
+  | otherwise =
+      Right resourcePath
+  where
+    resourcePath = T.strip rawResourcePath
+    lowered = T.toLower resourcePath
+    segments = T.splitOn "/" (T.drop 1 resourcePath)
+    invalidSegment segment =
+      T.null segment || segment == "." || segment == ".."
+    isDatafastCheckoutPaymentPath ["v1", "checkouts", checkoutId, "payment"] =
+      not (T.null checkoutId)
+    isDatafastCheckoutPaymentPath _ =
+      False
+
+isDatafastResourcePathChar :: Char -> Bool
+isDatafastResourcePathChar c =
+  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_./" :: String)
+
+invalidDatafastResourcePath :: Either ServerError a
+invalidDatafastResourcePath =
+  Left err400
+    { errBody =
+        "resourcePath must be a Datafast relative checkout payment path"
+    }
 
 splitName :: Text -> (Text, Text)
 splitName raw =

@@ -102,6 +102,7 @@ import TDF.Server
     , validateCourseRegistrationUrlField
     , validateMarketplaceBuyerEmail
     , requireMarketplaceCartTotals
+    , validateDatafastResourcePath
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , prepareLine
@@ -2161,6 +2162,39 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid 0
             assertInvalid (-500)
+
+    describe "validateDatafastResourcePath" $ do
+        it "accepts the relative checkout payment path returned by Datafast" $
+            validateDatafastResourcePath (Just " /v1/checkouts/ABC_123.456/payment ")
+                `shouldBe` Right "/v1/checkouts/ABC_123.456/payment"
+
+        it "rejects absolute, malformed, or query-shaped Datafast paths before status polling" $ do
+            let assertInvalid rawPath expectedMessage =
+                    case validateDatafastResourcePath rawPath of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right pathVal ->
+                            expectationFailure
+                                ( "Expected invalid Datafast resourcePath to be rejected, got: "
+                                    <> show pathVal
+                                )
+            assertInvalid Nothing "resourcePath requerido"
+            assertInvalid
+                (Just "https://attacker.example/v1/checkouts/ABC/payment")
+                "Datafast relative checkout payment path"
+            assertInvalid
+                (Just "/v1/checkouts/ABC/payment?entityId=other")
+                "Datafast relative checkout payment path"
+            assertInvalid
+                (Just "/v1/checkouts/../payment")
+                "Datafast relative checkout payment path"
+            assertInvalid
+                (Just "/v1/checkouts/payment")
+                "Datafast relative checkout payment path"
+            assertInvalid
+                (Just "/v1/registrations/ABC/payment")
+                "Datafast relative checkout payment path"
 
     describe "label track update validation" $ do
         it "trims required title updates and canonicalizes supported status values" $ do
