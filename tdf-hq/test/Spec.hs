@@ -51,7 +51,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
-import TDF.Cors (lookupFirstNonEmptyEnv)
+import TDF.Cors (isTrustedPreviewOrigin, lookupFirstNonEmptyEnv)
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -516,6 +516,19 @@ main = hspec $ do
                         `shouldReturn` Just "true"
                     lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
                         `shouldReturn` Just "1"
+
+    describe "CORS trusted preview origins" $ do
+        it "allows only the known TDF Pages projects and their preview subdomains" $ do
+            isTrustedPreviewOrigin "https://tdfui.pages.dev" `shouldBe` True
+            isTrustedPreviewOrigin "https://preview.tdfui.pages.dev" `shouldBe` True
+            isTrustedPreviewOrigin "https://tdf-app.pages.dev" `shouldBe` True
+            isTrustedPreviewOrigin "https://branch.tdf-app.pages.dev" `shouldBe` True
+
+        it "rejects arbitrary shared preview hosts instead of granting credentialed CORS broadly" $ do
+            isTrustedPreviewOrigin "https://attacker.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://tdf-app.pages.dev.evil.example" `shouldBe` False
+            isTrustedPreviewOrigin "http://preview.tdf-app.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://attacker.vercel.app" `shouldBe` False
 
     describe "extractToken" $ do
         let loadAuthConfig =

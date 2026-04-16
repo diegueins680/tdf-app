@@ -1,14 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Cors
   ( corsPolicy
+  , isTrustedPreviewOrigin
   , lookupFirstNonEmptyEnv
   ) where
 import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
-import Data.Char (isSpace, toLower)
+import Data.Char (isDigit, isSpace, toLower)
 import Data.List (dropWhileEnd, intercalate, nub)
+import Text.Read (readMaybe)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
@@ -58,16 +60,13 @@ corsPolicy = do
       allowPagesDevWildcard = True
       allowAllPolicy = basePolicy { corsOrigins = Nothing }
       allowOriginPolicy origin = basePolicy { corsOrigins = Just ([origin], True) }
-      pagesHost origin =
-        let lowered = BS.map toLower origin
-        in ".pages.dev" `BS.isSuffixOf` lowered || ".vercel.app" `BS.isSuffixOf` lowered
       choosePolicy :: Request -> Maybe CorsResourcePolicy
       choosePolicy req =
         case lookup "origin" (requestHeaders req) of
           Nothing -> Just allowAllPolicy -- allow health/public probes without CORS failures
           Just o
             | allowAll -> Just (allowOriginPolicy o)
-            | allowPagesDevWildcard && pagesHost o -> Just (allowOriginPolicy o)
+            | allowPagesDevWildcard && isTrustedPreviewOrigin o -> Just (allowOriginPolicy o)
             | otherwise -> Just basePolicy
       originLog =
         if wildcard
@@ -78,8 +77,41 @@ corsPolicy = do
           <> (if allowAll then " allowAll=true" else "")
           <> (if null deduped && includeDefaults && not allowAll then " (fallback to defaults)" else "")
   putStrLn $ "[cors] origins=" <> originLog <> notes
-  putStrLn $ "[cors] pages.dev wildcard=" <> show allowPagesDevWildcard
+  putStrLn $ "[cors] trusted preview wildcard=" <> show allowPagesDevWildcard
   pure (cors choosePolicy)
+
+-- | Allow credentialed preview origins only for known TDF Pages projects.
+isTrustedPreviewOrigin :: BS.ByteString -> Bool
+isTrustedPreviewOrigin origin =
+  case parseHttpsOriginHost origin of
+    Nothing -> False
+    Just host ->
+      any (matchesTrustedPagesHost host)
+        [ "tdfui.pages.dev"
+        , "tdf-app.pages.dev"
+        ]
+  where
+    matchesTrustedPagesHost host root =
+      host == root || ("." <> root) `BS.isSuffixOf` host
+
+parseHttpsOriginHost :: BS.ByteString -> Maybe BS.ByteString
+parseHttpsOriginHost origin = do
+  remainder <- BS.stripPrefix "https://" (BS.map toLower origin)
+  let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
+  if BS.null host || not (validOriginSuffix suffix)
+    then Nothing
+    else Just host
+
+validOriginSuffix :: BS.ByteString -> Bool
+validOriginSuffix suffix
+  | BS.null suffix = True
+  | ":" `BS.isPrefixOf` suffix =
+      let port = BS.drop 1 suffix
+      in not (BS.null port)
+        && BS.all isDigit port
+        && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
+            (readMaybe (BS.unpack port))
+  | otherwise = False
 
 -- | Split a comma-separated list into trimmed entries.
 splitComma :: String -> [String]

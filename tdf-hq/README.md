@@ -152,7 +152,7 @@ stack build tdf-hq:exe:tdf-hq-exe
 
 - If you see database connection errors, verify credentials match a running PostgreSQL instance or use Docker Compose.
 - To regenerate seeds from scratch, set `RESET_DB=true` and `SEED_DB=true` for a single `stack run` invocation, then revert to defaults.
-- CORS defaults allow localhost and Pages/Vercel domains; extend via `ALLOW_ORIGINS`/`ALLOW_ORIGIN`, set `ALLOW_ALL_ORIGINS=true` to open during debugging, or `CORS_DISABLE_DEFAULTS=true` to rely only on your list.
+- CORS defaults allow localhost, the configured HQ app URL, and TDF Pages project preview origins; extend via `ALLOW_ORIGINS`/`ALLOW_ORIGIN`, set `ALLOW_ALL_ORIGINS=true` to open during debugging, or `CORS_DISABLE_DEFAULTS=true` to rely only on your list.
 
 ---
 
