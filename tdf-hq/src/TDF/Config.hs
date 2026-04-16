@@ -131,9 +131,22 @@ validateFallbackConnUrl envName raw
       | otherwise =
           let remainder = T.drop (length scheme) value
               authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
-          in if T.null authority || "@" `T.isSuffixOf` authority
+              hostPort =
+                case reverse (T.splitOn "@" authority) of
+                  [] -> ""
+                  h:_ -> h
+          in if T.null authority || not (hasConnectionHost hostPort)
                then Left (envName <> " must include a PostgreSQL host")
                else Right raw
+
+    hasConnectionHost :: Text -> Bool
+    hasConnectionHost hostPort
+      | "[" `T.isPrefixOf` hostPort =
+          let host = T.takeWhile (/= ']') (T.drop 1 hostPort)
+              suffix = T.drop (T.length host + 1) hostPort
+          in not (T.null host) && "]" `T.isPrefixOf` suffix
+      | otherwise =
+          not (T.null (T.takeWhile (/= ':') hostPort))
 
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =

@@ -357,6 +357,27 @@ main = hspec $ do
                     "DATABASE_URL must use postgres:// or postgresql://"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with userinfo but no host" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must include a PostgreSQL host"
+                        `isInfixOf` show (err :: IOException)
+
     describe "CORS environment fallback discovery" $
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides
