@@ -169,4 +169,31 @@ describe('PartiesPage', () => {
     expect(screen.getByRole('menuitem', { name: /Editar contacto/i })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
   });
+
+  it('hides empty optional contact rows in the one-contact summary so onboarding stays focused', async () => {
+    mockPartiesList.mockResolvedValue([
+      buildParty({
+        isOrg: false,
+        primaryEmail: '   ',
+        primaryPhone: null,
+        whatsapp: '   ',
+        instagram: null,
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primer contacto registrado.')).toBeInTheDocument();
+      expect(screen.getByText('Tipo: Persona')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Acciones de Acme Studios/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Correo:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Teléfono \/ WhatsApp:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Instagram:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
 });

@@ -917,13 +917,15 @@ export default function PartiesPage() {
     handleConvertToStudent(singleContact);
   };
 
-  const singleContactSummaryRows = singleContact
-    ? [
-        ['Tipo', singleContact.isOrg ? 'Organización' : 'Persona'],
-        ['Correo', singleContact.primaryEmail?.trim() || '—'],
-        ['Teléfono / WhatsApp', singleContact.whatsapp?.trim() || singleContact.primaryPhone?.trim() || '—'],
-        ['Instagram', singleContact.instagram?.trim() || '—'],
-      ]
+  const singleContactSummaryRows: Array<[string, string]> = singleContact
+    ? (
+        [
+          ['Tipo', singleContact.isOrg ? 'Organización' : 'Persona'],
+          ['Correo', singleContact.primaryEmail?.trim()],
+          ['Teléfono / WhatsApp', singleContact.whatsapp?.trim() || singleContact.primaryPhone?.trim()],
+          ['Instagram', singleContact.instagram?.trim()],
+        ] as Array<[string, string | undefined]>
+      ).flatMap(([label, value]) => (value ? [[label, value]] : []))
     : [];
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
