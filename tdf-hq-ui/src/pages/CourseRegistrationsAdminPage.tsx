@@ -1391,6 +1391,7 @@ export default function CourseRegistrationsAdminPage() {
       : showReceiptComposer && hasReceipts
         ? receiptComposerHelpText
         : '';
+  const showAddReceiptAction = !showReceiptComposer && hasReceipts && selectedDossier?.intent !== 'markPaid';
   const canHideReceiptUrlField = showReceiptUrlField
     && receiptForm.editingId == null
     && !canSubmitReceipt
@@ -1587,7 +1588,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Typography>
               )}
             </Box>
-            {!showReceiptComposer && hasReceipts && (
+            {showAddReceiptAction && (
               <Button
                 size="small"
                 variant="contained"

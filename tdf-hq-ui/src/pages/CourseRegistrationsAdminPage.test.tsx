@@ -2867,7 +2867,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Confirmar pago de inscripción');
       expect(document.body.textContent).not.toContain('Expediente de inscripción');
       expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar comprobante')).toBe(0);
       expect(document.body.textContent).not.toContain(
         'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
       );
@@ -2881,6 +2881,7 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Guardar comprobante',
         ),
       ).toBe(false);
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
     });
 
     await cleanup();
