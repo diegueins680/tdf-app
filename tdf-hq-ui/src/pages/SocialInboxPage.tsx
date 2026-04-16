@@ -1293,7 +1293,8 @@ export default function SocialInboxPage() {
   const showReviewChecklist = reviewMode && Boolean(activeAsset);
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
-  const showManualRefresh = !reviewMode;
+  const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
+  const showManualRefresh = !reviewMode && !showUnifiedEmptyState;
   const showHeaderControls = showLimitControl || showManualRefresh;
   const refetch = () => {
     void instagramQuery.refetch();
@@ -1435,7 +1436,22 @@ export default function SocialInboxPage() {
         </Paper>
       )}
       {showReviewSetupOnlyState ? null : showUnifiedEmptyState ? (
-        <Alert severity="info" variant="outlined">
+        <Alert
+          severity="info"
+          variant="outlined"
+          action={
+            showEmptyStateRefresh ? (
+              <Button
+                color="inherit"
+                size="small"
+                onClick={refetch}
+                disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
+              >
+                Actualizar inbox
+              </Button>
+            ) : undefined
+          }
+        >
           <Stack spacing={0.5}>
             <Typography variant="body2" fontWeight={700}>
               {reviewMode ? 'No inbound messages yet.' : 'Todavia no hay mensajes entrantes.'}
@@ -1445,7 +1461,7 @@ export default function SocialInboxPage() {
                 ? activeAsset
                   ? 'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
-                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.'}
+                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
             </Typography>
           </Stack>
         </Alert>

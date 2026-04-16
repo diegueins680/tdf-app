@@ -319,6 +319,26 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('moves normal first-run refresh into the empty inbox guidance instead of a generic header action', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Inbox social');
+      expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
+      expect(container.textContent).toContain(
+        'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.',
+      );
+      expect(countButtonsByText(container, 'Actualizar inbox')).toBe(1);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first empty review run focused on setup until an asset is selected', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
