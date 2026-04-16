@@ -2744,6 +2744,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "curso/produccion" "slug must contain only ASCII letters"
             assertInvalid "curso?draft=true" "slug must contain only ASCII letters"
             assertInvalid "---" "include at least one letter or number"
+            assertInvalid (T.replicate 97 "a") "96 characters or fewer"
 
         it "rejects invalid public course slugs before DB or fallback lookup" $ do
             result <-

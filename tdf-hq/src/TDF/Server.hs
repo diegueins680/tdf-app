@@ -3524,15 +3524,18 @@ validateCourseSlug rawSlug =
     if T.null slugVal
       then Left err400 { errBody = "slug requerido" }
       else
-        if T.all isSlugChar slugVal && T.any isSlugAtom slugVal
+        if T.length slugVal <= courseSlugMaxLength
+            && T.all isSlugChar slugVal
+            && T.any isSlugAtom slugVal
           then Right slugVal
           else Left invalidCourseSlug
   where
+    courseSlugMaxLength = 96
     invalidCourseSlug =
       err400
         { errBody =
             "slug must contain only ASCII letters, numbers, and hyphens, "
-              <> "and include at least one letter or number"
+              <> "include at least one letter or number, and be 96 characters or fewer"
         }
 
 validateOptionalCourseSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
