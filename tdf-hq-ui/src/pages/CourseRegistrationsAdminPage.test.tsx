@@ -4445,7 +4445,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the list refresh action scope-labeled when the page still needs list-level utilities', async () => {
+  it('keeps tiny default lists on passive context instead of a lone refresh utility', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -4460,8 +4460,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
-      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(listUtilities?.textContent?.trim()).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(listUtilities?.querySelector('button')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
     });
 
@@ -4472,9 +4474,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(container, 'Refrescar lista')).toBeTruthy();
+      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
-      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(listUtilities?.textContent?.trim()).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(listUtilities?.querySelector('button')).toBeNull();
     });
 
     await cleanup();

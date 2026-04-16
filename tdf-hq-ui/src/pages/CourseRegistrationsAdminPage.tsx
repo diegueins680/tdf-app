@@ -869,7 +869,7 @@ export default function CourseRegistrationsAdminPage() {
       : 'Reintentar cohortes'
     : 'Refrescar lista';
   const showInlineListRefreshAction = !showHeaderRefreshAction
-    && (hasCustomFilters || loadedRegistrationCount > 1 || Boolean(copyMessage));
+    && (hasCustomFilters || canCopyCsv || Boolean(copyMessage));
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -883,7 +883,8 @@ export default function CourseRegistrationsAdminPage() {
   const showStandaloneListUtilityRow = !hasCustomFilters
     && hasVisibleRegistrations
     && (
-      canCopyCsv
+      showStandaloneListUtilitySummary
+      || canCopyCsv
       || Boolean(copyMessage)
       || showInlineListRefreshAction
     );
