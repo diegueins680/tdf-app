@@ -163,6 +163,8 @@ import TDF.Server.SocialEventsHandlers (
 import TDF.Auth (extractToken, extractTokenFromHeaders)
 import TDF.Config
     ( appPort,
+      courseInstructorAvatarFallback,
+      courseMapFallback,
       dbConnString,
       emailConfig,
       loadConfig,
@@ -231,6 +233,34 @@ main = hspec $ do
                     cfg <- loadConfig
                     sessionCookieSecure cfg `shouldBe` True
                     sessionCookieSameSite cfg `shouldBe` "None"
+
+        it "normalizes configured public course fallback URLs before serving metadata" $
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just " https://maps.example.com/studio ")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just " https://cdn.example.com/instructors/esteban.jpg ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    courseMapFallback cfg `shouldBe` "https://maps.example.com/studio"
+                    courseInstructorAvatarFallback cfg
+                        `shouldBe` "https://cdn.example.com/instructors/esteban.jpg"
+
+        it "rejects malformed configured public course fallback URLs at startup" $ do
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "http://maps.example.com/studio")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Nothing)
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/avatar copy.jpg")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
 
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides

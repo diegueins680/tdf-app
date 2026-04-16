@@ -255,6 +255,8 @@ loadConfig = do
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
+  courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
+  courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
       igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
       normalizedAppBase = fmap (T.strip . T.pack) baseUrlEnv >>= nonEmpty
@@ -285,8 +287,8 @@ loadConfig = do
     , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
     , assetsRootDir = assetsRoot
     , courseDefaultSlug = maybe "produccion-musical-abr-2026" (T.strip . T.pack) courseSlugEnv
-    , courseDefaultMapUrl = fmap (T.strip . T.pack) courseMapEnv
-    , courseDefaultInstructorAvatar = fmap (T.strip . T.pack) courseInstructorAvatarEnv
+    , courseDefaultMapUrl = courseMapUrl
+    , courseDefaultInstructorAvatar = courseInstructorAvatar
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
     , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
     , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
@@ -398,6 +400,60 @@ validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
   when (T.toLower cookieSameSite == "none" && not cookieSecure) $
     fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+
+validateConfiguredHttpsUrl :: String -> Maybe String -> IO (Maybe Text)
+validateConfiguredHttpsUrl _ Nothing = pure Nothing
+validateConfiguredHttpsUrl envName (Just rawUrl) =
+  case normalizeConfiguredHttpsUrl envName rawUrl of
+    Left msg -> fail msg
+    Right urlVal -> pure urlVal
+
+normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredHttpsUrl envName rawUrl
+  | T.null trimmed = Right Nothing
+  | T.any isSpace trimmed =
+      invalid
+  | not ("https://" `T.isPrefixOf` lowerUrl) =
+      invalid
+  | not (hasValidAuthority (T.drop 8 trimmed)) =
+      invalid
+  | otherwise =
+      Right (Just trimmed)
+  where
+    trimmed = T.strip (T.pack rawUrl)
+    lowerUrl = T.toLower trimmed
+    invalid = Left (envName <> " must be an absolute https URL")
+
+    hasValidAuthority remainder =
+      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+          (host, portSuffix) = T.breakOn ":" authority
+      in not (T.null authority)
+        && validateHost host
+        && validatePortSuffix portSuffix
+
+    validateHost host =
+      let labels = T.splitOn "." (T.toLower host)
+      in length labels >= 2
+        && all isValidHostLabel labels
+
+    isValidHostLabel label =
+      not (T.null label)
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all isHostChar label
+
+    isHostChar ch =
+      (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
+
+    validatePortSuffix suffix
+      | T.null suffix = True
+      | ":" `T.isPrefixOf` suffix =
+          let port = T.drop 1 suffix
+          in not (T.null port)
+            && T.all (\ch -> ch >= '0' && ch <= '9') port
+            && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
+                (readMaybe (T.unpack port))
+      | otherwise = False
 
 resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
 resolveAssetsRootDir mEnv = do
