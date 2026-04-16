@@ -2313,21 +2313,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer()@example.com" "buyerEmail inválido"
 
     describe "validateCourseRegistrationUrlField" $ do
-        it "trims valid absolute http(s) URLs and still lets optional attachment fields clear to Nothing" $ do
+        it "trims valid absolute HTTPS URLs and still lets optional attachment fields clear to Nothing" $ do
             validateCourseRegistrationUrlField "attachmentUrl" Nothing `shouldBe` Right Nothing
             validateCourseRegistrationUrlField "attachmentUrl" (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationUrlField "fileUrl" (Just " https://files.example.com/proof.pdf ")
                 `shouldBe` Right (Just "https://files.example.com/proof.pdf")
 
-        it "rejects malformed or non-http course registration asset URLs instead of storing opaque strings" $ do
+        it "rejects insecure, malformed, or non-HTTPS course registration asset URLs instead of storing opaque strings" $ do
             let assertInvalid fieldName rawUrl = case validateCourseRegistrationUrlField fieldName (Just rawUrl) of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 400
                         BL8.unpack (errBody serverErr)
-                            `shouldContain` (T.unpack fieldName <> " must be an absolute http(s) URL")
+                            `shouldContain` (T.unpack fieldName <> " must be an absolute https URL")
                     Right urlVal ->
                         expectationFailure ("Expected invalid course registration URL to be rejected, got: " <> show urlVal)
             assertInvalid "fileUrl" "receipt.pdf"
+            assertInvalid "fileUrl" "http://files.example.com/proof.pdf"
             assertInvalid "fileUrl" "ftp://files.example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files.example.com/proof copy.pdf"
             assertInvalid "attachmentUrl" "https://files..example.com/proof.pdf"
