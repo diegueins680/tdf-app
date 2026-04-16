@@ -3655,7 +3655,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Mostrando 2 inscripciones.');
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')?.textContent?.trim()).toBe('Restablecer límite');
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
-      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
     });
 
     await cleanup();
@@ -3843,7 +3844,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 50 inscripciones con los filtros actuales.');
       expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
-      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado (50 filas)',
