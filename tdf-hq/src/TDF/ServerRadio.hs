@@ -748,10 +748,19 @@ radioServer user =
             newId <- insert rec
             pure (Entity newId rec)
           Just (Entity pid old) -> do
-            let merged = old
+            let streamChanged = streamUrl /= partyRadioPresenceStreamUrl old
+                merged = old
                   { partyRadioPresenceStreamUrl   = streamUrl
-                  , partyRadioPresenceStationName = name <|> partyRadioPresenceStationName old
-                  , partyRadioPresenceStationId   = stationId <|> partyRadioPresenceStationId old
+                  -- Station metadata must describe the active stream. If the stream
+                  -- changes and no fresh label arrives, clear the stale station info.
+                  , partyRadioPresenceStationName =
+                      if streamChanged
+                        then name
+                        else name <|> partyRadioPresenceStationName old
+                  , partyRadioPresenceStationId   =
+                      if streamChanged
+                        then stationId
+                        else stationId <|> partyRadioPresenceStationId old
                   , partyRadioPresenceUpdatedAt   = now
                   }
             update pid

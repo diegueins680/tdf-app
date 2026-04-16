@@ -34,11 +34,14 @@ import TDF.API.LiveSessions
       LiveSessionMusicianPayload (..),
       LiveSessionSongPayload (..),
       resolveLiveSessionSetlistSortOrders )
+import TDF.API.Radio (RadioAPI)
 import TDF.API.SocialSyncAPI (SocialSyncAPI)
 import TDF.API.Types
     ( InternTaskUpdate (..),
       RadioImportRequest (..),
-      RadioMetadataRefreshRequest (..) )
+      RadioMetadataRefreshRequest (..),
+      RadioPresenceDTO (..),
+      RadioPresenceUpsert (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       ensureLeadCompletionUpdated,
@@ -67,13 +70,14 @@ import TDF.DTO.SocialEventsDTO
 import TDF.DTO.SocialSyncDTO (SocialSyncIngestRequest, SocialSyncPostDTO (..))
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Models (RoleEnum (..), SocialSyncPost (..))
+import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
-    ( validateRadioImportLimit,
+    ( radioServer,
+      validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
       validateRadioStreamUrl )
@@ -1346,6 +1350,54 @@ main = hspec $ do
                 )
                 `shouldSatisfy` isLeft
 
+    describe "radio presence updates" $ do
+        it "clears stale station metadata when a user switches streams without sending fresh station labels" $ do
+            let initialPayload =
+                    RadioPresenceUpsert
+                        { rpuStreamUrl = "https://radio.example.com/live"
+                        , rpuStationName = Just "Radio Uno"
+                        , rpuStationId = Just "station-uno"
+                        }
+                switchedPayload =
+                    RadioPresenceUpsert
+                        { rpuStreamUrl = "https://radio.example.com/alt"
+                        , rpuStationName = Nothing
+                        , rpuStationId = Nothing
+                        }
+                _searchStreams
+                    :<|> _upsertActive
+                    :<|> _importStreams
+                    :<|> _refreshMetadata
+                    :<|> _nowPlaying
+                    :<|> _createTransmission
+                    :<|> getSelfPresenceHandler
+                    :<|> upsertPresenceHandler
+                    :<|> _clearPresence
+                    :<|> _getPresenceByParty =
+                        radioServer radioPresenceUser :: ServerT RadioAPI RadioPresenceTestM
+
+            result <- runRadioPresenceTest $ do
+                _ <- upsertPresenceHandler initialPayload
+                updated <- upsertPresenceHandler switchedPayload
+                current <- getSelfPresenceHandler
+                pure (updated, current)
+
+            case result of
+                Left err ->
+                    expectationFailure
+                        ("Expected radio presence stream switch to succeed, got " <> show err)
+                Right (updated, current) -> do
+                    rpStreamUrl updated `shouldBe` "https://radio.example.com/alt"
+                    rpStationName updated `shouldBe` Nothing
+                    rpStationId updated `shouldBe` Nothing
+                    case current of
+                        Nothing ->
+                            expectationFailure "Expected current radio presence to remain readable"
+                        Just persisted -> do
+                            rpStreamUrl persisted `shouldBe` "https://radio.example.com/alt"
+                            rpStationName persisted `shouldBe` Nothing
+                            rpStationId persisted `shouldBe` Nothing
+
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do
             validateTemplateKey "  tdf_live_sessions  " `shouldBe` Right "tdf_live_sessions"
@@ -2588,6 +2640,46 @@ socialSyncListHandlerFor user =
         _ingest :<|> listPosts ->
             listPosts
 
+type RadioPresenceTestM = ReaderT Env (ExceptT ServerError IO)
+
+radioPresenceUser :: AuthedUser
+radioPresenceUser =
+    AuthedUser
+        { auPartyId = toSqlKey 1
+        , auRoles = [Fan]
+        , auModules = modulesForRoles [Fan]
+        }
+
+runRadioPresenceTest :: RadioPresenceTestM a -> IO (Either ServerError a)
+runRadioPresenceTest action =
+    runNoLoggingT $ do
+        pool <- createSqlitePool ":memory:" 1
+        let now = UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 0)
+            env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused in radio presence tests"
+                    }
+        liftIO $ runSqlPool initializeRadioPresenceSchema pool
+        liftIO $ runSqlPool (insert_ seedRadioPresenceParty { partyCreatedAt = now }) pool
+        liftIO $ runExceptT (runReaderT action env)
+
+seedRadioPresenceParty :: Party
+seedRadioPresenceParty =
+    Party
+        { partyLegalName = Nothing
+        , partyDisplayName = "Radio Presence Tester"
+        , partyIsOrg = False
+        , partyTaxId = Nothing
+        , partyPrimaryEmail = Just "radio.presence@example.com"
+        , partyPrimaryPhone = Nothing
+        , partyWhatsapp = Nothing
+        , partyInstagram = Nothing
+        , partyEmergencyContact = Nothing
+        , partyNotes = Nothing
+        , partyCreatedAt = UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 0)
+        }
+
 initializeSocialSyncSchema :: SqlPersistT IO ()
 initializeSocialSyncSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -2614,6 +2706,38 @@ initializeSocialSyncSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \UNIQUE(\"platform\", \"external_post_id\")\
+        \)"
+        []
+
+initializeRadioPresenceSchema :: SqlPersistT IO ()
+initializeRadioPresenceSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party_radio_presence\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"stream_url\" VARCHAR NOT NULL,\
+        \\"station_name\" VARCHAR NULL,\
+        \\"station_id\" VARCHAR NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_party_presence\" UNIQUE (\"party_id\"),\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 
