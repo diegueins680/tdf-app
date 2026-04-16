@@ -713,6 +713,8 @@ export default function CourseRegistrationsAdminPage() {
   const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
+  const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
+  const showFirstRunFilterHelper = showFilterOnboardingCopy && !showSingleResultWithoutHiddenLimit;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
@@ -1774,7 +1776,7 @@ export default function CourseRegistrationsAdminPage() {
                         {combinedSingleChoiceContextSummary}
                       </Typography>
                     )}
-                    {showFilterOnboardingCopy && (
+                    {showFirstRunFilterHelper && (
                       <Typography variant="caption" color="text.secondary">
                         {combinedSingleChoiceHelperText}
                       </Typography>
@@ -1831,7 +1833,7 @@ export default function CourseRegistrationsAdminPage() {
                             {standaloneSingleChoiceSourceSummary}
                           </Typography>
                         )}
-                        {showFilterOnboardingCopy && (
+                        {showFirstRunFilterHelper && (
                           <Typography variant="caption" color="text.secondary">
                             {singleAvailableCohortHelperText}
                           </Typography>
@@ -1903,7 +1905,7 @@ export default function CourseRegistrationsAdminPage() {
                             {standaloneSingleChoiceSourceSummary}
                           </Typography>
                         )}
-                        {showFilterOnboardingCopy && (
+                        {showFirstRunFilterHelper && (
                           <Typography variant="caption" color="text.secondary">
                             {singleVisibleStatusHelperText}
                           </Typography>
@@ -1984,7 +1986,7 @@ export default function CourseRegistrationsAdminPage() {
                 />
               </Box>
             </Collapse>
-            {showFilterOnboardingCopy && filtersHelpText && !showFilteredEmptyState && (
+            {showFirstRunFilterHelper && filtersHelpText && !showFilteredEmptyState && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                 {filtersHelpText}
               </Typography>

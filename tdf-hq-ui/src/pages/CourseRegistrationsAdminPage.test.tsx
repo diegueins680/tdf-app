@@ -364,6 +364,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
+      expect(container.textContent).not.toContain(
+        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+      );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
@@ -1216,7 +1219,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
