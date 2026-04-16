@@ -3161,9 +3161,9 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                             , Courses.landingUrl = metaLanding
                             } = metaRaw
   now <- liftIO getCurrentTime
+  sourceClean <- either throwError pure (validateCourseRegistrationSource source)
   let slugVal = normalizeSlug metaSlug
       nameClean = cleanOptional fullName
-      sourceClean = normalizeSource source
       howHeardClean = cleanOptional howHeard
       pendingStatus = "pending_payment"
       (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
@@ -3501,10 +3501,12 @@ normalizeCourseRegistrationPhoneInput raw =
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip
 
-normalizeSource :: Text -> Text
-normalizeSource raw =
+validateCourseRegistrationSource :: Text -> Either ServerError Text
+validateCourseRegistrationSource raw =
   let trimmed = T.toLower (T.strip raw)
-  in if T.null trimmed then "landing" else trimmed
+  in if T.null trimmed
+    then Left err400 { errBody = "source requerido" }
+    else Right trimmed
 
 validateCourseRegistrationPhoneE164 :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationPhoneE164 Nothing = Right Nothing

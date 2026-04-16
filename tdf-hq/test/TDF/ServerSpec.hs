@@ -74,6 +74,7 @@ import TDF.Server
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
+    , validateCourseRegistrationSource
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
     , validateCourseSessionInputs
@@ -2143,6 +2144,19 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
                 Right phoneVal ->
                     expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
+
+    describe "validateCourseRegistrationSource" $ do
+        it "normalizes meaningful public registration sources before persistence" $ do
+            validateCourseRegistrationSource " Landing " `shouldBe` Right "landing"
+            validateCourseRegistrationSource "WHATSAPP" `shouldBe` Right "whatsapp"
+
+        it "rejects blank explicit sources instead of silently rewriting them to landing" $
+            case validateCourseRegistrationSource "   " of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "source requerido"
+                Right sourceVal ->
+                    expectationFailure ("Expected blank course-registration source to be rejected, got: " <> show sourceVal)
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
