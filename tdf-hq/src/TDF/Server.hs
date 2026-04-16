@@ -7564,8 +7564,8 @@ openAIChatModelCandidates primaryModel =
       ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
-shouldRetryWithFallbackModel status rawMessage =
-  hasMarker || (status `elem` [400, 401, 403, 404] && "error al generar respuesta (http " `T.isPrefixOf` msg)
+shouldRetryWithFallbackModel _ rawMessage =
+  hasMarker
   where
     msg = T.toLower (T.strip rawMessage)
     hasMarker = any (`T.isInfixOf` msg) markers

@@ -139,6 +139,7 @@ import TDF.Server
     , chatListMessages
     , validateAdsInquiry
     , validateAdsAssistRequest
+    , shouldRetryWithFallbackModel
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
@@ -1608,6 +1609,21 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "adId must be a positive integer" baseRequest { aarAdId = Just (-7) }
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just 0 }
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just (-9) }
+
+    describe "shouldRetryWithFallbackModel" $ do
+        it "falls back only when the upstream error is explicitly model-related" $ do
+            shouldRetryWithFallbackModel 403 "Project does not have access to model gpt-x"
+                `shouldBe` True
+            shouldRetryWithFallbackModel 404 "model_not_found"
+                `shouldBe` True
+            shouldRetryWithFallbackModel 401 "Error al generar respuesta (HTTP 401)"
+                `shouldBe` False
+            shouldRetryWithFallbackModel 403 "Error al generar respuesta (HTTP 403)"
+                `shouldBe` False
+            shouldRetryWithFallbackModel 400 "Error al generar respuesta (HTTP 400)"
+                `shouldBe` False
+            shouldRetryWithFallbackModel 429 "rate limit exceeded"
+                `shouldBe` False
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
