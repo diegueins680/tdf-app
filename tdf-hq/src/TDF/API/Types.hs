@@ -371,7 +371,28 @@ data MarketplaceOrderUpdate = MarketplaceOrderUpdate
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceOrderUpdate
-instance FromJSON MarketplaceOrderUpdate
+instance FromJSON MarketplaceOrderUpdate where
+  parseJSON value@(Object o) = do
+    MarketplaceOrderUpdateParsed
+      { mouStatus = statusVal
+      } <- genericParseJSON strictObjectOptions value
+    paymentProviderVal <- o .:! "mouPaymentProvider"
+    paidAtVal <- o .:! "mouPaidAt"
+    pure MarketplaceOrderUpdate
+      { mouStatus = statusVal
+      , mouPaymentProvider = paymentProviderVal
+      , mouPaidAt = paidAtVal
+      }
+  parseJSON _ = fail "MarketplaceOrderUpdate must be an object"
+
+data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed
+  { mouStatus          :: Maybe Text
+  , mouPaymentProvider :: Maybe Text
+  , mouPaidAt          :: Maybe UTCTime
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceOrderUpdateParsed where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data DatafastCheckoutDTO = DatafastCheckoutDTO
   { dcOrderId     :: Text

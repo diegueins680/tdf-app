@@ -15,6 +15,7 @@ import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types
     ( LooseJSON
     , MarketplaceCheckoutReq (..)
+    , MarketplaceOrderUpdate (..)
     , PipelineCardCreate (..)
     , PipelineCardUpdate (..)
     , RolePayload (..)
@@ -502,6 +503,29 @@ spec = do
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
+    describe "MarketplaceOrderUpdate FromJSON" $ do
+        it "distinguishes omitted nullable fields from explicit clears for admin order updates" $ do
+            case decodeMarketplaceOrderUpdate "{\"mouStatus\":\"paid\"}" of
+                Left err ->
+                    expectationFailure ("Expected marketplace order status update to decode, got: " <> err)
+                Right payload -> do
+                    mouStatus payload `shouldBe` Just "paid"
+                    mouPaymentProvider payload `shouldBe` Nothing
+                    mouPaidAt payload `shouldBe` Nothing
+
+            case decodeMarketplaceOrderUpdate "{\"mouPaymentProvider\":null,\"mouPaidAt\":null}" of
+                Left err ->
+                    expectationFailure ("Expected marketplace order clear update to decode, got: " <> err)
+                Right payload -> do
+                    mouStatus payload `shouldBe` Nothing
+                    mouPaymentProvider payload `shouldBe` Just Nothing
+                    mouPaidAt payload `shouldBe` Just Nothing
+
+        it "rejects unexpected order update keys instead of silently ignoring admin intent" $ do
+            decodeMarketplaceOrderUpdate
+                "{\"mouStatus\":\"paid\",\"status\":\"cancelled\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -613,6 +637,8 @@ spec = do
     decodeServiceMarketplaceBooking = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
     decodeMarketplaceCheckout = eitherDecode
+    decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
+    decodeMarketplaceOrderUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq
