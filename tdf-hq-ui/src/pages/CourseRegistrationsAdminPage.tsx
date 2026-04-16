@@ -64,9 +64,11 @@ const initialCohortErrorMessage = 'No se pudieron cargar las cohortes para elegi
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
-const compactDossierScopeHint =
-  'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
-const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
+type RegistrationIdentityKind = 'name' | 'contact' | 'record';
+const buildCompactDossierScopeHint = (targetLabel: string) =>
+  `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;
+const buildDossierOnlyScopeHint = (targetLabel: string) =>
+  `Abre el expediente desde ${targetLabel}.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -388,6 +390,25 @@ const registrationIdentityDisplay = (
     primary: fallbackIdentity,
     secondary: 'Sin correo ni teléfono',
   };
+};
+
+const registrationIdentityKind = (
+  reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+): RegistrationIdentityKind => {
+  if (reg.crFullName?.trim()) return 'name';
+  if (reg.crEmail?.trim() || reg.crPhoneE164?.trim()) return 'contact';
+  return 'record';
+};
+
+const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
+  const identityKinds = new Set(registrations.map(registrationIdentityKind));
+  if (identityKinds.size === 1) {
+    const [kind] = Array.from(identityKinds);
+    if (kind === 'contact') return 'el contacto';
+    if (kind === 'record') return 'el registro';
+  }
+  if (identityKinds.size > 1 && !identityKinds.has('name')) return 'la identidad principal';
+  return 'el nombre';
 };
 
 const registrationContactSummary = (email: string | null | undefined, phone: string | null | undefined) => {
@@ -738,7 +759,10 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
-  const dossierScopeHint = useCompactStatusActionLabel ? compactDossierScopeHint : dossierOnlyScopeHint;
+  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(regsQuery.data ?? []);
+  const dossierScopeHint = useCompactStatusActionLabel
+    ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+    : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const visibleRegistrationsSummary = hasCustomFilters

@@ -184,6 +184,10 @@ const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estad
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
+const contactDossierScopeHint =
+  'Abre el expediente desde el contacto; usa Cambiar estado para acciones rápidas.';
+const recordDossierScopeHint =
+  'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
@@ -1020,6 +1024,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        contactDossierScopeHint,
+      );
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(hasExactText(container, 'sin-nombre@example.com')).toBe(true);
       expect(hasExactText(container, '+593999000777')).toBe(true);
       expect(countOccurrences(container, 'sin-nombre@example.com')).toBe(1);
@@ -1065,6 +1073,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        recordDossierScopeHint,
+      );
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(hasExactText(container, 'Registro #101')).toBe(true);
       expect(hasExactText(container, 'Registro #102')).toBe(true);
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
