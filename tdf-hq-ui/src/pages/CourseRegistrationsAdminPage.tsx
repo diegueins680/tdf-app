@@ -59,6 +59,7 @@ const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Ya h
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
+const initialCohortResolutionMessage = 'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
 const compactDossierScopeHint =
@@ -829,10 +830,17 @@ export default function CourseRegistrationsAdminPage() {
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
+    && !cohortsQuery.isLoading
+    && !hasCustomFilters
+    && !hasVisibleRegistrations;
+  const showInitialCohortResolutionState = !regsQuery.isLoading
+    && !regsQuery.isError
+    && cohortsQuery.isLoading
     && !hasCustomFilters
     && !hasVisibleRegistrations;
   const showInitialRegistrationLoading = regsQuery.isLoading && !regsQuery.data;
   const showRegistrationFilterPanel = !showInitialRegistrationLoading
+    && !showInitialCohortResolutionState
     && !showFilteredEmptyState
     && (!regsQuery.isError || hasCustomFilters);
   const limitToggleLabel = showAdvancedFilters
@@ -1819,6 +1827,17 @@ export default function CourseRegistrationsAdminPage() {
 
       {pageFlash && <Alert severity={pageFlash.severity}>{pageFlash.message}</Alert>}
 
+      {showInitialCohortResolutionState && (
+        <Alert
+          severity="info"
+          variant="outlined"
+          icon={<CircularProgress size={18} />}
+          data-testid="course-registration-initial-cohort-loading"
+        >
+          {initialCohortResolutionMessage}
+        </Alert>
+      )}
+
       {showRegistrationFilterPanel && showInitialFilterGuidance && (
         <Alert
           severity="info"
@@ -2212,7 +2231,7 @@ export default function CourseRegistrationsAdminPage() {
         </Paper>
       )}
 
-      {!showInitialFilterGuidance && (
+      {!showInitialFilterGuidance && !showInitialCohortResolutionState && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           {regsQuery.isError && (
             <Typography color="error">

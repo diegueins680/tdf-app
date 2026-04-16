@@ -193,6 +193,8 @@ const singleCohortInitialEmptyStateMessage =
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
+const initialCohortResolutionMessage =
+  'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -4051,6 +4053,42 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Canceladas: 0');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Refrescar lista')).toBe(false);
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('waits for cohort context before showing first-run empty-state actions', async () => {
+    listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const loadingState = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-initial-cohort-loading"]',
+      );
+      expect(loadingState?.textContent).toContain(initialCohortResolutionMessage);
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
+      expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(container.textContent).not.toContain(initialEmptyStateMultiCohortMessage);
+      expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(container.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
+      expect(container.querySelector('a[href^="/inscripcion/"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
