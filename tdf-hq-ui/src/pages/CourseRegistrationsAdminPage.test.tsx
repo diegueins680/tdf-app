@@ -866,7 +866,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await thirdRender.cleanup();
   }, 20_000);
 
-  it('shows the selected cohort once in the filtered summary and folds a lone shared source into that same header context', async () => {
+  it('shows the selected cohort once in the filtered summary without promoting the default public-form source', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
@@ -881,7 +881,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
-      expect(container.textContent).toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(getButtonByText(container, 'Mostrar todas las cohortes')).toBeTruthy();
@@ -1237,12 +1237,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('absorbs a shared source into the single-cohort summary block instead of adding another summary line', async () => {
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
+      buildRegistration({ crSource: 'instagram' }),
       buildRegistration({
         crId: 102,
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
         crStatus: 'paid',
+        crSource: 'instagram',
       }),
     ]);
 
@@ -1254,9 +1255,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(container.textContent).toContain('Fuente visible: landing.');
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: landing.');
-      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).toContain('Fuente visible: instagram.');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
+      expect(container.textContent).not.toContain('Fuente: instagram');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -1287,11 +1288,12 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('absorbs a shared source into the same single-choice summary block instead of adding another summary line', async () => {
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
+      buildRegistration({ crSource: 'instagram' }),
       buildRegistration({
         crId: 102,
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
+        crSource: 'instagram',
       }),
     ]);
 
@@ -1304,9 +1306,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: landing.');
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: landing.');
-      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).toContain('Fuente visible: instagram.');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
+      expect(container.textContent).not.toContain('Fuente: instagram');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -1502,12 +1504,13 @@ describe('CourseRegistrationsAdminPage', () => {
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
     ]);
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
+      buildRegistration({ crSource: 'instagram' }),
       buildRegistration({
         crId: 102,
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
         crStatus: 'paid',
+        crSource: 'instagram',
       }),
     ]);
 
@@ -1518,10 +1521,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countOccurrences(
         container,
-        'Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101). Fuente visible: landing.',
+        'Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101). Fuente visible: instagram.',
       )).toBe(1);
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: landing.');
-      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
+      expect(container.textContent).not.toContain('Fuente: instagram');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
@@ -1536,12 +1539,13 @@ describe('CourseRegistrationsAdminPage', () => {
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
     ]);
     listRegistrationsMock.mockResolvedValue([
-      buildRegistration(),
+      buildRegistration({ crSource: 'instagram' }),
       buildRegistration({
         crId: 102,
         crCourseSlug: 'mixing-bootcamp',
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
+        crSource: 'instagram',
       }),
     ]);
 
@@ -1552,8 +1556,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: landing.');
-      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).toContain('Fuente visible: instagram.');
+      expect(container.textContent).not.toContain('Fuente: instagram');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
       expect(container.textContent).toContain('Ada Lovelace');
@@ -1834,7 +1838,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('moves single-result source context into the header summary so the row stays focused on identity and actions', async () => {
+  it('keeps the single-result default source out of header and row chrome', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1842,7 +1846,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
@@ -3738,7 +3742,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps shared source and custom limit inside one passive current-view line', async () => {
+  it('keeps a custom limit passive without reintroducing the default public-form source', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
     ]);
@@ -3750,9 +3754,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
       expect(container.textContent).toContain('Vista actual');
-      expect(contextSummary?.textContent?.trim()).toBe('Fuente visible: landing. Límite actual: hasta 50 inscripciones.');
+      expect(contextSummary?.textContent?.trim()).toBe('Límite actual: hasta 50 inscripciones.');
       expect(container.querySelectorAll('[data-testid="course-registration-single-choice-context"]')).toHaveLength(1);
-      expect(countOccurrences(container, 'Fuente visible: landing.')).toBe(1);
+      expect(countOccurrences(container, 'Fuente visible: landing.')).toBe(0);
       expect(countOccurrences(container, 'Límite actual: hasta 50 inscripciones.')).toBe(1);
     });
 

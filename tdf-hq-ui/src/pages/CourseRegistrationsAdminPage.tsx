@@ -77,6 +77,7 @@ const followUpComposerHelpText = 'Este formulario ya está abierto para registra
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const defaultPublicFormSource = 'landing';
 const MIN_DEFAULT_CSV_EXPORT_ROWS = 3;
 
 interface FlashState {
@@ -341,6 +342,9 @@ const registrationSourceLabel = (source: string | null | undefined) => {
   return trimmed === '' ? 'Sin fuente' : trimmed;
 };
 
+const isDefaultPublicFormSource = (sourceLabel: string) =>
+  sourceLabel.trim().toLowerCase() === defaultPublicFormSource;
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
@@ -591,7 +595,11 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueSources.length !== 1) return '';
     return uniqueSources[0] ?? '';
   }, [regsQuery.data]);
-  const hasNamedVisibleSource = Boolean(singleVisibleSourceLabel && singleVisibleSourceLabel !== 'Sin fuente');
+  const hasNamedVisibleSource = Boolean(
+    singleVisibleSourceLabel
+    && singleVisibleSourceLabel !== 'Sin fuente'
+    && !isDefaultPublicFormSource(singleVisibleSourceLabel),
+  );
   const sharedVisibleSourceSummary = hasNamedVisibleSource
     ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
     : '';
