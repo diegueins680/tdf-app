@@ -2662,6 +2662,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('closes the first payment workflow directly instead of reopening the empty receipt prompt', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Registrar pago de inscripción');
+        expect(getButtonByText(document.body, 'Cerrar pago')).toBeTruthy();
+        expect(countButtonsByText(document.body, 'Cancelar comprobante')).toBe(0);
+        expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
+        expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      });
+
+      await act(async () => {
+        clickButton(getButtonByText(document.body, 'Cerrar pago'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).not.toContain('Registrar pago de inscripción');
+        expect(countButtonsByText(document.body, 'Cerrar pago')).toBe(0);
+        expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
+        expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps empty notes secondary in the mark-paid flow until the admin explicitly needs them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

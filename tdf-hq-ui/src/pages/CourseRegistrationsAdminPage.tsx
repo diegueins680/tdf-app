@@ -1386,6 +1386,21 @@ export default function CourseRegistrationsAdminPage() {
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
+  const isMarkPaidFirstReceiptFlow = selectedDossier?.intent === 'markPaid'
+    && !hasReceipts
+    && receiptForm.editingId == null;
+  const receiptCancelLabel = isMarkPaidFirstReceiptFlow
+    ? 'Cerrar pago'
+    : receiptForm.editingId == null
+      ? 'Cancelar comprobante'
+      : 'Cancelar edición de comprobante';
+  const handleCancelReceiptComposer = () => {
+    if (isMarkPaidFirstReceiptFlow) {
+      setSelectedDossier(null);
+      return;
+    }
+    resetReceiptComposer();
+  };
   const hasFollowUpOptionalDraft = (
     followUpForm.editingId != null
     || followUpForm.entryType !== 'note'
@@ -1650,8 +1665,8 @@ export default function CourseRegistrationsAdminPage() {
                     >
                       {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
                     </Button>
-                    <Button variant="text" onClick={() => resetReceiptComposer()}>
-                      {receiptForm.editingId == null ? 'Cancelar comprobante' : 'Cancelar edición de comprobante'}
+                    <Button variant="text" onClick={handleCancelReceiptComposer}>
+                      {receiptCancelLabel}
                     </Button>
                   </Stack>
                 </Stack>
