@@ -49,7 +49,7 @@ import TDF.Models
     , UserCredential (..)
     )
 import qualified TDF.ModelsExtra as ME
-import TDF.DTO (CreateInvoiceLineReq (..))
+import TDF.DTO (AdsAssistRequest (..), CreateInvoiceLineReq (..))
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
@@ -132,6 +132,7 @@ import TDF.Server
     , fanUnfollowArtist
     , chatListMessages
     , validateAdsInquiry
+    , validateAdsAssistRequest
     )
 import TDF.ServerAuth
     ( normalizeAuthEmailAddress
@@ -1470,6 +1471,70 @@ spec = describe "TDF.Server helpers" $ do
                 Right normalized ->
                     expectationFailure
                         ("Expected invalid ads inquiry phone to be rejected, got: " <> show normalized)
+
+    describe "validateAdsAssistRequest" $ do
+        it "normalizes prompt input and canonicalizes scoped ad lookups before calling the model" $ do
+            let request =
+                    AdsAssistRequest
+                        { aarAdId = Just 42
+                        , aarCampaignId = Just 7
+                        , aarMessage = "  Necesito responder a este lead  "
+                        , aarChannel = Just "  WhatsApp  "
+                        , aarPartyId = Nothing
+                        }
+            case validateAdsAssistRequest request of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected ads assist request to normalize successfully, got: " <> show serverErr)
+                Right (body, adKey, campaignKey, channel) -> do
+                    body `shouldBe` "Necesito responder a este lead"
+                    fmap fromSqlKey adKey `shouldBe` Just 42
+                    fmap fromSqlKey campaignKey `shouldBe` Just 7
+                    channel `shouldBe` Just "WhatsApp"
+
+        it "rejects invalid prompts before model fallback handling can mask bad input" $ do
+            let baseRequest =
+                    AdsAssistRequest
+                        { aarAdId = Nothing
+                        , aarCampaignId = Nothing
+                        , aarMessage = "Quiero info"
+                        , aarChannel = Nothing
+                        , aarPartyId = Nothing
+                        }
+                assertInvalid expectedMessage request =
+                    case validateAdsAssistRequest request of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right normalized ->
+                            expectationFailure
+                                ("Expected invalid ads assist request to be rejected, got: " <> show normalized)
+            assertInvalid "Mensaje vacío" baseRequest { aarMessage = "   " }
+            assertInvalid
+                "Mensaje demasiado largo"
+                baseRequest { aarMessage = T.replicate 2001 "x" }
+
+        it "rejects non-positive ad and campaign ids before scoped example lookup silently misses" $ do
+            let baseRequest =
+                    AdsAssistRequest
+                        { aarAdId = Nothing
+                        , aarCampaignId = Nothing
+                        , aarMessage = "Quiero info"
+                        , aarChannel = Nothing
+                        , aarPartyId = Nothing
+                        }
+                assertInvalid expectedMessage request =
+                    case validateAdsAssistRequest request of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right normalized ->
+                            expectationFailure
+                                ("Expected invalid ads assist scope to be rejected, got: " <> show normalized)
+            assertInvalid "adId must be a positive integer" baseRequest { aarAdId = Just 0 }
+            assertInvalid "adId must be a positive integer" baseRequest { aarAdId = Just (-7) }
+            assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just 0 }
+            assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just (-9) }
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do

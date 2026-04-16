@@ -7017,14 +7017,29 @@ adsInquiryPublic rawInquiry = do
     , aioRepliedVia = channels
     }
 
+validateAdsAssistRequest
+  :: AdsAssistRequest
+  -> Either ServerError (Text, Maybe ME.AdCreativeId, Maybe ME.CampaignId, Maybe Text)
+validateAdsAssistRequest AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel} = do
+  body <- validateMessage
+  adKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "adId" aarAdId
+  campaignKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "campaignId" aarCampaignId
+  pure (body, adKey, campaignKey, normalizeOptionalInput aarChannel)
+  where
+    validateMessage =
+      let body = T.strip aarMessage
+      in if T.null body
+           then Left err400 { errBody = "Mensaje vacío" }
+           else
+             if T.length body > 2000
+               then Left err400 { errBody = "Mensaje demasiado largo (max 2000 caracteres)" }
+               else Right body
+
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
-adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel} = do
-  let body = T.strip aarMessage
-  when (T.null body) $ throwBadRequest "Mensaje vacío"
+adsAssistPublic req = do
+  (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
   env <- ask
-  let adKey = fmap toSqlKey aarAdId :: Maybe ME.AdCreativeId
-      campaignKey = fmap toSqlKey aarCampaignId :: Maybe ME.CampaignId
-      hasScope = isJust adKey || isJust campaignKey
+  let hasScope = isJust adKey || isJust campaignKey
   candidateAds <- runDB $
     case campaignKey of
       Nothing -> pure (maybeToList adKey)
@@ -7033,7 +7048,7 @@ adsAssistPublic AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel}
         pure (maybe ads (:ads) adKey)
   examples <- runDB $ loadAdExamples hasScope candidateAds
   kb <- liftIO $ retrieveRagContext (envConfig env) (envPool env) body
-  reply <- liftIO $ runRagChatWithStatus (envConfig env) kb examples body aarChannel
+  reply <- liftIO $ runRagChatWithStatus (envConfig env) kb examples body channel
   finalReply <-
     case reply of
       Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
