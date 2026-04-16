@@ -23,7 +23,7 @@ import TDF.API
     , WhatsAppConsentStatus (..)
     )
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
-import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
+import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import Servant (ServerError (errBody, errHTTPCode))
 import Servant.Server.Internal.Handler (runHandler)
 import TDF.DB (Env (..))
@@ -87,6 +87,8 @@ import TDF.Server
     , validateCourseRegistrationListLimit
     , validateCourseRegistrationSeatAvailability
     , validateCourseRegistrationSource
+    , validateOptionalCourseRegistrationTextField
+    , validateCourseRegistrationUtm
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
     , validateOptionalCourseSessionDurationHours
@@ -2378,6 +2380,38 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "campaña" "source must be an ASCII keyword"
             assertInvalid "---" "source must be an ASCII keyword"
             assertInvalid (T.replicate 65 "a") "source must be an ASCII keyword"
+
+    describe "course registration tracking text validation" $ do
+        it "trims optional public registration text and keeps blank tracking fields unset" $ do
+            validateOptionalCourseRegistrationTextField "fullName" 160 (Just "  Ada Lovelace  ")
+                `shouldBe` Right (Just "Ada Lovelace")
+            validateOptionalCourseRegistrationTextField "howHeard" 256 (Just "   ")
+                `shouldBe` Right Nothing
+            validateCourseRegistrationUtm
+                (Just (UTMTags (Just " ig ") (Just " paid_social ") (Just " launch ") (Just " reel ")))
+                `shouldBe` Right (Just "ig", Just "paid_social", Just "launch", Just "reel")
+
+        it "rejects oversized or control-character tracking text instead of storing malformed public payloads" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid course registration tracking text to be rejected, got: " <> show value)
+            assertInvalid
+                "fullName must be 160 characters or fewer"
+                (validateOptionalCourseRegistrationTextField "fullName" 160 (Just (T.replicate 161 "a")))
+            assertInvalid
+                "howHeard must not contain control characters"
+                (validateOptionalCourseRegistrationTextField "howHeard" 256 (Just "Instagram\nDM"))
+            assertInvalid
+                "utm.campaign must be 256 characters or fewer"
+                (validateCourseRegistrationUtm (Just (UTMTags Nothing Nothing (Just (T.replicate 257 "a")) Nothing)))
+            assertInvalid
+                "utm.content must not contain control characters"
+                (validateCourseRegistrationUtm (Just (UTMTags Nothing Nothing Nothing (Just "reel\tvariant"))))
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $

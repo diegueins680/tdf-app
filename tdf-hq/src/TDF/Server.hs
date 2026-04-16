@@ -24,7 +24,7 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isDigit, isAlphaNum, isAsciiLower, isAsciiUpper, isSpace, toLower)
+import           Data.Char (isControl, isDigit, isAlphaNum, isAsciiLower, isAsciiUpper, isSpace, toLower)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -3171,11 +3171,12 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                             } = metaRaw
   now <- liftIO getCurrentTime
   sourceClean <- either throwError pure (validateCourseRegistrationSource source)
+  nameClean <- either throwError pure (validateOptionalCourseRegistrationTextField "fullName" 160 fullName)
+  howHeardClean <- either throwError pure (validateOptionalCourseRegistrationTextField "howHeard" 256 howHeard)
+  (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) <-
+    either throwError pure (validateCourseRegistrationUtm utm)
   let slugVal = normalizeSlug metaSlug
-      nameClean = cleanOptional fullName
-      howHeardClean = cleanOptional howHeard
       pendingStatus = "pending_payment"
-      (utmSourceVal, utmMediumVal, utmCampaignVal, utmContentVal) = normalizeUtm utm
   normalizedEmail <- either throwError pure (validateCourseRegistrationEmail email)
   phoneClean <- either throwError pure (validateCourseRegistrationPhoneE164 phoneE164)
   either throwError pure (validateCourseRegistrationContactChannels normalizedEmail phoneClean)
@@ -3763,10 +3764,34 @@ isPendingCourseRegistrationStatus :: Text -> Bool
 isPendingCourseRegistrationStatus rawStatus =
   normalizeCourseRegistrationStatus rawStatus == Just "pending_payment"
 
-normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
-normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
-normalizeUtm (Just UTMTags{..}) =
-  (cleanOptional source, cleanOptional medium, cleanOptional campaign, cleanOptional content)
+validateOptionalCourseRegistrationTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCourseRegistrationTextField _ _ Nothing = Right Nothing
+validateOptionalCourseRegistrationTextField fieldName maxLength (Just rawValue) =
+  case cleanOptional (Just rawValue) of
+    Nothing -> Right Nothing
+    Just value
+      | T.length value > maxLength ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
+            }
+      | T.any isControl value ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must not contain control characters"
+            }
+      | otherwise -> Right (Just value)
+
+validateCourseRegistrationUtm :: Maybe UTMTags -> Either ServerError (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
+validateCourseRegistrationUtm Nothing = Right (Nothing, Nothing, Nothing, Nothing)
+validateCourseRegistrationUtm (Just UTMTags{..}) = do
+  sourceVal <- validateOptionalCourseRegistrationTextField "utm.source" 256 source
+  mediumVal <- validateOptionalCourseRegistrationTextField "utm.medium" 256 medium
+  campaignVal <- validateOptionalCourseRegistrationTextField "utm.campaign" 256 campaign
+  contentVal <- validateOptionalCourseRegistrationTextField "utm.content" 256 content
+  pure (sourceVal, mediumVal, campaignVal, contentVal)
 
 -- Ensure a Party/UserCredential exists for a registration email. Returns (username, tempPassword) only when a new
 -- credential was created.
