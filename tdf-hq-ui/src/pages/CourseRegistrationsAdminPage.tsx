@@ -60,6 +60,7 @@ const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
 const initialCohortResolutionMessage = 'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
+const initialCohortErrorMessage = 'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
 const compactDossierScopeHint =
@@ -811,8 +812,13 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && hasCustomFilters
     && !hasVisibleRegistrations;
-  const showHeaderRefreshAction = regsQuery.isError
-    || cohortsQuery.isError;
+  const showInitialCohortErrorState = !regsQuery.isLoading
+    && !regsQuery.isError
+    && cohortsQuery.isError
+    && !hasCustomFilters
+    && !hasVisibleRegistrations;
+  const showHeaderRefreshAction = !showInitialCohortErrorState
+    && (regsQuery.isError || cohortsQuery.isError);
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
       ? 'Reintentar datos'
@@ -851,6 +857,7 @@ export default function CourseRegistrationsAdminPage() {
   const showInitialRegistrationLoading = regsQuery.isLoading && !regsQuery.data;
   const showRegistrationFilterPanel = !showInitialRegistrationLoading
     && !showInitialCohortResolutionState
+    && !showInitialCohortErrorState
     && !showFilteredEmptyState
     && (!regsQuery.isError || hasCustomFilters);
   const limitToggleLabel = showAdvancedFilters
@@ -1849,6 +1856,26 @@ export default function CourseRegistrationsAdminPage() {
         </Alert>
       )}
 
+      {showInitialCohortErrorState && (
+        <Alert
+          severity="warning"
+          variant="outlined"
+          data-testid="course-registration-initial-cohort-error"
+          action={(
+            <Button
+              color="inherit"
+              size="small"
+              onClick={handleRefresh}
+              disabled={cohortsQuery.isFetching}
+            >
+              {headerRefreshLabel}
+            </Button>
+          )}
+        >
+          {initialCohortErrorMessage}
+        </Alert>
+      )}
+
       {showRegistrationFilterPanel && showInitialFilterGuidance && (
         <Alert
           severity="info"
@@ -2242,7 +2269,7 @@ export default function CourseRegistrationsAdminPage() {
         </Paper>
       )}
 
-      {!showInitialFilterGuidance && !showInitialCohortResolutionState && (
+      {!showInitialFilterGuidance && !showInitialCohortResolutionState && !showInitialCohortErrorState && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           {regsQuery.isError && (
             <Typography color="error">

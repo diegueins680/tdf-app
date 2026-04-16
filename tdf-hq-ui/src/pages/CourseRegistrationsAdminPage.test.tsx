@@ -195,6 +195,8 @@ const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
 const initialCohortResolutionMessage =
   'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
+const initialCohortErrorMessage =
+  'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -4188,6 +4190,44 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps first-run cohort failures focused on retry instead of filters and empty-list chrome', async () => {
+    listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const errorState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-cohort-error"]');
+      expect(errorState?.textContent).toContain(initialCohortErrorMessage);
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
+      expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listCohortsMock).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(container.querySelector('[data-testid="course-registration-initial-cohort-error"]')).toBeNull();
     });
 
     await cleanup();
