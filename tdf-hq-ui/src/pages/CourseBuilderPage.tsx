@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   Grid,
   Stack,
   TextField,
@@ -125,6 +126,7 @@ export default function CourseBuilderPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [showPayloadPreview, setShowPayloadPreview] = useState(false);
+  const [showExistingCourseLoader, setShowExistingCourseLoader] = useState(false);
   const draftLoadedRef = useRef(false);
   const autoLoadedRef = useRef(false);
   const hasLocalEditsRef = useRef(false);
@@ -309,6 +311,7 @@ export default function CourseBuilderPage() {
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
+  const existingCourseLoaderOpen = showExistingCourseLoader || Boolean(loadError);
 
   useLayoutEffect(() => {
     if (draftLoadedRef.current) return;
@@ -424,6 +427,7 @@ export default function CourseBuilderPage() {
     },
     onError: (error) => {
       setLoadError(error instanceof Error ? error.message : 'No pudimos cargar ese curso.');
+      setShowExistingCourseLoader(true);
     },
   });
 
@@ -489,38 +493,61 @@ export default function CourseBuilderPage() {
         >
           Vista previa landing
         </Button>
+        <Button
+          size="small"
+          variant={existingCourseLoaderOpen ? 'outlined' : 'text'}
+          aria-expanded={existingCourseLoaderOpen}
+          aria-controls="course-builder-existing-loader"
+          onClick={() => {
+            if (existingCourseLoaderOpen) {
+              setLoadError(null);
+              setShowExistingCourseLoader(false);
+              return;
+            }
+            setShowExistingCourseLoader(true);
+          }}
+        >
+          {existingCourseLoaderOpen ? 'Ocultar carga' : 'Cargar existente'}
+        </Button>
       </Stack>
-      <Card variant="outlined">
-        <CardContent>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
-            <TextField
-              label="Cargar curso existente (slug)"
-              value={loadSlug}
-              onChange={(e) => {
-                setLoadSlug(e.target.value);
-                markDirty();
-              }}
-              size="small"
-              sx={{ minWidth: { md: 260 } }}
-            />
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={handleReloadFromServer}
-                disabled={loadCourseMutation.isPending}
-              >
-                {loadCourseMutation.isPending ? 'Cargando…' : 'Cargar curso'}
-              </Button>
-              {loadError && (
-                <Typography variant="caption" color="error">
-                  {loadError}
-                </Typography>
-              )}
+      <Collapse in={existingCourseLoaderOpen} unmountOnExit>
+        <Card variant="outlined" id="course-builder-existing-loader">
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Typography variant="body2" color="text.secondary">
+                Usa esto solo para editar un curso ya publicado. Para crear uno nuevo, sigue con Detalles.
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+                <TextField
+                  label="Cargar curso existente (slug)"
+                  value={loadSlug}
+                  onChange={(e) => {
+                    setLoadSlug(e.target.value);
+                    markDirty();
+                  }}
+                  size="small"
+                  sx={{ minWidth: { md: 260 } }}
+                />
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleReloadFromServer}
+                    disabled={loadCourseMutation.isPending}
+                  >
+                    {loadCourseMutation.isPending ? 'Cargando…' : 'Cargar curso'}
+                  </Button>
+                  {loadError && (
+                    <Typography variant="caption" color="error">
+                      {loadError}
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
             </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       {hasDraft && (
         <Alert

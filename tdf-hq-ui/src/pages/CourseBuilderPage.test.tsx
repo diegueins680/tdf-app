@@ -191,6 +191,18 @@ describe('CourseBuilderPage', () => {
         expect(text(document.getElementById('temario'))).toContain('Añadir sección');
         expect(text(document.getElementById('publicacion'))).toContain('Revisar y publicar');
         expect(text(document.getElementById('publicacion'))).toContain('Publicar curso');
+        expect(countLabelsByText(container, 'Cargar curso existente (slug)')).toBe(0);
+        expect(getButtonByText(container, 'Cargar existente').getAttribute('aria-expanded')).toBe('false');
+      });
+
+      await clickButton(getButtonByText(container, 'Cargar existente'));
+
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Cargar curso existente (slug)')).toBe(1);
+        expect(text(container)).toContain(
+          'Usa esto solo para editar un curso ya publicado. Para crear uno nuevo, sigue con Detalles.',
+        );
+        expect(getButtonByText(container, 'Ocultar carga').getAttribute('aria-expanded')).toBe('true');
       });
 
       await clickButton(getButtonByText(container, 'Detalles'));
