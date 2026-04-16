@@ -5,7 +5,7 @@ import           Control.Applicative ((<|>))
 import           Control.Monad      (filterM, when)
 import           Data.Char          (isDigit, isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
-import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
+import           Data.Maybe         (catMaybes, fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import           System.Directory  (doesDirectoryExist)
@@ -464,6 +464,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
       in length labels >= 2
         && not (normalizedHost == "localhost" || ".localhost" `T.isSuffixOf` normalizedHost)
         && all isValidHostLabel labels
+        && not (isAmbiguousNumericHost normalizedHost)
         && not (isPrivateIpv4Host normalizedHost)
 
     isValidHostLabel label =
@@ -474,6 +475,10 @@ normalizeConfiguredHttpsUrl envName rawUrl
 
     isHostChar ch =
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
+
+    isAmbiguousNumericHost host =
+      T.all (\ch -> isDigit ch || ch == '.') host
+        && isNothing (parseIpv4Octets host)
 
     validatePortSuffix suffix
       | T.null suffix = True

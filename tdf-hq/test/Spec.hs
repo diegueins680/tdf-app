@@ -293,6 +293,14 @@ main = hspec $ do
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://999.999.999.999/studio")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
                 [ ("COURSE_DEFAULT_MAP_URL", Just "https://studio.localhost/map")
                 , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
                 ]
