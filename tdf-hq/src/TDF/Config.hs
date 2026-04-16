@@ -135,18 +135,35 @@ validateFallbackConnUrl envName raw
                 case reverse (T.splitOn "@" authority) of
                   [] -> ""
                   h:_ -> h
-          in if T.null authority || not (hasConnectionHost hostPort)
+          in if T.null authority
                then Left (envName <> " must include a PostgreSQL host")
-               else Right raw
+               else validateConnectionHostPort hostPort *> Right raw
 
-    hasConnectionHost :: Text -> Bool
-    hasConnectionHost hostPort
+    validateConnectionHostPort :: Text -> Either String ()
+    validateConnectionHostPort hostPort
       | "[" `T.isPrefixOf` hostPort =
           let host = T.takeWhile (/= ']') (T.drop 1 hostPort)
               suffix = T.drop (T.length host + 1) hostPort
-          in not (T.null host) && "]" `T.isPrefixOf` suffix
+          in if T.null host || not ("]" `T.isPrefixOf` suffix)
+               then Left (envName <> " must include a PostgreSQL host")
+               else validateConnectionPortSuffix (T.drop 1 suffix)
       | otherwise =
-          not (T.null (T.takeWhile (/= ':') hostPort))
+          let (host, suffix) = T.breakOn ":" hostPort
+          in if T.null host
+               then Left (envName <> " must include a PostgreSQL host")
+               else validateConnectionPortSuffix suffix
+
+    validateConnectionPortSuffix :: Text -> Either String ()
+    validateConnectionPortSuffix suffix
+      | T.null suffix = Right ()
+      | ":" `T.isPrefixOf` suffix =
+          let port = T.drop 1 suffix
+          in if T.null port || T.any (not . isDigit) port
+               then Left (envName <> " port must be numeric")
+               else case readMaybe (T.unpack port) :: Maybe Int of
+                 Just portNumber | portNumber >= 1 && portNumber <= 65535 -> Right ()
+                 _ -> Left (envName <> " port must be between 1 and 65535")
+      | otherwise = Left (envName <> " port must be numeric")
 
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =

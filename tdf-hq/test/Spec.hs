@@ -499,6 +499,34 @@ main = hspec $ do
                     "DATABASE_URL must include a PostgreSQL host"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with malformed ports before opening DB connections" $ do
+            let expectInvalidPort raw expected =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just raw)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expected `isInfixOf` show (err :: IOException)
+
+            expectInvalidPort
+                "postgresql://flyuser:flypass@db.fly.internal:pg/tdf_hq"
+                "DATABASE_URL port must be numeric"
+            expectInvalidPort
+                "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
+                "DATABASE_URL port must be between 1 and 65535"
+
     describe "CORS environment fallback discovery" $
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides
