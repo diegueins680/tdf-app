@@ -449,8 +449,9 @@ const registrationListContextSummary = ({
   source: string | null | undefined;
 }) => {
   const parts: string[] = [];
+  const trimmedCohortLabel = cohortLabel.trim();
   const trimmedSource = source?.trim() ?? '';
-  if (showCohort) parts.push(`Cohorte: ${cohortLabel}`);
+  if (showCohort && trimmedCohortLabel) parts.push(`Cohorte: ${trimmedCohortLabel}`);
   if (showSource && trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
@@ -469,7 +470,8 @@ const registrationDossierContextSummary = ({
   createdAt: string | null | undefined;
   source: string | null | undefined;
 }) => {
-  const parts = [`Curso: ${courseLabel}`];
+  const trimmedCourseLabel = courseLabel.trim();
+  const parts = trimmedCourseLabel ? [`Curso: ${trimmedCourseLabel}`] : [];
   const trimmedSource = source?.trim() ?? '';
   if (trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${trimmedSource}`);
@@ -1516,7 +1518,7 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
-    : 'Sin cohorte';
+    : '';
   const activeRegistrationIdentity = activeRegistration
     ? registrationIdentityDisplay(
       activeRegistration.crFullName,
@@ -2585,9 +2587,11 @@ export default function CourseRegistrationsAdminPage() {
                       {activeRegistrationIdentity.secondary}
                     </Typography>
                   )}
-                  <Typography variant="body2" color="text.secondary">
-                    {activeRegistrationSummary}
-                  </Typography>
+                  {activeRegistrationSummary && (
+                    <Typography variant="body2" color="text.secondary">
+                      {activeRegistrationSummary}
+                    </Typography>
+                  )}
                   {showDossierActionRow && (
                     <Stack
                       direction="row"

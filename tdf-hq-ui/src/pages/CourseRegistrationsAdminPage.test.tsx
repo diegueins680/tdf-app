@@ -1712,6 +1712,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('omits missing-cohort placeholders from sparse rows and dossier context', async () => {
+    const sparseRegistration = buildRegistration({
+      crCourseSlug: '',
+      crCreatedAt: undefined,
+      crUpdatedAt: undefined,
+      crSource: 'referral',
+    });
+
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([
+      sparseRegistration,
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: '',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCreatedAt: undefined,
+        crUpdatedAt: undefined,
+        crSource: 'referral',
+      }),
+    ]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: sparseRegistration,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Fuente visible: referral.');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+      expect(container.textContent).not.toContain('Cohorte:');
+      expect(container.textContent).not.toContain('Sin cohorte');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(hasExactText(dialog, 'Fuente: referral')).toBe(true);
+      expect(dialog.textContent).not.toContain('Curso:');
+      expect(dialog.textContent).not.toContain('Sin cohorte');
+    });
+
+    await cleanup();
+  });
+
   it('hides a shared missing source instead of turning it into first-run list copy', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
