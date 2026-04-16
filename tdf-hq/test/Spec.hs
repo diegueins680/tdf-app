@@ -116,6 +116,7 @@ import TDF.ServerFeedback
       validateOptionalFeedbackContactEmail )
 import TDF.Server
     ( buildWhatsappCtaFor,
+      sanitizeStoredCoursePublicUrl,
       validateCoursePublicUrlField )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate )
@@ -717,6 +718,18 @@ main = hspec $ do
             assertInvalid "landingUrl" "javascript:alert(1)"
             assertInvalid "locationMapUrl" "/curso/produccion"
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"
+
+        it "drops stale persisted public course URLs before metadata serialization" $ do
+            sanitizeStoredCoursePublicUrl "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")
+                `shouldBe` Just "https://tdf.example.com/curso/produccion"
+            sanitizeStoredCoursePublicUrl "landingUrl" (Just "http://tdf.example.com/curso/produccion")
+                `shouldBe` Nothing
+            sanitizeStoredCoursePublicUrl "locationMapUrl" (Just "https://localhost/studio")
+                `shouldBe` Nothing
+            sanitizeStoredCoursePublicUrl "whatsappCtaUrl" (Just "javascript:alert(1)")
+                `shouldBe` Nothing
+            sanitizeStoredCoursePublicUrl "instructorAvatarUrl" Nothing
+                `shouldBe` Nothing
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do

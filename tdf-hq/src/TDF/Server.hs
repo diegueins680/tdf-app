@@ -2276,16 +2276,19 @@ toCourseMetadata
 toCourseMetadata cfg waEnv course sessions syllabus =
   let slugVal = Trials.courseSlug course
       landingUrlVal =
-        fromMaybe (buildLandingUrlFor cfg slugVal) (cleanOptional (Trials.courseLandingUrl course))
+        fromMaybe
+          (buildLandingUrlFor cfg slugVal)
+          (sanitizeStoredCoursePublicUrl "landingUrl" (Trials.courseLandingUrl course))
       whatsappUrl =
         fromMaybe
           (buildWhatsappCtaFor (waContactNumber waEnv) (Trials.courseTitle course) landingUrlVal)
-          (cleanOptional (Trials.courseWhatsappCtaUrl course))
+          (sanitizeStoredCoursePublicUrl "whatsappCtaUrl" (Trials.courseWhatsappCtaUrl course))
       dawsList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseDaws course))
       includesList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseIncludes course))
       instructorNameVal = cleanOptional (Trials.courseInstructorName course)
       instructorBioVal = cleanOptional (Trials.courseInstructorBio course)
-      instructorAvatarVal = cleanOptional (Trials.courseInstructorAvatarUrl course)
+      instructorAvatarVal =
+        sanitizeStoredCoursePublicUrl "instructorAvatarUrl" (Trials.courseInstructorAvatarUrl course)
       toSession (Entity _ s) =
         CourseSession
           { label = Trials.courseSessionModelLabel s
@@ -2309,7 +2312,10 @@ toCourseMetadata cfg waEnv course sessions syllabus =
       , sessionStartHour = fromMaybe 0 (Trials.courseSessionStartHour course)
       , sessionDurationHours = fromMaybe 0 (Trials.courseSessionDurationHours course)
       , locationLabel = fromMaybe "" (Trials.courseLocationLabel course)
-      , locationMapUrl = fromMaybe "" (Trials.courseLocationMapUrl course)
+      , locationMapUrl =
+          fromMaybe
+            (courseMapFallback cfg)
+            (sanitizeStoredCoursePublicUrl "locationMapUrl" (Trials.courseLocationMapUrl course))
       , daws = dawsList
       , includes = includesList
       , instructorName = instructorNameVal
@@ -3708,6 +3714,10 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+sanitizeStoredCoursePublicUrl :: Text -> Maybe Text -> Maybe Text
+sanitizeStoredCoursePublicUrl fieldName =
+  either (const Nothing) (\urlVal -> urlVal) . validateCoursePublicUrlField fieldName
 
 isValidCourseRegistrationEmail :: Text -> Bool
 isValidCourseRegistrationEmail candidate =
