@@ -245,6 +245,27 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not mix the first-user empty state into a failed admin-user load', async () => {
+    listUsersMock.mockRejectedValue(new Error('admin users unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Error al cargar usuarios');
+        expect(container.textContent).not.toContain(
+          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+        );
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('waits to show refresh until the roster is dense enough to need the wider list controls', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
