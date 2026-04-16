@@ -53,7 +53,11 @@ const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar e
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
-const initialEmptyStateMessage = 'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateConfigActionLabel = 'Configurar cursos';
+const initialEmptyStateFormActionLabel = 'Abrir formulario';
+const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
+  `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
@@ -538,10 +542,11 @@ export default function CourseRegistrationsAdminPage() {
     () => Array.from(cohortLabelsBySlug.entries()).map(([value, label]) => ({ value, label })),
     [cohortLabelsBySlug],
   );
-  const singleAvailableCohortLabel = useMemo(() => {
-    if (!cohortsQuery.data || cohortsQuery.isError || cohortOptions.length !== 1) return '';
-    return cohortOptions[0]?.label ?? '';
+  const singleAvailableCohort = useMemo(() => {
+    if (!cohortsQuery.data || cohortsQuery.isError || cohortOptions.length !== 1) return null;
+    return cohortOptions[0] ?? null;
   }, [cohortOptions, cohortsQuery.data, cohortsQuery.isError]);
+  const singleAvailableCohortLabel = singleAvailableCohort?.label ?? '';
 
   const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
 
@@ -847,6 +852,18 @@ export default function CourseRegistrationsAdminPage() {
     && !showSystemEmailHistoryAction
     && !emailEventsQuery.isLoading
     && selectedDossierId != null;
+  const initialEmptyStateMessage = singleAvailableCohort
+    ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.label)
+    : initialEmptyStateConfigMessage;
+  const initialEmptyStateAction = singleAvailableCohort
+    ? {
+      label: initialEmptyStateFormActionLabel,
+      to: `/inscripcion/${encodeURIComponent(singleAvailableCohort.value)}`,
+    }
+    : {
+      label: initialEmptyStateConfigActionLabel,
+      to: '/configuracion/cursos',
+    };
 
   const resetReceiptComposer = (open = false) => {
     setReceiptForm(emptyReceiptForm());
@@ -1770,9 +1787,9 @@ export default function CourseRegistrationsAdminPage() {
               color="inherit"
               size="small"
               component={RouterLink}
-              to="/configuracion/cursos"
+              to={initialEmptyStateAction.to}
             >
-              Configurar cursos
+              {initialEmptyStateAction.label}
             </Button>
           )}
         >

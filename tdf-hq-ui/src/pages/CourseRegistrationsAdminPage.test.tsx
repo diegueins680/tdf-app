@@ -183,9 +183,12 @@ const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
-const initialEmptyStateMessage =
+const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
-const initialEmptyStateActionLabel = 'Configurar cursos';
+const singleCohortInitialEmptyStateMessage =
+  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateConfigActionLabel = 'Configurar cursos';
+const initialEmptyStateFormActionLabel = 'Abrir formulario';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -3599,17 +3602,16 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(container.textContent).toContain(
-        initialEmptyStateMessage,
-      );
+      expect(container.textContent).toContain(singleCohortInitialEmptyStateMessage);
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).not.toBeNull();
       expect(
-        container.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateActionLabel);
+        container.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateFormActionLabel);
+      expect(container.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
     });
 
     await cleanup();
@@ -3892,7 +3894,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(container.textContent).not.toContain(initialEmptyStateMessage);
+      expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
+      expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
@@ -3934,7 +3937,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the first-run empty state focused on onboarding guidance instead of list actions', async () => {
+  it('keeps the first-run empty state focused on sharing the configured cohort form instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -3942,16 +3945,15 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
-        initialEmptyStateMessage,
-      );
+      expect(container.textContent).toContain(singleCohortInitialEmptyStateMessage);
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
-      expect(emptyState?.textContent).toContain(initialEmptyStateMessage);
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
       expect(
-        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateActionLabel);
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateFormActionLabel);
+      expect(emptyState?.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
-      expect(countOccurrences(container, initialEmptyStateMessage)).toBe(1);
+      expect(countOccurrences(container, singleCohortInitialEmptyStateMessage)).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
@@ -3975,6 +3977,26 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps course setup as the first-run action when no cohort is configured yet', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateConfigActionLabel);
+      expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
     });
 
     await cleanup();
