@@ -78,6 +78,7 @@ import TDF.Server
     , validateCmsLocaleFilter
     , validateCourseCurrency
     , validateCourseNonNegativeField
+    , validateRequiredCourseTextField
     , validateCoursePositiveField
     , validateCourseSlug
     , loadCourseMetadata
@@ -2818,6 +2819,30 @@ spec = describe "TDF.Server helpers" $ do
                     assertInvalid (parseCourseFollowUpType (Just "   "))
                     assertInvalid (parseCourseFollowUpType (Just "telegram"))
 
+    describe "course upsert required text validation" $ do
+        it "trims meaningful required course text before persistence" $
+            validateRequiredCourseTextField "title" 160 "  Produccion musical  "
+                `shouldBe` Right "Produccion musical"
+
+        it "rejects blank, oversized, or control-character course text before publishing metadata" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid course text to be rejected, got: " <> show value)
+            assertInvalid
+                "title is required"
+                (validateRequiredCourseTextField "title" 160 "   ")
+            assertInvalid
+                "title must be 160 characters or fewer"
+                (validateRequiredCourseTextField "title" 160 (T.replicate 161 "a"))
+            assertInvalid
+                "title must not contain control characters"
+                (validateRequiredCourseTextField "title" 160 "Intro\nMezcla")
+
     describe "course upsert numeric validation" $ do
         it "accepts non-negative prices, positive capacities, and optional values" $ do
             validateCourseNonNegativeField "priceCents" 0 `shouldBe` Right 0
@@ -2988,6 +3013,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "syllabus[1].title is required"
                 (validateCourseSyllabusInputs [CourseSyllabusIn "   " ["Ableton"] Nothing])
+
+        it "rejects control characters in nested course text instead of publishing malformed labels" $ do
+            let sessionDay = fromGregorian 2026 4 20
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid nested course text to be rejected, got: " <> show value)
+            assertInvalid
+                "sessions[1].label must not contain control characters"
+                (validateCourseSessionInputs [CourseSessionIn "Kickoff\nsession" sessionDay Nothing])
+            assertInvalid
+                "syllabus[1].topics[1] must not contain control characters"
+                (validateCourseSyllabusInputs [CourseSyllabusIn "Intro module" ["EQ\tcompression"] Nothing])
 
         it "rejects syllabus items whose topics are all blank instead of silently publishing empty topic lists" $
             case validateCourseSyllabusInputs [CourseSyllabusIn "Intro module" ["   ", "\n\t"] Nothing] of

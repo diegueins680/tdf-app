@@ -2344,9 +2344,7 @@ saveCourse Courses.CourseUpsert{..} = do
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
   slugVal <- either throwError pure (validateCourseSlug slug)
-  let titleClean = T.strip title
-  when (T.null titleClean) $
-    throwBadRequest "titulo requerido"
+  titleClean <- either throwError pure (validateRequiredCourseTextField "title" 160 title)
   capacityClean <- either throwError pure (validateCoursePositiveField "capacity" capacity)
   priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
   startHourClean <- either throwError pure (validateOptionalCourseSessionStartHour sessionStartHour)
@@ -3764,9 +3762,21 @@ isPendingCourseRegistrationStatus :: Text -> Bool
 isPendingCourseRegistrationStatus rawStatus =
   normalizeCourseRegistrationStatus rawStatus == Just "pending_payment"
 
-validateOptionalCourseRegistrationTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
-validateOptionalCourseRegistrationTextField _ _ Nothing = Right Nothing
-validateOptionalCourseRegistrationTextField fieldName maxLength (Just rawValue) =
+validateRequiredCourseTextField :: Text -> Int -> Text -> Either ServerError Text
+validateRequiredCourseTextField fieldName maxLength rawValue =
+  case validateOptionalCourseTextField fieldName maxLength (Just rawValue) of
+    Right (Just value) -> Right value
+    Right Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              fieldName <> " is required"
+        }
+    Left err -> Left err
+
+validateOptionalCourseTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCourseTextField _ _ Nothing = Right Nothing
+validateOptionalCourseTextField fieldName maxLength (Just rawValue) =
   case cleanOptional (Just rawValue) of
     Nothing -> Right Nothing
     Just value
@@ -3783,6 +3793,9 @@ validateOptionalCourseRegistrationTextField fieldName maxLength (Just rawValue) 
                   fieldName <> " must not contain control characters"
             }
       | otherwise -> Right (Just value)
+
+validateOptionalCourseRegistrationTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCourseRegistrationTextField = validateOptionalCourseTextField
 
 validateCourseRegistrationUtm :: Maybe UTMTags -> Either ServerError (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
 validateCourseRegistrationUtm Nothing = Right (Nothing, Nothing, Nothing, Nothing)
@@ -5840,20 +5853,17 @@ validateCourseSessionInputs rawSessions = do
   pure sessionsClean
 
 validateCourseSessionInput :: Int -> CourseSessionIn -> Either ServerError CourseSessionIn
-validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
-  case normalizeOptionalInput (Just rawLabel) of
-    Just labelClean -> do
-      orderClean <-
-        validateOptionalCoursePositiveField
-          ("sessions[" <> T.pack (show idx) <> "].order")
-          orderVal
-      Right (CourseSessionIn labelClean dayVal orderClean)
-    Nothing ->
-      Left err400
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              "sessions[" <> T.pack (show idx) <> "].label is required"
-        }
+validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) = do
+  labelClean <-
+    validateRequiredCourseTextField
+      ("sessions[" <> T.pack (show idx) <> "].label")
+      160
+      rawLabel
+  orderClean <-
+    validateOptionalCoursePositiveField
+      ("sessions[" <> T.pack (show idx) <> "].order")
+      orderVal
+  Right (CourseSessionIn labelClean dayVal orderClean)
 
 validateCourseSyllabusInputs :: [CourseSyllabusIn] -> Either ServerError [CourseSyllabusIn]
 validateCourseSyllabusInputs rawItems = do
@@ -5866,30 +5876,41 @@ validateCourseSyllabusInputs rawItems = do
   pure syllabusClean
 
 validateCourseSyllabusInput :: Int -> CourseSyllabusIn -> Either ServerError CourseSyllabusIn
-validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
-  case normalizeOptionalInput (Just rawTitle) of
-    Just titleClean -> do
-      orderClean <-
-        validateOptionalCoursePositiveField
-          ("syllabus[" <> T.pack (show idx) <> "].order")
-          orderVal
-      let topicsClean = mapMaybe (normalizeOptionalInput . Just) rawTopics
-      if null topicsClean
-        then
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  "syllabus[" <> T.pack (show idx) <> "].topics must include at least one non-blank topic"
-            }
-        else
-          Right
-            (CourseSyllabusIn titleClean topicsClean orderClean)
-    Nothing ->
+validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) = do
+  titleClean <-
+    validateRequiredCourseTextField
+      ("syllabus[" <> T.pack (show idx) <> "].title")
+      160
+      rawTitle
+  orderClean <-
+    validateOptionalCoursePositiveField
+      ("syllabus[" <> T.pack (show idx) <> "].order")
+      orderVal
+  topicsClean <-
+    fmap catMaybes $
+      traverse
+        (uncurry validateTopic)
+        (zip [1 :: Int ..] rawTopics)
+  if null topicsClean
+    then
       Left err400
         { errBody =
             BL.fromStrict . TE.encodeUtf8 $
-              "syllabus[" <> T.pack (show idx) <> "].title is required"
+              "syllabus[" <> T.pack (show idx) <> "].topics must include at least one non-blank topic"
         }
+    else
+      Right (CourseSyllabusIn titleClean topicsClean orderClean)
+  where
+    validateTopic topicIdx rawTopic =
+      validateOptionalCourseTextField
+        ( "syllabus["
+            <> T.pack (show idx)
+            <> "].topics["
+            <> T.pack (show topicIdx)
+            <> "]"
+        )
+        160
+        (Just rawTopic)
 
 validateDistinctResolvedCourseOrderValues :: Text -> [(Int, Int)] -> Either ServerError ()
 validateDistinctResolvedCourseOrderValues fieldName =
