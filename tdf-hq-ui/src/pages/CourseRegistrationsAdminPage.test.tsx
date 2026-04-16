@@ -507,6 +507,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the dossier loading state focused instead of showing premature empty prompts', async () => {
+    getRegistrationDossierMock.mockImplementation(() => new Promise(() => {}));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getOnlyDossierTrigger(container)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getOnlyDossierTrigger(container));
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Expediente de inscripción');
+      expect(document.body.textContent).toContain('Cargando expediente…');
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).not.toContain('Notas internas');
+      expect(document.body.textContent).not.toContain('Comprobantes de pago');
+      expect(document.body.textContent).not.toContain('Seguimiento');
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('explains the dossier once while keeping each condensed row action self-explanatory', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

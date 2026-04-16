@@ -2341,7 +2341,7 @@ export default function CourseRegistrationsAdminPage() {
             </Alert>
           )}
 
-          {activeRegistration && !dossierQuery.isError && (
+          {activeRegistration && !dossierQuery.isLoading && !dossierQuery.isError && (
             <Stack spacing={2.5}>
               {dossierFlash && <Alert severity={dossierFlash.severity}>{dossierFlash.message}</Alert>}
 
