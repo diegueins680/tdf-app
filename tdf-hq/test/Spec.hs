@@ -165,6 +165,7 @@ import TDF.Config
     ( appPort,
       courseInstructorAvatarFallback,
       courseMapFallback,
+      courseSlugFallback,
       dbConnString,
       emailConfig,
       loadConfig,
@@ -244,6 +245,26 @@ main = hspec $ do
                     courseMapFallback cfg `shouldBe` "https://maps.example.com/studio"
                     courseInstructorAvatarFallback cfg
                         `shouldBe` "https://cdn.example.com/instructors/esteban.jpg"
+
+        it "normalizes configured public course fallback slugs before matching fallback metadata" $
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_SLUG", Just " Produccion-Musical-MAY-2026 ") ]
+                $ do
+                    cfg <- loadConfig
+                    courseSlugFallback cfg `shouldBe` "produccion-musical-may-2026"
+
+        it "rejects malformed public course fallback slugs at startup" $ do
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_SLUG", Just "produccion musical") ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_SLUG must use only ASCII letters, numbers, and hyphens"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_SLUG", Just "---") ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_SLUG must use only ASCII letters, numbers, and hyphens"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed configured public course fallback URLs at startup" $ do
             withEnvOverrides

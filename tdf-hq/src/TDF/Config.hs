@@ -255,6 +255,7 @@ loadConfig = do
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
+  courseDefaultSlugVal <- validateConfiguredCourseSlug courseSlugEnv
   courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
@@ -286,7 +287,7 @@ loadConfig = do
     , appBaseUrl = normalizedAppBase
     , assetsBaseUrl = fmap (T.strip . T.pack) assetsBaseEnv
     , assetsRootDir = assetsRoot
-    , courseDefaultSlug = maybe "produccion-musical-abr-2026" (T.strip . T.pack) courseSlugEnv
+    , courseDefaultSlug = courseDefaultSlugVal
     , courseDefaultMapUrl = courseMapUrl
     , courseDefaultInstructorAvatar = courseInstructorAvatar
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
@@ -408,6 +409,30 @@ validateConfiguredHttpsUrl envName (Just rawUrl) =
     Left msg -> fail msg
     Right urlVal -> pure urlVal
 
+validateConfiguredCourseSlug :: Maybe String -> IO Text
+validateConfiguredCourseSlug rawSlug =
+  case normalizeConfiguredCourseSlug rawSlug of
+    Left msg -> fail msg
+    Right slug -> pure slug
+
+normalizeConfiguredCourseSlug :: Maybe String -> Either String Text
+normalizeConfiguredCourseSlug Nothing = Right defaultCourseSlug
+normalizeConfiguredCourseSlug (Just rawSlug)
+  | T.null slugVal = Right defaultCourseSlug
+  | T.length slugVal > 96 = invalid
+  | T.all isSlugChar slugVal && T.any isSlugAtom slugVal = Right slugVal
+  | otherwise = invalid
+  where
+    slugVal = T.toLower (T.strip (T.pack rawSlug))
+    isSlugAtom ch = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+    isSlugChar ch = isSlugAtom ch || ch == '-'
+    invalid =
+      Left
+        "COURSE_DEFAULT_SLUG must use only ASCII letters, numbers, and hyphens (96 chars max)"
+
+defaultCourseSlug :: Text
+defaultCourseSlug = "produccion-musical-abr-2026"
+
 normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredHttpsUrl envName rawUrl
   | T.null trimmed = Right Nothing
@@ -482,7 +507,7 @@ resolveConfiguredAssetsBase cfg = sanitizeBaseUrl (fromMaybe defaultAssetsBase (
 courseSlugFallback :: AppConfig -> Text
 courseSlugFallback cfg =
   let val = T.strip (courseDefaultSlug cfg)
-  in if T.null val then "produccion-musical-abr-2026" else val
+  in if T.null val then defaultCourseSlug else val
 
 courseMapFallback :: AppConfig -> Text
 courseMapFallback cfg = fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (courseDefaultMapUrl cfg >>= nonEmpty)
