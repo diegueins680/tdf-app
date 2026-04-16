@@ -185,9 +185,12 @@ const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateMultiCohortMessage =
+  'Todavía no hay inscripciones. Ya hay cohortes configuradas; abre Configuración de cursos para copiar o abrir el formulario público de la cohorte que quieres compartir.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
@@ -4050,6 +4053,34 @@ describe('CourseRegistrationsAdminPage', () => {
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateConfigActionLabel);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps multi-cohort first-run setup focused on choosing an existing cohort to share', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
+      expect(emptyState?.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });
 
     await cleanup();

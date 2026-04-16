@@ -54,7 +54,9 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Ya hay cohortes configuradas; abre Configuración de cursos para copiar o abrir el formulario público de la cohorte que quieres compartir.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
@@ -847,8 +849,11 @@ export default function CourseRegistrationsAdminPage() {
     && !showSystemEmailHistoryAction
     && !emailEventsQuery.isLoading
     && selectedDossierId != null;
+  const hasMultipleAvailableCohorts = !cohortsQuery.isError && cohortOptions.length > 1;
   const initialEmptyStateMessage = singleAvailableCohort
     ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.label)
+    : hasMultipleAvailableCohorts
+      ? initialEmptyStateMultiCohortMessage
     : initialEmptyStateConfigMessage;
   const initialEmptyStateAction = singleAvailableCohort
     ? {
@@ -856,7 +861,9 @@ export default function CourseRegistrationsAdminPage() {
       to: `/inscripcion/${encodeURIComponent(singleAvailableCohort.value)}`,
     }
     : {
-      label: initialEmptyStateConfigActionLabel,
+      label: hasMultipleAvailableCohorts
+        ? initialEmptyStateMultiCohortActionLabel
+        : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
     };
 
