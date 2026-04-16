@@ -95,6 +95,7 @@ import TDF.Server
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
     , validateOptionalCourseSessionDurationHours
+    , validateCourseSessionScheduleWindow
     , validateOptionalCourseSlugFilter
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
@@ -3094,6 +3095,23 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected an invalid sessionDurationHours error, got: " <> show value)
             assertInvalid (validateOptionalCourseSessionDurationHours (Just 0))
             assertInvalid (validateOptionalCourseSessionDurationHours (Just (-2)))
+
+    describe "course upsert session schedule window validation" $ do
+        it "accepts omitted values and same-day session windows" $ do
+            validateCourseSessionScheduleWindow Nothing (Just 4) `shouldBe` Right ()
+            validateCourseSessionScheduleWindow (Just 20) (Just 4) `shouldBe` Right ()
+            validateCourseSessionScheduleWindow (Just 23) (Just 1) `shouldBe` Right ()
+
+        it "rejects course session windows that spill into the next day" $
+            case validateCourseSessionScheduleWindow (Just 22) (Just 4) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "sessionStartHour plus sessionDurationHours must not exceed 24"
+                Right value ->
+                    expectationFailure
+                        ("Expected an invalid course session window error, got: " <> show value)
 
     describe "course upsert nested text validation" $ do
         it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do

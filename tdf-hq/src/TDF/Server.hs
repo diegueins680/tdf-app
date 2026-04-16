@@ -2397,6 +2397,7 @@ saveCourse Courses.CourseUpsert{..} = do
   priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
   startHourClean <- either throwError pure (validateOptionalCourseSessionStartHour sessionStartHour)
   durationHoursClean <- either throwError pure (validateOptionalCourseSessionDurationHours sessionDurationHours)
+  either throwError pure (validateCourseSessionScheduleWindow startHourClean durationHoursClean)
   sessionsClean <- either throwError pure (validateCourseSessionInputs sessions)
   syllabusClean <- either throwError pure (validateCourseSyllabusInputs syllabus)
   locationMapUrlClean <- either throwError pure (validateCoursePublicUrlField "locationMapUrl" locationMapUrl)
@@ -5893,6 +5894,17 @@ validateCourseSessionStartHour value
             BL.fromStrict (TE.encodeUtf8 "sessionStartHour must be between 0 and 23")
         }
   | otherwise = Right value
+
+validateCourseSessionScheduleWindow :: Maybe Int -> Maybe Int -> Either ServerError ()
+validateCourseSessionScheduleWindow (Just startHour) (Just durationHours)
+  | startHour + durationHours > 24 =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "sessionStartHour plus sessionDurationHours must not exceed 24")
+        }
+  | otherwise = Right ()
+validateCourseSessionScheduleWindow _ _ = Right ()
 
 validateCourseSessionInputs :: [CourseSessionIn] -> Either ServerError [CourseSessionIn]
 validateCourseSessionInputs rawSessions = do
