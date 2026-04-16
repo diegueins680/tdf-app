@@ -3,7 +3,7 @@ module TDF.Config where
 
 import           Control.Applicative ((<|>))
 import           Control.Monad      (filterM)
-import           Data.Char          (toLower)
+import           Data.Char          (isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
 import           Data.Text          (Text)
@@ -109,6 +109,32 @@ normalizeConnOption raw =
   let trimmed = T.unpack (T.strip (T.pack raw))
   in if null trimmed then Nothing else Just trimmed
 
+validateFallbackConnUrl :: String -> String -> Either String String
+validateFallbackConnUrl envName raw
+  | hasScheme "postgresql://" =
+      validateAuthority "postgresql://"
+  | hasScheme "postgres://" =
+      validateAuthority "postgres://"
+  | "://" `T.isInfixOf` value =
+      Left (envName <> " must use postgres:// or postgresql://")
+  | otherwise =
+      Right raw
+  where
+    value = T.strip (T.pack raw)
+    lowerValue = T.toLower value
+    hasScheme :: String -> Bool
+    hasScheme scheme = T.pack scheme `T.isPrefixOf` lowerValue
+    validateAuthority :: String -> Either String String
+    validateAuthority scheme
+      | T.any isSpace value =
+          Left (envName <> " must not contain whitespace")
+      | otherwise =
+          let remainder = T.drop (length scheme) value
+              authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
+          in if T.null authority || "@" `T.isSuffixOf` authority
+               then Left (envName <> " must include a PostgreSQL host")
+               else Right raw
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -155,7 +181,8 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  fallbackConnUrl <- lookupFirstEnv ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  fallbackConnUrl <- lookupFirstConnUrlEnv
+    ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
   connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
   h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
   p          <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
@@ -172,11 +199,12 @@ loadConfig = do
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
-  fbAppIdEnv <- lookupEnv "FACEBOOK_APP_ID" <|> lookupEnv "META_APP_ID"
-  fbAppSecretEnv <- lookupEnv "FACEBOOK_APP_SECRET" <|> lookupEnv "META_APP_SECRET"
+  fbAppIdEnv <- lookupFirstEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
+  fbAppSecretEnv <- lookupFirstEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
-  fbMsgTokenEnv <- lookupEnv "FACEBOOK_MESSAGING_TOKEN" <|> lookupEnv "FACEBOOK_PAGE_ACCESS_TOKEN"
-  fbMsgPageIdEnv <- lookupEnv "FACEBOOK_MESSAGING_PAGE_ID" <|> lookupEnv "FACEBOOK_PAGE_ID"
+  fbMsgTokenEnv <- lookupFirstEnv
+    ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
+  fbMsgPageIdEnv <- lookupFirstEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
   fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -184,7 +212,8 @@ loadConfig = do
   openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
   openAiModelEnv <- lookupEnv "OPENAI_MODEL"
   openAiEmbedModelEnv <- lookupEnv "OPENAI_EMBED_MODEL"
-  chatKitWorkflowEnv <- lookupEnv "CHATKIT_WORKFLOW_ID" <|> lookupEnv "VITE_CHATKIT_WORKFLOW_ID"
+  chatKitWorkflowEnv <- lookupFirstEnv
+    ["CHATKIT_WORKFLOW_ID", "VITE_CHATKIT_WORKFLOW_ID"]
   chatKitApiBaseEnv <- lookupEnv "CHATKIT_API_BASE"
   ragTopKEnv <- lookupEnv "RAG_TOP_K"
   ragChunkWordsEnv <- lookupEnv "RAG_CHUNK_WORDS"
@@ -195,8 +224,8 @@ loadConfig = do
   ragEmbedBatchSizeEnv <- lookupEnv "RAG_EMBED_BATCH_SIZE"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
-  smtpUserEnv <- lookupEnv "SMTP_USERNAME" <|> lookupEnv "SMTP_USER"
-  smtpPassEnv <- lookupEnv "SMTP_PASSWORD" <|> lookupEnv "SMTP_PASS"
+  smtpUserEnv <- lookupFirstEnv ["SMTP_USERNAME", "SMTP_USER"]
+  smtpPassEnv <- lookupFirstEnv ["SMTP_PASSWORD", "SMTP_PASS"]
   smtpFromEnv <- lookupEnv "SMTP_FROM"
   smtpFromNameEnv <- lookupEnv "SMTP_FROM_NAME"
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
@@ -205,7 +234,7 @@ loadConfig = do
   igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
-  igVerifyEnv <- lookupEnv "INSTAGRAM_VERIFY_TOKEN" <|> lookupEnv "IG_VERIFY_TOKEN"
+  igVerifyEnv <- lookupFirstEnv ["INSTAGRAM_VERIFY_TOKEN", "IG_VERIFY_TOKEN"]
   sessionCookieNameEnv <- lookupEnv "SESSION_COOKIE_NAME"
   sessionCookieDomainEnv <- lookupEnv "SESSION_COOKIE_DOMAIN"
   sessionCookiePathEnv <- lookupEnv "SESSION_COOKIE_PATH"
@@ -295,6 +324,15 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just normalized)
         Nothing -> lookupFirstEnv rest
+    lookupFirstConnUrlEnv [] = pure Nothing
+    lookupFirstConnUrlEnv (key:rest) = do
+      value <- lookupEnv key
+      case value >>= normalizeEnvString of
+        Nothing -> lookupFirstConnUrlEnv rest
+        Just normalized ->
+          case validateFallbackConnUrl key normalized of
+            Right conn -> pure (Just conn)
+            Left msg -> fail msg
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed

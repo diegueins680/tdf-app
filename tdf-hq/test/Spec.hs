@@ -3,7 +3,7 @@
 
 module Main (main) where
 
-import Control.Exception (bracket)
+import Control.Exception (IOException, bracket)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
@@ -12,6 +12,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
+import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
@@ -333,6 +334,27 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any"
+
+        it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must use postgres:// or postgresql://"
+                        `isInfixOf` show (err :: IOException)
 
     describe "extractToken" $ do
         let loadAuthConfig =
