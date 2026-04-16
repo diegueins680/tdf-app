@@ -1561,7 +1561,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps row source details visible when the current list mixes known and missing sources', async () => {
+  it('keeps known row source details visible while omitting empty source placeholders', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1585,7 +1585,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando una sola fuente:');
       expect(container.textContent).not.toContain('Todas las inscripciones visibles están sin fuente registrada.');
       expect(container.textContent).toContain('Fuente: landing');
-      expect(container.textContent).toContain('Fuente: Sin fuente');
+      expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });

@@ -412,8 +412,9 @@ const registrationListContextSummary = ({
   source: string | null | undefined;
 }) => {
   const parts: string[] = [];
+  const trimmedSource = source?.trim() ?? '';
   if (showCohort) parts.push(`Cohorte: ${cohortLabel}`);
-  if (showSource) parts.push(`Fuente: ${registrationSourceLabel(source)}`);
+  if (showSource && trimmedSource) parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   parts.push(`Creado: ${formatDate(createdAt)}`);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
