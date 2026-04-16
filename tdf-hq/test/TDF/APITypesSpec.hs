@@ -18,6 +18,8 @@ import TDF.API.Types
     , PipelineCardCreate (..)
     , PipelineCardUpdate (..)
     , RolePayload (..)
+    , ServiceCatalogCreate (..)
+    , ServiceCatalogUpdate (..)
     )
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
@@ -412,6 +414,44 @@ spec = do
                 "{\"adId\":42,\"slotId\":84,\"title\":\"Mix review\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
+    describe "Service catalog write payload FromJSON" $ do
+        it "accepts canonical service catalog create and update payloads, including explicit clear updates" $ do
+            case decodeServiceCatalogCreate
+                "{\"sccName\":\"Podcast\",\"sccRateCents\":4500,\"sccCurrency\":\"usd\",\"sccBillingUnit\":\"session\",\"sccActive\":true}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical service catalog create payload to decode, got: " <> err)
+                Right (ServiceCatalogCreate nameVal _ _ rateCentsVal currencyVal billingUnitVal taxBpsVal activeVal) -> do
+                    nameVal `shouldBe` "Podcast"
+                    rateCentsVal `shouldBe` Just 4500
+                    currencyVal `shouldBe` Just "usd"
+                    billingUnitVal `shouldBe` Just "session"
+                    taxBpsVal `shouldBe` Nothing
+                    activeVal `shouldBe` Just True
+
+            case decodeServiceCatalogUpdate
+                "{\"scuName\":\"Podcast Pro\",\"scuRateCents\":null,\"scuBillingUnit\":null,\"scuTaxBps\":1200,\"scuActive\":false}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical service catalog update payload to decode, got: " <> err)
+                Right (ServiceCatalogUpdate nameVal _ _ rateCentsVal _ billingUnitVal taxBpsVal activeVal) -> do
+                    nameVal `shouldBe` Just "Podcast Pro"
+                    rateCentsVal `shouldBe` Just Nothing
+                    billingUnitVal `shouldBe` Just Nothing
+                    taxBpsVal `shouldBe` Just (Just 1200)
+                    activeVal `shouldBe` Just False
+
+        it "rejects unexpected service catalog write keys instead of silently ignoring caller intent" $ do
+            decodeServiceCatalogCreate
+                "{\"sccName\":\"Podcast\",\"scActive\":false}"
+                `shouldSatisfy` isLeft
+            decodeServiceCatalogUpdate
+                "{\"scuName\":\"Podcast Pro\",\"scActive\":false}"
+                `shouldSatisfy` isLeft
+            decodeServiceCatalogUpdate
+                "{\"scuRateCents\":null,\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do
             case decodeServiceAdCreate
@@ -561,6 +601,10 @@ spec = do
     decodePipelineCardUpdate = eitherDecode
     decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
     decodeInstagramOAuthExchange = eitherDecode
+    decodeServiceCatalogCreate :: BL8.ByteString -> Either String ServiceCatalogCreate
+    decodeServiceCatalogCreate = eitherDecode
+    decodeServiceCatalogUpdate :: BL8.ByteString -> Either String ServiceCatalogUpdate
+    decodeServiceCatalogUpdate = eitherDecode
     decodeServiceAdCreate :: BL8.ByteString -> Either String API.ServiceAdCreateReq
     decodeServiceAdCreate = eitherDecode
     decodeServiceAdSlotCreate :: BL8.ByteString -> Either String API.ServiceAdSlotCreateReq

@@ -13,6 +13,8 @@ import           Data.Text    (Text)
 import qualified Data.Text    as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Aeson.Key as AKey
+import qualified Data.Aeson.KeyMap as AKM
 import           Data.Time    (UTCTime, Day)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
@@ -180,7 +182,8 @@ data ServiceCatalogCreate = ServiceCatalogCreate
   } deriving (Show, Generic)
 
 instance ToJSON ServiceCatalogCreate
-instance FromJSON ServiceCatalogCreate
+instance FromJSON ServiceCatalogCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ServiceCatalogUpdate = ServiceCatalogUpdate
   { scuName         :: Maybe Text
@@ -194,7 +197,32 @@ data ServiceCatalogUpdate = ServiceCatalogUpdate
   } deriving (Show, Generic)
 
 instance ToJSON ServiceCatalogUpdate
-instance FromJSON ServiceCatalogUpdate
+instance FromJSON ServiceCatalogUpdate where
+  parseJSON = withObject "ServiceCatalogUpdate" $ \o -> do
+    let allowedKeys =
+          [ "scuName"
+          , "scuKind"
+          , "scuPricingModel"
+          , "scuRateCents"
+          , "scuCurrency"
+          , "scuBillingUnit"
+          , "scuTaxBps"
+          , "scuActive"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in ServiceCatalogUpdate: " <> T.unpack key)
+      [] ->
+        ServiceCatalogUpdate
+          <$> o .:? "scuName"
+          <*> o .:? "scuKind"
+          <*> o .:? "scuPricingModel"
+          <*> o .:! "scuRateCents"
+          <*> o .:? "scuCurrency"
+          <*> o .:! "scuBillingUnit"
+          <*> o .:! "scuTaxBps"
+          <*> o .:? "scuActive"
 
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]
