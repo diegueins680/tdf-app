@@ -80,6 +80,7 @@ import TDF.Server
     , validateCourseRegistrationSource
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
+    , validateOptionalCourseSessionDurationHours
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
@@ -2595,6 +2596,22 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected an invalid sessionStartHour error, got: " <> show value)
             assertInvalid (validateOptionalCourseSessionStartHour (Just (-1)))
             assertInvalid (validateOptionalCourseSessionStartHour (Just 24))
+
+    describe "course upsert sessionDurationHours validation" $ do
+        it "accepts omitted or positive session durations" $ do
+            validateOptionalCourseSessionDurationHours Nothing `shouldBe` Right Nothing
+            validateOptionalCourseSessionDurationHours (Just 1) `shouldBe` Right (Just 1)
+            validateOptionalCourseSessionDurationHours (Just 4) `shouldBe` Right (Just 4)
+
+        it "rejects zero or negative explicit durations instead of creating zero-length course calendar slots" $ do
+            let assertInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "sessionDurationHours must be greater than 0"
+                    Right value ->
+                        expectationFailure ("Expected an invalid sessionDurationHours error, got: " <> show value)
+            assertInvalid (validateOptionalCourseSessionDurationHours (Just 0))
+            assertInvalid (validateOptionalCourseSessionDurationHours (Just (-2)))
 
     describe "course upsert nested text validation" $ do
         it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do
