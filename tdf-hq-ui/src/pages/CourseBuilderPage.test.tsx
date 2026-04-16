@@ -124,6 +124,9 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const countLabelsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('label')).filter((element) => text(element).replace('*', '').trim() === labelText).length;
+
 const clickButton = async (button: HTMLElement) => {
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -164,10 +167,16 @@ describe('CourseBuilderPage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
     const scrolledSectionIds: string[] = [];
-    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
-    HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
-      scrolledSectionIds.push(this.id);
-    };
+    const originalScrollIntoViewDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'scrollIntoView',
+    );
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: function scrollIntoView(this: HTMLElement) {
+        scrolledSectionIds.push(this.id);
+      },
+    });
 
     try {
       await waitForExpectation(() => {
@@ -191,11 +200,42 @@ describe('CourseBuilderPage', () => {
 
       expect(scrolledSectionIds).toEqual(['detalles', 'sesiones', 'temario', 'publicacion']);
     } finally {
-      if (originalScrollIntoView) {
-        HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+      if (originalScrollIntoViewDescriptor) {
+        Object.defineProperty(
+          HTMLElement.prototype,
+          'scrollIntoView',
+          originalScrollIntoViewDescriptor,
+        );
       } else {
         delete (HTMLElement.prototype as { scrollIntoView?: Element['scrollIntoView'] }).scrollIntoView;
       }
+      await cleanup();
+    }
+  });
+
+  it('keeps the technical publish payload hidden until an admin asks for it', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(document.getElementById('publicacion'))).toContain('Revisar y publicar');
+        expect(text(document.getElementById('publicacion'))).toContain(
+          'Publica desde este resumen. Abre el payload técnico solo si necesitas revisar el JSON que se enviará al servidor.',
+        );
+        expect(countLabelsByText(document.getElementById('publicacion') ?? container, 'Payload técnico')).toBe(0);
+        expect(getButtonByText(document.getElementById('publicacion') ?? container, 'Ver payload técnico')).toBeTruthy();
+      });
+
+      await clickButton(getButtonByText(document.getElementById('publicacion') ?? container, 'Ver payload técnico'));
+
+      await waitForExpectation(() => {
+        const publishSection = document.getElementById('publicacion') ?? container;
+        expect(countLabelsByText(publishSection, 'Payload técnico')).toBe(1);
+        expect(getButtonByText(publishSection, 'Ocultar payload técnico').getAttribute('aria-expanded')).toBe('true');
+      });
+    } finally {
       await cleanup();
     }
   });

@@ -124,6 +124,7 @@ export default function CourseBuilderPage() {
   const [loadSlug, setLoadSlug] = useState(COURSE_DEFAULTS.slug);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
+  const [showPayloadPreview, setShowPayloadPreview] = useState(false);
   const draftLoadedRef = useRef(false);
   const autoLoadedRef = useRef(false);
   const hasLocalEditsRef = useRef(false);
@@ -886,13 +887,30 @@ export default function CourseBuilderPage() {
                 </Stack>
               </CardContent>
             </Card>
-            <TextField
-              label="Payload"
-              multiline
-              minRows={8}
-              value={payloadPreview}
-              InputProps={{ readOnly: true, sx: { fontFamily: 'monospace' } }}
-            />
+            <Stack spacing={1} alignItems="flex-start">
+              <Typography variant="body2" color="text.secondary">
+                Publica desde este resumen. Abre el payload técnico solo si necesitas revisar el JSON que se enviará al servidor.
+              </Typography>
+              <Button
+                size="small"
+                variant="text"
+                aria-expanded={showPayloadPreview}
+                aria-controls="course-builder-payload-preview"
+                onClick={() => setShowPayloadPreview((value) => !value)}
+              >
+                {showPayloadPreview ? 'Ocultar payload técnico' : 'Ver payload técnico'}
+              </Button>
+            </Stack>
+            {showPayloadPreview && (
+              <TextField
+                id="course-builder-payload-preview"
+                label="Payload técnico"
+                multiline
+                minRows={8}
+                value={payloadPreview}
+                InputProps={{ readOnly: true, sx: { fontFamily: 'monospace' } }}
+              />
+            )}
             <Button
               variant="contained"
               onClick={() => createMutation.mutate()}
