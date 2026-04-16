@@ -878,7 +878,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await thirdRender.cleanup();
   }, 20_000);
 
-  it('shows the selected cohort once in the filtered summary without promoting the default public-form source', async () => {
+  it('treats the selected cohort as passive context when it is the only configured cohort', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
@@ -896,7 +896,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
-      expect(getButtonByText(container, 'Mostrar todas las cohortes')).toBeTruthy();
+      expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
     });
 
     await cleanup();

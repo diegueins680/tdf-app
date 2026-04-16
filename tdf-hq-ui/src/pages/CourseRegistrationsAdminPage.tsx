@@ -701,7 +701,13 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummary = Boolean(singleVisibleStatus && status === 'all');
   const hasSlugFilter = slug.trim() !== '';
   const hasStatusFilter = status !== 'all';
-  const hasManualFilters = hasSlugFilter || hasStatusFilter;
+  const hasRedundantSingleCohortFilter = Boolean(
+    selectedSlug
+    && singleAvailableCohort
+    && singleAvailableCohort.value === selectedSlug,
+  );
+  const hasEffectiveSlugFilter = hasSlugFilter && !hasRedundantSingleCohortFilter;
+  const hasManualFilters = hasEffectiveSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
@@ -730,7 +736,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const resetViewLabel = getResetViewLabel({
     hasCustomLimit,
-    hasSlugFilter,
+    hasSlugFilter: hasEffectiveSlugFilter,
     hasStatusFilter,
   });
   const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
@@ -824,7 +830,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummary);
-  const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasSlugFilter && !hasCustomLimit;
+  const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset && !statusFilterCanSelfReset;
   const showFilteredEmptyStateResetAction = hasManualFilters;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters;
