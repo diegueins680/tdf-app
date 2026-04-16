@@ -1,25 +1,33 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.Cors (corsPolicy) where
+module TDF.Cors
+  ( corsPolicy
+  , lookupFirstNonEmptyEnv
+  ) where
 import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
 import Data.Char (isSpace, toLower)
-import Control.Applicative ((<|>))
 import Data.List (dropWhileEnd, intercalate, nub)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
-  originsEnv <- lookupEnv "ALLOWED_ORIGINS"
-            <|> lookupEnv "ALLOW_ORIGINS"
-            <|> lookupEnv "ALLOW_ORIGIN"
-            <|> lookupEnv "CORS_ALLOW_ORIGINS"
-            <|> lookupEnv "CORS_ALLOW_ORIGIN"
+  originsEnv <- lookupFirstNonEmptyEnv
+    [ "ALLOWED_ORIGINS"
+    , "ALLOW_ORIGINS"
+    , "ALLOW_ORIGIN"
+    , "CORS_ALLOW_ORIGINS"
+    , "CORS_ALLOW_ORIGIN"
+    ]
   hqBaseEnv <- lookupEnv "HQ_APP_URL"
-  allowAllEnv <- lookupEnv "ALLOW_ALL_ORIGINS"
-             <|> lookupEnv "CORS_ALLOW_ALL_ORIGINS"
-  disableDefaultsEnv <- lookupEnv "CORS_DISABLE_DEFAULTS"
-                      <|> lookupEnv "DISABLE_DEFAULT_CORS"
+  allowAllEnv <- lookupFirstNonEmptyEnv
+    [ "ALLOW_ALL_ORIGINS"
+    , "CORS_ALLOW_ALL_ORIGINS"
+    ]
+  disableDefaultsEnv <- lookupFirstNonEmptyEnv
+    [ "CORS_DISABLE_DEFAULTS"
+    , "DISABLE_DEFAULT_CORS"
+    ]
   let defaultsCore =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
@@ -103,3 +111,11 @@ parseBool raw =
     "on"     -> True
     "*"      -> True
     _        -> False
+
+lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
+lookupFirstNonEmptyEnv [] = pure Nothing
+lookupFirstNonEmptyEnv (key:rest) = do
+  value <- lookupEnv key
+  case value of
+    Just raw | not (null (trim raw)) -> pure (Just raw)
+    _ -> lookupFirstNonEmptyEnv rest

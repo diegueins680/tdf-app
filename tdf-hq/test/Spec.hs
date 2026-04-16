@@ -51,6 +51,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
+import TDF.Cors (lookupFirstNonEmptyEnv)
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -355,6 +356,24 @@ main = hspec $ do
                 $ loadConfig `shouldThrow` \err ->
                     "DATABASE_URL must use postgres:// or postgresql://"
                         `isInfixOf` show (err :: IOException)
+
+    describe "CORS environment fallback discovery" $
+        it "falls through unset or blank primary names to documented CORS aliases" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "   ")
+                , ("ALLOW_ORIGINS", Just "https://app.example.com")
+                , ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Just "true")
+                , ("CORS_DISABLE_DEFAULTS", Nothing)
+                , ("DISABLE_DEFAULT_CORS", Just "1")
+                ]
+                $ do
+                    lookupFirstNonEmptyEnv ["ALLOWED_ORIGINS", "ALLOW_ORIGINS"]
+                        `shouldReturn` Just "https://app.example.com"
+                    lookupFirstNonEmptyEnv ["ALLOW_ALL_ORIGINS", "CORS_ALLOW_ALL_ORIGINS"]
+                        `shouldReturn` Just "true"
+                    lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
+                        `shouldReturn` Just "1"
 
     describe "extractToken" $ do
         let loadAuthConfig =
