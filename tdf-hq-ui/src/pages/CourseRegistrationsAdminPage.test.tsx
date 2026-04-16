@@ -539,6 +539,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
       expect(document.body.textContent).toContain('Cargando expediente…');
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);

@@ -1506,6 +1506,7 @@ export default function CourseRegistrationsAdminPage() {
     && !activeRegistration?.crPhoneE164?.trim(),
   );
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
+  const showDossierRefreshAction = Boolean(selectedDossier) && !dossierQuery.isLoading;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
     ? 'Refrescar expediente y correos'
     : 'Refrescar expediente';
@@ -2462,18 +2463,20 @@ export default function CourseRegistrationsAdminPage() {
         <DialogTitle>
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} useFlexGap>
             <span>{dossierDialogTitle}</span>
-            <Tooltip title={dossierRefreshLabel}>
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label={dossierRefreshLabel}
-                  onClick={handleRefreshDossier}
-                  disabled={!selectedDossier || isRefreshingDossier}
-                >
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
+            {showDossierRefreshAction && (
+              <Tooltip title={dossierRefreshLabel}>
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={dossierRefreshLabel}
+                    onClick={handleRefreshDossier}
+                    disabled={!selectedDossier || isRefreshingDossier}
+                  >
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
           </Stack>
         </DialogTitle>
         <DialogContent dividers>
