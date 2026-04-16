@@ -283,6 +283,22 @@ main = hspec $ do
                     "COURSE_DEFAULT_INSTRUCTOR_AVATAR must be an absolute https URL"
                         `isInfixOf` show (err :: IOException)
 
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://192.168.1.20/studio")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://studio.localhost/map")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")

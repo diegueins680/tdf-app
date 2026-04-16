@@ -3,7 +3,7 @@ module TDF.Config where
 
 import           Control.Applicative ((<|>))
 import           Control.Monad      (filterM, when)
-import           Data.Char          (isSpace, toLower)
+import           Data.Char          (isDigit, isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
 import           Data.Text          (Text)
@@ -459,9 +459,12 @@ normalizeConfiguredHttpsUrl envName rawUrl
         && validatePortSuffix portSuffix
 
     validateHost host =
-      let labels = T.splitOn "." (T.toLower host)
+      let normalizedHost = T.toLower host
+          labels = T.splitOn "." normalizedHost
       in length labels >= 2
+        && not (normalizedHost == "localhost" || ".localhost" `T.isSuffixOf` normalizedHost)
         && all isValidHostLabel labels
+        && not (isPrivateIpv4Host normalizedHost)
 
     isValidHostLabel label =
       not (T.null label)
@@ -481,6 +484,37 @@ normalizeConfiguredHttpsUrl envName rawUrl
             && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
                 (readMaybe (T.unpack port))
       | otherwise = False
+
+    isPrivateIpv4Host host =
+      case parseIpv4Octets host of
+        Nothing -> False
+        Just (a, b, _, _) ->
+          a == (0 :: Int)
+            || a == 10
+            || a == 127
+            || (a == 100 && b >= 64 && b <= 127)
+            || (a == 169 && b == 254)
+            || (a == 172 && b >= 16 && b <= 31)
+            || (a == 192 && b == 168)
+
+    parseIpv4Octets host =
+      case T.splitOn "." host of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet octet
+      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
+      | otherwise = do
+          value <- readMaybe (T.unpack octet)
+          if value >= (0 :: Int) && value <= 255
+            then Just value
+            else Nothing
 
 resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
 resolveAssetsRootDir mEnv = do
