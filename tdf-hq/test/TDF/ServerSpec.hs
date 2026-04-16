@@ -72,6 +72,7 @@ import TDF.Server
     , validateCourseCurrency
     , validateCourseNonNegativeField
     , validateCourseSlug
+    , loadCourseMetadata
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
@@ -2562,6 +2563,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "curso/produccion" "slug must contain only ASCII letters"
             assertInvalid "curso?draft=true" "slug must contain only ASCII letters"
             assertInvalid "---" "include at least one letter or number"
+
+        it "rejects invalid public course slugs before DB or fallback lookup" $ do
+            result <-
+                runHandler $
+                    runReaderT
+                        (loadCourseMetadata "produccion musical")
+                        (error "loadCourseMetadata should not inspect Env for invalid slugs")
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "slug must contain only ASCII letters"
+                Right meta ->
+                    expectationFailure
+                        ("Expected invalid public course slug to be rejected, got: " <> show meta)
 
     describe "course upsert sessionStartHour validation" $ do
         it "accepts omitted or in-range session start hours" $ do

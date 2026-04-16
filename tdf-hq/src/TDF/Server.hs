@@ -2226,9 +2226,9 @@ courseMetadataFor cfg mWaContact slugVal =
 
 loadCourseMetadata :: Text -> AppM CourseMetadata
 loadCourseMetadata rawSlug = do
+  normalized <- either throwError pure (validateCourseSlug rawSlug)
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
-  let normalized = normalizeSlug rawSlug
   mDbMeta <- loadCourseMetadataFromDB envConfig waEnv normalized
   let fallbackMeta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
   baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure mDbMeta
