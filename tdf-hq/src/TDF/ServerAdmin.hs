@@ -407,7 +407,12 @@ adminServer user =
           pure (fmap (ME.whatsAppMessageExternalId . entityVal) mRow)
         _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
       case mExt of
-        Nothing -> pure (object ["status" .= ("noop" :: Text), "channel" .= channel, "senderId" .= senderId, "message" .= ("No hold found" :: Text), "ts" .= T.pack (show now)])
+        Nothing ->
+          throwError err404
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 ("No held incoming " <> channel <> " message found for senderId"))
+            }
         Just extId -> do
           _ <- unholdByExternalId channel extId
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId)

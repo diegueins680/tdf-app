@@ -646,6 +646,47 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageHoldReason stored `shouldBe` Just "should stay outbound"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "transport failure"
 
+        it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeWhatsAppAdminSchema pool
+            let env = dummyEnv { envPool = pool }
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+                socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                    socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Nothing
+                        , surSenderId = Just "+593999000111"
+                        , surNote = Nothing
+                        }
+                incomingMsg =
+                    (seedWhatsAppAdminMessage now "wa-incoming-pending-1" "incoming")
+                        { ME.whatsAppMessageReplyStatus = "pending"
+                        , ME.whatsAppMessageReplyError = Just "previous transport error"
+                        }
+
+            msgKey <- runSqlPool (insert incomingMsg) pool
+            result <- runAdminTestWith env (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 404
+                    BL8.unpack (errBody err)
+                        `shouldContain` "No held incoming whatsapp message found for senderId"
+                Right value ->
+                    expectationFailure
+                        ( "Expected sender-id unhold without a held message to be rejected, got "
+                            <> show value
+                        )
+
+            mStored <- runSqlPool (get msgKey) pool
+            case mStored of
+                Nothing ->
+                    expectationFailure "Expected pending WhatsApp message to remain readable"
+                Just stored -> do
+                    ME.whatsAppMessageReplyStatus stored `shouldBe` "pending"
+                    ME.whatsAppMessageReplyError stored `shouldBe` Just "previous transport error"
+
         it "resets reply hold fields for matching incoming WhatsApp messages" $ do
             pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
             runSqlPool initializeWhatsAppAdminSchema pool
