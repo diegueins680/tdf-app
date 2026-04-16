@@ -8329,6 +8329,7 @@ requireMarketplaceAccess user =
 data MarketplaceCartTotalsState a
   = MarketplaceCartMissing
   | MarketplaceCartEmpty
+  | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
 
@@ -8356,14 +8357,25 @@ loadCartTotals cartId = do
           let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
                                | (_, listing, _, qty) <- items
                                ]
-              currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
-          pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+              currencies =
+                nub [ ME.marketplaceListingCurrency (entityVal listing)
+                    | (_, listing, _, _) <- items
+                    ]
+          case currencies of
+            [currency] -> pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+            mixed -> pure (MarketplaceCartMixedCurrencies mixed)
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
   Left err404
 requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
+requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
+  Left err400
+    { errBody =
+        BL.fromStrict . TE.encodeUtf8 $
+          "El carrito no puede mezclar monedas: " <> T.intercalate ", " currencies
+    }
 requireMarketplaceCartTotals (MarketplaceCartTotalsReady totals) =
   Right totals
 

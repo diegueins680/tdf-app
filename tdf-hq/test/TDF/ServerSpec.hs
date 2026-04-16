@@ -2102,6 +2102,10 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid (MarketplaceCartMissing :: MarketplaceCartTotalsState Int) 404 ""
             assertInvalid MarketplaceCartEmpty 400 "El carrito esta vacio."
+            assertInvalid
+                (MarketplaceCartMixedCurrencies ["USD", "EUR"])
+                400
+                "El carrito no puede mezclar monedas: USD, EUR"
 
         it "passes through loaded cart totals for downstream checkout logic" $
             requireMarketplaceCartTotals (MarketplaceCartTotalsReady (1200 :: Int))
