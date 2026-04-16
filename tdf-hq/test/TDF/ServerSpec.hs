@@ -2633,6 +2633,16 @@ spec = describe "TDF.Server helpers" $ do
                 "syllabus[1].title is required"
                 (validateCourseSyllabusInputs [CourseSyllabusIn "   " ["Ableton"] Nothing])
 
+        it "rejects syllabus items whose topics are all blank instead of silently publishing empty topic lists" $
+            case validateCourseSyllabusInputs [CourseSyllabusIn "Intro module" ["   ", "\n\t"] Nothing] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "syllabus[1].topics must include at least one non-blank topic"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank syllabus topics to be rejected, got: " <> show value)
+
         it "rejects negative nested ordering values instead of persisting ambiguous sort positions" $ do
             let sessionDay = fromGregorian 2026 4 20
                 assertInvalid expectedMessage result =

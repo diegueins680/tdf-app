@@ -5711,8 +5711,17 @@ validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
         validateOptionalCourseNonNegativeField
           ("syllabus[" <> T.pack (show idx) <> "].order")
           orderVal
-      Right
-        (CourseSyllabusIn titleClean (mapMaybe (normalizeOptionalInput . Just) rawTopics) orderClean)
+      let topicsClean = mapMaybe (normalizeOptionalInput . Just) rawTopics
+      if null topicsClean
+        then
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  "syllabus[" <> T.pack (show idx) <> "].topics must include at least one non-blank topic"
+            }
+        else
+          Right
+            (CourseSyllabusIn titleClean topicsClean orderClean)
     Nothing ->
       Left err400
         { errBody =
