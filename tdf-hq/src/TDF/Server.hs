@@ -310,7 +310,13 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
   toolName <- o .: "name"
-  args <- o .:? "arguments" .!= object []
+  when (T.null (T.strip toolName)) $
+    fail "name is required"
+  mArgs <- o .:? "arguments"
+  args <- case mArgs of
+    Nothing -> pure (object [])
+    Just value@(Object _) -> pure value
+    Just _ -> fail "arguments must be an object"
   pure (toolName, args)
 
 handleMcpRequest :: McpRequest -> AppM Value

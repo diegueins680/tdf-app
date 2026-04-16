@@ -57,6 +57,7 @@ import TDF.Server
     , PreparedLine(..)
     , normalizeOptionalInput
     , parseMcpRequest
+    , parseToolCallParams
     , parseBookingStatus
     , parseBoolParam
     , parseCourseFollowUpType
@@ -297,6 +298,33 @@ spec = describe "TDF.Server helpers" $ do
                     [ "jsonrpc" .= ("2.0" :: T.Text)
                     , "id" .= object ["nested" .= True]
                     , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
+
+    describe "parseToolCallParams" $ do
+        it "defaults omitted MCP tool arguments to an object" $
+            parseToolCallParams
+                (object ["name" .= ("tdf_health_check" :: T.Text)])
+                `shouldBe` Just ("tdf_health_check", object [])
+
+        it "rejects malformed MCP tool calls before handler fallback can mask bad params" $ do
+            let assertInvalid payload =
+                    case parseToolCallParams payload of
+                        Nothing -> pure ()
+                        Just value ->
+                            expectationFailure
+                                ("Expected malformed MCP tool params to be rejected, got: " <> show value)
+            assertInvalid (object ["name" .= ("   " :: T.Text)])
+            assertInvalid
+                ( object
+                    [ "name" .= ("tdf_health_check" :: T.Text)
+                    , "arguments" .= ([1, 2] :: [Int])
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "name" .= ("tdf_health_check" :: T.Text)
+                    , "arguments" .= ("not-an-object" :: T.Text)
                     ]
                 )
 
