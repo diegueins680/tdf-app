@@ -110,6 +110,10 @@ export default function BrainAdminPage() {
   });
 
   const entries = useMemo<BrainEntryDTO[]>(() => entriesQuery.data ?? [], [entriesQuery.data]);
+  const showInactiveToggle = includeInactive || entries.length > 0;
+  const emptyEntriesMessage = includeInactive
+    ? 'No hay entradas cargadas, incluyendo inactivas.'
+    : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
 
   const openCreate = () => {
     setEditingId(null);
@@ -249,15 +253,17 @@ export default function BrainAdminPage() {
                 Entradas del Brain
               </Typography>
               <Box flex={1} />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={includeInactive}
-                    onChange={(e) => setIncludeInactive(e.target.checked)}
-                  />
-                }
-                label="Incluir inactivas"
-              />
+              {showInactiveToggle && (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={includeInactive}
+                      onChange={(e) => setIncludeInactive(e.target.checked)}
+                    />
+                  }
+                  label="Incluir inactivas"
+                />
+              )}
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
@@ -272,7 +278,22 @@ export default function BrainAdminPage() {
             )}
 
             {!entriesQuery.isLoading && entries.length === 0 && (
-              <Alert severity="info">No hay entradas cargadas.</Alert>
+              <Alert
+                severity="info"
+                action={
+                  includeInactive ? undefined : (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => setIncludeInactive(true)}
+                    >
+                      Revisar inactivas
+                    </Button>
+                  )
+                }
+              >
+                {emptyEntriesMessage}
+              </Alert>
             )}
 
             <Stack spacing={2}>
