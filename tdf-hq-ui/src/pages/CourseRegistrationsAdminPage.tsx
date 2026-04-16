@@ -446,7 +446,9 @@ const registrationDossierContextSummary = ({
 }) => {
   const parts = [`Curso: ${courseLabel}`];
   const trimmedSource = source?.trim() ?? '';
-  if (trimmedSource) parts.push(`Fuente: ${trimmedSource}`);
+  if (trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
+    parts.push(`Fuente: ${trimmedSource}`);
+  }
   const createdLabel = formatOptionalDate(createdAt);
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   return parts.join(' · ');

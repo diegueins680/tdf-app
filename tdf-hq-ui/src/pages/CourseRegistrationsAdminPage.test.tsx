@@ -1319,7 +1319,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses the course label inside the dossier instead of raw slug jargon', async () => {
+  it('uses the course label inside the dossier while omitting the default public-form source', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1335,7 +1335,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Curso: Beatmaking 101 (beatmaking-101) · Fuente: landing');
+      expect(document.body.textContent).toContain(
+        `Curso: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      );
+      expect(document.body.textContent).not.toContain('Fuente: landing');
       expect(document.body.textContent).not.toContain('Slug: beatmaking-101');
     });
 
@@ -1371,6 +1374,38 @@ describe('CourseRegistrationsAdminPage', () => {
         `Curso: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       );
       expect(dialog.textContent).not.toContain('Fuente: Sin fuente');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps meaningful custom source context in the dossier header', async () => {
+    const referredRegistration = buildRegistration({ crSource: 'instagram' });
+    listRegistrationsMock.mockResolvedValue([referredRegistration]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: referredRegistration,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain('Curso: Beatmaking 101 (beatmaking-101) · Fuente: instagram');
+      expect(dialog.textContent).not.toContain('Fuente: landing');
     });
 
     await cleanup();
