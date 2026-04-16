@@ -172,6 +172,7 @@ import TDF.Config
       dbConnString,
       emailConfig,
       loadConfig,
+      sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
       smtpPort )
@@ -237,6 +238,25 @@ main = hspec $ do
                     cfg <- loadConfig
                     sessionCookieSecure cfg `shouldBe` True
                     sessionCookieSameSite cfg `shouldBe` "None"
+
+        it "normalizes valid session cookie paths before emitting Set-Cookie headers" $
+            withEnvOverrides
+                [ ("SESSION_COOKIE_PATH", Just " /hq ") ]
+                $ do
+                    cfg <- loadConfig
+                    sessionCookiePath cfg `shouldBe` "/hq"
+
+        it "rejects malformed session cookie paths before emitting ambiguous Set-Cookie headers" $ do
+            let assertInvalid rawPath =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_PATH", Just rawPath) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "SESSION_COOKIE_PATH must start with / and contain no whitespace, semicolons, commas, or control characters"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "hq"
+            assertInvalid "/hq; Secure"
+            assertInvalid "/hq admin"
+            assertInvalid "/hq,admin"
 
         it "normalizes configured public course fallback URLs before serving metadata" $
             withEnvOverrides

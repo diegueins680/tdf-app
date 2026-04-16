@@ -3,7 +3,7 @@ module TDF.Config where
 
 import           Control.Applicative ((<|>))
 import           Control.Monad      (filterM, when)
-import           Data.Char          (isDigit, isSpace, toLower)
+import           Data.Char          (isControl, isDigit, isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
@@ -275,6 +275,7 @@ loadConfig = do
   courseDefaultSlugVal <- validateConfiguredCourseSlug courseSlugEnv
   courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
+  cookiePath <- validateSessionCookiePath sessionCookiePathEnv
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
       igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
       normalizedAppBase = fmap (T.strip . T.pack) baseUrlEnv >>= nonEmpty
@@ -286,7 +287,6 @@ loadConfig = do
           fromMaybe
             (if cookieSecure then "None" else "Lax")
             sessionCookieSameSiteEnv
-      cookiePath = fromMaybe "/" (sessionCookiePathEnv >>= nonEmpty . T.pack)
   validateSessionCookiePolicy cookieSecure cookieSameSite
   pure AppConfig
     { dbHost = h
@@ -420,6 +420,28 @@ validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
   when (T.toLower cookieSameSite == "none" && not cookieSecure) $
     fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+
+validateSessionCookiePath :: Maybe String -> IO Text
+validateSessionCookiePath rawPath =
+  case normalizeSessionCookiePath rawPath of
+    Left msg -> fail msg
+    Right path -> pure path
+
+normalizeSessionCookiePath :: Maybe String -> Either String Text
+normalizeSessionCookiePath Nothing = Right "/"
+normalizeSessionCookiePath (Just rawPath)
+  | T.null path = Right "/"
+  | not ("/" `T.isPrefixOf` path) =
+      invalid
+  | T.any invalidPathChar path =
+      invalid
+  | otherwise =
+      Right path
+  where
+    path = T.strip (T.pack rawPath)
+    invalid = Left "SESSION_COOKIE_PATH must start with / and contain no whitespace, semicolons, commas, or control characters"
+    invalidPathChar ch =
+      isControl ch || isSpace ch || ch == ';' || ch == ','
 
 validateConfiguredHttpsUrl :: String -> Maybe String -> IO (Maybe Text)
 validateConfiguredHttpsUrl _ Nothing = pure Nothing
