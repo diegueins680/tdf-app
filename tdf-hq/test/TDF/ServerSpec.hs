@@ -2673,6 +2673,21 @@ spec = describe "TDF.Server helpers" $ do
                 startsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 39600)
             validatePublicBookingStartAt now startsAt `shouldBe` Right startsAt
 
+        it
+            "rejects public booking starts more than a year ahead instead of parking stale holds"
+            $ do
+            let now = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                tooFarAhead = addUTCTime (366 * 86400) now
+            case validatePublicBookingStartAt now tooFarAhead of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "startsAt must be within 365 days"
+                Right startsAtValue ->
+                    expectationFailure $
+                        "Expected too-far public booking start time to be rejected, got: "
+                            <> show startsAtValue
+
         it "rejects past or current public booking starts instead of creating already-expired bookings" $ do
             let now = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
                 pastStart = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 32400)

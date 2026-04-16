@@ -3647,8 +3647,13 @@ publicBookingDurationStepMinutes = 15
 
 validatePublicBookingStartAt :: UTCTime -> UTCTime -> Either ServerError UTCTime
 validatePublicBookingStartAt now startsAt
-  | startsAt > now = Right startsAt
-  | otherwise = Left err400 { errBody = "startsAt must be in the future" }
+  | startsAt <= now = Left err400 { errBody = "startsAt must be in the future" }
+  | startsAt > addUTCTime (fromIntegral publicBookingMaxLeadDays * 86400) now =
+      Left err400 { errBody = "startsAt must be within 365 days" }
+  | otherwise = Right startsAt
+
+publicBookingMaxLeadDays :: Int
+publicBookingMaxLeadDays = 365
 
 validateBookingTimeRange :: UTCTime -> UTCTime -> Either ServerError ()
 validateBookingTimeRange startsAt endsAt
