@@ -183,6 +183,7 @@ const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
+const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
@@ -741,9 +742,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierScopeHint,
+        dossierOnlyScopeHint,
       );
-      expect(countOccurrences(container, dossierScopeHint)).toBe(1);
+      expect(countOccurrences(container, dossierOnlyScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (2)');
     });
 
@@ -760,7 +762,7 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 200,
       });
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).toContain('Mostrando 2 inscripciones.');
       expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
     });
@@ -1999,7 +2001,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Abre expediente para ver notas, comprobantes y seguimiento. Usa el estado solo para cambios rapidos.',
       );
-      expect(container.textContent).toContain(dossierScopeHint);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierOnlyScopeHint,
+      );
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').className).toContain('MuiButton-text');
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
