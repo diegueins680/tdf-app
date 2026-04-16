@@ -92,6 +92,8 @@ import TDF.Server
     , parsePayPalCaptureOrderStatus
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
+    , validateLabelTrackTitle
+    , validateOptionalLabelTrackStatus
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
@@ -2099,6 +2101,33 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid 0
             assertInvalid (-500)
+
+    describe "label track update validation" $ do
+        it "trims required title updates and canonicalizes supported status values" $ do
+            validateLabelTrackTitle "  Mezcla final  " `shouldBe` Right "Mezcla final"
+            validateOptionalLabelTrackStatus Nothing `shouldBe` Right Nothing
+            validateOptionalLabelTrackStatus (Just " DONE ") `shouldBe` Right (Just "done")
+            validateOptionalLabelTrackStatus (Just "open") `shouldBe` Right (Just "open")
+
+        it "rejects blank titles and unsupported statuses before patching label-track rows" $ do
+            let assertTitleInvalid rawTitle =
+                    case validateLabelTrackTitle rawTitle of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "Título requerido"
+                        Right titleVal ->
+                            expectationFailure ("Expected invalid label track title to be rejected, got: " <> show titleVal)
+                assertStatusInvalid rawStatus =
+                    case validateOptionalLabelTrackStatus (Just rawStatus) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "status must be one of: open, done"
+                        Right statusVal ->
+                            expectationFailure ("Expected invalid label track status to be rejected, got: " <> show statusVal)
+            assertTitleInvalid "   "
+            assertTitleInvalid "\n\t"
+            assertStatusInvalid "closed"
+            assertStatusInvalid "in_progress"
 
     describe "parsePayPalCaptureOrderStatus" $ do
         it "maps known PayPal capture statuses onto canonical marketplace order states" $ do

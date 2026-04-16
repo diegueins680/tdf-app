@@ -8658,6 +8658,20 @@ loadTrackOwnerNames rows = do
     then pure Map.empty
     else runDB (fetchPartyNameMap owners)
 
+validateLabelTrackTitle :: Text -> Either ServerError Text
+validateLabelTrackTitle rawTitle =
+  case normalizeOptionalInput (Just rawTitle) of
+    Just title -> Right title
+    Nothing -> Left err400 { errBody = "Título requerido" }
+
+validateOptionalLabelTrackStatus :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalLabelTrackStatus Nothing = Right Nothing
+validateOptionalLabelTrackStatus (Just rawStatus) =
+  case T.toLower <$> normalizeOptionalInput (Just rawStatus) of
+    Just "open" -> Right (Just "open")
+    Just "done" -> Right (Just "done")
+    _ -> Left err400 { errBody = "status must be one of: open, done" }
+
 listLabelTracks :: AuthedUser -> Maybe Int64 -> AppM [LabelTrackDTO]
 listLabelTracks user mOwnerId = do
   scope <- resolveTrackScope user mOwnerId
@@ -8668,10 +8682,10 @@ listLabelTracks user mOwnerId = do
 createLabelTrack :: AuthedUser -> LabelTrackCreate -> AppM LabelTrackDTO
 createLabelTrack user LabelTrackCreate{..} = do
   scope <- resolveTrackScope user ltcOwnerId
-  when (T.null (T.strip ltcTitle)) $ throwBadRequest "Título requerido"
+  title <- either throwError pure (validateLabelTrackTitle ltcTitle)
   now <- liftIO getCurrentTime
   let record = ME.LabelTrack
-        { ME.labelTrackTitle      = T.strip ltcTitle
+        { ME.labelTrackTitle      = title
         , ME.labelTrackNote       = T.strip <$> ltcNote
         , ME.labelTrackStatus     = "open"
         , ME.labelTrackOwnerPartyId = tsOwner scope
@@ -8690,6 +8704,8 @@ updateLabelTrack user rawId LabelTrackUpdate{..} = do
     Nothing -> throwBadRequest "Invalid track id"
     Just k  -> pure k
   scope <- resolveTrackScope user Nothing
+  titleUpdate <- traverse (either throwError pure . validateLabelTrackTitle) ltuTitle
+  statusUpdate <- either throwError pure (validateOptionalLabelTrackStatus ltuStatus)
   now <- liftIO getCurrentTime
   mTrack <- runDB $ getEntity key
   case mTrack of
@@ -8697,11 +8713,11 @@ updateLabelTrack user rawId LabelTrackUpdate{..} = do
     Just (Entity _ track) -> do
       ensureTrackAccess scope track
       let updates = catMaybes
-            [ (ME.LabelTrackTitle =.) . T.strip <$> ltuTitle
+            [ (ME.LabelTrackTitle =.) <$> titleUpdate
             , case ltuNote of
                 Nothing -> Nothing
                 Just n  -> Just (ME.LabelTrackNote =. if T.null (T.strip n) then Nothing else Just (T.strip n))
-            , (ME.LabelTrackStatus =.) <$> ltuStatus
+            , (ME.LabelTrackStatus =.) <$> statusUpdate
             , Just (ME.LabelTrackUpdatedAt =. now)
             ]
       unless (null updates) (runDB $ update key updates)
