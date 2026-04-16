@@ -1344,8 +1344,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasReceiptMetadataDraft;
   const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
   const showReceiptMetadataFields = (
-    selectedDossier?.intent === 'markPaid'
-    || receiptForm.editingId != null
+    receiptForm.editingId != null
     || showReceiptUrlField
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt

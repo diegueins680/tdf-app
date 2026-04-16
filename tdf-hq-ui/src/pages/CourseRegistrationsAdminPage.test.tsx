@@ -2575,8 +2575,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
-      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
-      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(document.body.textContent).toContain(
+        'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
+      );
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
@@ -2592,6 +2596,18 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeGreaterThan(-1);
       expect(dialogHeadings.indexOf('Notas internas (opcional)')).toBeGreaterThan(-1);
       expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas (opcional)'));
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
     });
 
     await cleanup();
