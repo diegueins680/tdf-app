@@ -372,7 +372,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
       expect(container.textContent).not.toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+        'Vista única por ahora: una cohorte y un estado.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
@@ -468,7 +468,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
       expect(document.body.textContent).toContain(
-        'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
+        'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.',
       );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
@@ -677,7 +677,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+        'Vista única por ahora: una cohorte y un estado.',
       );
     });
 
@@ -692,7 +692,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+        'Vista única por ahora: una cohorte y un estado.',
       );
     });
 
@@ -801,14 +801,14 @@ describe('CourseRegistrationsAdminPage', () => {
           ?.trim(),
       ).toBe('Ajustar límite');
       expect(secondContainer.textContent).toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+        'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
       expect(secondContainer.textContent).not.toContain(
         'Esta vista ya está acotada a una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
       expect(countOccurrences(
         secondContainer,
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
+        'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       )).toBe(1);
       expect(
         Array.from(secondContainer.querySelectorAll('button')).filter(
@@ -1170,7 +1170,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain(
-        'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.',
+        'Cohorte única por ahora. Usa Estado para cambiar la vista.',
       );
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
@@ -1192,7 +1192,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(secondContainer, 'Curso / cohorte')).toBe(true);
-      expect(secondContainer.textContent).not.toContain('No hace falta filtrarla: es la unica cohorte disponible ahora mismo.');
+      expect(secondContainer.textContent).not.toContain('Cohorte única por ahora.');
     });
 
     await secondRender.cleanup();
@@ -1224,7 +1224,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pagado');
       expect(container.textContent).toContain(
-        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+        'Estado único en esta vista. Usa cohorte para cambiar la vista.',
       );
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
@@ -1273,7 +1273,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain(
-        'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.',
+        'Vista única por ahora: una cohorte y un estado.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Cohorte disponible');
@@ -1964,7 +1964,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
       expect(container.textContent).toContain(
-        'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.',
+        'Estado único en esta vista. Usa cohorte para cambiar la vista.',
       );
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Vista actual');
@@ -2631,7 +2631,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(markPaidReceiptSectionHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).toContain(
-        'Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y las notas.',
+        'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.',
       );
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);

@@ -822,11 +822,11 @@ export default function CourseRegistrationsAdminPage() {
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
   const singleAvailableCohortHelperText = showAdvancedLimitControl
-    ? 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado o Ajustar límite para cambiar la vista.'
-    : 'No hace falta filtrarla: es la unica cohorte disponible ahora mismo. Usa Estado para cambiar la vista.';
+    ? 'Cohorte única por ahora. Usa Estado o Ajustar límite para cambiar la vista.'
+    : 'Cohorte única por ahora. Usa Estado para cambiar la vista.';
   const singleVisibleStatusHelperText = showAdvancedLimitControl
-    ? 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
-    : 'No hace falta filtrarlo: es el unico estado presente en esta vista. Usa cohorte para cambiar la vista.';
+    ? 'Estado único en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
+    : 'Estado único en esta vista. Usa cohorte para cambiar la vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
@@ -844,8 +844,8 @@ export default function CourseRegistrationsAdminPage() {
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
-    ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-    : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
+    ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
+    : 'Vista única por ahora: una cohorte y un estado.';
   const canReviewSystemEmails = selectedDossier?.intent !== 'markPaid';
   const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
   const showSystemEmailHistoryAction = canReviewSystemEmails
@@ -1640,7 +1640,7 @@ export default function CourseRegistrationsAdminPage() {
                   </Collapse>
                   {!showReceiptMetadataFields && (
                     <Typography variant="caption" color="text.secondary">
-                      Primero elige el archivo o pega un enlace; luego podras ajustar el nombre visible y
+                      Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y
                       {' '}
                       las notas.
                     </Typography>
