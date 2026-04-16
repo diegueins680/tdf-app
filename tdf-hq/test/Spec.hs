@@ -83,7 +83,8 @@ import TDF.ServerRadio
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
-      validateRadioStreamUrl )
+      validateRadioStreamUrl,
+      validateRadioTransmissionPublicBase )
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
@@ -1564,6 +1565,39 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must be http(s)"
                 Right _ -> expectationFailure "Expected non-http streamUrl to be rejected"
+
+    describe "validateRadioTransmissionPublicBase" $ do
+        it "normalizes the configured public base before appending generated stream keys" $
+            validateRadioTransmissionPublicBase "  HTTPS://radio.example.com/live/  "
+                `shouldBe` Right "https://radio.example.com/live"
+
+        it "rejects query or fragment bases because generated stream keys would be ambiguous" $ do
+            let assertInvalid rawBase =
+                    case validateRadioTransmissionPublicBase rawBase of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "RADIO_PUBLIC_BASE must not include query or fragment"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid public radio base to be rejected, got " <> show value)
+            assertInvalid "https://radio.example.com/live?token=abc"
+            assertInvalid "https://radio.example.com/live#main"
+
+        it "rejects malformed or private public bases before transmission URLs are persisted" $ do
+            let assertInvalid rawBase expected =
+                    case validateRadioTransmissionPublicBase rawBase of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid public radio base to be rejected, got " <> show value)
+            assertInvalid "https://" "RADIO_PUBLIC_BASE must include a host"
+            assertInvalid
+                "http://127.0.0.1/live"
+                "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
 
     describe "validateRadioImportSources" $ do
         it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do

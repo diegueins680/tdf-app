@@ -6,6 +6,7 @@
 module TDF.ServerRadio
   ( radioServer
   , validateRadioStreamUrl
+  , validateRadioTransmissionPublicBase
   , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
@@ -86,6 +87,33 @@ validateRadioStreamUrl rawUrl
       | otherwise = Nothing
     authority =
       maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+
+validateRadioTransmissionPublicBase :: Text -> Either ServerError Text
+validateRadioTransmissionPublicBase rawBase =
+  case validateRadioStreamUrl rawBase of
+    Left err -> Left (radioPublicBaseError err)
+    Right publicBase ->
+      let normalizedPublicBase = normalizePublicBaseScheme publicBase
+      in if T.any (`elem` ("?#" :: String)) normalizedPublicBase
+            then Left err400 { errBody = "RADIO_PUBLIC_BASE must not include query or fragment" }
+            else Right (T.dropWhileEnd (== '/') normalizedPublicBase)
+  where
+    radioPublicBaseError err =
+      let bodyText =
+            TE.decodeUtf8With lenientDecode (BL.toStrict (errBody err))
+      in err
+          { errBody =
+              BL.fromStrict
+                (TE.encodeUtf8 (T.replace "streamUrl" "RADIO_PUBLIC_BASE" bodyText))
+          }
+
+normalizePublicBaseScheme :: Text -> Text
+normalizePublicBaseScheme baseUrl
+  | "https://" `T.isPrefixOf` lowerUrl = "https://" <> T.drop 8 baseUrl
+  | "http://" `T.isPrefixOf` lowerUrl = "http://" <> T.drop 7 baseUrl
+  | otherwise = baseUrl
+  where
+    lowerUrl = T.toLower baseUrl
 
 validateRadioImportSources :: Maybe [Text] -> Either ServerError [Text]
 validateRadioImportSources Nothing = Right defaultRadioImportSources
@@ -794,7 +822,8 @@ radioServer user =
       now <- liftIO getCurrentTime
       Env{..} <- ask
       streamKey <- liftIO (toText <$> nextRandom)
-      listenBase <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://tdf-hq.fly.dev/live")
+      listenBaseRaw <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://tdf-hq.fly.dev/live")
+      listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
       let fallbackIngest = deriveBase listenBase "rtmp" "/live"
           fallbackWhip   = deriveBase listenBase "https" "/whip"
       ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)
