@@ -8,7 +8,7 @@ module TDF.ServerLiveSessions
   , buildLiveSessionUsernameCollisionCandidate
   ) where
 
-import           Control.Monad              (forM, forM_, void, when)
+import           Control.Monad              (forM_, void, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
@@ -57,6 +57,16 @@ liveSessionsServer user = intakeHandler
       riderPath <- liftIO $ traverse storeRiderFile (lsiRider payload)
 
       partyKeys <- mapM (ensureMusician now) (lsiMusicians payload)
+      resolvedSongOrders <-
+        either
+          (\err ->
+            throwError
+              err400
+                { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err))
+                }
+          )
+          pure
+          (resolveLiveSessionSetlistSortOrders (lsiSetlist payload))
 
       intakeId <- withPool $ insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
@@ -74,12 +84,13 @@ liveSessionsServer user = intakeHandler
         , ME.liveSessionIntakeCreatedAt    = now
         }
 
-      preparedSongs <- fmap (mapMaybe id) $
-        forM (zip [0 :: Int ..] (lsiSetlist payload)) $ \(idx, song) -> do
-          let title = T.strip (lssTitle song)
-          if T.null title
-            then pure Nothing
-            else pure $ Just (idx, title, song)
+      let preparedSongs =
+            mapMaybe prepareSong (zip resolvedSongOrders (lsiSetlist payload))
+          prepareSong (sortOrder, song) =
+            let title = T.strip (lssTitle song)
+            in if T.null title
+                 then Nothing
+                 else Just (sortOrder, title, song)
 
       withPool $
         forM_ (zip partyKeys (lsiMusicians payload)) $ \(partyKey, m) ->
@@ -95,14 +106,14 @@ liveSessionsServer user = intakeHandler
             }
 
       withPool $
-        forM_ preparedSongs $ \(idx, title, song) ->
+        forM_ preparedSongs $ \(sortOrder, title, song) ->
           insert_ ME.LiveSessionSong
             { ME.liveSessionSongIntakeId  = intakeId
             , ME.liveSessionSongTitle     = title
             , ME.liveSessionSongBpm       = lssBpm song
             , ME.liveSessionSongSongKey   = fmap T.strip (lssSongKey song)
             , ME.liveSessionSongLyrics    = lssLyrics song
-            , ME.liveSessionSongSortOrder = idx
+            , ME.liveSessionSongSortOrder = sortOrder
             }
 
       pure NoContent

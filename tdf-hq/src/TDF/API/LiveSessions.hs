@@ -10,6 +10,7 @@ module TDF.API.LiveSessions
   , LiveSessionIntakePayload(..)
   , LiveSessionMusicianPayload(..)
   , LiveSessionSongPayload(..)
+  , resolveLiveSessionSetlistSortOrders
   ) where
 
 import           Data.Aeson               (FromJSON(..), Object, Value, eitherDecodeStrict', withObject, (.:?))
@@ -18,6 +19,8 @@ import qualified Data.Aeson.KeyMap        as AesonKeyMap
 import           Data.Aeson.Types         (Parser)
 import           Data.Char                (isAsciiLower, isDigit, isSpace)
 import           Control.Monad            (unless)
+import           Data.Maybe               (fromMaybe)
+import qualified Data.Set                 as Set
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Data.Text.Encoding       (encodeUtf8)
@@ -204,7 +207,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           Right xs ->
             case traverse validateSetlistSong xs of
               Left err -> Left ("Invalid setlist payload: " <> err)
-              Right validated -> Right validated
+              Right validated ->
+                case resolveLiveSessionSetlistSortOrders validated of
+                  Left err -> Left ("Invalid setlist payload: " <> err)
+                  Right _ -> Right validated
 
       validateMusician musician = do
         normalizedEmail <-
@@ -333,6 +339,25 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
 
       inputValueText :: Input -> Text
       inputValueText (Input _ value) = value
+
+resolveLiveSessionSetlistSortOrders :: [LiveSessionSongPayload] -> Either String [Int]
+resolveLiveSessionSetlistSortOrders songs = go Set.empty [] 0 songs
+  where
+    go _ acc _ [] = Right (reverse acc)
+    go seen acc idx (song : rest) =
+      let sortOrder = fromMaybe idx (lssSortOrder song)
+      in
+        if sortOrder < 0
+          then Left "each setlist song sortOrder must be greater than or equal to 0"
+          else
+            if Set.member sortOrder seen
+              then Left "setlist songs must resolve to distinct sortOrder values"
+              else
+                go
+                  (Set.insert sortOrder seen)
+                  (sortOrder : acc)
+                  (idx + 1)
+                  rest
 
 readMaybeDay :: Text -> Either String Day
 readMaybeDay txt =

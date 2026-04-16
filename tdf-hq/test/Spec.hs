@@ -32,7 +32,8 @@ import TDF.API.Admin (AdminEmailBroadcastRequest)
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
-      LiveSessionSongPayload (..) )
+      LiveSessionSongPayload (..),
+      resolveLiveSessionSetlistSortOrders )
 import TDF.API.SocialSyncAPI (SocialSyncAPI)
 import TDF.API.Types
     ( InternTaskUpdate (..),
@@ -2170,6 +2171,32 @@ main = hspec $ do
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
 
+    describe "resolveLiveSessionSetlistSortOrders" $ do
+        let mkSong title sortOrder =
+                LiveSessionSongPayload
+                    { lssTitle = title
+                    , lssBpm = Nothing
+                    , lssSongKey = Nothing
+                    , lssLyrics = Nothing
+                    , lssSortOrder = sortOrder
+                    }
+
+        it "preserves explicit setlist sortOrder values and falls back to submission order only when omitted" $ do
+            resolveLiveSessionSetlistSortOrders
+                [ mkSong "Intro Jam" (Just 3)
+                , mkSong "Finale" Nothing
+                ]
+                `shouldBe` Right [3, 1]
+
+        it "rejects negative or duplicate resolved setlist sort orders instead of silently persisting ambiguous ordering" $ do
+            resolveLiveSessionSetlistSortOrders [mkSong "Intro Jam" (Just (-1))]
+                `shouldBe` Left "each setlist song sortOrder must be greater than or equal to 0"
+            resolveLiveSessionSetlistSortOrders
+                [ mkSong "Intro Jam" (Just 1)
+                , mkSong "Finale" Nothing
+                ]
+                `shouldBe` Left "setlist songs must resolve to distinct sortOrder values"
+
     describe "live session intake multipart parsing" $ do
         it "normalizes blank optional text fields to Nothing while preserving versioned consent" $ do
             let parsed = fromMultipart (mkLiveSessionMultipart
@@ -2371,6 +2398,27 @@ main = hspec $ do
                     err `shouldContain` "each setlist song must include a non-blank title"
                 Right payload ->
                     expectationFailure ("Expected blank setlist title to be rejected, got: " <> show payload)
+
+        it "rejects negative or duplicate resolved setlist sortOrder values instead of accepting ambiguous ordering" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"sortOrder\":-1}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "sortOrder must be greater than or equal to 0"
+                Right payload ->
+                    expectationFailure ("Expected negative setlist sortOrder to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"sortOrder\":1},{\"title\":\"Finale\"}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "distinct sortOrder values"
+                Right payload ->
+                    expectationFailure ("Expected duplicate resolved setlist sortOrder values to be rejected, got: " <> show payload)
 
         it "rejects non-positive musician party ids before any database lookup" $
             case fromMultipart (mkLiveSessionMultipart
