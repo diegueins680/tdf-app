@@ -5751,6 +5751,19 @@ validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerErro
 validateOptionalCourseNonNegativeField fieldName =
   traverse (validateCourseNonNegativeField fieldName)
 
+validateCoursePositiveField :: Text -> Int -> Either ServerError Int
+validateCoursePositiveField fieldName value
+  | value <= 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+        }
+  | otherwise = Right value
+
+validateOptionalCoursePositiveField :: Text -> Maybe Int -> Either ServerError (Maybe Int)
+validateOptionalCoursePositiveField fieldName =
+  traverse (validateCoursePositiveField fieldName)
+
 validateOptionalCourseSessionDurationHours :: Maybe Int -> Either ServerError (Maybe Int)
 validateOptionalCourseSessionDurationHours =
   traverse validateCourseSessionDurationHours
@@ -5796,7 +5809,7 @@ validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
   case normalizeOptionalInput (Just rawLabel) of
     Just labelClean -> do
       orderClean <-
-        validateOptionalCourseNonNegativeField
+        validateOptionalCoursePositiveField
           ("sessions[" <> T.pack (show idx) <> "].order")
           orderVal
       Right (CourseSessionIn labelClean dayVal orderClean)
@@ -5822,7 +5835,7 @@ validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
   case normalizeOptionalInput (Just rawTitle) of
     Just titleClean -> do
       orderClean <-
-        validateOptionalCourseNonNegativeField
+        validateOptionalCoursePositiveField
           ("syllabus[" <> T.pack (show idx) <> "].order")
           orderVal
       let topicsClean = mapMaybe (normalizeOptionalInput . Just) rawTopics
