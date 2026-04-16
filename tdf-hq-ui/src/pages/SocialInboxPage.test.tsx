@@ -347,6 +347,37 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('hides inactive filters and empty channel tables when channel fetches fail before any messages load', async () => {
+    getMetaReviewAssetSelectionMock.mockReturnValue({
+      pageId: 'page-1',
+      pageName: 'TDF Review Page',
+      instagramUserId: 'ig-user-1',
+      instagramUsername: 'tdfreview',
+      selectedAt: 1_763_000_000_000,
+    });
+    listInstagramMessagesMock.mockRejectedValue(new Error('403 forbidden'));
+    listFacebookMessagesMock.mockRejectedValue(new Error('403 forbidden'));
+    listWhatsAppMessagesMock.mockRejectedValue(new Error('403 forbidden'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Selected professional/business Instagram messaging asset: TDF Review Page');
+      expect(container.textContent).toContain('Instagram: Cannot load messages: insufficient permissions (403).');
+      expect(container.textContent).toContain('Facebook: Cannot load messages: insufficient permissions (403).');
+      expect(container.textContent).toContain('WhatsApp: Cannot load messages: insufficient permissions (403).');
+      expect(container.textContent).toContain('Review channel credentials and app/page permissions.');
+      expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(container.textContent).not.toContain('No messages for this filter.');
+      expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps zero-result filters hidden while reserving per-channel status chips for the all-messages view', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),

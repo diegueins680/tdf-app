@@ -1287,6 +1287,7 @@ export default function SocialInboxPage() {
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
   const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
+  const showChannelErrorOnlyState = allChannelsLoaded && hasChannelLoadErrors && filterCounts.all === 0;
   const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const showReviewChecklist = reviewMode && Boolean(activeAsset);
@@ -1448,7 +1449,7 @@ export default function SocialInboxPage() {
             </Typography>
           </Stack>
         </Alert>
-      ) : (
+      ) : showChannelErrorOnlyState ? null : (
         <>
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack spacing={1.5}>
