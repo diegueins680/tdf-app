@@ -2334,10 +2334,8 @@ saveCourse Courses.CourseUpsert{..} = do
   now <- liftIO getCurrentTime
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
-  let slugVal = normalizeSlug slug
-      titleClean = T.strip title
-  when (T.null slugVal) $
-    throwBadRequest "slug requerido"
+  slugVal <- either throwError pure (validateCourseSlug slug)
+  let titleClean = T.strip title
   when (T.null titleClean) $
     throwBadRequest "titulo requerido"
   capacityClean <- either throwError pure (validateCourseNonNegativeField "capacity" capacity)
@@ -3500,6 +3498,26 @@ normalizeCourseRegistrationPhoneInput raw =
 
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip
+
+validateCourseSlug :: Text -> Either ServerError Text
+validateCourseSlug rawSlug =
+  let slugVal = normalizeSlug rawSlug
+      isSlugAtom ch = isAsciiLower ch || isDigit ch
+      isSlugChar ch = isSlugAtom ch || ch == '-'
+  in
+    if T.null slugVal
+      then Left err400 { errBody = "slug requerido" }
+      else
+        if T.all isSlugChar slugVal && T.any isSlugAtom slugVal
+          then Right slugVal
+          else Left invalidCourseSlug
+  where
+    invalidCourseSlug =
+      err400
+        { errBody =
+            "slug must contain only ASCII letters, numbers, and hyphens, "
+              <> "and include at least one letter or number"
+        }
 
 validateCourseRegistrationSource :: Text -> Either ServerError Text
 validateCourseRegistrationSource raw =

@@ -71,6 +71,7 @@ import TDF.Server
     , normalizeOptionalCmsFilter
     , validateCourseCurrency
     , validateCourseNonNegativeField
+    , validateCourseSlug
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
@@ -2532,6 +2533,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "usdollars"
             assertInvalid "12$"
             assertInvalid "U$D"
+
+    describe "course upsert slug validation" $ do
+        it "normalizes path-safe course slugs before persistence" $ do
+            validateCourseSlug "  Produccion-Musical-ABR-2026  "
+                `shouldBe` Right "produccion-musical-abr-2026"
+            validateCourseSlug "curso-2026" `shouldBe` Right "curso-2026"
+
+        it "rejects blank or path-unsafe course slugs instead of storing unreachable course URLs" $ do
+            let assertInvalid rawSlug expectedMessage =
+                    case validateCourseSlug rawSlug of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right slugVal ->
+                            expectationFailure ("Expected invalid course slug error, got: " <> show slugVal)
+            assertInvalid "   " "slug requerido"
+            assertInvalid "produccion musical" "slug must contain only ASCII letters"
+            assertInvalid "curso/produccion" "slug must contain only ASCII letters"
+            assertInvalid "curso?draft=true" "slug must contain only ASCII letters"
+            assertInvalid "---" "include at least one letter or number"
 
     describe "course upsert sessionStartHour validation" $ do
         it "accepts omitted or in-range session start hours" $ do
