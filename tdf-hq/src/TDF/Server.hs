@@ -5634,8 +5634,14 @@ validateCourseSessionStartHour value
   | otherwise = Right value
 
 validateCourseSessionInputs :: [CourseSessionIn] -> Either ServerError [CourseSessionIn]
-validateCourseSessionInputs =
-  traverse (uncurry validateCourseSessionInput) . zip [1 :: Int ..]
+validateCourseSessionInputs rawSessions = do
+  sessionsClean <- traverse (uncurry validateCourseSessionInput) (zip [1 :: Int ..] rawSessions)
+  validateDistinctResolvedCourseOrderValues
+    "sessions"
+    [ (idx, fromMaybe idx orderVal)
+    | (idx, CourseSessionIn _ _ orderVal) <- zip [1 :: Int ..] sessionsClean
+    ]
+  pure sessionsClean
 
 validateCourseSessionInput :: Int -> CourseSessionIn -> Either ServerError CourseSessionIn
 validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
@@ -5654,8 +5660,14 @@ validateCourseSessionInput idx (CourseSessionIn rawLabel dayVal orderVal) =
         }
 
 validateCourseSyllabusInputs :: [CourseSyllabusIn] -> Either ServerError [CourseSyllabusIn]
-validateCourseSyllabusInputs =
-  traverse (uncurry validateCourseSyllabusInput) . zip [1 :: Int ..]
+validateCourseSyllabusInputs rawItems = do
+  syllabusClean <- traverse (uncurry validateCourseSyllabusInput) (zip [1 :: Int ..] rawItems)
+  validateDistinctResolvedCourseOrderValues
+    "syllabus"
+    [ (idx, fromMaybe idx orderVal)
+    | (idx, CourseSyllabusIn _ _ orderVal) <- zip [1 :: Int ..] syllabusClean
+    ]
+  pure syllabusClean
 
 validateCourseSyllabusInput :: Int -> CourseSyllabusIn -> Either ServerError CourseSyllabusIn
 validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
@@ -5673,6 +5685,25 @@ validateCourseSyllabusInput idx (CourseSyllabusIn rawTitle rawTopics orderVal) =
             BL.fromStrict . TE.encodeUtf8 $
               "syllabus[" <> T.pack (show idx) <> "].title is required"
         }
+
+validateDistinctResolvedCourseOrderValues :: Text -> [(Int, Int)] -> Either ServerError ()
+validateDistinctResolvedCourseOrderValues fieldName =
+  go Set.empty
+  where
+    go _ [] = Right ()
+    go seen ((idx, resolvedOrder) : rest)
+      | Set.member resolvedOrder seen =
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> "["
+                    <> T.pack (show idx)
+                    <> "].order must be unique after applying defaults; duplicate order "
+                    <> T.pack (show resolvedOrder)
+            }
+      | otherwise =
+          go (Set.insert resolvedOrder seen) rest
 
 parseBookingStatus :: Text -> Either Text BookingStatus
 parseBookingStatus raw =

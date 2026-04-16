@@ -2557,6 +2557,32 @@ spec = describe "TDF.Server helpers" $ do
                 "syllabus[1].order must be greater than or equal to 0"
                 (validateCourseSyllabusInputs [CourseSyllabusIn "Intro module" ["Ableton"] (Just (-2))])
 
+        it "rejects duplicate resolved ordering values instead of persisting ambiguous course sort positions" $ do
+            let firstSessionDay = fromGregorian 2026 4 20
+                secondSessionDay = fromGregorian 2026 4 27
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid duplicate course ordering to be rejected, got: " <> show value)
+            assertInvalid
+                "sessions[2].order must be unique after applying defaults; duplicate order 1"
+                ( validateCourseSessionInputs
+                    [ CourseSessionIn "Kickoff session" firstSessionDay Nothing
+                    , CourseSessionIn "Mix session" secondSessionDay (Just 1)
+                    ]
+                )
+            assertInvalid
+                "syllabus[2].order must be unique after applying defaults; duplicate order 2"
+                ( validateCourseSyllabusInputs
+                    [ CourseSyllabusIn "Intro module" ["Ableton"] (Just 2)
+                    , CourseSyllabusIn "Mix module" ["EQ"] (Just 2)
+                    ]
+                )
+
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
             hasOperationsAccess (mkUser [Fan, Customer]) `shouldBe` False
