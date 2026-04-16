@@ -2149,6 +2149,7 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Limpiar');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');

@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
@@ -577,14 +578,16 @@ export default function AdminUsersPage() {
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
-                        <Button
-                          size="small"
-                          aria-label="Limpiar búsqueda"
-                          onClick={handleClearSearch}
-                          sx={{ minWidth: 0, px: 0.5, textTransform: 'none' }}
-                        >
-                          Limpiar
-                        </Button>
+                        <Tooltip title="Limpiar búsqueda">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            aria-label="Limpiar búsqueda"
+                            onClick={handleClearSearch}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </InputAdornment>
                     ) : null,
                   }}
