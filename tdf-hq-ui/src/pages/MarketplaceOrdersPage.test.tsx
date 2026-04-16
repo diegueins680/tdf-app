@@ -120,6 +120,9 @@ const countLabelsByText = (root: ParentNode, labelText: string) =>
     return text === labelText;
   }).length;
 
+const getTableHeaders = (root: ParentNode) =>
+  Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
+
 const queryActionByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).find(
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
@@ -571,6 +574,68 @@ describe('MarketplaceOrdersPage', () => {
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('shows the buyer phone column only when the current visible order list includes phone data', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerPhone: '   ',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const firstRender = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).not.toContain('Contacto');
+        expect(container.textContent).not.toContain('+593999000111');
+      });
+    } finally {
+      await firstRender.cleanup();
+    }
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerPhone: '+593999000111',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const nextContainer = document.createElement('div');
+    document.body.appendChild(nextContainer);
+    const secondRender = await renderPage(nextContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(nextContainer.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(nextContainer)).toContain('Contacto');
+        expect(nextContainer.textContent).toContain('+593999000111');
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 

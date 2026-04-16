@@ -108,6 +108,7 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
   items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ');
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
+const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
 
 export default function MarketplaceOrdersPage() {
   const defaultFilters = createDefaultMarketplaceOrderFilters();
@@ -260,6 +261,7 @@ export default function MarketplaceOrdersPage() {
       return true;
     });
   }, [baseContextOrders, normalizedProviderFilter, statusFilter]);
+  const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
@@ -795,7 +797,7 @@ export default function MarketplaceOrdersPage() {
                   <TableRow>
                     <TableCell>Pedido</TableCell>
                     <TableCell>Cliente</TableCell>
-                    <TableCell>Contacto</TableCell>
+                    {showBuyerPhoneColumn && <TableCell>Contacto</TableCell>}
                     <TableCell>Estado</TableCell>
                   <TableCell align="right">Total</TableCell>
                   <TableCell>Pago</TableCell>
@@ -858,21 +860,23 @@ export default function MarketplaceOrdersPage() {
                           </Typography>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {order.moBuyerPhone ? (
-                          <Link
-                            href={`tel:${order.moBuyerPhone.replace(/\s+/g, '')}`}
-                            underline="hover"
-                            color="text.primary"
-                            variant="body2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {order.moBuyerPhone}
-                          </Link>
-                        ) : (
-                          '—'
-                        )}
-                      </TableCell>
+                      {showBuyerPhoneColumn && (
+                        <TableCell>
+                          {normalizeBuyerPhoneValue(order.moBuyerPhone) ? (
+                            <Link
+                              href={`tel:${normalizeBuyerPhoneValue(order.moBuyerPhone).replace(/\s+/g, '')}`}
+                              underline="hover"
+                              color="text.primary"
+                              variant="body2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {normalizeBuyerPhoneValue(order.moBuyerPhone)}
+                            </Link>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
                       </TableCell>
