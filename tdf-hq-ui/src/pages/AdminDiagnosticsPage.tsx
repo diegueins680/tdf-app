@@ -137,6 +137,7 @@ export default function AdminDiagnosticsPage() {
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
   const showSocialChannelCards = !showGlobalSocialQuietGuidance;
+  const showSocialRefreshAction = !showGlobalSocialQuietGuidance;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -204,14 +205,16 @@ export default function AdminDiagnosticsPage() {
         <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
             <Typography variant="h6">Auto respuestas sociales</Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={refetchSocialMessages}
-              disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
-            >
-              Actualizar mensajes
-            </Button>
+            {showSocialRefreshAction && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={refetchSocialMessages}
+                disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
+              >
+                Actualizar mensajes
+              </Button>
+            )}
           </Stack>
           {showGlobalSocialQuietGuidance && (
             <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-quiet-summary">

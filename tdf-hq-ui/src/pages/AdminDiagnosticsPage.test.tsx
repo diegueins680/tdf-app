@@ -135,6 +135,7 @@ describe('AdminDiagnosticsPage', () => {
         expect(container.textContent).toContain(
           'Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp. Cuando llegue el primero, aquí verás el historial respondido por canal.',
         );
+        expect(container.textContent).not.toContain('Actualizar mensajes');
         expect(container.textContent).not.toContain('Entrantes: 0');
         expect(container.textContent).not.toContain('Respondidos: 0');
         expect(container.textContent).not.toContain('Pendientes: 0');
@@ -159,6 +160,7 @@ describe('AdminDiagnosticsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(3);
         expect(container.querySelectorAll('thead')).toHaveLength(1);
+        expect(container.textContent).toContain('Actualizar mensajes');
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Claro, te comparto los detalles.');
         expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(2);
