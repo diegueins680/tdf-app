@@ -75,6 +75,7 @@ const followUpComposerHelpText = 'Este formulario ya está abierto para registra
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const MIN_DEFAULT_CSV_EXPORT_ROWS = 3;
 
 interface FlashState {
   severity: FlashSeverity;
@@ -696,8 +697,11 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const canCopyCsv = (regsQuery.data?.length ?? 0) > 1;
-  const showStandaloneListUtilitySummary = !hasCustomFilters && (canCopyCsv || Boolean(copyMessage));
+  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const canCopyCsv = loadedRegistrationCount > 1
+    && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
+  const showStandaloneListUtilitySummary = !hasCustomFilters
+    && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
@@ -706,7 +710,6 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSharedListContextSummary = shouldShowSharedCohortSummary && shouldShowSharedSourceSummary
     ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
-  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
   const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;

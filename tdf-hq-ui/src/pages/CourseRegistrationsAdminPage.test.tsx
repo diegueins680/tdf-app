@@ -3781,7 +3781,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps multi-row single-status counts in passive list context instead of the header', async () => {
+  it('keeps tiny single-status lists focused on passive count and row actions instead of export chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -3798,7 +3798,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).not.toContain('Total: 2');
       expect(container.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
-      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV (2 filas)',
