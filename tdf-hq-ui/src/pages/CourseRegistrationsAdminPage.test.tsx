@@ -180,6 +180,7 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const copyVisibleCsvLabel = 'Copiar CSV visible';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
@@ -776,7 +777,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).toContain('Mostrando 2 inscripciones.');
-      expect(getButtonByText(container, 'Copiar CSV filtrado')).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
     });
 
     await cleanup();
@@ -1989,11 +1990,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
-      expect(
-        Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado',
-        ),
-      ).toBe(false);
+      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
     });
 
     await cleanup();
@@ -3979,8 +3976,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Mostrando 2 inscripciones.');
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')?.textContent?.trim()).toBe('Restablecer límite');
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
-      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
+      expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
     });
 
     await cleanup();
@@ -4054,7 +4052,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Total: 2');
       expect(container.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
-      expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV (2 filas)',
@@ -4139,7 +4137,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
       expect(getButtonByText(listUtilities!, 'Refrescar lista')).toBeTruthy();
-      expect(getButtonByText(listUtilities!, 'Copiar CSV')).toBeTruthy();
+      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
     });
 
     await act(async () => {
@@ -4169,8 +4167,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 50 inscripciones con los filtros actuales.');
       expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
-      expect(getButtonByText(container, 'Copiar CSV')).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
+      expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV filtrado (50 filas)',

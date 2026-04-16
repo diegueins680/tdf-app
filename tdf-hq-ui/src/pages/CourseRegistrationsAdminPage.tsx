@@ -786,7 +786,7 @@ export default function CourseRegistrationsAdminPage() {
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
-  const copyCsvButtonLabel = hasManualFilters ? 'Copiar CSV filtrado' : 'Copiar CSV';
+  const copyCsvButtonLabel = 'Copiar CSV visible';
   const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
