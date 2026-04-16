@@ -114,7 +114,8 @@ import TDF.ServerFeedback
       sanitizeFeedbackAttachmentFileName,
       validateOptionalFeedbackContactEmail )
 import TDF.Server
-    ( validateCoursePublicUrlField )
+    ( buildWhatsappCtaFor,
+      validateCoursePublicUrlField )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate )
 import TDF.Server.SocialSync
@@ -666,6 +667,23 @@ main = hspec $ do
             assertInvalid "landingUrl" "javascript:alert(1)"
             assertInvalid "locationMapUrl" "/curso/produccion"
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"
+
+    describe "buildWhatsappCtaFor" $ do
+        it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
+            buildWhatsappCtaFor
+                (Just " +593 99 123 4567 ")
+                "Curso de Producción Musical"
+                "https://tdf.example.com/curso/produccion"
+                `shouldSatisfy`
+                    Data.Text.isPrefixOf "https://wa.me/593991234567?text="
+
+        it "falls back to a numberless WhatsApp CTA when the configured contact is malformed" $ do
+            buildWhatsappCtaFor
+                (Just "593")
+                "Curso de Producción Musical"
+                "https://tdf.example.com/curso/produccion"
+                `shouldSatisfy`
+                    Data.Text.isPrefixOf "https://wa.me/?text="
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do

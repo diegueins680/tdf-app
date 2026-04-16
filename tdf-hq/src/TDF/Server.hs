@@ -2330,14 +2330,13 @@ buildWhatsappCtaFor :: Maybe Text -> Text -> Text -> Text
 buildWhatsappCtaFor mNumber courseTitle landingUrl =
   let msg = "INSCRIBIRME " <> courseTitle <> " " <> landingUrl
       encoded = TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 msg))
-      cleanNumber txt = T.filter isDigit txt
-  in case mNumber >>= nonEmpty of
-       Just num -> "https://wa.me/" <> cleanNumber num <> "?text=" <> encoded
+  in case resolveWhatsappCtaNumber mNumber of
+       Just num -> "https://wa.me/" <> num <> "?text=" <> encoded
        Nothing  -> "https://wa.me/?text=" <> encoded
-  where
-    nonEmpty txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
+
+resolveWhatsappCtaNumber :: Maybe Text -> Maybe Text
+resolveWhatsappCtaNumber mNumber =
+  T.filter isDigit <$> (mNumber >>= normalizeCourseRegistrationPhoneInput)
 
 saveCourse :: CourseUpsert -> AppM CourseMetadata
 saveCourse Courses.CourseUpsert{..} = do
