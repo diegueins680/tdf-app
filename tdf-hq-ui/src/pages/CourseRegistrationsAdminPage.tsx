@@ -778,6 +778,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const showFilteredEmptyState = !regsQuery.isLoading
     && !regsQuery.isError
+    && !cohortsQuery.isError
     && hasCustomFilters
     && !hasVisibleRegistrations;
   const showHeaderRefreshAction = regsQuery.isError
@@ -806,7 +807,7 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
-  const showRegistrationFilterPanel = !regsQuery.isError || hasCustomFilters;
+  const showRegistrationFilterPanel = !showFilteredEmptyState && (!regsQuery.isError || hasCustomFilters);
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT

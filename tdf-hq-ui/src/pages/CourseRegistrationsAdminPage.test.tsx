@@ -3574,6 +3574,10 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).not.toContain('Esta vista ya está filtrada por ese estado.');
+      expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite (50)')).toBe(false);
       expect(container.textContent).not.toContain('No hay inscripciones para esta vista.');
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
