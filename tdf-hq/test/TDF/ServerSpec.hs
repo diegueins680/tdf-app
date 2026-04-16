@@ -2177,17 +2177,26 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
 
     describe "validateCourseRegistrationSource" $ do
-        it "normalizes meaningful public registration sources before persistence" $ do
+        it "normalizes meaningful public registration source keywords before persistence" $ do
             validateCourseRegistrationSource " Landing " `shouldBe` Right "landing"
             validateCourseRegistrationSource "WHATSAPP" `shouldBe` Right "whatsapp"
+            validateCourseRegistrationSource "Meta_Ads-2026" `shouldBe` Right "meta_ads-2026"
 
-        it "rejects blank explicit sources instead of silently rewriting them to landing" $
-            case validateCourseRegistrationSource "   " of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "source requerido"
-                Right sourceVal ->
-                    expectationFailure ("Expected blank course-registration source to be rejected, got: " <> show sourceVal)
+        it "rejects blank or malformed sources instead of persisting arbitrary labels" $ do
+            let assertInvalid rawSource expectedMessage =
+                    case validateCourseRegistrationSource rawSource of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right sourceVal ->
+                            expectationFailure
+                                ("Expected invalid course-registration source to be rejected, got: " <> show sourceVal)
+            assertInvalid "   " "source requerido"
+            assertInvalid "meta ads" "source must be an ASCII keyword"
+            assertInvalid "https://example.com" "source must be an ASCII keyword"
+            assertInvalid "campaña" "source must be an ASCII keyword"
+            assertInvalid "---" "source must be an ASCII keyword"
+            assertInvalid (T.replicate 65 "a") "source must be an ASCII keyword"
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $

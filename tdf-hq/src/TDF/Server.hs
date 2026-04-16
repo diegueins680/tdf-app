@@ -3521,10 +3521,22 @@ validateCourseSlug rawSlug =
 
 validateCourseRegistrationSource :: Text -> Either ServerError Text
 validateCourseRegistrationSource raw =
-  let trimmed = T.toLower (T.strip raw)
-  in if T.null trimmed
+  let sourceVal = T.toLower (T.strip raw)
+      isSourceChar ch = isAsciiLower ch || isDigit ch || ch == '_' || ch == '-'
+      isSourceAtom ch = isAsciiLower ch || isDigit ch
+  in if T.null sourceVal
     then Left err400 { errBody = "source requerido" }
-    else Right trimmed
+    else
+      if T.length sourceVal <= 64
+          && T.all isSourceChar sourceVal
+          && T.any isSourceAtom sourceVal
+        then Right sourceVal
+        else
+          Left err400
+            { errBody =
+                "source must be an ASCII keyword using letters, numbers, underscores, "
+                  <> "or hyphens (64 chars max)"
+            }
 
 validateCourseRegistrationPhoneE164 :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationPhoneE164 Nothing = Right Nothing
