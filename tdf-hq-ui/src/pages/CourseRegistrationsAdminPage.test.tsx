@@ -3338,7 +3338,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Acciones')).toBe(1);
+      expect(countButtonsByText(document.body, 'Acciones')).toBe(0);
       expect(document.body.textContent).not.toContain('1 entrada');
       expect(document.body.querySelector('button[aria-label="Editar seguimiento Confirmó transferencia"]')).toBeNull();
       expect(document.body.querySelector('button[aria-label="Eliminar seguimiento Confirmó transferencia"]')).toBeNull();
@@ -3465,6 +3465,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Acciones')).toBe(0);
       expect(document.body.textContent).not.toContain('1 guardado');
       expect(document.body.querySelector('button[aria-label="Editar receipt.pdf"]')).toBeNull();
       expect(document.body.querySelector('button[aria-label="Eliminar receipt.pdf"]')).toBeNull();

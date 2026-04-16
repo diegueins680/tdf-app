@@ -29,6 +29,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -1729,16 +1730,15 @@ export default function CourseRegistrationsAdminPage() {
                               Subido: {formatDate(receipt.crrCreatedAt)}
                             </Typography>
                           </Box>
-                          <Button
+                          <IconButton
                             size="small"
-                            variant="text"
-                            endIcon={<ArrowDropDownIcon />}
+                            title="Opciones del comprobante"
                             aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
                             aria-haspopup="menu"
                             onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
                           >
-                            Acciones
-                          </Button>
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
                         </Stack>
                         {receipt.crrNotes && (
                           <Typography variant="body2" color="text.secondary">
@@ -2776,16 +2776,15 @@ export default function CourseRegistrationsAdminPage() {
                                         />
                                       )}
                                     </Stack>
-                                    <Button
+                                    <IconButton
                                       size="small"
-                                      variant="text"
-                                      endIcon={<ArrowDropDownIcon />}
+                                      title="Opciones del seguimiento"
                                       aria-label={`Abrir acciones para seguimiento ${followUpActionTargetLabel(entry)}`}
                                       aria-haspopup="menu"
                                       onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
                                     >
-                                      Acciones
-                                    </Button>
+                                      <MoreVertIcon fontSize="small" />
+                                    </IconButton>
                                   </Stack>
                                   {entry.crfSubject && (
                                     <Typography variant="subtitle2">{entry.crfSubject}</Typography>
