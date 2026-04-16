@@ -2484,10 +2484,11 @@ listCourseRegistrations
   -> Maybe Int
   -> AppM [DTO.CourseRegistrationDTO]
 listCourseRegistrations mSlug mStatus mLimit = do
+  normalizedSlug <- either throwError pure (validateOptionalCourseSlugFilter mSlug)
   normalizedStatus <- either throwError pure (validateOptionalCourseRegistrationStatusFilter mStatus)
   limit <- either throwError pure (validateCourseRegistrationListLimit 200 mLimit)
   let filters = catMaybes
-        [ (\s -> ME.CourseRegistrationCourseSlug ==. normalizeSlug s) <$> cleanOptional mSlug
+        [ (ME.CourseRegistrationCourseSlug ==.) <$> normalizedSlug
         , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
   rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limit]
@@ -2496,8 +2497,8 @@ listCourseRegistrations mSlug mStatus mLimit = do
 fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
 fetchCourseRegistrationEntity rawSlug regId = do
   regIdValid <- either throwError pure (validateCourseRegistrationId regId)
-  let slugVal = normalizeSlug rawSlug
-      key = toSqlKey regIdValid
+  slugVal <- either throwError pure (validateCourseSlug rawSlug)
+  let key = toSqlKey regIdValid
   mRow <- runDB $ getEntity key
   case mRow of
     Nothing -> throwNotFound "Registro no encontrado"
@@ -3522,6 +3523,22 @@ validateCourseSlug rawSlug =
         { errBody =
             "slug must contain only ASCII letters, numbers, and hyphens, "
               <> "and include at least one letter or number"
+        }
+
+validateOptionalCourseSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCourseSlugFilter Nothing = Right Nothing
+validateOptionalCourseSlugFilter (Just rawSlug)
+  | T.null (T.strip rawSlug) =
+      Left invalidOptionalCourseSlug
+  | otherwise =
+      case validateCourseSlug rawSlug of
+        Right slugVal -> Right (Just slugVal)
+        Left _ -> Left invalidOptionalCourseSlug
+  where
+    invalidOptionalCourseSlug =
+      err400
+        { errBody =
+            "slug must be omitted or use only ASCII letters, numbers, and hyphens"
         }
 
 validateCourseRegistrationSource :: Text -> Either ServerError Text

@@ -82,6 +82,7 @@ import TDF.Server
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
     , validateOptionalCourseSessionDurationHours
+    , validateOptionalCourseSlugFilter
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
@@ -2624,6 +2625,27 @@ spec = describe "TDF.Server helpers" $ do
                 Right meta ->
                     expectationFailure
                         ("Expected invalid public course slug to be rejected, got: " <> show meta)
+
+    describe "validateOptionalCourseSlugFilter" $ do
+        it "keeps omitted filters absent and canonicalizes explicit course slugs" $ do
+            validateOptionalCourseSlugFilter Nothing `shouldBe` Right Nothing
+            validateOptionalCourseSlugFilter (Just " Produccion-Musical-ABR-2026 ")
+                `shouldBe` Right (Just "produccion-musical-abr-2026")
+
+        it "rejects blank or malformed course slug filters instead of widening admin listings" $ do
+            let assertInvalid rawSlug =
+                    case validateOptionalCourseSlugFilter (Just rawSlug) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "slug must be omitted or use only ASCII letters"
+                        Right slugVal ->
+                            expectationFailure
+                                ("Expected invalid optional course slug filter, got: " <> show slugVal)
+            assertInvalid "   "
+            assertInvalid "produccion musical"
+            assertInvalid "course/production"
+            assertInvalid "---"
 
     describe "course upsert sessionStartHour validation" $ do
         it "accepts omitted or in-range session start hours" $ do
