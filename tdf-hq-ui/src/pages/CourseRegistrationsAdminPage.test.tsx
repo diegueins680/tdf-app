@@ -184,7 +184,8 @@ const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estad
 const dossierScopeHint =
   'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 const initialEmptyStateMessage =
-  'Todavía no hay inscripciones. Cuando llegue una desde el formulario público del curso, aquí podrás revisar pago, seguimiento y correos.';
+  'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateActionLabel = 'Configurar cursos';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -3605,6 +3606,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite')).toBe(false);
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Restablecer filtros')).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).not.toBeNull();
+      expect(
+        container.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateActionLabel);
     });
 
     await cleanup();
@@ -3908,8 +3913,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         initialEmptyStateMessage,
       );
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState?.textContent).toContain(initialEmptyStateMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateActionLabel);
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(countOccurrences(container, initialEmptyStateMessage)).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('tamaño del lote');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);

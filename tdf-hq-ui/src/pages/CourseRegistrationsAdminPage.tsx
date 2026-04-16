@@ -30,7 +30,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   Courses,
   type CourseCohortOptionDTO,
@@ -53,7 +53,7 @@ const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar e
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
-const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando llegue una desde el formulario público del curso, aquí podrás revisar pago, seguimiento y correos.';
+const initialEmptyStateMessage = 'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const dossierScopeHint =
   'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
@@ -1743,14 +1743,29 @@ export default function CourseRegistrationsAdminPage() {
 
       {pageFlash && <Alert severity={pageFlash.severity}>{pageFlash.message}</Alert>}
 
-      {showRegistrationFilterPanel && (
+      {showRegistrationFilterPanel && showInitialFilterGuidance && (
+        <Alert
+          severity="info"
+          variant="outlined"
+          data-testid="course-registration-initial-empty-state"
+          action={(
+            <Button
+              color="inherit"
+              size="small"
+              component={RouterLink}
+              to="/configuracion/cursos"
+            >
+              Configurar cursos
+            </Button>
+          )}
+        >
+          {initialEmptyStateMessage}
+        </Alert>
+      )}
+
+      {showRegistrationFilterPanel && !showInitialFilterGuidance && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
-          {showInitialFilterGuidance ? (
-            <Alert severity="info" variant="outlined">
-              {initialEmptyStateMessage}
-            </Alert>
-          ) : (
-            <>
+          <>
             <Grid container spacing={2}>
               {combinedSingleChoiceSummary ? (
                 <Grid item xs={12}>
@@ -2108,8 +2123,7 @@ export default function CourseRegistrationsAdminPage() {
                 )}
               </Stack>
             )}
-            </>
-          )}
+          </>
         </Paper>
       )}
 
