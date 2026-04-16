@@ -2225,6 +2225,9 @@ export default function CourseRegistrationsAdminPage() {
                     reg.crPhoneE164,
                     reg.crId,
                   );
+                  const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
+                    && !reg.crEmail?.trim()
+                    && !reg.crPhoneE164?.trim();
                   const rowActionTarget = registrationActionTargetLabel(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
@@ -2275,7 +2278,7 @@ export default function CourseRegistrationsAdminPage() {
                             {rowIdentity.primary}
                           </Link>
                         </Typography>
-                        {rowIdentity.secondary && (
+                        {rowIdentity.secondary && !rowUsesGeneratedIdentity && (
                           <Typography variant="body2" color="text.secondary">
                             {rowIdentity.secondary}
                           </Typography>

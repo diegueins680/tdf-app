@@ -1054,6 +1054,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(container, 'Registro #101')).toBe(true);
       expect(hasExactText(container, 'Registro #102')).toBe(true);
+      expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(countOccurrences(container, 'Sin nombre')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de registro #"]')).toHaveLength(2);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(2);
