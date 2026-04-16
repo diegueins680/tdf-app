@@ -96,6 +96,7 @@ import TDF.Server
     , validateMarketplaceBuyerEmail
     , requireMarketplaceCartTotals
     , parsePayPalCaptureOrderStatus
+    , validatePayPalCaptureOrderId
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
     , validateLabelTrackTitle
@@ -2177,6 +2178,29 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected unsupported PayPal capture status to be rejected, got: "
                             <> show statusVal
                         )
+
+    describe "validatePayPalCaptureOrderId" $ do
+        it "trims path-safe PayPal order ids before capture" $ do
+            validatePayPalCaptureOrderId "  5O190127TN364715T  "
+                `shouldBe` Right "5O190127TN364715T"
+            validatePayPalCaptureOrderId "ORDER-abc_123"
+                `shouldBe` Right "ORDER-abc_123"
+
+        it "rejects blank or path-shaped PayPal order ids before calling PayPal" $ do
+            let assertInvalid rawId expectedMessage =
+                    case validatePayPalCaptureOrderId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right orderId ->
+                            expectationFailure
+                                ( "Expected invalid PayPal order id to be rejected, got: "
+                                    <> show orderId
+                                )
+            assertInvalid "   " "paypalOrderId is required"
+            assertInvalid "ORDER/../capture" "paypalOrderId must contain only ASCII letters"
+            assertInvalid "ORDER 123" "paypalOrderId must contain only ASCII letters"
+            assertInvalid (T.replicate 129 "A") "paypalOrderId must be 128 characters or fewer"
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do

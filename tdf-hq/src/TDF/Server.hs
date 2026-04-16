@@ -5933,6 +5933,25 @@ parsePayPalCaptureOrderStatus rawStatus =
               "Unsupported PayPal capture status: " <> T.strip rawStatus
         }
 
+validatePayPalCaptureOrderId :: Text -> Either ServerError Text
+validatePayPalCaptureOrderId rawOrderId =
+  case normalizeOptionalInput (Just rawOrderId) of
+    Nothing ->
+      Left err400 { errBody = "paypalOrderId is required" }
+    Just orderId
+      | T.length orderId > 128 ->
+          Left err400 { errBody = "paypalOrderId must be 128 characters or fewer" }
+      | T.all isPayPalOrderIdChar orderId ->
+          Right orderId
+      | otherwise ->
+          Left err400
+            { errBody =
+                "paypalOrderId must contain only ASCII letters, digits, hyphen, or underscore"
+            }
+  where
+    isPayPalOrderIdChar c =
+      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
   case normalizeMarketplaceOrderStatusToken rawStatus of
@@ -8144,6 +8163,7 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
 capturePaypalOrder :: PaypalCaptureReq -> AppM MarketplaceOrderDTO
 capturePaypalOrder PaypalCaptureReq{..} = do
   orderKey <- parseOrderId pcCaptureOrderId
+  paypalOrderId <- either throwError pure (validatePayPalCaptureOrderId pcCapturePaypalId)
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
   case mOrder of
@@ -8151,7 +8171,8 @@ capturePaypalOrder PaypalCaptureReq{..} = do
     Just order -> do
       (cid, sec, baseUrl) <- loadPaypalEnv
       manager <- liftIO $ newManager tlsManagerSettings
-      PayPalCaptureOutcome statusTxt payerEmail <- capturePaypalOrderRemote manager cid sec baseUrl pcCapturePaypalId
+      PayPalCaptureOutcome statusTxt payerEmail <-
+        capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId
       now <- liftIO getCurrentTime
       nextStatus <- either throwError pure (parsePayPalCaptureOrderStatus statusTxt)
       let paidAtVal =
@@ -8160,7 +8181,7 @@ capturePaypalOrder PaypalCaptureReq{..} = do
               else ME.marketplaceOrderPaidAt order
       liftIO $ flip runSqlPool envPool $ update orderKey
         [ ME.MarketplaceOrderStatus =. nextStatus
-        , ME.MarketplaceOrderPaypalOrderId =. Just pcCapturePaypalId
+        , ME.MarketplaceOrderPaypalOrderId =. Just paypalOrderId
         , ME.MarketplaceOrderPaymentProvider =. Just "paypal"
         , ME.MarketplaceOrderPaypalPayerEmail =. (payerEmail <|> ME.marketplaceOrderPaypalPayerEmail order)
         , ME.MarketplaceOrderPaidAt =. paidAtVal
