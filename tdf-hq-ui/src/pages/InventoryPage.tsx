@@ -68,6 +68,13 @@ function normalizeInventoryField(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
+const INVENTORY_LOCATION_SETUP_GUIDANCE =
+  'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
+const INVENTORY_MOVEMENT_GUIDANCE =
+  'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.';
+const INVENTORY_NO_MOVEMENT_GUIDANCE =
+  'En esta vista no hay movimientos disponibles por ahora.';
+
 export default function InventoryPage() {
   const qc = useQueryClient();
   const assetsQuery = useQuery({
@@ -224,6 +231,19 @@ export default function InventoryPage() {
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
+  const showMovementGuidance = grouped.length > 1;
+  const hasVisibleMovementActions = grouped.some((asset) => {
+    const movementState = getInventoryMovementState(asset.status);
+    return movementState.canCheckout || movementState.canCheckin;
+  });
+  const tableGuidance = [
+    showLocationSetupGuidance ? INVENTORY_LOCATION_SETUP_GUIDANCE : '',
+    showMovementGuidance
+      ? (hasVisibleMovementActions ? INVENTORY_MOVEMENT_GUIDANCE : INVENTORY_NO_MOVEMENT_GUIDANCE)
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -341,15 +361,11 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
-              {showLocationSetupGuidance && (
+              {tableGuidance && (
                 <Typography variant="body2" color="rgba(226,232,240,0.68)">
-                  La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.
+                  {tableGuidance}
                 </Typography>
               )}
-              <Typography variant="body2" color="rgba(226,232,240,0.68)">
-                Usa el botón de check-out o check-in cuando esté disponible para registrar el siguiente movimiento.
-                Abre Acciones para ver QR o historial.
-              </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -408,10 +424,10 @@ export default function InventoryPage() {
                               size="small"
                               variant="text"
                               onClick={(event) => openActionsMenu(event, asset)}
-                              aria-label={`Abrir acciones para ${asset.name}`}
+                              aria-label={`Abrir QR e historial de ${asset.name}`}
                               sx={{ textTransform: 'none' }}
                             >
-                              Acciones
+                              QR e historial
                             </Button>
                           </Stack>
                         </TableCell>

@@ -261,20 +261,31 @@ describe('InventoryPage', () => {
         expect(container.textContent).not.toContain('Active');
         expect(container.textContent).not.toContain('Booked');
         expect(container.textContent).toContain(
-          'Usa el botón de check-out o check-in cuando esté disponible para registrar el siguiente movimiento. Abre Acciones para ver QR o historial.',
+          'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
-        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Abre Acciones para ver QR o historial.');
+        expect(container.querySelectorAll('button[aria-label^="Abrir QR e historial de "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'QR e historial',
+          ),
+        ).toHaveLength(2);
         expect(
           Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Historial',
           ),
         ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Acciones',
+          ),
+        ).toBe(false);
       });
 
       await act(async () => {
-        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir acciones para Neumann U87"]');
+        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir QR e historial de Neumann U87"]');
         actionsButton?.click();
         await flushPromises();
       });
@@ -343,7 +354,7 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).toContain(
-          'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.',
+          'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada. Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
@@ -403,6 +414,34 @@ describe('InventoryPage', () => {
         expect(container.querySelector('[aria-label="Abrir check-out de Prestado Uno"]')).toBeNull();
         expect(container.querySelector('[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
         expect(container.querySelector('[aria-label="Abrir check-out de Retirado Uno"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the table guidance honest when the current inventory has no movement actions', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({ assetId: 'asset-1', name: 'Retirado Uno', status: 'Retired' }),
+      buildAsset({ assetId: 'asset-2', name: 'Retirado Dos', status: 'Retired' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('En esta vista no hay movimientos disponibles por ahora.');
+        expect(container.textContent).not.toContain(
+          'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
+        );
+        expect(container.querySelector('button[aria-label="Abrir check-out de Retirado Uno"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir check-out de Retirado Dos"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Dos"]')).toBeNull();
+        expect(container.querySelectorAll('button[aria-label^="Abrir QR e historial de "]')).toHaveLength(2);
       });
     } finally {
       await cleanup();
