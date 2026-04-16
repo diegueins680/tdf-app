@@ -584,6 +584,28 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected duplicate attachment field to be rejected, got: " <> show payload)
 
+        it "rejects unexpected scalar or file fields instead of silently ignoring typos" $ do
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("priority", "p1")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "Unexpected field: priority"
+                Right payload ->
+                    expectationFailure ("Expected unexpected feedback field to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkFeedbackMultipartWithFiles
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    ]
+                    [ mkUnexpectedFeedbackAttachment "screenshot" "screen.png"
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    err `shouldContain` "Unexpected file field: screenshot"
+                Right payload ->
+                    expectationFailure ("Expected unexpected feedback file field to be rejected, got: " <> show payload)
+
     describe "normalizeInvitationStatus" $ do
         it "falls back to pending when missing" $ do
             normalizeInvitationStatus Nothing `shouldBe` "pending"
@@ -2610,6 +2632,15 @@ mkFeedbackAttachment :: Text -> FileData Tmp
 mkFeedbackAttachment fileName =
     FileData
         { fdInputName = "attachment"
+        , fdFileName = fileName
+        , fdFileCType = "image/png"
+        , fdPayload = "/tmp/mock-feedback-upload"
+        }
+
+mkUnexpectedFeedbackAttachment :: Text -> Text -> FileData Tmp
+mkUnexpectedFeedbackAttachment inputName fileName =
+    FileData
+        { fdInputName = inputName
         , fdFileName = fileName
         , fdFileCType = "image/png"
         , fdPayload = "/tmp/mock-feedback-upload"

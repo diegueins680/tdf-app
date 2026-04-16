@@ -39,6 +39,7 @@ data FeedbackPayload = FeedbackPayload
 
 instance FromMultipart Tmp FeedbackPayload where
   fromMultipart multipart = do
+    rejectUnexpectedParts multipart
     title <- lookupText "title" multipart
     description <- lookupText "description" multipart
     consent <- optionalBool "consent" multipart
@@ -92,6 +93,32 @@ instance FromMultipart Tmp FeedbackPayload where
           [] -> Right Nothing
           [file] -> Right (Just file)
           _ -> Left ("Duplicate file field: " <> T.unpack name)
+
+      rejectUnexpectedParts mp =
+        case (unexpectedInputs, unexpectedFiles) of
+          (fieldName : _, _) -> Left ("Unexpected field: " <> T.unpack fieldName)
+          (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
+          _ -> Right ()
+        where
+          expectedInputs =
+            [ "title"
+            , "description"
+            , "category"
+            , "severity"
+            , "contactEmail"
+            , "consent"
+            ]
+          expectedFiles = ["attachment"]
+          unexpectedInputs =
+            [ name
+            | Input name _ <- inputs mp
+            , name `notElem` expectedInputs
+            ]
+          unexpectedFiles =
+            [ fdInputName file
+            | file <- files mp
+            , fdInputName file `notElem` expectedFiles
+            ]
 
       lookupSingleInput name mp =
         case filter (\(Input nm _) -> nm == name) (inputs mp) of
