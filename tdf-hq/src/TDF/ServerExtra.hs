@@ -977,15 +977,16 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
       maybe (throwError err404) (pure . toRoomDTO) result
 
     ensureRoomNameAvailable currentRoomKey nameClean = do
+      let canonicalName = canonicalRoomName nameClean
       duplicate <- withPool $ do
-        existing <- getBy (UniqueRoomName nameClean)
+        existing <- selectList ([] :: [Filter Room]) []
         pure $
-          case existing of
-            Nothing -> False
-            Just (Entity existingKey _) ->
-              case currentRoomKey of
-                Just currentKey -> existingKey /= currentKey
-                Nothing -> True
+          any
+            (\(Entity existingKey room) ->
+                maybe True (/= existingKey) currentRoomKey
+                  && canonicalRoomName (roomName room) == canonicalName
+            )
+            existing
       when duplicate $
         throwError err409 { errBody = "A room with this name already exists" }
 
@@ -998,15 +999,21 @@ toRoomDTO (Entity key room) = RoomDTO
 
 normalizeRoomName :: Text -> Either ServerError Text
 normalizeRoomName rawName =
-  let trimmed = T.strip rawName
-  in if T.null trimmed
+  let normalized = normalizeRoomNameValue rawName
+  in if T.null normalized
        then Left err400 { errBody = "Room name is required" }
-       else Right trimmed
+       else Right normalized
 
 normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeRoomNameUpdate Nothing = Right Nothing
 normalizeRoomNameUpdate (Just rawName) =
   Just <$> normalizeRoomName rawName
+
+normalizeRoomNameValue :: Text -> Text
+normalizeRoomNameValue = T.unwords . T.words
+
+canonicalRoomName :: Text -> Text
+canonicalRoomName = T.toCaseFold . normalizeRoomNameValue
 
 normalizePipelineCardTitle :: Text -> Either ServerError Text
 normalizePipelineCardTitle rawTitle =

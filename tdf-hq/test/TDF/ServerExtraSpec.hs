@@ -322,9 +322,9 @@ spec = do
       normalizeAssetNotesUpdate (Just "   ") `shouldBe` Just Nothing
 
   describe "normalizeRoomName" $ do
-    it "trims meaningful room names on create and update" $ do
-      normalizeRoomName "  Sala A  " `shouldBe` Right "Sala A"
-      normalizeRoomNameUpdate (Just "  Control Room  ") `shouldBe` Right (Just "Control Room")
+    it "trims and collapses meaningful room names on create and update" $ do
+      normalizeRoomName "  Sala   A  " `shouldBe` Right "Sala A"
+      normalizeRoomNameUpdate (Just "  Control \t Room  ") `shouldBe` Right (Just "Control Room")
       normalizeRoomNameUpdate Nothing `shouldBe` Right Nothing
 
     it "rejects explicit blank room names instead of storing whitespace-only records" $ do
@@ -390,6 +390,20 @@ spec = do
         Right value ->
           expectationFailure ("Expected duplicate room create to fail, got " <> show value)
 
+    it "rejects room creates that only differ by case or repeated whitespace" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      result <- runRoomCreateHandler
+        (insertKey existingKey (fixtureRoom "Sala A"))
+        (RoomCreate "  sala   a  ")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
+        Right value ->
+          expectationFailure ("Expected canonical duplicate room create to fail, got " <> show value)
+
     it "rejects room renames that collide with another room instead of failing ambiguously on update" $ do
       existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
         Just key -> pure key
@@ -409,6 +423,26 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
         Right value ->
           expectationFailure ("Expected duplicate room patch to fail, got " <> show value)
+
+    it "rejects room renames that collide after case-and-spacing normalization" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      otherKey <- case (fromPathPiece otherRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid other room fixture key" >> fail "unreachable"
+      result <- runRoomPatchHandler
+        (do
+            insertKey existingKey (fixtureRoom "Sala A")
+            insertKey otherKey (fixtureRoom "Control Room"))
+        otherRoomId
+        (RoomUpdate (Just "  sala   a  ") Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
+        Right value ->
+          expectationFailure ("Expected canonical duplicate room patch to fail, got " <> show value)
 
   describe "pipeline card write normalization" $ do
     let pipelineType = "recording"
