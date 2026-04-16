@@ -1363,6 +1363,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
+  const canSubmitFollowUp = Boolean(trimToNull(followUpForm.notes));
   const showCompactMarkPaidFollowUpState = selectedDossier?.intent === 'markPaid'
     && followUps.length === 0
     && !showFollowUpComposer;
@@ -2623,7 +2624,7 @@ export default function CourseRegistrationsAdminPage() {
                                 <Button
                                   variant="contained"
                                   onClick={handleSubmitFollowUp}
-                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending}
+                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
                                 >
                                   {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
                                 </Button>

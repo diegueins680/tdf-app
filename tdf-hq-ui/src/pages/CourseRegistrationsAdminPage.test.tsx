@@ -2944,7 +2944,18 @@ describe('CourseRegistrationsAdminPage', () => {
         ),
       ).toBe(false);
       expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'Nota de seguimiento'), 'Confirmó que enviará el comprobante.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(false);
     });
 
     await act(async () => {
