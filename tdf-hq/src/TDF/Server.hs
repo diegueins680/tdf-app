@@ -2347,7 +2347,7 @@ saveCourse Courses.CourseUpsert{..} = do
   let titleClean = T.strip title
   when (T.null titleClean) $
     throwBadRequest "titulo requerido"
-  capacityClean <- either throwError pure (validateCourseNonNegativeField "capacity" capacity)
+  capacityClean <- either throwError pure (validateCoursePositiveField "capacity" capacity)
   priceCentsClean <- either throwError pure (validateCourseNonNegativeField "priceCents" priceCents)
   startHourClean <- either throwError pure (validateOptionalCourseSessionStartHour sessionStartHour)
   durationHoursClean <- either throwError pure (validateOptionalCourseSessionDurationHours sessionDurationHours)

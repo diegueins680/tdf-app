@@ -78,6 +78,7 @@ import TDF.Server
     , validateCmsLocaleFilter
     , validateCourseCurrency
     , validateCourseNonNegativeField
+    , validateCoursePositiveField
     , validateCourseSlug
     , loadCourseMetadata
     , validateCourseRegistrationContactChannels
@@ -2691,21 +2692,30 @@ spec = describe "TDF.Server helpers" $ do
                     assertInvalid (parseCourseFollowUpType (Just "telegram"))
 
     describe "course upsert numeric validation" $ do
-        it "accepts non-negative required and optional values" $ do
+        it "accepts non-negative prices, positive capacities, and optional values" $ do
             validateCourseNonNegativeField "priceCents" 0 `shouldBe` Right 0
-            validateCourseNonNegativeField "capacity" 25 `shouldBe` Right 25
+            validateCoursePositiveField "capacity" 25 `shouldBe` Right 25
             validateOptionalCourseNonNegativeField "sessionDurationHours" (Just 3) `shouldBe` Right (Just 3)
 
-        it "rejects negative values instead of silently clamping them to zero" $ do
-            let assertInvalid result fieldName = case result of
+        it "rejects invalid values before publishing impossible course metadata" $ do
+            let assertInvalid result expectedMessage = case result of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 400
-                        BL8.unpack (errBody serverErr) `shouldContain` (fieldName <> " must be greater than or equal to 0")
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
                     Right value ->
-                        expectationFailure ("Expected a negative " <> fieldName <> " error, got: " <> show value)
-            assertInvalid (validateCourseNonNegativeField "priceCents" (-1)) "priceCents"
-            assertInvalid (validateCourseNonNegativeField "capacity" (-5)) "capacity"
-            assertInvalid (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2))) "sessionDurationHours"
+                        expectationFailure ("Expected a numeric validation error, got: " <> show value)
+            assertInvalid
+                (validateCourseNonNegativeField "priceCents" (-1))
+                "priceCents must be greater than or equal to 0"
+            assertInvalid
+                (validateCoursePositiveField "capacity" 0)
+                "capacity must be greater than 0"
+            assertInvalid
+                (validateCoursePositiveField "capacity" (-5))
+                "capacity must be greater than 0"
+            assertInvalid
+                (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2)))
+                "sessionDurationHours must be greater than or equal to 0"
 
     describe "course upsert currency validation" $ do
         it "defaults blank course currencies to USD and normalizes explicit ISO codes" $ do
