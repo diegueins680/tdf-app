@@ -36,6 +36,7 @@ import {
   describeServiceDefaults,
   getBookingCustomerFieldState,
   requiresEngineerForService,
+  shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
@@ -330,6 +331,7 @@ export default function BookingsPage() {
     () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
     [customerOptions.length, customerPartyId],
   );
+  const showQuickTemplateField = shouldShowQuickBookingTemplate({ mode, serviceLocked });
   const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
@@ -1035,42 +1037,44 @@ const openDialogForRange = (start: Date, end: Date) => {
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-            <TextField
-              select
-              label="Plantilla rápida (opcional)"
-              value={template}
-              onChange={(e) => {
-                const val = String(e.target.value);
-                setTemplate(val);
-                const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
-                  rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
-                  recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
-                  mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
-                  curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
-                };
-                const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
-                  ? presetMap[val as keyof typeof presetMap]
-                  : undefined;
-                if (preset) {
-                  setTitle(preset.title);
-                  setServiceType(preset.svc);
-                  setNotes((prev) => (prev ? prev : preset.note));
-                  const defaults = defaultRoomsForService(preset.svc);
-                  if (defaults.length) {
-                    setAssignedRoomIds(defaults.map((r) => r.roomId));
-                    setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
+            {showQuickTemplateField && (
+              <TextField
+                select
+                label="Plantilla rápida (opcional)"
+                value={template}
+                onChange={(e) => {
+                  const val = String(e.target.value);
+                  setTemplate(val);
+                  const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
+                    rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
+                    recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
+                    mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
+                    curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
+                  };
+                  const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
+                    ? presetMap[val as keyof typeof presetMap]
+                    : undefined;
+                  if (preset) {
+                    setTitle(preset.title);
+                    setServiceType(preset.svc);
+                    setNotes((prev) => (prev ? prev : preset.note));
+                    const defaults = defaultRoomsForService(preset.svc);
+                    if (defaults.length) {
+                      setAssignedRoomIds(defaults.map((r) => r.roomId));
+                      setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
+                    }
                   }
-                }
-              }}
-              helperText="Úsala si quieres precargar servicio, salas y notas de una vez."
-              fullWidth
-            >
-              <MenuItem value="">Sin plantilla</MenuItem>
-              <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
-              <MenuItem value="recording">Recording (cabina + control)</MenuItem>
-              <MenuItem value="mix">Mix/Master (control room)</MenuItem>
-              <MenuItem value="curso">Curso/bloque</MenuItem>
-            </TextField>
+                }}
+                helperText="Úsala si quieres precargar servicio, salas y notas de una vez."
+                fullWidth
+              >
+                <MenuItem value="">Sin plantilla</MenuItem>
+                <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
+                <MenuItem value="recording">Recording (cabina + control)</MenuItem>
+                <MenuItem value="mix">Mix/Master (control room)</MenuItem>
+                <MenuItem value="curso">Curso/bloque</MenuItem>
+              </TextField>
+            )}
             <TextField
               label="Notas (opcional)"
               value={notes}

@@ -87,3 +87,11 @@ export const getBookingCustomerFieldState = ({
     showQuickCreateAction: true,
   };
 };
+
+export const shouldShowQuickBookingTemplate = ({
+  mode,
+  serviceLocked,
+}: {
+  mode: 'create' | 'edit';
+  serviceLocked: boolean;
+}) => mode === 'create' && !serviceLocked;

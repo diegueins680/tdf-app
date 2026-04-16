@@ -3,6 +3,7 @@ import {
   describeServiceDefaults,
   getBookingCustomerFieldState,
   requiresEngineerForService,
+  shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
 
 describe('bookingsPageLogic', () => {
@@ -51,5 +52,11 @@ describe('bookingsPageLogic', () => {
       quickCreateLabel: 'Crear contacto nuevo',
       showQuickCreateAction: false,
     });
+  });
+
+  it('keeps quick booking templates limited to unlocked create flows', () => {
+    expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: false })).toBe(true);
+    expect(shouldShowQuickBookingTemplate({ mode: 'edit', serviceLocked: false })).toBe(false);
+    expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: true })).toBe(false);
   });
 });
