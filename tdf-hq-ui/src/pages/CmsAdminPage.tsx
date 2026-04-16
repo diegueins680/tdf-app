@@ -620,7 +620,7 @@ export default function CmsAdminPage() {
             Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
           </Typography>
         </Box>
-        {hasSlugSelection && (
+        {hasSlugSelection && liveContent && (
           <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
             Abrir página en vivo
           </Button>
@@ -706,7 +706,7 @@ export default function CmsAdminPage() {
                     {!liveQuery.isError && !liveQuery.isLoading && !liveContent && (
                       <Alert severity="warning">
                         <AlertTitle>Sin contenido publicado</AlertTitle>
-                        Publica una versión para ver la vista previa en vivo.
+                        Publica una versión para activar la vista previa en vivo y el enlace a la página pública.
                       </Alert>
                     )}
                     {liveContent && (

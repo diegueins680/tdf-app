@@ -407,6 +407,10 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
+      expect(container.textContent).toContain(
+        'Publica una versión para activar la vista previa en vivo y el enlace a la página pública.',
+      );
+      expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
       expect(countActionsByText(container, 'Comparar con live')).toBe(0);
       expect(container.textContent).toContain(
