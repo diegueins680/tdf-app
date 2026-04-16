@@ -183,6 +183,8 @@ const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const dossierScopeHint =
   'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
+const initialEmptyStateMessage =
+  'Todavía no hay inscripciones. Cuando llegue una desde el formulario público del curso, aquí podrás revisar pago, seguimiento y correos.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -3486,7 +3488,7 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 200,
       });
       expect(container.textContent).toContain(
-        'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
+        initialEmptyStateMessage,
       );
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales:');
@@ -3769,10 +3771,11 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.',
+        initialEmptyStateMessage,
       );
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
-      expect(countOccurrences(container, 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.')).toBe(1);
+      expect(countOccurrences(container, initialEmptyStateMessage)).toBe(1);
+      expect(container.textContent).not.toContain('tamaño del lote');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Cambiar estado:');

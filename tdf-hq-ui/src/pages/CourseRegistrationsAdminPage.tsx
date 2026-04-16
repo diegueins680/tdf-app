@@ -53,7 +53,7 @@ const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar e
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
-const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando exista la primera, aquí aparecerán cohorte, estado y tamaño del lote para filtrar la vista.';
+const initialEmptyStateMessage = 'Todavía no hay inscripciones. Cuando llegue una desde el formulario público del curso, aquí podrás revisar pago, seguimiento y correos.';
 const dossierScopeHint =
   'Expediente reúne notas, pagos, seguimiento y correos. Ábrelo desde el nombre y usa Estado para cambios rápidos.';
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
