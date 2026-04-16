@@ -11,6 +11,8 @@ import Test.Hspec
 
 import qualified TDF.API as API
 import qualified TDF.API.Calendar as Calendar
+import qualified TDF.API.Facebook as Facebook
+import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types
@@ -102,6 +104,49 @@ spec = do
             decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
             decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":\"   \"}" `shouldSatisfy` isLeft
             decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
+    describe "social reply request FromJSON" $ do
+        it "accepts canonical manual reply payloads" $ do
+            case decodeInstagramReply
+                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical Instagram reply payload to decode, got: " <> err)
+                Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "ig-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "ig-msg-1"
+
+            case decodeFacebookReply
+                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical Facebook reply payload to decode, got: " <> err)
+                Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "fb-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "fb-msg-1"
+
+            case decodeWhatsAppReply
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":\"wa-msg-1\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical WhatsApp reply payload to decode, got: " <> err)
+                Right (API.WhatsAppReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "+593991234567"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "wa-msg-1"
+
+        it "rejects unexpected reply keys so over-posted social replies fail before dispatch" $ do
+            decodeInstagramReply
+                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"senderId\":\"other\"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"externalId\":\"fb-msg-1\"}"
+                `shouldSatisfy` isLeft
+            decodeWhatsAppReply
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
 
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
@@ -639,6 +684,12 @@ spec = do
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
     decodeTidalAgentRequest = eitherDecode
+    decodeInstagramReply :: BL8.ByteString -> Either String Instagram.InstagramReplyReq
+    decodeInstagramReply = eitherDecode
+    decodeFacebookReply :: BL8.ByteString -> Either String Facebook.FacebookReplyReq
+    decodeFacebookReply = eitherDecode
+    decodeWhatsAppReply :: BL8.ByteString -> Either String API.WhatsAppReplyReq
+    decodeWhatsAppReply = eitherDecode
     decodeAdsInquiry :: BL8.ByteString -> Either String API.AdsInquiry
     decodeAdsInquiry = eitherDecode
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn

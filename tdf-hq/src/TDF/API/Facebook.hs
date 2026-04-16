@@ -4,7 +4,14 @@
 
 module TDF.API.Facebook where
 
-import           Data.Aeson (Value, FromJSON, ToJSON)
+import           Data.Aeson
+  ( FromJSON(..)
+  , ToJSON
+  , Value
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  )
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
@@ -15,7 +22,8 @@ data FacebookReplyReq = FacebookReplyReq
   , frExternalId :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON FacebookReplyReq
+instance FromJSON FacebookReplyReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 instance ToJSON FacebookReplyReq
 
 type FacebookAPI =

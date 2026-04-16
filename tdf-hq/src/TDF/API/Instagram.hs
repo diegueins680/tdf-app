@@ -4,7 +4,14 @@
 
 module TDF.API.Instagram where
 
-import           Data.Aeson (Value, FromJSON, ToJSON)
+import           Data.Aeson
+  ( FromJSON(..)
+  , ToJSON
+  , Value
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  )
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
@@ -15,7 +22,8 @@ data InstagramReplyReq = InstagramReplyReq
   , irExternalId :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON InstagramReplyReq
+instance FromJSON InstagramReplyReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 instance ToJSON InstagramReplyReq
 
 type InstagramAPI =

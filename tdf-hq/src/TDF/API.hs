@@ -160,7 +160,8 @@ data WhatsAppReplyReq = WhatsAppReplyReq
   , wrExternalId :: Maybe Text
   } deriving (Show, Generic)
 
-instance FromJSON WhatsAppReplyReq
+instance FromJSON WhatsAppReplyReq where
+  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
 instance ToJSON WhatsAppReplyReq
 
 type WhatsAppReplyAPI =
