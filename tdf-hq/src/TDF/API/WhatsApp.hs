@@ -183,8 +183,9 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
     emailValue = T.toLower (T.strip rawEmail)
 
 isValidLeadCompletionToken :: Text -> Bool
-isValidLeadCompletionToken =
-  T.all isValidLeadCompletionTokenChar
+isValidLeadCompletionToken tokenValue =
+  T.length tokenValue <= 128
+    && T.all isValidLeadCompletionTokenChar tokenValue
 
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =

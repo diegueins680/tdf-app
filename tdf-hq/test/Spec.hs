@@ -2282,6 +2282,7 @@ main = hspec $ do
             assertInvalid "token 123"
             assertInvalid "token/123"
             assertInvalid "token?123"
+            assertInvalid (Data.Text.replicate 129 "a")
 
     describe "validateLeadCompletionId" $ do
         it "accepts only positive lead identifiers before the completion lookup runs" $
