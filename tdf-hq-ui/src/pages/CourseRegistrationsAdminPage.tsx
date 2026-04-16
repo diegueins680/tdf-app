@@ -783,6 +783,11 @@ export default function CourseRegistrationsAdminPage() {
     && !hasVisibleRegistrations;
   const showHeaderRefreshAction = regsQuery.isError
     || cohortsQuery.isError;
+  const headerRefreshLabel = cohortsQuery.isError
+    ? regsQuery.isError
+      ? 'Reintentar datos'
+      : 'Reintentar cohortes'
+    : 'Refrescar lista';
   const showInlineListRefreshAction = !showHeaderRefreshAction
     && (hasCustomFilters || loadedRegistrationCount > 1 || Boolean(copyMessage));
   const showFilteredUtilityRow = hasCustomFilters
@@ -989,7 +994,19 @@ export default function CourseRegistrationsAdminPage() {
   }, [dossierQuery.data?.crdRegistration.crId, dossierQuery.data?.crdRegistration.crAdminNotes]);
 
   const handleRefresh = () => {
-    void qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
+    const shouldRefreshCohorts = cohortsQuery.isError;
+    const shouldRefreshRegistrations = regsQuery.isError || !shouldRefreshCohorts;
+    const requests: Promise<unknown>[] = [];
+
+    if (shouldRefreshRegistrations) {
+      requests.push(qc.invalidateQueries({ queryKey: ['admin', 'course-registrations'] }));
+    }
+
+    if (shouldRefreshCohorts) {
+      requests.push(qc.invalidateQueries({ queryKey: ['admin', 'course-cohorts'] }));
+    }
+
+    void Promise.all(requests);
   };
 
   const handleRefreshDossier = () => {
@@ -1733,9 +1750,9 @@ export default function CourseRegistrationsAdminPage() {
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
-              disabled={regsQuery.isFetching}
+              disabled={regsQuery.isFetching || cohortsQuery.isFetching}
             >
-              Refrescar lista
+              {headerRefreshLabel}
             </Button>
           </Stack>
         )}

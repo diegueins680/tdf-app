@@ -3902,6 +3902,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('scopes the header retry to cohort loading failures when registrations already loaded', async () => {
+    listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('No se pudieron cargar cohortes.');
+      expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listCohortsMock).toHaveBeenCalledTimes(2);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).not.toContain('No se pudieron cargar cohortes.');
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first-run empty state focused on onboarding guidance instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
