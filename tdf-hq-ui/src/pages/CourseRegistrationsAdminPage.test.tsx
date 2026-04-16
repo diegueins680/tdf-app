@@ -2331,6 +2331,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('omits empty system-email guidance when the registration has no email contact', async () => {
+    const emailLessRegistration = buildRegistration({ crEmail: null });
+    listRegistrationsMock.mockResolvedValue([emailLessRegistration]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({ crdRegistration: emailLessRegistration }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('+593999000111');
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
+      expect(document.body.querySelector('[data-testid="course-registration-empty-email-history-hint"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('hides passive empty email guidance when the pay action is already primary', async () => {
     getRegistrationDossierMock.mockResolvedValue(buildDossier({ crdCanMarkPaid: true }));
 

@@ -1426,7 +1426,9 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const showDossierActionRow = canMarkPaid || showSystemEmailHistoryAction;
+  const hasRegistrationEmail = Boolean(activeRegistration?.crEmail?.trim());
   const showEmptySystemEmailHistoryHint = canReviewSystemEmails
+    && hasRegistrationEmail
     && !showDossierActionRow
     && !emailEventsQuery.isLoading
     && selectedDossierId != null;
