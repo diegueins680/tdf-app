@@ -10,6 +10,7 @@ import Servant.API (MimeUnrender (mimeUnrender))
 import Test.Hspec
 
 import qualified TDF.API as API
+import qualified TDF.API.Calendar as Calendar
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import TDF.API.Types
@@ -396,6 +397,48 @@ spec = do
                 "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "Calendar admin request FromJSON" $ do
+        it "normalizes canonical token exchange and sync payloads before handlers call Google" $ do
+            case decodeCalendarTokenExchange
+                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\"   \",\"calendarId\":\" primary \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical calendar token payload to decode, got: " <> err)
+                Right (Calendar.TokenExchangeIn codeVal redirectUriVal calendarIdVal) -> do
+                    codeVal `shouldBe` "oauth-code-123"
+                    redirectUriVal `shouldBe` Nothing
+                    calendarIdVal `shouldBe` "primary"
+
+            case decodeCalendarSync
+                "{\"calendarId\":\" primary \",\"from\":\"2026-05-02T15:00:00Z\",\"to\":\"2026-05-02T16:00:00Z\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical calendar sync payload to decode, got: " <> err)
+                Right (Calendar.SyncRequest calendarIdVal fromVal toVal) -> do
+                    calendarIdVal `shouldBe` "primary"
+                    show <$> fromVal `shouldBe` Just "2026-05-02 15:00:00 UTC"
+                    show <$> toVal `shouldBe` Just "2026-05-02 16:00:00 UTC"
+
+        it "rejects blank, typoed, or inverted calendar admin bodies before ambiguous Google calls" $ do
+            decodeCalendarTokenExchange
+                "{\"code\":\"   \",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"calendarId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"calendarId\":\"primary\",\"syncCursor\":\"stale\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                "{\"calendarId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                "{\"calendarId\":\"primary\",\"from\":\"2026-05-02T16:00:00Z\",\"to\":\"2026-05-02T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                "{\"calendarId\":\"primary\",\"status\":\"confirmed\"}"
+                `shouldSatisfy` isLeft
+
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
         it "accepts canonical service-marketplace booking payloads" $
             case decodeServiceMarketplaceBooking
@@ -625,6 +668,10 @@ spec = do
     decodePipelineCardUpdate = eitherDecode
     decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
     decodeInstagramOAuthExchange = eitherDecode
+    decodeCalendarTokenExchange :: BL8.ByteString -> Either String Calendar.TokenExchangeIn
+    decodeCalendarTokenExchange = eitherDecode
+    decodeCalendarSync :: BL8.ByteString -> Either String Calendar.SyncRequest
+    decodeCalendarSync = eitherDecode
     decodeServiceCatalogCreate :: BL8.ByteString -> Either String ServiceCatalogCreate
     decodeServiceCatalogCreate = eitherDecode
     decodeServiceCatalogUpdate :: BL8.ByteString -> Either String ServiceCatalogUpdate

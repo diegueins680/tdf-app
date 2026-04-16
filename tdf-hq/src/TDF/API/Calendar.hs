@@ -6,10 +6,28 @@
 module TDF.API.Calendar where
 
 import           Servant
-import           Data.Aeson (ToJSON, FromJSON, Value)
+import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
+import           Data.Aeson.Types (Parser)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
+
+strictObjectOptions :: Options
+strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+requiredNonBlank :: String -> Text -> Parser Text
+requiredNonBlank fieldName raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then fail (fieldName <> " must not be blank")
+       else pure trimmed
+
+optionalNonBlank :: Maybe Text -> Maybe Text
+optionalNonBlank raw =
+  case T.strip <$> raw of
+    Just trimmed | not (T.null trimmed) -> Just trimmed
+    _ -> Nothing
 
 data AuthUrlResponse = AuthUrlResponse
   { url :: Text
@@ -21,7 +39,14 @@ data TokenExchangeIn = TokenExchangeIn
   , redirectUri :: Maybe Text
   , calendarId  :: Text
   } deriving (Show, Generic)
-instance FromJSON TokenExchangeIn
+instance FromJSON TokenExchangeIn where
+  parseJSON value = do
+    TokenExchangeIn rawCode rawRedirectUri rawCalendarId <-
+      genericParseJSON strictObjectOptions value
+    TokenExchangeIn
+      <$> requiredNonBlank "code" rawCode
+      <*> pure (optionalNonBlank rawRedirectUri)
+      <*> requiredNonBlank "calendarId" rawCalendarId
 
 data CalendarConfigDTO = CalendarConfigDTO
   { configId   :: Int
@@ -36,7 +61,18 @@ data SyncRequest = SyncRequest
   , from       :: Maybe UTCTime
   , to         :: Maybe UTCTime
   } deriving (Show, Generic)
-instance FromJSON SyncRequest
+instance FromJSON SyncRequest where
+  parseJSON value = do
+    SyncRequest rawCalendarId rawFrom rawTo <-
+      genericParseJSON strictObjectOptions value
+    case (rawFrom, rawTo) of
+      (Just fromTs, Just toTs) | toTs < fromTs ->
+        fail "to must be on or after from"
+      _ ->
+        SyncRequest
+          <$> requiredNonBlank "calendarId" rawCalendarId
+          <*> pure rawFrom
+          <*> pure rawTo
 
 data SyncResult = SyncResult
   { created :: Int
