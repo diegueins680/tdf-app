@@ -15,7 +15,13 @@ import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffT
 import Database.Persist (Entity(..), Key, get, insert)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
-import TDF.API (AdsInquiry (..), CreateBookingReq (..), PublicBookingReq (..), UpdateBookingReq (..))
+import TDF.API
+    ( AdsInquiry (..)
+    , CreateBookingReq (..)
+    , PublicBookingReq (..)
+    , UpdateBookingReq (..)
+    , WhatsAppConsentStatus (..)
+    )
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..))
 import Servant (ServerError (errBody, errHTTPCode))
@@ -115,6 +121,7 @@ import TDF.Server
     , validateCourseRegistrationId
     , validateCourseRegistrationReceiptId
     , validateCourseRegistrationFollowUpId
+    , whatsAppConsentStatusFromRow
     , resolveResourcesForBooking
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
@@ -2265,6 +2272,51 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "call me at 099 123 4567"
             assertInvalid "12345"
             assertInvalid "+1234567890123456"
+
+    describe "whatsAppConsentStatusFromRow" $ do
+        it "omits stored display names from public consent status responses" $ do
+            let now = UTCTime (fromGregorian 2026 4 16) (secondsToDiffTime 0)
+                row =
+                    ME.WhatsAppConsent
+                        { ME.whatsAppConsentPhoneE164 = "+593991234567"
+                        , ME.whatsAppConsentDisplayName = Just "Ada Lovelace"
+                        , ME.whatsAppConsentConsent = True
+                        , ME.whatsAppConsentSource = Just "landing"
+                        , ME.whatsAppConsentNote = Just "consent"
+                        , ME.whatsAppConsentConsentedAt = Just now
+                        , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentCreatedAt = now
+                        , ME.whatsAppConsentUpdatedAt = now
+                        }
+                status =
+                    whatsAppConsentStatusFromRow
+                        False
+                        "+593991234567"
+                        (Just (Entity (toSqlKey 1) row))
+            wcsConsent status `shouldBe` True
+            wcsDisplayName status `shouldBe` Nothing
+
+        it "keeps stored display names for gated admin consent status responses" $ do
+            let now = UTCTime (fromGregorian 2026 4 16) (secondsToDiffTime 0)
+                row =
+                    ME.WhatsAppConsent
+                        { ME.whatsAppConsentPhoneE164 = "+593991234567"
+                        , ME.whatsAppConsentDisplayName = Just "Ada Lovelace"
+                        , ME.whatsAppConsentConsent = True
+                        , ME.whatsAppConsentSource = Just "tdf-hq-ui"
+                        , ME.whatsAppConsentNote = Just "consent"
+                        , ME.whatsAppConsentConsentedAt = Just now
+                        , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentCreatedAt = now
+                        , ME.whatsAppConsentUpdatedAt = now
+                        }
+                status =
+                    whatsAppConsentStatusFromRow
+                        True
+                        "+593991234567"
+                        (Just (Entity (toSqlKey 1) row))
+            wcsConsent status `shouldBe` True
+            wcsDisplayName status `shouldBe` Just "Ada Lovelace"
 
     describe "validateCourseRegistrationEmail" $ do
         it "preserves omitted and blank emails while normalizing meaningful values" $ do

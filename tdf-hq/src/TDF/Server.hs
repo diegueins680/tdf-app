@@ -808,13 +808,40 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
 whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM
 whatsappConsentServer user =
   let requireAdmin = unless (hasRole Admin user) $ throwError err403
-  in whatsappConsentRoutes "tdf-hq-ui" requireAdmin
+  in whatsappConsentRoutes "tdf-hq-ui" True requireAdmin
 
 whatsappConsentPublicServer :: ServerT Api.WhatsAppConsentPublicAPI AppM
-whatsappConsentPublicServer = whatsappConsentRoutes "public" (pure ())
+whatsappConsentPublicServer = whatsappConsentRoutes "public" False (pure ())
 
-whatsappConsentRoutes :: Text -> AppM () -> ServerT Api.WhatsAppConsentRoutes AppM
-whatsappConsentRoutes defaultSource requireGate =
+whatsAppConsentStatusFromRow
+  :: Bool
+  -> Text
+  -> Maybe (Entity ME.WhatsAppConsent)
+  -> WhatsAppConsentStatus
+whatsAppConsentStatusFromRow exposeDisplayName phoneVal mRow =
+  case mRow of
+    Nothing ->
+      WhatsAppConsentStatus
+        { wcsPhone = phoneVal
+        , wcsConsent = False
+        , wcsConsentedAt = Nothing
+        , wcsRevokedAt = Nothing
+        , wcsDisplayName = Nothing
+        }
+    Just (Entity _ row) ->
+      WhatsAppConsentStatus
+        { wcsPhone = phoneVal
+        , wcsConsent = ME.whatsAppConsentConsent row
+        , wcsConsentedAt = ME.whatsAppConsentConsentedAt row
+        , wcsRevokedAt = ME.whatsAppConsentRevokedAt row
+        , wcsDisplayName =
+            if exposeDisplayName
+              then ME.whatsAppConsentDisplayName row
+              else Nothing
+        }
+
+whatsappConsentRoutes :: Text -> Bool -> AppM () -> ServerT Api.WhatsAppConsentRoutes AppM
+whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
        createConsent
   :<|> revokeConsent
   :<|> fetchStatus
@@ -822,24 +849,7 @@ whatsappConsentRoutes defaultSource requireGate =
     normalizePhoneOrFail raw =
       either throwError pure (validateWhatsAppPhoneInput raw)
 
-    toStatus phoneVal mRow =
-      case mRow of
-        Nothing ->
-          WhatsAppConsentStatus
-            { wcsPhone = phoneVal
-            , wcsConsent = False
-            , wcsConsentedAt = Nothing
-            , wcsRevokedAt = Nothing
-            , wcsDisplayName = Nothing
-            }
-        Just (Entity _ row) ->
-          WhatsAppConsentStatus
-            { wcsPhone = phoneVal
-            , wcsConsent = ME.whatsAppConsentConsent row
-            , wcsConsentedAt = ME.whatsAppConsentConsentedAt row
-            , wcsRevokedAt = ME.whatsAppConsentRevokedAt row
-            , wcsDisplayName = ME.whatsAppConsentDisplayName row
-            }
+    toStatus = whatsAppConsentStatusFromRow exposeDisplayName
 
     persistConsent phoneVal nameClean sourceClean noteClean now = runDB $ do
       let record =
