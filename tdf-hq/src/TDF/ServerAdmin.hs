@@ -18,6 +18,7 @@ module TDF.ServerAdmin
   , validateAdminLogsLimit
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
+  , validateAdminEmailSubject
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   ) where
@@ -203,8 +204,9 @@ adminServer user =
         (throwError err400 { errBody = "Invalid email address" })
         pure
         (normalizeAdminEmailAddress etrEmail)
+      subj <- either throwError pure $
+        maybe (Right "Correo de prueba TDF") validateAdminEmailSubject etrSubject
       let emailSvc = EmailSvc.mkEmailService cfg
-          subj = fromMaybe "Correo de prueba TDF" etrSubject
           body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
           targetName = fromMaybe "" etrName
           preMsg = "[Admin][EmailTest] Sending to " <> targetEmail <> " | subject: " <> subj
@@ -916,12 +918,10 @@ adminServer user =
 
     registeredUserEmailBroadcastHandler AdminEmailBroadcastRequest{..} = do
       ensureStrictAdmin user
-      let subject = T.strip aebrSubject
-          bodyLines = normalizeAdminEmailBodyLines aebrBodyLines
+      subject <- either throwError pure (validateAdminEmailSubject aebrSubject)
+      let bodyLines = normalizeAdminEmailBodyLines aebrBodyLines
           dryRun = fromMaybe False aebrDryRun
           includeInactive = fromMaybe False aebrIncludeInactive
-      when (T.null subject) $
-        throwError err400 { errBody = "Subject must not be empty" }
       when (null bodyLines) $
         throwError err400 { errBody = "At least one non-empty body line is required" }
       limitValue <- either throwError pure (validateAdminEmailBroadcastLimit aebrLimit)
@@ -1134,6 +1134,17 @@ validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
       | otherwise -> Right "notify"
     _ ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+
+validateAdminEmailSubject :: Text -> Either ServerError Text
+validateAdminEmailSubject rawSubject
+  | T.null subject =
+      Left err400 { errBody = "Subject must not be empty" }
+  | T.any isEmailHeaderLineBreak subject =
+      Left err400 { errBody = "Subject must be a single line" }
+  | otherwise = Right subject
+  where
+    subject = T.strip rawSubject
+    isEmailHeaderLineBreak c = c == '\r' || c == '\n'
 
 validateAdminEmailBroadcastLimit :: Maybe Int -> Either ServerError (Maybe Int)
 validateAdminEmailBroadcastLimit Nothing = Right Nothing

@@ -18,7 +18,7 @@ import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
 import TDF.API.Admin
-    ( AdminEmailBroadcastRequest
+    ( AdminEmailBroadcastRequest (..)
     , AdminEmailBroadcastResponse
     , BrainEntryCreate (..)
     , BrainEntryUpdate (..)
@@ -52,6 +52,7 @@ import TDF.ServerAdmin (
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
+    validateAdminEmailSubject,
     validateAdminEmailBroadcastLimit,
     validateAdminLogsLimit,
     validateUserCommunicationHistoryLimit,
@@ -81,6 +82,26 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "trims lines and drops blanks" $
             normalizeAdminEmailBodyLines ["  Hola  ", "", "   ", " Link: https://example.com  "]
                 `shouldBe` ["Hola", "Link: https://example.com"]
+
+    describe "validateAdminEmailSubject" $ do
+        it "trims valid single-line subjects before they are used as email headers" $
+            validateAdminEmailSubject "  Clase abierta TDF  "
+                `shouldBe` Right "Clase abierta TDF"
+
+        it "rejects blank or multiline subjects instead of passing ambiguous headers to SMTP" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin email subject, got " <> show value)
+            assertInvalid "Subject must not be empty" (validateAdminEmailSubject "   ")
+            assertInvalid
+                "Subject must be a single line"
+                (validateAdminEmailSubject "Launch\nBcc: ops@example.com")
+            assertInvalid
+                "Subject must be a single line"
+                (validateAdminEmailSubject "Launch\r\nBcc: ops@example.com")
 
     describe "normalizeAdminUsername" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do
@@ -344,6 +365,28 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid (validateAdminEmailBroadcastLimit (Just 0))
             assertInvalid (validateAdminEmailBroadcastLimit (Just (-3)))
             assertInvalid (validateAdminEmailBroadcastLimit (Just 5001))
+
+    describe "admin email broadcast route validation" $ do
+        it "rejects multiline subjects before recipient lookup or SMTP work" $ do
+            let _historyHandler :<|> _sendHandler :<|> _resendHandler :<|> broadcastHandler =
+                    communicationsHandlersFor (mkUser [Admin])
+                req =
+                    AdminEmailBroadcastRequest
+                        { aebrSubject = "Launch\nBcc: ops@example.com"
+                        , aebrBodyLines = ["Line 1"]
+                        , aebrDryRun = Just True
+                        , aebrLimit = Nothing
+                        , aebrIncludeInactive = Nothing
+                        }
+
+            result <- runAdminTest (broadcastHandler req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "Subject must be a single line"
+                Right value ->
+                    expectationFailure
+                        ("Expected multiline broadcast subject to be rejected, got " <> show value)
 
     describe "admin lookup id validation" $ do
         it "rejects non-positive user ids before admin user lookups can degrade malformed input into 404s" $ do
