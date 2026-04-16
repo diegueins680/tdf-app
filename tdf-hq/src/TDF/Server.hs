@@ -5795,7 +5795,7 @@ validateCmsLocaleFilter rawLocale =
   case normalizeOptionalCmsFilter rawLocale of
     Nothing -> Right "es"
     Just locale
-      | isValidCmsLocale locale -> Right locale
+      | isValidCmsLocale locale -> Right (canonicalizeCmsLocale locale)
       | otherwise ->
           Left err400
             { errBody =
@@ -5819,6 +5819,27 @@ validateCmsLocaleFilter rawLocale =
 
     isAsciiLetter ch = isAsciiLower ch || isAsciiUpper ch
     isAsciiAlphaNum ch = isAsciiLetter ch || isDigit ch
+
+canonicalizeCmsLocale :: Text -> Text
+canonicalizeCmsLocale rawLocale =
+  case T.splitOn "-" rawLocale of
+    [] -> rawLocale
+    primary : subtags ->
+      T.intercalate "-" (T.toLower primary : map canonicalizeSubtag subtags)
+  where
+    canonicalizeSubtag subtag
+      | T.length subtag == 2 && T.all isAsciiLetter subtag = T.toUpper subtag
+      | otherwise = T.toLower subtag
+
+    isAsciiLetter ch = isAsciiLower ch || isAsciiUpper ch
+
+validateRequiredCmsLocale :: Text -> Either ServerError Text
+validateRequiredCmsLocale rawLocale =
+  case normalizeOptionalCmsFilter (Just rawLocale) of
+    Nothing ->
+      Left err400 { errBody = "locale requerido" }
+    Just _ ->
+      validateCmsLocaleFilter (Just rawLocale)
 
 validateRequiredCmsField :: Text -> Text -> Either ServerError Text
 validateRequiredCmsField fieldName rawValue =
@@ -9160,7 +9181,7 @@ cmsAdminServer user =
       now <- liftIO getCurrentTime
       statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
       slug <- either throwError pure (validateRequiredCmsField "slug" cciSlug)
-      locale <- either throwError pure (validateRequiredCmsField "locale" cciLocale)
+      locale <- either throwError pure (validateRequiredCmsLocale cciLocale)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug

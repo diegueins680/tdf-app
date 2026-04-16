@@ -124,6 +124,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
     , validateRequiredCmsField
+    , validateRequiredCmsLocale
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validateWhatsAppReplyTarget
@@ -1323,6 +1324,7 @@ spec = describe "TDF.Server helpers" $ do
             validateCmsLocaleFilter (Just "   ") `shouldBe` Right "es"
             validateCmsLocaleFilter (Just " en ") `shouldBe` Right "en"
             validateCmsLocaleFilter (Just " es-EC ") `shouldBe` Right "es-EC"
+            validateCmsLocaleFilter (Just " ES-ec ") `shouldBe` Right "es-EC"
 
         it "rejects malformed locales instead of returning ambiguous CMS fallbacks" $ do
             let assertInvalid rawLocale =
@@ -1337,6 +1339,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "es--EC"
             assertInvalid "english locale"
             assertInvalid "e"
+
+    describe "validateRequiredCmsLocale" $ do
+        it "requires admin-created CMS locale keys and canonicalizes their case" $ do
+            validateRequiredCmsLocale " es-ec " `shouldBe` Right "es-EC"
+            validateRequiredCmsLocale " EN " `shouldBe` Right "en"
+
+        it "rejects blank or malformed CMS locale keys before they can miss public lookups" $ do
+            let assertInvalid rawLocale expectedMessage =
+                    case validateRequiredCmsLocale rawLocale of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right locale ->
+                            expectationFailure ("Expected invalid required CMS locale, got: " <> show locale)
+            assertInvalid "   " "locale requerido"
+            assertInvalid "es_EC" "locale must be omitted"
 
     describe "validateRequiredCmsField" $ do
         it "trims required CMS identifiers before create and lookup handlers use them" $ do
