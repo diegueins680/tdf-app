@@ -839,6 +839,10 @@ export default function CourseRegistrationsAdminPage() {
     : hasHiddenStatusFilters
       ? 'Solo aparecen estados con inscripciones en esta vista.'
       : '';
+  const showStatusFilterCaption = !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
+  const statusFilterGroupLabel = statusFilterCanSelfReset
+    ? `Filtro de estado activo: ${statusFilterLabels[status]}`
+    : 'Filtros de estado de inscripciones';
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'No hace falta filtrar cohorte ni estado: esta vista solo tiene una cohorte y un estado por ahora.';
@@ -1998,10 +2002,19 @@ export default function CourseRegistrationsAdminPage() {
                       </Stack>
                     ) : (
                       <Stack spacing={1}>
-                        <Typography variant="caption" color="text.secondary">
-                          Filtrar por estado
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {showStatusFilterCaption && (
+                          <Typography variant="caption" color="text.secondary">
+                            Filtrar por estado
+                          </Typography>
+                        )}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                          role="group"
+                          aria-label={statusFilterGroupLabel}
+                        >
                           {actionableStatusFilters.map((value) => (
                             <Chip
                               key={value}

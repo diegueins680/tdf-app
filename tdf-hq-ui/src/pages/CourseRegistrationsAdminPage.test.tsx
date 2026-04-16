@@ -1768,6 +1768,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
       expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).not.toBeNull();
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
