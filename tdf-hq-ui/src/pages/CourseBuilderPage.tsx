@@ -842,15 +842,16 @@ export default function CourseBuilderPage() {
                       <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
                         Duplicar
                       </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveSession(idx)}
-                        disabled={sessions.length <= 1}
-                      >
-                        Borrar
-                      </Button>
+                      {sessions.length > 1 && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveSession(idx)}
+                        >
+                          Borrar
+                        </Button>
+                      )}
                     </Stack>
                   </Grid>
                 </Grid>

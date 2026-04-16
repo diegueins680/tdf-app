@@ -124,6 +124,11 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const countButtonsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('button, [role="button"]')).filter(
+    (element) => text(element) === labelText,
+  ).length;
+
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((element) => text(element).replace('*', '').trim() === labelText).length;
 
@@ -221,6 +226,30 @@ describe('CourseBuilderPage', () => {
       } else {
         delete (HTMLElement.prototype as { scrollIntoView?: Element['scrollIntoView'] }).scrollIntoView;
       }
+      await cleanup();
+    }
+  });
+
+  it('hides the delete-session action until there is more than one session to remove', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(document.getElementById('sesiones'))).toContain('Sesiones');
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar')).toBe(1);
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Borrar')).toBe(0);
+      });
+
+      await clickButton(getButtonByText(document.getElementById('sesiones') ?? container, 'Añadir sesión'));
+
+      await waitForExpectation(() => {
+        const sessionsSection = document.getElementById('sesiones') ?? container;
+        expect(countButtonsByText(sessionsSection, 'Duplicar')).toBe(2);
+        expect(countButtonsByText(sessionsSection, 'Borrar')).toBe(2);
+      });
+    } finally {
       await cleanup();
     }
   });
