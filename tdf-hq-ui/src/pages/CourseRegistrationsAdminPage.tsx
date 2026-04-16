@@ -221,6 +221,10 @@ const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' 
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
+const formatOptionalDate = (iso: string | null | undefined) => {
+  const formatted = formatDate(iso);
+  return formatted === '-' ? '' : formatted;
+};
 
 const isRegistrationStatus = (
   status: string,
@@ -425,7 +429,8 @@ const registrationListContextSummary = ({
   if (showSource && trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
-  parts.push(`Creado: ${formatDate(createdAt)}`);
+  const createdLabel = formatOptionalDate(createdAt);
+  if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
 };
@@ -442,7 +447,8 @@ const registrationDossierContextSummary = ({
   const parts = [`Curso: ${courseLabel}`];
   const trimmedSource = source?.trim() ?? '';
   if (trimmedSource) parts.push(`Fuente: ${trimmedSource}`);
-  parts.push(`Creado: ${formatDate(createdAt)}`);
+  const createdLabel = formatOptionalDate(createdAt);
+  if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   return parts.join(' · ');
 };
 
@@ -2303,6 +2309,7 @@ export default function CourseRegistrationsAdminPage() {
                     showSource: showRowSource,
                     source: reg.crSource,
                   });
+                  const showRowContext = !hideMinimalRowContext && Boolean(rowContextSummary);
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
@@ -2339,7 +2346,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         )}
                       </Box>
-                      {!hideMinimalRowContext && (
+                      {showRowContext && (
                         <Box sx={{ minWidth: 180 }}>
                           <Typography variant="body2" color="text.secondary">
                             {rowContextSummary}

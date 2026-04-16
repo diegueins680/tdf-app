@@ -1603,6 +1603,62 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('omits missing-created placeholders from sparse rows and dossier context', async () => {
+    const sparseRegistration = buildRegistration({
+      crCreatedAt: undefined,
+      crUpdatedAt: undefined,
+      crSource: null,
+    });
+
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      sparseRegistration,
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCreatedAt: undefined,
+        crUpdatedAt: undefined,
+        crSource: 'referral',
+      }),
+    ]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: sparseRegistration,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'Cohorte: Beatmaking 101 (beatmaking-101)')).toBe(true);
+      expect(hasExactText(container, 'Cohorte: Mixing Bootcamp (mixing-bootcamp) · Fuente: referral')).toBe(true);
+      expect(container.textContent).not.toContain('Creado: -');
+      expect(container.textContent).not.toContain('Fuente: Sin fuente');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(hasExactText(dialog, 'Curso: Beatmaking 101 (beatmaking-101)')).toBe(true);
+      expect(dialog.textContent).not.toContain('Creado: -');
+      expect(dialog.textContent).not.toContain('Fuente: Sin fuente');
+    });
+
+    await cleanup();
+  });
+
   it('hides a shared missing source instead of turning it into first-run list copy', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
