@@ -217,13 +217,15 @@ extractToken cfg req =
         Left _ -> Left "Invalid Authorization header"
         Right txt -> extractTokenFromHeaders cfg (Just txt) Nothing
     Nothing ->
-      case extractCookieToken cfg req of
-        Just token -> Right token
-        Nothing -> Left "Missing or invalid auth token"
+      extractCookieToken cfg req
   where
     extractCookieToken AppConfig{sessionCookieName} request =
-      lookup "Cookie" (requestHeaders request)
-        >>= either (const Nothing) (lookupCookie sessionCookieName) . TE.decodeUtf8'
+      case lookup "Cookie" (requestHeaders request) of
+        Nothing -> Left "Missing or invalid auth token"
+        Just rawHeader ->
+          case TE.decodeUtf8' rawHeader of
+            Left _ -> Left "Missing or invalid auth token"
+            Right header -> lookupCookie sessionCookieName header
 
 extractTokenFromHeaders :: AppConfig -> Maybe Text -> Maybe Text -> Either Text Text
 extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCookieHeader =
@@ -234,11 +236,12 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
           | T.toLower scheme == "bearer" -> Right value
         _ -> Left "Invalid Authorization header"
     Nothing ->
-      case mCookieHeader >>= lookupCookie sessionCookieName of
-        Just token -> Right token
-        Nothing -> Left "Missing or invalid auth token"
+      maybe
+        (Left "Missing or invalid auth token")
+        (lookupCookie sessionCookieName)
+        mCookieHeader
 
-lookupCookie :: Text -> Text -> Maybe Text
+lookupCookie :: Text -> Text -> Either Text Text
 lookupCookie cookieName rawHeader =
   let pairs = map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
       cleaned = do
@@ -247,7 +250,16 @@ lookupCookie cookieName rawHeader =
             value = T.strip valuePart
         guard (not (T.null name) && not (T.null value))
         pure (name, value)
-  in lookup cookieName cleaned >>= nonEmptyText
+      matchingValues =
+        [ token
+        | (name, value) <- cleaned
+        , name == cookieName
+        , token <- maybeToList (nonEmptyText value)
+        ]
+  in case matchingValues of
+       [] -> Left "Missing or invalid auth token"
+       [token] -> Right token
+       _ -> Left "Multiple session cookies found"
   where
     breakOnEquals chunk =
       let (name, rest) = T.breakOn "=" chunk

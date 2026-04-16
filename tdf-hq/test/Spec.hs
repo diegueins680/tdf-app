@@ -500,6 +500,14 @@ main = hspec $ do
                 (Just "other=1; tdf_session_test = cookie-token ; foo=bar")
                 `shouldBe` Right "cookie-token"
 
+        it "rejects duplicate session cookies instead of choosing an ambiguous token" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                Nothing
+                (Just "tdf_session_test=old-token; tdf_session_test=new-token")
+                `shouldBe` Left "Multiple session cookies found"
+
         it "keeps malformed authorization headers authoritative over cookies" $ do
             cfg <- loadAuthConfig
             extractTokenFromHeaders
