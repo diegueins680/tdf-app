@@ -245,9 +245,23 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps refresh visible once the page has administrable users to revisit', async () => {
+  it('waits to show refresh until the roster is dense enough to need the wider list controls', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus View',
+        username: 'linus-view',
+        primaryEmail: 'linus@example.com',
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -256,9 +270,7 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
-        );
+        expect(container.textContent).toContain('Buscar usuarios');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
     } finally {
@@ -698,6 +710,7 @@ describe('AdminUsersPage', () => {
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-admin');
       });
