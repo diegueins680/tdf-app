@@ -762,8 +762,18 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
-  const combinedSharedListContextSummary = shouldShowSharedCohortSummary && shouldShowSharedSourceSummary
-    ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
+  const allVisibleRegistrationsHaveNotes = loadedRegistrationCount > 1
+    && (regsQuery.data ?? []).every((reg) => Boolean(reg.crAdminNotes?.trim()));
+  const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
+    ? 'Notas internas en todas las inscripciones visibles.'
+    : '';
+  const sharedListContextSummaries = [
+    shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
+    shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
+    sharedVisibleNotesSummary,
+  ].filter(Boolean);
+  const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
+    ? sharedListContextSummaries.join(' ')
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
@@ -2278,6 +2288,15 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
+                {sharedVisibleNotesSummary && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
+                  >
+                    {sharedVisibleNotesSummary}
+                  </Typography>
+                )}
               </>
             )}
             {showStandaloneListUtilityRow && (
@@ -2395,7 +2414,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
-                    hasNotes: hasRowNotes,
+                    hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes,
                     showCreatedAt: !hideDateOnlyRowContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
