@@ -3081,10 +3081,11 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateOptionalCourseSessionStartHour (Just 24))
 
     describe "course upsert sessionDurationHours validation" $ do
-        it "accepts omitted or positive session durations" $ do
+        it "accepts omitted or same-day session durations" $ do
             validateOptionalCourseSessionDurationHours Nothing `shouldBe` Right Nothing
             validateOptionalCourseSessionDurationHours (Just 1) `shouldBe` Right (Just 1)
             validateOptionalCourseSessionDurationHours (Just 4) `shouldBe` Right (Just 4)
+            validateOptionalCourseSessionDurationHours (Just 24) `shouldBe` Right (Just 24)
 
         it "rejects zero or negative explicit durations instead of creating zero-length course calendar slots" $ do
             let assertInvalid result = case result of
@@ -3095,6 +3096,15 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected an invalid sessionDurationHours error, got: " <> show value)
             assertInvalid (validateOptionalCourseSessionDurationHours (Just 0))
             assertInvalid (validateOptionalCourseSessionDurationHours (Just (-2)))
+
+        it "rejects durations longer than one day even when the start hour is omitted" $
+            case validateOptionalCourseSessionDurationHours (Just 25) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "sessionDurationHours must be 24 or fewer"
+                Right value ->
+                    expectationFailure ("Expected an overlong sessionDurationHours error, got: " <> show value)
 
     describe "course upsert session schedule window validation" $ do
         it "accepts omitted values and same-day session windows" $ do

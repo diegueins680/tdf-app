@@ -5876,6 +5876,11 @@ validateCourseSessionDurationHours value
         { errBody =
             BL.fromStrict (TE.encodeUtf8 "sessionDurationHours must be greater than 0")
         }
+  | value > 24 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "sessionDurationHours must be 24 or fewer")
+        }
   | otherwise = Right value
 
 validateCourseCurrency :: Text -> Either ServerError Text
