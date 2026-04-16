@@ -1,11 +1,11 @@
 const normalizeServiceType = (serviceType: string) => serviceType.trim().toLowerCase();
 
-type BookingCustomerFieldState = {
+interface BookingCustomerFieldState {
   helperText: string;
   dialogTitle: string;
   quickCreateLabel: string;
   showQuickCreateAction: boolean;
-};
+}
 
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
@@ -95,3 +95,17 @@ export const shouldShowQuickBookingTemplate = ({
   mode: 'create' | 'edit';
   serviceLocked: boolean;
 }) => mode === 'create' && !serviceLocked;
+
+export const getBookingConflictAlertText = (conflictTitles: (string | null | undefined)[]) => {
+  if (conflictTitles.length === 0) return null;
+
+  const visibleTitles = conflictTitles
+    .slice(0, 3)
+    .map((title) => {
+      const trimmed = title?.trim();
+      return trimmed && trimmed.length > 0 ? trimmed : 'reserva';
+    })
+    .join(', ');
+
+  return `Conflicto con ${conflictTitles.length} reserva(s): ${visibleTitles}. Ajusta horario o salas.`;
+};

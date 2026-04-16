@@ -1,6 +1,7 @@
 import {
   defaultMinutesForService,
   describeServiceDefaults,
+  getBookingConflictAlertText,
   getBookingCustomerFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -58,5 +59,12 @@ describe('bookingsPageLogic', () => {
     expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: false })).toBe(true);
     expect(shouldShowQuickBookingTemplate({ mode: 'edit', serviceLocked: false })).toBe(false);
     expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: true })).toBe(false);
+  });
+
+  it('keeps room conflict guidance in one specific warning with a capped conflict list', () => {
+    expect(getBookingConflictAlertText([])).toBeNull();
+    expect(getBookingConflictAlertText(['Mix principal', 'Ensayo tarde', null, 'Podcast'])).toBe(
+      'Conflicto con 4 reserva(s): Mix principal, Ensayo tarde, reserva. Ajusta horario o salas.',
+    );
   });
 });

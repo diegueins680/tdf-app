@@ -34,6 +34,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   defaultMinutesForService,
   describeServiceDefaults,
+  getBookingConflictAlertText,
   getBookingCustomerFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -332,6 +333,10 @@ export default function BookingsPage() {
     [customerOptions.length, customerPartyId],
   );
   const showQuickTemplateField = shouldShowQuickBookingTemplate({ mode, serviceLocked });
+  const conflictAlertText = useMemo(
+    () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
+    [conflicts],
+  );
   const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
@@ -1083,10 +1088,9 @@ const openDialogForRange = (start: Date, end: Date) => {
               multiline
               minRows={2}
             />
-            {conflicts.length > 0 && (
+            {conflictAlertText && (
               <Alert severity="warning" variant="outlined">
-                Conflicto con {conflicts.length} reserva(s):{' '}
-                {conflicts.slice(0, 3).map((c) => c.title ?? 'reserva').join(', ')}. Ajusta horario o salas.
+                {conflictAlertText}
               </Alert>
             )}
             <Autocomplete
@@ -1214,11 +1218,6 @@ const openDialogForRange = (start: Date, end: Date) => {
               )}
               noOptionsText="No hay salas registradas"
             />
-            {conflicts.length > 0 && (
-              <Typography variant="caption" color="warning.main">
-                Revisa las reservas que se cruzan antes de guardar.
-              </Typography>
-            )}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}
