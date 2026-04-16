@@ -1027,6 +1027,51 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses unique registration ids instead of repeating the generic no-name fallback', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: null,
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'Registro #101')).toBe(true);
+      expect(hasExactText(container, 'Registro #102')).toBe(true);
+      expect(countOccurrences(container, 'Sin nombre')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir expediente de registro #"]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(2);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de registro #101'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain('Registro #101');
+      expect(dialog.textContent).toContain('Sin correo ni teléfono');
+      expect(dialog.textContent).toContain('Party #9');
+      expect(dialog.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
   it('condenses row cohort, source, and created metadata into one summary line', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

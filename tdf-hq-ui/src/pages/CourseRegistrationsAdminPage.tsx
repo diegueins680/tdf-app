@@ -336,10 +336,12 @@ const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
   phone: string | null | undefined,
+  registrationId?: number | null,
 ) => {
   const trimmedName = fullName?.trim() ?? '';
   const trimmedEmail = email?.trim() ?? '';
   const trimmedPhone = phone?.trim() ?? '';
+  const fallbackIdentity = registrationId == null ? 'Sin nombre' : `Registro #${registrationId}`;
 
   if (trimmedName) {
     return {
@@ -363,7 +365,7 @@ const registrationIdentityDisplay = (
   }
 
   return {
-    primary: 'Sin nombre',
+    primary: fallbackIdentity,
     secondary: 'Sin correo ni teléfono',
   };
 };
@@ -1392,6 +1394,7 @@ export default function CourseRegistrationsAdminPage() {
       activeRegistration.crFullName,
       activeRegistration.crEmail,
       activeRegistration.crPhoneE164,
+      activeRegistration.crId,
     )
     : { primary: 'Sin nombre', secondary: 'Sin correo ni teléfono' };
   const activeRegistrationSummary = activeRegistration
@@ -2152,7 +2155,12 @@ export default function CourseRegistrationsAdminPage() {
               <Stack divider={<Divider flexItem />} spacing={2}>
                 {regsQuery.data.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
-                  const rowIdentity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164);
+                  const rowIdentity = registrationIdentityDisplay(
+                    reg.crFullName,
+                    reg.crEmail,
+                    reg.crPhoneE164,
+                    reg.crId,
+                  );
                   const rowActionTarget = registrationActionTargetLabel(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
