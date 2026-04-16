@@ -704,7 +704,7 @@ export default function CourseRegistrationsAdminPage() {
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
-  const showDossierScopeHint = loadedRegistrationCount > 1 && !hasUsedRowAction && !hasUsedFilterControl;
+  const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`

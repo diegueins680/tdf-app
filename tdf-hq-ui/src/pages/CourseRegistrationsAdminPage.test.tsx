@@ -353,7 +353,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationEmailsMock.mockResolvedValue([]);
   });
 
-  it('consolidates row details into the dossier without extra list chrome', async () => {
+  it('keeps the single-result view minimal while still hinting that the name opens the dossier', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -371,7 +371,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.',
       );
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierScopeHint,
+      );
+      expect(countOccurrences(container, dossierScopeHint)).toBe(1);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(container.textContent).not.toContain('Cambiar estado:');
