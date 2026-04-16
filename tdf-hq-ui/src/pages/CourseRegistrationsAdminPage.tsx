@@ -61,6 +61,7 @@ const initialEmptyStateMultiCohortActionLabel = 'Ver cohortes';
 const initialEmptyStateFormActionLabel = 'Abrir formulario';
 const initialCohortResolutionMessage = 'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 const initialCohortErrorMessage = 'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
+const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
 const compactDossierScopeHint =
@@ -680,6 +681,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasManualFilters = hasSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
+  const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
     [activeCohortLabel, status, limit],
@@ -1962,7 +1964,28 @@ export default function CourseRegistrationsAdminPage() {
               ) : (
                 <>
                   <Grid item xs={12} md={6}>
-                    {singleAvailableCohortLabel ? (
+                    {showCohortFilterUnavailableSummary ? (
+                      <Stack
+                        data-testid="course-registration-cohort-filter-unavailable"
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Cohortes no disponibles
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {cohortFilterUnavailableMessage}
+                        </Typography>
+                      </Stack>
+                    ) : singleAvailableCohortLabel ? (
                       <Stack
                         data-testid="course-registration-single-cohort-summary"
                         spacing={0.5}

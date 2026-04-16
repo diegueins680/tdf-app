@@ -197,6 +197,8 @@ const initialCohortResolutionMessage =
   'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 const initialCohortErrorMessage =
   'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
+const cohortFilterUnavailableMessage =
+  'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -4092,7 +4094,12 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain('No se pudieron cargar cohortes.');
+      const cohortFallback = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-cohort-filter-unavailable"]',
+      );
+
+      expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
@@ -4108,7 +4115,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(listCohortsMock).toHaveBeenCalledTimes(2);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).not.toContain('No se pudieron cargar cohortes.');
+      expect(container.querySelector('[data-testid="course-registration-cohort-filter-unavailable"]')).toBeNull();
+      expect(container.textContent).not.toContain(cohortFilterUnavailableMessage);
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
     });
 
