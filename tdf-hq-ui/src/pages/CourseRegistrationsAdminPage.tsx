@@ -412,6 +412,7 @@ const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
   hasNotes,
+  showCreatedAt = true,
   showCohort,
   showSource,
   source,
@@ -419,6 +420,7 @@ const registrationListContextSummary = ({
   cohortLabel: string;
   createdAt: string | null | undefined;
   hasNotes: boolean;
+  showCreatedAt?: boolean;
   showCohort: boolean;
   showSource: boolean;
   source: string | null | undefined;
@@ -429,7 +431,7 @@ const registrationListContextSummary = ({
   if (showSource && trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
-  const createdLabel = formatOptionalDate(createdAt);
+  const createdLabel = showCreatedAt ? formatOptionalDate(createdAt) : '';
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
@@ -2299,19 +2301,22 @@ export default function CourseRegistrationsAdminPage() {
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
                   const showRowSource = !hasSharedVisibleSource;
-                  const hideMinimalRowContext = loadedRegistrationCount === 1
-                    && !showRowCohort
-                    && !showRowSource
-                    && !hasRowNotes;
+                  const hasDateOnlyRowContext = !showRowCohort && !showRowSource && !hasRowNotes;
+                  const hideDateOnlyRowContext = hasDateOnlyRowContext
+                    && (
+                      loadedRegistrationCount === 1
+                      || (!hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS)
+                    );
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
                     hasNotes: hasRowNotes,
+                    showCreatedAt: !hideDateOnlyRowContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
                   });
-                  const showRowContext = !hideMinimalRowContext && Boolean(rowContextSummary);
+                  const showRowContext = Boolean(rowContextSummary);
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>

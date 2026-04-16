@@ -3904,6 +3904,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).not.toContain('Total: 2');
       expect(container.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
