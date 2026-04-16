@@ -2,7 +2,7 @@
 module TDF.Config where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad      (filterM)
+import           Control.Monad      (filterM, when)
 import           Data.Char          (isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, listToMaybe)
@@ -267,6 +267,7 @@ loadConfig = do
             (if cookieSecure then "None" else "Lax")
             sessionCookieSameSiteEnv
       cookiePath = fromMaybe "/" (sessionCookiePathEnv >>= nonEmpty . T.pack)
+  validateSessionCookiePolicy cookieSecure cookieSameSite
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -392,6 +393,11 @@ normalizeSameSiteValue raw =
     "strict" -> "Strict"
     "none" -> "None"
     _ -> "Lax"
+
+validateSessionCookiePolicy :: Bool -> Text -> IO ()
+validateSessionCookiePolicy cookieSecure cookieSameSite =
+  when (T.toLower cookieSameSite == "none" && not cookieSecure) $
+    fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
 
 resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
 resolveAssetsRootDir mEnv = do

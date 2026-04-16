@@ -161,7 +161,14 @@ import TDF.Server.SocialEventsHandlers (
     validateBudgetLineTypeInput,
  )
 import TDF.Auth (extractToken, extractTokenFromHeaders)
-import TDF.Config (appPort, dbConnString, emailConfig, loadConfig, smtpPort)
+import TDF.Config
+    ( appPort,
+      dbConnString,
+      emailConfig,
+      loadConfig,
+      sessionCookieSameSite,
+      sessionCookieSecure,
+      smtpPort )
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
@@ -204,6 +211,26 @@ main = hspec $ do
                     cfg <- loadConfig
                     appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
+
+        it "rejects SameSite=None unless session cookies are secure" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_SAMESITE", Just "None")
+                , ("SESSION_COOKIE_SECURE", Just "false")
+                , ("HQ_APP_URL", Just "https://hq.example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("SESSION_COOKIE_SAMESITE", Just "None")
+                , ("SESSION_COOKIE_SECURE", Just "true")
+                , ("HQ_APP_URL", Just "http://localhost:5173")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionCookieSecure cfg `shouldBe` True
+                    sessionCookieSameSite cfg `shouldBe` "None"
 
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides
