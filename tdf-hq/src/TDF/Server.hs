@@ -2350,11 +2350,11 @@ saveCourse Courses.CourseUpsert{..} = do
   landingUrlClean <- either throwError pure (validateCoursePublicUrlField "landingUrl" landingUrl)
   whatsappClean <- either throwError pure (validateCoursePublicUrlField "whatsappCtaUrl" whatsappCtaUrl)
   instructorAvatarClean <- either throwError pure (validateCoursePublicUrlField "instructorAvatarUrl" instructorAvatarUrl)
+  currencyClean <- either throwError pure (validateCourseCurrency currency)
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
       durationClean = cleanOptional duration
-      currencyClean = let cur = T.strip currency in if T.null cur then "USD" else cur
       locationLabelClean = cleanOptional locationLabel
       landingResolved = fromMaybe (buildLandingUrlFor envConfig slugVal) landingUrlClean
       whatsappResolved = fromMaybe (buildWhatsappCtaFor (waContactNumber waEnv) titleClean landingResolved) whatsappClean
@@ -5620,6 +5620,10 @@ validateOptionalCourseNonNegativeField :: Text -> Maybe Int -> Either ServerErro
 validateOptionalCourseNonNegativeField fieldName =
   traverse (validateCourseNonNegativeField fieldName)
 
+validateCourseCurrency :: Text -> Either ServerError Text
+validateCourseCurrency rawCurrency =
+  validateCurrencyCode (normalizeOptionalInput (Just rawCurrency))
+
 validateOptionalCourseSessionStartHour :: Maybe Int -> Either ServerError (Maybe Int)
 validateOptionalCourseSessionStartHour =
   traverse validateCourseSessionStartHour
@@ -5876,8 +5880,11 @@ validateServiceMarketplaceCatalog (Just catalog)
       Right (serviceCatalogKind catalog)
 
 validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
-validateServiceAdCurrency Nothing = Right "USD"
-validateServiceAdCurrency (Just rawCurrency) =
+validateServiceAdCurrency = validateCurrencyCode
+
+validateCurrencyCode :: Maybe Text -> Either ServerError Text
+validateCurrencyCode Nothing = Right "USD"
+validateCurrencyCode (Just rawCurrency) =
   case normalizeOptionalInput (Just rawCurrency) of
     Nothing ->
       Left err400 { errBody = "currency must be a 3-letter ISO code" }

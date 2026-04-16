@@ -69,6 +69,7 @@ import TDF.Server
     , validateServiceAdSlotMinutes
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
+    , validateCourseCurrency
     , validateCourseNonNegativeField
     , validateCourseRegistrationContactChannels
     , validateCourseRegistrationEmail
@@ -2513,6 +2514,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateCourseNonNegativeField "priceCents" (-1)) "priceCents"
             assertInvalid (validateCourseNonNegativeField "capacity" (-5)) "capacity"
             assertInvalid (validateOptionalCourseNonNegativeField "sessionDurationHours" (Just (-2))) "sessionDurationHours"
+
+    describe "course upsert currency validation" $ do
+        it "defaults blank course currencies to USD and normalizes explicit ISO codes" $ do
+            validateCourseCurrency "   " `shouldBe` Right "USD"
+            validateCourseCurrency " usd " `shouldBe` Right "USD"
+            validateCourseCurrency "eur" `shouldBe` Right "EUR"
+
+        it "rejects malformed course currencies instead of storing ambiguous public pricing data" $ do
+            let assertInvalid rawCurrency =
+                    case validateCourseCurrency rawCurrency of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "3-letter ISO code"
+                        Right currencyVal ->
+                            expectationFailure ("Expected invalid course currency error, got: " <> show currencyVal)
+            assertInvalid "usdollars"
+            assertInvalid "12$"
+            assertInvalid "U$D"
 
     describe "course upsert sessionStartHour validation" $ do
         it "accepts omitted or in-range session start hours" $ do
