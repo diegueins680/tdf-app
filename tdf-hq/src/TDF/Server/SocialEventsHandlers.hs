@@ -2189,8 +2189,11 @@ validateInvitationStatusInput (Just rawStatus) =
             }
 
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
-validateEventArtistIds =
-  fmap catMaybes . traverse validateArtistId
+validateEventArtistIds artists = do
+  artistKeys <- fmap catMaybes (traverse validateArtistId artists)
+  if Set.size (Set.fromList artistKeys) == length artistKeys
+    then Right artistKeys
+    else Left err400 { errBody = "eventArtists[].artistId must be unique" }
   where
     validateArtistId artist =
       case artistId artist of

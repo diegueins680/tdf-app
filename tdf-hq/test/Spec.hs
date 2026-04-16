@@ -1139,6 +1139,14 @@ main = hspec $ do
                 (validateEventArtistIds [mkArtist Nothing, mkArtist (Just " 0042 "), mkArtist (Just "7")])
                 `shouldBe` Right [42, 7]
 
+        it "rejects duplicate artist ids before event writes hit the join-table constraint" $
+            case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be unique"
+                Right value ->
+                    expectationFailure ("Expected duplicate event artist ids to be rejected, got " <> show value)
+
         it "rejects malformed explicit artist ids instead of silently dropping event links" $ do
             let assertInvalid rawArtistId =
                     case validateEventArtistIds [mkArtist (Just rawArtistId)] of
