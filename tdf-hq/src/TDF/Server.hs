@@ -3918,7 +3918,10 @@ fanFollowArtist user artistId = do
 fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
 fanUnfollowArtist user artistId = do
   requireFanAccess user
+  when (artistId <= 0) $ throwBadRequest "Invalid artist id"
   let artistKey = toSqlKey artistId :: PartyId
+  when (artistKey == auPartyId user) $
+    throwBadRequest "No puedes dejar de seguirte a ti mismo"
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $
     deleteBy (UniqueFanFollow (auPartyId user) artistKey)

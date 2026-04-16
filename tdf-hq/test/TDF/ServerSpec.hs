@@ -117,6 +117,7 @@ import TDF.Server
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , resolvePartyRoleAssignmentTarget
+    , fanUnfollowArtist
     , chatListMessages
     , validateAdsInquiry
     )
@@ -479,6 +480,25 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected existing social target party to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
+
+    describe "fanUnfollowArtist" $ do
+        it "rejects invalid fan follow targets before deleting can return a misleading no-op" $ do
+            let user = mkUser [Fan]
+                assertInvalid rawArtistId expectedMessage = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (fanUnfollowArtist user rawArtistId)
+                                (error "fanUnfollowArtist should reject invalid ids before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid fan unfollow target to be rejected, got: " <> show value)
+            assertInvalid 0 "Invalid artist id"
+            assertInvalid 1 "No puedes dejar de seguirte a ti mismo"
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $
