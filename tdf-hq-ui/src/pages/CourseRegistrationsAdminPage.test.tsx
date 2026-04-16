@@ -3930,7 +3930,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the initial loading state focused on the first-result setup instead of a refresh action', async () => {
+  it('keeps the initial loading state focused on the first-result setup instead of filters or refresh actions', async () => {
     listRegistrationsMock.mockImplementation(() => new Promise(() => {}));
 
     const container = document.createElement('div');
@@ -3939,6 +3939,14 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Cargando inscripciones…');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Refrescar lista')).toBe(false);
     });
 
