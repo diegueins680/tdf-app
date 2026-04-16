@@ -3561,6 +3561,85 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins hide an empty follow-up URL fallback without collapsing drafted details', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'Asunto'), 'Confirmar transferencia');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+      expect(getInputByLabel(document.body, 'Asunto').value).toBe('Confirmar transferencia');
+      expect(getButtonByText(document.body, 'Ocultar enlace existente')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Ocultar enlace existente').getAttribute('aria-expanded')).toBe('true');
+      expect(countButtonsByText(document.body, 'Ocultar detalles opcionales')).toBe(0);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Ocultar enlace existente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(getInputByLabel(document.body, 'Asunto').value).toBe('Confirmar transferencia');
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto').getAttribute('aria-expanded')).toBe('false');
+      expect(countButtonsByText(document.body, 'Ocultar enlace existente')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps one follow-up actions entry point per saved note and reveals edit only on demand', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

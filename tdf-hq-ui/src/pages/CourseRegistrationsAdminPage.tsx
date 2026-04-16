@@ -1520,6 +1520,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
+  const canHideFollowUpUrlField = showFollowUpUrlField && !trimToNull(followUpForm.attachmentUrl);
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
@@ -2854,19 +2855,33 @@ export default function CourseRegistrationsAdminPage() {
                                       size="small"
                                       variant="text"
                                       sx={{ alignSelf: 'flex-start' }}
+                                      aria-expanded={showFollowUpUrlField}
                                       onClick={() => setShowFollowUpUrlField(true)}
                                     >
                                       Usar enlace existente en lugar de subir adjunto
                                     </Button>
                                   )}
-                                  <Collapse in={showFollowUpUrlField} unmountOnExit>
-                                    <TextField
-                                      label="URL del adjunto"
-                                      value={followUpForm.attachmentUrl}
-                                      onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
-                                      fullWidth
-                                    />
-                                  </Collapse>
+                                  {showFollowUpUrlField && (
+                                    <Stack spacing={1}>
+                                      <TextField
+                                        label="URL del adjunto"
+                                        value={followUpForm.attachmentUrl}
+                                        onChange={(e) => setFollowUpForm((prev) => ({ ...prev, attachmentUrl: e.target.value }))}
+                                        fullWidth
+                                      />
+                                      {canHideFollowUpUrlField && (
+                                        <Button
+                                          size="small"
+                                          variant="text"
+                                          sx={{ alignSelf: 'flex-start' }}
+                                          aria-expanded={showFollowUpUrlField}
+                                          onClick={() => setShowFollowUpUrlField(false)}
+                                        >
+                                          Ocultar enlace existente
+                                        </Button>
+                                      )}
+                                    </Stack>
+                                  )}
                                   {canHideFollowUpOptionalFields && (
                                     <Button
                                       size="small"
