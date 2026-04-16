@@ -1590,7 +1590,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes a shared missing source once instead of repeating Sin fuente on each row', async () => {
+  it('hides a shared missing source instead of turning it into first-run list copy', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1613,7 +1613,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: sin fuente registrada.');
+      expect(container.textContent).not.toContain('Fuente visible: sin fuente registrada.');
       expect(container.textContent).not.toContain('Mostrando una sola fuente:');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).toContain('Ada Lovelace');

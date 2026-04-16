@@ -585,10 +585,9 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueSources.length !== 1) return '';
     return uniqueSources[0] ?? '';
   }, [regsQuery.data]);
-  const sharedVisibleSourceSummary = singleVisibleSourceLabel
-    ? singleVisibleSourceLabel === 'Sin fuente'
-      ? 'Todas las inscripciones visibles están sin fuente registrada.'
-      : `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
+  const hasNamedVisibleSource = Boolean(singleVisibleSourceLabel && singleVisibleSourceLabel !== 'Sin fuente');
+  const sharedVisibleSourceSummary = hasNamedVisibleSource
+    ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
     : '';
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
@@ -663,10 +662,8 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceLimitSummary = combinedSingleChoiceSummary && limit !== DEFAULT_LIMIT
     ? `Límite actual: hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
     : '';
-  const summarizedVisibleSourceLabel = singleVisibleSourceLabel
-    ? singleVisibleSourceLabel === 'Sin fuente'
-      ? 'Fuente visible: sin fuente registrada.'
-      : `Fuente visible: ${singleVisibleSourceLabel}.`
+  const summarizedVisibleSourceLabel = hasNamedVisibleSource
+    ? `Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary
     ? summarizedVisibleSourceLabel
@@ -700,13 +697,11 @@ export default function CourseRegistrationsAdminPage() {
   const showStandaloneListUtilitySummary = !hasCustomFilters && (canCopyCsv || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
-  const shouldShowSharedSourceSummary = hasSharedVisibleSource
+  const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
   const combinedSharedListContextSummary = shouldShowSharedCohortSummary && shouldShowSharedSourceSummary
-    ? singleVisibleSourceLabel === 'Sin fuente'
-      ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Todas las inscripciones visibles están sin fuente registrada.`
-      : `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
+    ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}. Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
