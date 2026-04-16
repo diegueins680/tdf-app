@@ -5687,6 +5687,36 @@ validateServiceMarketplaceBookingSlot adKey slot
 normalizeOptionalCmsFilter :: Maybe Text -> Maybe Text
 normalizeOptionalCmsFilter = normalizeOptionalInput
 
+validateCmsLocaleFilter :: Maybe Text -> Either ServerError Text
+validateCmsLocaleFilter rawLocale =
+  case normalizeOptionalCmsFilter rawLocale of
+    Nothing -> Right "es"
+    Just locale
+      | isValidCmsLocale locale -> Right locale
+      | otherwise ->
+          Left err400
+            { errBody =
+                "locale must be omitted or a BCP-47 language tag such as es, en, or es-EC"
+            }
+  where
+    isValidCmsLocale locale =
+      T.length locale <= 35
+        && case T.splitOn "-" locale of
+          [] -> False
+          primary : subtags ->
+            isValidPrimarySubtag primary && all isValidLocaleSubtag subtags
+
+    isValidPrimarySubtag subtag =
+      let len = T.length subtag
+      in len >= 2 && len <= 8 && T.all isAsciiLetter subtag
+
+    isValidLocaleSubtag subtag =
+      let len = T.length subtag
+      in len >= 2 && len <= 8 && T.all isAsciiAlphaNum subtag
+
+    isAsciiLetter ch = isAsciiLower ch || isAsciiUpper ch
+    isAsciiAlphaNum ch = isAsciiLetter ch || isDigit ch
+
 validateRequiredCmsField :: Text -> Text -> Either ServerError Text
 validateRequiredCmsField fieldName rawValue =
   case normalizeOptionalCmsFilter (Just rawValue) of
@@ -7743,7 +7773,7 @@ cmsPublicServer = cmsGet :<|> cmsList
         maybe (throwError err400 { errBody = "slug requerido" })
           (either throwError pure . validateRequiredCmsField "slug")
           mSlug
-      let locale = fromMaybe "es" (normalizeOptionalCmsFilter mLocale)
+      locale <- either throwError pure (validateCmsLocaleFilter mLocale)
       mPublished <- runDB $ selectFirst
         [ CMS.CmsContentSlug ==. slug
         , CMS.CmsContentLocale ==. locale
@@ -7752,7 +7782,7 @@ cmsPublicServer = cmsGet :<|> cmsList
       maybe (fallbackContent slug locale) (pure . toCmsDTO) mPublished
 
     cmsList mLocale mPrefix = do
-      let locale = fromMaybe "es" (normalizeOptionalCmsFilter mLocale)
+      locale <- either throwError pure (validateCmsLocaleFilter mLocale)
       entries <- runDB $
         selectList
           [ CMS.CmsContentLocale ==. locale

@@ -75,6 +75,7 @@ import TDF.Server
     , validateServiceAdSlotMinutes
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
+    , validateCmsLocaleFilter
     , validateCourseCurrency
     , validateCourseNonNegativeField
     , validateCourseSlug
@@ -1237,6 +1238,27 @@ spec = describe "TDF.Server helpers" $ do
             normalizeOptionalCmsFilter Nothing `shouldBe` Nothing
             normalizeOptionalCmsFilter (Just "  homepage ") `shouldBe` Just "homepage"
             normalizeOptionalCmsFilter (Just "   ") `shouldBe` Nothing
+
+    describe "validateCmsLocaleFilter" $ do
+        it "defaults omitted or blank locales and accepts explicit language tags" $ do
+            validateCmsLocaleFilter Nothing `shouldBe` Right "es"
+            validateCmsLocaleFilter (Just "   ") `shouldBe` Right "es"
+            validateCmsLocaleFilter (Just " en ") `shouldBe` Right "en"
+            validateCmsLocaleFilter (Just " es-EC ") `shouldBe` Right "es-EC"
+
+        it "rejects malformed locales instead of returning ambiguous CMS fallbacks" $ do
+            let assertInvalid rawLocale =
+                    case validateCmsLocaleFilter (Just rawLocale) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "locale must be omitted"
+                        Right locale ->
+                            expectationFailure ("Expected invalid CMS locale to be rejected, got: " <> show locale)
+            assertInvalid "../es"
+            assertInvalid "es_EC"
+            assertInvalid "es--EC"
+            assertInvalid "english locale"
+            assertInvalid "e"
 
     describe "validateRequiredCmsField" $ do
         it "trims required CMS identifiers before create and lookup handlers use them" $ do
