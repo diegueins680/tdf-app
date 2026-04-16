@@ -194,7 +194,7 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  fallbackConnUrl <- lookupFirstConnUrlEnv
+  fallbackConnUrl <- lookupFirstConnUrlEnv (not keywordDbEnvConfigured)
     ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
   connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
   h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
@@ -341,15 +341,17 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just normalized)
         Nothing -> lookupFirstEnv rest
-    lookupFirstConnUrlEnv [] = pure Nothing
-    lookupFirstConnUrlEnv (key:rest) = do
+    lookupFirstConnUrlEnv _ [] = pure Nothing
+    lookupFirstConnUrlEnv requireValid (key:rest) = do
       value <- lookupEnv key
       case value >>= normalizeEnvString of
-        Nothing -> lookupFirstConnUrlEnv rest
+        Nothing -> lookupFirstConnUrlEnv requireValid rest
         Just normalized ->
           case validateFallbackConnUrl key normalized of
             Right conn -> pure (Just conn)
-            Left msg -> fail msg
+            Left msg
+              | requireValid -> fail msg
+              | otherwise -> lookupFirstConnUrlEnv requireValid rest
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed
