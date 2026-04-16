@@ -466,7 +466,6 @@ export default function CourseBuilderPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Chip label={`Slug: ${slug}`} color="primary" />
           <Chip label={`Estado: ${createMutation.isSuccess ? 'Publicado' : 'Borrador'}`} />
         </Stack>
       </Stack>
@@ -490,7 +489,7 @@ export default function CourseBuilderPage() {
           Vista previa landing
         </Button>
       </Stack>
-      <Card variant="outlined" id="detalles">
+      <Card variant="outlined">
         <CardContent>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
             <TextField
@@ -549,7 +548,7 @@ export default function CourseBuilderPage() {
         <Alert severity="error">No pudimos guardar el curso. Revisa los campos obligatorios.</Alert>
       )}
 
-      <Card variant="outlined" id="sesiones">
+      <Card variant="outlined" id="detalles">
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -775,7 +774,7 @@ export default function CourseBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" id="temario">
+      <Card variant="outlined" id="sesiones">
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Sesiones</Typography>
@@ -836,7 +835,7 @@ export default function CourseBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" id="publicacion">
+      <Card variant="outlined" id="temario">
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Temario</Typography>
@@ -870,7 +869,7 @@ export default function CourseBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card variant="outlined" id="publicacion">
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Revisar y publicar</Typography>
