@@ -3797,6 +3797,28 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps first-load registration errors focused on retry instead of showing unusable filters', async () => {
+    listRegistrationsMock.mockRejectedValue(new Error('Backend unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('No se pudieron cargar las inscripciones: Backend unavailable');
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).not.toContain(initialEmptyStateMessage);
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first-run empty state focused on onboarding guidance instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 

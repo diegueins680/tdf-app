@@ -804,6 +804,7 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
+  const showRegistrationFilterPanel = !regsQuery.isError || hasCustomFilters;
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT
@@ -1738,13 +1739,14 @@ export default function CourseRegistrationsAdminPage() {
 
       {pageFlash && <Alert severity={pageFlash.severity}>{pageFlash.message}</Alert>}
 
-      <Paper sx={{ p: 3, borderRadius: 3 }}>
-        {showInitialFilterGuidance ? (
-          <Alert severity="info" variant="outlined">
-            {initialEmptyStateMessage}
-          </Alert>
-        ) : (
-          <>
+      {showRegistrationFilterPanel && (
+        <Paper sx={{ p: 3, borderRadius: 3 }}>
+          {showInitialFilterGuidance ? (
+            <Alert severity="info" variant="outlined">
+              {initialEmptyStateMessage}
+            </Alert>
+          ) : (
+            <>
             <Grid container spacing={2}>
               {combinedSingleChoiceSummary ? (
                 <Grid item xs={12}>
@@ -2102,9 +2104,10 @@ export default function CourseRegistrationsAdminPage() {
                 )}
               </Stack>
             )}
-          </>
-        )}
-      </Paper>
+            </>
+          )}
+        </Paper>
+      )}
 
       {!showInitialFilterGuidance && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
