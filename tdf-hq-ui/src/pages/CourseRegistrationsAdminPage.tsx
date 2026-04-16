@@ -718,6 +718,10 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
+  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const visibleRegistrationsSummary = hasCustomFilters
+    ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
+    : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
   const combinedSingleChoiceLimitSummary = combinedSingleChoiceSummary && limit !== DEFAULT_LIMIT
     ? `Límite actual: hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
     : '';
@@ -727,9 +731,18 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSourceSummary = combinedSingleChoiceSummary
     ? summarizedVisibleSourceLabel
     : '';
+  const showTinyDefaultCountInCurrentView = Boolean(combinedSingleChoiceSummary)
+    && !hasCustomFilters
+    && loadedRegistrationCount > 1
+    && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS
+    && !copyMessage;
+  const combinedSingleChoiceCountSummary = showTinyDefaultCountInCurrentView
+    ? visibleRegistrationsSummary
+    : '';
   const combinedSingleChoiceContextSummary = [
     combinedSingleChoiceSourceSummary,
     combinedSingleChoiceLimitSummary,
+    combinedSingleChoiceCountSummary,
   ].filter(Boolean).join(' ');
   const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
     ? summarizedVisibleSourceLabel
@@ -752,10 +765,10 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
   const canCopyCsv = loadedRegistrationCount > 1
     && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
   const showStandaloneListUtilitySummary = !hasCustomFilters
+    && !showTinyDefaultCountInCurrentView
     && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
@@ -783,9 +796,6 @@ export default function CourseRegistrationsAdminPage() {
     : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
-  const visibleRegistrationsSummary = hasCustomFilters
-    ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
-    : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
   const copyCsvButtonLabel = 'Copiar CSV visible';
   const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;

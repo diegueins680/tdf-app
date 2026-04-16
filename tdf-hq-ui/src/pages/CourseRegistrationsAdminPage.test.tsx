@@ -4050,7 +4050,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).not.toContain('Total: 2');
-      expect(container.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(
+        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
+      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
       expect(
@@ -4445,7 +4448,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps tiny default lists on passive context instead of a lone refresh utility', async () => {
+  it('folds tiny default-list counts into the current view instead of adding a utility row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -4460,10 +4463,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(listUtilities?.textContent?.trim()).toBe('Mostrando 2 inscripciones en esta vista.');
-      expect(listUtilities?.querySelector('button')).toBeNull();
+      expect(
+        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
+      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
     });
 
@@ -4474,11 +4478,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
-      expect(listUtilities?.textContent?.trim()).toBe('Mostrando 2 inscripciones en esta vista.');
-      expect(listUtilities?.querySelector('button')).toBeNull();
+      expect(
+        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
+      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
     });
 
     await cleanup();
