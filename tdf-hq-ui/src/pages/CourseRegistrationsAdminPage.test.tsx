@@ -2262,7 +2262,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps passive empty email guidance outside the dossier action row so only real actions stay clickable', async () => {
+  it('hides passive empty email guidance when the pay action is already primary', async () => {
     getRegistrationDossierMock.mockResolvedValue(buildDossier({ crdCanMarkPaid: true }));
 
     const container = document.createElement('div');
@@ -2289,7 +2289,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(actions as HTMLElement, 'Marcar pagado')).toBe(1);
       expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
-      expect(emptyHint?.textContent?.trim()).toBe(emptySystemEmailHistoryMessage);
+      expect(emptyHint).toBeNull();
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
     });
 
     await cleanup();

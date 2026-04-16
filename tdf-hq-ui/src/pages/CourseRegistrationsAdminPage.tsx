@@ -894,10 +894,6 @@ export default function CourseRegistrationsAdminPage() {
   const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
-  const showEmptySystemEmailHistoryHint = canReviewSystemEmails
-    && !showSystemEmailHistoryAction
-    && !emailEventsQuery.isLoading
-    && selectedDossierId != null;
   const hasMultipleAvailableCohorts = !cohortsQuery.isError && cohortOptions.length > 1;
   const initialEmptyStateMessage = singleAvailableCohort
     ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.label)
@@ -1402,6 +1398,10 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const showDossierActionRow = canMarkPaid || showSystemEmailHistoryAction;
+  const showEmptySystemEmailHistoryHint = canReviewSystemEmails
+    && !showDossierActionRow
+    && !emailEventsQuery.isLoading
+    && selectedDossierId != null;
   const hasReceipts = receipts.length > 0;
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
