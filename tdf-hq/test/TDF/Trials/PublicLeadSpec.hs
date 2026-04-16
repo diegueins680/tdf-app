@@ -443,6 +443,36 @@ spec = do
       assertInvalid "discountCents must not exceed priceCents" $
         PurchaseIn 1 2 12000 (Just 13000) (Just 1440) (Just 3) (Just 4) (Just 5)
 
+  describe "PurchaseIn FromJSON" $ do
+    it "accepts canonical purchase payloads for the private trials purchase endpoint" $
+      case A.eitherDecode
+        "{\"studentId\":1,\"packageId\":2,\"priceCents\":12000,\"discountCents\":1000,\"taxCents\":1440,\"sellerId\":3,\"commissionedTeacherId\":4,\"trialRequestId\":5}" of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical purchase payload to decode, got: " <> decodeErr)
+        Right (PurchaseIn studentIdValue packageIdValue priceCentsValue discountCentsValue taxCentsValue sellerIdValue commissionedTeacherIdValue trialRequestIdValue) -> do
+          studentIdValue `shouldBe` 1
+          packageIdValue `shouldBe` 2
+          priceCentsValue `shouldBe` 12000
+          discountCentsValue `shouldBe` Just 1000
+          taxCentsValue `shouldBe` Just 1440
+          sellerIdValue `shouldBe` Just 3
+          commissionedTeacherIdValue `shouldBe` Just 4
+          trialRequestIdValue `shouldBe` Just 5
+
+    it "rejects typoed or unexpected purchase keys so financial writes cannot silently ignore caller intent" $ do
+      isLeft
+        ( A.eitherDecode
+            "{\"studentId\":1,\"packageId\":2,\"priceCents\":12000,\"commissionedTeacherID\":4}"
+            :: Either String PurchaseIn
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode
+            "{\"studentId\":1,\"packageId\":2,\"priceCents\":12000,\"status\":\"paid\"}"
+            :: Either String PurchaseIn
+        )
+        `shouldBe` True
+
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do
       let assertRejected rawSubjectId = do

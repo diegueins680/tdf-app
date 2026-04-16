@@ -110,7 +110,9 @@ data PackageDTO = PackageDTO { packageId :: Int, name :: Text, hoursQty :: Int, 
 instance ToJSON PackageDTO; instance FromJSON PackageDTO
 
 data PurchaseIn = PurchaseIn { studentId :: Int, packageId :: Int, priceCents :: Int, discountCents :: Maybe Int, taxCents :: Maybe Int, sellerId :: Maybe Int, commissionedTeacherId :: Maybe Int, trialRequestId :: Maybe Int } deriving (Generic)
-instance ToJSON PurchaseIn; instance FromJSON PurchaseIn
+instance ToJSON PurchaseIn
+instance FromJSON PurchaseIn where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 data PurchaseOut = PurchaseOut { purchaseId :: Int } deriving (Generic)
 instance ToJSON PurchaseOut; instance FromJSON PurchaseOut
 
