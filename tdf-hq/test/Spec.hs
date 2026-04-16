@@ -45,6 +45,7 @@ import TDF.API.Types
       RadioPresenceUpsert (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
+      PreviewReq (..),
       ensureLeadCompletionUpdated,
       validateHookVerifyRequest,
       validateLeadCompletionId,
@@ -2267,6 +2268,16 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 503
                     BL.unpack (errBody err) `shouldContain` "WhatsApp verify token not configured"
                 Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
+
+    describe "PreviewReq" $ do
+        it "accepts only the canonical preview-link request body" $ do
+            case eitherDecode "{\"phone\":\"+593991234567\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical preview-link payload to decode, got: " <> err)
+                Right payload ->
+                    phone payload `shouldBe` "+593991234567"
+            (eitherDecode "{\"phone\":\"+593991234567\",\"status\":\"COMPLETED\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
 
     describe "validateLeadCompletionRequest" $ do
         it "accepts canonical lead-completion request bodies and rejects unexpected keys" $ do

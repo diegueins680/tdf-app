@@ -13,6 +13,7 @@ module TDF.API.WhatsApp
   , validateLeadCompletionId
   , validateLeadCompletionLookup
   , ensureLeadCompletionUpdated
+  , PreviewReq(..)
   , CompleteReq(..)
   ) where
 
@@ -50,7 +51,10 @@ type WhatsAppApi =
   :<|> "api"   :> "leads" :> "preview-link" :> ReqBody '[JSON] PreviewReq :> Post '[JSON] Value
 
 data PreviewReq = PreviewReq { phone :: Text } deriving (Show, Generic)
-instance FromJSON PreviewReq
+instance FromJSON PreviewReq where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 whatsappServer :: Connection -> Server WhatsAppApi
 whatsappServer conn =
