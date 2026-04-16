@@ -77,6 +77,7 @@ import TDF.Server
     , validateCourseRegistrationEmail
     , validateCourseRegistrationEmailEventListLimit
     , validateCourseRegistrationListLimit
+    , validateCourseRegistrationSeatAvailability
     , validateCourseRegistrationSource
     , validateOptionalCourseRegistrationStatusFilter
     , validateOptionalCourseSessionStartHour
@@ -2481,6 +2482,25 @@ spec = describe "TDF.Server helpers" $ do
                     BL8.unpack (errBody serverErr) `shouldContain` "email o phoneE164 requerido"
                 Right result ->
                     expectationFailure ("Expected missing course-registration contact channels to be rejected, got: " <> show result)
+
+    describe "validateCourseRegistrationSeatAvailability" $ do
+        it "allows new registrations only when seats remain" $
+            validateCourseRegistrationSeatAvailability 1 Nothing `shouldBe` Right ()
+
+        it "allows an existing pending registration to update details even when the cohort is full" $
+            validateCourseRegistrationSeatAvailability 0 (Just " Pending Payment ")
+                `shouldBe` Right ()
+
+        it "rejects new or non-pending registrations when no seats remain" $ do
+            let assertFull result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 409
+                        BL8.unpack (errBody serverErr) `shouldContain` "course has no remaining seats"
+                    Right value ->
+                        expectationFailure
+                            ("Expected full course registration to be rejected, got: " <> show value)
+            assertFull (validateCourseRegistrationSeatAvailability 0 Nothing)
+            assertFull (validateCourseRegistrationSeatAvailability 0 (Just "paid"))
 
     describe "validateCourseRegistrationReceiptDeletion" $ do
         it "allows receipt deletion for non-paid registrations or when paid registrations still have other receipts" $ do

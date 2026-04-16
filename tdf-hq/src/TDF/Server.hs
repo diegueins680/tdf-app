@@ -3157,6 +3157,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
                             , Courses.sessions = metaSessions
                             , Courses.title = metaTitle
                             , Courses.landingUrl = metaLanding
+                            , Courses.remaining = metaRemaining
                             } = metaRaw
   now <- liftIO getCurrentTime
   sourceClean <- either throwError pure (validateCourseRegistrationSource source)
@@ -3172,11 +3173,15 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
     throwBadRequest "email requerido"
-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now
   existing <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
+  either throwError pure $
+    validateCourseRegistrationSeatAvailability
+      metaRemaining
+      (ME.courseRegistrationStatus . entityVal <$> existing)
+  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now
   case existing of
     -- Update in-place only when the existing row is still pending; otherwise create a fresh row.
-    Just (Entity regId reg) | ME.courseRegistrationStatus reg == pendingStatus -> do
+    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do
       let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId
       runDB $ update regId
         [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)
@@ -3691,6 +3696,19 @@ validateCourseRegistrationContactChannels mEmail mPhone
       Left err400 { errBody = "email o phoneE164 requerido" }
   | otherwise =
       Right ()
+
+validateCourseRegistrationSeatAvailability :: Int -> Maybe Text -> Either ServerError ()
+validateCourseRegistrationSeatAvailability remainingSeats mExistingStatus
+  | remainingSeats > 0 =
+      Right ()
+  | maybe False isPendingCourseRegistrationStatus mExistingStatus =
+      Right ()
+  | otherwise =
+      Left err409 { errBody = "course has no remaining seats" }
+
+isPendingCourseRegistrationStatus :: Text -> Bool
+isPendingCourseRegistrationStatus rawStatus =
+  normalizeCourseRegistrationStatus rawStatus == Just "pending_payment"
 
 normalizeUtm :: Maybe UTMTags -> (Maybe Text, Maybe Text, Maybe Text, Maybe Text)
 normalizeUtm Nothing = (Nothing, Nothing, Nothing, Nothing)
