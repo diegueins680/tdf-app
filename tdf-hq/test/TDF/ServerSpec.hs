@@ -144,6 +144,7 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validateWhatsAppReplyBody
+    , validateWhatsAppReplyExternalId
     , validateWhatsAppReplyTarget
     , whatsappWebhookServer
     , validatePublicBookingStartAt
@@ -2997,6 +2998,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Mensaje demasiado largo"
                 (validateWhatsAppReplyBody (T.replicate 4097 "a"))
+
+    describe "validateWhatsAppReplyExternalId" $ do
+        it "requires provided reply targets to be explicit non-blank identifiers" $ do
+            validateWhatsAppReplyExternalId Nothing `shouldBe` Right Nothing
+            validateWhatsAppReplyExternalId (Just "  wamid.ID_123  ")
+                `shouldBe` Right (Just "wamid.ID_123")
+
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right externalId ->
+                        expectationFailure
+                            ("Expected invalid WhatsApp reply externalId to be rejected, got: " <> show externalId)
+            assertInvalid
+                "externalId must be omitted or a non-empty string"
+                (validateWhatsAppReplyExternalId (Just "   "))
+            assertInvalid
+                "externalId must not contain whitespace"
+                (validateWhatsAppReplyExternalId (Just "wamid ID"))
+            assertInvalid
+                "externalId must be 256 characters or fewer"
+                (validateWhatsAppReplyExternalId (Just (T.replicate 257 "a")))
 
     describe "validateWhatsAppReplyTarget" $ do
         it "requires manual replies to target an incoming message for the same recipient" $ do

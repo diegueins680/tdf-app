@@ -89,6 +89,7 @@ import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
 import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import qualified TDF.ServerExtra as ServerExtra
 import qualified TDF.ServerAuth as AuthServer
 import           TDF.ServerInstagramOAuth (instagramOAuthServer)
 import           TDF.ServerInternships (internshipsServer)
@@ -783,11 +784,9 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
   unless (hasSocialInboxAccess user) $
     throwError err403 { errBody = "Missing required module access" }
   let recipientRaw = T.strip wrSenderId
-      mExternalId = wrExternalId >>= \raw ->
-        let trimmed = T.strip raw
-        in if T.null trimmed then Nothing else Just trimmed
   when (T.null recipientRaw) $ throwBadRequest "Remitente requerido"
   recipient <- either throwError pure (validateWhatsAppPhoneInput recipientRaw)
+  mExternalId <- either throwError pure (validateWhatsAppReplyExternalId wrExternalId)
   body <- either throwError pure (validateWhatsAppReplyBody wrMessage)
   mReplyTargetRaw <- case mExternalId of
     Nothing -> pure Nothing
@@ -1043,6 +1042,9 @@ validateWhatsAppReplyBody rawBody
 
 maxWhatsAppReplyBodyChars :: Int
 maxWhatsAppReplyBodyChars = 4096
+
+validateWhatsAppReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
+validateWhatsAppReplyExternalId = ServerExtra.validateSocialReplyExternalId
 
 parseBoolParam :: Maybe Text -> Either ServerError Bool
 parseBoolParam Nothing = Right False
