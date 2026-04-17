@@ -1564,12 +1564,15 @@ export default function CourseRegistrationsAdminPage() {
       source: activeRegistration.crSource,
     })
     : '';
-  const showPartyIdFallback = Boolean(
+  const showInternalRegistrationReference = Boolean(
     activeRegistration?.crPartyId
     && !activeRegistration?.crFullName?.trim()
     && !activeRegistration?.crEmail?.trim()
     && !activeRegistration?.crPhoneE164?.trim(),
   );
+  const activeRegistrationSecondaryLine = showInternalRegistrationReference && activeRegistration?.crPartyId
+    ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
+    : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
   const showDossierRefreshAction = Boolean(selectedDossier) && !dossierQuery.isLoading;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
@@ -2617,13 +2620,10 @@ export default function CourseRegistrationsAdminPage() {
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
                     {statusChip(activeRegistration.crStatus)}
-                    {showPartyIdFallback && (
-                      <Chip size="small" label={`Party #${activeRegistration.crPartyId}`} variant="outlined" />
-                    )}
                   </Stack>
-                  {activeRegistrationIdentity.secondary && (
+                  {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
-                      {activeRegistrationIdentity.secondary}
+                      {activeRegistrationSecondaryLine}
                     </Typography>
                   )}
                   {activeRegistrationSummary && (

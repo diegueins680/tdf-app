@@ -1097,8 +1097,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const dialog = getDialog();
       expect(dialog.textContent).toContain('Registro #101');
-      expect(dialog.textContent).toContain('Sin correo ni teléfono');
-      expect(dialog.textContent).toContain('Party #9');
+      expect(hasExactText(dialog, 'Sin datos de contacto. Referencia interna: Party #9.')).toBe(true);
+      expect(hasExactText(dialog, 'Party #9')).toBe(false);
+      expect(dialog.textContent).not.toContain('Sin correo ni teléfono');
       expect(dialog.textContent).not.toContain('Sin nombre');
     });
 
@@ -1526,8 +1527,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Party #9');
-      expect(document.body.textContent).toContain('Sin correo ni teléfono');
+      const dialog = getDialog();
+      expect(hasExactText(dialog, 'Sin datos de contacto. Referencia interna: Party #9.')).toBe(true);
+      expect(hasExactText(dialog, 'Party #9')).toBe(false);
+      expect(dialog.textContent).not.toContain('Sin correo ni teléfono');
     });
 
     await cleanup();
