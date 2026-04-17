@@ -19,11 +19,18 @@ import Database.Persist hiding (Active)
 import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
+import Servant.Multipart
+  ( FileData (..)
+  , FromMultipart (fromMultipart)
+  , Input (..)
+  , MultipartData (..)
+  , Tmp
+  )
 import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
-import TDF.API.Inventory (InventoryAPI)
+import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI)
 import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
@@ -111,6 +118,22 @@ import TDF.ServerExtra (
  )
 
 type InventoryTestM = ReaderT Env (ExceptT ServerError IO)
+
+mkAssetUploadMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkAssetUploadMultipart fields uploads =
+  MultipartData
+    { inputs = map (uncurry Input) fields
+    , files = uploads
+    }
+
+mkAssetUploadFile :: Text -> FileData Tmp
+mkAssetUploadFile fileName =
+  FileData
+    { fdInputName = "file"
+    , fdFileName = fileName
+    , fdFileCType = "image/jpeg"
+    , fdPayload = "/tmp/mock-asset-upload"
+    }
 
 spec :: Spec
 spec = do
@@ -212,6 +235,62 @@ spec = do
         "{\"ciConditionIn\":\"Returned OK\",\"unexpected\":true}"
           :: Either String AssetCheckinRequest)
         `shouldSatisfy` isLeft
+
+  describe "inventory asset upload multipart parsing" $ do
+    it "normalizes optional upload names so blank values keep filename fallbacks" $ do
+      case fromMultipart
+        (mkAssetUploadMultipart [("name", "  Front Room.jpg  ")] [mkAssetUploadFile "camera.jpg"])
+          :: Either String AssetUploadForm of
+        Left err ->
+          expectationFailure ("Expected asset upload multipart to parse, got: " <> err)
+        Right payload -> do
+          fdFileName (aufFile payload) `shouldBe` "camera.jpg"
+          aufName payload `shouldBe` Just "Front Room.jpg"
+
+      case fromMultipart
+        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "fallback.jpg"])
+          :: Either String AssetUploadForm of
+        Left err ->
+          expectationFailure ("Expected blank asset upload name to parse, got: " <> err)
+        Right payload ->
+          aufName payload `shouldBe` Nothing
+
+    it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected malformed asset upload multipart, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Duplicate field: name"
+        (mkAssetUploadMultipart
+          [ ("name", "front-room")
+          , ("name", "stage-left")
+          ]
+          [mkAssetUploadFile "file.jpg"]
+        )
+      assertInvalid
+        "Unexpected field: folder"
+        (mkAssetUploadMultipart [("folder", "inventory")] [mkAssetUploadFile "file.jpg"])
+      assertInvalid
+        "Duplicate file field: file"
+        (mkAssetUploadMultipart
+          []
+          [ mkAssetUploadFile "first.jpg"
+          , mkAssetUploadFile "second.jpg"
+          ]
+        )
+      assertInvalid
+        "Unexpected file field: photo"
+        (mkAssetUploadMultipart
+          []
+          [(mkAssetUploadFile "file.jpg") { fdInputName = "photo" }]
+        )
 
   describe "inventory asset query filtering" $ do
     it "normalizes missing or blank queries to no filter" $ do

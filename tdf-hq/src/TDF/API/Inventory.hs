@@ -8,7 +8,14 @@ module TDF.API.Inventory where
 
 import           Data.Text         (Text)
 import           Servant
-import           Servant.Multipart (FileData, FromMultipart(..), MultipartForm, Tmp, lookupFile, lookupInput)
+import           Servant.Multipart ( FileData
+                                    , FromMultipart(..)
+                                    , Input(..)
+                                    , MultipartData(inputs, files)
+                                    , MultipartForm
+                                    , Tmp
+                                    , fdInputName
+                                    )
 import qualified Data.Text         as T
 
 import           TDF.API.Types
@@ -20,14 +27,51 @@ data AssetUploadForm = AssetUploadForm
 
 instance FromMultipart Tmp AssetUploadForm where
   fromMultipart multipart = do
-    file <- lookupFile "file" multipart
-    let nameTxt = case lookupInput "name" multipart of
-          Right v -> Just (T.strip v)
-          _       -> Nothing
+    rejectUnexpectedParts multipart
+    file <- lookupSingleFile "file" multipart
+    nameTxt <- optionalText "name" multipart
     pure AssetUploadForm
       { aufFile = file
       , aufName = nameTxt
       }
+    where
+      optionalText field mp =
+        fmap (>>= normalizeInputText) (lookupSingleInput field mp)
+
+      normalizeInputText (Input _ rawValue) =
+        let trimmed = T.strip rawValue
+        in if T.null trimmed then Nothing else Just trimmed
+
+      lookupSingleInput field mp =
+        case filter (\(Input inputName _) -> inputName == field) (inputs mp) of
+          [] -> Right Nothing
+          [input] -> Right (Just input)
+          _ -> Left ("Duplicate field: " <> T.unpack field)
+
+      lookupSingleFile field mp =
+        case [file | file <- files mp, fdInputName file == field] of
+          [] -> Left ("Missing file field: " <> T.unpack field)
+          [file] -> Right file
+          _ -> Left ("Duplicate file field: " <> T.unpack field)
+
+      rejectUnexpectedParts mp =
+        case (unexpectedInputs, unexpectedFiles) of
+          (fieldName : _, _) -> Left ("Unexpected field: " <> T.unpack fieldName)
+          (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
+          _ -> Right ()
+        where
+          expectedInputs = ["name"]
+          expectedFiles = ["file"]
+          unexpectedInputs =
+            [ inputName
+            | Input inputName _ <- inputs mp
+            , inputName `notElem` expectedInputs
+            ]
+          unexpectedFiles =
+            [ fdInputName file
+            | file <- files mp
+            , fdInputName file `notElem` expectedFiles
+            ]
 
 type InventoryAPI =
        "assets"
