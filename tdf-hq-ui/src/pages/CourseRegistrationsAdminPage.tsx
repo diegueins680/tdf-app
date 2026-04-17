@@ -1365,6 +1365,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleResetFilters = () => {
     setHasUsedFilterControl(true);
+    setLocalSearch('');
     setSlug('');
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
@@ -2316,6 +2317,7 @@ export default function CourseRegistrationsAdminPage() {
                         value={slug}
                         onChange={(e) => {
                           setHasUsedFilterControl(true);
+                          setLocalSearch('');
                           setSlug(e.target.value);
                         }}
                         fullWidth
@@ -2454,6 +2456,7 @@ export default function CourseRegistrationsAdminPage() {
                               aria-pressed={status === value}
                               onClick={() => {
                                 setHasUsedFilterControl(true);
+                                setLocalSearch('');
                                 setStatus((current) => (current === value ? 'all' : value));
                               }}
                             />
@@ -2491,6 +2494,7 @@ export default function CourseRegistrationsAdminPage() {
                   value={limit}
                   onChange={(e) => {
                     setHasUsedFilterControl(true);
+                    setLocalSearch('');
                     setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
                   }}
                   helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."

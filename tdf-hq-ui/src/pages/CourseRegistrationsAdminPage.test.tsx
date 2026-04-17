@@ -4723,6 +4723,65 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
+    const pendingRegistrations = buildRegistrations(9);
+    const initialRegistrations = [
+      ...pendingRegistrations,
+      buildRegistration({
+        crId: 210,
+        crPartyId: 21,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina@example.com',
+        crStatus: 'paid',
+      }),
+    ];
+    listRegistrationsMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'pending_payment' ? pendingRegistrations : initialRegistrations));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(10);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina Simone');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: 'pending_payment',
+        limit: 200,
+      });
+      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Estudiante 1');
+      expect(container.textContent).not.toContain('Nina Simone');
+      expect(container.textContent).not.toContain('No hay coincidencias para "nina"');
+    });
+
+    await cleanup();
+  });
+
   it('uses one explicit empty-search recovery action instead of an icon-only clear control', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
