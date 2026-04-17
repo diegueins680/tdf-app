@@ -124,7 +124,8 @@ import TDF.Server
       validateCoursePublicUrlField,
       validateDatafastBaseUrl )
 import TDF.ServerLiveSessions
-    ( buildLiveSessionUsernameCollisionCandidate )
+    ( buildLiveSessionUsernameCollisionCandidate,
+      sanitizeLiveSessionRiderFileName )
 import TDF.Server.SocialSync
     ( socialSyncServer,
       validateSocialSyncArtistPartyId,
@@ -3001,6 +3002,21 @@ main = hspec $ do
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
+
+    describe "sanitizeLiveSessionRiderFileName" $ do
+        it "reduces rider upload names to a stable safe basename before persistence" $ do
+            sanitizeLiveSessionRiderFileName "  ../Stage rider final?.pdf  "
+                `shouldBe` "Stage-rider-final-.pdf"
+            sanitizeLiveSessionRiderFileName " input\tlist\nfinal.txt "
+                `shouldBe` "input-list-final.txt"
+
+        it "falls back when rider upload names contain no stable filename characters" $ do
+            sanitizeLiveSessionRiderFileName "   " `shouldBe` "rider"
+            sanitizeLiveSessionRiderFileName "." `shouldBe` "rider"
+            sanitizeLiveSessionRiderFileName ".." `shouldBe` "rider"
+            sanitizeLiveSessionRiderFileName "..." `shouldBe` "rider"
+            sanitizeLiveSessionRiderFileName "___" `shouldBe` "rider"
+            sanitizeLiveSessionRiderFileName "???" `shouldBe` "rider"
 
     describe "resolveLiveSessionSetlistSortOrders" $ do
         let mkSong title sortOrder =

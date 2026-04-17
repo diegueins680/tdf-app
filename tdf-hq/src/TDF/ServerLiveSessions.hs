@@ -6,6 +6,7 @@
 module TDF.ServerLiveSessions
   ( liveSessionsServer
   , buildLiveSessionUsernameCollisionCandidate
+  , sanitizeLiveSessionRiderFileName
   ) where
 
 import           Control.Monad              (forM_, void, when)
@@ -13,6 +14,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import           Data.Char                  (isAlphaNum, isAscii)
 import           Data.Maybe                 (fromMaybe, mapMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
@@ -224,16 +226,13 @@ liveSessionsServer user = intakeHandler
 
     storeRiderFile :: FileData Tmp -> IO Text
     storeRiderFile FileData{..} = do
-      let safeName = sanitize (T.pack (takeFileName (T.unpack fdFileName)))
+      let safeName = sanitizeLiveSessionRiderFileName fdFileName
       token <- toText <$> nextRandom
       let destDir  = "uploads/live-sessions"
           destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
       createDirectoryIfMissing True destDir
       BL.readFile fdPayload >>= BL.writeFile destPath
       pure (T.pack destPath)
-
-    sanitize :: Text -> Text
-    sanitize = T.filter (\c -> c /= '/' && c /= '\\')
 
 buildLiveSessionUsernameCollisionCandidate :: Text -> Text -> Text
 buildLiveSessionUsernameCollisionCandidate base suffix =
@@ -251,6 +250,24 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
           else T.take baseBudget trimmedBase
   in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
 
+sanitizeLiveSessionRiderFileName :: Text -> Text
+sanitizeLiveSessionRiderFileName rawName =
+  let trimmed = T.strip rawName
+      baseName = T.pack (takeFileName (T.unpack trimmed))
+      cleaned = T.map normalizeRiderFileNameChar baseName
+      stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+  in
+    if T.null stripped || not (T.any isStableRiderFileNameChar stripped)
+      then "rider"
+      else stripped
+  where
+    isStableRiderFileNameChar ch = isAscii ch && isAlphaNum ch
+
+    normalizeRiderFileNameChar ch
+      | isStableRiderFileNameChar ch = ch
+      | ch == '.' || ch == '-' || ch == '_' = ch
+      | ch == ' ' = '-'
+      | otherwise = '-'
 
 withPool
   :: (MonadReader Env m, MonadIO m)
