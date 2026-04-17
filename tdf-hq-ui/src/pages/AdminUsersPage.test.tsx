@@ -578,6 +578,61 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps repeated WhatsApp row actions compact while naming each target clearly', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'linus-view',
+        username: 'linus-view',
+        primaryEmail: null,
+        primaryPhone: '+593999000333',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(3);
+        expect(container.querySelector('button[aria-label="WhatsApp"]')).toBeNull();
+
+        const adaAction = getButtonsByText(
+          container,
+          'Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin)',
+        )[0]!;
+        const graceAction = getButtonsByText(
+          container,
+          'Abrir WhatsApp para Grace Hopper (Usuario: grace-admin)',
+        )[0]!;
+        const linusAction = getButtonsByText(container, 'Abrir WhatsApp para linus-view')[0]!;
+
+        expect(buttonText(adaAction)).toBe('WhatsApp');
+        expect(buttonText(graceAction)).toBe('WhatsApp');
+        expect(buttonText(linusAction)).toBe('WhatsApp');
+        expect(adaAction.getAttribute('title')).toBe('Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin)');
+        expect(graceAction.getAttribute('title')).toBe('Abrir WhatsApp para Grace Hopper (Usuario: grace-admin)');
+        expect(linusAction.getAttribute('title')).toBe('Abrir WhatsApp para linus-view');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps users without a linked profile as plain text so the row does not imply a broken action', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

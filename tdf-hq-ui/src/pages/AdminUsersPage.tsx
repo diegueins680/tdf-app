@@ -749,6 +749,8 @@ function UserRow({
     sharedModulesSummary,
   });
   const identity = summarizeUserIdentity(user);
+  const communicationTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
+  const whatsappActionLabel = `Abrir WhatsApp para ${communicationTarget}`;
   const hasLinkedProfile = hasLinkedAdminUserProfile(user);
   const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
@@ -812,7 +814,13 @@ function UserRow({
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         {hasWhatsAppChannel ? (
-          <Button size="small" variant="contained" onClick={onOpenCommunications}>
+          <Button
+            size="small"
+            variant="contained"
+            aria-label={whatsappActionLabel}
+            title={whatsappActionLabel}
+            onClick={onOpenCommunications}
+          >
             WhatsApp
           </Button>
         ) : !hidePendingStateChip ? (
