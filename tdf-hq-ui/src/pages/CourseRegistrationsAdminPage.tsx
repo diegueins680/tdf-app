@@ -1832,9 +1832,18 @@ export default function CourseRegistrationsAdminPage() {
                         )}
                         <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
                           <Box>
-                            <Typography variant="subtitle2">
+                            <Link
+                              href={receipt.crrFileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              underline="hover"
+                              color="text.primary"
+                              variant="subtitle2"
+                              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, fontWeight: 600 }}
+                            >
                               {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
-                            </Typography>
+                              <OpenInNewIcon sx={{ fontSize: 16 }} />
+                            </Link>
                             <Typography variant="caption" color="text.secondary">
                               Subido: {formatDate(receipt.crrCreatedAt)}
                             </Typography>
@@ -1854,12 +1863,6 @@ export default function CourseRegistrationsAdminPage() {
                             {receipt.crrNotes}
                           </Typography>
                         )}
-                        <Link href={receipt.crrFileUrl} target="_blank" rel="noreferrer" underline="hover">
-                          <Stack direction="row" spacing={0.75} alignItems="center">
-                            <OpenInNewIcon sx={{ fontSize: 16 }} />
-                            <span>Abrir comprobante</span>
-                          </Stack>
-                        </Link>
                       </Stack>
                     </Paper>
                   ))}

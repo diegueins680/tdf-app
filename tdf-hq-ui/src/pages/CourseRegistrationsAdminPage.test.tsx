@@ -2733,6 +2733,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      const receiptLink = document.body.querySelector<HTMLAnchorElement>('a[href="https://example.com/receipt.pdf"]');
+      expect(receiptLink?.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).not.toContain('Abrir comprobante');
       expect(document.body.textContent).not.toContain(receiptComposerHelpText);
       expect(document.body.textContent).not.toContain(editingReceiptComposerHelpText);
       expect(document.body.textContent).not.toContain(
