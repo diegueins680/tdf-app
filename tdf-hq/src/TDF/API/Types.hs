@@ -446,7 +446,8 @@ data LabelTrackCreate = LabelTrackCreate
   } deriving (Show, Generic)
 
 instance ToJSON LabelTrackCreate
-instance FromJSON LabelTrackCreate
+instance FromJSON LabelTrackCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data LabelTrackUpdate = LabelTrackUpdate
   { ltuTitle  :: Maybe Text
@@ -455,7 +456,8 @@ data LabelTrackUpdate = LabelTrackUpdate
   } deriving (Show, Generic)
 
 instance ToJSON LabelTrackUpdate
-instance FromJSON LabelTrackUpdate
+instance FromJSON LabelTrackUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data AssetCreate = AssetCreate
   { cName     :: Text

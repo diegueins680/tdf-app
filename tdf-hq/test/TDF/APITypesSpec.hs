@@ -27,6 +27,8 @@ import TDF.API.Types
     , RolePayload (..)
     , ServiceCatalogCreate (..)
     , ServiceCatalogUpdate (..)
+    , LabelTrackCreate (..)
+    , LabelTrackUpdate (..)
     , UserRoleUpdatePayload (..)
     )
 import qualified TDF.Routes.Academy as Academy
@@ -683,6 +685,36 @@ spec = do
                 "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
                 `shouldSatisfy` isLeft
 
+    describe "LabelTrack write payload FromJSON" $ do
+        it "accepts canonical label track create and update payloads" $ do
+            case decodeLabelTrackCreate
+                "{\"ltcTitle\":\"Master final\",\"ltcNote\":\"Check credits\",\"ltcOwnerId\":8}"
+             of
+                Left err ->
+                    expectationFailure ("Expected label track create payload to decode, got: " <> err)
+                Right (LabelTrackCreate titleVal noteVal ownerIdVal) -> do
+                    titleVal `shouldBe` "Master final"
+                    noteVal `shouldBe` Just "Check credits"
+                    ownerIdVal `shouldBe` Just 8
+
+            case decodeLabelTrackUpdate
+                "{\"ltuTitle\":\"Master delivered\",\"ltuNote\":\"\",\"ltuStatus\":\"done\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected label track update payload to decode, got: " <> err)
+                Right (LabelTrackUpdate titleVal noteVal statusVal) -> do
+                    titleVal `shouldBe` Just "Master delivered"
+                    noteVal `shouldBe` Just ""
+                    statusVal `shouldBe` Just "done"
+
+        it "rejects unexpected keys so owner typos and over-posted updates fail explicitly" $ do
+            decodeLabelTrackCreate
+                "{\"ltcTitle\":\"Master final\",\"ownerId\":8}"
+                `shouldSatisfy` isLeft
+            decodeLabelTrackUpdate
+                "{\"ltuStatus\":\"done\",\"ltuOwnerId\":8}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -814,6 +846,10 @@ spec = do
     decodeMarketplaceOrderUpdate = eitherDecode
     decodePaypalCapture :: BL8.ByteString -> Either String PaypalCaptureReq
     decodePaypalCapture = eitherDecode
+    decodeLabelTrackCreate :: BL8.ByteString -> Either String LabelTrackCreate
+    decodeLabelTrackCreate = eitherDecode
+    decodeLabelTrackUpdate :: BL8.ByteString -> Either String LabelTrackUpdate
+    decodeLabelTrackUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq
