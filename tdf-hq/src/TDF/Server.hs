@@ -7177,7 +7177,8 @@ validateAdsAssistRequest AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aa
   body <- validateMessage
   adKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "adId" aarAdId
   campaignKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "campaignId" aarCampaignId
-  pure (body, adKey, campaignKey, normalizeOptionalInput aarChannel)
+  channel <- validateAdsAssistChannel aarChannel
+  pure (body, adKey, campaignKey, channel)
   where
     validateMessage =
       let body = T.strip aarMessage
@@ -7187,6 +7188,16 @@ validateAdsAssistRequest AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aa
              if T.length body > 2000
                then Left err400 { errBody = "Mensaje demasiado largo (max 2000 caracteres)" }
                else Right body
+
+validateAdsAssistChannel :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdsAssistChannel Nothing = Right Nothing
+validateAdsAssistChannel (Just rawChannel) =
+  case T.toLower <$> normalizeOptionalInput (Just rawChannel) of
+    Nothing -> Right Nothing
+    Just "instagram" -> Right (Just "instagram")
+    Just "facebook" -> Right (Just "facebook")
+    Just "whatsapp" -> Right (Just "whatsapp")
+    _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
 adsAssistPublic req = do
