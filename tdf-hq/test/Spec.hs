@@ -186,6 +186,7 @@ import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
+import qualified TDF.WhatsApp.Service as WhatsAppService
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
 withEnvOverrides overrides action =
@@ -364,6 +365,35 @@ main = hspec $ do
                 ]
                 $ loadConfig `shouldThrow` \err ->
                     "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes WhatsApp enrollment fallback config before minting public links" $
+            withEnvOverrides
+                [ ("COURSE_EDITION_SLUG", Just "  ")
+                , ("COURSE_DEFAULT_SLUG", Just " Produccion-Musical-MAY-2026 ")
+                , ("COURSE_REG_URL", Just "  ")
+                , ("HQ_APP_URL", Just " https://hq.example.com/app/ ")
+                , ("WA_GRAPH_API_VERSION", Just "  ")
+                , ("WHATSAPP_API_VERSION", Just " v21.0 ")
+                ]
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.courseSlug cfg `shouldBe` "produccion-musical-may-2026"
+                    WhatsAppService.courseRegUrl cfg `shouldBe` Nothing
+                    WhatsAppService.appBaseUrl cfg `shouldBe` "https://hq.example.com/app/"
+                    WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
+
+        it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do
+            withEnvOverrides
+                [ ("COURSE_REG_URL", Just "javascript:alert(1)") ]
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute http(s) URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("HQ_APP_URL", Just "https://hq.example.com/app copy") ]
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "HQ_APP_URL must be an absolute http(s) URL"
                         `isInfixOf` show (err :: IOException)
 
         it "keeps DB_* connection settings authoritative when they are already configured" $

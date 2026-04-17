@@ -3,6 +3,7 @@
 module TDF.WhatsApp.Service
   ( WhatsAppService(..)
   , WhatsAppConfig(..)
+  , loadWhatsAppConfig
   , mkWhatsAppService
   , enrollPhone
   , previewEnrollment
@@ -12,12 +13,12 @@ module TDF.WhatsApp.Service
 import Data.Aeson (Value, object, (.=))
 import Data.Text (Text)
 import qualified Data.Text as T
-import Control.Applicative ((<|>))
 import System.Environment (lookupEnv)
 import Network.HTTP.Client (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
+import qualified TDF.Config as Config
 import TDF.Leads.Model (ensureLead, lookupCourseIdBySlug)
 import TDF.WhatsApp.Client (sendText)
 
@@ -39,28 +40,57 @@ data WhatsAppService = WhatsAppService
 mkWhatsAppService :: IO WhatsAppService
 mkWhatsAppService = do
   mgr <- newManager tlsManagerSettings
-  cfg <- loadConfig
+  cfg <- loadWhatsAppConfig
   pure $ WhatsAppService mgr cfg
 
-loadConfig :: IO WhatsAppConfig
-loadConfig = do
+loadWhatsAppConfig :: IO WhatsAppConfig
+loadWhatsAppConfig = do
   tok <- fmap (maybe "" T.pack) (lookupEnv "WA_TOKEN")
   pid <- fmap (maybe "" T.pack) (lookupEnv "WA_PHONE_ID")
   ver <- fmap (fmap T.pack) (lookupEnv "WA_VERIFY_TOKEN")
-  mSlug <- lookupEnv "COURSE_EDITION_SLUG"
+  mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
-  mVersion <- lookupEnv "WA_GRAPH_API_VERSION" <|> lookupEnv "WHATSAPP_API_VERSION"
+  mVersion <- lookupFirstNonEmptyEnv ["WA_GRAPH_API_VERSION", "WHATSAPP_API_VERSION"]
+  slugVal <- either fail pure (Config.normalizeConfiguredCourseSlug mSlug)
+  regUrl <- either fail pure (normalizeWhatsAppRegistrationUrl mReg)
+  baseUrl <- either fail pure (normalizeWhatsAppAppBaseUrl mBase)
   let cfg = WhatsAppConfig
         { waToken       = tok
         , waPhoneId     = pid
         , waVerifyToken = ver
-        , courseSlug    = maybe "produccion-musical-abr-2026" T.pack mSlug
-        , courseRegUrl  = fmap T.pack mReg
-        , appBaseUrl    = maybe "http://localhost:5173" T.pack mBase
+        , courseSlug    = slugVal
+        , courseRegUrl  = regUrl
+        , appBaseUrl    = baseUrl
         , waApiVersion  = maybe "v20.0" T.pack mVersion
         }
   pure cfg
+
+lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
+lookupFirstNonEmptyEnv [] = pure Nothing
+lookupFirstNonEmptyEnv (key:rest) = do
+  value <- lookupEnv key
+  case value >>= nonEmptyString of
+    Just normalized -> pure (Just normalized)
+    Nothing -> lookupFirstNonEmptyEnv rest
+
+nonEmptyString :: String -> Maybe String
+nonEmptyString raw =
+  let trimmed = T.unpack (T.strip (T.pack raw))
+  in if null trimmed then Nothing else Just trimmed
+
+normalizeWhatsAppRegistrationUrl :: Maybe String -> Either String (Maybe Text)
+normalizeWhatsAppRegistrationUrl Nothing = Right Nothing
+normalizeWhatsAppRegistrationUrl (Just rawUrl) =
+  Config.normalizeConfiguredBaseUrl "COURSE_REG_URL" rawUrl
+
+normalizeWhatsAppAppBaseUrl :: Maybe String -> Either String Text
+normalizeWhatsAppAppBaseUrl Nothing = Right "http://localhost:5173"
+normalizeWhatsAppAppBaseUrl (Just rawUrl) =
+  case Config.normalizeConfiguredBaseUrl "HQ_APP_URL" rawUrl of
+    Left msg -> Left msg
+    Right Nothing -> Right "http://localhost:5173"
+    Right (Just urlVal) -> Right urlVal
 
 verifyTokenMatches :: WhatsAppService -> Text -> Bool
 verifyTokenMatches svc token = case waVerifyToken (waConfig svc) of
