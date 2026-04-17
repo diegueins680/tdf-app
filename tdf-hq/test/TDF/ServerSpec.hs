@@ -107,6 +107,7 @@ import TDF.Server
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
+    , validateMarketplaceBuyerName
     , validateMarketplaceBuyerEmail
     , requireMarketplaceCartTotals
     , validateDatafastResourcePath
@@ -2639,6 +2640,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user..name@example.com"
             assertInvalid "user()@example.com"
             assertInvalid "usér@example.com"
+
+    describe "validateMarketplaceBuyerName" $ do
+        it "trims checkout buyer names before contact or payment order creation" $
+            validateMarketplaceBuyerName "  Ada Lovelace  " `shouldBe` Right "Ada Lovelace"
+
+        it "rejects blank, oversized, or control-character buyer names before checkout persistence" $ do
+            let assertInvalid rawName expectedMessage =
+                    case validateMarketplaceBuyerName rawName of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right nameVal ->
+                            expectationFailure
+                                ( "Expected invalid marketplace buyer name to be rejected, got: "
+                                    <> show nameVal
+                                )
+            assertInvalid "   " "buyerName requerido"
+            assertInvalid (T.replicate 161 "a") "buyerName must be 160 characters or fewer"
+            assertInvalid "Ada\nLovelace" "buyerName must not contain control characters"
 
     describe "validateMarketplaceBuyerEmail" $ do
         it "trims and lowercases valid buyer emails before checkout creates marketplace orders" $

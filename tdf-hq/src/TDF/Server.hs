@@ -3726,6 +3726,18 @@ validateMarketplaceBuyerEmail rawEmail =
     Right Nothing -> Left err400 { errBody = "buyerEmail requerido" }
     Left _ -> Left err400 { errBody = "buyerEmail inválido" }
 
+validateMarketplaceBuyerName :: Text -> Either ServerError Text
+validateMarketplaceBuyerName rawName =
+  case cleanOptional (Just rawName) of
+    Nothing -> Left err400 { errBody = "buyerName requerido" }
+    Just nameVal
+      | T.length nameVal > 160 ->
+          Left err400 { errBody = "buyerName must be 160 characters or fewer" }
+      | T.any isControl nameVal ->
+          Left err400 { errBody = "buyerName must not contain control characters" }
+      | otherwise ->
+          Right nameVal
+
 validateCourseRegistrationUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationUrlField _ Nothing = Right Nothing
 validateCourseRegistrationUrlField fieldName (Just rawUrl) =
@@ -8146,7 +8158,7 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
 
 checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId MarketplaceCheckoutReq{..} = do
-  when (T.null (T.strip mcrBuyerName)) $ throwBadRequest "buyerName requerido"
+  buyerNameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   buyerEmailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
@@ -8158,7 +8170,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
     let statusTxt = if totalCents > 0 then "pending" else "contact"
     orderId <- insert ME.MarketplaceOrder
       { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = T.strip mcrBuyerName
+      , ME.marketplaceOrderBuyerName     = buyerNameTxt
       , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
       , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
       , ME.marketplaceOrderTotalUsdCents = totalCents
@@ -8195,7 +8207,6 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
   env <- ask
   -- fire-and-forget email confirmation
   let emailSvc = EmailSvc.mkEmailService (envConfig env)
-      buyerNameTxt = T.strip mcrBuyerName
       itemsSummary = map (\oi -> T.pack (show (moiQuantity oi)) <> " × " <> moiTitle oi <> " — " <> moiSubtotalDisplay oi) (moItems orderDto)
   liftIO $ void $ forkIO $ do
     _ <- (try $
@@ -8211,9 +8222,8 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
 
 createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId payload = do
-  let nameTxt = T.strip (mcrBuyerName payload)
-      phoneTxt = fmap T.strip (mcrBuyerPhone payload)
-  when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
+  let phoneTxt = fmap T.strip (mcrBuyerPhone payload)
+  nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
@@ -8319,8 +8329,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
 
 createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
 createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
-  let nameTxt = T.strip mcrBuyerName
-  when (T.null nameTxt) $ throwBadRequest "buyerName requerido"
+  nameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
