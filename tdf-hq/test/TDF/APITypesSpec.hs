@@ -21,6 +21,7 @@ import TDF.API.Types
     , MarketplaceCheckoutReq (..)
     , MarketplaceCartItemUpdate (..)
     , MarketplaceOrderUpdate (..)
+    , PaypalCaptureReq (..)
     , PipelineCardCreate (..)
     , PipelineCardUpdate (..)
     , RolePayload (..)
@@ -666,6 +667,22 @@ spec = do
                 "{\"mouStatus\":\"paid\",\"status\":\"cancelled\"}"
                 `shouldSatisfy` isLeft
 
+    describe "PaypalCaptureReq FromJSON" $ do
+        it "accepts canonical PayPal capture payloads" $
+            case decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected PayPal capture payload to decode, got: " <> err)
+                Right payload -> do
+                    pcCaptureOrderId payload `shouldBe` "42"
+                    pcCapturePaypalId payload `shouldBe` "PAYPAL-ORDER-123"
+
+        it "rejects unexpected capture keys before payment handler validation runs" $
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -795,6 +812,8 @@ spec = do
     decodeMarketplaceCartItemUpdate = eitherDecode
     decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
     decodeMarketplaceOrderUpdate = eitherDecode
+    decodePaypalCapture :: BL8.ByteString -> Either String PaypalCaptureReq
+    decodePaypalCapture = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

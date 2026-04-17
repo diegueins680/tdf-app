@@ -422,7 +422,8 @@ data PaypalCaptureReq = PaypalCaptureReq
   } deriving (Show, Generic)
 
 instance ToJSON PaypalCaptureReq
-instance FromJSON PaypalCaptureReq
+instance FromJSON PaypalCaptureReq where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text
