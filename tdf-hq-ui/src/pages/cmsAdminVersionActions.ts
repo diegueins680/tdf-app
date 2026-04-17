@@ -1,6 +1,7 @@
 export interface CmsVersionRowActions {
   showPublish: boolean;
   showLoadInEditor: boolean;
+  showDelete: boolean;
   loadedStateLabel: string | null;
 }
 
@@ -17,6 +18,7 @@ export const getCmsVersionRowActions = (
   return {
     showPublish: !isPublished,
     showLoadInEditor: !loadedStateLabel,
+    showDelete: !isCurrentLive,
     loadedStateLabel,
   };
 };

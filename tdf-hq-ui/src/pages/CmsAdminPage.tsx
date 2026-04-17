@@ -785,19 +785,19 @@ export default function CmsAdminPage() {
                       Limpiar
                     </Button>
                   )}
-	                  {showExampleAction && (
-	                    <Button
-	                      variant="text"
-	                      onClick={() => {
-	                        if (!samplePayload) return;
-	                        if (samplePayload.locale) setLocaleFilter(samplePayload.locale);
-	                        setPayload(JSON.stringify(samplePayload, null, 2));
-	                        if (samplePayload.heroTitle) setTitle(samplePayload.heroTitle);
-	                      }}
-	                    >
-	                      Cargar ejemplo
-	                    </Button>
-	                  )}
+                  {showExampleAction && (
+                    <Button
+                      variant="text"
+                      onClick={() => {
+                        if (!samplePayload) return;
+                        if (samplePayload.locale) setLocaleFilter(samplePayload.locale);
+                        setPayload(JSON.stringify(samplePayload, null, 2));
+                        if (samplePayload.heroTitle) setTitle(samplePayload.heroTitle);
+                      }}
+                    >
+                      Cargar ejemplo
+                    </Button>
+                  )}
                   {liveContent && (
                     <Button
                       variant="outlined"
@@ -991,15 +991,17 @@ export default function CmsAdminPage() {
                           {rowActions.loadedStateLabel}
                         </Typography>
                       ) : null}
-                      <Button
-                        size="small"
-                        variant="text"
-                        color="error"
-                        onClick={() => deleteMutation.mutate(v.ccdId)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        Borrar
-                      </Button>
+                      {rowActions.showDelete && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          color="error"
+                          onClick={() => deleteMutation.mutate(v.ccdId)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          Borrar
+                        </Button>
+                      )}
                     </Stack>
                   </Stack>
                 </Paper>

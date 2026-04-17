@@ -5,12 +5,14 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('draft')).toEqual({
       showPublish: true,
       showLoadInEditor: true,
+      showDelete: true,
       loadedStateLabel: null,
     });
 
     expect(getCmsVersionRowActions('archived')).toEqual({
       showPublish: true,
       showLoadInEditor: true,
+      showDelete: true,
       loadedStateLabel: null,
     });
   });
@@ -19,12 +21,14 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('published')).toEqual({
       showPublish: false,
       showLoadInEditor: true,
+      showDelete: true,
       loadedStateLabel: null,
     });
 
     expect(getCmsVersionRowActions(' published ')).toEqual({
       showPublish: false,
       showLoadInEditor: true,
+      showDelete: true,
       loadedStateLabel: null,
     });
   });
@@ -33,6 +37,16 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('published', { isCurrentLive: true })).toEqual({
       showPublish: false,
       showLoadInEditor: false,
+      showDelete: false,
+      loadedStateLabel: 'En vivo',
+    });
+  });
+
+  it('removes destructive row actions from the current live version', () => {
+    expect(getCmsVersionRowActions('draft', { isCurrentLive: true })).toEqual({
+      showPublish: true,
+      showLoadInEditor: false,
+      showDelete: false,
       loadedStateLabel: 'En vivo',
     });
   });
@@ -41,6 +55,7 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('draft', { isLoadedInEditor: true })).toEqual({
       showPublish: true,
       showLoadInEditor: false,
+      showDelete: true,
       loadedStateLabel: 'En formulario',
     });
   });
@@ -49,6 +64,7 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('published', { isCurrentLive: true, isLoadedInEditor: true })).toEqual({
       showPublish: false,
       showLoadInEditor: false,
+      showDelete: false,
       loadedStateLabel: 'En formulario',
     });
   });

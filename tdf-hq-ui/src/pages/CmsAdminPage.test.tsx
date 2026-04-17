@@ -130,7 +130,11 @@ const countActionsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button,a')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
 
 const countExactText = (root: ParentNode, labelText: string) =>
-  Array.from(root.querySelectorAll('*')).filter((el) => (el.textContent ?? '').trim() === labelText).length;
+  Array.from(root.querySelectorAll('*')).filter((el) => {
+    const text = (el.textContent ?? '').trim();
+    const childHasText = Array.from(el.children).some((child) => (child.textContent ?? '').trim().length > 0);
+    return text === labelText && !childHasText;
+  }).length;
 
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((el) => (el.textContent ?? '').replace('*', '').trim() === labelText).length;
@@ -239,6 +243,19 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('hides the destructive delete action from the current live version row', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countExactText(container, 'En vivo')).toBe(1);
+      expect(countActionsByText(container, 'Borrar')).toBe(1);
     });
 
     await cleanup();
@@ -473,7 +490,7 @@ describe('CmsAdminPage', () => {
   });
 
   it('hides the compare action until a live version exists so new slugs do not show a dead-end control', async () => {
-    getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -499,7 +516,7 @@ describe('CmsAdminPage', () => {
     listMock.mockResolvedValue([
       buildContent({ ccdId: 201, ccdVersion: 1, ccdStatus: 'draft', ccdPublishedAt: null }),
     ]);
-    getPublicMock.mockImplementation(async () => null as unknown as CmsContentDTO);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
