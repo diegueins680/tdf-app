@@ -1062,7 +1062,8 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   , rpuStationId   :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON RadioPresenceUpsert
-instance FromJSON RadioPresenceUpsert
+instance FromJSON RadioPresenceUpsert where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternProfileDTO = InternProfileDTO
   { ipPartyId  :: Int64

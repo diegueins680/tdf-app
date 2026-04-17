@@ -2101,6 +2101,18 @@ main = hspec $ do
                     rtrGenre payload `shouldBe` Just "ambient"
                     rtrCountry payload `shouldBe` Just "EC"
 
+            case eitherDecode $
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\""
+                    <> ",\"rpuStationName\":\"Radio Uno\""
+                    <> ",\"rpuStationId\":\"station-uno\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical radio presence payload to decode, got: " <> err)
+                Right payload -> do
+                    rpuStreamUrl payload `shouldBe` "https://radio.example.com/live"
+                    rpuStationName payload `shouldBe` Just "Radio Uno"
+                    rpuStationId payload `shouldBe` Just "station-uno"
+
         it "rejects typoed radio request keys instead of silently falling back to default behavior" $ do
             ( eitherDecode
                 "{\"sources\":[\"https://radio.example.com/catalog.csv\"],\"limit\":25}"
@@ -2117,6 +2129,12 @@ main = hspec $ do
             ( eitherDecode
                 "{\"name\":\"TDF Live\",\"genre\":\"ambient\"}"
                     :: Either String RadioTransmissionRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"streamUrl\":\"https://radio.example.com/live\",\"stationName\":\"Radio Uno\"}"
+                    :: Either String RadioPresenceUpsert
                 )
                 `shouldSatisfy` isLeft
 
