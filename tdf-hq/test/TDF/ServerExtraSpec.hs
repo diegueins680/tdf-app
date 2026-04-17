@@ -12,6 +12,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time (utctDay)
 import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
@@ -619,6 +620,12 @@ spec = do
               expectationFailure ("Expected contradictory checkout target to be rejected, got " <> show value)
       assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty Nothing Nothing Nothing)
       assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
+      assertInvalid
+        "targetParty must not contain control characters"
+        (validateCheckoutTargets TargetParty (Just "Crew\nA") Nothing Nothing)
+      assertInvalid
+        "targetParty must be 160 characters or fewer"
+        (validateCheckoutTargets TargetParty (Just (T.replicate 161 "a")) Nothing Nothing)
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just "Crew") (Just roomId) Nothing)
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetRoom (Just "Crew") (Just roomId) Nothing)

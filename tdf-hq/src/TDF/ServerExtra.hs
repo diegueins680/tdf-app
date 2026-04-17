@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isSpace, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -105,30 +105,39 @@ validateCheckoutTargets
 validateCheckoutTargets targetKind mTargetParty mRoom mSession =
   case targetKind of
     TargetRoom ->
-      case (normalizedTargetParty, mRoom, mSession) of
+      case (targetPartyPresent, mRoom, mSession) of
         (Just _, _, _) -> Left err400 { errBody = "targetParty is only allowed for party checkout" }
         (_, Nothing, _) -> Left err400 { errBody = "targetRoom required for room checkout" }
         (_, Just _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
         (Nothing, Just roomKey, Nothing) -> Right (Nothing, Just roomKey, Nothing)
     TargetSession ->
-      case (normalizedTargetParty, mRoom, mSession) of
+      case (targetPartyPresent, mRoom, mSession) of
         (Just _, _, _) -> Left err400 { errBody = "targetParty is only allowed for party checkout" }
         (_, _, Nothing) -> Left err400 { errBody = "targetSession required for session checkout" }
         (_, Just _, Just _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
         (Nothing, Nothing, Just sessionKey) -> Right (Nothing, Nothing, Just sessionKey)
     TargetParty ->
-      case (normalizedTargetParty, mRoom, mSession) of
+      case (targetPartyPresent, mRoom, mSession) of
         (Nothing, _, _) -> Left err400 { errBody = "targetParty required for party checkout" }
         (_, Just _, _) -> Left err400 { errBody = "targetRoom is only allowed for room checkout" }
         (_, _, Just _) -> Left err400 { errBody = "targetSession is only allowed for session checkout" }
-        (Just targetParty, Nothing, Nothing) -> Right (Just targetParty, Nothing, Nothing)
+        (Just _, Nothing, Nothing) -> do
+          targetParty <- validateCheckoutTargetParty mTargetParty
+          Right (targetParty, Nothing, Nothing)
   where
-    normalizedTargetParty =
-      case mTargetParty of
-        Nothing -> Nothing
-        Just rawTargetParty ->
-          let trimmed = T.strip rawTargetParty
-          in if T.null trimmed then Nothing else Just trimmed
+    targetPartyPresent = normalizeOptionalTextField mTargetParty
+
+validateCheckoutTargetParty :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutTargetParty mTargetParty =
+  case normalizeOptionalTextField mTargetParty of
+    Nothing -> Right Nothing
+    Just targetParty
+      | T.length targetParty > 160 ->
+          Left err400 { errBody = "targetParty must be 160 characters or fewer" }
+      | T.any isControl targetParty ->
+          Left err400 { errBody = "targetParty must not contain control characters" }
+      | otherwise ->
+          Right (Just targetParty)
 
 inventoryServer
   :: ( MonadReader Env m
