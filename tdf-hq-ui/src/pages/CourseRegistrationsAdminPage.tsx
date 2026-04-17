@@ -15,6 +15,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  InputAdornment,
   Link,
   Menu,
   MenuItem,
@@ -30,6 +31,8 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -85,6 +88,7 @@ const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estad
 const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
 const defaultPublicFormSource = 'landing';
 const MIN_DEFAULT_CSV_EXPORT_ROWS = 3;
+const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 
 interface FlashState {
   severity: FlashSeverity;
@@ -612,6 +616,7 @@ export default function CourseRegistrationsAdminPage() {
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [pageFlash, setPageFlash] = useState<FlashState | null>(null);
   const [dossierFlash, setDossierFlash] = useState<FlashState | null>(null);
@@ -857,6 +862,25 @@ export default function CourseRegistrationsAdminPage() {
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
   const loadedRegistrationCount = registrations.length;
+  const localSearchTerm = localSearch.trim();
+  const localSearchKey = localSearchTerm.toLocaleLowerCase('es');
+  const searchedRegistrations = useMemo(() => {
+    if (!localSearchKey) return registrations;
+    return registrations.filter((reg) => {
+      const courseSlug = reg.crCourseSlug.trim();
+      const haystack = [
+        reg.crFullName,
+        reg.crEmail,
+        reg.crPhoneE164,
+        courseSlug,
+        cohortLabelsBySlug.get(courseSlug),
+        registrationStatusLabel(reg.crStatus),
+        reg.crSource,
+      ].join(' ').toLocaleLowerCase('es');
+      return haystack.includes(localSearchKey);
+    });
+  }, [cohortLabelsBySlug, localSearchKey, registrations]);
+  const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -2591,6 +2615,45 @@ export default function CourseRegistrationsAdminPage() {
             </Alert>
           )}
           {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
+          {showLocalSearchControl && (
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                label="Buscar registros cargados"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                placeholder="Nombre, email, teléfono, estado o curso"
+                helperText={
+                  localSearchKey
+                    ? `Mostrando ${formatRegistrationCountLabel(searchedRegistrations.length)} de ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`
+                    : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.'
+                }
+                size="small"
+                fullWidth
+                data-testid="course-registration-local-search"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: localSearchKey ? (
+                    <InputAdornment position="end">
+                      <Tooltip title="Limpiar búsqueda">
+                        <IconButton
+                          aria-label="Limpiar búsqueda"
+                          size="small"
+                          edge="end"
+                          onClick={() => setLocalSearch('')}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </InputAdornment>
+                  ) : undefined,
+                }}
+              />
+            </Box>
+          )}
           {!regsQuery.isLoading && registrations.length === 0 && (
             hasCustomFilters ? (
               <Alert
@@ -2621,10 +2684,15 @@ export default function CourseRegistrationsAdminPage() {
               <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
             )
           )}
-          {registrations.length ? (
+          {!regsQuery.isLoading && registrations.length > 0 && searchedRegistrations.length === 0 && (
+            <Alert severity="info">
+              No hay coincidencias para "{localSearchTerm}" en las {formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.
+            </Alert>
+          )}
+          {searchedRegistrations.length ? (
             <Stack spacing={1.5}>
               <Stack divider={<Divider flexItem />} spacing={2}>
-                {registrations.map((reg) => {
+                {searchedRegistrations.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                   const rowIdentity = registrationIdentityDisplay(
                     reg.crFullName,

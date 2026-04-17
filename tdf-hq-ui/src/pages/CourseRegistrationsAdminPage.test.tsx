@@ -4661,6 +4661,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => (
+        index === 8
+          ? {
+            crFullName: 'Nina Simone',
+            crEmail: 'nina@example.com',
+            crStatus: 'paid',
+          }
+          : {}
+      )),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 1 inscripción de 9 inscripciones cargadas.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps capped default-list utilities focused on limit guidance instead of a refresh action', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
