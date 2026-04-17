@@ -1716,6 +1716,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just 0 }
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just (-9) }
 
+        it "rejects caller-supplied party ids on the public assist endpoint" $ do
+            let request =
+                    AdsAssistRequest
+                        { aarAdId = Nothing
+                        , aarCampaignId = Nothing
+                        , aarMessage = "Quiero info"
+                        , aarChannel = Just "instagram"
+                        , aarPartyId = Just 123
+                        }
+            case validateAdsAssistRequest request of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "partyId is not allowed on public ads assist requests"
+                Right normalized ->
+                    expectationFailure
+                        ("Expected public ads assist partyId to be rejected, got: " <> show normalized)
+
         it "rejects unsupported channels before they are embedded into the model prompt" $ do
             let baseRequest =
                     AdsAssistRequest

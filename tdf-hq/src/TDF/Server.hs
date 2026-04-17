@@ -7271,7 +7271,9 @@ adsInquiryPublic rawInquiry = do
 validateAdsAssistRequest
   :: AdsAssistRequest
   -> Either ServerError (Text, Maybe ME.AdCreativeId, Maybe ME.CampaignId, Maybe Text)
-validateAdsAssistRequest AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel} = do
+validateAdsAssistRequest
+  AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aarChannel, aarPartyId} = do
+  validatePublicAdsAssistPartyId aarPartyId
   body <- validateMessage
   adKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "adId" aarAdId
   campaignKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "campaignId" aarCampaignId
@@ -7286,6 +7288,11 @@ validateAdsAssistRequest AdsAssistRequest{aarAdId, aarCampaignId, aarMessage, aa
              if T.length body > 2000
                then Left err400 { errBody = "Mensaje demasiado largo (max 2000 caracteres)" }
                else Right body
+
+validatePublicAdsAssistPartyId :: Maybe Int64 -> Either ServerError ()
+validatePublicAdsAssistPartyId Nothing = Right ()
+validatePublicAdsAssistPartyId (Just _) =
+  Left err400 { errBody = "partyId is not allowed on public ads assist requests" }
 
 validateAdsAssistChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsAssistChannel Nothing = Right Nothing
