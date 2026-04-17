@@ -1106,7 +1106,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('condenses row cohort and meaningful source metadata into one summary line', async () => {
+  it('keeps tiny default row context focused on cohort and source instead of repeated timestamps', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1129,13 +1129,14 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(
         container,
-        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        'Cohorte: Beatmaking 101 (beatmaking-101)',
       )).toBe(true);
       expect(hasExactText(
         container,
-        `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Fuente: referral · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        'Cohorte: Mixing Bootcamp (mixing-bootcamp) · Fuente: referral',
       )).toBe(true);
       expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).not.toContain('Creado:');
     });
 
     await cleanup();
@@ -1164,13 +1165,14 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(
         container,
-        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')} · Notas internas`,
+        'Cohorte: Beatmaking 101 (beatmaking-101) · Notas internas',
       )).toBe(true);
       expect(hasExactText(
         container,
-        `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        'Cohorte: Mixing Bootcamp (mixing-bootcamp)',
       )).toBe(true);
       expect(container.textContent).not.toContain('Con notas');
+      expect(container.textContent).not.toContain('Creado:');
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
     });
 
@@ -1202,16 +1204,17 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
       expect(hasExactText(
         container,
-        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        'Cohorte: Beatmaking 101 (beatmaking-101)',
       )).toBe(true);
       expect(hasExactText(
         container,
-        `Cohorte: Mixing Bootcamp (mixing-bootcamp) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        'Cohorte: Mixing Bootcamp (mixing-bootcamp)',
       )).toBe(true);
       expect(hasExactText(
         container,
-        `Cohorte: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')} · Notas internas`,
+        'Cohorte: Beatmaking 101 (beatmaking-101) · Notas internas',
       )).toBe(false);
+      expect(container.textContent).not.toContain('Creado:');
     });
 
     await cleanup();
@@ -4291,6 +4294,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
       expect(listUtilities).not.toBeNull();
       expect(listUtilities?.textContent).toContain('Mostrando 3 inscripciones en esta vista.');
+      expect(countOccurrences(container, `Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`)).toBe(3);
       expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();

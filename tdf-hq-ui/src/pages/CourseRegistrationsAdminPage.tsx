@@ -797,6 +797,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
+  const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(regsQuery.data ?? []);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
@@ -2458,7 +2459,7 @@ export default function CourseRegistrationsAdminPage() {
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes,
-                    showCreatedAt: !hideDateOnlyRowContext,
+                    showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
