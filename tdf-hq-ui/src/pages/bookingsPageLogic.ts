@@ -7,6 +7,11 @@ interface BookingCustomerFieldState {
   showQuickCreateAction: boolean;
 }
 
+interface BookingCalendarStatusState {
+  message: string;
+  severity: 'info';
+}
+
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
   return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
@@ -85,6 +90,41 @@ export const getBookingCustomerFieldState = ({
     dialogTitle: 'Nuevo contacto',
     quickCreateLabel: 'Crear contacto nuevo',
     showQuickCreateAction: true,
+  };
+};
+
+export const getBookingCalendarStatusState = ({
+  bookingCount,
+  hasActiveFilter,
+  hasError,
+  isLoading,
+}: {
+  bookingCount: number;
+  hasActiveFilter: boolean;
+  hasError: boolean;
+  isLoading: boolean;
+}): BookingCalendarStatusState | null => {
+  if (hasError) return null;
+
+  if (isLoading) {
+    return {
+      message: 'Cargando agenda… El calendario quedará listo para crear sesiones cuando termine esta primera carga.',
+      severity: 'info',
+    };
+  }
+
+  if (bookingCount > 0) return null;
+
+  if (hasActiveFilter) {
+    return {
+      message: 'No hay sesiones para este filtro. Quita el filtro o selecciona un horario en el calendario para crear una sesión nueva.',
+      severity: 'info',
+    };
+  }
+
+  return {
+    message: 'Todavía no hay sesiones. Selecciona un horario en el calendario para crear la primera; luego esta vista servirá para mover, editar y revisar conflictos.',
+    severity: 'info',
   };
 };
 

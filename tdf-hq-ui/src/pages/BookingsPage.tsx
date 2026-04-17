@@ -34,6 +34,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   defaultMinutesForService,
   describeServiceDefaults,
+  getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   requiresEngineerForService,
@@ -94,6 +95,13 @@ export default function BookingsPage() {
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
+  const calendarStatusState = getBookingCalendarStatusState({
+    bookingCount: bookings.length,
+    hasActiveFilter: hasActiveBookingFilter,
+    hasError: Boolean(bookingsQuery.error),
+    isLoading: bookingsQuery.isLoading,
+  });
   const statusOptions = [
     'Tentative',
     'Confirmed',
@@ -743,8 +751,8 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
-      {bookingsQuery.isLoading && <div>Cargando...</div>}
-      {bookingsQuery.error && <div>Error: {bookingsQuery.error.message}</div>}
+      {calendarStatusState && <Alert severity={calendarStatusState.severity} sx={{ mb: 1 }}>{calendarStatusState.message}</Alert>}
+      {bookingsQuery.error && <Alert severity="error" sx={{ mb: 1 }}>Error al cargar agenda: {bookingsQuery.error.message}</Alert>}
       <Paper sx={{ p: 1 }}>
         <FullCalendar
           ref={calendarRef}
