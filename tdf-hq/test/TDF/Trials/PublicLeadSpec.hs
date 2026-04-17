@@ -222,6 +222,17 @@ spec = do
         Right _ ->
           expectationFailure "Expected blank interest type to be rejected"
 
+    it "rejects oversized or control-character interest types before storing fallback lead rows" $ do
+      let assertRejected rawInterestType expectedMessage =
+            case validatePublicInterestInput (InterestIn rawInterestType Nothing Nothing Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed interestType to be rejected"
+      assertRejected (pack (replicate 81 'a')) "interestType must be 1-80 characters"
+      assertRejected "workshop\nvip" "interestType must not contain control characters"
+
     it "trims interest types and drops blank optional fields" $
       case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "   ") (Just "  https://example.com/file  ")) of
         Left err ->

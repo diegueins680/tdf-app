@@ -11,7 +11,7 @@ import           Control.Exception      (SomeException, displayException, throwI
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Char              (isAlphaNum, isAsciiLower, isDigit, isSpace)
+import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
@@ -719,16 +719,25 @@ isValidHttpUrl rawUrl
         isLinkLocal segment =
           any (`T.isPrefixOf` segment) ["fe8", "fe9", "fea", "feb"]
 
-validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
-validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) =
+validatePublicInterestType :: Text -> Either ServerError Text
+validatePublicInterestType rawInterestType =
   case cleanOptional (Just rawInterestType) of
     Nothing ->
       Left err400 { errBody = "interestType is required" }
-    Just interestTypeVal ->
-      do
-        subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
-        driveLinkVal <- validateOptionalDriveLink driveLink
-        Right (InterestIn interestTypeVal subjectId (cleanOptional details) driveLinkVal)
+    Just interestTypeVal
+      | T.length interestTypeVal > 80 ->
+          Left err400 { errBody = "interestType must be 1-80 characters" }
+      | T.any isControl interestTypeVal ->
+          Left err400 { errBody = "interestType must not contain control characters" }
+      | otherwise ->
+          Right interestTypeVal
+
+validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
+validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) = do
+  interestTypeVal <- validatePublicInterestType rawInterestType
+  subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
+  driveLinkVal <- validateOptionalDriveLink driveLink
+  Right (InterestIn interestTypeVal subjectId (cleanOptional details) driveLinkVal)
 
 validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
 validatePublicSubjectSelection (Just subject)
