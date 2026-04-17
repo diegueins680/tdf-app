@@ -2626,7 +2626,10 @@ export default function CourseRegistrationsAdminPage() {
               <TextField
                 label="Buscar registros cargados"
                 value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
+                onChange={(e) => {
+                  setHasUsedFilterControl(true);
+                  setLocalSearch(e.target.value);
+                }}
                 placeholder="Nombre, email, teléfono, estado o curso"
                 helperText={
                   localSearchKey

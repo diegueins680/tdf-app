@@ -4681,6 +4681,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierOnlyScopeHint,
+      );
     });
 
     listRegistrationsMock.mockClear();
@@ -4696,6 +4699,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 inscripción de 9 inscripciones cargadas.');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
@@ -4711,6 +4716,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
