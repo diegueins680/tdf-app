@@ -239,8 +239,14 @@ const isRegistrationStatus = (
   status === 'pending_payment' || status === 'paid' || status === 'cancelled'
 );
 
+const customRegistrationStatusLabel = (status: string) => {
+  const normalized = status.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  if (!normalized) return 'Estado desconocido';
+  return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
+};
+
 const registrationStatusLabel = (status: string) =>
-  isRegistrationStatus(status) ? statusFilterLabels[status] : status.trim() || 'Estado desconocido';
+  isRegistrationStatus(status) ? statusFilterLabels[status] : customRegistrationStatusLabel(status);
 
 const registrationStatusButtonLabel = (
   status: string,
