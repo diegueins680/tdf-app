@@ -1717,6 +1717,33 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('labels empty role assignments explicitly instead of showing a dash in the edit flow', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        roles: [],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Sin roles');
+      expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }));
+
+    expect(
+      await screen.findByText(
+        /Roles actuales: Sin roles\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Roles actuales: —\./i)).not.toBeInTheDocument();
+  });
+
   it('flags role selections that collapse to the same app navigation', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);

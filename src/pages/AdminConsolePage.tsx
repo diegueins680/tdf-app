@@ -318,6 +318,12 @@ function buildAdminUserRoleEditLabel(user: Pick<AdminUserDTO, 'displayName' | 'u
   return `Editar roles de ${summarizeAdminUserIdentity(user).primary}`;
 }
 
+function formatEditableRoleList(roles?: readonly RoleKey[] | null) {
+  const formattedRoles = formatRoleList(roles);
+
+  return formattedRoles === '—' ? 'Sin roles' : formattedRoles;
+}
+
 function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
   const identity = summarizeAdminUserIdentity(user);
 
@@ -752,7 +758,7 @@ export default function AdminConsolePage() {
     return editingUser.displayName?.trim() || editingUser.username;
   }, [editingUser]);
   const currentRoleSummary = useMemo(() => (
-    editingUser ? formatRoleList(editingUser.roles) : '—'
+    editingUser ? formatEditableRoleList(editingUser.roles) : 'Sin roles'
   ), [editingUser]);
   const hasPendingRoleChanges = useMemo(() => (
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
@@ -1085,7 +1091,7 @@ export default function AdminConsolePage() {
                             textTransform: 'none',
                           }}
                         >
-                          {formatRoleList(user.roles)}
+                          {formatEditableRoleList(user.roles)}
                         </Button>
                       </TableCell>
                       {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
@@ -1139,7 +1145,7 @@ export default function AdminConsolePage() {
                     textTransform: 'none',
                   }}
                 >
-                  {formatRoleList(singleAdminUser.roles)}
+                  {formatEditableRoleList(singleAdminUser.roles)}
                 </Button>
                 {singleAdminUserLastAccess && (
                   <Typography variant="body2" color="text.secondary">
