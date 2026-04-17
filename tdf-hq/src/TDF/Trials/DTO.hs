@@ -79,7 +79,8 @@ data TrialAssignIn = TrialAssignIn
   { teacherId :: Int
   } deriving (Show, Generic)
 instance ToJSON TrialAssignIn
-instance FromJSON TrialAssignIn
+instance FromJSON TrialAssignIn where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data TrialScheduleIn = TrialScheduleIn
   { requestId :: Int
@@ -89,7 +90,8 @@ data TrialScheduleIn = TrialScheduleIn
   , roomId    :: Int
   } deriving (Show, Generic)
 instance ToJSON TrialScheduleIn
-instance FromJSON TrialScheduleIn
+instance FromJSON TrialScheduleIn where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data SubjectBriefDTO = SubjectBriefDTO
   { subjectId :: Int

@@ -440,6 +440,59 @@ spec = do
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
 
+  describe "private trial scheduling request decoding" $ do
+    it "rejects typoed or unexpected assignment keys so teacher selection cannot be silently ignored" $ do
+      case (A.eitherDecode "{\"teacherId\":2}" :: Either String TrialAssignIn) of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical trial assignment payload to decode, got: " <> decodeErr)
+        Right (TrialAssignIn teacherIdValue) ->
+          teacherIdValue `shouldBe` 2
+
+      isLeft
+        (A.eitherDecode "{\"teacherID\":2}" :: Either String TrialAssignIn)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode "{\"teacherId\":2,\"status\":\"Scheduled\"}" :: Either String TrialAssignIn)
+        `shouldBe` True
+
+    it "rejects typoed or unexpected schedule keys so room and time intent stays explicit" $ do
+      let canonicalPayload = BL8.pack $ concat
+            [ "{\"requestId\":1"
+            , ",\"teacherId\":2"
+            , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+            , ",\"roomId\":3}"
+            ]
+      case A.eitherDecode canonicalPayload of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical trial schedule payload to decode, got: " <> decodeErr)
+        Right (TrialScheduleIn requestIdValue teacherIdValue startValue endValue roomIdValue) -> do
+          requestIdValue `shouldBe` 1
+          teacherIdValue `shouldBe` 2
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          roomIdValue `shouldBe` 3
+
+      let assertRejected payload =
+            isLeft
+              (A.eitherDecode (BL8.pack payload) :: Either String TrialScheduleIn)
+              `shouldBe` True
+      assertRejected $ concat
+        [ "{\"requestId\":1"
+        , ",\"teacherId\":2"
+        , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+        , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+        , ",\"roomID\":3}"
+        ]
+      assertRejected $ concat
+        [ "{\"requestId\":1"
+        , ",\"teacherId\":2"
+        , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+        , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+        , ",\"roomId\":3"
+        , ",\"status\":\"Scheduled\"}"
+        ]
+
   describe "validatePurchaseInput" $ do
     let validPurchase :: PurchaseIn
         validPurchase = PurchaseIn 1 2 12000 (Just 1000) (Just 1440) (Just 3) (Just 4) (Just 5)
