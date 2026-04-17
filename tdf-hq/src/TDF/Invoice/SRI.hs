@@ -59,11 +59,10 @@ instance Aeson.ToJSON SriScriptRequest
 
 runSriInvoiceScript :: SriScriptRequest -> IO (Either Text SriIssueResultDTO)
 runSriInvoiceScript payload = do
-  mScriptPath <- resolveScriptPath
-  case mScriptPath of
-    Nothing ->
-      pure (Left "Could not find scripts/generate-sri-invoice.mjs. Set SRI_INVOICE_SCRIPT to enable SRI emission.")
-    Just scriptPath -> do
+  scriptPathResult <- resolveScriptPath
+  case scriptPathResult of
+    Left err -> pure (Left err)
+    Right scriptPath -> do
       absolutePath <- makeAbsolute scriptPath
       let processSpec = proc "node" [absolutePath]
           stdinJson = BS8.unpack (BL.toStrict (Aeson.encode payload))
@@ -77,13 +76,37 @@ runSriInvoiceScript payload = do
           let trimmedErr = T.strip (TE.decodeUtf8 (BS8.pack stderrTxt))
           in pure (Left (if T.null trimmedErr then "SRI invoice script failed" else trimmedErr))
 
-resolveScriptPath :: IO (Maybe FilePath)
+resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do
   envPath <- lookupEnv "SRI_INVOICE_SCRIPT"
-  let candidates =
-        maybe [] pure envPath <>
-        ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
-  firstExisting candidates
+  case envPath >>= nonEmptyPath of
+    Just scriptPath -> do
+      exists <- doesFileExist scriptPath
+      pure $
+        if exists
+          then Right scriptPath
+          else Left (missingConfiguredScriptMessage scriptPath)
+    Nothing -> do
+      mDefaultPath <-
+        firstExisting ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
+      pure $
+        maybe
+          (Left missingDefaultScriptMessage)
+          Right
+          mDefaultPath
+
+missingConfiguredScriptMessage :: FilePath -> Text
+missingConfiguredScriptMessage scriptPath =
+  "SRI_INVOICE_SCRIPT does not point to an existing file: " <> T.pack scriptPath
+
+missingDefaultScriptMessage :: Text
+missingDefaultScriptMessage =
+  "Could not find scripts/generate-sri-invoice.mjs. Set SRI_INVOICE_SCRIPT to enable SRI emission."
+
+nonEmptyPath :: String -> Maybe FilePath
+nonEmptyPath raw =
+  let trimmed = T.unpack (T.strip (T.pack raw))
+  in if null trimmed then Nothing else Just trimmed
 
 firstExisting :: [FilePath] -> IO (Maybe FilePath)
 firstExisting [] = pure Nothing

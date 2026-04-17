@@ -56,6 +56,7 @@ import TDF.Cors (isTrustedPreviewOrigin, lookupFirstNonEmptyEnv)
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
+import qualified TDF.Invoice.SRI as Sri
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
       EventMetadataUpdateDTO (..),
@@ -208,6 +209,26 @@ withEnvOverrides overrides action =
         case value of
             Just raw -> setEnv key raw
             Nothing -> unsetEnv key
+
+sampleSriScriptRequest :: Sri.SriScriptRequest
+sampleSriScriptRequest =
+    Sri.SriScriptRequest
+        (Sri.SriScriptCustomer "1790012345001" "TDF Test Customer" Nothing Nothing)
+        [ Sri.SriScriptLine
+            (Just "SRV-001")
+            Nothing
+            "Studio session"
+            1
+            9000
+            (Just 1500)
+            Nothing
+            Nothing
+        ]
+        "001"
+        "001"
+        "cash"
+        False
+        Nothing
 
 main :: IO ()
 main = hspec $ do
@@ -635,6 +656,23 @@ main = hspec $ do
             expectInvalidPort
                 "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
                 "DATABASE_URL port must be between 1 and 65535"
+
+    describe "SRI invoice script discovery" $
+        it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
+            withEnvOverrides
+                [ ( "SRI_INVOICE_SCRIPT"
+                  , Just "/tmp/tdf-hq-missing-sri-script-never-created.mjs"
+                  )
+                ]
+                $ do
+                    let expected = "SRI_INVOICE_SCRIPT does not point to an existing file"
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected missing SRI script path to fail, got: " <> show value)
 
     describe "CORS environment fallback discovery" $
         it "falls through unset or blank primary names to documented CORS aliases" $
