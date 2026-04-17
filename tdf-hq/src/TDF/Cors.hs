@@ -98,9 +98,22 @@ parseHttpsOriginHost :: BS.ByteString -> Maybe BS.ByteString
 parseHttpsOriginHost origin = do
   remainder <- BS.stripPrefix "https://" (BS.map toLower origin)
   let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
-  if BS.null host || not (validOriginSuffix suffix)
+  if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
     then Nothing
     else Just host
+
+validOriginHost :: BS.ByteString -> Bool
+validOriginHost host =
+  BS.length host <= 253 && all validLabel (BS.split '.' host)
+  where
+    validLabel label =
+      not (BS.null label)
+        && BS.length label <= 63
+        && not ("-" `BS.isPrefixOf` label)
+        && not ("-" `BS.isSuffixOf` label)
+        && BS.all isHostnameChar label
+    isHostnameChar c =
+      (c >= 'a' && c <= 'z') || isDigit c || c == '-'
 
 validOriginSuffix :: BS.ByteString -> Bool
 validOriginSuffix suffix

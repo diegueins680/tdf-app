@@ -806,6 +806,10 @@ main = hspec $ do
             isTrustedPreviewOrigin "https://tdf-app.pages.dev.evil.example" `shouldBe` False
             isTrustedPreviewOrigin "http://preview.tdf-app.pages.dev" `shouldBe` False
             isTrustedPreviewOrigin "https://attacker.vercel.app" `shouldBe` False
+            isTrustedPreviewOrigin "https://.tdf-app.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://preview..tdf-app.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://bad-.tdf-app.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://bad_.tdf-app.pages.dev" `shouldBe` False
 
     describe "extractToken" $ do
         let loadAuthConfig =
