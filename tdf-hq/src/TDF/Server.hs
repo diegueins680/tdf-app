@@ -68,7 +68,14 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
-import           TDF.Config (AppConfig(..), courseInstructorAvatarFallback, courseMapFallback, courseSlugFallback, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
+import           TDF.Config ( AppConfig(..)
+                            , courseInstructorAvatarFallback
+                            , courseMapFallback
+                            , courseSlugFallback
+                            , normalizeConfiguredBaseUrl
+                            , resolveConfiguredAppBase
+                            , resolveConfiguredAssetsBase
+                            )
 import           TDF.DB
 import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
@@ -1693,16 +1700,17 @@ driveUploadServer _ mAccessToken DriveUploadForm{..} = do
       in "invalid_grant" `isInfixOf` body
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
-driveTokenExchangeServer _ DriveTokenExchangeRequest{..} = do
+driveTokenExchangeServer _ payload = do
   Env{envConfig} <- ask
   manager <- liftIO $ newManager tlsManagerSettings
   (cid, secret) <- loadDriveClientCreds
-  let redirectResolved = resolveDriveRedirectUri envConfig redirectUri
+  (codeVal, codeVerifierVal, redirectResolved) <-
+    either throwError pure (validateDriveTokenExchangeRequest envConfig payload)
   token <- requestGoogleToken manager
     [ ("client_id", TE.encodeUtf8 cid)
     , ("client_secret", TE.encodeUtf8 secret)
-    , ("code", TE.encodeUtf8 code)
-    , ("code_verifier", TE.encodeUtf8 codeVerifier)
+    , ("code", TE.encodeUtf8 codeVal)
+    , ("code_verifier", TE.encodeUtf8 codeVerifierVal)
     , ("redirect_uri", TE.encodeUtf8 redirectResolved)
     , ("grant_type", "authorization_code")
     ]
@@ -1720,13 +1728,64 @@ driveTokenRefreshServer _ DriveTokenRefreshRequest{..} = do
     ]
   pure (driveTokenResponseFrom token (Just refreshToken))
 
-resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Text
-resolveDriveRedirectUri cfg mProvided =
-  fromMaybe (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback") (mProvided >>= nonEmptyTextLocal)
+validateDriveTokenExchangeRequest
+  :: AppConfig
+  -> DriveTokenExchangeRequest
+  -> Either ServerError (Text, Text, Text)
+validateDriveTokenExchangeRequest cfg DriveTokenExchangeRequest{..} = do
+  codeVal <- validateDriveAuthorizationCode code
+  codeVerifierVal <- validateDriveCodeVerifier codeVerifier
+  redirectResolved <- resolveDriveRedirectUri cfg redirectUri
+  pure (codeVal, codeVerifierVal, redirectResolved)
+
+validateDriveAuthorizationCode :: Text -> Either ServerError Text
+validateDriveAuthorizationCode rawCode =
+  let codeVal = T.strip rawCode
+  in if T.null codeVal
+       then Left err400 { errBody = "code is required" }
+       else
+         if T.any isSpace codeVal
+           then Left err400 { errBody = "code must not contain whitespace" }
+           else Right codeVal
+
+validateDriveCodeVerifier :: Text -> Either ServerError Text
+validateDriveCodeVerifier rawVerifier =
+  let verifier = T.strip rawVerifier
+      verifierLen = T.length verifier
+  in if verifierLen < 43 || verifierLen > 128 || not (T.all isPkceVerifierChar verifier)
+       then
+         Left err400
+           { errBody =
+               "codeVerifier must be a PKCE verifier (43-128 chars: A-Z a-z 0-9 - . _ ~)"
+           }
+       else Right verifier
   where
-    nonEmptyTextLocal txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
+    isPkceVerifierChar ch =
+      isAsciiLower ch
+        || isAsciiUpper ch
+        || isDigit ch
+        || ch `elem` ("-._~" :: String)
+
+resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
+resolveDriveRedirectUri cfg mProvided =
+  maybe
+    (Right (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback"))
+    validateDriveRedirectUri
+    (cleanOptional mProvided)
+
+validateDriveRedirectUri :: Text -> Either ServerError Text
+validateDriveRedirectUri rawRedirect =
+  case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
+    Right (Just uri)
+      | "#" `T.isInfixOf` uri ->
+          invalid
+      | otherwise ->
+          Right uri
+    _ -> invalid
+  where
+    invalid =
+      Left err400
+        { errBody = "redirectUri must be an absolute http(s) URL without a fragment" }
 
 driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
 driveTokenResponseFrom GoogleToken{..} fallbackRefresh =

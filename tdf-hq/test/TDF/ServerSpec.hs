@@ -22,6 +22,7 @@ import TDF.API
     , UpdateBookingReq (..)
     , WhatsAppConsentStatus (..)
     )
+import TDF.API.Types (DriveTokenExchangeRequest (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -146,6 +147,7 @@ import TDF.Server
     , chatListMessages
     , validateAdsInquiry
     , validateAdsAssistRequest
+    , validateDriveTokenExchangeRequest
     , shouldRetryWithFallbackModel
     )
 import TDF.ServerAuth
@@ -1753,6 +1755,60 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
+
+    describe "validateDriveTokenExchangeRequest" $ do
+        it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do
+            let verifier = T.replicate 43 "a"
+                request =
+                    DriveTokenExchangeRequest
+                        "  oauth-code-123  "
+                        ("  " <> verifier <> "  ")
+                        (Just "  http://localhost:5173/oauth/google-drive/callback  ")
+            case validateDriveTokenExchangeRequest (error "cfg should be unused") request of
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected Drive token exchange request to normalize, got: "
+                            <> show serverErr
+                        )
+                Right (codeVal, verifierVal, redirectVal) -> do
+                    codeVal `shouldBe` "oauth-code-123"
+                    verifierVal `shouldBe` verifier
+                    redirectVal `shouldBe` "http://localhost:5173/oauth/google-drive/callback"
+
+        it "rejects malformed Drive OAuth exchange fields before Google token calls" $ do
+            let validVerifier = T.replicate 43 "a"
+                baseRequest =
+                    DriveTokenExchangeRequest
+                        "oauth-code-123"
+                        validVerifier
+                        (Just "https://tdf-app.pages.dev/oauth/google-drive/callback")
+                assertInvalid expectedMessage request =
+                    case validateDriveTokenExchangeRequest (error "cfg should be unused") request of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive token exchange request, got: "
+                                    <> show value
+                                )
+            assertInvalid "code is required" (DriveTokenExchangeRequest "   " validVerifier Nothing)
+            assertInvalid "code must not contain whitespace" baseRequest { code = "oauth code" }
+            assertInvalid
+                "codeVerifier must be a PKCE verifier"
+                baseRequest { codeVerifier = "short" }
+            assertInvalid
+                "codeVerifier must be a PKCE verifier"
+                baseRequest { codeVerifier = T.replicate 42 "a" <> "!" }
+            assertInvalid
+                "redirectUri must be an absolute http(s) URL without a fragment"
+                baseRequest { redirectUri = Just "/oauth/google-drive/callback" }
+            assertInvalid
+                "redirectUri must be an absolute http(s) URL without a fragment"
+                baseRequest
+                    { redirectUri =
+                        Just "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
+                    }
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
