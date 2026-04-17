@@ -477,6 +477,7 @@ export default function CmsAdminPage() {
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
+  const showClearPayloadAction = payload.trim() !== '{}';
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -772,13 +773,15 @@ export default function CmsAdminPage() {
                   <Button variant="outlined" onClick={handleFormatPayload} disabled={Boolean(payloadError)}>
                     Formatear JSON
                   </Button>
-                  <Button
-                    variant="text"
-                    onClick={() => setPayload('{}')}
-                    disabled={createMutation.isPending}
-                  >
-                    Limpiar
-                  </Button>
+                  {showClearPayloadAction && (
+                    <Button
+                      variant="text"
+                      onClick={() => setPayload('{}')}
+                      disabled={createMutation.isPending}
+                    >
+                      Limpiar
+                    </Button>
+                  )}
 	                  {showExampleAction && (
 	                    <Button
 	                      variant="text"

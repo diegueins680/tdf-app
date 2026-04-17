@@ -281,6 +281,43 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the clear-payload action until the editor has JSON to clear', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+    });
+
+    await act(async () => {
+      setInputValue(
+        getInputByLabel(container, 'Payload JSON'),
+        JSON.stringify({ heroTitle: 'Landing actualizada' }, null, 2),
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Limpiar')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Limpiar').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('replaces the duplicate payload preview grid with one compare hint inside the editor', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
