@@ -1314,6 +1314,7 @@ privateTrialsServer user@AuthedUser{..} =
           hasTeacherRole <- recordExists
             [ Models.PartyRolePartyId ==. teacherKey
             , Models.PartyRoleRole ==. Teacher
+            , Models.PartyRoleActive ==. True
             ]
           unless hasTeacherRole $
             liftIO $ throwIO err422 { errBody = "La persona seleccionada no está registrada como profesor" }

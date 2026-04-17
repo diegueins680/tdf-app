@@ -739,6 +739,35 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-teacher parties to be rejected for trial scheduling"
 
+    it "rejects scheduling a trial with an inactive teacher role instead of using stale authorization" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        formerTeacherPartyId <- insertPartyFixture "Former Teacher" now
+        _ <- insert Models.PartyRole
+          { Models.partyRolePartyId = formerTeacherPartyId
+          , Models.partyRoleRole = Models.Teacher
+          , Models.partyRoleActive = False
+          }
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey formerTeacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected inactive teacher roles to be rejected for trial scheduling"
+
     it "rejects scheduling a trial with a missing room id instead of accepting a dangling room reference" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
