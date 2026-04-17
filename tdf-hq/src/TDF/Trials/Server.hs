@@ -732,12 +732,26 @@ validatePublicInterestType rawInterestType =
       | otherwise ->
           Right interestTypeVal
 
+validatePublicInterestDetails :: Maybe Text -> Either ServerError (Maybe Text)
+validatePublicInterestDetails rawDetails =
+  case cleanOptional rawDetails of
+    Nothing ->
+      Right Nothing
+    Just detailsVal
+      | T.length detailsVal > 2000 ->
+          Left err400 { errBody = "details must be 1-2000 characters" }
+      | T.any isControl detailsVal ->
+          Left err400 { errBody = "details must not contain control characters" }
+      | otherwise ->
+          Right (Just detailsVal)
+
 validatePublicInterestInput :: InterestIn -> Either ServerError InterestIn
 validatePublicInterestInput (InterestIn rawInterestType rawSubjectId details driveLink) = do
   interestTypeVal <- validatePublicInterestType rawInterestType
   subjectId <- traverse validatePublicSubjectIdInput rawSubjectId
+  detailsVal <- validatePublicInterestDetails details
   driveLinkVal <- validateOptionalDriveLink driveLink
-  Right (InterestIn interestTypeVal subjectId (cleanOptional details) driveLinkVal)
+  Right (InterestIn interestTypeVal subjectId detailsVal driveLinkVal)
 
 validatePublicSubjectSelection :: Maybe Subject -> Either ServerError ()
 validatePublicSubjectSelection (Just subject)

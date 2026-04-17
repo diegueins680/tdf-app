@@ -233,15 +233,32 @@ spec = do
       assertRejected (pack (replicate 81 'a')) "interestType must be 1-80 characters"
       assertRejected "workshop\nvip" "interestType must not contain control characters"
 
-    it "trims interest types and drops blank optional fields" $
-      case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "   ") (Just "  https://example.com/file  ")) of
+    it "trims interest types and details, and drops blank optional fields" $ do
+      case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "  Looking for info  ") (Just "  https://example.com/file  ")) of
         Left err ->
           expectationFailure ("Expected valid interest input to be accepted, got " <> show err)
         Right (InterestIn interestTypeValue subjectIdValue detailsValue driveLinkValue) -> do
           interestTypeValue `shouldBe` "workshop"
           subjectIdValue `shouldBe` Just 7
-          detailsValue `shouldBe` Nothing
+          detailsValue `shouldBe` Just "Looking for info"
           driveLinkValue `shouldBe` Just "https://example.com/file"
+
+      case validatePublicInterestInput (InterestIn "workshop" Nothing (Just "   ") Nothing) of
+        Left err ->
+          expectationFailure ("Expected blank optional details to be dropped, got " <> show err)
+        Right (InterestIn _ _ detailsValue _) ->
+          detailsValue `shouldBe` Nothing
+
+    it "rejects oversized or control-character details before storing fallback lead rows" $ do
+      let assertRejected rawDetails expectedMessage =
+            case validatePublicInterestInput (InterestIn "workshop" Nothing (Just rawDetails) Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed details to be rejected"
+      assertRejected (pack (replicate 2001 'a')) "details must be 1-2000 characters"
+      assertRejected "line one\nline two" "details must not contain control characters"
 
     it "accepts public drive links with valid explicit ports" $
       case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just "https://example.com:8443/file")) of
