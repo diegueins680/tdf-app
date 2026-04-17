@@ -2434,6 +2434,7 @@ main = hspec $ do
                         expectationFailure ("Expected invalid lead completion payload to be rejected, got " <> show value)
             assertInvalid (CompleteReq "   " "Ada Lovelace" "ada@example.com") "Completion token is required"
             assertInvalid (CompleteReq "token-123" "   " "ada@example.com") "Invalid name: must be 1-200 characters"
+            assertInvalid (CompleteReq "token-123" "Ada\nLovelace" "ada@example.com") "Invalid name: must not contain control characters"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada @example.com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@-example.com") "Invalid email format"

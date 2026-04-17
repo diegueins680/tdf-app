@@ -29,7 +29,7 @@ import Data.Aeson
   , rejectUnknownFields
   )
 import Control.Monad (unless)
-import Data.Char (isAlphaNum, isAscii, isAsciiLower, isDigit)
+import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import Data.Int (Int64)
 import Data.Maybe (isNothing, listToMaybe)
 import Data.Text (Text)
@@ -177,6 +177,8 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
       Left err400 { errBody = "Completion token format is invalid" }
   | T.null nameValue || T.length nameValue > 200 =
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
+  | T.any isControl nameValue =
+      Left err400 { errBody = "Invalid name: must not contain control characters" }
   | not (isValidEmail emailValue) =
       Left err400 { errBody = "Invalid email format" }
   | otherwise =
