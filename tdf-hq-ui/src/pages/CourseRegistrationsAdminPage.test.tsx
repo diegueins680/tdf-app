@@ -912,7 +912,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('combines filtered scope and visible-count copy into one passive utility summary', async () => {
+  it('combines filtered scope and visible-count copy without adding shared date chrome', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -944,6 +944,10 @@ describe('CourseRegistrationsAdminPage', () => {
         'Vista filtrada: cohorte Beatmaking 101 (beatmaking-101). Mostrando 2 inscripciones.',
       );
       expect(container.querySelectorAll('[data-testid="course-registration-filter-summary"]')).toHaveLength(1);
+      const createdAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain(`Misma fecha de registro: ${createdAtLabel}.`);
+      expect(countOccurrences(container, `Creado: ${createdAtLabel}`)).toBe(0);
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });

@@ -899,10 +899,7 @@ export default function CourseRegistrationsAdminPage() {
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [registrations]);
-  const shouldShowSharedCreatedAtSummary = Boolean(sharedVisibleCreatedAtLabel) && hasCustomFilters;
-  const sharedVisibleCreatedAtSummary = shouldShowSharedCreatedAtSummary
-    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
-    : '';
+  const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel) && hasCustomFilters;
   const allVisibleRegistrationsHaveNotes = loadedRegistrationCount > 1
     && registrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
@@ -911,7 +908,6 @@ export default function CourseRegistrationsAdminPage() {
   const sharedListContextSummaries = [
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
-    sharedVisibleCreatedAtSummary,
     sharedVisibleNotesSummary,
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
@@ -2509,21 +2505,11 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
-                {shouldShowSharedCreatedAtSummary && (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    data-testid="course-registration-shared-created-at-summary"
-                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
-                  >
-                    {sharedVisibleCreatedAtSummary}
-                  </Typography>
-                )}
                 {sharedVisibleNotesSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary || shouldShowSharedCreatedAtSummary ? 0.75 : 1.5 }}
+                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
                   >
                     {sharedVisibleNotesSummary}
                   </Typography>
@@ -2642,7 +2628,7 @@ export default function CourseRegistrationsAdminPage() {
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes,
-                    showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldShowSharedCreatedAtSummary,
+                    showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
