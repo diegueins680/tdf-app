@@ -84,6 +84,8 @@ import TDF.ServerRadio
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
       validateRadioStreamUrl,
+      validateRadioTransmissionIngestBase,
+      validateRadioTransmissionWhipBase,
       validateRadioTransmissionPublicBase )
 import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
@@ -1682,6 +1684,37 @@ main = hspec $ do
             assertInvalid
                 "http://127.0.0.1/live"
                 "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
+
+    describe "validateRadioTransmission endpoint bases" $ do
+        it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
+            validateRadioTransmissionIngestBase "  RTMPS://stream.example.com/live/  "
+                `shouldBe` Right "rtmps://stream.example.com/live"
+            validateRadioTransmissionWhipBase "  HTTPS://stream.example.com/whip/  "
+                `shouldBe` Right "https://stream.example.com/whip"
+
+        it "rejects malformed endpoint overrides before returning unusable transmission URLs" $ do
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid transmission endpoint base, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (validateRadioTransmissionIngestBase "https://stream.example.com/live")
+                "RADIO_INGEST_BASE must be rtmp(s)"
+            assertInvalid
+                (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live?token=abc")
+                "RADIO_INGEST_BASE must not include query or fragment"
+            assertInvalid
+                (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
+                "RADIO_WHIP_BASE must be http(s)"
+            assertInvalid
+                (validateRadioTransmissionWhipBase "https://127.0.0.1/whip")
+                "RADIO_WHIP_BASE must not target localhost or private network addresses"
 
     describe "validateRadioImportSources" $ do
         it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do

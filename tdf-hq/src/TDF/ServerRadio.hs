@@ -7,6 +7,8 @@ module TDF.ServerRadio
   ( radioServer
   , validateRadioStreamUrl
   , validateRadioTransmissionPublicBase
+  , validateRadioTransmissionIngestBase
+  , validateRadioTransmissionWhipBase
   , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
@@ -91,21 +93,66 @@ validateRadioStreamUrl rawUrl
 validateRadioTransmissionPublicBase :: Text -> Either ServerError Text
 validateRadioTransmissionPublicBase rawBase =
   case validateRadioStreamUrl rawBase of
-    Left err -> Left (radioPublicBaseError err)
+    Left err -> Left (radioFieldError "RADIO_PUBLIC_BASE" err)
     Right publicBase ->
       let normalizedPublicBase = normalizePublicBaseScheme publicBase
       in if T.any (`elem` ("?#" :: String)) normalizedPublicBase
             then Left err400 { errBody = "RADIO_PUBLIC_BASE must not include query or fragment" }
             else Right (T.dropWhileEnd (== '/') normalizedPublicBase)
+
+validateRadioTransmissionIngestBase :: Text -> Either ServerError Text
+validateRadioTransmissionIngestBase =
+  validateRadioTransmissionEndpointBase "RADIO_INGEST_BASE" "rtmp(s)" ["rtmp", "rtmps"]
+
+validateRadioTransmissionWhipBase :: Text -> Either ServerError Text
+validateRadioTransmissionWhipBase =
+  validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "http(s)" ["http", "https"]
+
+validateRadioTransmissionEndpointBase :: Text -> Text -> [Text] -> Text -> Either ServerError Text
+validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes rawBase
+  | T.null endpointBase =
+      Left err400 { errBody = fieldBody " is required" }
+  | T.any isSpace endpointBase =
+      Left err400 { errBody = fieldBody " must not contain whitespace" }
+  | Nothing <- mRemainder =
+      Left err400 { errBody = fieldBody (" must be " <> allowedSchemesText) }
+  | T.null authority =
+      Left err400 { errBody = fieldBody " must include a host" }
+  | Left authorityErr <- validateRadioAuthority authority =
+      Left (radioFieldError label authorityErr)
+  | T.any (`elem` ("?#" :: String)) normalizedEndpointBase =
+      Left err400 { errBody = fieldBody " must not include query or fragment" }
+  | otherwise =
+      Right (T.dropWhileEnd (== '/') normalizedEndpointBase)
   where
-    radioPublicBaseError err =
-      let bodyText =
-            TE.decodeUtf8With lenientDecode (BL.toStrict (errBody err))
-      in err
-          { errBody =
-              BL.fromStrict
-                (TE.encodeUtf8 (T.replace "streamUrl" "RADIO_PUBLIC_BASE" bodyText))
-          }
+    endpointBase = T.strip rawBase
+    lowerEndpointBase = T.toLower endpointBase
+    matchingScheme =
+      find
+        (\scheme -> (scheme <> "://") `T.isPrefixOf` lowerEndpointBase)
+        allowedSchemes
+    mRemainder =
+      fmap
+        (\scheme -> T.drop (T.length scheme + 3) endpointBase)
+        matchingScheme
+    normalizedEndpointBase =
+      case matchingScheme of
+        Nothing -> endpointBase
+        Just scheme -> scheme <> "://" <> T.drop (T.length scheme + 3) endpointBase
+    authority =
+      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+    fieldBody suffix =
+      BL.fromStrict (TE.encodeUtf8 (label <> suffix))
+
+radioFieldError :: Text -> ServerError -> ServerError
+radioFieldError label err =
+  let bodyText =
+        TE.decodeUtf8With lenientDecode (BL.toStrict (errBody err))
+  in err
+      { errBody =
+          BL.fromStrict
+            (TE.encodeUtf8 (T.replace "streamUrl" label bodyText))
+      }
 
 normalizePublicBaseScheme :: Text -> Text
 normalizePublicBaseScheme baseUrl
@@ -826,8 +873,10 @@ radioServer user =
       listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
       let fallbackIngest = deriveBase listenBase "rtmp" "/live"
           fallbackWhip   = deriveBase listenBase "https" "/whip"
-      ingestBase <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)
-      whipBase <- liftIO (readEnv "RADIO_WHIP_BASE" fallbackWhip)
+      ingestBaseRaw <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)
+      whipBaseRaw <- liftIO (readEnv "RADIO_WHIP_BASE" fallbackWhip)
+      ingestBase <- either throwError pure (validateRadioTransmissionIngestBase ingestBaseRaw)
+      whipBase <- either throwError pure (validateRadioTransmissionWhipBase whipBaseRaw)
       let publicUrl = appendPath listenBase streamKey
           ingestUrl = appendPath ingestBase streamKey
           whipUrl = appendPath whipBase streamKey
