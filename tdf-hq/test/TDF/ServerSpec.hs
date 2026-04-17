@@ -112,6 +112,7 @@ import TDF.Server
     , validateCourseRegistrationUrlField
     , validateMarketplaceBuyerName
     , validateMarketplaceBuyerEmail
+    , validateMarketplacePathId
     , requireMarketplaceCartTotals
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
@@ -2514,6 +2515,28 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   " "status cannot be blank"
             assertInvalid "refunded" "pending, contact, paid, cancelled"
+
+    describe "validateMarketplacePathId" $ do
+        it "accepts positive decimal marketplace path ids before DB lookup" $ do
+            validateMarketplacePathId "cart" "42" `shouldBe` Right 42
+            validateMarketplacePathId "order" "  7  " `shouldBe` Right 7
+
+        it "rejects malformed or non-positive marketplace path ids as bad requests" $ do
+            let assertInvalid entityLabel rawId =
+                    case validateMarketplacePathId entityLabel rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` ("Invalid " <> T.unpack entityLabel <> " id")
+                        Right pathId ->
+                            expectationFailure
+                                ( "Expected invalid marketplace path id to be rejected, got: "
+                                    <> show pathId
+                                )
+            assertInvalid "cart" "0"
+            assertInvalid "cart" "-1"
+            assertInvalid "listing" "+1"
+            assertInvalid "order" "abc"
 
     describe "requireMarketplaceCartTotals" $ do
         it "distinguishes missing carts from empty carts before checkout handlers respond" $ do

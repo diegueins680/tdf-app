@@ -8170,9 +8170,7 @@ listMarketplace = do
 
 getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
 getMarketplaceItem rawId = do
-  listingKey <- case fromPathPiece rawId of
-    Nothing -> throwBadRequest "Invalid listing id"
-    Just k  -> pure k
+  listingKey <- parseListingId rawId
   Env{..} <- ask
   let assetsBase = resolveConfiguredAssetsBase envConfig
   mRow <- liftIO $ flip runSqlPool envPool $ do
@@ -8763,22 +8761,41 @@ getOrder rawId = do
   maybe (throwError err404) pure mDto
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
-parseOrderId rawId =
-  case fromPathPiece rawId of
+parseOrderId rawId = do
+  _ <- either throwError pure (validateMarketplacePathId "order" rawId)
+  case fromPathPiece (T.strip rawId) of
     Nothing -> throwBadRequest "Invalid order id"
-    Just k  -> pure k
+    Just k -> pure k
 
 parseCartId :: Text -> AppM (Key ME.MarketplaceCart)
-parseCartId rawId =
-  case fromPathPiece rawId of
+parseCartId rawId = do
+  _ <- either throwError pure (validateMarketplacePathId "cart" rawId)
+  case fromPathPiece (T.strip rawId) of
     Nothing -> throwBadRequest "Invalid cart id"
-    Just k  -> pure k
+    Just k -> pure k
 
 parseListingId :: Text -> AppM (Key ME.MarketplaceListing)
-parseListingId rawId =
-  case fromPathPiece rawId of
+parseListingId rawId = do
+  _ <- either throwError pure (validateMarketplacePathId "listing" rawId)
+  case fromPathPiece (T.strip rawId) of
     Nothing -> throwBadRequest "Invalid listing id"
-    Just k  -> pure k
+    Just k -> pure k
+
+validateMarketplacePathId :: Text -> Text -> Either ServerError Int64
+validateMarketplacePathId label rawId =
+  let normalized = T.strip rawId
+      invalid =
+        Left err400
+          { errBody =
+              BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
+          }
+  in
+    if T.null normalized || not (T.all isDigit normalized)
+      then invalid
+      else
+        case readMaybe (T.unpack normalized) of
+          Just pathId | pathId > 0 -> Right pathId
+          _ -> invalid
 
 requireMarketplaceAccess :: AuthedUser -> AppM ()
 requireMarketplaceAccess user =
