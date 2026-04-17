@@ -476,8 +476,12 @@ export default function AdminUsersPage() {
     if (isDefaultSharedAdminAccess) return '';
 
     const sharedAccessSummaryParts: string[] = [];
-    if (sharedRolesSummary) sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);
-    if (sharedModulesSummary) sharedAccessSummaryParts.push(`Módulos: ${sharedModulesSummary}`);
+    if (sharedRolesSummary && sharedRolesSummary !== DEFAULT_SHARED_ADMIN_ROLES_SUMMARY) {
+      sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);
+    }
+    if (sharedModulesSummary && sharedModulesSummary !== DEFAULT_SHARED_ADMIN_MODULES_SUMMARY) {
+      sharedAccessSummaryParts.push(`Módulos: ${sharedModulesSummary}`);
+    }
     return sharedAccessSummaryParts.length
       ? `Acceso compartido en esta vista: ${sharedAccessSummaryParts.join(' · ')}.`
       : '';

@@ -885,6 +885,47 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('omits the baseline shared Admin role when module differences are the only useful access signal', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-crm',
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-inventory',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+        );
+        expect(container.textContent).not.toContain('Acceso compartido en esta vista: Roles: Admin.');
+
+        const crmRow = getRowByUserId(container, 101);
+        const inventoryRow = getRowByUserId(container, 102);
+        expect(crmRow.textContent).not.toContain('Roles: Admin');
+        expect(inventoryRow.textContent).not.toContain('Roles: Admin');
+        expect(hasExactText(crmRow, 'Módulos: crm')).toBe(true);
+        expect(hasExactText(inventoryRow, 'Módulos: inventory')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes the default active-only scope once and groups even a lone inactive row under one inactive section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
