@@ -69,7 +69,8 @@ data DropdownOptionCreate = DropdownOptionCreate
   } deriving (Show, Generic)
 
 instance ToJSON DropdownOptionCreate
-instance FromJSON DropdownOptionCreate
+instance FromJSON DropdownOptionCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data DropdownOptionUpdate = DropdownOptionUpdate
   { douValue     :: Maybe Text
@@ -79,7 +80,24 @@ data DropdownOptionUpdate = DropdownOptionUpdate
   } deriving (Show, Generic)
 
 instance ToJSON DropdownOptionUpdate
-instance FromJSON DropdownOptionUpdate
+instance FromJSON DropdownOptionUpdate where
+  parseJSON = withObject "DropdownOptionUpdate" $ \o -> do
+    let allowedKeys =
+          [ "douValue"
+          , "douLabel"
+          , "douSortOrder"
+          , "douActive"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in DropdownOptionUpdate: " <> T.unpack key)
+      [] ->
+        DropdownOptionUpdate
+          <$> o .:? "douValue"
+          <*> o .:! "douLabel"
+          <*> o .:! "douSortOrder"
+          <*> o .:? "douActive"
 
 data RoleDetailDTO = RoleDetailDTO
   { role    :: RoleEnum

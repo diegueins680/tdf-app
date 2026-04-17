@@ -19,6 +19,8 @@ import qualified TDF.DTO as DTO
 import TDF.API.Types
     ( ClockInRequest (..)
     , ClockOutRequest (..)
+    , DropdownOptionCreate (..)
+    , DropdownOptionUpdate (..)
     , LooseJSON
     , MarketplaceCheckoutReq (..)
     , MarketplaceCartItemUpdate (..)
@@ -75,6 +77,38 @@ spec = do
         it "rejects unexpected keys so role updates cannot silently ignore over-posted fields" $
             decodeUserRoleUpdate
                 "{\"roles\":[\"Admin\"],\"active\":false}"
+                `shouldSatisfy` isLeft
+
+    describe "Dropdown option write payload FromJSON" $ do
+        it "accepts canonical admin dropdown create and update payloads" $ do
+            case decodeDropdownOptionCreate
+                "{\"docValue\":\"stage\",\"docLabel\":\"Stage\",\"docSortOrder\":3,\"docActive\":true}"
+             of
+                Left err ->
+                    expectationFailure ("Expected dropdown option create payload to decode, got: " <> err)
+                Right (DropdownOptionCreate valueVal labelVal sortOrderVal activeVal) -> do
+                    valueVal `shouldBe` "stage"
+                    labelVal `shouldBe` Just "Stage"
+                    sortOrderVal `shouldBe` Just 3
+                    activeVal `shouldBe` Just True
+
+            case decodeDropdownOptionUpdate
+                "{\"douValue\":\"stage-two\",\"douLabel\":null,\"douSortOrder\":4,\"douActive\":false}"
+             of
+                Left err ->
+                    expectationFailure ("Expected dropdown option update payload to decode, got: " <> err)
+                Right (DropdownOptionUpdate valueVal labelVal sortOrderVal activeVal) -> do
+                    valueVal `shouldBe` Just "stage-two"
+                    labelVal `shouldBe` Just Nothing
+                    sortOrderVal `shouldBe` Just (Just 4)
+                    activeVal `shouldBe` Just False
+
+        it "rejects unexpected dropdown keys instead of silently ignoring admin intent" $ do
+            decodeDropdownOptionCreate
+                "{\"docValue\":\"stage\",\"label\":\"typoed alias\"}"
+                `shouldSatisfy` isLeft
+            decodeDropdownOptionUpdate
+                "{\"douActive\":false,\"active\":true}"
                 `shouldSatisfy` isLeft
 
     describe "ChatKitSessionRequest FromJSON" $ do
@@ -813,6 +847,10 @@ spec = do
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
     decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
     decodeUserRoleUpdate = eitherDecode
+    decodeDropdownOptionCreate :: BL8.ByteString -> Either String DropdownOptionCreate
+    decodeDropdownOptionCreate = eitherDecode
+    decodeDropdownOptionUpdate :: BL8.ByteString -> Either String DropdownOptionUpdate
+    decodeDropdownOptionUpdate = eitherDecode
     decodeChatKitSession :: BL8.ByteString -> Either String API.ChatKitSessionRequest
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest

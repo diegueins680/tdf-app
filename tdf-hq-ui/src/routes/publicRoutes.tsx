@@ -8,6 +8,7 @@ const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
 const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
+const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
 const GoogleDriveCallbackPage = lazy(() => import('../pages/GoogleDriveCallbackPage'));
@@ -53,6 +54,8 @@ export function renderPublicRoutes() {
       <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
+      <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
+      <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />
       <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />
       <Route path="/reset" element={<PublicBranding showHeader showLoginButton={false}><ResetPasswordPage /></PublicBranding>} />
       <Route path="/herramientas/creador-musical" element={<PublicBranding><MusicMakerPage /></PublicBranding>} />
