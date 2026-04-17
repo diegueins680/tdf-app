@@ -300,6 +300,15 @@ const canTransitionToStatus = (
   return currentStatus !== nextStatus;
 };
 
+const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
+  currentStatus !== 'cancelled' && canTransitionToStatus(currentStatus, 'paid');
+
+const pendingStatusMenuLabel = (currentStatus: string) =>
+  currentStatus === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';
+
+const pendingStatusMenuTargetLabel = (currentStatus: string) =>
+  currentStatus === 'cancelled' ? 'reabrir la inscripción como pendiente' : 'marcarla pendiente';
+
 const eventStatusColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' | 'info' => {
@@ -2703,7 +2712,7 @@ export default function CourseRegistrationsAdminPage() {
         anchorEl={statusMenuTarget?.anchorEl ?? null}
         onClose={handleCloseStatusMenu}
       >
-        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'paid') && (
+        {statusMenuReg && canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
             onClick={() => {
               handleCloseStatusMenu();
@@ -2715,12 +2724,13 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
           <MenuItem
+            title={`Usa esta acción para ${pendingStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
             onClick={() => {
               handleCloseStatusMenu();
               handleQuickStatus(statusMenuReg, 'pending_payment');
             }}
           >
-            Marcar pendiente
+            {pendingStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'cancelled') && (

@@ -180,6 +180,7 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = 'Copiar CSV visible';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage =
@@ -2366,8 +2367,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
-      expect(document.body.textContent).toContain('Marcar pendiente');
+      expect(document.body.textContent).toContain(reopenPendingLabel);
+      expect(getMenuItemByText(document.body, reopenPendingLabel).getAttribute('title')).toBe(
+        'Usa esta acción para reabrir la inscripción como pendiente.',
+      );
+      expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
+      expect(document.body.textContent).not.toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Estado actual:');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
