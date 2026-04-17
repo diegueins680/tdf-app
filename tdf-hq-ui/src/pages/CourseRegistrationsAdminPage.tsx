@@ -1610,8 +1610,9 @@ export default function CourseRegistrationsAdminPage() {
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
+  const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && followUps.length === 0;
   const hasPrimaryDossierAction = canMarkPaid || showSystemEmailHistoryAction;
-  const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction;
+  const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
@@ -1750,7 +1751,9 @@ export default function CourseRegistrationsAdminPage() {
   const showNotesSection = isMarkPaidIntent
     ? (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
     : (hasSavedNotes || showNotesComposer);
-  const showFollowUpSection = !isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer;
+  const showFollowUpSection = isMarkPaidIntent
+    ? (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
+    : (followUps.length > 0 || showFollowUpComposer);
   const prioritizePaymentSection = isMarkPaidIntent;
   const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
   const dossierDialogTitle = isMarkPaidIntent
@@ -2871,6 +2874,14 @@ export default function CourseRegistrationsAdminPage() {
                           onClick={handleOpenNotesComposer}
                         >
                           Agregar nota
+                        </Button>
+                      )}
+                      {showInlineEmptyFollowUpAction && (
+                        <Button
+                          variant="outlined"
+                          onClick={() => setShowFollowUpComposer(true)}
+                        >
+                          Agregar seguimiento
                         </Button>
                       )}
                     </Stack>

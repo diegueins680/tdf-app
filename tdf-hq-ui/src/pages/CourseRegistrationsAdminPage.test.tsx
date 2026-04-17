@@ -448,8 +448,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(document.body.textContent).not.toContain('0 guardados');
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
-      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
@@ -461,7 +461,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await act(async () => {
       clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -490,6 +490,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.',
       );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
@@ -2572,7 +2573,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
-      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
       expect(document.body.textContent).not.toContain(
         'Aún no hay seguimiento manual. Documenta llamadas, correos o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.',
       );
@@ -2609,7 +2611,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('+593999000111');
       expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
-      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.querySelector('[data-testid="course-registration-empty-email-history-hint"]')).toBeNull();
@@ -3548,9 +3551,9 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(1);
-      expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain('0 entradas');
       expect(document.body.textContent).not.toContain('Registrar seguimiento');
       expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
@@ -3564,7 +3567,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -3577,6 +3580,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Abre el formulario solo cuando necesites documentar una llamada, mensaje o próximo paso.',
       );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
@@ -3642,11 +3646,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).not.toBeNull();
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(document.body.querySelector('[data-testid="course-registration-follow-up-list-pane"]')).toBeNull();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -3722,13 +3727,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasExactText(document.body, 'Seguimiento')).toBe(true);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(hasExactText(document.body, 'Seguimiento')).toBe(false);
       expect(hasExactText(document.body, 'Historial de seguimiento')).toBe(false);
       expect(hasExactText(document.body, 'Primer seguimiento')).toBe(false);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -3786,11 +3792,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
@@ -3848,11 +3854,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Registrar primer seguimiento')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Registrar primer seguimiento'));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
