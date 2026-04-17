@@ -1625,7 +1625,15 @@ export default function CourseRegistrationsAdminPage() {
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
-  const showDossierRefreshAction = Boolean(selectedDossier) && !dossierQuery.isLoading;
+  const hasDossierRefreshContext = dossierQuery.isError
+    || canMarkPaid
+    || hasReceipts
+    || followUps.length > 0
+    || hasSavedNotes
+    || showSystemEmailHistoryAction;
+  const showDossierRefreshAction = Boolean(selectedDossier)
+    && !dossierQuery.isLoading
+    && hasDossierRefreshContext;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
     ? 'Refrescar expediente y correos'
     : 'Refrescar expediente';

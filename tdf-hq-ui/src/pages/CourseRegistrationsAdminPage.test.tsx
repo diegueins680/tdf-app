@@ -429,6 +429,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
       expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
     });
 
     await waitForExpectation(() => {
@@ -2584,8 +2586,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses a scoped dossier refresh control instead of a generic footer action', async () => {
-    getRegistrationDossierMock.mockResolvedValue(buildDossier());
+  it('uses a scoped dossier refresh control once the dossier has saved activity', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier({
+      crdReceipts: [buildReceipt()],
+    }));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -4737,7 +4741,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(
         container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
       ).toBe('Mostrando 2 inscripciones en esta vista.');
