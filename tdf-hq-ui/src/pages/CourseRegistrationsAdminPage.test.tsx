@@ -182,6 +182,8 @@ const firstFollowUpComposerHelpText =
 const openPaymentWorkflowLabel = 'Registrar pago';
 const copyVisibleCsvLabel = 'Copiar CSV visible';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const customStatusFilterUnavailableMessage =
+  'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
@@ -532,7 +534,7 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps the dossier loading state focused instead of showing premature empty prompts', async () => {
-    getRegistrationDossierMock.mockImplementation(() => new Promise(() => {}));
+    getRegistrationDossierMock.mockImplementation(() => new Promise(() => undefined));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -2177,6 +2179,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces empty status filter chrome with guidance for custom backend statuses', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'needs_review',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'waitlist',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const customStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-status-filter-unavailable"]',
+      );
+
+      expect(customStatusSummary?.textContent).toContain('Sin filtros de estado');
+      expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('needs_review');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('waitlist');
+    });
+
+    await cleanup();
+  });
+
   it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
@@ -2522,7 +2558,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(actions).toBeTruthy();
-      expect(countButtonsByText(actions as HTMLElement, 'Marcar pagado')).toBe(1);
+      expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
       expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(emptyHint).toBeNull();
@@ -3282,7 +3318,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(document.body.textContent).toContain('Confirmar pago de inscripción');
       expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
-      expect(countButtonsByText(actions as HTMLElement, 'Marcar pagado')).toBe(1);
+      expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).not.toContain(hideSystemEmailsLabel);
@@ -4440,7 +4476,7 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps the initial loading state focused on the first-result setup instead of filters or refresh actions', async () => {
-    listRegistrationsMock.mockImplementation(() => new Promise(() => {}));
+    listRegistrationsMock.mockImplementation(() => new Promise(() => undefined));
 
     const container = document.createElement('div');
     document.body.appendChild(container);

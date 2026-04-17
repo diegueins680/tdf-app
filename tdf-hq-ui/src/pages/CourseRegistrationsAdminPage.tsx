@@ -82,6 +82,7 @@ const followUpComposerHelpText = 'Este formulario ya está abierto para registra
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
 const defaultPublicFormSource = 'landing';
 const MIN_DEFAULT_CSV_EXPORT_ROWS = 3;
 
@@ -726,8 +727,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasStatusFilter = status !== 'all';
   const hasRedundantSingleCohortFilter = Boolean(
     selectedSlug
-    && singleAvailableCohort
-    && singleAvailableCohort.value === selectedSlug,
+    && singleAvailableCohort?.value === selectedSlug,
   );
   const hasEffectiveSlugFilter = hasSlugFilter && !hasRedundantSingleCohortFilter;
   const hasManualFilters = hasEffectiveSlugFilter || hasStatusFilter;
@@ -991,6 +991,9 @@ export default function CourseRegistrationsAdminPage() {
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
+  const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
+    && !showSingleStatusSummary
+    && actionableStatusFilters.length === 0;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'Vista única por ahora: una cohorte y un estado.';
@@ -2223,6 +2226,27 @@ export default function CourseRegistrationsAdminPage() {
                             {limitToggleLabel}
                           </Button>
                         )}
+                      </Stack>
+                    ) : showCustomStatusFilterUnavailableSummary ? (
+                      <Stack
+                        data-testid="course-registration-status-filter-unavailable"
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Sin filtros de estado
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {customStatusFilterUnavailableMessage}
+                        </Typography>
                       </Stack>
                     ) : (
                       <Stack spacing={1}>
