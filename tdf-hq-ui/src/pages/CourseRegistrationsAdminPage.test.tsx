@@ -4717,6 +4717,50 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses one explicit empty-search recovery action instead of an icon-only clear control', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'sin coincidencias');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the visible CSV export scoped to local search results', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {

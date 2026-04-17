@@ -881,6 +881,9 @@ export default function CourseRegistrationsAdminPage() {
       return haystack.includes(localSearchKey);
     });
   }, [cohortLabelsBySlug, localSearchKey, registrations]);
+  const showEmptyLocalSearchResults = hasLocalSearch
+    && loadedRegistrationCount > 0
+    && searchedRegistrations.length === 0;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
@@ -2639,7 +2642,7 @@ export default function CourseRegistrationsAdminPage() {
                       <SearchIcon fontSize="small" />
                     </InputAdornment>
                   ),
-                  endAdornment: localSearchKey ? (
+                  endAdornment: localSearchKey && !showEmptyLocalSearchResults ? (
                     <InputAdornment position="end">
                       <Tooltip title="Limpiar búsqueda">
                         <IconButton
@@ -2687,8 +2690,15 @@ export default function CourseRegistrationsAdminPage() {
               <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
             )
           )}
-          {!regsQuery.isLoading && registrations.length > 0 && searchedRegistrations.length === 0 && (
-            <Alert severity="info">
+          {!regsQuery.isLoading && showEmptyLocalSearchResults && (
+            <Alert
+              severity="info"
+              action={(
+                <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
+                  Limpiar búsqueda
+                </Button>
+              )}
+            >
               No hay coincidencias para "{localSearchTerm}" en las {formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.
             </Alert>
           )}
