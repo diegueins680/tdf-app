@@ -508,6 +508,53 @@ spec = do
         )
         `shouldBe` True
 
+  describe "ClassSessionIn FromJSON" $ do
+    it "accepts canonical class-session create payloads" $ do
+      let payload = BL8.pack $ concat
+            [ "{\"studentId\":1"
+            , ",\"teacherId\":2"
+            , ",\"subjectId\":3"
+            , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+            , ",\"roomId\":4"
+            , ",\"bookingId\":5}"
+            ]
+      case A.eitherDecode payload of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical class session payload to decode, got: " <> decodeErr)
+        Right (ClassSessionIn studentIdValue teacherIdValue subjectIdValue startValue endValue roomIdValue bookingIdValue) -> do
+          studentIdValue `shouldBe` 1
+          teacherIdValue `shouldBe` 2
+          subjectIdValue `shouldBe` 3
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          roomIdValue `shouldBe` 4
+          bookingIdValue `shouldBe` Just 5
+
+    it "rejects typoed class-session keys so booking links cannot be silently dropped" $ do
+      let assertRejected payload =
+            isLeft
+              (A.eitherDecode (BL8.pack payload) :: Either String ClassSessionIn)
+              `shouldBe` True
+      assertRejected $ concat
+        [ "{\"studentId\":1"
+        , ",\"teacherId\":2"
+        , ",\"subjectId\":3"
+        , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+        , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+        , ",\"roomId\":4"
+        , ",\"bookingID\":5}"
+        ]
+      assertRejected $ concat
+        [ "{\"studentId\":1"
+        , ",\"teacherId\":2"
+        , ",\"subjectId\":3"
+        , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+        , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+        , ",\"roomId\":4"
+        , ",\"unexpected\":true}"
+        ]
+
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do
       let assertRejected rawSubjectId = do

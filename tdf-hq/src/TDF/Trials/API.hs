@@ -119,7 +119,9 @@ data PurchaseOut = PurchaseOut { purchaseId :: Int } deriving (Generic)
 instance ToJSON PurchaseOut; instance FromJSON PurchaseOut
 
 data ClassSessionIn = ClassSessionIn { studentId :: Int, teacherId :: Int, subjectId :: Int, startAt :: UTCTime, endAt :: UTCTime, roomId :: Int, bookingId :: Maybe Int } deriving (Generic)
-instance ToJSON ClassSessionIn; instance FromJSON ClassSessionIn
+instance ToJSON ClassSessionIn
+instance FromJSON ClassSessionIn where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 data ClassSessionOut = ClassSessionOut { classSessionId :: Int, consumedMinutes :: Int } deriving (Generic)
 instance ToJSON ClassSessionOut; instance FromJSON ClassSessionOut
 
