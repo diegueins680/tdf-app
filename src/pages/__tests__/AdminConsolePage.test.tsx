@@ -712,6 +712,61 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
+  it('deduplicates fallback cards with different titles when the body copy is identical', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+        {
+          cardId: 'shared-credentials',
+          title: 'Credenciales compartidas',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Opcional: ver Tokens de servicio$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /^Opcional: ver 2 módulos adicionales$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales compartidas')).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Opcional: ver Tokens de servicio$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(screen.queryByText('Credenciales compartidas')).not.toBeInTheDocument();
+    expect(
+      screen.getAllByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.?/i,
+      ),
+    ).toHaveLength(1);
+  });
+
   it('merges repeated module titles into one additional card so admins only review that workflow once', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

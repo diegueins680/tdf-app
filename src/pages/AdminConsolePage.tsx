@@ -134,6 +134,13 @@ function normalizeAdminConsoleParagraphKey(value: string) {
   return normalizeAdminConsoleSectionKey(value);
 }
 
+function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
+  return card.body
+    .map((paragraph) => normalizeAdminConsoleParagraphKey(paragraph))
+    .filter((paragraphKey) => paragraphKey.length > 0)
+    .join('\n');
+}
+
 const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
   BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeAdminConsoleSectionKey(value)),
 );
@@ -185,13 +192,19 @@ function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
 
 function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   const cardsByTitle = new Map<string, AdminConsoleCard>();
+  const titleKeyByBody = new Map<string, string>();
 
   cards.forEach((card) => {
     const titleKey = normalizeAdminConsoleSectionKey(card.title);
-    const existingCard = cardsByTitle.get(titleKey);
+    const bodyKey = getAdminConsoleCardBodyKey(card);
+    const existingTitleKey = cardsByTitle.has(titleKey) ? titleKey : titleKeyByBody.get(bodyKey);
+    const existingCard = existingTitleKey ? cardsByTitle.get(existingTitleKey) : undefined;
 
-    if (!existingCard) {
+    if (!existingTitleKey || !existingCard) {
       cardsByTitle.set(titleKey, { ...card, body: [...card.body] });
+      if (bodyKey !== '') {
+        titleKeyByBody.set(bodyKey, titleKey);
+      }
       return;
     }
 
@@ -211,7 +224,10 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
       mergedBody.push(paragraph);
     });
 
-    cardsByTitle.set(titleKey, { ...existingCard, body: mergedBody });
+    cardsByTitle.set(existingTitleKey, { ...existingCard, body: mergedBody });
+    if (bodyKey !== '') {
+      titleKeyByBody.set(bodyKey, existingTitleKey);
+    }
   });
 
   return [...cardsByTitle.values()];
