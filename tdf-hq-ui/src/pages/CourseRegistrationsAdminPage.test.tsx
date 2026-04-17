@@ -4696,6 +4696,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 inscripción de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -4709,6 +4712,72 @@ describe('CourseRegistrationsAdminPage', () => {
       expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the visible CSV export scoped to local search results', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 20 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
+      expect(container.textContent).toContain('Mostrando 2 inscripciones de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, copyVisibleCsvLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(writeTextMock).toHaveBeenCalledTimes(1);
+      const csv = writeTextMock.mock.calls[0]?.[0] ?? '';
+      expect(csv.split('\n')).toHaveLength(3);
+      expect(csv).toContain('"Nina Simone"');
+      expect(csv).toContain('"Nina Garcia"');
+      expect(csv).not.toContain('"Estudiante 1"');
+      expect(container.textContent).toContain('Copiado CSV (2 filas)');
     });
 
     await cleanup();

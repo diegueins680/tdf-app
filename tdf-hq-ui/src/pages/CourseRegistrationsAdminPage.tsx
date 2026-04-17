@@ -864,6 +864,7 @@ export default function CourseRegistrationsAdminPage() {
   const loadedRegistrationCount = registrations.length;
   const localSearchTerm = localSearch.trim();
   const localSearchKey = localSearchTerm.toLocaleLowerCase('es');
+  const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {
     if (!localSearchKey) return registrations;
     return registrations.filter((reg) => {
@@ -927,9 +928,10 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const canCopyCsv = loadedRegistrationCount > 1
+  const canCopyCsv = searchedRegistrations.length > 1
     && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
   const showStandaloneListUtilitySummary = !hasCustomFilters
+    && !hasLocalSearch
     && !showTinyDefaultCountInCurrentView
     && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
@@ -963,7 +965,8 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const copyCsvButtonLabel = 'Copiar CSV visible';
-  const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
+  const showVisibleRegistrationsSummary = !hasLocalSearch
+    && (loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage));
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const standaloneReachedListLimitSummary = !hasCustomFilters && viewHitsCurrentLimit
     ? buildReachedListLimitSummary(limit)
@@ -1334,9 +1337,9 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleCopyCsv = async () => {
-    if (registrations.length < 2) return;
+    if (searchedRegistrations.length < 2) return;
     const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
-    const rows = registrations.map((reg) => [
+    const rows = searchedRegistrations.map((reg) => [
       reg.crId,
       reg.crCourseSlug,
       reg.crFullName ?? '',
