@@ -2059,6 +2059,12 @@ main = hspec $ do
                     , "https://www.internet-radio.com"
                     ]
 
+        it "only canonicalizes exact GitHub catalog repositories, not lookalike hosts or repo prefixes" $ do
+            let spoofedHost = "https://example.com/cache/github.com/mikepierce/internet-radio-streams/blob/master/streams.csv"
+                repoPrefix = "https://github.com/mikepierce/internet-radio-streams-extra/blob/master/streams.csv"
+            validateRadioImportSources (Just [spoofedHost, repoPrefix])
+                `shouldBe` Right [spoofedHost, repoPrefix]
+
         it "rejects explicit empty or invalid source lists instead of silently falling back to defaults" $ do
             let assertInvalid rawSources expected = case validateRadioImportSources rawSources of
                     Left err -> do

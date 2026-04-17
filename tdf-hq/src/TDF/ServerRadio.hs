@@ -206,12 +206,23 @@ defaultRadioImportSources =
 
 canonicalRadioImportSource :: Text -> Text
 canonicalRadioImportSource src
-  | "github.com/mikepierce/internet-radio-streams" `T.isInfixOf` src =
+  | Just path <- githubComPath source
+  , githubRepoPath "mikepierce/internet-radio-streams" path =
       "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
-  | "github.com/junguler/m3u-radio-music-playlists" `T.isInfixOf` src =
+  | Just path <- githubComPath source
+  , githubRepoPath "junguler/m3u-radio-music-playlists" path =
       "https://raw.githubusercontent.com/junguler/m3u-radio-music-playlists/master/all.m3u"
-  | T.isSuffixOf ".csv" src = src
-  | otherwise = src
+  | T.isSuffixOf ".csv" source = source
+  | otherwise = source
+  where
+    source = T.strip src
+    githubComPath raw =
+      T.stripPrefix "https://github.com/" lowerRaw
+        <|> T.stripPrefix "http://github.com/" lowerRaw
+      where
+        lowerRaw = T.toLower raw
+    githubRepoPath repo path =
+      path == repo || (repo <> "/") `T.isPrefixOf` path
 
 validateRadioAuthority :: Text -> Either ServerError ()
 validateRadioAuthority rawAuthority
