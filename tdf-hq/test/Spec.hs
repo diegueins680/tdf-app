@@ -53,7 +53,11 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
-import TDF.Cors (corsPolicy, isTrustedPreviewOrigin, lookupFirstNonEmptyEnv)
+import TDF.Cors
+    ( corsPolicy,
+      deriveCorsOriginFromAppBase,
+      isTrustedPreviewOrigin,
+      lookupFirstNonEmptyEnv )
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -821,6 +825,17 @@ main = hspec $ do
                         `shouldReturn` Just "true"
                     lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
                         `shouldReturn` Just "1"
+
+        it "derives origin-only defaults from configured app fallback bases" $ do
+            deriveCorsOriginFromAppBase " https://hq.example.com/app/ "
+                `shouldBe` Right "https://hq.example.com"
+            deriveCorsOriginFromAppBase "http://localhost:5173/hq"
+                `shouldBe` Right "http://localhost:5173"
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app?preview=1" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected query-bearing fallback to fail, got: " <> origin)
 
         it "rejects malformed configured origins before building the credentialed policy" $ do
             let assertInvalid rawOrigin =

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Cors
   ( corsPolicy
+  , deriveCorsOriginFromAppBase
   , isTrustedPreviewOrigin
   , lookupFirstNonEmptyEnv
   ) where
@@ -35,12 +36,14 @@ corsPolicy = do
         , "http://127.0.0.1:5173"
         , "https://tdfui.pages.dev"
         ]
-      defaults =
-        defaultsCore ++ maybe [] (\raw -> [normalizeOrigin raw]) hqBaseEnv
+      hqBaseCandidates = filter (not . null . trim) (maybe [] pure hqBaseEnv)
       parsed = maybe [] splitComma originsEnv
+  hqBaseDefaults <- either (ioError . userError) pure $
+    traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
     traverse normalizeConfiguredCorsOrigin (filter (not . null) parsed)
   let
+      defaults = defaultsCore ++ hqBaseDefaults
       includeDefaults = not (maybe False parseBool disableDefaultsEnv)
       merged = (if includeDefaults then defaults else []) ++ filtered
       deduped = nub merged
@@ -132,6 +135,40 @@ parseHttpOrigin origin =
       in if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
         then Nothing
         else Just (BS.unpack (scheme <> host <> suffix))
+
+-- | Convert a configured app base URL into the origin shape required by CORS.
+deriveCorsOriginFromAppBase :: String -> Either String String
+deriveCorsOriginFromAppBase raw =
+  case parseHttpBaseOrigin (trim raw) of
+    Just origin -> Right origin
+    Nothing ->
+      Left $
+        "HQ_APP_URL CORS fallback must be an absolute http(s) URL "
+          <> "with a valid origin and no query or fragment: "
+          <> raw
+
+parseHttpBaseOrigin :: String -> Maybe String
+parseHttpBaseOrigin raw
+  | null raw || any isSpace raw = Nothing
+  | otherwise =
+      let lowered = BS.map toLower (BS.pack raw)
+      in case BS.stripPrefix "https://" lowered of
+        Just remainder -> parseWithScheme "https://" remainder
+        Nothing ->
+          case BS.stripPrefix "http://" lowered of
+            Just remainder -> parseWithScheme "http://" remainder
+            Nothing -> Nothing
+  where
+    parseWithScheme scheme remainder =
+      let (authority, suffix) = BS.break (`elem` ("/?#" :: String)) remainder
+          origin = BS.unpack (scheme <> authority)
+      in if BS.null authority || not (validBaseSuffix suffix)
+        then Nothing
+        else parseHttpOrigin origin
+
+    validBaseSuffix suffix =
+      BS.null suffix
+        || ("/" `BS.isPrefixOf` suffix && not (BS.any (\c -> c == '?' || c == '#') suffix))
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
