@@ -1,9 +1,13 @@
 # Meta App Review Current Packet
 
-Updated: 2026-04-14 America/Guayaquil
+Updated: 2026-04-17 America/Guayaquil
 
 ## Owner Direction
 Keep tdf-label focused on the Meta permissions lane until the current App Review submission is reworked and resubmitted with the active evidence set.
+
+## Release Gate
+- Do not take any live Meta `Request again`, `Ask a question`, or `Submit` action until exactly one canonical reviewer-proof replacement screencast path under `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/` is frozen in this file and in `screencast/meta-app-review/submission-packet.current.json`.
+- Until that freeze happens, the inbound carry-forward artifacts below remain the packet of record and the freeze decision stays with `tdf-label-platform`.
 
 ## Live Submission
 - App ID: `1098715965613487`

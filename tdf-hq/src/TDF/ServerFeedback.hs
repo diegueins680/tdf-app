@@ -6,6 +6,7 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
+  , validateFeedbackTitle
   , validateOptionalFeedbackContactEmail
   , validateFeedbackAttachmentSize
   , sanitizeFeedbackAttachmentFileName
@@ -16,7 +17,7 @@ import           Control.Monad              (forM_, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import           Data.Time                  (getCurrentTime)
@@ -49,12 +50,10 @@ feedbackServer user = submitFeedback
   where
     submitFeedback :: FeedbackPayload -> m NoContent
     submitFeedback FeedbackPayload{..} = do
-      let title = T.strip fpTitle
-          body  = T.strip fpDescription
+      title <- either throwError pure (validateFeedbackTitle fpTitle)
+      let body  = T.strip fpDescription
           category = normalizeOptionalFeedbackText fpCategory
           severity = normalizeOptionalFeedbackText fpSeverity
-      when (T.null title) $
-        throwError err400 { errBody = "title is required" }
       when (T.null body) $
         throwError err400 { errBody = "description is required" }
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
@@ -115,6 +114,22 @@ validateOptionalFeedbackContactEmail (Just rawEmail) =
       in if isValidFeedbackEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+maxFeedbackTitleChars :: Int
+maxFeedbackTitleChars = 160
+
+validateFeedbackTitle :: Text -> Either ServerError Text
+validateFeedbackTitle rawTitle
+  | T.null title =
+      Left err400 { errBody = "title is required" }
+  | T.length title > maxFeedbackTitleChars =
+      Left err400 { errBody = "title must be 160 characters or fewer" }
+  | T.any isControl title =
+      Left err400 { errBody = "title must not contain control characters" }
+  | otherwise =
+      Right title
+  where
+    title = T.strip rawTitle
 
 maxFeedbackAttachmentBytes :: Integer
 maxFeedbackAttachmentBytes = 10 * 1024 * 1024

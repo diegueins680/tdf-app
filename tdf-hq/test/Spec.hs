@@ -123,6 +123,7 @@ import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateFeedbackAttachmentSize,
+      validateFeedbackTitle,
       validateOptionalFeedbackContactEmail )
 import TDF.Server
     ( buildWhatsappCtaFor,
@@ -990,6 +991,26 @@ main = hspec $ do
         it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
+
+    describe "validateFeedbackTitle" $ do
+        it "trims valid feedback titles before storage and notification" $
+            validateFeedbackTitle "  Broken checkout flow  "
+                `shouldBe` Right "Broken checkout flow"
+
+        it "rejects malformed feedback titles before building email subjects" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackTitle raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid feedback title, got " <> show value)
+            assertInvalid "   " "title is required"
+            assertInvalid
+                "Bug\nBcc: attacker@example.com"
+                "title must not contain control characters"
+            assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
 
     describe "validateOptionalFeedbackContactEmail" $ do
         it "normalizes valid optional feedback contact emails and keeps blanks unset" $ do
