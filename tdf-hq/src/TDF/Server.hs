@@ -6264,6 +6264,17 @@ validatePayPalCaptureOrderId rawOrderId =
     isPayPalOrderIdChar c =
       isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
+validatePayPalCaptureOrderReference :: Maybe Text -> Text -> Either ServerError Text
+validatePayPalCaptureOrderReference mStoredOrderId paypalOrderId =
+  case normalizeOptionalInput mStoredOrderId of
+    Nothing ->
+      Left err409 { errBody = "Order does not have a PayPal order to capture" }
+    Just storedOrderId
+      | storedOrderId == paypalOrderId ->
+          Right paypalOrderId
+      | otherwise ->
+          Left err400 { errBody = "paypalOrderId does not match this order's PayPal order" }
+
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
   case normalizeMarketplaceOrderStatusToken rawStatus of
@@ -8509,10 +8520,14 @@ capturePaypalOrder PaypalCaptureReq{..} = do
   case mOrder of
     Nothing -> throwError err404
     Just order -> do
+      paypalOrderIdForCapture <- either throwError pure $
+        validatePayPalCaptureOrderReference
+          (ME.marketplaceOrderPaypalOrderId order)
+          paypalOrderId
       (cid, sec, baseUrl) <- loadPaypalEnv
       manager <- liftIO $ newManager tlsManagerSettings
       PayPalCaptureOutcome statusTxt payerEmail <-
-        capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId
+        capturePaypalOrderRemote manager cid sec baseUrl paypalOrderIdForCapture
       now <- liftIO getCurrentTime
       nextStatus <- either throwError pure (parsePayPalCaptureOrderStatus statusTxt)
       let paidAtVal =

@@ -117,6 +117,7 @@ import TDF.Server
     , validateDatafastOrderResourcePath
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
+    , validatePayPalCaptureOrderReference
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
     , validateLabelTrackTitle
@@ -2689,6 +2690,37 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "ORDER/../capture" "paypalOrderId must contain only ASCII letters"
             assertInvalid "ORDER 123" "paypalOrderId must contain only ASCII letters"
             assertInvalid (T.replicate 129 "A") "paypalOrderId must be 128 characters or fewer"
+
+    describe "validatePayPalCaptureOrderReference" $ do
+        it "accepts captures only for the PayPal order stored on the marketplace order" $
+            validatePayPalCaptureOrderReference
+                (Just " PAYPAL-ORDER_123 ")
+                "PAYPAL-ORDER_123"
+                `shouldBe` Right "PAYPAL-ORDER_123"
+
+        it "rejects missing or mismatched PayPal order references before remote capture" $ do
+            let assertInvalid expectedCode expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` expectedCode
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right orderId ->
+                            expectationFailure
+                                ( "Expected invalid PayPal capture reference to be rejected, got: "
+                                    <> show orderId
+                                )
+            assertInvalid
+                409
+                "Order does not have a PayPal order to capture"
+                (validatePayPalCaptureOrderReference Nothing "PAYPAL-ORDER_123")
+            assertInvalid
+                409
+                "Order does not have a PayPal order to capture"
+                (validatePayPalCaptureOrderReference (Just "   ") "PAYPAL-ORDER_123")
+            assertInvalid
+                400
+                "paypalOrderId does not match this order's PayPal order"
+                (validatePayPalCaptureOrderReference (Just "EXPECTED") "OTHER")
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do
