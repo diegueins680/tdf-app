@@ -648,7 +648,7 @@ export default function AdminConsolePage() {
     : null;
   const showUsersTable = isUsersLoading || users.length > 1;
   const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
-  const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status !== 'ACTIVE');
+  const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status != null && user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);

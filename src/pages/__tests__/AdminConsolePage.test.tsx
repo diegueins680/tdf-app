@@ -1437,6 +1437,39 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('hides unknown user statuses until one account needs status context', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        status: null,
+      }),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+        status: null,
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryAllByText('—')).toHaveLength(0);
+  });
+
   it('shows the status column again as soon as one admin account needs that extra context', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser({
