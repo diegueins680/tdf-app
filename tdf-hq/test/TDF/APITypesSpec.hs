@@ -17,7 +17,9 @@ import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import qualified TDF.DTO as DTO
 import TDF.API.Types
-    ( LooseJSON
+    ( ClockInRequest (..)
+    , ClockOutRequest (..)
+    , LooseJSON
     , MarketplaceCheckoutReq (..)
     , MarketplaceCartItemUpdate (..)
     , MarketplaceOrderUpdate (..)
@@ -715,6 +717,34 @@ spec = do
                 "{\"ltuStatus\":\"done\",\"ltuOwnerId\":8}"
                 `shouldSatisfy` isLeft
 
+    describe "internship time-entry request FromJSON" $ do
+        it "accepts canonical clock-in and clock-out payloads" $ do
+            case decodeClockIn "{}" of
+                Left err ->
+                    expectationFailure ("Expected empty clock-in payload to decode, got: " <> err)
+                Right (ClockInRequest notesVal) ->
+                    notesVal `shouldBe` Nothing
+
+            case decodeClockIn "{\"cirNotes\":\"Opening studio\"}" of
+                Left err ->
+                    expectationFailure ("Expected clock-in payload to decode, got: " <> err)
+                Right (ClockInRequest notesVal) ->
+                    notesVal `shouldBe` Just "Opening studio"
+
+            case decodeClockOut "{\"corNotes\":\"Closed after inventory\"}" of
+                Left err ->
+                    expectationFailure ("Expected clock-out payload to decode, got: " <> err)
+                Right (ClockOutRequest notesVal) ->
+                    notesVal `shouldBe` Just "Closed after inventory"
+
+        it "rejects unexpected clock fields so over-posted time-entry intent fails explicitly" $ do
+            decodeClockIn
+                "{\"cirNotes\":\"Opening studio\",\"partyId\":42}"
+                `shouldSatisfy` isLeft
+            decodeClockOut
+                "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -850,6 +880,10 @@ spec = do
     decodeLabelTrackCreate = eitherDecode
     decodeLabelTrackUpdate :: BL8.ByteString -> Either String LabelTrackUpdate
     decodeLabelTrackUpdate = eitherDecode
+    decodeClockIn :: BL8.ByteString -> Either String ClockInRequest
+    decodeClockIn = eitherDecode
+    decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest
+    decodeClockOut = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

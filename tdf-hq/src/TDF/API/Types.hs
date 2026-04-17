@@ -1176,13 +1176,15 @@ data ClockInRequest = ClockInRequest
   { cirNotes :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClockInRequest
-instance FromJSON ClockInRequest
+instance FromJSON ClockInRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ClockOutRequest = ClockOutRequest
   { corNotes :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClockOutRequest
-instance FromJSON ClockOutRequest
+instance FromJSON ClockOutRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternTimeEntryDTO = InternTimeEntryDTO
   { iteId       :: Text
