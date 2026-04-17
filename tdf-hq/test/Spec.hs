@@ -53,7 +53,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest )
 import qualified TDF.APITypesSpec as APITypesSpec
-import TDF.Cors (isTrustedPreviewOrigin, lookupFirstNonEmptyEnv)
+import TDF.Cors (corsPolicy, isTrustedPreviewOrigin, lookupFirstNonEmptyEnv)
 import TDF.Cron (Directive (..), parseDirective)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -804,7 +804,7 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected missing SRI script path to fail, got: " <> show value)
 
-    describe "CORS environment fallback discovery" $
+    describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides
                 [ ("ALLOWED_ORIGINS", Just "   ")
@@ -821,6 +821,23 @@ main = hspec $ do
                         `shouldReturn` Just "true"
                     lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
                         `shouldReturn` Just "1"
+
+        it "rejects malformed configured origins before building the credentialed policy" $ do
+            let assertInvalid rawOrigin =
+                    withEnvOverrides
+                        [ ("ALLOWED_ORIGINS", Just rawOrigin)
+                        , ("ALLOW_ORIGINS", Nothing)
+                        , ("ALLOW_ORIGIN", Nothing)
+                        , ("CORS_ALLOW_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ORIGIN", Nothing)
+                        , ("ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                        ]
+                        $ corsPolicy `shouldThrow` \err ->
+                            "Configured CORS origins must be absolute http(s) origins"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "https://app.example.com/admin"
+            assertInvalid "javascript:alert(1)"
 
     describe "CORS trusted preview origins" $ do
         it "allows only the known TDF Pages projects and their preview subdomains" $ do

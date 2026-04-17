@@ -38,8 +38,9 @@ corsPolicy = do
       defaults =
         defaultsCore ++ maybe [] (\raw -> [normalizeOrigin raw]) hqBaseEnv
       parsed = maybe [] splitComma originsEnv
-      normalized = map normalizeOrigin parsed
-      filtered = filter (not . null) normalized
+  filtered <- either (ioError . userError) pure $
+    traverse normalizeConfiguredCorsOrigin (filter (not . null) parsed)
+  let
       includeDefaults = not (maybe False parseBool disableDefaultsEnv)
       merged = (if includeDefaults then defaults else []) ++ filtered
       deduped = nub merged
@@ -101,6 +102,36 @@ parseHttpsOriginHost origin = do
   if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
     then Nothing
     else Just host
+
+normalizeConfiguredCorsOrigin :: String -> Either String String
+normalizeConfiguredCorsOrigin raw =
+  let normalized = normalizeOrigin raw
+  in case normalized of
+    "*" -> Right "*"
+    _ ->
+      case parseHttpOrigin normalized of
+        Just origin -> Right origin
+        Nothing ->
+          Left $
+            "Configured CORS origins must be absolute http(s) origins "
+              <> "without path, query, or fragment: "
+              <> raw
+
+parseHttpOrigin :: String -> Maybe String
+parseHttpOrigin origin =
+  let lowered = BS.map toLower (BS.pack origin)
+  in case BS.stripPrefix "https://" lowered of
+    Just remainder -> parseWithScheme "https://" remainder
+    Nothing ->
+      case BS.stripPrefix "http://" lowered of
+        Just remainder -> parseWithScheme "http://" remainder
+        Nothing -> Nothing
+  where
+    parseWithScheme scheme remainder =
+      let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
+      in if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
+        then Nothing
+        else Just (BS.unpack (scheme <> host <> suffix))
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
