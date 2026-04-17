@@ -4345,6 +4345,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a URL-only cohort slug as a filter instead of treating it as a configured form', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=archived-course');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'archived-course',
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'No hay inscripciones con los filtros actuales: cohorte archived-course. Revisa los filtros o restablece la vista si esperabas resultados.',
+      );
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para archived-course.');
+      expect(container.textContent).not.toContain(initialEmptyStateFormActionLabel);
+      expect(container.querySelector('a[href="/inscripcion/archived-course"]')).toBeNull();
+      expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(1);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Mostrar todas las cohortes'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateConfigActionLabel);
+      expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps reset attached to the current-view summary when a custom limit still shows multiple registrations', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

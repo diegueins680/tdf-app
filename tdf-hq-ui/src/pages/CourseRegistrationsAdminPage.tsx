@@ -687,10 +687,25 @@ export default function CourseRegistrationsAdminPage() {
     () => Array.from(cohortLabelsBySlug.entries()).map(([value, label]) => ({ value, label })),
     [cohortLabelsBySlug],
   );
+  const configuredCohortOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    const seenSlugs = new Set<string>();
+
+    for (const cohort of cohortsQuery.data ?? []) {
+      const cohortSlug = cohort.ccSlug.trim();
+      if (!cohortSlug || seenSlugs.has(cohortSlug)) continue;
+      seenSlugs.add(cohortSlug);
+      options.push({ value: cohortSlug, label: cohortOptionLabel(cohort) });
+    }
+
+    return options;
+  }, [cohortsQuery.data]);
   const singleAvailableCohort = useMemo(() => {
-    if (!cohortsQuery.data || cohortsQuery.isError || cohortOptions.length !== 1) return null;
-    return cohortOptions[0] ?? null;
-  }, [cohortOptions, cohortsQuery.data, cohortsQuery.isError]);
+    if (cohortsQuery.isError || configuredCohortOptions.length !== 1) return null;
+    const [onlyConfiguredCohort] = configuredCohortOptions;
+    if (!onlyConfiguredCohort) return null;
+    return !selectedSlug || selectedSlug === onlyConfiguredCohort.value ? onlyConfiguredCohort : null;
+  }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
   const singleAvailableCohortLabel = singleAvailableCohort?.label ?? '';
 
   const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
@@ -1106,7 +1121,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
-  const hasMultipleAvailableCohorts = !cohortsQuery.isError && cohortOptions.length > 1;
+  const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const initialEmptyStateMessage = singleAvailableCohort
     ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.label)
     : hasMultipleAvailableCohorts
