@@ -515,6 +515,49 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Recent audit')).not.toBeInTheDocument();
   });
 
+  it('keeps terse fallback titles for built-in admin sections out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-system-status',
+          title: 'Health',
+          body: ['Check whether the API and database are ready before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-access-list',
+          title: 'Users',
+          body: ['Adjust team access from the users and roles workflow.'],
+        },
+        {
+          cardId: 'fallback-history',
+          title: 'Audit',
+          body: ['Confirm who changed what before repeating an admin action.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Health')).not.toBeInTheDocument();
+    expect(screen.queryByText('Users')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit')).not.toBeInTheDocument();
+  });
+
   it('keeps unique preview cards collapsed during first-run until the admin asks to see them inline', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
