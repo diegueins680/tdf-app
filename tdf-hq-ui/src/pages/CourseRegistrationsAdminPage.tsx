@@ -495,6 +495,19 @@ const trimToNull = (value: string): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
+const preferNonEmptyText = (primary?: string | null, fallback?: string | null) => {
+  const trimmedPrimary = primary?.trim();
+  if (trimmedPrimary) return trimmedPrimary;
+  const trimmedFallback = fallback?.trim();
+  return trimmedFallback || null;
+};
+
+const preferPositiveId = (primary?: number | null, fallback?: number | null) => {
+  if (typeof primary === 'number' && Number.isInteger(primary) && primary > 0) return primary;
+  if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback > 0) return fallback;
+  return primary ?? fallback ?? null;
+};
+
 const looksLikeImageResource = (url?: string | null, fileName?: string | null) => {
   const candidate = `${url ?? ''} ${fileName ?? ''}`;
   return /\.(png|jpe?g|gif|webp|bmp|svg)(?:$|[?#])/i.test(candidate);
@@ -514,17 +527,41 @@ const toIsoStringFromLocalDateTime = (value: string): string | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
-const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO[]) => {
-  const seenRegistrationIds = new Set<number>();
+const mergeCourseRegistrationRecords = (
+  primary: CourseRegistrationDTO,
+  fallback: CourseRegistrationDTO,
+): CourseRegistrationDTO => ({
+  ...primary,
+  crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
+  crFullName: preferNonEmptyText(primary.crFullName, fallback.crFullName),
+  crEmail: preferNonEmptyText(primary.crEmail, fallback.crEmail),
+  crPhoneE164: preferNonEmptyText(primary.crPhoneE164, fallback.crPhoneE164),
+  crSource: preferNonEmptyText(primary.crSource, fallback.crSource),
+  crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
+  crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
+  crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),
+  crUtmMedium: preferNonEmptyText(primary.crUtmMedium, fallback.crUtmMedium),
+  crUtmCampaign: preferNonEmptyText(primary.crUtmCampaign, fallback.crUtmCampaign),
+  crUtmContent: preferNonEmptyText(primary.crUtmContent, fallback.crUtmContent),
+});
 
-  return registrations.filter((registration) => {
-    if (seenRegistrationIds.has(registration.crId)) {
-      return false;
+const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO[]) => {
+  const registrationsById = new Map<number, CourseRegistrationDTO>();
+
+  registrations.forEach((registration) => {
+    const existingRegistration = registrationsById.get(registration.crId);
+    if (!existingRegistration) {
+      registrationsById.set(registration.crId, registration);
+      return;
     }
 
-    seenRegistrationIds.add(registration.crId);
-    return true;
+    registrationsById.set(
+      registration.crId,
+      mergeCourseRegistrationRecords(existingRegistration, registration),
+    );
   });
+
+  return [...registrationsById.values()];
 };
 
 const dedupeCourseRegistrationReceipts = (receipts: readonly CourseRegistrationReceiptDTO[]) => {

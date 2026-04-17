@@ -4396,6 +4396,51 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('merges duplicate registration records so the surviving row keeps the clearest identity', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crPartyId: null,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: null,
+        crSource: '   ',
+        crAdminNotes: '   ',
+      }),
+      buildRegistration({
+        crId: 101,
+        crPartyId: 9,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crPhoneE164: '+593999000111',
+        crSource: 'instagram',
+        crAdminNotes: 'Confirmó pago por WhatsApp.',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(container.querySelector('button[aria-label="Abrir expediente de registro #101"]')).toBeNull();
+      expect(countOccurrences(container, 'Registro #101')).toBe(0);
+      expect(container.textContent).toContain('ada@example.com · +593999000111');
+      expect(container.textContent).toContain('Fuente: instagram · Notas internas');
+      expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
+      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('shows status counts on the filter chips instead of a separate totals legend', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
