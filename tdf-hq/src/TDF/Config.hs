@@ -562,6 +562,8 @@ normalizeConfiguredBaseUrl envName rawUrl
   | T.null trimmed = Right Nothing
   | T.any isSpace trimmed =
       invalid
+  | T.any (`elem` ("?#" :: String)) trimmed =
+      Left (envName <> " must be an absolute http(s) URL without query or fragment")
   | "https://" `T.isPrefixOf` lowerUrl =
       validateRemainder (T.drop 8 trimmed)
   | "http://" `T.isPrefixOf` lowerUrl =

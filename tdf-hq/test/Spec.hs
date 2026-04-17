@@ -343,6 +343,14 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL"
                 "https://files_example.com/assets"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com/app?preview=1"
+                "HQ_APP_URL must be an absolute http(s) URL without query or fragment"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets#logo"
+                "HQ_ASSETS_BASE_URL must be an absolute http(s) URL without query or fragment"
 
         it "normalizes configured outbound API base URLs before building requests" $
             withEnvOverrides
