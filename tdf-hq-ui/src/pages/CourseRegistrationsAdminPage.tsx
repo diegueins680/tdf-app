@@ -55,15 +55,15 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
-const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Elige en Configuración de cursos qué formulario público compartir para empezar a recibirlas.';
+const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Elige qué formulario público compartir para empezar a recibirlas.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
-const initialEmptyStateFormActionLabel = 'Abrir formulario';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialCohortResolutionMessage = 'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 const initialCohortErrorMessage = 'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
-  `Todavía no hay inscripciones para ${cohortLabel}. Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
+  `Todavía no hay inscripciones para ${cohortLabel}. Comparte el formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;

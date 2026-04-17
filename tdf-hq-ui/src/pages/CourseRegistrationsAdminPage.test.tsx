@@ -192,12 +192,12 @@ const recordDossierScopeHint =
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Elige en Configuración de cursos qué formulario público compartir para empezar a recibirlas.';
+  'Todavía no hay inscripciones. Elige qué formulario público compartir para empezar a recibirlas.';
 const singleCohortInitialEmptyStateMessage =
-  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Abre el formulario público y comparte el enlace; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Comparte el formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
-const initialEmptyStateFormActionLabel = 'Abrir formulario';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialCohortResolutionMessage =
   'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
 const initialCohortErrorMessage =
@@ -4493,6 +4493,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(singleCohortInitialEmptyStateMessage);
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateFormActionLabel);
@@ -4636,6 +4637,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
       expect(emptyState?.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(emptyState?.textContent).not.toContain('Elige en Configuración de cursos');
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
       expect(
