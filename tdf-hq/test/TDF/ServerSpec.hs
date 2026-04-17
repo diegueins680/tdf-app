@@ -219,12 +219,48 @@ decodeCreateBookingRequest = eitherDecode
 decodeUpdateBookingRequest :: BL8.ByteString -> Either String UpdateBookingReq
 decodeUpdateBookingRequest = eitherDecode
 
+decodePartyCreate :: BL8.ByteString -> Either String DTO.PartyCreate
+decodePartyCreate = eitherDecode
+
+decodePartyUpdate :: BL8.ByteString -> Either String DTO.PartyUpdate
+decodePartyUpdate = eitherDecode
+
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
 isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "Party request FromJSON" $ do
+        it "accepts canonical CRM party create and update bodies" $ do
+            case decodePartyCreate
+                "{\"cDisplayName\":\"Ada Lovelace\",\"cIsOrg\":false,\"cLegalName\":\"Ada Byron\",\"cPrimaryEmail\":\"ada@example.com\",\"cRoles\":[\"Customer\"]}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical party create payload to decode, got: " <> decodeErr)
+                Right (DTO.PartyCreate legalNameValue displayNameValue isOrgValue _ primaryEmailValue _ _ _ _ _ rolesValue) -> do
+                    legalNameValue `shouldBe` Just "Ada Byron"
+                    displayNameValue `shouldBe` "Ada Lovelace"
+                    isOrgValue `shouldBe` False
+                    primaryEmailValue `shouldBe` Just "ada@example.com"
+                    rolesValue `shouldBe` Just [Customer]
+
+            case decodePartyUpdate
+                "{\"uDisplayName\":\"Ada Updated\",\"uPrimaryEmail\":\"ada.updated@example.com\",\"uNotes\":\"VIP\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical party update payload to decode, got: " <> decodeErr)
+                Right (DTO.PartyUpdate _ displayNameValue _ _ primaryEmailValue _ _ _ _ notesValue) -> do
+                    displayNameValue `shouldBe` Just "Ada Updated"
+                    primaryEmailValue `shouldBe` Just "ada.updated@example.com"
+                    notesValue `shouldBe` Just "VIP"
+
+        it "rejects typoed or response-shaped CRM party keys instead of silently dropping them" $ do
+            decodePartyCreate
+                "{\"cDisplayName\":\"Ada Lovelace\",\"cIsOrg\":false,\"displayName\":\"ignored\"}"
+                `shouldSatisfy` isLeft
+            decodePartyUpdate
+                "{\"uDisplayName\":\"Ada Updated\",\"primaryEmail\":\"ignored@example.com\"}"
+                `shouldSatisfy` isLeft
+
     describe "normalizeOptionalInput" $ do
         it "returns Nothing when input is Nothing" $
             normalizeOptionalInput Nothing `shouldBe` Nothing

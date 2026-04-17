@@ -402,7 +402,8 @@ data PartyCreate = PartyCreate
   , cNotes            :: Maybe Text
   , cRoles            :: Maybe [RoleEnum]
   } deriving (Show, Generic)
-instance FromJSON PartyCreate
+instance FromJSON PartyCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data PartyUpdate = PartyUpdate
   { uLegalName        :: Maybe Text
@@ -416,7 +417,8 @@ data PartyUpdate = PartyUpdate
   , uEmergencyContact :: Maybe Text
   , uNotes            :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON PartyUpdate
+instance FromJSON PartyUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 toPartyDTO :: Bool -> Entity Party -> PartyDTO
 toPartyDTO = toPartyDTOWithBand Nothing
