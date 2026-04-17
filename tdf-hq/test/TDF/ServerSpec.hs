@@ -9,6 +9,7 @@ import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
@@ -22,10 +23,18 @@ import TDF.API
     , UpdateBookingReq (..)
     , WhatsAppConsentStatus (..)
     )
+import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types (DriveTokenExchangeRequest (..), DriveTokenRefreshRequest (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant.Multipart
+    ( FileData (..)
+    , FromMultipart (fromMultipart)
+    , Input (..)
+    , MultipartData (..)
+    , Tmp
+    )
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.DB (Env (..))
@@ -182,6 +191,22 @@ mkUser roles =
         { auPartyId = toSqlKey 1
         , auRoles = roles
         , auModules = modulesForRoles roles
+        }
+
+mkDriveMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkDriveMultipart fields uploads =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = uploads
+        }
+
+mkDriveUploadFile :: Text -> FileData Tmp
+mkDriveUploadFile fileName =
+    FileData
+        { fdInputName = "file"
+        , fdFileName = fileName
+        , fdFileCType = "application/pdf"
+        , fdPayload = "/tmp/mock-drive-upload"
         }
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
@@ -1778,6 +1803,76 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
+
+    describe "DriveUploadForm FromMultipart" $ do
+        it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do
+            case fromMultipart
+                (mkDriveMultipart
+                    [ ("folderId", "  folder-123  ")
+                    , ("name", "  Contract.pdf  ")
+                    , ("accessToken", "  token-123  ")
+                    ]
+                    [mkDriveUploadFile "original.pdf"]
+                ) :: Either String DriveUploadForm of
+                Left err ->
+                    expectationFailure ("Expected Drive upload multipart to parse, got: " <> err)
+                Right payload -> do
+                    fdFileName (duFile payload) `shouldBe` "original.pdf"
+                    duFolderId payload `shouldBe` Just "folder-123"
+                    duName payload `shouldBe` Just "Contract.pdf"
+                    duAccessToken payload `shouldBe` Just "token-123"
+
+            case fromMultipart
+                (mkDriveMultipart
+                    [ ("folderId", "   ")
+                    , ("name", "   ")
+                    , ("accessToken", "   ")
+                    ]
+                    [mkDriveUploadFile "fallback.pdf"]
+                ) :: Either String DriveUploadForm of
+                Left err ->
+                    expectationFailure
+                        ("Expected blank Drive upload fields to parse as absent, got: " <> err)
+                Right payload -> do
+                    duFolderId payload `shouldBe` Nothing
+                    duName payload `shouldBe` Nothing
+                    duAccessToken payload `shouldBe` Nothing
+
+        it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String DriveUploadForm of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected malformed Drive upload multipart, got file: "
+                                    <> T.unpack (fdFileName (duFile payload))
+                                )
+            assertInvalid
+                "Duplicate field: folderId"
+                (mkDriveMultipart
+                    [ ("folderId", "folder-a")
+                    , ("folderId", "folder-b")
+                    ]
+                    [mkDriveUploadFile "file.pdf"]
+                )
+            assertInvalid
+                "Unexpected field: folder"
+                (mkDriveMultipart [("folder", "folder-a")] [mkDriveUploadFile "file.pdf"])
+            assertInvalid
+                "Duplicate file field: file"
+                (mkDriveMultipart
+                    []
+                    [ mkDriveUploadFile "first.pdf"
+                    , mkDriveUploadFile "second.pdf"
+                    ]
+                )
+            assertInvalid
+                "Unexpected file field: document"
+                (mkDriveMultipart
+                    []
+                    [(mkDriveUploadFile "file.pdf") { fdInputName = "document" }]
+                )
 
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do

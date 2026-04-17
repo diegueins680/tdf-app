@@ -1658,13 +1658,13 @@ driveServer user =
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer _ mAccessToken DriveUploadForm{..} = do
   manager <- liftIO $ newManager tlsManagerSettings
-  accessToken <- resolveDriveAccessToken manager (fmap T.strip mAccessToken <|> duAccessToken)
+  accessToken <- resolveDriveAccessToken manager (cleanOptional mAccessToken <|> duAccessToken)
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
-  let folder = duFolderId <|> mFolderEnv
+  let folder = cleanOptional duFolderId <|> mFolderEnv
       fallbackName =
         let raw = T.strip (fdFileName duFile)
         in if T.null raw then Nothing else Just raw
-      nameOverride = duName <|> fallbackName
+      nameOverride = cleanOptional duName <|> fallbackName
   dtoOrErr <-
     liftIO
       (try (uploadToDrive manager accessToken duFile nameOverride folder) ::

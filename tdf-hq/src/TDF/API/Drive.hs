@@ -9,10 +9,21 @@ module TDF.API.Drive where
 import           Data.Text          (Text)
 import           GHC.Generics       (Generic)
 import           Servant
-import           Servant.Multipart  (MultipartForm, Tmp, FromMultipart(..), lookupFile, lookupInput, FileData)
+import           Servant.Multipart  ( FileData
+                                     , FromMultipart(..)
+                                     , Input(..)
+                                     , MultipartData(inputs, files)
+                                     , MultipartForm
+                                     , Tmp
+                                     , fdInputName
+                                     )
 import qualified Data.Text         as T
 
-import           TDF.API.Types      (DriveUploadDTO, DriveTokenExchangeRequest, DriveTokenRefreshRequest, DriveTokenResponse)
+import           TDF.API.Types      ( DriveTokenExchangeRequest
+                                     , DriveTokenRefreshRequest
+                                     , DriveTokenResponse
+                                     , DriveUploadDTO
+                                     )
 
 data DriveUploadForm = DriveUploadForm
   { duFile        :: FileData Tmp
@@ -23,22 +34,55 @@ data DriveUploadForm = DriveUploadForm
 
 instance FromMultipart Tmp DriveUploadForm where
   fromMultipart multipart = do
-    file <- lookupFile "file" multipart
-    let folder = case lookupInput "folderId" multipart of
-          Right v -> Just (T.strip v)
-          _       -> Nothing
-        nameTxt = case lookupInput "name" multipart of
-          Right v -> Just (T.strip v)
-          _       -> Nothing
-        token = case lookupInput "accessToken" multipart of
-          Right v -> Just (T.strip v)
-          _       -> Nothing
+    rejectUnexpectedParts multipart
+    file <- lookupSingleFile "file" multipart
+    folder <- optionalText "folderId" multipart
+    nameTxt <- optionalText "name" multipart
+    token <- optionalText "accessToken" multipart
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
       , duName = nameTxt
       , duAccessToken = token
       }
+    where
+      optionalText name mp =
+        fmap (>>= normalizeInputText) (lookupSingleInput name mp)
+
+      normalizeInputText (Input _ value) =
+        let trimmed = T.strip value
+        in if T.null trimmed then Nothing else Just trimmed
+
+      lookupSingleInput name mp =
+        case filter (\(Input nm _) -> nm == name) (inputs mp) of
+          [] -> Right Nothing
+          [input] -> Right (Just input)
+          _ -> Left ("Duplicate field: " <> T.unpack name)
+
+      lookupSingleFile name mp =
+        case [file | file <- files mp, fdInputName file == name] of
+          [] -> Left ("Missing file field: " <> T.unpack name)
+          [file] -> Right file
+          _ -> Left ("Duplicate file field: " <> T.unpack name)
+
+      rejectUnexpectedParts mp =
+        case (unexpectedInputs, unexpectedFiles) of
+          (fieldName : _, _) -> Left ("Unexpected field: " <> T.unpack fieldName)
+          (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
+          _ -> Right ()
+        where
+          expectedInputs = ["folderId", "name", "accessToken"]
+          expectedFiles = ["file"]
+          unexpectedInputs =
+            [ name
+            | Input name _ <- inputs mp
+            , name `notElem` expectedInputs
+            ]
+          unexpectedFiles =
+            [ fdInputName file
+            | file <- files mp
+            , fdInputName file `notElem` expectedFiles
+            ]
 
 type DriveAPI =
   "drive" :> "upload"
