@@ -123,7 +123,7 @@ leadsCompleteServer conn lid rawReq = do
   either throwError pure (validateLeadCompletionLookup tok (listToMaybe existing))
 
   n <- liftIO $ execute conn
-       "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=NULL WHERE id=? AND token=? AND status != 'COMPLETED'"
+       "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=NULL WHERE id=? AND token=? AND status IN ('NEW','LINK_SENT')"
        (nm, em, leadId, tok)
   either throwError pure (ensureLeadCompletionUpdated n)
   pure $ object ["ok" .= True]
@@ -210,6 +210,8 @@ validateLeadCompletionLookup _ Nothing =
 validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
   | T.toUpper (T.strip status) == "COMPLETED" =
       Left err409 { errBody = "Lead already completed" }
+  | not (isCompletableLeadStatus status) =
+      Left err409 { errBody = "Lead completion is not available" }
   | isNothing storedTokenValue =
       Left err409 { errBody = "Lead completion is not available" }
   | storedTokenValue /= Just suppliedToken =
@@ -224,6 +226,10 @@ validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
       case fmap T.strip mTxt of
         Just txt | not (T.null txt) -> Just txt
         _ -> Nothing
+
+isCompletableLeadStatus :: Text -> Bool
+isCompletableLeadStatus rawStatus =
+  T.toUpper (T.strip rawStatus) `elem` ["NEW", "LINK_SENT"]
 
 ensureLeadCompletionUpdated :: Int64 -> Either ServerError ()
 ensureLeadCompletionUpdated updatedRows

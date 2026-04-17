@@ -2562,10 +2562,12 @@ main = hspec $ do
 
     describe "validateLeadCompletionLookup" $ do
         it "allows only matching non-completed lead records" $ do
+            validateLeadCompletionLookup "token-123" (Just ("NEW", Just "token-123"))
+                `shouldBe` Right ()
             validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "token-123"))
                 `shouldBe` Right ()
 
-        it "returns explicit 404/403/409 errors for missing, invalid-token, unavailable, and completed links" $ do
+        it "returns explicit 404/403/409 errors for missing, invalid-token, unavailable, blocked, and completed links" $ do
             let assertLookupFailure result expectedStatus expectedBody = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` expectedStatus
@@ -2586,6 +2588,14 @@ main = hspec $ do
                 "Lead completion is not available"
             assertLookupFailure
                 (validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "   ")))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup "token-123" (Just ("COLD", Just "token-123")))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup "token-123" (Just ("ARCHIVED", Just "token-123")))
                 409
                 "Lead completion is not available"
             assertLookupFailure
