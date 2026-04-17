@@ -4248,6 +4248,36 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates repeated registrations before showing row actions or export utilities', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(
+        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
+      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(container.querySelectorAll('button[aria-label="Abrir expediente de Ada Lovelace"]')).toHaveLength(1);
+      expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
+      expect(container.querySelectorAll('button[aria-label="Abrir expediente de Grace Hopper"]')).toHaveLength(1);
+      expect(countOccurrences(container, 'Ada Lovelace')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('shows status counts on the filter chips instead of a separate totals legend', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

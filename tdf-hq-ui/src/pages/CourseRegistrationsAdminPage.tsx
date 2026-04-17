@@ -507,6 +507,19 @@ const toIsoStringFromLocalDateTime = (value: string): string | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
 
+const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO[]) => {
+  const seenRegistrationIds = new Set<number>();
+
+  return registrations.filter((registration) => {
+    if (seenRegistrationIds.has(registration.crId)) {
+      return false;
+    }
+
+    seenRegistrationIds.add(registration.crId);
+    return true;
+  });
+};
+
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -609,12 +622,16 @@ export default function CourseRegistrationsAdminPage() {
         limit,
       }),
   });
+  const registrations = useMemo(
+    () => dedupeCourseRegistrations(regsQuery.data ?? []),
+    [regsQuery.data],
+  );
 
   const singleVisibleCohortLabel = useMemo(() => {
-    if (selectedSlug || !regsQuery.data || regsQuery.data.length < 2) return '';
+    if (selectedSlug || registrations.length < 2) return '';
     const uniqueCohortSlugs = Array.from(
       new Set(
-        regsQuery.data
+        registrations
           .map((reg) => reg.crCourseSlug.trim())
           .filter((value) => value !== ''),
       ),
@@ -623,18 +640,18 @@ export default function CourseRegistrationsAdminPage() {
     const cohortSlug = uniqueCohortSlugs[0];
     if (!cohortSlug) return '';
     return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
-  }, [cohortLabelsBySlug, regsQuery.data, selectedSlug]);
+  }, [cohortLabelsBySlug, registrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
-    if (!regsQuery.data || regsQuery.data.length === 0) return '';
+    if (registrations.length === 0) return '';
     const uniqueSources = Array.from(
       new Set(
-        regsQuery.data
+        registrations
           .map((reg) => registrationSourceLabel(reg.crSource)),
       ),
     );
     if (uniqueSources.length !== 1) return '';
     return uniqueSources[0] ?? '';
-  }, [regsQuery.data]);
+  }, [registrations]);
   const hasNamedVisibleSource = Boolean(
     singleVisibleSourceLabel
     && singleVisibleSourceLabel !== 'Sin fuente'
@@ -673,8 +690,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const statusCounts = useMemo(() => {
     const base = { total: 0, pending_payment: 0, paid: 0, cancelled: 0 };
-    if (!regsQuery.data) return base;
-    return regsQuery.data.reduce(
+    return registrations.reduce(
       (acc, reg) => {
         acc.total += 1;
         if (
@@ -688,8 +704,8 @@ export default function CourseRegistrationsAdminPage() {
       },
       { ...base },
     );
-  }, [regsQuery.data]);
-  const hasVisibleRegistrations = (regsQuery.data?.length ?? 0) > 0;
+  }, [registrations]);
+  const hasVisibleRegistrations = registrations.length > 0;
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
@@ -725,7 +741,7 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
-  const loadedRegistrationCount = regsQuery.data?.length ?? 0;
+  const loadedRegistrationCount = registrations.length;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -784,19 +800,18 @@ export default function CourseRegistrationsAdminPage() {
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
   const sharedVisibleCreatedAtLabel = useMemo(() => {
-    const registrations = regsQuery.data ?? [];
     if (registrations.length < 2) return '';
     const createdLabels = registrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
     if (createdLabels.some((label) => label === '')) return '';
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
-  }, [regsQuery.data]);
+  }, [registrations]);
   const shouldShowSharedCreatedAtSummary = Boolean(sharedVisibleCreatedAtLabel) && !hideTinyDefaultListRowDates;
   const sharedVisibleCreatedAtSummary = shouldShowSharedCreatedAtSummary
     ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
     : '';
   const allVisibleRegistrationsHaveNotes = loadedRegistrationCount > 1
-    && (regsQuery.data ?? []).every((reg) => Boolean(reg.crAdminNotes?.trim()));
+    && registrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';
@@ -811,7 +826,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
-  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(regsQuery.data ?? []);
+  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
     : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
@@ -1172,8 +1187,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleCopyCsv = async () => {
-    const registrations = regsQuery.data;
-    if (!registrations || registrations.length < 2) return;
+    if (registrations.length < 2) return;
     const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
     const rows = registrations.map((reg) => [
       reg.crId,
@@ -2413,7 +2427,7 @@ export default function CourseRegistrationsAdminPage() {
             </Alert>
           )}
           {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
-          {!regsQuery.isLoading && regsQuery.data?.length === 0 && (
+          {!regsQuery.isLoading && registrations.length === 0 && (
             hasCustomFilters ? (
               <Alert
                 severity="info"
@@ -2443,10 +2457,10 @@ export default function CourseRegistrationsAdminPage() {
               <Typography color="text.secondary">Todavía no hay inscripciones para mostrar en esta vista.</Typography>
             )
           )}
-          {regsQuery.data?.length ? (
+          {registrations.length ? (
             <Stack spacing={1.5}>
               <Stack divider={<Divider flexItem />} spacing={2}>
-                {regsQuery.data.map((reg) => {
+                {registrations.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                   const rowIdentity = registrationIdentityDisplay(
                     reg.crFullName,
