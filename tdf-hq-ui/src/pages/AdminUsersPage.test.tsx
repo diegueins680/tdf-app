@@ -2149,7 +2149,8 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Usuario, nombre, ID, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
@@ -2157,6 +2158,62 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('La búsqueda aparecerá desde el tercer usuario.');
         expect(container.textContent).not.toContain('Busca por identidad');
         expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps internal-id search available without foregrounding IDs in the first-time search hint', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, '44');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+        expect(container.textContent).not.toContain('ID 44');
       });
     } finally {
       await cleanup();

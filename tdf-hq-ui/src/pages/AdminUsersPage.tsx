@@ -137,6 +137,7 @@ const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ?
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
+const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto o acceso';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -578,7 +579,7 @@ export default function AdminUsersPage() {
                   onChange={(event) => setSearchQuery(event.target.value)}
                   size="small"
                   fullWidth
-                  placeholder="Usuario, nombre, ID, contacto o acceso"
+                  placeholder={SEARCH_INPUT_PLACEHOLDER}
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
