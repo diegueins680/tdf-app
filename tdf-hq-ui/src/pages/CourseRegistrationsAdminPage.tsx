@@ -777,11 +777,24 @@ export default function CourseRegistrationsAdminPage() {
   const showStandaloneListUtilitySummary = !hasCustomFilters
     && !showTinyDefaultCountInCurrentView
     && (loadedRegistrationCount > 1 || Boolean(copyMessage));
+  const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
+  const sharedVisibleCreatedAtLabel = useMemo(() => {
+    const registrations = regsQuery.data ?? [];
+    if (registrations.length < 2) return '';
+    const createdLabels = registrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
+    if (createdLabels.some((label) => label === '')) return '';
+    const [firstLabel] = createdLabels;
+    return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
+  }, [regsQuery.data]);
+  const shouldShowSharedCreatedAtSummary = Boolean(sharedVisibleCreatedAtLabel) && !hideTinyDefaultListRowDates;
+  const sharedVisibleCreatedAtSummary = shouldShowSharedCreatedAtSummary
+    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
+    : '';
   const allVisibleRegistrationsHaveNotes = loadedRegistrationCount > 1
     && (regsQuery.data ?? []).every((reg) => Boolean(reg.crAdminNotes?.trim()));
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
@@ -790,6 +803,7 @@ export default function CourseRegistrationsAdminPage() {
   const sharedListContextSummaries = [
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
+    sharedVisibleCreatedAtSummary,
     sharedVisibleNotesSummary,
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
@@ -797,7 +811,6 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
-  const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(regsQuery.data ?? []);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
@@ -2339,11 +2352,21 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
+                {shouldShowSharedCreatedAtSummary && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    data-testid="course-registration-shared-created-at-summary"
+                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
+                  >
+                    {sharedVisibleCreatedAtSummary}
+                  </Typography>
+                )}
                 {sharedVisibleNotesSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
+                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary || shouldShowSharedCreatedAtSummary ? 0.75 : 1.5 }}
                   >
                     {sharedVisibleNotesSummary}
                   </Typography>
@@ -2473,7 +2496,7 @@ export default function CourseRegistrationsAdminPage() {
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes,
-                    showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates,
+                    showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldShowSharedCreatedAtSummary,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
