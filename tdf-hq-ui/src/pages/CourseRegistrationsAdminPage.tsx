@@ -1504,12 +1504,6 @@ export default function CourseRegistrationsAdminPage() {
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
   const hasPrimaryDossierAction = canMarkPaid || showSystemEmailHistoryAction;
   const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction;
-  const hasRegistrationEmail = Boolean(activeRegistration?.crEmail?.trim());
-  const showEmptySystemEmailHistoryHint = canReviewSystemEmails
-    && hasRegistrationEmail
-    && !hasPrimaryDossierAction
-    && !emailEventsQuery.isLoading
-    && selectedDossierId != null;
   const hasReceipts = receipts.length > 0;
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
@@ -2735,15 +2729,6 @@ export default function CourseRegistrationsAdminPage() {
                         </Button>
                       )}
                     </Stack>
-                  )}
-                  {showEmptySystemEmailHistoryHint && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      data-testid="course-registration-empty-email-history-hint"
-                    >
-                      {emptySystemEmailHistoryMessage}
-                    </Typography>
                   )}
                 </Stack>
               </Paper>

@@ -427,7 +427,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
-      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
@@ -2422,7 +2422,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Grace Hopper');
-      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(countButtonsByText(document.body, hideSystemEmailsLabel)).toBe(0);
       expect(countButtonsByText(document.body, showSystemEmailsLabel)).toBe(0);
       expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
@@ -2432,7 +2432,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('replaces the empty system-email action with passive guidance for first-time admins', async () => {
+  it('keeps first-time dossiers focused by hiding empty system-email guidance until there is history', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -2448,7 +2448,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.textContent).toContain(emptyFollowUpAlertMessage);
       expect(document.body.textContent).not.toContain(
@@ -2456,6 +2456,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(document.body.textContent).not.toContain('Correos del sistema');
       expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
+      expect(document.body.querySelector('[data-testid="course-registration-empty-email-history-hint"]')).toBeNull();
     });
 
     await cleanup();
