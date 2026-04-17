@@ -29,6 +29,7 @@ import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMayb
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
+import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -1090,7 +1091,12 @@ parseMetaBackfillOptions :: Value -> Maybe MetaBackfillOptions
 parseMetaBackfillOptions = either (const Nothing) Just . validateMetaBackfillOptions
 
 validateMetaBackfillOptions :: Value -> Either ServerError MetaBackfillOptions
-validateMetaBackfillOptions raw =
+validateMetaBackfillOptions raw = do
+  case raw of
+    Object metaBackfillFields
+      | Just unknownKey <- listToMaybe (unknownMetaBackfillKeys metaBackfillFields) ->
+          metaBackfillBadRequest ("Unexpected meta backfill field: " <> AKey.toText unknownKey)
+    _ -> pure ()
   case parseMaybe (withObject "MetaBackfillOptions" parseOptions) raw of
     Nothing -> metaBackfillBadRequest "Invalid meta backfill payload"
     Just (mPlatform, mConversationLimit, mMessagesPerConversation, mOnlyUnread, mDryRun) -> do
@@ -1117,6 +1123,20 @@ validateMetaBackfillOptions raw =
            , mOnlyUnread
            , mDryRun
            )
+
+allowedMetaBackfillKeys :: Set.Set AKey.Key
+allowedMetaBackfillKeys =
+  Set.fromList (map AKey.fromText
+    [ "platform"
+    , "conversationLimit"
+    , "messagesPerConversation"
+    , "onlyUnread"
+    , "dryRun"
+    ])
+
+unknownMetaBackfillKeys :: AKeyMap.KeyMap Value -> [AKey.Key]
+unknownMetaBackfillKeys =
+  filter (`Set.notMember` allowedMetaBackfillKeys) . AKeyMap.keys
 
 validateMetaBackfillPlatform :: Maybe Text -> Either ServerError Text
 validateMetaBackfillPlatform Nothing = pure "all"

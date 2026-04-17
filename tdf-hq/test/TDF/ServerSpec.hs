@@ -1376,6 +1376,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "messagesPerConversation must be between 1 and 200"
                 (validateMetaBackfillOptions (object ["messagesPerConversation" .= (201 :: Int)]))
+            assertInvalid
+                "Unexpected meta backfill field: conversationlimit"
+                (validateMetaBackfillOptions (object ["conversationlimit" .= (200 :: Int)]))
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do
