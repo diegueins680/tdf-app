@@ -871,6 +871,17 @@ main = hspec $ do
                     ])
                 `shouldBe` Left "Invalid Authorization header"
 
+        it "rejects duplicate Authorization headers instead of choosing an ambiguous token" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Bearer first-token")
+                    , ("Authorization", "Bearer second-token")
+                    , ("Cookie", "tdf_session_test=cookie-token")
+                    ])
+                `shouldBe` Left "Multiple Authorization headers found"
+
     describe "extractTokenFromHeaders" $ do
         let loadAuthConfig =
                 withEnvOverrides [("SESSION_COOKIE_NAME", Just "tdf_session_test")] loadConfig

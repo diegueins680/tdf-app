@@ -211,14 +211,22 @@ ensureDefaultRoles pid roles = do
 
 extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =
-  case lookup "Authorization" (requestHeaders req) of
-    Just rawHeader ->
+  case authorizationHeaders of
+    [] ->
+      extractCookieToken cfg req
+    [rawHeader] ->
       case TE.decodeUtf8' rawHeader of
         Left _ -> Left "Invalid Authorization header"
         Right txt -> extractTokenFromHeaders cfg (Just txt) Nothing
-    Nothing ->
-      extractCookieToken cfg req
+    _ ->
+      Left "Multiple Authorization headers found"
   where
+    authorizationHeaders =
+      [ rawHeader
+      | (headerName, rawHeader) <- requestHeaders req
+      , headerName == "Authorization"
+      ]
+
     extractCookieToken AppConfig{sessionCookieName} request =
       case lookup "Cookie" (requestHeaders request) of
         Nothing -> Left "Missing or invalid auth token"
