@@ -169,6 +169,24 @@ const hasTableHeader = (root: ParentNode, labelText: string) =>
 const queryFilterChip = (root: ParentNode, labelText: string) =>
   root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
 
+const getTextControlByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll('label')).find((candidate) => {
+    const text = (candidate.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+  const control = label instanceof HTMLLabelElement ? label.control : null;
+  if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
+    return control;
+  }
+  throw new Error(`Text control not found: ${labelText}`);
+};
+
+const setTextControlValue = (control: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(control), 'value')?.set;
+  valueSetter?.call(control, value);
+  control.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 describe('SocialInboxPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -575,6 +593,49 @@ describe('SocialInboxPage', () => {
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
       expect(countInteractiveElementsByText(document.body, 'Open native client')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('hides reply draft utilities until there is draft text to copy or clear', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Reply from app UI');
+      expect(countButtonsByText(document.body, 'Copy')).toBe(0);
+      expect(countButtonsByText(document.body, 'Clear')).toBe(0);
+    });
+
+    await act(async () => {
+      setTextControlValue(getTextControlByLabel(document.body, 'Outgoing message'), 'Thanks for reaching out.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countButtonsByText(document.body, 'Copy')).toBe(1);
+      expect(countButtonsByText(document.body, 'Clear')).toBe(1);
+    });
+
+    await act(async () => {
+      const clearButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Clear',
+      );
+      if (!clearButton) throw new Error('Clear button not found');
+      clearButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countButtonsByText(document.body, 'Copy')).toBe(0);
+      expect(countButtonsByText(document.body, 'Clear')).toBe(0);
     });
 
     await cleanup();

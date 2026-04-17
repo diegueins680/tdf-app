@@ -481,6 +481,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
 
   const canGenerate = Boolean(channel && msg && (msg.text ?? '').trim().length > 0 && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
+  const hasReplyDraft = replyDraft.trim().length > 0;
 
   const extractProviderMessageId = (payload: unknown): string | null => {
     if (!payload || typeof payload !== 'object') return null;
@@ -853,20 +854,21 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   <Typography variant="subtitle1" fontWeight={800}>
                     {reviewMode ? 'Reply from app UI' : 'Responder'}
                   </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<ContentCopyIcon />}
-                      onClick={() => void handleCopyReply()}
-                      disabled={!replyDraft.trim()}
-                    >
-                      {reviewMode ? 'Copy' : 'Copiar'}
-                    </Button>
-                    <Button variant="outlined" size="small" onClick={() => setReplyDraft('')} disabled={!replyDraft.trim()}>
-                      {reviewMode ? 'Clear' : 'Limpiar'}
-                    </Button>
-                  </Stack>
+                  {hasReplyDraft && (
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ContentCopyIcon />}
+                        onClick={() => void handleCopyReply()}
+                      >
+                        {reviewMode ? 'Copy' : 'Copiar'}
+                      </Button>
+                      <Button variant="outlined" size="small" onClick={() => setReplyDraft('')}>
+                        {reviewMode ? 'Clear' : 'Limpiar'}
+                      </Button>
+                    </Stack>
+                  )}
                 </Stack>
 
                 {reviewMode && (
