@@ -7,6 +7,7 @@ module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
   , validateOptionalFeedbackContactEmail
+  , validateFeedbackAttachmentSize
   , sanitizeFeedbackAttachmentFileName
   ) where
 
@@ -23,7 +24,7 @@ import           Database.Persist           (insert)
 import           Database.Persist.Sql       (runSqlPool)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
-import           System.Directory           (createDirectoryIfMissing)
+import           System.Directory           (createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import qualified Data.ByteString.Lazy       as BL
@@ -59,7 +60,7 @@ feedbackServer user = submitFeedback
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
-      attachmentPath <- liftIO $ traverse storeAttachment fpAttachment
+      attachmentPath <- traverse validateAndStoreAttachment fpAttachment
 
       Env{..} <- ask
       let emailSvc = EmailSvc.mkEmailService envConfig
@@ -81,6 +82,12 @@ feedbackServer user = submitFeedback
       liftIO $ notify emailSvc title body category severity contactEmail attachmentPath
 
       pure NoContent
+
+    validateAndStoreAttachment :: FileData Tmp -> m FilePath
+    validateAndStoreAttachment file@FileData{..} = do
+      size <- liftIO (getFileSize fdPayload)
+      either throwError pure (validateFeedbackAttachmentSize size)
+      liftIO (storeAttachment file)
 
     storeAttachment :: FileData Tmp -> IO FilePath
     storeAttachment FileData{..} = do
@@ -108,6 +115,18 @@ validateOptionalFeedbackContactEmail (Just rawEmail) =
       in if isValidFeedbackEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+maxFeedbackAttachmentBytes :: Integer
+maxFeedbackAttachmentBytes = 10 * 1024 * 1024
+
+validateFeedbackAttachmentSize :: Integer -> Either ServerError ()
+validateFeedbackAttachmentSize size
+  | size < 0 =
+      Left err400 { errBody = "attachment size is invalid" }
+  | size > maxFeedbackAttachmentBytes =
+      Left err400 { errBody = "attachment must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 isValidFeedbackEmail :: Text -> Bool
 isValidFeedbackEmail candidate =

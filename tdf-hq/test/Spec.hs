@@ -117,6 +117,7 @@ import TDF.ServerProposals
 import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
+      validateFeedbackAttachmentSize,
       validateOptionalFeedbackContactEmail )
 import TDF.Server
     ( buildWhatsappCtaFor,
@@ -1073,6 +1074,22 @@ main = hspec $ do
             sanitizeFeedbackAttachmentFileName "." `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName ".." `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName "/\\///" `shouldBe` "attachment"
+
+    describe "validateFeedbackAttachmentSize" $ do
+        it "accepts empty and boundary-sized feedback attachments" $ do
+            validateFeedbackAttachmentSize 0 `shouldBe` Right ()
+            validateFeedbackAttachmentSize (10 * 1024 * 1024) `shouldBe` Right ()
+
+        it "rejects invalid or oversized feedback attachments before copying uploads" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackAttachmentSize raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid attachment size, got " <> show value)
+            assertInvalid (-1) "attachment size is invalid"
+            assertInvalid (10 * 1024 * 1024 + 1) "attachment must be 10 MB or smaller"
 
     describe "feedback multipart parsing" $ do
         it "accepts omitted consent as false and normalizes explicit truthy values" $ do
