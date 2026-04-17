@@ -420,6 +420,7 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
+  const showInactiveFilterAction = hasMultipleUsers || includeInactive;
   const showRefreshAction = Boolean(usersQuery.error)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
@@ -620,7 +621,7 @@ export default function AdminUsersPage() {
               )}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              {hasUsers && (
+              {showInactiveFilterAction && (
                 <>
                   <FormControlLabel
                     control={(

@@ -1295,6 +1295,7 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('1 usuario');
         expect(getButtonsByText(container, 'Abrir perfil')).toHaveLength(0);
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
