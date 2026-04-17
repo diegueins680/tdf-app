@@ -1765,6 +1765,13 @@ main = hspec $ do
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
 
     describe "validateTicketCheckInLookup" $ do
+        it "rejects unknown check-in request fields before lookup fallback handling" $ do
+            let decoded =
+                    eitherDecode @TicketCheckInRequestDTO
+                        "{\"ticketCheckInTicketCode\":\"AB-123\",\"ticketCheckInTicketCod\":\"typo\"}"
+                        :: Either String TicketCheckInRequestDTO
+            decoded `shouldSatisfy` isLeft
+
         it "accepts exactly one lookup field and canonicalizes ticket ids and codes" $ do
             validateTicketCheckInLookup
                 TicketCheckInRequestDTO

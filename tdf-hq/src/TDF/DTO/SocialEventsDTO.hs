@@ -422,7 +422,17 @@ data TicketCheckInRequestDTO = TicketCheckInRequestDTO
   , ticketCheckInTicketCode :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketCheckInRequestDTO
-instance FromJSON TicketCheckInRequestDTO
+instance FromJSON TicketCheckInRequestDTO where
+  parseJSON = withObject "TicketCheckInRequestDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "TicketCheckInRequestDTO"
+      [ "ticketCheckInTicketId"
+      , "ticketCheckInTicketCode"
+      ]
+      o
+    TicketCheckInRequestDTO
+      <$> o .:? "ticketCheckInTicketId"
+      <*> o .:? "ticketCheckInTicketCode"
 
 data TicketDTO = TicketDTO
   { ticketId          :: Maybe Text
