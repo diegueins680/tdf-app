@@ -369,6 +369,9 @@ const registrationSourceLabel = (source: string | null | undefined) => {
   return trimmed === '' ? 'Sin fuente' : trimmed;
 };
 
+const normalizeRegistrationSourceKey = (sourceLabel: string) =>
+  registrationSourceLabel(sourceLabel).toLocaleLowerCase('es');
+
 const isDefaultPublicFormSource = (sourceLabel: string) =>
   sourceLabel.trim().toLowerCase() === defaultPublicFormSource;
 
@@ -722,14 +725,18 @@ export default function CourseRegistrationsAdminPage() {
   }, [cohortLabelsBySlug, registrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
     if (registrations.length === 0) return '';
-    const uniqueSources = Array.from(
-      new Set(
-        registrations
-          .map((reg) => registrationSourceLabel(reg.crSource)),
-      ),
-    );
-    if (uniqueSources.length !== 1) return '';
-    return uniqueSources[0] ?? '';
+    const sourceLabelsByKey = new Map<string, string>();
+
+    registrations.forEach((reg) => {
+      const sourceLabel = registrationSourceLabel(reg.crSource);
+      const sourceKey = normalizeRegistrationSourceKey(sourceLabel);
+      if (!sourceLabelsByKey.has(sourceKey)) {
+        sourceLabelsByKey.set(sourceKey, sourceLabel);
+      }
+    });
+
+    const [onlySourceLabel] = Array.from(sourceLabelsByKey.values());
+    return sourceLabelsByKey.size === 1 && onlySourceLabel ? onlySourceLabel : '';
   }, [registrations]);
   const hasNamedVisibleSource = Boolean(
     singleVisibleSourceLabel

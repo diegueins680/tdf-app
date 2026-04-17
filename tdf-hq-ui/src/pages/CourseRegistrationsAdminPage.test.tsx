@@ -1691,6 +1691,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('normalizes shared source casing before deciding whether to repeat row source details', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'Instagram' }),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crSource: ' instagram ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Fuente visible: Instagram.');
+      expect(container.textContent).not.toContain('Fuente visible: instagram.');
+      expect(container.textContent).not.toContain('Fuente: Instagram');
+      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
+    });
+
+    await cleanup();
+  });
+
   it('keeps custom row source details visible while omitting default and empty source placeholders', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
