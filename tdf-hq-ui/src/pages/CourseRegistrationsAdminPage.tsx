@@ -885,6 +885,11 @@ export default function CourseRegistrationsAdminPage() {
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
+  const localSearchHelperText = localSearchKey
+    ? showEmptyLocalSearchResults
+      ? `Búsqueda local en el lote cargado (${formatRegistrationCountLabel(loadedRegistrationCount)}).`
+      : `Mostrando ${formatRegistrationCountLabel(searchedRegistrations.length)} de ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`
+    : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -2635,11 +2640,7 @@ export default function CourseRegistrationsAdminPage() {
                   setLocalSearch(e.target.value);
                 }}
                 placeholder="Nombre, email, teléfono, estado o curso"
-                helperText={
-                  localSearchKey
-                    ? `Mostrando ${formatRegistrationCountLabel(searchedRegistrations.length)} de ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`
-                    : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.'
-                }
+                helperText={localSearchHelperText}
                 size="small"
                 fullWidth
                 data-testid="course-registration-local-search"

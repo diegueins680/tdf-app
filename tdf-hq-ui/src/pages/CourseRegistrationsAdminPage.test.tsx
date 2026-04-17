@@ -4805,6 +4805,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Búsqueda local en el lote cargado (9 inscripciones).');
+      expect(container.textContent).not.toContain('Mostrando 0 inscripciones de 9 inscripciones cargadas.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
