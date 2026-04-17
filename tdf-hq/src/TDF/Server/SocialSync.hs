@@ -8,6 +8,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncArtistProfileId
   , validateSocialSyncPlatform
   , validateSocialSyncExternalPostId
+  , validateSocialSyncIngestSource
   , validateSocialSyncPostsLimit
   ) where
 
@@ -16,6 +17,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
+import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe)
@@ -66,7 +68,7 @@ socialSyncServer user =
       results <- forM ssirPosts $ \payload -> do
         platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
         externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
-        let ingestSrc = fromMaybe "manual" (sspIngestSource payload)
+        ingestSrc <- either throwError pure (validateSocialSyncIngestSource (sspIngestSource payload))
         artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
         artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
         let tagList = classifyTags (sspCaption payload)
@@ -95,7 +97,7 @@ socialSyncServer user =
                     ]
                   ]
             withPool $ update key updates
-            pure False
+            pure (False, ingestSrc)
           Nothing -> do
             let record = SocialSyncPost
                   { socialSyncPostAccountId = Nothing
@@ -119,11 +121,11 @@ socialSyncServer user =
                   , socialSyncPostUpdatedAt = now
                   }
             withPool $ insert_ record
-            pure True
-      let inserted = length (filter id results)
+            pure (True, ingestSrc)
+      let inserted = length (filter fst results)
           updated = length results - inserted
       let platformLabel = maybe "mixed" (normalizePlatform . sspPlatform) (listToMaybe ssirPosts)
-      let runSource = fromMaybe "manual" (listToMaybe ssirPosts >>= sspIngestSource)
+      let runSource = maybe "manual" snd (listToMaybe results)
       _ <- withPool $ insert SocialSyncRun
         { socialSyncRunPlatform = platformLabel
         , socialSyncRunIngestSource = runSource
@@ -213,6 +215,34 @@ validateSocialSyncExternalPostId raw =
          { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId is required")
          }
        else Right trimmed
+
+validateSocialSyncIngestSource :: Maybe Text -> Either ServerError Text
+validateSocialSyncIngestSource Nothing = Right "manual"
+validateSocialSyncIngestSource (Just raw) =
+  case nonEmptyText raw of
+    Nothing ->
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "ingestSource must be omitted or a non-empty ASCII label")
+        }
+    Just source
+      | T.length source > 64 ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 "ingestSource must be 64 characters or fewer")
+            }
+      | T.all isSocialSyncIngestSourceChar source ->
+          Right (T.toLower source)
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 $
+                     "ingestSource must contain only ASCII letters, digits, "
+                       <> "hyphen, or underscore")
+            }
+  where
+    isSocialSyncIngestSourceChar c =
+      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
 validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
 validateSocialSyncPostsLimit Nothing = Right 50

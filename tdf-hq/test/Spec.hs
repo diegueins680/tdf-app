@@ -131,7 +131,8 @@ import TDF.Server.SocialSync
       validateSocialSyncExternalPostId,
       validateSocialSyncArtistProfileId,
       validateSocialSyncPlatform,
-      validateSocialSyncPostsLimit )
+      validateSocialSyncPostsLimit,
+      validateSocialSyncIngestSource )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -1203,6 +1204,30 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "externalPostId is required"
                 Right value ->
                     expectationFailure ("Expected blank social sync externalPostId to be rejected, got " <> show value)
+
+    describe "social sync ingest source validation" $ do
+        it "defaults omitted sources and normalizes explicit source keys before audit storage" $ do
+            validateSocialSyncIngestSource Nothing `shouldBe` Right "manual"
+            validateSocialSyncIngestSource (Just "  Meta_Ads-Backfill  ")
+                `shouldBe` Right "meta_ads-backfill"
+
+        it "rejects blank or malformed source labels instead of storing ambiguous audit values" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncIngestSource (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync ingestSource to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid "   " "ingestSource must be omitted or a non-empty ASCII label"
+            assertInvalid "meta ads" "ingestSource must contain only ASCII letters"
+            assertInvalid "campaña" "ingestSource must contain only ASCII letters"
+            assertInvalid
+                (Data.Text.replicate 65 "a")
+                "ingestSource must be 64 characters or fewer"
 
     describe "social sync ingest JSON contract" $ do
         it "accepts canonical ingest payloads and rejects unexpected keys at both request levels" $ do
