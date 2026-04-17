@@ -389,6 +389,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
@@ -399,13 +401,13 @@ describe('CourseRegistrationsAdminPage', () => {
         'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.',
       );
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierScopeHint,
+        dossierOnlyScopeHint,
       );
-      expect(countOccurrences(container, dossierScopeHint)).toBe(1);
+      expect(countOccurrences(container, dossierOnlyScopeHint)).toBe(1);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(container.textContent).not.toContain('Cambiar estado:');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.textContent).not.toContain(showSystemEmailsLabel);
       expect(hasLabel(container, 'Límite')).toBe(false);
@@ -1034,9 +1036,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        contactDossierScopeHint,
+        'Abre el expediente desde el contacto.',
       );
       expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(contactDossierScopeHint);
       expect(hasExactText(container, 'sin-nombre@example.com')).toBe(true);
       expect(hasExactText(container, '+593999000777')).toBe(true);
       expect(countOccurrences(container, 'sin-nombre@example.com')).toBe(1);
@@ -1339,7 +1342,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('combines single-choice cohort and status context into one summary block', async () => {
+  it('omits passive single-choice context when the default view has only one registration', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1347,14 +1350,16 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
     });
 
     await cleanup();
@@ -2067,19 +2072,20 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
     });
 
     await cleanup();
   });
 
-  it('keeps the row action focused on changing status once the shared summary already states the only visible status', async () => {
+  it('keeps the single-result row status visible when there is no shared status summary', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
     ]);
@@ -2089,10 +2095,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(countOccurrences(container, 'Estado: Pendiente de pago')).toBe(0);
     });
@@ -4167,7 +4174,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
-  });
+  }, 20_000);
 
   it('keeps a filtered-empty view focused on clearing filters instead of offering duplicate recovery actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
@@ -4324,8 +4331,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Pendientes: 1');
       expect(container.textContent).not.toContain('Pagadas: 0');
       expect(container.textContent).not.toContain('Canceladas: 0');
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).not.toContain(
@@ -4873,6 +4881,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Expediente')).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
     });
 

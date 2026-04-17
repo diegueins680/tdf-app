@@ -919,14 +919,6 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
-  const useCompactStatusActionLabel = showSingleStatusSummary
-    || statusAlreadyVisibleInFilterStrip
-    || showSingleCustomStatusSummary;
-  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
-  const dossierScopeHint = useCompactStatusActionLabel
-    ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
-    : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
-  const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const copyCsvButtonLabel = 'Copiar CSV visible';
   const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
@@ -936,6 +928,19 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
+  const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
+    && !hasCustomFilters
+    && !hasSlugFilter
+    && Boolean(combinedSingleChoiceSummary);
+  const showSingleStatusSummaryInPageChrome = showSingleStatusSummary && !showSingleResultWithOnlyPassiveFilterContext;
+  const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
+    || statusAlreadyVisibleInFilterStrip
+    || showSingleCustomStatusSummary;
+  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
+  const dossierScopeHint = useCompactStatusActionLabel
+    ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+    : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
+  const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showFirstRunFilterHelper = showFilterOnboardingCopy && !showSingleResultWithoutHiddenLimit;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
@@ -1059,6 +1064,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showInitialCohortResolutionState
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
+    && !showSingleResultWithOnlyPassiveFilterContext
     && (!regsQuery.isError || hasCustomFilters);
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
