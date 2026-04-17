@@ -655,10 +655,15 @@ export default function CourseRegistrationsAdminPage() {
     },
     staleTime: 0,
   });
+  const selectedDossierEmail = (
+    dossierQuery.data?.crdRegistration.crId === selectedDossierId
+      ? dossierQuery.data.crdRegistration.crEmail
+      : selectedDossier?.reg.crEmail
+  )?.trim() ?? '';
 
   const emailEventsQuery = useQuery<CourseEmailEventDTO[]>({
     queryKey: ['admin', 'course-registration-email-events', selectedDossierId],
-    enabled: selectedDossierId != null && selectedDossier?.intent !== 'markPaid',
+    enabled: selectedDossierId != null && selectedDossier?.intent !== 'markPaid' && selectedDossierEmail !== '',
     queryFn: () => {
       if (selectedDossierId == null) return Promise.resolve([]);
       return Courses.listRegistrationEmails(selectedDossierId, 200);

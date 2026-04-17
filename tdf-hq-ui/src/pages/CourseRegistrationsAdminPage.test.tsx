@@ -2447,6 +2447,7 @@ describe('CourseRegistrationsAdminPage', () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({ crdRegistration: emailLessRegistration }),
     );
+    listRegistrationEmailsMock.mockRejectedValue(new Error('Email service unavailable'));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -2469,6 +2470,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.querySelector('[data-testid="course-registration-empty-email-history-hint"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+      expect(listRegistrationEmailsMock).not.toHaveBeenCalled();
     });
 
     await cleanup();
