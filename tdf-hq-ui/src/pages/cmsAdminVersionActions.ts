@@ -6,13 +6,17 @@ export interface CmsVersionRowActions {
 
 export const getCmsVersionRowActions = (
   status: string,
-  { isLoadedInEditor = false }: { isLoadedInEditor?: boolean } = {},
+  {
+    isCurrentLive = false,
+    isLoadedInEditor = false,
+  }: { isCurrentLive?: boolean; isLoadedInEditor?: boolean } = {},
 ): CmsVersionRowActions => {
   const isPublished = status.trim().toLowerCase() === 'published';
+  const loadedStateLabel = isLoadedInEditor ? 'En formulario' : isCurrentLive ? 'En vivo' : null;
 
   return {
     showPublish: !isPublished,
-    showLoadInEditor: !isLoadedInEditor,
-    loadedStateLabel: isLoadedInEditor ? 'En formulario' : null,
+    showLoadInEditor: !loadedStateLabel,
+    loadedStateLabel,
   };
 };

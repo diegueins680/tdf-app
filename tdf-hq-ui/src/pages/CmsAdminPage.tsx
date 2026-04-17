@@ -930,6 +930,7 @@ export default function CmsAdminPage() {
           <Stack spacing={1.5}>
             {filteredVersions.map((v) => {
               const rowActions = getCmsVersionRowActions(v.ccdStatus, {
+                isCurrentLive: liveContent?.ccdId === v.ccdId,
                 isLoadedInEditor: editingFromId === v.ccdId,
               });
 

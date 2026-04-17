@@ -237,7 +237,8 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
       expect(container.textContent).not.toContain('Ver en vivo');
       expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
-      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+      expect(countExactText(container, 'En vivo')).toBe(1);
     });
 
     await cleanup();
@@ -464,7 +465,8 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain('Contexto compartido: slug records-public · locale es.');
       expect(countExactText(container, 'records-public')).toBe(1);
       expect(countExactText(container, 'es')).toBe(1);
-      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+      expect(countExactText(container, 'En vivo')).toBe(1);
     });
 
     await cleanup();
@@ -524,7 +526,7 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
 
     await act(async () => {
@@ -546,8 +548,8 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       const pageText = container.textContent ?? '';
-      expect(pageText).toContain('Base: v4 · ID 101');
-      expect(pageText.split('Base: v4 · ID 101').length - 1).toBe(1);
+      expect(pageText).toContain('Base: v3 · ID 102');
+      expect(pageText.split('Base: v3 · ID 102').length - 1).toBe(1);
       expect(pageText).not.toContain('Editando desde ID');
     });
 
@@ -560,7 +562,7 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Editar en formulario')).toBe(2);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
 
     await act(async () => {
@@ -581,9 +583,10 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(0);
       expect(countExactText(container, 'En formulario')).toBe(1);
-      expect(container.textContent).toContain('Base: v4 · ID 101');
+      expect(countExactText(container, 'En vivo')).toBe(1);
+      expect(container.textContent).toContain('Base: v3 · ID 102');
     });
 
     await cleanup();
