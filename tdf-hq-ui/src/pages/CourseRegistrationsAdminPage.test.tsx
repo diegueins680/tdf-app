@@ -1540,7 +1540,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps empty notes in one optional inline state so the dossier stays focused on saved context', async () => {
+  it('keeps empty notes behind one optional dossier action until the admin asks for them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1557,8 +1557,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
-      expect(dialogHeadings).toContain('Notas internas (opcional)');
-      expect(document.body.textContent).toContain(
+      expect(dialogHeadings).not.toContain('Notas internas (opcional)');
+      expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
       expect(getButtonByText(document.body, 'Agregar nota')).toBeTruthy();
@@ -1576,6 +1576,8 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings).toContain('Notas internas');
       expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
@@ -1593,9 +1595,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(
+      expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
+      expect(Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim()))
+        .not.toContain('Notas internas (opcional)');
       expect(getButtonByText(document.body, 'Agregar nota')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cancelar notas')).toBe(0);
       expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
@@ -3278,7 +3282,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps empty internal notes collapsed until the admin explicitly opens them', async () => {
+  it('keeps empty internal notes out of the dossier body until the admin explicitly opens them', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
         crdRegistration: buildRegistration({ crAdminNotes: null }),
@@ -3301,8 +3305,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
-      expect(dialogHeadings).toContain('Notas internas (opcional)');
-      expect(document.body.textContent).toContain(
+      expect(dialogHeadings).not.toContain('Notas internas (opcional)');
+      expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
       expect(hasLabel(document.body, 'Notas internas')).toBe(false);
@@ -3330,6 +3334,8 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
+      expect(dialogHeadings).toContain('Notas internas');
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);

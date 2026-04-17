@@ -1486,11 +1486,14 @@ export default function CourseRegistrationsAdminPage() {
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
-  const showDossierActionRow = canMarkPaid || showSystemEmailHistoryAction;
+  const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
+  const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
+  const hasPrimaryDossierAction = canMarkPaid || showSystemEmailHistoryAction;
+  const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction;
   const hasRegistrationEmail = Boolean(activeRegistration?.crEmail?.trim());
   const showEmptySystemEmailHistoryHint = canReviewSystemEmails
     && hasRegistrationEmail
-    && !showDossierActionRow
+    && !hasPrimaryDossierAction
     && !emailEventsQuery.isLoading
     && selectedDossierId != null;
   const hasReceipts = receipts.length > 0;
@@ -1618,9 +1621,10 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(false);
   }, [canMarkPaid, selectedDossier?.intent]);
 
-  const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
   const isConfirmMarkPaidFlow = isMarkPaidIntent && canMarkPaid;
-  const showNotesSection = !isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer;
+  const showNotesSection = isMarkPaidIntent
+    ? (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
+    : (hasSavedNotes || showNotesComposer);
   const showFollowUpSection = !isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer;
   const prioritizePaymentSection = isMarkPaidIntent;
   const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
@@ -2697,6 +2701,14 @@ export default function CourseRegistrationsAdminPage() {
                           aria-expanded={showEmailHistory}
                         >
                           {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
+                        </Button>
+                      )}
+                      {showInlineEmptyNotesAction && (
+                        <Button
+                          variant="outlined"
+                          onClick={handleOpenNotesComposer}
+                        >
+                          Agregar nota
                         </Button>
                       )}
                     </Stack>
