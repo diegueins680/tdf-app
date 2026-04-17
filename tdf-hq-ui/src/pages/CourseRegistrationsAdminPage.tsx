@@ -727,6 +727,21 @@ export default function CourseRegistrationsAdminPage() {
     const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
   }, [hasVisibleRegistrations, visibleStatusFilters]);
+  const singleVisibleCustomStatus = useMemo(() => {
+    if (!hasVisibleRegistrations || status !== 'all') return '';
+    const statusesByKey = new Map<string, string>();
+
+    registrations.forEach((reg) => {
+      const trimmedStatus = reg.crStatus.trim();
+      const statusKey = trimmedStatus.toLowerCase();
+      if (!statusesByKey.has(statusKey)) {
+        statusesByKey.set(statusKey, trimmedStatus);
+      }
+    });
+
+    const [onlyStatus] = Array.from(statusesByKey.values());
+    return statusesByKey.size === 1 && onlyStatus && !isRegistrationStatus(onlyStatus) ? onlyStatus : '';
+  }, [hasVisibleRegistrations, registrations, status]);
 
   const showSingleStatusSummary = Boolean(singleVisibleStatus && status === 'all');
   const hasSlugFilter = slug.trim() !== '';
@@ -831,7 +846,10 @@ export default function CourseRegistrationsAdminPage() {
     ? sharedListContextSummaries.join(' ')
     : '';
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
-  const useCompactStatusActionLabel = showSingleStatusSummary || statusAlreadyVisibleInFilterStrip;
+  const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
+  const useCompactStatusActionLabel = showSingleStatusSummary
+    || statusAlreadyVisibleInFilterStrip
+    || showSingleCustomStatusSummary;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
@@ -2232,6 +2250,30 @@ export default function CourseRegistrationsAdminPage() {
                             {limitToggleLabel}
                           </Button>
                         )}
+                      </Stack>
+                    ) : showSingleCustomStatusSummary ? (
+                      <Stack
+                        data-testid="course-registration-single-custom-status-summary"
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Estado no estándar
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {customRegistrationStatusLabel(singleVisibleCustomStatus)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {customStatusFilterUnavailableMessage}
+                        </Typography>
                       </Stack>
                     ) : showCustomStatusFilterUnavailableSummary ? (
                       <Stack
