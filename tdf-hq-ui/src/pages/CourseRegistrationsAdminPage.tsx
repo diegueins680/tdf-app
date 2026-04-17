@@ -879,7 +879,7 @@ export default function CourseRegistrationsAdminPage() {
       : 'Reintentar cohortes'
     : 'Refrescar lista';
   const showInlineListRefreshAction = !showHeaderRefreshAction
-    && (hasCustomFilters || canCopyCsv || Boolean(copyMessage));
+    && (hasCustomFilters || viewHitsCurrentLimit);
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (

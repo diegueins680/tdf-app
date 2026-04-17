@@ -4183,6 +4183,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps normal export utilities focused on CSV until the loaded batch reaches the limit', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
+      expect(listUtilities).not.toBeNull();
+      expect(listUtilities?.textContent).toContain('Mostrando 3 inscripciones en esta vista.');
+      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps populated-list utilities together and leaves row counts in passive context copy', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
