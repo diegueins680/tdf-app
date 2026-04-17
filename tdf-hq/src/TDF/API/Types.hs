@@ -316,7 +316,8 @@ data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
   , mciuQuantity  :: Int
   } deriving (Show, Generic)
 
-instance FromJSON MarketplaceCartItemUpdate
+instance FromJSON MarketplaceCartItemUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 instance ToJSON MarketplaceCartItemUpdate
 
 data MarketplaceCheckoutReq = MarketplaceCheckoutReq

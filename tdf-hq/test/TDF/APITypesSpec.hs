@@ -19,6 +19,7 @@ import qualified TDF.DTO as DTO
 import TDF.API.Types
     ( LooseJSON
     , MarketplaceCheckoutReq (..)
+    , MarketplaceCartItemUpdate (..)
     , MarketplaceOrderUpdate (..)
     , PipelineCardCreate (..)
     , PipelineCardUpdate (..)
@@ -626,6 +627,22 @@ spec = do
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
+    describe "MarketplaceCartItemUpdate FromJSON" $ do
+        it "accepts canonical public cart item payloads" $
+            case decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"1\",\"mciuQuantity\":2}"
+             of
+                Left err ->
+                    expectationFailure ("Expected marketplace cart item payload to decode, got: " <> err)
+                Right payload -> do
+                    mciuListingId payload `shouldBe` "1"
+                    mciuQuantity payload `shouldBe` 2
+
+        it "rejects unexpected cart item keys so malformed cart writes fail explicitly" $
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"1\",\"mciuQuantity\":2,\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
     describe "MarketplaceOrderUpdate FromJSON" $ do
         it "distinguishes omitted nullable fields from explicit clears for admin order updates" $ do
             case decodeMarketplaceOrderUpdate "{\"mouStatus\":\"paid\"}" of
@@ -774,6 +791,8 @@ spec = do
     decodeServiceMarketplaceBooking = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
     decodeMarketplaceCheckout = eitherDecode
+    decodeMarketplaceCartItemUpdate :: BL8.ByteString -> Either String MarketplaceCartItemUpdate
+    decodeMarketplaceCartItemUpdate = eitherDecode
     decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
     decodeMarketplaceOrderUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
