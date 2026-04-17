@@ -3197,12 +3197,18 @@ describe('CourseRegistrationsAdminPage', () => {
         'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.',
       );
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
+      expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
+      expect(hasExactText(document.body, 'Notas internas (opcional)')).toBe(false);
+      expect(hasExactText(document.body, 'Seguimiento (opcional)')).toBe(false);
       expect(document.body.textContent).toContain('receipt.pdf');
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Guardar comprobante',
         ),
       ).toBe(false);
+      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento opcional')).toBe(0);
       expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
     });
 

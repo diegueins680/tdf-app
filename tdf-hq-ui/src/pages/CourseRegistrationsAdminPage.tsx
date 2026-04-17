@@ -1600,9 +1600,13 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(false);
   }, [canMarkPaid, selectedDossier?.intent]);
 
-  const prioritizePaymentSection = selectedDossier?.intent === 'markPaid';
+  const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
+  const isConfirmMarkPaidFlow = isMarkPaidIntent && canMarkPaid;
+  const showNotesSection = !isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer;
+  const showFollowUpSection = !isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer;
+  const prioritizePaymentSection = isMarkPaidIntent;
   const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
-  const dossierDialogTitle = selectedDossier?.intent === 'markPaid'
+  const dossierDialogTitle = isMarkPaidIntent
     ? canMarkPaid
       ? 'Confirmar pago de inscripción'
       : 'Registrar pago de inscripción'
@@ -2763,16 +2767,17 @@ export default function CourseRegistrationsAdminPage() {
               {prioritizePaymentSection ? (
                 <>
                   {receiptsSection}
-                  {notesSection}
+                  {showNotesSection && notesSection}
                 </>
               ) : (
                 <>
-                  {notesSection}
+                  {showNotesSection && notesSection}
                   {receiptsSection}
                 </>
               )}
 
-              <Card variant="outlined">
+              {showFollowUpSection && (
+                <Card variant="outlined">
                 <CardContent>
                   <Stack spacing={2}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
@@ -3012,6 +3017,7 @@ export default function CourseRegistrationsAdminPage() {
                   </Stack>
                 </CardContent>
               </Card>
+              )}
             </Stack>
           )}
         </DialogContent>
