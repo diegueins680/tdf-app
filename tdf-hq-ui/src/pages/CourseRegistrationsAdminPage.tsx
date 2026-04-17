@@ -244,7 +244,7 @@ const registrationStatusLabel = (status: string) =>
 const registrationStatusButtonLabel = (
   status: string,
   useCompactActionLabel: boolean,
-) => (useCompactActionLabel ? 'Cambiar estado' : `Estado: ${registrationStatusLabel(status)}`);
+) => (useCompactActionLabel ? 'Cambiar estado' : registrationStatusLabel(status));
 
 const registrationStatusChipColor = (
   status: string,
