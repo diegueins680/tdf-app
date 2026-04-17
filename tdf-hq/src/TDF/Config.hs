@@ -131,12 +131,15 @@ validateFallbackConnUrl envName raw
       | otherwise =
           let remainder = T.drop (length scheme) value
               authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
+              atCount = T.count "@" authority
               hostPort =
                 case reverse (T.splitOn "@" authority) of
                   [] -> ""
                   h:_ -> h
           in if T.null authority
                then Left (envName <> " must include a PostgreSQL host")
+               else if atCount > 1
+                 then Left (envName <> " must not contain multiple @ separators")
                else validateConnectionHostPort hostPort *> Right raw
 
     validateConnectionHostPort :: Text -> Either String ()

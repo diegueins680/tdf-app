@@ -702,6 +702,27 @@ main = hspec $ do
                     "DATABASE_URL must include a PostgreSQL host"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with ambiguous userinfo separators" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:fly@pass@db.fly.internal:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must not contain multiple @ separators"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects DATABASE_URL fallback values with malformed ports before opening DB connections" $ do
             let expectInvalidPort raw expected =
                     withEnvOverrides
