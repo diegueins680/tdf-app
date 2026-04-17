@@ -3,7 +3,7 @@
 module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
-import Control.Exception (try)
+import Control.Exception (bracket, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
@@ -24,8 +24,9 @@ import TDF.API
     )
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
-import Servant (ServerError (errBody, errHTTPCode))
+import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Server.Internal.Handler (runHandler)
+import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.DB (Env (..))
 import TDF.Models
     ( ApiToken (..)
@@ -129,6 +130,7 @@ import TDF.Server
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validateWhatsAppReplyTarget
+    , whatsappWebhookServer
     , validatePublicBookingStartAt
     , validateCourseRegistrationId
     , validateCourseRegistrationReceiptId
@@ -172,6 +174,24 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         }
+
+withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
+withEnvOverrides overrides action =
+    bracket setup restore (const action)
+  where
+    setup = do
+        previous <- mapM capture overrides
+        apply overrides
+        pure previous
+    restore previous = apply previous
+    capture (key, _) = do
+        value <- lookupEnv key
+        pure (key, value)
+    apply = mapM_ assign
+    assign (key, value) =
+        case value of
+            Just raw -> setEnv key raw
+            Nothing -> unsetEnv key
 
 mkCatalog :: ServiceKind -> Bool -> ServiceCatalog
 mkCatalog kind active =
@@ -1241,6 +1261,28 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected conflicting booking list filters to be rejected, got: " <> show filtersVal)
             assertInvalid (validateBookingListFilters (Just 7) (Just 11) Nothing)
             assertInvalid (validateBookingListFilters (Just 7) Nothing (Just 13))
+
+    describe "whatsappWebhookServer verification" $ do
+        it "rejects missing hub.mode instead of accepting token-only webhook verification" $
+            withEnvOverrides
+                [ ("WHATSAPP_VERIFY_TOKEN", Nothing)
+                , ("WA_VERIFY_TOKEN", Just "secret")
+                ]
+                $ do
+                    let verifyHook :<|> _handleMessages = whatsappWebhookServer
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (verifyHook Nothing (Just "secret") (Just "challenge-123"))
+                                (error "whatsappWebhookServer verification should not read Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "hub.mode is required"
+                        Right challenge ->
+                            expectationFailure
+                                ("Expected missing hub.mode to be rejected, got: " <> T.unpack challenge)
 
     describe "validateWhatsAppMessagesLimit" $ do
         it "defaults omitted limits and preserves explicit values inside the supported page window" $ do

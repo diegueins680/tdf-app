@@ -61,6 +61,7 @@ import           Database.Persist.Postgresql ()
 
 import           TDF.API
 import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..))
+import           TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
@@ -657,14 +658,10 @@ whatsappWebhookServer =
        verifyHook
   :<|> handleMessages
   where
-    verifyHook _ mToken mChallenge = do
+    verifyHook mMode mToken mChallenge = do
       cfg <- liftIO loadWhatsAppEnv
-      case waVerifyToken cfg of
-        Nothing -> throwError err403 { errBody = "Verify token not configured" }
-        Just expected ->
-          case mToken of
-            Just tok | tok == expected -> pure (fromMaybe "" mChallenge)
-            _ -> throwError err403 { errBody = "Verify token mismatch" }
+      either throwError pure $
+        validateHookVerifyRequest mMode mChallenge mToken (waVerifyToken cfg)
 
     handleMessages payload = do
       cfg <- liftIO loadWhatsAppEnv
