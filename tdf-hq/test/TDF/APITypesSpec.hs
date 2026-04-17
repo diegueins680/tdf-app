@@ -15,6 +15,7 @@ import qualified TDF.API.Facebook as Facebook
 import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
+import qualified TDF.DTO as DTO
 import TDF.API.Types
     ( LooseJSON
     , MarketplaceCheckoutReq (..)
@@ -196,6 +197,25 @@ spec = do
         it "rejects unexpected keys so public ads inquiries fail explicitly instead of silently dropping input" $ do
             decodeAdsInquiry
                 "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"message\":\"Quiero info\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "AdsAssistRequest FromJSON" $ do
+        it "accepts canonical public ads assist payloads" $
+            case decodeAdsAssist
+                "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":\"whatsapp\",\"aarAdId\":42,\"aarCampaignId\":7}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical ads assist payload to decode, got: " <> err)
+                Right (DTO.AdsAssistRequest adIdVal campaignIdVal messageVal channelVal partyIdVal) -> do
+                    adIdVal `shouldBe` Just 42
+                    campaignIdVal `shouldBe` Just 7
+                    messageVal `shouldBe` "Responder al lead"
+                    channelVal `shouldBe` Just "whatsapp"
+                    partyIdVal `shouldBe` Nothing
+
+        it "rejects unexpected keys so typoed public assist requests fail before model fallback handling" $
+            decodeAdsAssist
+                "{\"aarMessage\":\"Responder al lead\",\"message\":\"typoed duplicate\"}"
                 `shouldSatisfy` isLeft
 
     describe "CmsContentIn FromJSON" $ do
@@ -692,6 +712,8 @@ spec = do
     decodeWhatsAppReply = eitherDecode
     decodeAdsInquiry :: BL8.ByteString -> Either String API.AdsInquiry
     decodeAdsInquiry = eitherDecode
+    decodeAdsAssist :: BL8.ByteString -> Either String DTO.AdsAssistRequest
+    decodeAdsAssist = eitherDecode
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
     decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode

@@ -273,7 +273,8 @@ data AdsAssistRequest = AdsAssistRequest
   , aarChannel    :: Maybe Text
   , aarPartyId    :: Maybe Int64
   } deriving (Show, Generic)
-instance FromJSON AdsAssistRequest
+instance FromJSON AdsAssistRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data AdsAssistResponse = AdsAssistResponse
   { aasReply         :: Text
