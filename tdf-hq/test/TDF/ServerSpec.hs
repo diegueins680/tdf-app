@@ -134,6 +134,7 @@ import TDF.Server
     , validateRequiredCmsLocale
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
+    , validateWhatsAppReplyBody
     , validateWhatsAppReplyTarget
     , whatsappWebhookServer
     , validatePublicBookingStartAt
@@ -2874,6 +2875,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "call me at 099 123 4567"
             assertInvalid "12345"
             assertInvalid "+1234567890123456"
+
+    describe "validateWhatsAppReplyBody" $ do
+        it "trims manual reply text and accepts the WhatsApp text-size boundary" $ do
+            validateWhatsAppReplyBody "  Hola, seguimos por aqui.  "
+                `shouldBe` Right "Hola, seguimos por aqui."
+            case validateWhatsAppReplyBody (T.replicate 4096 "a") of
+                Right bodyVal -> T.length bodyVal `shouldBe` 4096
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected boundary-sized WhatsApp reply body, got: " <> show serverErr)
+
+        it "rejects blank or oversized manual replies before transport setup" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right bodyVal ->
+                        expectationFailure
+                            ("Expected invalid WhatsApp reply body to be rejected, got: " <> show bodyVal)
+            assertInvalid "Mensaje vacío" (validateWhatsAppReplyBody "   ")
+            assertInvalid
+                "Mensaje demasiado largo"
+                (validateWhatsAppReplyBody (T.replicate 4097 "a"))
 
     describe "validateWhatsAppReplyTarget" $ do
         it "requires manual replies to target an incoming message for the same recipient" $ do

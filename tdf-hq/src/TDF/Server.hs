@@ -782,19 +782,20 @@ whatsappReplyServer :: AuthedUser -> ServerT Api.WhatsAppReplyAPI AppM
 whatsappReplyServer user WhatsAppReplyReq{..} = do
   unless (hasSocialInboxAccess user) $
     throwError err403 { errBody = "Missing required module access" }
-  now <- liftIO getCurrentTime
-  waEnv <- liftIO loadWhatsAppEnv
   let recipientRaw = T.strip wrSenderId
-      body = T.strip wrMessage
-      mExternalId = wrExternalId >>= (\raw -> let trimmed = T.strip raw in if T.null trimmed then Nothing else Just trimmed)
+      mExternalId = wrExternalId >>= \raw ->
+        let trimmed = T.strip raw
+        in if T.null trimmed then Nothing else Just trimmed
   when (T.null recipientRaw) $ throwBadRequest "Remitente requerido"
   recipient <- either throwError pure (validateWhatsAppPhoneInput recipientRaw)
-  when (T.null body) $ throwBadRequest "Mensaje vacío"
+  body <- either throwError pure (validateWhatsAppReplyBody wrMessage)
   mReplyTargetRaw <- case mExternalId of
     Nothing -> pure Nothing
     Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
   mReplyTarget <- either throwError pure $
     validateWhatsAppReplyTarget recipient mExternalId mReplyTargetRaw
+  now <- liftIO getCurrentTime
+  waEnv <- liftIO loadWhatsAppEnv
   sendResult <- sendWhatsAppText waEnv recipient body
   sentEntity <- runDB $
     recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
@@ -1028,6 +1029,20 @@ validateWhatsAppMessagesLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 200 =
       Left err400 { errBody = "limit must be between 1 and 200" }
   | otherwise = Right rawLimit
+
+validateWhatsAppReplyBody :: Text -> Either ServerError Text
+validateWhatsAppReplyBody rawBody
+  | T.null body =
+      Left err400 { errBody = "Mensaje vacío" }
+  | T.length body > maxWhatsAppReplyBodyChars =
+      Left err400 { errBody = "Mensaje demasiado largo (max 4096 caracteres)" }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+maxWhatsAppReplyBodyChars :: Int
+maxWhatsAppReplyBodyChars = 4096
 
 parseBoolParam :: Maybe Text -> Either ServerError Bool
 parseBoolParam Nothing = Right False
