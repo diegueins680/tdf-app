@@ -7756,11 +7756,13 @@ openAIChatModelCandidates primaryModel =
       ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
-shouldRetryWithFallbackModel _ rawMessage =
-  hasMarker
+shouldRetryWithFallbackModel status rawMessage =
+  statusAllowsFallback && hasMarker && not hasNonFallbackMarker
   where
     msg = T.toLower (T.strip rawMessage)
+    statusAllowsFallback = status == 0 || status == 400 || status == 403 || status == 404
     hasMarker = any (`T.isInfixOf` msg) markers
+    hasNonFallbackMarker = any (`T.isInfixOf` msg) nonFallbackMarkers
     markers =
       [ "does not have access to model"
       , "do not have access to model"
@@ -7770,6 +7772,11 @@ shouldRetryWithFallbackModel _ rawMessage =
       , "invalid model"
       , "not a valid model"
       , "model_not_found"
+      ]
+    nonFallbackMarkers =
+      [ "rate limit"
+      , "too many requests"
+      , "quota"
       ]
 
 tidalSystemPrompt :: Text

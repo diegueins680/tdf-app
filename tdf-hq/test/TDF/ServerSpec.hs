@@ -1803,6 +1803,10 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
+            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model gpt-4.1"
+                `shouldBe` False
+            shouldRetryWithFallbackModel 500 "invalid model response format"
+                `shouldBe` False
 
     describe "DriveUploadForm FromMultipart" $ do
         it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do
