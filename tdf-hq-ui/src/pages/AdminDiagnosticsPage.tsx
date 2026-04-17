@@ -104,6 +104,12 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
   return 'El historial detallado aparecerá aquí cuando exista al menos un mensaje respondido.';
 };
 
+const formatChannelList = (labels: readonly string[]) => {
+  if (labels.length <= 1) return labels[0] ?? '';
+  if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+};
+
 export default function AdminDiagnosticsPage() {
   const missingEnv =
     typeof window !== 'undefined'
@@ -136,7 +142,16 @@ export default function AdminDiagnosticsPage() {
     && !facebookQuery.isError
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
-  const showSocialChannelCards = !showGlobalSocialQuietGuidance;
+  const hasSocialQueryError = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
+  const visibleSocialChannels = showGlobalSocialQuietGuidance || hasSocialQueryError
+    ? socialChannels
+    : socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
+  const quietSocialChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
+    ? []
+    : socialChannels
+      .filter(({ loading, stats }) => !loading && stats.incoming.length === 0)
+      .map(({ label }) => label);
+  const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
   const showSocialRefreshAction = !showGlobalSocialQuietGuidance;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
@@ -222,9 +237,14 @@ export default function AdminDiagnosticsPage() {
               Cuando llegue el primero, aquí verás el historial respondido por canal.
             </Alert>
           )}
+          {quietSocialChannelLabels.length > 0 && (
+            <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-partial-quiet-summary">
+              Sin mensajes entrantes en {formatChannelList(quietSocialChannelLabels)}.
+            </Alert>
+          )}
           {showSocialChannelCards && (
             <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
-              {socialChannels.map(({ label, stats, loading }) => (
+              {visibleSocialChannels.map(({ label, stats, loading }) => (
                 <Paper
                   key={label}
                   variant="outlined"

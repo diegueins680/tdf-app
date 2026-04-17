@@ -158,12 +158,16 @@ describe('AdminDiagnosticsPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(3);
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(1);
         expect(container.querySelectorAll('thead')).toHaveLength(1);
         expect(container.textContent).toContain('Actualizar mensajes');
+        expect(container.textContent).toContain(
+          'Sin mensajes entrantes en Facebook y WhatsApp.',
+        );
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Claro, te comparto los detalles.');
-        expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(2);
+        expect(container.textContent).not.toContain('Entrantes: 0');
+        expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(0);
       });
     } finally {
       await cleanup();
