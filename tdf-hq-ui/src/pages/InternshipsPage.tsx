@@ -526,6 +526,8 @@ export default function InternshipsPage() {
   const pendingTodoCount = todos.filter((todo) => !todo.itdDone).length;
   const showTodoCountChip = pendingTodoCount > 0;
   const entries = entriesQuery.data ?? [];
+  const showFirstRunAdminHoursEmptyState =
+    isAdmin && internsQuery.isSuccess && entriesQuery.isSuccess && interns.length === 0 && entries.length === 0;
   const permissions = permissionsQuery.data ?? [];
   const showPermissionCountChip = permissions.length > 0;
   const singleAvailableIntern = isAdmin && interns.length === 1 ? interns[0] : null;
@@ -837,17 +839,24 @@ export default function InternshipsPage() {
           <Stack spacing={2}>
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1}>
               <Typography variant="h6" fontWeight={700}>Jornada y registro de horas</Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                {showReadOnlyAdminHoursView ? (
-                  <Chip label="Vista administrativa" variant="outlined" />
-                ) : (
-                  <Chip label={openEntry ? 'En jornada' : 'Fuera de jornada'} color={openEntry ? 'success' : 'default'} />
-                )}
-                <Chip label={totalHoursSummaryLabel} variant="outlined" />
-              </Stack>
+              {!showFirstRunAdminHoursEmptyState && (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {showReadOnlyAdminHoursView ? (
+                    <Chip label="Vista administrativa" variant="outlined" />
+                  ) : (
+                    <Chip label={openEntry ? 'En jornada' : 'Fuera de jornada'} color={openEntry ? 'success' : 'default'} />
+                  )}
+                  <Chip label={totalHoursSummaryLabel} variant="outlined" />
+                </Stack>
+              )}
             </Stack>
 
-            {showInternFilter ? (
+            {showFirstRunAdminHoursEmptyState ? (
+              <Alert severity="info" variant="outlined">
+                Todavía no hay pasantes ni registros de horas. Comparte el link de registro; cuando llegue el
+                primer pasante, aquí aparecerán filtros y registros horarios.
+              </Alert>
+            ) : showInternFilter ? (
               <FormControl size="small" sx={{ maxWidth: 320 }}>
                 <InputLabel id="intern-filter-label">Filtrar por pasante</InputLabel>
                 <Select
@@ -906,48 +915,50 @@ export default function InternshipsPage() {
                 </Button>
               </Stack>
             )}
-            {showReadOnlyAdminHoursView && (
+            {!showFirstRunAdminHoursEmptyState && showReadOnlyAdminHoursView && (
               <Typography variant="caption" color="text.secondary">
                 Vista administrativa: el clock-in/out solo aparece cuando estás viendo tu propia cuenta.
               </Typography>
             )}
 
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Pasante</TableCell>
-                  <TableCell>Entrada</TableCell>
-                  <TableCell>Salida</TableCell>
-                  <TableCell>Horas</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {entries.length === 0 && (
+            {!showFirstRunAdminHoursEmptyState && (
+              <Table size="small">
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={4}>
-                      <Typography color="text.secondary">Sin registros todavía.</Typography>
-                    </TableCell>
+                    <TableCell>Pasante</TableCell>
+                    <TableCell>Entrada</TableCell>
+                    <TableCell>Salida</TableCell>
+                    <TableCell>Horas</TableCell>
                   </TableRow>
-                )}
-                {entries.map((entry) => {
-                  const entryMinutes = resolveEntryMinutes(entry);
-                  return (
-                    <TableRow key={entry.iteId}>
-                      <TableCell>{entry.itePartyName}</TableCell>
-                      <TableCell>{formatDateTime(entry.iteClockIn)}</TableCell>
-                      <TableCell>{formatDateTime(entry.iteClockOut)}</TableCell>
-                      <TableCell>
-                        {entryMinutes != null
-                          ? `${minutesToHours(entryMinutes)} h`
-                          : entry.iteClockOut
-                            ? '—'
-                            : 'En curso'}
+                </TableHead>
+                <TableBody>
+                  {entries.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <Typography color="text.secondary">Sin registros todavía.</Typography>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  )}
+                  {entries.map((entry) => {
+                    const entryMinutes = resolveEntryMinutes(entry);
+                    return (
+                      <TableRow key={entry.iteId}>
+                        <TableCell>{entry.itePartyName}</TableCell>
+                        <TableCell>{formatDateTime(entry.iteClockIn)}</TableCell>
+                        <TableCell>{formatDateTime(entry.iteClockOut)}</TableCell>
+                        <TableCell>
+                          {entryMinutes != null
+                            ? `${minutesToHours(entryMinutes)} h`
+                            : entry.iteClockOut
+                              ? '—'
+                              : 'En curso'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </Stack>
         </CardContent>
       </Card>

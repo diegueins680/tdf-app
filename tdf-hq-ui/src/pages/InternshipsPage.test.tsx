@@ -414,6 +414,29 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('replaces first-run hour-log chrome with one admin setup prompt', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(container.textContent).toContain(
+          'Todavía no hay pasantes ni registros de horas. Comparte el link de registro;',
+        );
+        expect(container.textContent).toContain('primer pasante');
+        expect(container.textContent).not.toContain('Filtro por pasante');
+        expect(container.textContent).not.toContain('Aparecerá cuando exista más de un pasante');
+        expect(container.textContent).not.toContain('0.00 h registradas');
+        expect(container.textContent).not.toContain('Sin registros todavía.');
+        expect(container.querySelectorAll('thead')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the empty task form with project-first guidance until an admin has something to assign into', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
