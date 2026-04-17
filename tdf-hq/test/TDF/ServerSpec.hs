@@ -125,6 +125,7 @@ import TDF.Server
     , requireMarketplaceCartTotals
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
+    , resolvePaypalBaseUrl
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -2824,6 +2825,29 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ( "Expected unsupported PayPal capture status to be rejected, got: "
                             <> show statusVal
+                        )
+
+    describe "resolvePaypalBaseUrl" $ do
+        it "keeps the default sandbox fallback and accepts explicit live aliases" $ do
+            resolvePaypalBaseUrl Nothing
+                `shouldBe` Right "https://api-m.sandbox.paypal.com"
+            resolvePaypalBaseUrl (Just " sandbox ")
+                `shouldBe` Right "https://api-m.sandbox.paypal.com"
+            resolvePaypalBaseUrl (Just "LIVE")
+                `shouldBe` Right "https://api-m.paypal.com"
+            resolvePaypalBaseUrl (Just "production")
+                `shouldBe` Right "https://api-m.paypal.com"
+
+        it "rejects typoed PayPal environments instead of silently using sandbox" $
+            case resolvePaypalBaseUrl (Just "liv") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "PAYPAL_ENV must be one of"
+                Right baseUrl ->
+                    expectationFailure
+                        ( "Expected invalid PayPal environment to be rejected, got: "
+                            <> show baseUrl
                         )
 
     describe "validatePayPalCaptureOrderId" $ do

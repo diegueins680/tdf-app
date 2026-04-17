@@ -9135,14 +9135,29 @@ loadPaypalEnv = do
   mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
   mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
   mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
+  baseUrl <- either throwError pure (resolvePaypalBaseUrl mEnv)
   let cid = fmap (T.strip . T.pack) mCid
       secret = fmap (T.strip . T.pack) mSecret
-      baseUrl = case fmap (map toLower) mEnv of
-        Just envTxt | envTxt == "live" || envTxt == "prod" -> "https://api-m.paypal.com"
-        _ -> "https://api-m.sandbox.paypal.com"
   case (cid, secret) of
     (Just cid', Just sec') -> pure (cid', sec', baseUrl)
     _ -> throwError err500 { errBody = "Faltan PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET" }
+
+resolvePaypalBaseUrl :: Maybe String -> Either ServerError String
+resolvePaypalBaseUrl mEnv =
+  case fmap (T.toLower . T.strip . T.pack) mEnv of
+    Nothing -> Right sandboxBase
+    Just "" -> Right sandboxBase
+    Just envTxt
+      | envTxt `elem` ["sandbox", "test"] -> Right sandboxBase
+      | envTxt `elem` ["live", "prod", "production"] -> Right liveBase
+      | otherwise ->
+          Left err500
+            { errBody =
+                "PAYPAL_ENV must be one of: sandbox, test, live, prod, production"
+            }
+  where
+    sandboxBase = "https://api-m.sandbox.paypal.com"
+    liveBase = "https://api-m.paypal.com"
 
 paypalAccessToken :: Manager -> Text -> Text -> String -> AppM Text
 paypalAccessToken manager cid sec baseUrl = do
