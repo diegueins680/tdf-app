@@ -2397,6 +2397,8 @@ saveCourse Courses.CourseUpsert{..} = do
   either throwError pure (validateCourseSessionScheduleWindow startHourClean durationHoursClean)
   sessionsClean <- either throwError pure (validateCourseSessionInputs sessions)
   syllabusClean <- either throwError pure (validateCourseSyllabusInputs syllabus)
+  dawsClean <- either throwError pure (validateCourseTextListField "daws" 160 daws)
+  includesClean <- either throwError pure (validateCourseTextListField "includes" 160 includes)
   locationMapUrlClean <- either throwError pure (validateCoursePublicUrlField "locationMapUrl" locationMapUrl)
   landingUrlClean <- either throwError pure (validateCoursePublicUrlField "landingUrl" landingUrl)
   whatsappClean <- either throwError pure (validateCoursePublicUrlField "whatsappCtaUrl" whatsappCtaUrl)
@@ -2409,14 +2411,8 @@ saveCourse Courses.CourseUpsert{..} = do
       locationLabelClean = cleanOptional locationLabel
       landingResolved = fromMaybe (buildLandingUrlFor envConfig slugVal) landingUrlClean
       whatsappResolved = fromMaybe (buildWhatsappCtaFor (waContactNumber waEnv) titleClean landingResolved) whatsappClean
-      dawsClean = normalizeList daws
-      includesClean = normalizeList includes
       instructorNameClean = cleanOptional instructorName
       instructorBioClean = cleanOptional instructorBio
-      normalizeList xs =
-        case filter (not . T.null) (map T.strip xs) of
-          [] -> Nothing
-          ys -> Just ys
       withOrder fallbackIdx mOrder = fromMaybe fallbackIdx mOrder
       -- Persistent is misencoding text[] here, so store course arrays through SQL.
       persistTextArrayField courseId columnName Nothing =
@@ -3835,6 +3831,17 @@ validateRequiredCourseTextField fieldName maxLength rawValue =
               fieldName <> " is required"
         }
     Left err -> Left err
+
+validateCourseTextListField :: Text -> Int -> [Text] -> Either ServerError (Maybe [Text])
+validateCourseTextListField _ _ [] = Right Nothing
+validateCourseTextListField fieldName maxLength rawValues =
+  Just <$> traverse validateIndexed (zip [1 :: Int ..] rawValues)
+  where
+    validateIndexed (idx, rawValue) =
+      validateRequiredCourseTextField
+        (fieldName <> "[" <> T.pack (show idx) <> "]")
+        maxLength
+        rawValue
 
 validateOptionalCourseTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCourseTextField _ _ Nothing = Right Nothing

@@ -98,6 +98,7 @@ import TDF.Server
     , validateOptionalCourseSessionDurationHours
     , validateCourseSessionScheduleWindow
     , validateOptionalCourseSlugFilter
+    , validateCourseTextListField
     , validateCourseSessionInputs
     , validateCourseSyllabusInputs
     , validateMarketplaceOrderListLimit
@@ -3296,6 +3297,30 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected an invalid course session window error, got: " <> show value)
 
     describe "course upsert nested text validation" $ do
+        it "validates course list fields before persisting public course metadata" $ do
+            validateCourseTextListField "daws" 160 []
+                `shouldBe` Right Nothing
+            validateCourseTextListField "daws" 160 ["  Ableton Live  ", " Logic Pro "]
+                `shouldBe` Right (Just ["Ableton Live", "Logic Pro"])
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid course list text to be rejected, got: " <> show value)
+            assertInvalid
+                "daws[1] is required"
+                (validateCourseTextListField "daws" 160 ["   "])
+            assertInvalid
+                "includes[1] must not contain control characters"
+                (validateCourseTextListField "includes" 160 ["Mentoring\nfeedback"])
+            assertInvalid
+                "includes[1] must be 160 characters or fewer"
+                (validateCourseTextListField "includes" 160 [T.replicate 161 "a"])
+
         it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do
             let sessionDay = fromGregorian 2026 4 20
             case validateCourseSessionInputs [CourseSessionIn "  Kickoff session  " sessionDay (Just 2)] of
