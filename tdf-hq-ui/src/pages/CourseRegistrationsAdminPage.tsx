@@ -806,7 +806,7 @@ export default function CourseRegistrationsAdminPage() {
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [registrations]);
-  const shouldShowSharedCreatedAtSummary = Boolean(sharedVisibleCreatedAtLabel) && !hideTinyDefaultListRowDates;
+  const shouldShowSharedCreatedAtSummary = Boolean(sharedVisibleCreatedAtLabel) && hasCustomFilters;
   const sharedVisibleCreatedAtSummary = shouldShowSharedCreatedAtSummary
     ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
     : '';
@@ -2485,7 +2485,7 @@ export default function CourseRegistrationsAdminPage() {
                   const hideDateOnlyRowContext = hasDateOnlyRowContext
                     && (
                       loadedRegistrationCount === 1
-                      || (!hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS)
+                      || !hasCustomFilters
                     );
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,

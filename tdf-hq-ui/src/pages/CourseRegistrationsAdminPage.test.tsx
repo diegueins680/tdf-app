@@ -4321,7 +4321,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps normal export utilities focused on CSV and collapses shared created dates', async () => {
+  it('keeps normal export utilities focused on count and CSV instead of passive date context', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -4347,9 +4347,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const createdAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
       expect(listUtilities).not.toBeNull();
       expect(listUtilities?.textContent).toContain('Mostrando 3 inscripciones en esta vista.');
-      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')?.textContent?.trim()).toBe(
-        `Misma fecha de registro: ${createdAtLabel}.`,
-      );
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain(`Misma fecha de registro: ${createdAtLabel}.`);
       expect(countOccurrences(container, `Creado: ${createdAtLabel}`)).toBe(0);
       expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
