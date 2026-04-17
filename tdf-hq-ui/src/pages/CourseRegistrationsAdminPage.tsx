@@ -2529,6 +2529,7 @@ export default function CourseRegistrationsAdminPage() {
                         variant="text"
                         color={registrationStatusButtonColor(reg.crStatus)}
                         endIcon={<ArrowDropDownIcon />}
+                        title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}
                         aria-label={`Cambiar estado para ${rowActionTarget}`}
                         aria-haspopup="menu"
                         disabled={isUpdating}

@@ -2132,6 +2132,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('title')).toBe(
+        'Cambiar estado; actual: Pendiente de pago',
+      );
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').getAttribute('title')).toBe(
+        'Cambiar estado; actual: Pagado',
+      );
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').getAttribute('title')).toBe(
+        'Cambiar estado; actual: Cancelado',
+      );
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(countOccurrences(container, 'Estado:')).toBe(0);
     });
