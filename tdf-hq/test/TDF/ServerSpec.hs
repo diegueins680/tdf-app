@@ -22,7 +22,7 @@ import TDF.API
     , UpdateBookingReq (..)
     , WhatsAppConsentStatus (..)
     )
-import TDF.API.Types (DriveTokenExchangeRequest (..))
+import TDF.API.Types (DriveTokenExchangeRequest (..), DriveTokenRefreshRequest (..))
 import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -148,6 +148,7 @@ import TDF.Server
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateDriveTokenExchangeRequest
+    , validateDriveTokenRefreshRequest
     , shouldRetryWithFallbackModel
     )
 import TDF.ServerAuth
@@ -1809,6 +1810,43 @@ spec = describe "TDF.Server helpers" $ do
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
                     }
+
+        it "rejects unexpected Drive OAuth exchange keys so typoed token writes fail explicitly" $
+            ( eitherDecode
+                "{\"code\":\"oauth-code-123\",\"codeVerifier\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"unexpected\":true}"
+                :: Either String DriveTokenExchangeRequest
+            )
+                `shouldSatisfy` isLeft
+
+    describe "validateDriveTokenRefreshRequest" $ do
+        it "normalizes valid Drive refresh tokens before contacting Google" $
+            validateDriveTokenRefreshRequest (DriveTokenRefreshRequest "  1//refresh-token  ")
+                `shouldBe` Right "1//refresh-token"
+
+        it "rejects malformed Drive refresh tokens before Google token calls" $ do
+            let assertInvalid expectedMessage request =
+                    case validateDriveTokenRefreshRequest request of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive refresh request, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "refreshToken is required"
+                (DriveTokenRefreshRequest "   ")
+            assertInvalid
+                "refreshToken must not contain whitespace"
+                (DriveTokenRefreshRequest "1//refresh token")
+
+        it "rejects unexpected Drive refresh keys so typoed token writes fail explicitly" $
+            ( eitherDecode
+                "{\"refreshToken\":\"1//refresh-token\",\"unexpected\":true}"
+                :: Either String DriveTokenRefreshRequest
+            )
+                `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
         it "preserves omission and accepts positive artist ids for explicit profile claims" $ do

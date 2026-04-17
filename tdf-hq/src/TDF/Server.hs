@@ -1717,16 +1717,17 @@ driveTokenExchangeServer _ payload = do
   pure (driveTokenResponseFrom token Nothing)
 
 driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveTokenResponse
-driveTokenRefreshServer _ DriveTokenRefreshRequest{..} = do
+driveTokenRefreshServer _ payload = do
+  refreshTokenVal <- either throwError pure (validateDriveTokenRefreshRequest payload)
   manager <- liftIO $ newManager tlsManagerSettings
   (cid, secret) <- loadDriveClientCreds
   token <- requestGoogleToken manager
     [ ("client_id", TE.encodeUtf8 cid)
     , ("client_secret", TE.encodeUtf8 secret)
-    , ("refresh_token", TE.encodeUtf8 refreshToken)
+    , ("refresh_token", TE.encodeUtf8 refreshTokenVal)
     , ("grant_type", "refresh_token")
     ]
-  pure (driveTokenResponseFrom token (Just refreshToken))
+  pure (driveTokenResponseFrom token (Just refreshTokenVal))
 
 validateDriveTokenExchangeRequest
   :: AppConfig
@@ -1737,6 +1738,20 @@ validateDriveTokenExchangeRequest cfg DriveTokenExchangeRequest{..} = do
   codeVerifierVal <- validateDriveCodeVerifier codeVerifier
   redirectResolved <- resolveDriveRedirectUri cfg redirectUri
   pure (codeVal, codeVerifierVal, redirectResolved)
+
+validateDriveTokenRefreshRequest :: DriveTokenRefreshRequest -> Either ServerError Text
+validateDriveTokenRefreshRequest DriveTokenRefreshRequest{refreshToken = rawToken} =
+  validateDriveRefreshToken rawToken
+
+validateDriveRefreshToken :: Text -> Either ServerError Text
+validateDriveRefreshToken rawToken =
+  let tokenVal = T.strip rawToken
+  in if T.null tokenVal
+       then Left err400 { errBody = "refreshToken is required" }
+       else
+         if T.any isSpace tokenVal
+           then Left err400 { errBody = "refreshToken must not contain whitespace" }
+           else Right tokenVal
 
 validateDriveAuthorizationCode :: Text -> Either ServerError Text
 validateDriveAuthorizationCode rawCode =

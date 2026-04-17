@@ -519,13 +519,15 @@ data DriveTokenExchangeRequest = DriveTokenExchangeRequest
   , redirectUri  :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON DriveTokenExchangeRequest
-instance FromJSON DriveTokenExchangeRequest
+instance FromJSON DriveTokenExchangeRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data DriveTokenRefreshRequest = DriveTokenRefreshRequest
   { refreshToken :: Text
   } deriving (Show, Generic)
 instance ToJSON DriveTokenRefreshRequest
-instance FromJSON DriveTokenRefreshRequest
+instance FromJSON DriveTokenRefreshRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data DriveTokenResponse = DriveTokenResponse
   { accessToken  :: Text
