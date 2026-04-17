@@ -527,6 +527,32 @@ const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO
   });
 };
 
+const dedupeCourseRegistrationReceipts = (receipts: readonly CourseRegistrationReceiptDTO[]) => {
+  const seenReceiptIds = new Set<number>();
+
+  return receipts.filter((receipt) => {
+    if (seenReceiptIds.has(receipt.crrId)) {
+      return false;
+    }
+
+    seenReceiptIds.add(receipt.crrId);
+    return true;
+  });
+};
+
+const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
+  const seenFollowUpIds = new Set<number>();
+
+  return followUps.filter((entry) => {
+    if (seenFollowUpIds.has(entry.crfId)) {
+      return false;
+    }
+
+    seenFollowUpIds.add(entry.crfId);
+    return true;
+  });
+};
+
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1521,8 +1547,8 @@ export default function CourseRegistrationsAdminPage() {
 
   const dossierData = dossierQuery.data;
   const activeRegistration = dossierData?.crdRegistration ?? selectedDossier?.reg ?? null;
-  const receipts = dossierData?.crdReceipts ?? [];
-  const followUps = dossierData?.crdFollowUps ?? [];
+  const receipts = dedupeCourseRegistrationReceipts(dossierData?.crdReceipts ?? []);
+  const followUps = dedupeCourseRegistrationFollowUps(dossierData?.crdFollowUps ?? []);
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;

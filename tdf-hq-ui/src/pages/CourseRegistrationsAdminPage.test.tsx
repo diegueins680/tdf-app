@@ -4045,6 +4045,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates repeated dossier artifacts before showing saved-item counts or actions', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt(), buildReceipt()],
+        crdFollowUps: [buildFollowUp(), buildFollowUp()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).not.toContain('2 guardados');
+      expect(document.body.textContent).not.toContain('2 entradas');
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para comprobante receipt.pdf"]'),
+      ).toHaveLength(1);
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para seguimiento Confirmó transferencia"]'),
+      ).toHaveLength(1);
+      expect(countOccurrences(document.body, 'receipt.pdf')).toBe(1);
+      expect(countOccurrences(document.body, 'Confirmó transferencia')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {
     const cappedRegistrations = buildRegistrations(200);
     listRegistrationsMock.mockImplementation((params) => Promise.resolve(cappedRegistrations.slice(0, params?.limit ?? 200)));
