@@ -277,11 +277,34 @@ loadConfig = do
   courseDefaultSlugVal <- validateConfiguredCourseSlug courseSlugEnv
   courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
+  chatKitApiBaseVal <-
+    validateConfiguredApiBaseUrl
+      "CHATKIT_API_BASE"
+      "https://api.openai.com"
+      chatKitApiBaseEnv
+  fbGraphBase <-
+    validateConfiguredApiBaseUrl
+      "FACEBOOK_GRAPH_BASE"
+      "https://graph.facebook.com/v20.0"
+      fbGraphBaseEnv
+  fbMsgBase <-
+    validateConfiguredApiBaseUrl
+      "FACEBOOK_MESSAGING_API_BASE"
+      fbGraphBase
+      fbMsgBaseEnv
+  igGraphBase <-
+    validateConfiguredApiBaseUrl
+      "INSTAGRAM_GRAPH_BASE"
+      "https://graph.instagram.com"
+      igBaseEnv
+  igMsgBase <-
+    validateConfiguredApiBaseUrl
+      "INSTAGRAM_MESSAGING_API_BASE"
+      "https://graph.facebook.com/v20.0"
+      igMsgBaseEnv
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
-  let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
-      igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
-      normalizedAppBase = appBaseUrlVal
+  let normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
       cookieSecure = maybe cookieSecureDefault asBool sessionCookieSecureEnv
@@ -314,7 +337,7 @@ loadConfig = do
     , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
     , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
     , chatKitWorkflowId = chatKitWorkflowEnv >>= nonEmpty . T.pack
-    , chatKitApiBase = fromMaybe "https://api.openai.com" (chatKitApiBaseEnv >>= nonEmpty . T.pack)
+    , chatKitApiBase = chatKitApiBaseVal
     , ragTopK = parseInt 8 ragTopKEnv
     , ragChunkWords = parseInt 220 ragChunkWordsEnv
     , ragChunkOverlap = parseInt 40 ragChunkOverlapEnv
@@ -329,7 +352,7 @@ loadConfig = do
     , facebookGraphBase = fbGraphBase
     , facebookMessagingToken = fmap (T.strip . T.pack) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fmap (T.strip . T.pack) fbMsgPageIdEnv >>= nonEmpty
-    , facebookMessagingApiBase = maybe fbGraphBase (T.strip . T.pack) fbMsgBaseEnv
+    , facebookMessagingApiBase = fbMsgBase
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
     , instagramGraphBase = igGraphBase
     , instagramMessagingToken =
@@ -337,7 +360,7 @@ loadConfig = do
           Just val | not (T.null val) -> Just val
           _ -> fmap (T.strip . T.pack) igTokenEnv
     , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
-    , instagramMessagingApiBase = maybe "https://graph.facebook.com/v20.0" (T.strip . T.pack) igMsgBaseEnv
+    , instagramMessagingApiBase = igMsgBase
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
     , sessionCookieName = cookieName
     , sessionCookieDomain = fmap (T.strip . T.pack) sessionCookieDomainEnv >>= nonEmpty
@@ -480,6 +503,32 @@ validateConfiguredBaseUrl envName (Just rawUrl) =
   case normalizeConfiguredBaseUrl envName rawUrl of
     Left msg -> fail msg
     Right urlVal -> pure urlVal
+
+validateConfiguredApiBaseUrl :: String -> Text -> Maybe String -> IO Text
+validateConfiguredApiBaseUrl _ defaultUrl Nothing = pure defaultUrl
+validateConfiguredApiBaseUrl envName defaultUrl (Just rawUrl)
+  | T.null trimmed = pure defaultUrl
+  | otherwise =
+      case normalizeConfiguredApiBaseUrl envName (T.unpack trimmed) of
+        Left msg -> fail msg
+        Right urlVal -> pure urlVal
+  where
+    trimmed = T.strip (T.pack rawUrl)
+
+normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
+normalizeConfiguredApiBaseUrl envName rawUrl
+  | T.null (T.strip (T.pack rawUrl)) =
+      Left (envName <> " must be an absolute https URL")
+  | otherwise = do
+      mUrl <- normalizeConfiguredHttpsUrl envName rawUrl
+      case mUrl of
+        Nothing ->
+          Left (envName <> " must be an absolute https URL")
+        Just urlVal
+          | T.any (`elem` ("?#" :: String)) urlVal ->
+              Left (envName <> " must be an absolute https URL without query or fragment")
+          | otherwise ->
+              Right (T.dropWhileEnd (== '/') urlVal)
 
 validateConfiguredCourseSlug :: Maybe String -> IO Text
 validateConfiguredCourseSlug rawSlug =

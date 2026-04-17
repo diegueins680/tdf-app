@@ -170,11 +170,16 @@ import TDF.Server.SocialEventsHandlers (
 import TDF.Auth (extractToken, extractTokenFromHeaders)
 import TDF.Config
     ( appPort,
+      chatKitApiBase,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
       dbConnString,
       emailConfig,
+      facebookGraphBase,
+      facebookMessagingApiBase,
+      instagramGraphBase,
+      instagramMessagingApiBase,
       loadConfig,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
@@ -336,6 +341,57 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL"
                 "https://files_example.com/assets"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
+
+        it "normalizes configured outbound API base URLs before building requests" $
+            withEnvOverrides
+                [ ("CHATKIT_API_BASE", Just " https://api.openai.com/ ")
+                , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
+                , ( "FACEBOOK_MESSAGING_API_BASE"
+                  , Just " https://graph.facebook.com/v22.0/ "
+                  )
+                , ("INSTAGRAM_GRAPH_BASE", Just " https://graph.instagram.com/ ")
+                , ( "INSTAGRAM_MESSAGING_API_BASE"
+                  , Just " https://graph.facebook.com/v23.0/ "
+                  )
+                ]
+                $ do
+                    cfg <- loadConfig
+                    chatKitApiBase cfg `shouldBe` "https://api.openai.com"
+                    facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
+                    facebookMessagingApiBase cfg
+                        `shouldBe` "https://graph.facebook.com/v22.0"
+                    instagramGraphBase cfg `shouldBe` "https://graph.instagram.com"
+                    instagramMessagingApiBase cfg
+                        `shouldBe` "https://graph.facebook.com/v23.0"
+
+        it "rejects malformed outbound API base URLs before token-bearing requests are built" $ do
+            let apiBaseKeys =
+                    [ "CHATKIT_API_BASE"
+                    , "FACEBOOK_GRAPH_BASE"
+                    , "FACEBOOK_MESSAGING_API_BASE"
+                    , "INSTAGRAM_GRAPH_BASE"
+                    , "INSTAGRAM_MESSAGING_API_BASE"
+                    ]
+                onlyApiBase envName rawUrl =
+                    [ (key, if key == envName then Just rawUrl else Nothing)
+                    | key <- apiBaseKeys
+                    ]
+                assertInvalid envName rawUrl expectedMessage =
+                    withEnvOverrides (onlyApiBase envName rawUrl) $
+                        loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "FACEBOOK_MESSAGING_API_BASE"
+                "http://graph.facebook.com/v20.0"
+                "FACEBOOK_MESSAGING_API_BASE must be an absolute https URL"
+            assertInvalid
+                "INSTAGRAM_MESSAGING_API_BASE"
+                "https://169.254.169.254/latest"
+                "INSTAGRAM_MESSAGING_API_BASE must be an absolute https URL"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                "https://api.openai.com?proxy=1"
+                "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
 
         it "normalizes configured public course fallback URLs before serving metadata" $
             withEnvOverrides
