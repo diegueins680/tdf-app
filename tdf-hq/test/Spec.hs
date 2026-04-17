@@ -175,6 +175,7 @@ import TDF.Config
       loadConfig,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
+      sessionCookieName,
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
@@ -249,6 +250,24 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     sessionCookiePath cfg `shouldBe` "/hq"
+
+        it "rejects malformed session cookie names before emitting ambiguous Set-Cookie headers" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_NAME", Just " tdf_session_admin ") ]
+                $ do
+                    cfg <- loadConfig
+                    sessionCookieName cfg `shouldBe` "tdf_session_admin"
+
+            let assertInvalid rawName =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_NAME", Just rawName) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "SESSION_COOKIE_NAME must be a cookie token"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "tdf session"
+            assertInvalid "tdf_session; Secure"
+            assertInvalid "tdf/session"
+            assertInvalid "tdf_session,alt"
 
         it "rejects malformed session cookie paths before emitting ambiguous Set-Cookie headers" $ do
             let assertInvalid rawPath =

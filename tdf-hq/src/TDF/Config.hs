@@ -277,6 +277,7 @@ loadConfig = do
   courseDefaultSlugVal <- validateConfiguredCourseSlug courseSlugEnv
   courseMapUrl <- validateConfiguredHttpsUrl "COURSE_DEFAULT_MAP_URL" courseMapEnv
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
+  cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
   let fbGraphBase = fromMaybe "https://graph.facebook.com/v20.0" (fbGraphBaseEnv >>= nonEmpty . T.pack)
       igGraphBase = maybe "https://graph.instagram.com" (T.strip . T.pack) igBaseEnv
@@ -338,7 +339,7 @@ loadConfig = do
     , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
     , instagramMessagingApiBase = maybe "https://graph.facebook.com/v20.0" (T.strip . T.pack) igMsgBaseEnv
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
-    , sessionCookieName = fromMaybe "tdf_session" (sessionCookieNameEnv >>= nonEmpty . T.pack)
+    , sessionCookieName = cookieName
     , sessionCookieDomain = fmap (T.strip . T.pack) sessionCookieDomainEnv >>= nonEmpty
     , sessionCookiePath = cookiePath
     , sessionCookieSecure = cookieSecure
@@ -422,6 +423,27 @@ validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
   when (T.toLower cookieSameSite == "none" && not cookieSecure) $
     fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+
+validateSessionCookieName :: Maybe String -> IO Text
+validateSessionCookieName rawName =
+  case normalizeSessionCookieName rawName of
+    Left msg -> fail msg
+    Right name -> pure name
+
+normalizeSessionCookieName :: Maybe String -> Either String Text
+normalizeSessionCookieName Nothing = Right "tdf_session"
+normalizeSessionCookieName (Just rawName)
+  | T.null name = Right "tdf_session"
+  | T.all isCookieNameChar name = Right name
+  | otherwise = invalid
+  where
+    name = T.strip (T.pack rawName)
+    invalid =
+      Left
+        "SESSION_COOKIE_NAME must be a cookie token with no whitespace, separators, or control characters"
+    separators = ("()<>@,;:\\\"/[]?={} \t" :: String)
+    isCookieNameChar ch =
+      not (isControl ch) && ch < '\DEL' && ch `notElem` separators
 
 validateSessionCookiePath :: Maybe String -> IO Text
 validateSessionCookiePath rawPath =
