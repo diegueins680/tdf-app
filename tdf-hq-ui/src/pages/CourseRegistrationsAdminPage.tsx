@@ -1646,6 +1646,7 @@ export default function CourseRegistrationsAdminPage() {
     || canSubmitReceipt
   );
   const isMarkPaidFirstReceiptFlow = selectedDossier?.intent === 'markPaid'
+    && !dossierQuery.isError
     && !hasReceipts
     && receiptForm.editingId == null;
   const receiptCancelLabel = isMarkPaidFirstReceiptFlow

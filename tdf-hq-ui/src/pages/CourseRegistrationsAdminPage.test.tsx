@@ -3156,6 +3156,47 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('keeps one explicit close action when the payment workflow cannot load', async () => {
+    getRegistrationDossierMock.mockRejectedValue(new Error('Dossier unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Registrar pago de inscripción');
+        expect(document.body.textContent).toContain('No se pudo cargar el expediente: Dossier unavailable');
+        expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+        expect(countButtonsByText(document.body, 'Cerrar pago')).toBe(0);
+        expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+        expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps empty notes secondary in the mark-paid flow until the admin explicitly needs them', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
