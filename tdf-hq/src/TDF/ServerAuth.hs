@@ -16,6 +16,7 @@ module TDF.ServerAuth
   , passwordResetConfirm
   , authV1Server
   , PasswordResetError
+  , findReusableActiveToken
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
@@ -1030,6 +1031,7 @@ findReusableActiveToken pid preferredLabel = do
     Nothing -> pure Nothing
   case preferred of
     Just (Entity _ tok) -> pure (Just (apiTokenToken tok))
+    Nothing | isJust preferredLabel -> pure Nothing
     Nothing -> do
       fallback <- selectFirst [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] [Asc ApiTokenId]
       pure (apiTokenToken . entityVal <$> fallback)

@@ -154,7 +154,8 @@ import TDF.Server
     , shouldRetryWithFallbackModel
     )
 import TDF.ServerAuth
-    ( normalizeAuthEmailAddress
+    ( findReusableActiveToken
+    , normalizeAuthEmailAddress
     , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
@@ -2273,6 +2274,39 @@ spec = describe "TDF.Server helpers" $ do
                 Right _ -> pure ()
             updatedHash `shouldNotBe` Just "old-hash"
             tokenActive `shouldBe` Just False
+
+    describe "findReusableActiveToken" $
+        it "does not fall back to unrelated active tokens for labeled session reuse" $ do
+            result <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Login User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "login@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "generic-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Nothing
+                    , apiTokenActive = True
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "different-login-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-login:old-login@example.com"
+                    , apiTokenActive = True
+                    }
+                findReusableActiveToken partyId (Just "password-login:login@example.com")
+
+            result `shouldBe` Nothing
 
     describe "parseBookingStatus" $ do
         it "parses a known status and ignores surrounding whitespace" $
