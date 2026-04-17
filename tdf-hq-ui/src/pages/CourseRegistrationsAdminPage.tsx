@@ -916,7 +916,6 @@ export default function CourseRegistrationsAdminPage() {
   const registrationErrorRetryLabel = cohortsQuery.isError
     ? 'Reintentar datos'
     : 'Reintentar inscripciones';
-  const showInlineListRefreshAction = !showHeaderRefreshAction && hasCustomFilters;
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -925,7 +924,6 @@ export default function CourseRegistrationsAdminPage() {
       || canCopyCsv
       || Boolean(copyMessage)
       || showFilteredResetAction
-      || showInlineListRefreshAction
     );
   const showStandaloneListUtilityRow = !hasCustomFilters
     && hasVisibleRegistrations
@@ -933,7 +931,6 @@ export default function CourseRegistrationsAdminPage() {
       Boolean(standaloneUtilitySummaryMessage)
       || canCopyCsv
       || Boolean(copyMessage)
-      || showInlineListRefreshAction
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
@@ -2309,17 +2306,6 @@ export default function CourseRegistrationsAdminPage() {
                     {resetViewLabel}
                   </Button>
                 )}
-                {showInlineListRefreshAction && (
-                  <Button
-                    size="small"
-                    variant="text"
-                    startIcon={<RefreshIcon fontSize="small" />}
-                    onClick={handleRefresh}
-                    disabled={regsQuery.isFetching}
-                  >
-                    Refrescar lista
-                  </Button>
-                )}
                 {canCopyCsv && (
                   <Button
                     size="small"
@@ -2387,17 +2373,6 @@ export default function CourseRegistrationsAdminPage() {
                   <Typography variant="body2" color="text.secondary">
                     {standaloneUtilitySummaryMessage}
                   </Typography>
-                )}
-                {showInlineListRefreshAction && (
-                  <Button
-                    size="small"
-                    variant="text"
-                    startIcon={<RefreshIcon fontSize="small" />}
-                    onClick={handleRefresh}
-                    disabled={regsQuery.isFetching}
-                  >
-                    Refrescar lista
-                  </Button>
                 )}
                 {canCopyCsv && (
                   <Button

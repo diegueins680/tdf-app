@@ -938,6 +938,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.querySelectorAll('[data-testid="course-registration-filter-summary"]')).toHaveLength(1);
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });
 
     await cleanup();
