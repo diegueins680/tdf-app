@@ -153,7 +153,8 @@ data UserRoleUpdatePayload = UserRoleUpdatePayload
   } deriving (Show, Generic)
 
 instance ToJSON UserRoleUpdatePayload
-instance FromJSON UserRoleUpdatePayload
+instance FromJSON UserRoleUpdatePayload where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ServiceCatalogDTO = ServiceCatalogDTO
   { scId            :: Int64

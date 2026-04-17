@@ -25,9 +25,11 @@ import TDF.API.Types
     , RolePayload (..)
     , ServiceCatalogCreate (..)
     , ServiceCatalogUpdate (..)
+    , UserRoleUpdatePayload (..)
     )
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
+import TDF.Models (RoleEnum (Admin, Teacher))
 import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
@@ -55,6 +57,19 @@ spec = do
         it "rejects malformed or ambiguous JSON-like bodies instead of treating them as raw role text" $ do
             decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
             decodeLooseRole "{}" `shouldSatisfy` isLeft
+
+    describe "UserRoleUpdatePayload FromJSON" $ do
+        it "accepts canonical admin role update payloads" $
+            case decodeUserRoleUpdate "{\"roles\":[\"Admin\",\"Teacher\"]}" of
+                Left err ->
+                    expectationFailure ("Expected canonical user role update payload to decode, got: " <> err)
+                Right (UserRoleUpdatePayload rolesVal) ->
+                    rolesVal `shouldBe` [Admin, Teacher]
+
+        it "rejects unexpected keys so role updates cannot silently ignore over-posted fields" $
+            decodeUserRoleUpdate
+                "{\"roles\":[\"Admin\"],\"active\":false}"
+                `shouldSatisfy` isLeft
 
     describe "ChatKitSessionRequest FromJSON" $ do
         it "accepts canonical top-level and nested workflow selectors" $ do
@@ -700,6 +715,8 @@ spec = do
   where
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
+    decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
+    decodeUserRoleUpdate = eitherDecode
     decodeChatKitSession :: BL8.ByteString -> Either String API.ChatKitSessionRequest
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
