@@ -55,6 +55,7 @@ loadWhatsAppConfig = do
   slugVal <- either fail pure (Config.normalizeConfiguredCourseSlug mSlug)
   regUrl <- either fail pure (normalizeWhatsAppRegistrationUrl mReg)
   baseUrl <- either fail pure (normalizeWhatsAppAppBaseUrl mBase)
+  version <- either fail pure (normalizeWhatsAppApiVersion mVersion)
   let cfg = WhatsAppConfig
         { waToken       = tok
         , waPhoneId     = pid
@@ -62,7 +63,7 @@ loadWhatsAppConfig = do
         , courseSlug    = slugVal
         , courseRegUrl  = regUrl
         , appBaseUrl    = baseUrl
-        , waApiVersion  = maybe "v20.0" T.pack mVersion
+        , waApiVersion  = version
         }
   pure cfg
 
@@ -91,6 +92,26 @@ normalizeWhatsAppAppBaseUrl (Just rawUrl) =
     Left msg -> Left msg
     Right Nothing -> Right "http://localhost:5173"
     Right (Just urlVal) -> Right urlVal
+
+normalizeWhatsAppApiVersion :: Maybe String -> Either String Text
+normalizeWhatsAppApiVersion Nothing = Right "v20.0"
+normalizeWhatsAppApiVersion (Just rawVersion)
+  | T.null version = Right "v20.0"
+  | isValidVersion version = Right version
+  | otherwise =
+      Left "WhatsApp API version must look like v20.0"
+  where
+    version = T.toLower (T.strip (T.pack rawVersion))
+    isValidVersion value =
+      case T.uncons value of
+        Just ('v', rest) ->
+          case T.splitOn "." rest of
+            [major] -> allAsciiDigits major
+            [major, minor] -> allAsciiDigits major && allAsciiDigits minor
+            _ -> False
+        _ -> False
+    allAsciiDigits value =
+      not (T.null value) && T.all (\ch -> ch >= '0' && ch <= '9') value
 
 verifyTokenMatches :: WhatsAppService -> Text -> Bool
 verifyTokenMatches svc token = case waVerifyToken (waConfig svc) of

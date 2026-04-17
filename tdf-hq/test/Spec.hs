@@ -494,6 +494,21 @@ main = hspec $ do
                     "HQ_APP_URL must be an absolute http(s) URL"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects malformed WhatsApp API versions before building Graph request paths" $ do
+            let assertInvalid overrides =
+                    withEnvOverrides overrides $
+                        WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                            "WhatsApp API version must look like v20.0"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "v21.0/messages")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ]
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "   ")
+                , ("WHATSAPP_API_VERSION", Just "2024-01")
+                ]
+
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
