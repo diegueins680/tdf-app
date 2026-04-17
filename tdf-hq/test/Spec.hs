@@ -121,7 +121,8 @@ import TDF.ServerFeedback
 import TDF.Server
     ( buildWhatsappCtaFor,
       sanitizeStoredCoursePublicUrl,
-      validateCoursePublicUrlField )
+      validateCoursePublicUrlField,
+      validateDatafastBaseUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate )
 import TDF.Server.SocialSync
@@ -946,6 +947,31 @@ main = hspec $ do
                 `shouldBe` Nothing
             sanitizeStoredCoursePublicUrl "instructorAvatarUrl" Nothing
                 `shouldBe` Nothing
+
+    describe "validateDatafastBaseUrl" $ do
+        it "keeps the default OPPWA base and normalizes configured origins" $ do
+            validateDatafastBaseUrl Nothing `shouldBe` Right "https://test.oppwa.com"
+            validateDatafastBaseUrl (Just " https://eu-prod.oppwa.com/ ")
+                `shouldBe` Right "https://eu-prod.oppwa.com"
+            validateDatafastBaseUrl (Just "https://eu-prod.oppwa.com:443")
+                `shouldBe` Right "https://eu-prod.oppwa.com:443"
+
+        it "rejects malformed Datafast bases before payment requests are built" $ do
+            let assertInvalid rawValue =
+                    case validateDatafastBaseUrl (Just rawValue) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "DATAFAST_BASE_URL must be an absolute https origin"
+                        Right value ->
+                            expectationFailure ("Expected invalid Datafast base URL, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "ftp://test.oppwa.com"
+            assertInvalid "http://payments.example.com"
+            assertInvalid "https://test.oppwa.com/v1"
+            assertInvalid "https://test.oppwa.com?proxy=1"
+            assertInvalid "http://localhost:8080"
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do

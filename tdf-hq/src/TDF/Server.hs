@@ -8994,9 +8994,9 @@ loadDatafastEnv = do
   mPserv  <- liftIO $ lookupEnv "DATAFAST_PSERV"
   mUserData2 <- liftIO $ lookupEnv "DATAFAST_USER_DATA2"
   mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
+  baseUrl <- either throwError pure (validateDatafastBaseUrl mBase)
   let entityId = fmap (T.strip . T.pack) mEntity
       bearer   = fmap (T.strip . T.pack) mBearer
-      baseUrl  = fromMaybe "https://test.oppwa.com" mBase
       testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
@@ -9017,6 +9017,32 @@ loadDatafastEnv = do
         , dfExtraParams = extras
         }
     _ -> throwError err500 { errBody = "Faltan DATAFAST_ENTITY_ID / DATAFAST_BEARER_TOKEN" }
+
+validateDatafastBaseUrl :: Maybe String -> Either ServerError String
+validateDatafastBaseUrl mRawBase
+  | T.null cleanBase =
+      invalidDatafastBaseUrl
+  | not ("https://" `T.isPrefixOf` T.toLower cleanBase) =
+      invalidDatafastBaseUrl
+  | not (TrialsServer.isValidHttpUrl cleanBase) =
+      invalidDatafastBaseUrl
+  | not (isHttpsOrigin cleanBase) =
+      invalidDatafastBaseUrl
+  | otherwise =
+      Right (T.unpack cleanBase)
+  where
+    rawBase = maybe "https://test.oppwa.com" T.pack mRawBase
+    cleanBase = T.dropWhileEnd (== '/') (T.strip rawBase)
+
+    isHttpsOrigin rawUrl =
+      T.all (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 rawUrl)
+
+invalidDatafastBaseUrl :: Either ServerError a
+invalidDatafastBaseUrl =
+  Left err500
+    { errBody =
+        "DATAFAST_BASE_URL must be an absolute https origin without path, query, or fragment"
+    }
 
 data PayPalLink = PayPalLink
   { pplRel  :: Text
