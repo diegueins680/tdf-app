@@ -190,13 +190,13 @@ const contactDossierScopeHint =
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. Configura el curso y comparte su formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Elige qué formulario público compartir para empezar a recibirlas.';
+  'Todavía no hay inscripciones. Ya hay formularios configurados; abre Cursos para decidir cuál compartir primero.';
 const singleCohortInitialEmptyStateMessage =
-  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Comparte el formulario público; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateMultiCohortActionLabel = 'Abrir Cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialCohortResolutionMessage =
   'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
@@ -4535,7 +4535,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain(singleCohortInitialEmptyStateMessage);
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Comparte el formulario público');
+      expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
@@ -4678,11 +4681,14 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
       expect(emptyState?.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(emptyState?.textContent).not.toContain('Elige qué formulario público compartir');
       expect(emptyState?.textContent).not.toContain('Elige en Configuración de cursos');
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
+      expect(countOccurrences(emptyState!, 'formulario público')).toBe(0);
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateMultiCohortActionLabel);
