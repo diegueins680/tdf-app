@@ -1314,8 +1314,8 @@ describe('AdminUsersPage', () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 103,
-        roles: [' Admin ', '', 'Teacher', 'Admin', 'Teacher'],
-        modules: [' admin ', 'crm', 'crm', ''],
+        roles: [' Admin ', '', 'Teacher', 'admin', 'Teacher'],
+        modules: [' admin ', 'crm', 'CRM', ''],
       }),
       buildUser({
         userId: 104,
@@ -1338,8 +1338,8 @@ describe('AdminUsersPage', () => {
         expect(hasExactText(row, 'Roles: Admin, Teacher · Módulos: admin, crm')).toBe(true);
         expect(hasExactText(row, 'Roles: Admin, Teacher')).toBe(false);
         expect(hasExactText(row, 'Módulos: admin, crm')).toBe(false);
-        expect(row.textContent).not.toContain('Roles: Admin, Teacher, Admin');
-        expect(row.textContent).not.toContain('Módulos: admin, crm, crm');
+        expect(row.textContent).not.toContain('Roles: Admin, admin, Teacher');
+        expect(row.textContent).not.toContain('Módulos: admin, crm, CRM');
       });
     } finally {
       await cleanup();

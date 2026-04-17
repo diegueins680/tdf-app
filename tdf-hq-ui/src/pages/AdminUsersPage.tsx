@@ -28,9 +28,24 @@ const normalizeContactValue = (value?: string | null) => {
   return trimmed;
 };
 
-const normalizeAccessValues = (values: readonly string[]) =>
-  Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)))
+const normalizeAccessKey = (value: string) => value.trim().toLocaleLowerCase('es');
+
+const normalizeAccessValues = (values: readonly string[]) => {
+  const valuesByKey = new Map<string, string>();
+
+  values.forEach((value) => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+
+    const accessKey = normalizeAccessKey(trimmedValue);
+    if (!valuesByKey.has(accessKey)) {
+      valuesByKey.set(accessKey, trimmedValue);
+    }
+  });
+
+  return [...valuesByKey.values()]
     .sort((left, right) => left.localeCompare(right));
+};
 
 const preferNonEmptyText = (primary?: string | null, fallback?: string | null) => {
   const normalizedPrimary = normalizeContactValue(primary);
