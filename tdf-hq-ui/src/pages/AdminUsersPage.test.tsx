@@ -509,6 +509,46 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('shows profile ids only when duplicate visible identities need a disambiguator', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        partyName: 'Ana Admin',
+        username: 'ana-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Ana Admin',
+        username: 'ana-admin',
+        primaryEmail: 'ana.alt@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getRowByUserId(container, 101).textContent).toContain('Perfil #9');
+        expect(getRowByUserId(container, 102).textContent).toContain('Perfil #10');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Perfil #11');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('ID 11');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),

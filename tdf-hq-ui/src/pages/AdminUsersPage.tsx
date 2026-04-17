@@ -261,6 +261,28 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) 
   };
 };
 
+const getUserVisibleIdentityKey = (user: Pick<AdminUser, 'partyName' | 'username'>) => {
+  const identity = summarizeUserIdentity(user);
+  return [identity.primary, identity.secondary]
+    .map((value) => value.trim().toLocaleLowerCase('es'))
+    .join('::');
+};
+
+const getUserIdsRequiringIdentityDisambiguator = (users: readonly AdminUser[]) => {
+  const identityCounts = new Map<string, number>();
+
+  users.forEach((user) => {
+    const identityKey = getUserVisibleIdentityKey(user);
+    identityCounts.set(identityKey, (identityCounts.get(identityKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    users
+      .filter((user) => (identityCounts.get(getUserVisibleIdentityKey(user)) ?? 0) > 1)
+      .map((user) => user.userId),
+  );
+};
+
 const compareAdminUsers = (left: AdminUser, right: AdminUser) => {
   if (left.active !== right.active) return left.active ? -1 : 1;
 
@@ -433,6 +455,10 @@ export default function AdminUsersPage() {
   const inactiveVisibleUsers = useMemo(
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
     [showInactiveUsersGroup, visibleUsers],
+  );
+  const userIdsRequiringIdentityDisambiguator = useMemo(
+    () => getUserIdsRequiringIdentityDisambiguator(visibleUsers),
+    [visibleUsers],
   );
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
@@ -680,6 +706,7 @@ export default function AdminUsersPage() {
                     hideAccessSummary={hideRowAccessSummary}
                     hidePendingStateChip={hideSingleRowPendingState}
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                    showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
                   />
                 ))}
                 {showInactiveUsersGroup ? (
@@ -702,6 +729,7 @@ export default function AdminUsersPage() {
                         hideAccessSummary={hideRowAccessSummary}
                         hidePendingStateChip={hideSingleRowPendingState}
                         hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                        showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
                       />
                     ))}
                   </>
@@ -729,6 +757,7 @@ function UserRow({
   hideAccessSummary,
   hidePendingStateChip,
   hidePendingProfileLabel,
+  showIdentityDisambiguator,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
@@ -738,6 +767,7 @@ function UserRow({
   hideAccessSummary: boolean;
   hidePendingStateChip: boolean;
   hidePendingProfileLabel: boolean;
+  showIdentityDisambiguator: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
@@ -754,6 +784,7 @@ function UserRow({
   const hasLinkedProfile = hasLinkedAdminUserProfile(user);
   const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
+  const identityDisambiguator = hasLinkedProfile ? `Perfil #${user.partyId}` : `Cuenta #${user.userId}`;
 
   return (
     <Box
@@ -789,6 +820,11 @@ function UserRow({
         {identity.secondary && (
           <Typography variant="body2" color="text.secondary">
             {identity.secondary}
+          </Typography>
+        )}
+        {showIdentityDisambiguator && (
+          <Typography variant="caption" color="text.secondary">
+            {identityDisambiguator}
           </Typography>
         )}
         {!hasLinkedProfile && !hidePendingProfileLabel && (
