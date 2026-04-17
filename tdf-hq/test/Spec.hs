@@ -42,7 +42,8 @@ import TDF.API.Types
       RadioImportRequest (..),
       RadioMetadataRefreshRequest (..),
       RadioPresenceDTO (..),
-      RadioPresenceUpsert (..) )
+      RadioPresenceUpsert (..),
+      RadioTransmissionRequest (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
       PreviewReq (..),
@@ -2038,7 +2039,7 @@ main = hspec $ do
             assertRejected 401
 
     describe "radio request JSON contracts" $ do
-        it "accepts canonical radio import and metadata refresh payloads used by current handlers" $ do
+        it "accepts canonical radio request payloads used by current handlers" $ do
             case eitherDecode "{\"rirSources\":[\"https://radio.example.com/catalog.csv\"],\"rirLimit\":25}" of
                 Left err ->
                     expectationFailure ("Expected canonical radio import payload to decode, got: " <> err)
@@ -2053,7 +2054,15 @@ main = hspec $ do
                     rmrLimit payload `shouldBe` Just 10
                     rmrOnlyMissing payload `shouldBe` Just True
 
-        it "rejects typoed radio request keys instead of silently falling back to default import or refresh behavior" $ do
+            case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\",\"rtrCountry\":\"EC\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical radio transmission payload to decode, got: " <> err)
+                Right payload -> do
+                    rtrName payload `shouldBe` Just "TDF Live"
+                    rtrGenre payload `shouldBe` Just "ambient"
+                    rtrCountry payload `shouldBe` Just "EC"
+
+        it "rejects typoed radio request keys instead of silently falling back to default behavior" $ do
             ( eitherDecode
                 "{\"sources\":[\"https://radio.example.com/catalog.csv\"],\"limit\":25}"
                     :: Either String RadioImportRequest
@@ -2063,6 +2072,12 @@ main = hspec $ do
             ( eitherDecode
                 "{\"limit\":10,\"onlyMissing\":true}"
                     :: Either String RadioMetadataRefreshRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"name\":\"TDF Live\",\"genre\":\"ambient\"}"
+                    :: Either String RadioTransmissionRequest
                 )
                 `shouldSatisfy` isLeft
 

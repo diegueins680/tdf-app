@@ -1013,7 +1013,8 @@ data RadioTransmissionRequest = RadioTransmissionRequest
   , rtrCountry :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON RadioTransmissionRequest
-instance FromJSON RadioTransmissionRequest
+instance FromJSON RadioTransmissionRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioTransmissionInfo = RadioTransmissionInfo
   { rtiStreamId  :: Int64
