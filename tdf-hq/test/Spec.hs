@@ -2833,6 +2833,65 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+    describe "CreateInvoiceReq" $ do
+        it "accepts canonical direct invoice payloads used by the invoicing API" $ do
+            let rawPayload =
+                    "{\"ciCustomerId\":42,"
+                    <> "\"ciCurrency\":\"USD\","
+                    <> "\"ciNumber\":\"INV-2026-001\","
+                    <> "\"ciNotes\":\"April session\","
+                    <> "\"ciLineItems\":[{"
+                    <> "\"cilDescription\":\"Studio session\","
+                    <> "\"cilQuantity\":1,"
+                    <> "\"cilUnitCents\":9000,"
+                    <> "\"cilTaxBps\":1500,"
+                    <> "\"cilServiceOrderId\":7"
+                    <> "}],"
+                    <> "\"ciGenerateReceipt\":true}"
+            case
+                (eitherDecode rawPayload :: Either String DTO.CreateInvoiceReq) of
+                Left err ->
+                    expectationFailure ("Expected canonical invoice payload to decode, got: " <> err)
+                Right invoiceReq -> do
+                    DTO.ciCustomerId invoiceReq `shouldBe` 42
+                    DTO.ciCurrency invoiceReq `shouldBe` Just "USD"
+                    DTO.ciNumber invoiceReq `shouldBe` Just "INV-2026-001"
+                    DTO.ciGenerateReceipt invoiceReq `shouldBe` Just True
+                    case DTO.ciLineItems invoiceReq of
+                        [lineItem] -> do
+                            DTO.cilDescription lineItem `shouldBe` "Studio session"
+                            DTO.cilQuantity lineItem `shouldBe` 1
+                            DTO.cilUnitCents lineItem `shouldBe` 9000
+                            DTO.cilTaxBps lineItem `shouldBe` Just 1500
+                            DTO.cilServiceOrderId lineItem `shouldBe` Just 7
+                        lineItems ->
+                            expectationFailure ("Expected one direct invoice line item, got: " <> show lineItems)
+
+        it "rejects unexpected top-level or nested line-item keys so typoed invoice writes fail explicitly" $ do
+            let typoedTopLevel =
+                    "{\"ciCustomerId\":42,"
+                    <> "\"ciLineItems\":[{"
+                    <> "\"cilDescription\":\"Studio session\","
+                    <> "\"cilQuantity\":1,"
+                    <> "\"cilUnitCents\":9000"
+                    <> "}],"
+                    <> "\"ciGenerateReceipt\":true,"
+                    <> "\"generateReceipt\":false}"
+                typoedLineItem =
+                    "{\"ciCustomerId\":42,"
+                    <> "\"ciLineItems\":[{"
+                    <> "\"cilDescription\":\"Studio session\","
+                    <> "\"cilQuantity\":1,"
+                    <> "\"cilUnitCents\":9000,"
+                    <> "\"unitAmountCents\":9500"
+                    <> "}]}"
+            isLeft
+                (eitherDecode typoedTopLevel :: Either String DTO.CreateInvoiceReq)
+                `shouldBe` True
+            isLeft
+                (eitherDecode typoedLineItem :: Either String DTO.CreateInvoiceReq)
+                `shouldBe` True
+
     describe "GenerateSessionInvoiceReq" $ do
         it "accepts canonical session-invoice payloads used by the invoicing flow" $
             case

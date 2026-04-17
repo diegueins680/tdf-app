@@ -531,7 +531,8 @@ data CreateInvoiceLineReq = CreateInvoiceLineReq
   , cilServiceOrderId    :: Maybe Int64
   , cilPackagePurchaseId :: Maybe Int64
   } deriving (Show, Generic)
-instance FromJSON CreateInvoiceLineReq
+instance FromJSON CreateInvoiceLineReq where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data CreateInvoiceReq = CreateInvoiceReq
   { ciCustomerId      :: Int64
@@ -541,7 +542,8 @@ data CreateInvoiceReq = CreateInvoiceReq
   , ciLineItems       :: [CreateInvoiceLineReq]
   , ciGenerateReceipt :: Maybe Bool
   } deriving (Show, Generic)
-instance FromJSON CreateInvoiceReq
+instance FromJSON CreateInvoiceReq where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data GenerateSessionInvoiceLineReq = GenerateSessionInvoiceLineReq
   { gsilDescription       :: Text
