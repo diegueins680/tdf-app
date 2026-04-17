@@ -36,6 +36,7 @@ import TDF.Trials.API
   , InterestIn (..)
   , PackageDTO
   , PurchaseIn (..)
+  , SignupIn (..)
   , SubjectUpdate (..)
   , TrialQueueItem
   )
@@ -176,6 +177,29 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "status must be one of: Requested, Assigned, Scheduled"
         Right value ->
           expectationFailure ("Expected invalid trial queue status filter to be rejected, got " <> show value)
+
+  describe "SignupIn request decoding" $ do
+    it "accepts canonical public signup payloads" $
+      case (A.eitherDecode
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"marketingOptIn\":true}"
+          :: Either String SignupIn) of
+        Left err ->
+          expectationFailure ("Expected canonical public signup payload to decode, got " <> err)
+        Right (SignupIn firstNameValue lastNameValue emailValue phoneValue passwordValue googleIdTokenValue marketingOptInValue) -> do
+          firstNameValue `shouldBe` "Ada"
+          lastNameValue `shouldBe` "Lovelace"
+          emailValue `shouldBe` "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+          passwordValue `shouldBe` Nothing
+          googleIdTokenValue `shouldBe` Nothing
+          marketingOptInValue `shouldBe` True
+
+    it "rejects unexpected keys so public signup bodies fail explicitly instead of silently over-posting" $
+      isLeft
+        (A.eitherDecode
+          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"marketingOptIn\":true,\"role\":\"Admin\"}"
+            :: Either String SignupIn)
+        `shouldBe` True
 
   describe "validatePublicInterestInput" $ do
     it "rejects typoed or unexpected JSON keys so subject selections do not silently disappear" $ do

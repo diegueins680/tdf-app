@@ -60,7 +60,9 @@ type PrivateTrialsAPI =
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)
-instance ToJSON SignupIn; instance FromJSON SignupIn
+instance ToJSON SignupIn
+instance FromJSON SignupIn where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 data SignupOut = SignupOut { ok :: Bool } deriving (Generic)
 instance ToJSON SignupOut; instance FromJSON SignupOut
 
