@@ -889,13 +889,20 @@ export default function CourseRegistrationsAdminPage() {
     && cohortsQuery.isError
     && !hasCustomFilters
     && !hasVisibleRegistrations;
+  const showRegistrationErrorInlineRetry = regsQuery.isError && !hasVisibleRegistrations;
   const showHeaderRefreshAction = !showInitialCohortErrorState
+    && !showRegistrationErrorInlineRetry
     && (regsQuery.isError || cohortsQuery.isError);
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
       ? 'Reintentar datos'
       : 'Reintentar cohortes'
-    : 'Refrescar lista';
+    : regsQuery.isError
+      ? 'Reintentar inscripciones'
+      : 'Refrescar lista';
+  const registrationErrorRetryLabel = cohortsQuery.isError
+    ? 'Reintentar datos'
+    : 'Reintentar inscripciones';
   const showInlineListRefreshAction = !showHeaderRefreshAction && hasCustomFilters;
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
@@ -2392,9 +2399,16 @@ export default function CourseRegistrationsAdminPage() {
       {!showInitialFilterGuidance && !showInitialCohortResolutionState && !showInitialCohortErrorState && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           {regsQuery.isError && (
-            <Typography color="error">
+            <Alert
+              severity="error"
+              action={showRegistrationErrorInlineRetry ? (
+                <Button color="inherit" size="small" onClick={handleRefresh}>
+                  {registrationErrorRetryLabel}
+                </Button>
+              ) : undefined}
+            >
               No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
-            </Typography>
+            </Alert>
           )}
           {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
           {!regsQuery.isLoading && regsQuery.data?.length === 0 && (

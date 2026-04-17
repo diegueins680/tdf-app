@@ -4416,7 +4416,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('No se pudieron cargar las inscripciones: Backend unavailable');
-      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
@@ -4424,6 +4425,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
     });
 
