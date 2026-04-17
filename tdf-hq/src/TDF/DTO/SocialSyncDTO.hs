@@ -7,7 +7,9 @@ import           Control.Monad (when)
 import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON)
 import           Data.Aeson.Types (Options(..), Parser)
 import           Data.Char (toLower)
+import qualified Data.Set as Set
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 
@@ -56,7 +58,28 @@ instance FromJSON SocialSyncIngestRequest where
       } value
     when (null (ssirPosts request)) $
       fail "posts must contain at least one post"
+    validateUniquePostIdentities (ssirPosts request)
     pure request
+
+validateUniquePostIdentities :: [SocialSyncPostIn] -> Parser ()
+validateUniquePostIdentities = go Set.empty
+  where
+    go _ [] = pure ()
+    go seen (post : rest) =
+      case postIdentityKey post of
+        Nothing -> go seen rest
+        Just key
+          | Set.member key seen ->
+              fail "posts must not contain duplicate platform/externalPostId pairs"
+          | otherwise ->
+              go (Set.insert key seen) rest
+
+    postIdentityKey post =
+      let platformKey = T.toLower (T.strip (sspPlatform post))
+          externalPostKey = T.strip (sspExternalPostId post)
+      in if T.null platformKey || T.null externalPostKey
+           then Nothing
+           else Just (platformKey, externalPostKey)
 
 validateOptionalMetricCount :: String -> Maybe Int -> Parser ()
 validateOptionalMetricCount _ Nothing = pure ()

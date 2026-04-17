@@ -1368,6 +1368,13 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected empty social sync ingest batch to be rejected, got: " <> show value)
 
+        it "rejects duplicate normalized post identities instead of making batch counts order-dependent" $ do
+            case (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\" ig-media-42 \"},{\"platform\":\" Instagram \",\"externalPostId\":\"ig-media-42\"}]}" :: Either String SocialSyncIngestRequest) of
+                Left err ->
+                    err `shouldContain` "posts must not contain duplicate platform/externalPostId pairs"
+                Right value ->
+                    expectationFailure ("Expected duplicate social sync post identity to be rejected, got: " <> show value)
+
         it "rejects negative engagement metrics instead of persisting impossible social analytics" $ do
             let assertInvalid fieldName payload =
                     case (eitherDecode payload :: Either String SocialSyncIngestRequest) of
