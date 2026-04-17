@@ -8296,13 +8296,17 @@ createDatafastCheckout rawId payload = do
 
 confirmDatafastPayment :: Maybe Text -> Maybe Text -> AppM MarketplaceOrderDTO
 confirmDatafastPayment mOrderId mResourcePath = do
-  resourcePathTxt <- either throwError pure (validateDatafastResourcePath mResourcePath)
   orderKey <- case mOrderId of
     Just oid -> parseOrderId oid
     Nothing  -> throwBadRequest "orderId requerido"
   Env{ envPool } <- ask
   mOrder <- liftIO $ flip runSqlPool envPool $ get orderKey
   order <- maybe (throwError err404) pure mOrder
+  resourcePathTxt <-
+    either throwError pure $
+      validateDatafastOrderResourcePath
+        (ME.marketplaceOrderDatafastCheckoutId order)
+        mResourcePath
   dfEnv <- loadDatafastEnv
   statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
   now <- liftIO getCurrentTime
@@ -8327,11 +8331,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
         , ME.MarketplaceOrderDatafastAuthCode =. (dfpResultDetails statusResp >>= dfrdAuthCode)
         , ME.MarketplaceOrderDatafastAcquirerCode =. (dfpResultDetails statusResp >>= dfrdAcquirerCode)
         ]
-      finalUpdates =
-        if isJust (ME.marketplaceOrderDatafastCheckoutId order)
-          then updateFields
-          else (ME.MarketplaceOrderDatafastCheckoutId =. dfpId statusResp) : updateFields
-  liftIO $ flip runSqlPool envPool $ update orderKey finalUpdates
+  liftIO $ flip runSqlPool envPool $ update orderKey updateFields
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
   maybe (throwError err500) pure mDto
 
@@ -8503,7 +8503,7 @@ validateDatafastResourcePath (Just rawResourcePath)
       invalidDatafastResourcePath
   | any invalidSegment segments =
       invalidDatafastResourcePath
-  | not (isDatafastCheckoutPaymentPath segments) =
+  | isNothing (datafastCheckoutIdFromSegments segments) =
       invalidDatafastResourcePath
   | otherwise =
       Right resourcePath
@@ -8513,10 +8513,36 @@ validateDatafastResourcePath (Just rawResourcePath)
     segments = T.splitOn "/" (T.drop 1 resourcePath)
     invalidSegment segment =
       T.null segment || segment == "." || segment == ".."
-    isDatafastCheckoutPaymentPath ["v1", "checkouts", checkoutId, "payment"] =
-      not (T.null checkoutId)
-    isDatafastCheckoutPaymentPath _ =
-      False
+
+validateDatafastOrderResourcePath :: Maybe Text -> Maybe Text -> Either ServerError Text
+validateDatafastOrderResourcePath mExpectedCheckoutId mRawResourcePath = do
+  resourcePath <- validateDatafastResourcePath mRawResourcePath
+  expectedCheckoutId <- case mExpectedCheckoutId of
+    Just checkoutId -> Right checkoutId
+    Nothing ->
+      Left err409
+        { errBody =
+            "Order does not have a Datafast checkout to confirm"
+        }
+  actualCheckoutId <-
+    maybe invalidDatafastResourcePath Right (datafastCheckoutIdFromResourcePath resourcePath)
+  if actualCheckoutId == expectedCheckoutId
+    then Right resourcePath
+    else
+      Left err400
+        { errBody =
+            "resourcePath does not match this order's Datafast checkout"
+        }
+
+datafastCheckoutIdFromResourcePath :: Text -> Maybe Text
+datafastCheckoutIdFromResourcePath resourcePath =
+  datafastCheckoutIdFromSegments (T.splitOn "/" (T.drop 1 resourcePath))
+
+datafastCheckoutIdFromSegments :: [Text] -> Maybe Text
+datafastCheckoutIdFromSegments ["v1", "checkouts", checkoutId, "payment"]
+  | not (T.null checkoutId) = Just checkoutId
+datafastCheckoutIdFromSegments _ =
+  Nothing
 
 isDatafastResourcePathChar :: Char -> Bool
 isDatafastResourcePathChar c =

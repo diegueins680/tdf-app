@@ -112,6 +112,7 @@ import TDF.Server
     , validateMarketplaceBuyerEmail
     , requireMarketplaceCartTotals
     , validateDatafastResourcePath
+    , validateDatafastOrderResourcePath
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , prepareLine
@@ -2474,6 +2475,35 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "/v1/registrations/ABC/payment")
                 "Datafast relative checkout payment path"
+
+    describe "validateDatafastOrderResourcePath" $ do
+        it "accepts confirmation paths only for the checkout stored on the order" $
+            validateDatafastOrderResourcePath
+                (Just "ABC_123.456")
+                (Just " /v1/checkouts/ABC_123.456/payment ")
+                `shouldBe` Right "/v1/checkouts/ABC_123.456/payment"
+
+        it "rejects confirmations for orders without the same Datafast checkout id" $ do
+            let assertInvalid expectedCode expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` expectedCode
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right pathVal ->
+                            expectationFailure
+                                ( "Expected invalid order resourcePath to be rejected, got: "
+                                    <> show pathVal
+                                )
+            assertInvalid
+                409
+                "Order does not have a Datafast checkout to confirm"
+                (validateDatafastOrderResourcePath Nothing (Just "/v1/checkouts/ABC/payment"))
+            assertInvalid
+                400
+                "resourcePath does not match this order's Datafast checkout"
+                (validateDatafastOrderResourcePath
+                    (Just "EXPECTED")
+                    (Just "/v1/checkouts/OTHER/payment"))
 
     describe "label track update validation" $ do
         it "trims required title updates and canonicalizes supported status values" $ do
