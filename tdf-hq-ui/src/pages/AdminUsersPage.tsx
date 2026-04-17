@@ -641,7 +641,7 @@ export default function AdminUsersPage() {
             {usersQuery.error && <Typography color="error">Error al cargar usuarios</Typography>}
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
               <Typography color="text.secondary">
-                No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.
+                No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.
               </Typography>
             )}
             {showSearchEmptyState ? (

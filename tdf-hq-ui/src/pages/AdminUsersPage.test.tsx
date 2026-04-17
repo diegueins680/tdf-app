@@ -211,8 +211,9 @@ describe('AdminUsersPage', () => {
         );
         expect(container.textContent).not.toContain('admin API');
         expect(container.textContent).toContain(
-          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
         );
+        expect(container.textContent).not.toContain('señales de contacto para revisar la lista más rápido');
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('0 usuarios');
         expect(container.textContent).not.toContain('Incluir inactivos');
@@ -237,7 +238,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('Cargando usuarios…');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.textContent).not.toContain(
-          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
         );
       });
     } finally {
@@ -256,7 +257,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Error al cargar usuarios');
         expect(container.textContent).not.toContain(
-          'No hay usuarios todavía. Cuando exista el primero, aquí aparecerán búsqueda, filtros y señales de contacto para revisar la lista más rápido.',
+          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
         );
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
