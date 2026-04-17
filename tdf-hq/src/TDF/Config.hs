@@ -131,6 +131,7 @@ validateFallbackConnUrl envName raw
       | otherwise =
           let remainder = T.drop (length scheme) value
               authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
+              databasePath = T.drop (T.length authority) remainder
               atCount = T.count "@" authority
               hostPort =
                 case reverse (T.splitOn "@" authority) of
@@ -140,7 +141,10 @@ validateFallbackConnUrl envName raw
                then Left (envName <> " must include a PostgreSQL host")
                else if atCount > 1
                  then Left (envName <> " must not contain multiple @ separators")
-               else validateConnectionHostPort hostPort *> Right raw
+               else
+                 validateConnectionHostPort hostPort
+                   *> validateConnectionDatabasePath databasePath
+                   *> Right raw
 
     validateConnectionHostPort :: Text -> Either String ()
     validateConnectionHostPort hostPort
@@ -167,6 +171,16 @@ validateFallbackConnUrl envName raw
                  Just portNumber | portNumber >= 1 && portNumber <= 65535 -> Right ()
                  _ -> Left (envName <> " port must be between 1 and 65535")
       | otherwise = Left (envName <> " port must be numeric")
+
+    validateConnectionDatabasePath :: Text -> Either String ()
+    validateConnectionDatabasePath path
+      | not ("/" `T.isPrefixOf` path) =
+          Left (envName <> " must include a database name")
+      | otherwise =
+          let databaseName = T.takeWhile (`notElem` ("?#" :: String)) (T.drop 1 path)
+          in if T.null databaseName || "/" `T.isInfixOf` databaseName
+               then Left (envName <> " must include a database name")
+               else Right ()
 
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =

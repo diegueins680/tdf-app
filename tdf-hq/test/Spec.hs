@@ -710,6 +710,31 @@ main = hspec $ do
                     "DATABASE_URL must include a PostgreSQL host"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values without an explicit database name" $ do
+            let expectMissingDatabase raw =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just raw)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL must include a database name"
+                                `isInfixOf` show (err :: IOException)
+            expectMissingDatabase "postgresql://flyuser:flypass@db.fly.internal:5432"
+            expectMissingDatabase "postgresql://flyuser:flypass@db.fly.internal:5432?sslmode=require"
+            expectMissingDatabase "postgresql://flyuser:flypass@db.fly.internal:5432/"
+
         it "rejects DATABASE_URL fallback values with ambiguous userinfo separators" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:fly@pass@db.fly.internal:5432/tdf_hq")
