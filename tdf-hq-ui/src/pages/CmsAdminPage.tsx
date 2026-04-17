@@ -477,6 +477,7 @@ export default function CmsAdminPage() {
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
+  const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}';
 
   return (
@@ -770,9 +771,11 @@ export default function CmsAdminPage() {
                   error={Boolean(payloadError)}
                 />
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Button variant="outlined" onClick={handleFormatPayload} disabled={Boolean(payloadError)}>
-                    Formatear JSON
-                  </Button>
+                  {showFormatPayloadAction && (
+                    <Button variant="outlined" onClick={handleFormatPayload}>
+                      Formatear JSON
+                    </Button>
+                  )}
                   {showClearPayloadAction && (
                     <Button
                       variant="text"

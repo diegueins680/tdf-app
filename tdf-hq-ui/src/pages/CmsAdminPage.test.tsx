@@ -318,6 +318,42 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('only shows the JSON format action when formatting would change the payload', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Formatear JSON')).toBe(0);
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Payload JSON'), '{"heroTitle":"Landing actualizada"}');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Formatear JSON')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Formatear JSON').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Payload JSON').value).toBe(
+        JSON.stringify({ heroTitle: 'Landing actualizada' }, null, 2),
+      );
+      expect(countActionsByText(container, 'Formatear JSON')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('replaces the duplicate payload preview grid with one compare hint inside the editor', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
