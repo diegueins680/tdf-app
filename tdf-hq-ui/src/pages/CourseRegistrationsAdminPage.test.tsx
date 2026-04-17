@@ -2344,6 +2344,74 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('resets expanded system-email history when moving to another dossier', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+    listRegistrationEmailsMock.mockImplementation((registrationId) => (
+      Promise.resolve(registrationId === 101 ? [buildEmailEvent()] : [])
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, hideSystemEmailsLabel)).toBeTruthy();
+      expect(document.body.textContent).toContain(systemEmailHistoryHelperText);
+      expect(document.body.textContent).toContain('Recordatorio de pago enviado.');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cerrar'));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Grace Hopper');
+      expect(document.body.textContent).toContain(emptySystemEmailHistoryMessage);
+      expect(countButtonsByText(document.body, hideSystemEmailsLabel)).toBe(0);
+      expect(countButtonsByText(document.body, showSystemEmailsLabel)).toBe(0);
+      expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
+      expect(document.body.textContent).not.toContain('Recordatorio de pago enviado.');
+    });
+
+    await cleanup();
+  });
+
   it('replaces the empty system-email action with passive guidance for first-time admins', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

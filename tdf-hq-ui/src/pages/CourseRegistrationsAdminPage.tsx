@@ -1602,6 +1602,11 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Confirmar pago de inscripción'
       : 'Registrar pago de inscripción'
     : 'Expediente de inscripción';
+
+  useEffect(() => {
+    setShowEmailHistory(false);
+  }, [selectedDossierId, selectedDossier?.intent]);
+
   const notesSection = (
     <Card variant="outlined">
       <CardContent>
