@@ -4219,7 +4219,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps populated-list utilities together and leaves row counts in passive context copy', async () => {
+  it('keeps capped default-list utilities focused on limit guidance instead of a refresh action', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -4246,6 +4246,9 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).toContain('Mostrando 200 inscripciones en esta vista.');
+      expect(container.textContent).toContain(
+        'Se cargó el límite de 200 inscripciones; usa Ajustar límite si necesitas revisar más registros.',
+      );
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV (200 filas)',
@@ -4253,8 +4256,7 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBe(false);
       expect(listUtilities).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
-      expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
-      expect(getButtonByText(listUtilities!, 'Refrescar lista')).toBeTruthy();
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
     });
 

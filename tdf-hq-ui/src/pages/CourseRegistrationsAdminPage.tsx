@@ -223,6 +223,8 @@ const getResetViewLabel = ({
 
 const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
+const buildReachedListLimitSummary = (limit: number) =>
+  `Se cargó el límite de ${limit} inscripciones; usa Ajustar límite si necesitas revisar más registros.`;
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
@@ -799,6 +801,9 @@ export default function CourseRegistrationsAdminPage() {
   const copyCsvButtonLabel = 'Copiar CSV visible';
   const showVisibleRegistrationsSummary = loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage);
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
+  const standaloneReachedListLimitSummary = !hasCustomFilters && viewHitsCurrentLimit
+    ? buildReachedListLimitSummary(limit)
+    : '';
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
   const showFirstRunFilterHelper = showFilterOnboardingCopy && !showSingleResultWithoutHiddenLimit;
@@ -861,6 +866,13 @@ export default function CourseRegistrationsAdminPage() {
     ].filter(Boolean).join(' '),
     [activeViewSummaryMessage, showVisibleRegistrationsSummary, visibleRegistrationsSummary],
   );
+  const standaloneUtilitySummaryMessage = useMemo(
+    () => [
+      showStandaloneListUtilitySummary ? visibleRegistrationsSummary : '',
+      standaloneReachedListLimitSummary,
+    ].filter(Boolean).join(' '),
+    [showStandaloneListUtilitySummary, standaloneReachedListLimitSummary, visibleRegistrationsSummary],
+  );
   const showFilteredEmptyState = !regsQuery.isLoading
     && !regsQuery.isError
     && !cohortsQuery.isError
@@ -878,8 +890,7 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Reintentar datos'
       : 'Reintentar cohortes'
     : 'Refrescar lista';
-  const showInlineListRefreshAction = !showHeaderRefreshAction
-    && (hasCustomFilters || viewHitsCurrentLimit);
+  const showInlineListRefreshAction = !showHeaderRefreshAction && hasCustomFilters;
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
@@ -893,7 +904,7 @@ export default function CourseRegistrationsAdminPage() {
   const showStandaloneListUtilityRow = !hasCustomFilters
     && hasVisibleRegistrations
     && (
-      showStandaloneListUtilitySummary
+      Boolean(standaloneUtilitySummaryMessage)
       || canCopyCsv
       || Boolean(copyMessage)
       || showInlineListRefreshAction
@@ -2324,9 +2335,9 @@ export default function CourseRegistrationsAdminPage() {
                 useFlexGap
                 data-testid="course-registration-list-utilities"
               >
-                {showStandaloneListUtilitySummary && (
+                {standaloneUtilitySummaryMessage && (
                   <Typography variant="body2" color="text.secondary">
-                    {visibleRegistrationsSummary}
+                    {standaloneUtilitySummaryMessage}
                   </Typography>
                 )}
                 {showInlineListRefreshAction && (
