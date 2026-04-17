@@ -28,6 +28,7 @@ import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
+import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
 const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
@@ -390,6 +391,32 @@ export default function CmsAdminPage() {
     const draftPretty = (formattedPayload ?? '').trim();
     return livePretty !== '' && draftPretty !== '' && livePretty !== draftPretty;
   }, [formattedPayload, livePayloadPretty]);
+  const titleChangedFromLive = liveContent
+    ? title.trim() !== (liveContent.ccdTitle ?? '').trim()
+    : false;
+  const statusChangedFromLive = liveContent
+    ? status !== liveContent.ccdStatus
+    : false;
+  const liveEditorActionState = useMemo(
+    () => getCmsLiveEditorActionState({
+      hasSlugSelection,
+      hasLiveContent: Boolean(liveContent),
+      hasPayloadError: Boolean(payloadError),
+      isLoadingLiveOnDemand: loadingLiveOnDemand,
+      payloadChangedFromLive: payloadChanged,
+      statusChangedFromLive,
+      titleChangedFromLive,
+    }),
+    [
+      hasSlugSelection,
+      liveContent,
+      loadingLiveOnDemand,
+      payloadChanged,
+      payloadError,
+      statusChangedFromLive,
+      titleChangedFromLive,
+    ],
+  );
   const draftVsLiveDiff = useMemo(
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
     [formattedPayload, livePayloadPretty],
@@ -798,7 +825,7 @@ export default function CmsAdminPage() {
                       Cargar ejemplo
                     </Button>
                   )}
-                  {liveContent && (
+                  {liveEditorActionState.showUseLiveAction && (
                     <Button
                       variant="outlined"
                       onClick={() => {
@@ -806,8 +833,11 @@ export default function CmsAdminPage() {
                       }}
                       disabled={loadingLiveOnDemand || !hasSlugSelection}
                     >
-                      {loadingLiveOnDemand ? 'Cargando versión en vivo...' : 'Usar versión en vivo'}
+                      {liveEditorActionState.useLiveActionLabel}
                     </Button>
+                  )}
+                  {liveEditorActionState.showLiveInSyncChip && (
+                    <Chip label="Editor coincide con live" color="success" variant="outlined" />
                   )}
                   {canCompareWithLive && (
                     <Button variant="text" onClick={() => setShowDraftDiff(true)}>

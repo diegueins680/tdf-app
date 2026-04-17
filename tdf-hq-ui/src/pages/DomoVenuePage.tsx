@@ -323,7 +323,7 @@ export default function DomoVenuePage() {
             ['Cultura y contenido', 'Conciertos, sesiones audiovisuales y retiros con una identidad clara de destino.'],
           ].map(([title, body]) => (
             <Grid item xs={12} md={4} key={title}>
-              <Card sx={{ height: '100%', borderRadius: 2, boxShadow: 'none', border: '1px solid rgba(44,35,24,0.12)' }}>
+              <Card sx={{ height: '100%', borderRadius: 1, boxShadow: 'none', border: '1px solid rgba(44,35,24,0.12)' }}>
                 <CardContent>
                   <Typography variant="h6" fontWeight={800}>{title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{body}</Typography>
@@ -337,7 +337,7 @@ export default function DomoVenuePage() {
       <Box id="cotizar" sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 7 } }}>
         <Grid container spacing={3}>
           <Grid item xs={12} lg={7}>
-            <Card id="reservar" sx={{ borderRadius: 2 }}>
+            <Card id="reservar" sx={{ borderRadius: 1 }}>
               <CardContent>
                 <Stack spacing={2.5}>
                   <Stack spacing={0.75}>
@@ -474,7 +474,7 @@ export default function DomoVenuePage() {
           </Grid>
 
           <Grid item xs={12} lg={5}>
-            <Card sx={{ borderRadius: 2, position: { lg: 'sticky' }, top: 24 }}>
+            <Card sx={{ borderRadius: 1, position: { lg: 'sticky' }, top: 24 }}>
               <CardContent>
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={1} alignItems="center">
