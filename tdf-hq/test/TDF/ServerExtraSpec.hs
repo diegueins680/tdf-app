@@ -81,6 +81,7 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
+    validateMetaWebhookChannel,
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
     parseSocialDirectionParam,
@@ -1182,6 +1183,36 @@ spec = do
         403
         "Meta verify token not configured"
         (validate (Just "subscribe") (Just "challenge-123") (Just "secret") [Just "   "])
+
+  describe "validateMetaWebhookChannel" $ do
+    it "accepts only route-matching Meta webhook object values" $ do
+      let instagramPayload = A.object ["object" .= (" InStAgRaM " :: Text)]
+          facebookPagePayload = A.object ["object" .= ("page" :: Text)]
+          facebookAliasPayload = A.object ["object" .= ("facebook" :: Text)]
+      validateMetaWebhookChannel MetaInstagram instagramPayload
+        `shouldBe` Right MetaInstagram
+      validateMetaWebhookChannel MetaFacebook facebookPagePayload
+        `shouldBe` Right MetaFacebook
+      validateMetaWebhookChannel MetaFacebook facebookAliasPayload
+        `shouldBe` Right MetaFacebook
+
+    it "rejects missing or mismatched Meta webhook objects instead of falling back to the endpoint" $ do
+      let assertInvalid expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right channel ->
+                expectationFailure ("Expected invalid Meta webhook channel, got " <> show channel)
+      assertInvalid
+        "Meta webhook object must be one of: instagram, page, facebook"
+        (validateMetaWebhookChannel MetaInstagram (A.object []))
+      assertInvalid
+        "Meta webhook object does not match the webhook endpoint"
+        (validateMetaWebhookChannel MetaInstagram (A.object ["object" .= ("page" :: Text)]))
+      assertInvalid
+        "Meta webhook object does not match the webhook endpoint"
+        (validateMetaWebhookChannel MetaFacebook (A.object ["object" .= ("instagram" :: Text)]))
 
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do

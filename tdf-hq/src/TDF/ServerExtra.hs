@@ -2120,6 +2120,19 @@ extractMetaChannel payload =
         Just "facebook" -> Just MetaFacebook
         _ -> Nothing
 
+validateMetaWebhookChannel :: MetaChannel -> A.Value -> Either ServerError MetaChannel
+validateMetaWebhookChannel expected payload =
+  case extractMetaChannel payload of
+    Nothing ->
+      Left err400 { errBody = "Meta webhook object must be one of: instagram, page, facebook" }
+    Just actual
+      | actual == expected -> Right actual
+      | otherwise ->
+          Left err400
+            { errBody =
+                "Meta webhook object does not match the webhook endpoint"
+            }
+
 persistMetaInbound
   :: MonadIO m
   => MetaChannel
@@ -2347,8 +2360,8 @@ instagramWebhookServer =
     handleWebhook payload = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
       let incoming = extractMetaInbound payload
-          channel = fromMaybe MetaInstagram (extractMetaChannel payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
         BL8.hPutStrLn stderr (A.encode payload)
@@ -2371,8 +2384,8 @@ facebookWebhookServer =
     handleWebhook payload = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
       let incoming = extractMetaInbound payload
-          channel = fromMaybe MetaFacebook (extractMetaChannel payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
         BL8.hPutStrLn stderr (A.encode payload)
