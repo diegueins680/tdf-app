@@ -3657,6 +3657,16 @@ main = hspec $ do
 
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
+                    , ("contactEmail", "lead<ops>@example.com")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "contactEmail must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected malformed contactEmail local part to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
                     , ( "musicians"
                       , "[{\"lsmName\":\"Keys\",\"lsmEmail\":\"not-an-email\",\"lsmIsExisting\":false}]"
                       )
@@ -3665,6 +3675,17 @@ main = hspec $ do
                     err `shouldContain` "musician email must be a valid email address"
                 Right payload ->
                     expectationFailure ("Expected invalid musician email to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"Keys\",\"lsmEmail\":\"keys..player@example.com\",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musician email must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected malformed musician email local part to be rejected, got: " <> show payload)
 
         it "rejects malformed contact phones instead of storing ambiguous free-form contact text" $ do
             case fromMultipart (mkLiveSessionMultipart

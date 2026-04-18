@@ -296,7 +296,8 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       isValidEmail candidate =
         case T.splitOn "@" candidate of
           [localPart, domain] ->
-            not (T.null localPart)
+            T.length candidate <= 254
+              && isValidEmailLocalPart localPart
               && not (T.null domain)
               && not (T.any isSpace candidate)
               && not (T.isPrefixOf "." domain)
@@ -305,9 +306,23 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               && all isValidEmailDomainLabel (T.splitOn "." domain)
           _ -> False
 
+      isValidEmailLocalPart :: Text -> Bool
+      isValidEmailLocalPart localPart =
+        not (T.null localPart)
+          && T.length localPart <= 64
+          && not (T.isPrefixOf "." localPart)
+          && not (T.isSuffixOf "." localPart)
+          && not (".." `T.isInfixOf` localPart)
+          && T.all isValidEmailLocalChar localPart
+
+      isValidEmailLocalChar :: Char -> Bool
+      isValidEmailLocalChar c =
+        isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
       isValidEmailDomainLabel :: Text -> Bool
       isValidEmailDomainLabel label =
         not (T.null label)
+          && T.length label <= 63
           && not (T.isPrefixOf "-" label)
           && not (T.isSuffixOf "-" label)
           && T.all isValidEmailDomainChar label
