@@ -10,7 +10,7 @@ module TDF.ServerInstagramOAuth
   ) where
 
 import           Control.Exception          (SomeException, displayException, try)
-import           Control.Monad              (forM, forM_, when)
+import           Control.Monad              (forM, forM_, unless, when)
 import           Control.Monad.Except       (MonadError, catchError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
@@ -35,7 +35,7 @@ import           Network.HTTP.Types.URI     (renderSimpleQuery)
 import           Servant
 
 import           TDF.API.InstagramOAuth
-import           TDF.Auth                   (AuthedUser(..))
+import           TDF.Auth                   (AuthedUser(..), hasSocialInboxAccess)
 import           TDF.Config
   ( AppConfig(..)
   , normalizeConfiguredBaseUrl
@@ -149,6 +149,8 @@ instagramOAuthServer
 instagramOAuthServer user = exchangeHandler
   where
     exchangeHandler InstagramOAuthExchangeRequest{..} = do
+      unless (hasSocialInboxAccess user) $
+        throwError err403 { errBody = "Missing required module access" }
       Env{envConfig, envPool} <- asks id
       (appId, appSecret) <- loadFacebookCreds envConfig
       redirectUri <- either throwError pure (resolveInstagramRedirectUri envConfig ioeRedirectUri)

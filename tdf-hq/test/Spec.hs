@@ -30,6 +30,7 @@ import Web.PathPieces (toPathPiece)
 import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
+import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
@@ -125,7 +126,7 @@ import TDF.ServerFeedback
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
       validateOptionalFeedbackContactEmail )
-import TDF.ServerInstagramOAuth (resolveInstagramRedirectUri)
+import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
 import TDF.Server
     ( buildWhatsappCtaFor,
       sanitizeStoredCoursePublicUrl,
@@ -1007,6 +1008,36 @@ main = hspec $ do
                 cfg
                 (Just " https://tdf-app.pages.dev/oauth/instagram/callback ")
                 `shouldBe` Right "https://tdf-app.pages.dev/oauth/instagram/callback"
+
+        it "requires social inbox access before exchanging Instagram OAuth codes" $ do
+            let fanUser =
+                    AuthedUser
+                        { auPartyId = toSqlKey 7
+                        , auRoles = [Fan]
+                        , auModules = modulesForRoles [Fan]
+                        }
+                payload =
+                    InstagramOAuth.InstagramOAuthExchangeRequest
+                        "oauth-code-123"
+                        Nothing
+                handler =
+                    instagramOAuthServer fanUser
+                        :: ServerT
+                             InstagramOAuth.InstagramOAuthAPI
+                             (ReaderT Env (ExceptT ServerError IO))
+                unusedEnv =
+                    Env
+                        { envPool = error "envPool should be unused by Instagram OAuth authorization rejection"
+                        , envConfig = error "envConfig should be unused by Instagram OAuth authorization rejection"
+                        }
+            result <- runExceptT (runReaderT (handler payload) unusedEnv)
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL.unpack (errBody serverErr) `shouldContain` "Missing required module access"
+                Right value ->
+                    expectationFailure
+                        ("Expected unauthorized Instagram OAuth exchange to be rejected, got " <> show value)
 
         it "rejects malformed explicit Instagram redirect URIs before contacting Facebook" $ do
             cfg <- loadInstagramConfig
