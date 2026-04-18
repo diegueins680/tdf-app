@@ -85,6 +85,7 @@ const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para reg
 const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
 const defaultPublicFormSource = 'landing';
@@ -646,6 +647,7 @@ export default function CourseRegistrationsAdminPage() {
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
   const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
+  const [markedPaidRegistrationId, setMarkedPaidRegistrationId] = useState<number | null>(null);
   const selectedSlug = slug.trim();
 
   const listQueryKey = useMemo(
@@ -1285,6 +1287,7 @@ export default function CourseRegistrationsAdminPage() {
   useEffect(() => {
     if (!selectedDossier) {
       setDossierFlash(null);
+      setMarkedPaidRegistrationId(null);
       setShowEmailHistory(false);
       setReceiptMenuTarget(null);
       setFollowUpMenuTarget(null);
@@ -1299,6 +1302,7 @@ export default function CourseRegistrationsAdminPage() {
       setShowFollowUpComposer(false);
       return;
     }
+    setMarkedPaidRegistrationId(null);
     setShowEmailHistory(false);
     setReceiptMenuTarget(null);
     setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
@@ -1642,7 +1646,8 @@ export default function CourseRegistrationsAdminPage() {
         newStatus: 'paid',
       })
       .then(() => {
-        setDossierFlash({ severity: 'success', message: 'Inscripción marcada como pagada.' });
+        setMarkedPaidRegistrationId(selectedDossierId);
+        setDossierFlash({ severity: 'success', message: markPaidSuccessMessage });
       })
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
@@ -1658,9 +1663,12 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
+  const hasMarkedPaidInCurrentDossier =
+    isMarkPaidIntent && selectedDossierId != null && markedPaidRegistrationId === selectedDossierId;
+  const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
   const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && followUps.length === 0;
-  const hasPrimaryDossierAction = canMarkPaid || showSystemEmailHistoryAction;
+  const hasPrimaryDossierAction = showMarkPaidAction || showSystemEmailHistoryAction;
   const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
   const showEvidenceOnlyEmptyReceiptCopy = activeRegistration?.crStatus === 'paid'
@@ -1801,7 +1809,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowReceiptComposer(false);
   }, [canMarkPaid, selectedDossier?.intent]);
 
-  const isConfirmMarkPaidFlow = isMarkPaidIntent && canMarkPaid;
+  const isConfirmMarkPaidFlow = isMarkPaidIntent && (showMarkPaidAction || hasMarkedPaidInCurrentDossier);
   const showNotesSection = isMarkPaidIntent
     ? (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
     : (hasSavedNotes || showNotesComposer);
@@ -2956,7 +2964,7 @@ export default function CourseRegistrationsAdminPage() {
                       useFlexGap
                       data-testid="course-registration-dossier-actions"
                     >
-                      {canMarkPaid && (
+                      {showMarkPaidAction && (
                         <Button
                           variant="contained"
                           color="success"

@@ -3442,6 +3442,66 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('removes the mark-paid action after success so admins do not repeat the payment update', async () => {
+    const registration = buildRegistration();
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registration,
+        crdReceipts: [buildReceipt({ crrRegistrationId: registration.crId })],
+        crdCanMarkPaid: true,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+        expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(1);
+      });
+
+      await act(async () => {
+        clickButton(getButtonByText(document.body, 'Marcar pagado'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Inscripción marcada como pagada.');
+        expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
+        expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
+        expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
+        expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
+        expect(countButtonsByText(document.body, 'Agregar seguimiento opcional')).toBe(0);
+        expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps existing system-email history out of the mark-paid workflow so the pay action stays primary', async () => {
     const registration = buildRegistration();
     getRegistrationDossierMock.mockResolvedValue(
