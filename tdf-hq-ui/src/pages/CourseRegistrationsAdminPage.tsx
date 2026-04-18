@@ -655,7 +655,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     if (reg.crAdminNotes?.trim()) hasNotes = true;
   });
 
-  const terms = hasNamedOrContactIdentity ? ['Nombre', 'email', 'teléfono'] : ['Registro'];
+  const terms = hasNamedOrContactIdentity ? ['Nombre', 'contacto'] : ['Registro'];
   if (hasNamedOrContactIdentity && hasGeneratedRegistrationIdentity) terms.push('registro');
   if (hasNotes) terms.push('nota');
   if (statusKeys.size > 1) terms.push('estado');

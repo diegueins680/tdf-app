@@ -5038,7 +5038,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(hasLabel(container, 'Buscar registros cargados')).toBe(false);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, email, teléfono o estado',
+        'Nombre, contacto o estado',
       );
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
@@ -5097,7 +5097,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, email o teléfono',
+        'Nombre o contacto',
       );
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
@@ -5153,7 +5153,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, email, teléfono o curso',
+        'Nombre, contacto o curso',
       );
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
@@ -5199,7 +5199,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(searchInput.getAttribute('placeholder')).toBe('Registro');
-      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre, email, teléfono');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');
     });
@@ -5271,7 +5271,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, estado, fuente o curso');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, estado, fuente o curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -5382,7 +5382,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, email, teléfono o nota',
+        'Nombre, contacto o nota',
       );
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
