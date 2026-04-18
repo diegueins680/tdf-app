@@ -260,7 +260,8 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Error al cargar usuarios');
+        expect(container.textContent).toContain('No se pudieron cargar los usuarios: admin users unavailable.');
+        expect(container.textContent).not.toContain('Error al cargar usuarios');
         expect(container.textContent).not.toContain(
           'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
         );

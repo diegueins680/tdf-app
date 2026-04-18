@@ -494,6 +494,7 @@ export default function AdminUsersPage() {
     && !hasActiveSearch
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === 0;
+  const usersErrorMessage = usersQuery.error instanceof Error ? usersQuery.error.message : '';
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos en esta vista.'
     : '';
@@ -710,7 +711,11 @@ export default function AdminUsersPage() {
         <Card>
           <CardContent>
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
-            {usersQuery.error && <Typography color="error">Error al cargar usuarios</Typography>}
+            {usersQuery.error && (
+              <Typography color="error">
+                No se pudieron cargar los usuarios{usersErrorMessage ? `: ${usersErrorMessage}` : ''}.
+              </Typography>
+            )}
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
               <Typography color="text.secondary">
                 No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.
