@@ -993,6 +993,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );

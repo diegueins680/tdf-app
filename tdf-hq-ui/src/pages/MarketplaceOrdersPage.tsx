@@ -280,6 +280,7 @@ export default function MarketplaceOrdersPage() {
   const visiblePaidCount = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const visiblePendingCount = Math.max(filtered.length - visiblePaidCount, 0);
   const showVisibleOrderBreakdown = visiblePaidCount > 0 && visiblePendingCount > 0;
+  const showExportCsvAction = filtered.length > 0;
   const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const ordersSummary = summarizeMarketplaceOrderList({
@@ -290,6 +291,10 @@ export default function MarketplaceOrdersPage() {
   const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
+  const showOrderListHeaderActions =
+    !showFirstOrderEmptyState
+    && !showSingleOrderFocusedState
+    && (showVisibleOrderBreakdown || showExportCsvAction);
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
@@ -750,7 +755,7 @@ export default function MarketplaceOrdersPage() {
                 ? 'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
                 : 'Haz clic en una fila para revisar estado, pago y datos del comprador.'
           }
-          action={showFirstOrderEmptyState || showSingleOrderFocusedState ? null : (
+          action={showOrderListHeaderActions ? (
             <Stack direction="row" spacing={1}>
               {showVisibleOrderBreakdown && (
                 <>
@@ -768,11 +773,13 @@ export default function MarketplaceOrdersPage() {
                   />
                 </>
               )}
-              <Button size="small" variant="outlined" onClick={exportCsv} disabled={filtered.length === 0}>
-                Exportar CSV
-              </Button>
+              {showExportCsvAction && (
+                <Button size="small" variant="outlined" onClick={exportCsv}>
+                  Exportar CSV
+                </Button>
+              )}
             </Stack>
-          )}
+          ) : null}
         />
         <CardContent>
           {ordersQuery.isError && <Alert severity="error">{ordersQuery.error?.message ?? 'Error al cargar órdenes'}</Alert>}
