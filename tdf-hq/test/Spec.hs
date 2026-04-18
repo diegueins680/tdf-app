@@ -416,6 +416,14 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
             assertInvalid
                 "HQ_APP_URL"
+                "https://hq-admin/app"
+                "HQ_APP_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn/assets"
+                "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_APP_URL"
                 "https://hq.example.com/app?preview=1"
                 "HQ_APP_URL must be an absolute http(s) URL without query or fragment"
             assertInvalid

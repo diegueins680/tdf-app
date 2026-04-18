@@ -671,10 +671,19 @@ normalizeConfiguredBaseUrl envName rawUrl
     validateHost host =
       let normalizedHost = T.toLower host
       in not (T.null normalizedHost)
+        && hasPublicOrLocalhostShape normalizedHost
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
         && not (isAmbiguousNumericHost normalizedHost)
         && all isValidHostLabel (T.splitOn "." normalizedHost)
+
+    hasPublicOrLocalhostShape host =
+      host == "localhost"
+        || ".localhost" `T.isSuffixOf` host
+        || "." `T.isInfixOf` host
+        || case parseIpv4Octets host of
+             Just _ -> True
+             Nothing -> False
 
     validateBracketedHost host =
       not (T.null host)
