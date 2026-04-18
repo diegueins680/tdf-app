@@ -191,6 +191,7 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReference
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
+import TDF.ServerFuture (validateFutureAdminAccess)
 import Test.Hspec
 import Web.PathPieces (toPathPiece)
 
@@ -4076,6 +4077,18 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the intended single-role strict-admin matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasStrictAdminAccess (mkUser [role]) `shouldBe` (role == Admin)
+
+    describe "validateFutureAdminAccess" $ do
+        it "keeps admin discovery stubs scoped to literal Admin sessions" $ do
+            validateFutureAdminAccess (mkUser [Admin]) `shouldBe` Right ()
+            forM_ [Manager, StudioManager, Webmaster, Fan, Customer] $ \role ->
+                case validateFutureAdminAccess (mkUser [role]) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 403
+                        BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                    Right value ->
+                        expectationFailure
+                            ("Expected admin discovery access to be rejected, got: " <> show value)
 
     describe "hasSocialInboxAccess" $ do
         it "denies baseline and read-only CRM sessions" $ do

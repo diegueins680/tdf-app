@@ -2030,7 +2030,7 @@ protectedServer user =
   :<|> driveServer user
   :<|> radioServer user
   :<|> countriesServer
-  :<|> futureServer
+  :<|> futureServer user
 
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =

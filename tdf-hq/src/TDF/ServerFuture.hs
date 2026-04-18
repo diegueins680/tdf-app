@@ -3,10 +3,12 @@
 
 module TDF.ServerFuture where
 
+import           Control.Monad.Except (MonadError)
 import           Data.Text            (Text)
 import           Servant
 
 import           TDF.API.Future
+import           TDF.Auth             (AuthedUser, hasStrictAdminAccess)
 
 -- | Shared helper to quickly craft stub responses.
 stub :: Applicative m => Text -> Text -> m StubResponse
@@ -17,9 +19,10 @@ stub area endpoint = pure StubResponse
   }
 
 futureServer
-  :: Applicative m
-  => ServerT FutureAPI m
-futureServer = accessStubs
+  :: MonadError ServerError m
+  => AuthedUser
+  -> ServerT FutureAPI m
+futureServer user = accessStubs
           :<|> crmStubs
           :<|> schedulingStubs
           :<|> packagesStubs
@@ -50,25 +53,41 @@ futureServer = accessStubs
                 :<|> stub "inventory" "assets/workflow"
                 :<|> stub "inventory" "stock"
 
-    adminStubs =     stub "admin" "seed"
+    adminStubs =     adminSeed
                 :<|> adminConsole
 
-    adminConsole = pure AdminConsoleView
-      { status = "preview"
-      , cards =
-          [ AdminConsoleCard
-              { cardId = "user-management"
-              , title  = "Gestión de usuarios"
-              , body   =
-                  [ "La asignación de roles se administra desde la pantalla de Parties."
-                  , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
-                  ]
-              }
-          ]
-      }
+    adminSeed = do
+      requireFutureAdminAccess user
+      stub "admin" "seed"
+
+    adminConsole = do
+      requireFutureAdminAccess user
+      pure $
+        AdminConsoleView
+          { status = "preview"
+          , cards =
+              [ AdminConsoleCard
+                  { cardId = "user-management"
+                  , title  = "Gestión de usuarios"
+                  , body   =
+                      [ "La asignación de roles se administra desde la pantalla de Parties."
+                      , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+                      ]
+                  }
+              ]
+          }
 
     crossCuttingStubs = stub "experience" "navigation"
                     :<|> stub "experience" "feedback"
                     :<|> stub "experience" "offline"
                     :<|> stub "experience" "design"
                     :<|> stub "experience" "auditing"
+
+validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
+validateFutureAdminAccess user
+  | hasStrictAdminAccess user = Right ()
+  | otherwise = Left err403 { errBody = "Admin role required" }
+
+requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
+requireFutureAdminAccess user =
+  either throwError pure (validateFutureAdminAccess user)
