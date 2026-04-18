@@ -1460,6 +1460,10 @@ export default function CourseRegistrationsAdminPage() {
   }, [slug, status, limit, setSearchParams]);
 
   useEffect(() => {
+    setCopyMessage(null);
+  }, [localSearchKey, slug, status, limit]);
+
+  useEffect(() => {
     if (!selectedDossier) {
       setDossierFlash(null);
       setMarkedPaidRegistrationId(null);

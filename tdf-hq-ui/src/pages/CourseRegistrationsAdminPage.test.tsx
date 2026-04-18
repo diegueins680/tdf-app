@@ -5352,6 +5352,80 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('clears stale CSV feedback when local search changes the visible export scope', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 20 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, copyVisibleCsvLabel(2)));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(writeTextMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
+      expect(getButtonByText(container, copyVisibleCsvLabel(9))).toBeTruthy();
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps capped default-list utilities focused on limit guidance instead of a refresh action', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
