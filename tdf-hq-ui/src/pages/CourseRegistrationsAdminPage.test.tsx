@@ -2506,7 +2506,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+
+      expect(actions).toBeTruthy();
       expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+      expect(countButtonsByText(actions!, showSystemEmailsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Más contexto')).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
       expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
     });
