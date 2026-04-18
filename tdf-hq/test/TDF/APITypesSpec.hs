@@ -31,6 +31,8 @@ import TDF.API.Types
     , RolePayload (..)
     , ServiceCatalogCreate (..)
     , ServiceCatalogUpdate (..)
+    , SessionCreate (..)
+    , SessionUpdate (..)
     , LabelTrackCreate (..)
     , LabelTrackUpdate (..)
     , UserRoleUpdatePayload (..)
@@ -492,6 +494,50 @@ spec = do
                 "{\"title\":\"Final Quote\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "Session write payload FromJSON" $ do
+        it "accepts canonical session create payloads" $
+            case decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":\"confirmed\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical session create payload to decode, got: " <> err)
+                Right (SessionCreate _ _ _ serviceVal _ _ engineerVal _ roomIdsVal _ _ _ _ _ _ statusVal) -> do
+                    serviceVal `shouldBe` "recording"
+                    engineerVal `shouldBe` "eng-1"
+                    roomIdsVal `shouldBe` ["1"]
+                    statusVal `shouldBe` Just "confirmed"
+
+        it "preserves explicit nulls on nullable session patch fields" $ do
+            case decodeSessionUpdate
+                "{\"suBookingRef\":null,\"suAssistantRef\":null,\"suSampleRate\":null,\"suNotes\":null}"
+             of
+                Left err ->
+                    expectationFailure ("Expected nullable session patch payload to decode, got: " <> err)
+                Right SessionUpdate
+                    { suBookingRef = bookingRefVal
+                    , suAssistantRef = assistantRefVal
+                    , suSampleRate = sampleRateVal
+                    , suNotes = notesVal
+                    } -> do
+                        bookingRefVal `shouldBe` Just Nothing
+                        assistantRefVal `shouldBe` Just Nothing
+                        sampleRateVal `shouldBe` Just Nothing
+                        notesVal `shouldBe` Just Nothing
+
+            case decodeSessionUpdate "{\"suNotes\":\"Keep this note\"}" of
+                Left err ->
+                    expectationFailure ("Expected text session patch payload to decode, got: " <> err)
+                Right SessionUpdate{suNotes = notesVal} ->
+                    notesVal `shouldBe` Just (Just "Keep this note")
+
+        it "rejects unexpected session write keys before the handler applies a partial change" $ do
+            decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"service\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suNotes\":null,\"notes\":null}"
+                `shouldSatisfy` isLeft
+
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
         it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do
             case decodeInstagramOAuthExchange
@@ -892,6 +938,10 @@ spec = do
     decodePipelineCardCreate = eitherDecode
     decodePipelineCardUpdate :: BL8.ByteString -> Either String PipelineCardUpdate
     decodePipelineCardUpdate = eitherDecode
+    decodeSessionCreate :: BL8.ByteString -> Either String SessionCreate
+    decodeSessionCreate = eitherDecode
+    decodeSessionUpdate :: BL8.ByteString -> Either String SessionUpdate
+    decodeSessionUpdate = eitherDecode
     decodeInstagramOAuthExchange :: BL8.ByteString -> Either String InstagramOAuth.InstagramOAuthExchangeRequest
     decodeInstagramOAuthExchange = eitherDecode
     decodeCalendarTokenExchange :: BL8.ByteString -> Either String Calendar.TokenExchangeIn

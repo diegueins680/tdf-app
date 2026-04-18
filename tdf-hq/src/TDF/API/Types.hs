@@ -758,7 +758,8 @@ data SessionCreate = SessionCreate
   } deriving (Show, Generic)
 
 instance ToJSON SessionCreate
-instance FromJSON SessionCreate
+instance FromJSON SessionCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data SessionUpdate = SessionUpdate
   { suBookingRef          :: Maybe (Maybe Text)
@@ -780,7 +781,48 @@ data SessionUpdate = SessionUpdate
   } deriving (Show, Generic)
 
 instance ToJSON SessionUpdate
-instance FromJSON SessionUpdate
+instance FromJSON SessionUpdate where
+  parseJSON = withObject "SessionUpdate" $ \o -> do
+    let allowedKeys =
+          [ "suBookingRef"
+          , "suBandId"
+          , "suClientPartyRef"
+          , "suService"
+          , "suStartAt"
+          , "suEndAt"
+          , "suEngineerRef"
+          , "suAssistantRef"
+          , "suRoomIds"
+          , "suSampleRate"
+          , "suBitDepth"
+          , "suDaw"
+          , "suSessionFolderDriveId"
+          , "suNotes"
+          , "suInputListRows"
+          , "suStatus"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in SessionUpdate: " <> T.unpack key)
+      [] ->
+        SessionUpdate
+          <$> o .:! "suBookingRef"
+          <*> o .:! "suBandId"
+          <*> o .:! "suClientPartyRef"
+          <*> o .:? "suService"
+          <*> o .:? "suStartAt"
+          <*> o .:? "suEndAt"
+          <*> o .:? "suEngineerRef"
+          <*> o .:! "suAssistantRef"
+          <*> o .:? "suRoomIds"
+          <*> o .:! "suSampleRate"
+          <*> o .:! "suBitDepth"
+          <*> o .:! "suDaw"
+          <*> o .:! "suSessionFolderDriveId"
+          <*> o .:! "suNotes"
+          <*> o .:? "suInputListRows"
+          <*> o .:? "suStatus"
 
 data PartyRelatedBooking = PartyRelatedBooking
   { prbBookingId  :: Int64
