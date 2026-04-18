@@ -130,6 +130,18 @@ spec = do
       assertRejected "user..name@example.com"
       assertRejected "user()@example.com"
 
+    it "rejects the reserved anonymous-interest fallback email for real parties" $ do
+      result <- tryCreateOrFetchParty
+        (Just "Test User")
+        (Just " public-interest@tdf.local ")
+        Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "reserved for anonymous public interests"
+        Right _ ->
+          expectationFailure "Expected the fallback email to be reserved"
+
     it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
       case result of

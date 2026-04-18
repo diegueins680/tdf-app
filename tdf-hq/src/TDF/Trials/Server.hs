@@ -136,7 +136,10 @@ validateRequiredEmail mEmail =
   case validateOptionalEmail mEmail of
     Left err -> Left err
     Right Nothing -> Left err400 { errBody = "Correo requerido para crear la cuenta" }
-    Right (Just emailVal) -> Right emailVal
+    Right (Just emailVal)
+      | emailVal == publicLeadFallbackEmail ->
+          Left err400 { errBody = "email is reserved for anonymous public interests" }
+      | otherwise -> Right emailVal
 
 normalizePhone :: Text -> Maybe Text
 normalizePhone raw =
