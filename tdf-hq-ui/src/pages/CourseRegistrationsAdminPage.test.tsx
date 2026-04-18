@@ -4904,6 +4904,50 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses registration ids as the busy-list search fallback when rows lack contact identity', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crId: 501 + index,
+        crPartyId: null,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(searchInput.getAttribute('placeholder')).toBe('Registro');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre, email, teléfono');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Registro #501');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'registro #506');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #506')).toBeTruthy();
+      expect(container.textContent).toContain('Registro #506');
+      expect(container.textContent).not.toContain('Registro #501');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('summarizes shared status, cohort, and source once after local search narrows a mixed list', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

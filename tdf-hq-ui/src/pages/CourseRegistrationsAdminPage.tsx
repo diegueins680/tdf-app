@@ -537,13 +537,25 @@ const registrationListContextSummary = ({
 };
 
 const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
-  const terms = ['Nombre', 'email', 'teléfono'];
   const statusKeys = new Set<string>();
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
+  let hasNamedOrContactIdentity = false;
+  let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
 
   registrations.forEach((reg) => {
+    const hasVisibleIdentity = Boolean(
+      reg.crFullName?.trim()
+      || reg.crEmail?.trim()
+      || reg.crPhoneE164?.trim()
+    );
+    if (hasVisibleIdentity) {
+      hasNamedOrContactIdentity = true;
+    } else {
+      hasGeneratedRegistrationIdentity = true;
+    }
+
     const statusKey = reg.crStatus.trim().toLocaleLowerCase('es');
     if (statusKey) statusKeys.add(statusKey);
 
@@ -556,6 +568,8 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     if (reg.crAdminNotes?.trim()) hasNotes = true;
   });
 
+  const terms = hasNamedOrContactIdentity ? ['Nombre', 'email', 'teléfono'] : ['Registro'];
+  if (hasNamedOrContactIdentity && hasGeneratedRegistrationIdentity) terms.push('registro');
   if (hasNotes) terms.push('nota');
   if (statusKeys.size > 1) terms.push('estado');
   if (sourceKeys.size > 1) terms.push('fuente');
@@ -916,6 +930,8 @@ export default function CourseRegistrationsAdminPage() {
         reg.crFullName,
         reg.crEmail,
         reg.crPhoneE164,
+        `registro #${reg.crId}`,
+        String(reg.crId),
         reg.crAdminNotes,
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
