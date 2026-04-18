@@ -1672,7 +1672,9 @@ driveServer user =
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer _ mAccessToken DriveUploadForm{..} = do
   manager <- liftIO $ newManager tlsManagerSettings
-  accessToken <- resolveDriveAccessToken manager (cleanOptional mAccessToken <|> duAccessToken)
+  providedToken <-
+    either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
+  accessToken <- resolveDriveAccessToken manager providedToken
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   let folder = cleanOptional duFolderId <|> mFolderEnv
       fallbackName =
@@ -1727,6 +1729,18 @@ driveUploadServer _ mAccessToken DriveUploadForm{..} = do
     isInvalidGrant err =
       let body = map toLower (BL8.unpack (errBody err))
       in "invalid_grant" `isInfixOf` body
+
+resolveProvidedDriveAccessToken :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
+resolveProvidedDriveAccessToken mHeaderToken mFormToken =
+  case (cleanOptional mHeaderToken, cleanOptional mFormToken) of
+    (Just headerToken, Just formToken)
+      | headerToken == formToken -> Right (Just headerToken)
+      | otherwise ->
+          Left err400
+            { errBody = "Conflicting Google Drive access tokens" }
+    (Just headerToken, Nothing) -> Right (Just headerToken)
+    (Nothing, Just formToken) -> Right (Just formToken)
+    (Nothing, Nothing) -> Right Nothing
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
 driveTokenExchangeServer _ payload = do

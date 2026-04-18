@@ -129,6 +129,7 @@ import TDF.ServerFeedback
 import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
 import TDF.Server
     ( buildWhatsappCtaFor,
+      resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
       validateCoursePublicUrlField,
       validateDatafastBaseUrl )
@@ -1225,6 +1226,27 @@ main = hspec $ do
                 "https://tdf.example.com/curso/produccion"
                 `shouldSatisfy`
                     Data.Text.isPrefixOf "https://wa.me/?text="
+
+    describe "resolveProvidedDriveAccessToken" $ do
+        it "normalizes matching token sources and rejects conflicting upload credentials" $ do
+            resolveProvidedDriveAccessToken (Just " header-token ") Nothing
+                `shouldBe` Right (Just "header-token")
+            resolveProvidedDriveAccessToken Nothing (Just " form-token ")
+                `shouldBe` Right (Just "form-token")
+            resolveProvidedDriveAccessToken (Just " same-token ") (Just "same-token")
+                `shouldBe` Right (Just "same-token")
+            resolveProvidedDriveAccessToken (Just "   ") (Just " form-token ")
+                `shouldBe` Right (Just "form-token")
+            case resolveProvidedDriveAccessToken (Just "header-token") (Just "form-token") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Conflicting Google Drive access tokens"
+                Right value ->
+                    expectationFailure
+                        ( "Expected conflicting Drive upload tokens to be rejected, got "
+                            <> show value
+                        )
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
