@@ -344,7 +344,12 @@ export default function BookingsPage() {
     () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
     [customerOptions.length, customerPartyId],
   );
-  const showQuickTemplateField = shouldShowQuickBookingTemplate({ mode, serviceLocked });
+  const showQuickTemplateField = shouldShowQuickBookingTemplate({
+    hasServiceCatalog: serviceTypes.length > 0,
+    mode,
+    serviceCatalogReady: !serviceCatalogQuery.isLoading,
+    serviceLocked,
+  });
   const conflictAlertText = useMemo(
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
@@ -1069,7 +1074,7 @@ const openDialogForRange = (start: Date, end: Date) => {
             {showQuickTemplateField && (
               <TextField
                 select
-                label="Plantilla rápida (opcional)"
+                label="Plantilla de respaldo"
                 value={template}
                 onChange={(e) => {
                   const val = String(e.target.value);
@@ -1094,7 +1099,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     }
                   }
                 }}
-                helperText="Úsala si quieres precargar servicio, salas y notas de una vez."
+                helperText="Aparece cuando no hay catálogo de servicios; precarga servicio, salas y notas."
                 fullWidth
               >
                 <MenuItem value="">Sin plantilla</MenuItem>

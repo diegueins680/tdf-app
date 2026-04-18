@@ -131,12 +131,16 @@ export const getBookingCalendarStatusState = ({
 };
 
 export const shouldShowQuickBookingTemplate = ({
+  hasServiceCatalog,
   mode,
+  serviceCatalogReady,
   serviceLocked,
 }: {
+  hasServiceCatalog: boolean;
   mode: 'create' | 'edit';
+  serviceCatalogReady: boolean;
   serviceLocked: boolean;
-}) => mode === 'create' && !serviceLocked;
+}) => mode === 'create' && !serviceLocked && serviceCatalogReady && !hasServiceCatalog;
 
 export const getBookingConflictAlertText = (conflictTitles: (string | null | undefined)[]) => {
   if (conflictTitles.length === 0) return null;

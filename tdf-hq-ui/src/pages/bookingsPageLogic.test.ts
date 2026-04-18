@@ -56,10 +56,37 @@ describe('bookingsPageLogic', () => {
     });
   });
 
-  it('keeps quick booking templates limited to unlocked create flows', () => {
-    expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: false })).toBe(true);
-    expect(shouldShowQuickBookingTemplate({ mode: 'edit', serviceLocked: false })).toBe(false);
-    expect(shouldShowQuickBookingTemplate({ mode: 'create', serviceLocked: true })).toBe(false);
+  it('keeps quick booking templates as a fallback instead of duplicating the service catalog', () => {
+    expect(shouldShowQuickBookingTemplate({
+      hasServiceCatalog: false,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toBe(true);
+    expect(shouldShowQuickBookingTemplate({
+      hasServiceCatalog: true,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toBe(false);
+    expect(shouldShowQuickBookingTemplate({
+      hasServiceCatalog: false,
+      mode: 'create',
+      serviceCatalogReady: false,
+      serviceLocked: false,
+    })).toBe(false);
+    expect(shouldShowQuickBookingTemplate({
+      hasServiceCatalog: false,
+      mode: 'edit',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toBe(false);
+    expect(shouldShowQuickBookingTemplate({
+      hasServiceCatalog: false,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: true,
+    })).toBe(false);
   });
 
   it('keeps room conflict guidance in one specific warning with a capped conflict list', () => {
