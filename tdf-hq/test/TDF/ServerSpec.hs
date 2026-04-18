@@ -13,7 +13,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, get, insert)
+import Database.Persist (Entity(..), Key, count, get, insert, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
@@ -37,6 +37,7 @@ import Servant.Multipart
     )
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
+import TDF.Config (AppConfig(..))
 import TDF.DB (Env (..))
 import TDF.Models
     ( ApiToken (..)
@@ -171,6 +172,7 @@ import TDF.Server
     , validateDriveTokenRefreshRequest
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
+    , listMarketplace
     )
 import TDF.ServerAuth
     ( findReusableActiveToken
@@ -2739,6 +2741,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateCourseRegistrationEmailEventListLimit (Just 501))
             assertInvalid (validateCourseRegistrationEmailEventListLimit (Just (-3)))
 
+    describe "public marketplace listing fallback" $ do
+        it "does not seed demo inventory when production-style seeding is disabled" $ do
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeMarketplaceListingSchema pool
+
+            result <-
+                runHandler $
+                    runReaderT
+                        listMarketplace
+                        Env
+                            { envPool = pool
+                            , envConfig = marketplaceTestConfig False
+                            }
+
+            activeListings <- runSqlPool (count [ME.MarketplaceListingActive ==. True]) pool
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected empty marketplace listing response, got: " <> show serverErr)
+                Right items ->
+                    items `shouldSatisfy` null
+            activeListings `shouldBe` 0
+
     describe "marketplace order list pagination validation" $ do
         it "keeps marketplace order defaults only when the caller omits pagination" $ do
             validateMarketplaceOrderListLimit Nothing `shouldBe` Right 50
@@ -4115,6 +4140,79 @@ runServiceAdSqlite action =
         backend <- ask
         liftIO $ runReaderT initializeServiceAdSchema backend
         liftIO $ runReaderT action backend
+
+marketplaceTestConfig :: Bool -> AppConfig
+marketplaceTestConfig seedFlag =
+    AppConfig
+        { dbHost = "127.0.0.1"
+        , dbPort = "5432"
+        , dbUser = "postgres"
+        , dbPass = "postgres"
+        , dbName = "tdf_hq_test"
+        , dbConnUrl = Nothing
+        , dbSslMode = Nothing
+        , appPort = 8080
+        , resetDb = False
+        , seedDatabase = seedFlag
+        , runMigrations = False
+        , seedTriggerToken = Nothing
+        , appBaseUrl = Nothing
+        , assetsBaseUrl = Nothing
+        , assetsRootDir = "assets"
+        , courseDefaultSlug = "produccion-musical"
+        , courseDefaultMapUrl = Nothing
+        , courseDefaultInstructorAvatar = Nothing
+        , openAiApiKey = Nothing
+        , openAiModel = "gpt-5-chat-latest"
+        , openAiEmbedModel = "text-embedding-3-small"
+        , chatKitWorkflowId = Nothing
+        , chatKitApiBase = "https://api.openai.com"
+        , ragTopK = 8
+        , ragChunkWords = 220
+        , ragChunkOverlap = 40
+        , ragAvailabilityDays = 14
+        , ragAvailabilityPerResource = 6
+        , ragRefreshHours = 24
+        , ragEmbedBatchSize = 64
+        , emailConfig = Nothing
+        , googleClientId = Nothing
+        , facebookAppId = Nothing
+        , facebookAppSecret = Nothing
+        , facebookGraphBase = "https://graph.facebook.com/v20.0"
+        , facebookMessagingToken = Nothing
+        , facebookMessagingPageId = Nothing
+        , facebookMessagingApiBase = "https://graph.facebook.com/v20.0"
+        , instagramAppToken = Nothing
+        , instagramGraphBase = "https://graph.instagram.com"
+        , instagramMessagingToken = Nothing
+        , instagramMessagingAccountId = Nothing
+        , instagramMessagingApiBase = "https://graph.facebook.com/v20.0"
+        , instagramVerifyToken = Nothing
+        , sessionCookieName = "tdf_session"
+        , sessionCookieDomain = Nothing
+        , sessionCookiePath = "/"
+        , sessionCookieSecure = False
+        , sessionCookieSameSite = "Lax"
+        , sessionCookieMaxAgeSeconds = Nothing
+        }
+
+initializeMarketplaceListingSchema :: SqlPersistT IO ()
+initializeMarketplaceListingSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"marketplace_listing\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"asset_id\" INTEGER NOT NULL,\
+        \\"title\" VARCHAR NOT NULL,\
+        \\"purpose\" VARCHAR NOT NULL,\
+        \\"price_usd_cents\" INTEGER NOT NULL,\
+        \\"markup_pct\" INTEGER NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
 
 initializeServiceAdSchema :: SqlPersistT IO ()
 initializeServiceAdSchema = do

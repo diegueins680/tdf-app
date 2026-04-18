@@ -8353,7 +8353,8 @@ listMarketplace = do
     then do
       dtos <- forM rows (toMarketplaceDTO assetsBase)
       pure (catMaybes dtos)
-    else do
+    else if seedDatabase envConfig
+    then do
       -- Auto-publish demo inventory so the public marketplace is never empty.
       liftIO $ flip runSqlPool envPool $ do
         seedInventoryAssets
@@ -8361,6 +8362,8 @@ listMarketplace = do
       seeded <- liftIO $ flip runSqlPool envPool loadListings
       dtos <- forM seeded (toMarketplaceDTO assetsBase)
       pure (catMaybes dtos)
+    else
+      pure []
 
 getMarketplaceItem :: Text -> AppM MarketplaceItemDTO
 getMarketplaceItem rawId = do
