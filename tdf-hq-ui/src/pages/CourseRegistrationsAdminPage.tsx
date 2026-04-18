@@ -245,6 +245,12 @@ const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
   return `${terms.slice(0, -1).join(', ')} o ${terms[terms.length - 1]}`;
 };
 
+const normalizeLocalSearchText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es');
+
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
   const formatted = formatDate(iso);
@@ -952,7 +958,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const loadedRegistrationCount = registrations.length;
   const localSearchTerm = localSearch.trim();
-  const localSearchKey = localSearchTerm.toLocaleLowerCase('es');
+  const localSearchKey = normalizeLocalSearchText(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {
     if (!localSearchKey) return registrations;
@@ -969,8 +975,9 @@ export default function CourseRegistrationsAdminPage() {
         cohortLabelsBySlug.get(courseSlug),
         registrationStatusLabel(reg.crStatus),
         reg.crSource,
-      ].join(' ').toLocaleLowerCase('es');
-      return haystack.includes(localSearchKey);
+      ].join(' ');
+      const searchableText = normalizeLocalSearchText(haystack);
+      return searchableText.includes(localSearchKey);
     });
   }, [cohortLabelsBySlug, localSearchKey, registrations]);
   const registrationIdsRequiringActionDisambiguator = useMemo(
