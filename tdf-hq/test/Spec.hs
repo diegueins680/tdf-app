@@ -1525,6 +1525,10 @@ main = hspec $ do
                 "DATAFAST_BEARER_TOKEN"
                 (Just "bearer\nvalue")
                 "must not contain control characters"
+            assertInvalid
+                "DATAFAST_BEARER_TOKEN"
+                (Just "bearer token")
+                "must not contain control characters or whitespace"
 
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do

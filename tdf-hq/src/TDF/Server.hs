@@ -9352,11 +9352,11 @@ validateRequiredGatewayCredential envName mRawCredential =
               envName <> " must be configured"
         }
     Just credential
-      | T.any isControl credential ->
+      | T.any (\ch -> isControl ch || isSpace ch) credential ->
           Left err500
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must not contain control characters"
+                  envName <> " must not contain control characters or whitespace"
             }
       | otherwise ->
           Right credential
