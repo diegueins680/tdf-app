@@ -1018,7 +1018,8 @@ data RadioStreamUpsert = RadioStreamUpsert
   , rsuGenre     :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON RadioStreamUpsert
-instance FromJSON RadioStreamUpsert
+instance FromJSON RadioStreamUpsert where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioImportRequest = RadioImportRequest
   { rirSources :: Maybe [Text]
@@ -1059,7 +1060,8 @@ data RadioNowPlayingRequest = RadioNowPlayingRequest
   { rnpStreamUrl :: Text
   } deriving (Show, Generic)
 instance ToJSON RadioNowPlayingRequest
-instance FromJSON RadioNowPlayingRequest
+instance FromJSON RadioNowPlayingRequest where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioNowPlayingResult = RadioNowPlayingResult
   { rnpTitle  :: Maybe Text

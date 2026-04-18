@@ -42,8 +42,10 @@ import TDF.API.Types
     ( InternTaskUpdate (..),
       RadioImportRequest (..),
       RadioMetadataRefreshRequest (..),
+      RadioNowPlayingRequest (..),
       RadioPresenceDTO (..),
       RadioPresenceUpsert (..),
+      RadioStreamUpsert (..),
       RadioTransmissionRequest (..) )
 import TDF.API.WhatsApp
     ( CompleteReq (..),
@@ -2491,6 +2493,26 @@ main = hspec $ do
                     rmrLimit payload `shouldBe` Just 10
                     rmrOnlyMissing payload `shouldBe` Just True
 
+            case eitherDecode $
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\""
+                    <> ",\"rsuName\":\"TDF Live\""
+                    <> ",\"rsuCountry\":\"EC\""
+                    <> ",\"rsuGenre\":\"ambient\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical radio stream upsert payload to decode, got: " <> err)
+                Right payload -> do
+                    rsuStreamUrl payload `shouldBe` "https://radio.example.com/live"
+                    rsuName payload `shouldBe` Just "TDF Live"
+                    rsuCountry payload `shouldBe` Just "EC"
+                    rsuGenre payload `shouldBe` Just "ambient"
+
+            case eitherDecode "{\"rnpStreamUrl\":\"https://radio.example.com/live\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical radio now-playing payload to decode, got: " <> err)
+                Right payload ->
+                    rnpStreamUrl payload `shouldBe` "https://radio.example.com/live"
+
             case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\",\"rtrCountry\":\"EC\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical radio transmission payload to decode, got: " <> err)
@@ -2521,6 +2543,18 @@ main = hspec $ do
             ( eitherDecode
                 "{\"limit\":10,\"onlyMissing\":true}"
                     :: Either String RadioMetadataRefreshRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"streamUrl\":\"https://typo.example.com/live\"}"
+                    :: Either String RadioStreamUpsert
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rnpStreamUrl\":\"https://radio.example.com/live\",\"streamUrl\":\"https://typo.example.com/live\"}"
+                    :: Either String RadioNowPlayingRequest
                 )
                 `shouldSatisfy` isLeft
 
