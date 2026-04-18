@@ -1092,7 +1092,15 @@ describe('AdminUsersPage', () => {
         expect(
           buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
         ).toBe('1 usuario inactivo');
+        expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]?.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
         expect(getRowByUserId(container, 102).textContent).not.toContain('Inactivo');
+        expect(getButtonsByText(container, 'Ocultar inactivos')[0]?.getAttribute('aria-expanded')).toBe('true');
       });
     } finally {
       await cleanup();
@@ -1587,12 +1595,22 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
-        expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
         expect(
           buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
         ).toBe('2 usuarios inactivos');
+        expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
+        expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]?.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
         expect(getRowByUserId(container, 203).textContent).not.toContain('Inactivo');
         expect(getRowByUserId(container, 204).textContent).not.toContain('Inactivo');
+        expect(getButtonsByText(container, 'Ocultar inactivos')[0]?.getAttribute('aria-expanded')).toBe('true');
       });
     } finally {
       await cleanup();

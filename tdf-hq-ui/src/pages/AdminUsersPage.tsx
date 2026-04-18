@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -364,6 +364,7 @@ export default function AdminUsersPage() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showInactiveUsers, setShowInactiveUsers] = useState(false);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const usersQuery = useQuery({
@@ -473,10 +474,17 @@ export default function AdminUsersPage() {
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
     [showInactiveUsersGroup, visibleUsers],
   );
+  const shouldCollapseInactiveUsers = showInactiveUsersGroup && !hasActiveSearch;
+  const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
   const userIdsRequiringIdentityDisambiguator = useMemo(
     () => getUserIdsRequiringIdentityDisambiguator(visibleUsers),
     [visibleUsers],
   );
+  useEffect(() => {
+    if (!showInactiveUsersGroup || hasActiveSearch) {
+      setShowInactiveUsers(false);
+    }
+  }, [hasActiveSearch, showInactiveUsersGroup]);
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
@@ -741,27 +749,51 @@ export default function AdminUsersPage() {
                 ))}
                 {showInactiveUsersGroup ? (
                   <>
-                    <Typography
-                      data-testid="admin-users-inactive-group-label"
-                      variant="overline"
-                      color="text.secondary"
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1}
+                      justifyContent="space-between"
+                      alignItems={{ xs: 'flex-start', sm: 'center' }}
                     >
-                      {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
-                    </Typography>
-                    {inactiveVisibleUsers.map((user) => (
-                      <UserRow
-                        key={user.userId}
-                        user={user}
-                        showInactiveStatusChip={false}
-                        onOpenCommunications={() => setSelectedUser(user)}
-                        sharedModulesSummary={sharedModulesSummary}
-                        sharedRolesSummary={sharedRolesSummary}
-                        hideAccessSummary={hideRowAccessSummary}
-                        hidePendingStateChip={hideSingleRowPendingState}
-                        hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                        showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
-                      />
-                    ))}
+                      <Typography
+                        data-testid="admin-users-inactive-group-label"
+                        variant="overline"
+                        color="text.secondary"
+                      >
+                        {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
+                      </Typography>
+                      {shouldCollapseInactiveUsers && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          onClick={() => setShowInactiveUsers((current) => !current)}
+                          aria-controls="admin-users-inactive-list"
+                          aria-expanded={showInactiveUsers}
+                        >
+                          {showInactiveUsers
+                            ? 'Ocultar inactivos'
+                            : `Ver ${formatInactiveUserCountLabel(visibleInactiveUsersCount)}`}
+                        </Button>
+                      )}
+                    </Stack>
+                    {showInactiveUsersList && (
+                      <Stack id="admin-users-inactive-list" spacing={1.5}>
+                        {inactiveVisibleUsers.map((user) => (
+                          <UserRow
+                            key={user.userId}
+                            user={user}
+                            showInactiveStatusChip={false}
+                            onOpenCommunications={() => setSelectedUser(user)}
+                            sharedModulesSummary={sharedModulesSummary}
+                            sharedRolesSummary={sharedRolesSummary}
+                            hideAccessSummary={hideRowAccessSummary}
+                            hidePendingStateChip={hideSingleRowPendingState}
+                            hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                            showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
+                          />
+                        ))}
+                      </Stack>
+                    )}
                   </>
                 ) : null}
               </Stack>
