@@ -787,7 +787,8 @@ export default function AdminConsolePage() {
         : null
     );
   const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);
-  const shouldShowAdditionalModuleCards = !showGettingStartedGuidance || showFirstRunAdditionalModules;
+  const shouldShowAdditionalModuleCards =
+    consoleCards.length > 0 && (!showGettingStartedGuidance || showFirstRunAdditionalModules);
   const showFirstRunAdditionalModulesShowAction =
     showGettingStartedGuidance
     && consoleCards.length > 0
@@ -802,6 +803,12 @@ export default function AdminConsolePage() {
       setShowFirstRunAdditionalModules(false);
     }
   }, [showGettingStartedGuidance]);
+  useEffect(() => {
+    if (consoleCards.length === 0) {
+      setShowFirstRunAdditionalModules(false);
+      setShowStandaloneAdditionalModules(false);
+    }
+  }, [consoleCards.length]);
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;

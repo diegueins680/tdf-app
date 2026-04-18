@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import AdminConsolePage from '../AdminConsolePage';
@@ -771,6 +771,53 @@ describe('AdminConsolePage', () => {
     expect(screen.getAllByRole('button', { name: /Ocultar módulos adicionales/i })).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
+  });
+
+  it('removes the first-run optional modules area when no actionable fallback cards remain', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    const { queryClient } = renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^Opcional: ver Tokens de servicio$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(['admin', 'console'], { status: 'preview', cards: [] });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Módulos opcionales')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Ocultar módulos adicionales/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('deduplicates repeated preview cards so the console only shows each extra workflow once', async () => {
