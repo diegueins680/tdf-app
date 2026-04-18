@@ -966,7 +966,7 @@ export default function CourseRegistrationsAdminPage() {
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
-      ? `Búsqueda local en el lote cargado (${formatRegistrationCountLabel(loadedRegistrationCount)}).`
+      ? undefined
       : formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
     : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
   const visibleRegistrationsSummary = hasCustomFilters
