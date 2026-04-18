@@ -315,7 +315,11 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
   method <- o .: "method"
   when (T.null (T.strip method)) $
     fail "method is required"
-  McpRequest reqId method <$> o .:? "params"
+  mParams <- o .:? "params"
+  case mParams of
+    Nothing -> pure (McpRequest reqId method Nothing)
+    Just value@(Object _) -> pure (McpRequest reqId method (Just value))
+    Just _ -> fail "params must be an object"
 
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
