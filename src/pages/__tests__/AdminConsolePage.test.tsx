@@ -160,6 +160,22 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Seed demo data/i })).not.toBeInTheDocument();
   });
 
+  it('keeps header admin actions hidden while first-run data is still loading', async () => {
+    mockAuditLogs.mockImplementation(() => new Promise(() => undefined));
+    mockConsolePreview.mockImplementation(() => new Promise(() => undefined));
+    mockListUsers.mockImplementation(() => new Promise(() => undefined));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Actualizar panel/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Restablecer datos demo/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
+    });
+  });
+
   it('collapses the healthy service card into one friendly summary', async () => {
     renderPage();
 

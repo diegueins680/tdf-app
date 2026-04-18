@@ -740,19 +740,21 @@ export default function AdminConsolePage() {
   const showAuditTable = audits.length > 1;
   const showAuditActorColumn = audits.some((entry) => hasAuditActor(entry.actorId));
   const showAuditDetailColumn = audits.some((entry) => hasAuditDetail(entry.diff));
+  const isAdminPanelBaselining = consoleQuery.isPending || usersQuery.isLoading || auditQuery.isLoading;
+  const hasAdminPanelError =
+    healthQuery.isError
+    || auditQuery.isError
+    || consoleQuery.isError
+    || usersQuery.isError;
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
-  const showHeaderRefreshAction =
-    !showGettingStartedGuidance
-    || healthQuery.isError
-    || auditQuery.isError
-    || consoleQuery.isError
-    || usersQuery.isError;
-  const showHeaderActions = showHeaderRefreshAction || !showGettingStartedGuidance;
+  const showHeaderDemoSeedAction = !isAdminPanelBaselining && !showGettingStartedGuidance;
+  const showHeaderRefreshAction = hasAdminPanelError || showHeaderDemoSeedAction;
+  const showHeaderActions = showHeaderRefreshAction;
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
@@ -892,7 +894,7 @@ export default function AdminConsolePage() {
                 {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
               </Button>
             )}
-            {!showGettingStartedGuidance && (
+            {showHeaderDemoSeedAction && (
               <Button
                 variant="text"
                 startIcon={<AutoFixHighIcon />}
