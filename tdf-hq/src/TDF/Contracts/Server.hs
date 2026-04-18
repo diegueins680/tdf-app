@@ -197,7 +197,9 @@ validateContractPayload :: A.Value -> Either ServerError (Text, A.Value)
 validateContractPayload (A.Object payloadObj) =
   case KM.lookup "kind" payloadObj of
     Nothing ->
-      Right ("generic", A.Object (KM.insert "kind" (A.String "generic") payloadObj))
+      Left err400
+        { errBody = "Contract payload must include a kind field"
+        }
     Just (A.String rawKind) ->
       case normalizeContractKind rawKind of
         Left err -> Left err

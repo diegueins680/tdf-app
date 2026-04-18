@@ -2642,7 +2642,7 @@ main = hspec $ do
             assertInvalid "../contracts/store"
 
     describe "validateContractPayload" $ do
-        it "requires object payloads and normalizes the stored contract kind" $ do
+        it "requires object payloads and normalizes the explicit stored contract kind" $ do
             validateContractPayload
                 (A.object
                     [ "kind" .= ("  Event_Vendor_Contract  " :: Text)
@@ -2657,16 +2657,6 @@ main = hspec $ do
                         , "amountCents" .= (25000 :: Int)
                         ]
                     )
-            validateContractPayload (A.object ["amountCents" .= (25000 :: Int)])
-                `shouldBe`
-                Right
-                    ( "generic"
-                    , A.object
-                        [ "kind" .= ("generic" :: Text)
-                        , "amountCents" .= (25000 :: Int)
-                        ]
-                    )
-
         it "rejects non-object or malformed kind values instead of silently storing generic contracts" $ do
             let assertInvalid payload expected = case validateContractPayload payload of
                     Left err -> do
@@ -2675,6 +2665,9 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid contract payload to be rejected, got: " <> show value)
             assertInvalid (A.String "not-an-object") "Contract payload must be a JSON object"
+            assertInvalid
+                (A.object ["amountCents" .= (25000 :: Int)])
+                "Contract payload must include a kind field"
             assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
