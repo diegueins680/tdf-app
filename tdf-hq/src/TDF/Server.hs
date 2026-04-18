@@ -9259,7 +9259,7 @@ loadDatafastEnv = do
   mUserData2 <- liftIO $ lookupEnv "DATAFAST_USER_DATA2"
   mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
   baseUrl <- either throwError pure (validateDatafastBaseUrl mBase)
-  entityId <- either throwError pure (validateDatafastCredential "DATAFAST_ENTITY_ID" mEntity)
+  entityId <- either throwError pure (validateDatafastEntityId mEntity)
   bearer <- either throwError pure (validateDatafastCredential "DATAFAST_BEARER_TOKEN" mBearer)
   let testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
@@ -9281,6 +9281,20 @@ loadDatafastEnv = do
 
 validateDatafastCredential :: Text -> Maybe String -> Either ServerError Text
 validateDatafastCredential = validateRequiredGatewayCredential
+
+validateDatafastEntityId :: Maybe String -> Either ServerError Text
+validateDatafastEntityId mRawEntityId = do
+  entityId <- validateDatafastCredential "DATAFAST_ENTITY_ID" mRawEntityId
+  if T.all isDatafastGatewayIdChar entityId
+    then Right entityId
+    else
+      Left err500
+        { errBody =
+            "DATAFAST_ENTITY_ID must contain only ASCII letters, digits, hyphen, underscore, or dot"
+        }
+  where
+    isDatafastGatewayIdChar c =
+      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_' || c == '.'
 
 validateDatafastBaseUrl :: Maybe String -> Either ServerError String
 validateDatafastBaseUrl mRawBase

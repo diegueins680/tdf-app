@@ -128,6 +128,7 @@ import TDF.Server
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , requireMarketplaceCartTotals
+    , validateDatafastEntityId
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
     , resolvePaypalBaseUrl
@@ -3054,6 +3055,33 @@ spec = describe "TDF.Server helpers" $ do
                 (validateDatafastOrderResourcePath
                     (Just "EXPECTED")
                     (Just "/v1/checkouts/OTHER/payment"))
+
+    describe "validateDatafastEntityId" $ do
+        it "trims URL-safe Datafast entity ids before gateway requests" $
+            validateDatafastEntityId (Just "  8ac7a4c9_test-01.02  ")
+                `shouldBe` Right "8ac7a4c9_test-01.02"
+
+        it "rejects query-shaped Datafast entity ids before status polling" $ do
+            let assertInvalid rawValue expectedMessage =
+                    case validateDatafastEntityId rawValue of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right entityId ->
+                            expectationFailure
+                                ( "Expected invalid Datafast entity id to be rejected, got: "
+                                    <> show entityId
+                                )
+            assertInvalid Nothing "DATAFAST_ENTITY_ID must be configured"
+            assertInvalid
+                (Just "entity&entityId=other")
+                "DATAFAST_ENTITY_ID must contain only ASCII letters"
+            assertInvalid
+                (Just "entity=value")
+                "DATAFAST_ENTITY_ID must contain only ASCII letters"
+            assertInvalid
+                (Just "entity/../status")
+                "DATAFAST_ENTITY_ID must contain only ASCII letters"
 
     describe "label track update validation" $ do
         it "trims required title updates and canonicalizes supported status values" $ do
