@@ -1710,6 +1710,21 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected blank social sync externalPostId to be rejected, got " <> show value)
 
+        it "rejects ambiguous external ids before they become persisted post identities" $ do
+            let assertInvalid expected raw =
+                    case validateSocialSyncExternalPostId raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid social sync externalPostId to be rejected, got " <> show value)
+            assertInvalid "externalPostId must not contain whitespace" "ig media 42"
+            assertInvalid "externalPostId must not contain whitespace" "ig-media\n42"
+            assertInvalid
+                "externalPostId must be 256 characters or fewer"
+                (Data.Text.replicate 257 "a")
+
     describe "social sync ingest source validation" $ do
         it "defaults omitted sources and normalizes explicit source keys before audit storage" $ do
             validateSocialSyncIngestSource Nothing `shouldBe` Right "manual"

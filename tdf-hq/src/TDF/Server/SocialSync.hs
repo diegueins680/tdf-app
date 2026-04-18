@@ -17,7 +17,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit)
+import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit, isSpace)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe)
@@ -214,6 +214,14 @@ validateSocialSyncExternalPostId raw =
        then Left err400
          { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId is required")
          }
+       else if T.length trimmed > 256
+         then Left err400
+           { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must be 256 characters or fewer")
+           }
+       else if T.any isSpace trimmed
+         then Left err400
+           { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain whitespace")
+           }
        else Right trimmed
 
 validateSocialSyncIngestSource :: Maybe Text -> Either ServerError Text
