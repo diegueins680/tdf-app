@@ -771,4 +771,31 @@ describe('CmsAdminPage', () => {
 
     await cleanup();
   });
+
+  it('shows shared version status once in the history context instead of repeating identical row chips', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-02T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Contexto compartido: slug records-public · locale es · estado Publicado.',
+      );
+      expect(countExactText(container, 'Publicado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await cleanup();
+  });
 });

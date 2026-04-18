@@ -126,6 +126,19 @@ const formatCmsAdminTimestamp = (value: string) => {
   }
 };
 
+const CMS_STATUS_LABELS: Record<string, string> = {
+  archived: 'Archivado',
+  draft: 'Borrador',
+  published: 'Publicado',
+};
+
+const normalizeCmsStatus = (value: string) => value.trim().toLowerCase();
+
+const formatCmsStatusLabel = (value: string) => {
+  const normalized = normalizeCmsStatus(value);
+  return CMS_STATUS_LABELS[normalized] ?? (value.trim() || 'Sin estado');
+};
+
 export default function CmsAdminPage() {
   const qc = useQueryClient();
   const [slugFilter, setSlugFilter] = useState<string>(() => {
@@ -251,7 +264,7 @@ export default function CmsAdminPage() {
   const listDataInvalid = listQuery.data !== undefined && !Array.isArray(listQuery.data);
   const filteredVersions = useMemo(() => {
     return versions.filter((v) => {
-      const statusOk = statusFilter === 'all' || v.ccdStatus === statusFilter;
+      const statusOk = statusFilter === 'all' || normalizeCmsStatus(v.ccdStatus) === statusFilter;
       const versionOk = minVersionFilter == null || v.ccdVersion >= minVersionFilter;
       return statusOk && versionOk;
     });
@@ -438,12 +451,21 @@ export default function CmsAdminPage() {
     ));
     return localesInView.length === 1 ? (localesInView[0] ?? null) : null;
   }, [filteredVersions]);
+  const sharedVersionStatus = useMemo(() => {
+    const statusesInView = Array.from(new Set(
+      filteredVersions
+        .map((version) => normalizeCmsStatus(version.ccdStatus))
+        .filter((value) => value !== ''),
+    ));
+    return statusesInView.length === 1 ? (statusesInView[0] ?? null) : null;
+  }, [filteredVersions]);
   const sharedVersionContextSummary = useMemo(() => {
     const parts: string[] = [];
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
     if (sharedVersionLocale) parts.push(`locale ${sharedVersionLocale}`);
+    if (sharedVersionStatus) parts.push(`estado ${formatCmsStatusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
-  }, [sharedVersionLocale, sharedVersionSlug]);
+  }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: filteredVersions.length,
@@ -458,7 +480,7 @@ export default function CmsAdminPage() {
       Array.from(
         new Set(
           versions
-            .map((version) => version.ccdStatus.trim())
+            .map((version) => normalizeCmsStatus(version.ccdStatus))
             .filter((value) => value !== ''),
         ),
       ),
@@ -523,7 +545,7 @@ export default function CmsAdminPage() {
             <Stack spacing={1.5}>
               <Typography fontWeight={700}>{pendingVersion.ccdTitle ?? pendingVersion.ccdSlug}</Typography>
               <Typography variant="body2" color="text.secondary">
-                v{pendingVersion.ccdVersion} · {pendingVersion.ccdStatus} · {pendingVersion.ccdLocale} ·{' '}
+                v{pendingVersion.ccdVersion} · {formatCmsStatusLabel(pendingVersion.ccdStatus)} · {pendingVersion.ccdLocale} ·{' '}
                 {pendingVersion.ccdPublishedAt
                   ? `publicado ${formatCmsAdminTimestamp(pendingVersion.ccdPublishedAt)}`
                   : `creado ${formatCmsAdminTimestamp(pendingVersion.ccdCreatedAt)}`}
@@ -531,7 +553,7 @@ export default function CmsAdminPage() {
               <Typography variant="body2">
                 Live actual:{' '}
                 {liveContent
-                  ? `v${liveContent.ccdVersion} (${liveContent.ccdStatus} · ${liveContent.ccdLocale})`
+                  ? `v${liveContent.ccdVersion} (${formatCmsStatusLabel(liveContent.ccdStatus)} · ${liveContent.ccdLocale})`
                   : 'no hay versión publicada'}
               </Typography>
               <Typography
@@ -744,7 +766,11 @@ export default function CmsAdminPage() {
                         <Typography fontWeight={700}>{liveContent.ccdTitle ?? liveContent.ccdSlug}</Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           <Chip label={`v${liveContent.ccdVersion}`} size="small" />
-                          <Chip label={liveContent.ccdStatus} size="small" color={liveContent.ccdStatus === 'published' ? 'success' : 'default'} />
+                          <Chip
+                            label={formatCmsStatusLabel(liveContent.ccdStatus)}
+                            size="small"
+                            color={normalizeCmsStatus(liveContent.ccdStatus) === 'published' ? 'success' : 'default'}
+                          />
                           {liveContent.ccdPublishedAt && (
                             <Chip
                               label={`Publicado: ${formatCmsAdminTimestamp(liveContent.ccdPublishedAt)}`}
@@ -986,11 +1012,13 @@ export default function CmsAdminPage() {
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
                         {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
                         <Chip label={`v${v.ccdVersion}`} size="small" />
-                        <Chip
-                          label={v.ccdStatus}
-                          size="small"
-                          color={v.ccdStatus === 'published' ? 'success' : 'default'}
-                        />
+                        {!sharedVersionStatus && (
+                          <Chip
+                            label={formatCmsStatusLabel(v.ccdStatus)}
+                            size="small"
+                            color={normalizeCmsStatus(v.ccdStatus) === 'published' ? 'success' : 'default'}
+                          />
+                        )}
                         {v.ccdPublishedAt && (
                           <Chip
                             label={`pub: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
