@@ -13,6 +13,9 @@ Do not commit emails or simulations that include private IDs, account numbers, o
 
 Prepared files:
 
+- `send-queue.md`
+- `email-pichincha.eml`
+- `email-produbanco.eml`
 - `lender-outreach-drafts.md`
 - `lender-outreach-tracker.csv`
 - `domo-lender-outreach-table.pdf`
