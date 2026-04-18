@@ -13,8 +13,8 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (utctDay)
-import Data.Time.Clock (UTCTime, addUTCTime, getCurrentTime)
+import Data.Time (UTCTime (..), fromGregorian, utctDay)
+import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
 import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
@@ -91,6 +91,7 @@ import TDF.ServerExtra (
     validateSocialReplySenderId,
     validateInventoryPageParams,
     validatePaymentAmountCents,
+    validatePaymentPaidAt,
     validatePaymentAttachmentUrl,
     parseCheckoutTargetKind,
     parseOptionalKeyField,
@@ -991,6 +992,23 @@ spec = do
               expectationFailure ("Expected invalid payment amount error, got " <> show value)
       assertInvalid (validatePaymentAmountCents 0)
       assertInvalid (validatePaymentAmountCents (-500))
+
+  describe "validatePaymentPaidAt" $ do
+    let now = UTCTime (fromGregorian 2026 4 13) 0
+        past = UTCTime (fromGregorian 2026 4 12) 0
+        future = UTCTime (fromGregorian 2026 4 14) 0
+
+    it "accepts same-day and historical manual payment dates without rewriting them" $ do
+      validatePaymentPaidAt now now `shouldBe` Right now
+      validatePaymentPaidAt now past `shouldBe` Right past
+
+    it "rejects future manual payment dates before persisting impossible payments" $
+      case validatePaymentPaidAt now future of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paidAt must not be in the future"
+        Right value ->
+          expectationFailure ("Expected future payment date error, got " <> show value)
 
   describe "validatePositivePaymentReferenceId" $ do
     it "accepts positive payment, party, order, and invoice identifiers without rewriting them" $ do

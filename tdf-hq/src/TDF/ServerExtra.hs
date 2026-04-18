@@ -1589,13 +1589,14 @@ paymentsServer user =
       partyId <- either throwError pure (validatePositivePaymentReferenceId "partyId" pcPartyId)
       orderId <- either throwError pure (validateOptionalPositivePaymentReferenceId "orderId" pcOrderId)
       invoiceId <- either throwError pure (validateOptionalPositivePaymentReferenceId "invoiceId" pcInvoiceId)
-      paidAt <- parseUTCTimeText pcPaidAt
+      parsedPaidAt <- parseUTCTimeText pcPaidAt
+      now <- liftIO getCurrentTime
+      paidAt <- either throwError pure (validatePaymentPaidAt now parsedPaidAt)
       amountCents <- either throwError pure (validatePaymentAmountCents pcAmountCents)
       _ <- either throwError pure (validatePaymentCurrency pcCurrency)
       conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       attachmentUrl <- either throwError pure (validatePaymentAttachmentUrl pcAttachmentUrl)
-      now <- liftIO getCurrentTime
       let partyKey   = toSqlKey partyId
           mOrderKey  = toSqlKey <$> orderId
           mInvoiceKey= toSqlKey <$> invoiceId
@@ -1643,6 +1644,11 @@ validatePaymentAmountCents :: Int -> Either ServerError Int
 validatePaymentAmountCents amountCents
   | amountCents > 0 = Right amountCents
   | otherwise = Left err400 { errBody = "amountCents must be greater than 0" }
+
+validatePaymentPaidAt :: UTCTime -> UTCTime -> Either ServerError UTCTime
+validatePaymentPaidAt now paidAt
+  | paidAt <= now = Right paidAt
+  | otherwise = Left err400 { errBody = "paidAt must not be in the future" }
 
 validatePositivePaymentReferenceId :: Text -> Int64 -> Either ServerError Int64
 validatePositivePaymentReferenceId fieldName rawId
