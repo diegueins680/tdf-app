@@ -184,6 +184,7 @@ const firstFollowUpComposerHelpText =
 const openPaymentWorkflowLabel = 'Registrar pago';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
+const localSearchLabel = 'Buscar inscripciones';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
@@ -4834,7 +4835,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(hasLabel(container, 'Buscar registros cargados')).toBe(false);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
         dossierOnlyScopeHint,
@@ -4844,7 +4846,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
       await flushPromises();
       await flushPromises();
     });
@@ -4869,7 +4871,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
@@ -4924,13 +4926,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const searchInput = getInputByLabel(container, 'Buscar registros cargados');
+      const searchInput = getInputByLabel(container, localSearchLabel);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, estado, fuente o curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
       await flushPromises();
       await flushPromises();
     });
@@ -4970,12 +4972,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(10);
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
       await flushPromises();
       await flushPromises();
     });
@@ -4999,7 +5001,7 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'pending_payment',
         limit: 200,
       });
-      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Estudiante 1');
       expect(container.textContent).not.toContain('Nina Simone');
@@ -5017,14 +5019,14 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'sin coincidencias');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin coincidencias');
       await flushPromises();
       await flushPromises();
     });
@@ -5046,7 +5048,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect((getInputByLabel(container, 'Buscar registros cargados') as HTMLInputElement).value).toBe('');
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
@@ -5085,12 +5087,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Buscar registros cargados')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
       await flushPromises();
       await flushPromises();
     });

@@ -91,6 +91,7 @@ const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden 
 const defaultPublicFormSource = 'landing';
 const MIN_DEFAULT_CSV_EXPORT_ROWS = 3;
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
+const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -2703,7 +2704,7 @@ export default function CourseRegistrationsAdminPage() {
           {showLocalSearchControl && (
             <Box sx={{ mb: 2 }}>
               <TextField
-                label="Buscar registros cargados"
+                label={LOCAL_SEARCH_LABEL}
                 value={localSearch}
                 onChange={(e) => {
                   setHasUsedFilterControl(true);
