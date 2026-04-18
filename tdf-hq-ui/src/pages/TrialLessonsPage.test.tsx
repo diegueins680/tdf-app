@@ -190,6 +190,7 @@ describe('TrialLessonsPage', () => {
         expect(container.textContent).toContain('Aún no hay clases de prueba en este rango.');
         expect(container.textContent).not.toContain('No hay clases de prueba para este filtro.');
         expect(hasButton(container, 'Exportar CSV')).toBe(false);
+        expect(hasButton(container, 'Refrescar')).toBe(false);
         expect(hasButton(container, 'Nuevo alumno')).toBe(true);
         expect(hasButton(container, 'Nueva clase')).toBe(true);
       });
@@ -211,6 +212,7 @@ describe('TrialLessonsPage', () => {
         expect(container.textContent).toContain('Grace Hopper');
         expect(container.textContent).toContain('Produccion Musical');
         expect(hasButton(container, 'Exportar CSV')).toBe(true);
+        expect(hasButton(container, 'Refrescar')).toBe(true);
       });
     } finally {
       await cleanup();

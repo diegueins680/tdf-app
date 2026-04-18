@@ -482,6 +482,7 @@ export default function TrialLessonsPage() {
     studentsQuery.isLoading ||
     (!rangeError && classesQuery.isLoading);
   const queryError = rangeError ? null : classesQuery.error;
+  const showRefreshAction = Boolean(queryError) || data.length > 0;
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -614,13 +615,15 @@ export default function TrialLessonsPage() {
           <Button variant="outlined" onClick={openStudentDialog}>
             Nuevo alumno
           </Button>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={() => void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] })}
-          >
-            Refrescar
-          </Button>
+          {showRefreshAction && (
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => void qc.invalidateQueries({ queryKey: ['trial-class-sessions'] })}
+            >
+              Refrescar
+            </Button>
+          )}
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
             Nueva clase
           </Button>
