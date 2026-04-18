@@ -259,21 +259,19 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
 lookupCookie :: Text -> Text -> Either Text Text
 lookupCookie cookieName rawHeader =
   let pairs = map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
-      cleaned = do
+      matchingValues = do
         (namePart, valuePart) <- pairs
         let name = T.strip namePart
             value = T.strip valuePart
-        guard (not (T.null name) && not (T.null value))
-        pure (name, value)
-      matchingValues =
-        [ token
-        | (name, value) <- cleaned
-        , name == cookieName
-        , token <- maybeToList (nonEmptyText value)
-        ]
+        guard (name == cookieName)
+        pure value
   in case matchingValues of
        [] -> Left "Missing or invalid auth token"
-       [token] -> Right token
+       [value] ->
+         maybe
+           (Left "Missing or invalid auth token")
+           Right
+           (nonEmptyText value)
        _ -> Left "Multiple session cookies found"
   where
     breakOnEquals chunk =
