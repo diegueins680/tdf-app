@@ -1016,8 +1016,8 @@ export default function CourseRegistrationsAdminPage() {
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [registrations]);
   const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel) && hasCustomFilters;
-  const allVisibleRegistrationsHaveNotes = loadedRegistrationCount > 1
-    && registrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
+  const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
+    && searchedRegistrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';

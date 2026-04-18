@@ -4966,6 +4966,66 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes shared internal notes once after local search narrows a mixed list', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crCourseSlug: 'beatmaking-101',
+        crAdminNotes: 'Pidió factura.',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crCourseSlug: 'mixing-bootcamp',
+        crAdminNotes: 'Confirmó pago por WhatsApp.',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+        crAdminNotes: index === 0 ? 'Revisar cupo.' : null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Notas internas');
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(hasExactText(container, 'Notas internas en todas las inscripciones visibles.')).toBe(true);
+      expect(countOccurrences(container, 'Notas internas')).toBe(1);
+      expect(hasExactText(container, 'Cohorte: Beatmaking 101 (beatmaking-101) · Notas internas')).toBe(false);
+      expect(hasExactText(container, 'Cohorte: Mixing Bootcamp (mixing-bootcamp) · Notas internas')).toBe(false);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).toContain('Nina Garcia');
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
   it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
     const pendingRegistrations = buildRegistrations(9);
     const initialRegistrations = [
