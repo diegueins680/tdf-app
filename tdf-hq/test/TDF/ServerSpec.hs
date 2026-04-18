@@ -123,6 +123,7 @@ import TDF.Server
     , validateCourseRegistrationUrlField
     , validateMarketplaceBuyerName
     , validateMarketplaceBuyerEmail
+    , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , requireMarketplaceCartTotals
     , validateDatafastResourcePath
@@ -3325,6 +3326,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer@example-.com" "buyerEmail inválido"
             assertInvalid "buyer..name@example.com" "buyerEmail inválido"
             assertInvalid "buyer()@example.com" "buyerEmail inválido"
+
+    describe "validateMarketplaceBuyerPhone" $ do
+        it "normalizes optional checkout phones before order and gateway persistence" $ do
+            validateMarketplaceBuyerPhone Nothing `shouldBe` Right Nothing
+            validateMarketplaceBuyerPhone (Just "   ") `shouldBe` Right Nothing
+            validateMarketplaceBuyerPhone (Just " +593 99 123 4567 ")
+                `shouldBe` Right (Just "+593991234567")
+            validateMarketplaceBuyerPhone (Just " +593991234567 ")
+                `shouldBe` Right (Just "+593991234567")
+
+        it "rejects malformed checkout phones before creating marketplace orders" $
+            case validateMarketplaceBuyerPhone (Just "call me maybe") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "buyerPhone inválido"
+                Right phoneVal ->
+                    expectationFailure
+                        ( "Expected invalid marketplace buyer phone to be rejected, got: "
+                            <> show phoneVal
+                        )
 
     describe "validateCourseRegistrationUrlField" $ do
         it "trims valid absolute HTTPS URLs and still lets optional attachment fields clear to Nothing" $ do

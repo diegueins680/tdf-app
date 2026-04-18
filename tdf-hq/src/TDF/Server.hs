@@ -3917,6 +3917,12 @@ validateMarketplaceBuyerEmail rawEmail =
     Right Nothing -> Left err400 { errBody = "buyerEmail requerido" }
     Left _ -> Left err400 { errBody = "buyerEmail inválido" }
 
+validateMarketplaceBuyerPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateMarketplaceBuyerPhone rawPhone =
+  case validateCourseRegistrationPhoneE164 rawPhone of
+    Right phoneVal -> Right phoneVal
+    Left _ -> Left err400 { errBody = "buyerPhone inválido" }
+
 validateMarketplaceBuyerName :: Text -> Either ServerError Text
 validateMarketplaceBuyerName rawName =
   case cleanOptional (Just rawName) of
@@ -8418,6 +8424,7 @@ checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId MarketplaceCheckoutReq{..} = do
   buyerNameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   buyerEmailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
+  buyerPhoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
@@ -8430,7 +8437,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
       { ME.marketplaceOrderCartId        = Just cartKey
       , ME.marketplaceOrderBuyerName     = buyerNameTxt
       , ME.marketplaceOrderBuyerEmail    = buyerEmailTxt
-      , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+      , ME.marketplaceOrderBuyerPhone    = buyerPhoneTxt
       , ME.marketplaceOrderTotalUsdCents = totalCents
       , ME.marketplaceOrderCurrency      = currency
       , ME.marketplaceOrderStatus        = statusTxt
@@ -8480,9 +8487,9 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
 
 createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId payload = do
-  let phoneTxt = fmap T.strip (mcrBuyerPhone payload)
   nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
+  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
@@ -8589,6 +8596,7 @@ createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
 createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
   nameTxt <- either throwError pure (validateMarketplaceBuyerName mcrBuyerName)
   emailTxt <- either throwError pure (validateMarketplaceBuyerEmail mcrBuyerEmail)
+  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone mcrBuyerPhone)
   cartKey <- parseCartId rawId
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
@@ -8605,7 +8613,7 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
       { ME.marketplaceOrderCartId        = Just cartKey
       , ME.marketplaceOrderBuyerName     = nameTxt
       , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = fmap T.strip mcrBuyerPhone
+      , ME.marketplaceOrderBuyerPhone    = phoneTxt
       , ME.marketplaceOrderTotalUsdCents = totalCents
       , ME.marketplaceOrderCurrency      = currency
       , ME.marketplaceOrderStatus        = "paypal_pending"
