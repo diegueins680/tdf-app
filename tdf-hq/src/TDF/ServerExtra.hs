@@ -2705,7 +2705,10 @@ extractRecipientIdFromMetadata (Just raw) =
         Just recipientId -> pure recipientId
         Nothing -> fail "recipient id missing"
 
-resolveInstagramReplyContext :: Maybe Text -> SqlPersistT IO (Maybe Text, Maybe Text)
+resolveInstagramReplyContext
+  :: MonadIO m
+  => Maybe Text
+  -> SqlPersistT m (Maybe Text, Maybe Text)
 resolveInstagramReplyContext mExternalId = do
   let mCleanExternalId = stripNonEmptyText mExternalId
   mPreferredAccountId <- case mCleanExternalId of
@@ -2719,7 +2722,10 @@ resolveInstagramReplyContext mExternalId = do
       pure (mIncoming >>= extractRecipientIdFromMetadata . M.instagramMessageMetadata . entityVal)
   resolveInstagramDeliveryAccount mPreferredAccountId
 
-resolveInstagramDeliveryAccount :: Maybe Text -> SqlPersistT IO (Maybe Text, Maybe Text)
+resolveInstagramDeliveryAccount
+  :: MonadIO m
+  => Maybe Text
+  -> SqlPersistT m (Maybe Text, Maybe Text)
 resolveInstagramDeliveryAccount mPreferredAccountId = do
   let baseFilters =
         [ M.SocialSyncAccountPlatform ==. "instagram"
@@ -2729,11 +2735,8 @@ resolveInstagramDeliveryAccount mPreferredAccountId = do
       ordering = [Desc M.SocialSyncAccountUpdatedAt, Desc M.SocialSyncAccountCreatedAt]
       mCleanPreferred = stripNonEmptyText mPreferredAccountId
   mSelected <- case mCleanPreferred of
-    Just accountId -> do
-      mExact <- selectFirst ([M.SocialSyncAccountExternalUserId ==. accountId] ++ baseFilters) ordering
-      case mExact of
-        Just row -> pure (Just row)
-        Nothing -> selectFirst baseFilters ordering
+    Just accountId ->
+      selectFirst ([M.SocialSyncAccountExternalUserId ==. accountId] ++ baseFilters) ordering
     Nothing ->
       selectFirst baseFilters ordering
   let selectedAccountId = mSelected >>= stripNonEmptyText . Just . M.socialSyncAccountExternalUserId . entityVal

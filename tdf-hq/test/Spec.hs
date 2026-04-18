@@ -136,6 +136,7 @@ import TDF.Server
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       sanitizeLiveSessionRiderFileName )
+import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import TDF.Server.SocialSync
     ( socialSyncServer,
       validateSocialSyncArtistPartyId,
@@ -827,6 +828,24 @@ main = hspec $ do
             expectInvalidPort
                 "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
                 "DATABASE_URL port must be between 1 and 65535"
+
+    describe "Instagram messaging context fallback" $
+        it "does not use the configured fallback token when a targeted account has no connected token" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        (Just "biz-missing")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset token no configurado"
 
     describe "SRI invoice script discovery" $
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $

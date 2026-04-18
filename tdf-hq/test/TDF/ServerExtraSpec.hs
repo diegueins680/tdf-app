@@ -84,6 +84,7 @@ import TDF.ServerExtra (
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
     parseSocialDirectionParam,
+    resolveInstagramReplyContext,
     validateSocialReplyExternalId,
     socialReplyOutcomeFields,
     validateSocialReplySenderId,
@@ -1377,6 +1378,41 @@ spec = do
                         M.instagramMessageDeletedAt row `shouldBe` Just deletedAt
                 length visible `shouldBe` 0
 
+    it "keeps reply delivery bound to the incoming Instagram recipient instead of falling back to another asset" $ do
+        now <- getCurrentTime
+        (mAccountId, mToken) <- runMetaInboxSql $ do
+            _ <- insert M.SocialSyncAccount
+                { M.socialSyncAccountPartyId = Nothing
+                , M.socialSyncAccountArtistProfileId = Nothing
+                , M.socialSyncAccountPlatform = "instagram"
+                , M.socialSyncAccountExternalUserId = "biz-other"
+                , M.socialSyncAccountHandle = Just "other-account"
+                , M.socialSyncAccountAccessToken = Just "other-token"
+                , M.socialSyncAccountTokenExpiresAt = Nothing
+                , M.socialSyncAccountStatus = "connected"
+                , M.socialSyncAccountLastSyncedAt = Nothing
+                , M.socialSyncAccountCreatedAt = now
+                , M.socialSyncAccountUpdatedAt = Just now
+                }
+            persistMetaInbound MetaInstagram now
+                [ MetaInboundMessage
+                    IGInbound
+                        { igInboundExternalId = "mid-preferred"
+                        , igInboundSenderId = "user-1"
+                        , igInboundSenderName = Just "Fan"
+                        , igInboundText = "hola"
+                        , igInboundAdExternalId = Nothing
+                        , igInboundAdName = Nothing
+                        , igInboundCampaignExternalId = Nothing
+                        , igInboundCampaignName = Nothing
+                        , igInboundMetadata = Just "{\"recipient_id\":\"biz-missing\"}"
+                        }
+                ]
+            resolveInstagramReplyContext (Just "mid-preferred")
+
+        mAccountId `shouldBe` Just "biz-missing"
+        mToken `shouldBe` Nothing
+
 runMetaInboxSql :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runMetaInboxSql action =
     runSqlite ":memory:" $ do
@@ -1571,6 +1607,23 @@ initializeMetaInboxSchema = do
         \\"deleted_at\" TIMESTAMP NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \CONSTRAINT \"unique_instagram_message\" UNIQUE (\"external_id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"social_sync_account\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NULL,\
+        \\"artist_profile_id\" INTEGER NULL,\
+        \\"platform\" VARCHAR NOT NULL,\
+        \\"external_user_id\" VARCHAR NOT NULL,\
+        \\"handle\" VARCHAR NULL,\
+        \\"access_token\" VARCHAR NULL,\
+        \\"token_expires_at\" TIMESTAMP NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"last_synced_at\" TIMESTAMP NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NULL,\
+        \CONSTRAINT \"unique_social_sync_account\" UNIQUE (\"platform\", \"external_user_id\")\
         \)"
         []
 

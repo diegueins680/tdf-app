@@ -7,7 +7,7 @@ module TDF.Services.InstagramMessaging
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
 import           Data.List (nub)
-import           Data.Maybe (catMaybes, maybeToList)
+import           Data.Maybe (catMaybes, isJust, maybeToList)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -39,7 +39,10 @@ data InstagramAttempt = InstagramAttempt
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
   case buildAttempts cfg mTokenOverride mAccountIdOverride of
-    [] -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
+    []
+      | hasExplicitMessagingContext mTokenOverride mAccountIdOverride ->
+          pure (Left "Instagram connected asset token no configurado")
+      | otherwise -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
     attempts -> do
       manager <- newManager tlsManagerSettings
       runAttempts manager recipientId body attempts []
@@ -52,14 +55,30 @@ nonEmptyText raw =
 buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> [InstagramAttempt]
 buildAttempts cfg mTokenOverride mAccountIdOverride =
   let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-      sources = nubSources (catMaybes
-        [ buildSource "connected asset token" (mTokenOverride >>= nonEmptyText) (mAccountIdOverride >>= nonEmptyText)
-        , buildSource "configured fallback token" (instagramMessagingToken cfg >>= nonEmptyText) (instagramMessagingAccountId cfg >>= nonEmptyText)
-        ])
+      connectedSource =
+        buildSource
+          "connected asset token"
+          (mTokenOverride >>= nonEmptyText)
+          (mAccountIdOverride >>= nonEmptyText)
+      configuredSource =
+        buildSource
+          "configured fallback token"
+          (instagramMessagingToken cfg >>= nonEmptyText)
+          (instagramMessagingAccountId cfg >>= nonEmptyText)
+      sources =
+        nubSources $
+          if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+            then maybeToList connectedSource
+            else catMaybes [connectedSource, configuredSource]
   in nubAttempts (concatMap (sourceAttempts base) sources)
   where
     buildSource label mToken mAccountId =
       InstagramAttemptSource label <$> mToken <*> pure mAccountId
+
+hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
+hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
+  isJust (mTokenOverride >>= nonEmptyText)
+    || isJust (mAccountIdOverride >>= nonEmptyText)
 
 nubSources :: [InstagramAttemptSource] -> [InstagramAttemptSource]
 nubSources =
