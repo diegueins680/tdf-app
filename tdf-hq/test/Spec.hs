@@ -1435,6 +1435,7 @@ main = hspec $ do
             assertInvalid "landingUrl" "javascript:alert(1)"
             assertInvalid "locationMapUrl" "/curso/produccion"
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"
+            assertInvalid "landingUrl" "https://tdf.example.com/curso\NULpreview"
 
         it "drops stale persisted public course URLs before metadata serialization" $ do
             sanitizeStoredCoursePublicUrl "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")

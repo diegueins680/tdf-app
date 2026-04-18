@@ -595,13 +595,15 @@ validateOptionalDriveLink (Just rawDriveLink) =
 
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl
-  | T.any isSpace trimmed = False
+  | T.any invalidUrlChar trimmed = False
   | "http://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 7 trimmed)
   | "https://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 8 trimmed)
   | otherwise = False
   where
     trimmed = T.strip rawUrl
     lowerUrl = T.toLower trimmed
+
+    invalidUrlChar ch = isSpace ch || isControl ch
 
     hasValidAuthority remainder =
       let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
