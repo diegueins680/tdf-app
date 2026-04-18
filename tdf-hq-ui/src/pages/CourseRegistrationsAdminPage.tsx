@@ -72,7 +72,7 @@ type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}.`;
+  `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';

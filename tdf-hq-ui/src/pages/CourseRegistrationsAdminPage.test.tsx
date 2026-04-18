@@ -191,9 +191,12 @@ const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
-const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
+const dossierOnlyScopeHint =
+  'Abre el expediente desde el nombre; el estado abre acciones rápidas.';
 const contactDossierScopeHint =
   'Abre el expediente desde el contacto; usa Cambiar estado para acciones rápidas.';
+const contactDossierOnlyScopeHint =
+  'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
 const initialEmptyStateConfigMessage =
@@ -383,7 +386,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationEmailsMock.mockResolvedValue([]);
   });
 
-  it('keeps the single-result view minimal while still hinting that the name opens the dossier', async () => {
+  it('keeps the single-result view minimal while still hinting at dossier and status actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -1048,7 +1051,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        'Abre el expediente desde el contacto.',
+        contactDossierOnlyScopeHint,
       );
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(contactDossierScopeHint);
