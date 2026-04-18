@@ -16,7 +16,7 @@ export const getCmsVersionRowActions = (
   const loadedStateLabel = isLoadedInEditor ? 'En formulario' : isCurrentLive ? 'En vivo' : null;
 
   return {
-    showPublish: !isPublished,
+    showPublish: !isPublished && !isLoadedInEditor,
     showLoadInEditor: !loadedStateLabel,
     showDelete: !isCurrentLive && !isLoadedInEditor,
     loadedStateLabel,

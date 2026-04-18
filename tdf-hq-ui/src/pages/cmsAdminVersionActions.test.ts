@@ -51,9 +51,9 @@ describe('getCmsVersionRowActions', () => {
     });
   });
 
-  it('replaces the duplicate load action with passive state when the version is already in the editor', () => {
+  it('replaces row publish and load actions with passive state when the version is already in the editor', () => {
     expect(getCmsVersionRowActions('draft', { isLoadedInEditor: true })).toEqual({
-      showPublish: true,
+      showPublish: false,
       showLoadInEditor: false,
       showDelete: false,
       loadedStateLabel: 'En formulario',
@@ -69,7 +69,7 @@ describe('getCmsVersionRowActions', () => {
     });
 
     expect(getCmsVersionRowActions('archived', { isLoadedInEditor: true })).toEqual({
-      showPublish: true,
+      showPublish: false,
       showLoadInEditor: false,
       showDelete: false,
       loadedStateLabel: 'En formulario',
