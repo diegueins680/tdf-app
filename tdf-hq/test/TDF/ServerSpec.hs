@@ -66,6 +66,7 @@ import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
+    , SessionInputLookup(..)
     , normalizeOptionalInput
     , parseMcpRequest
     , parseToolCallParams
@@ -136,6 +137,7 @@ import TDF.Server
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
+    , validateSessionInputLookup
     , resolveSocialTargetPartyId
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
@@ -357,6 +359,39 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateSessionInputLookup" $ do
+        it "accepts exactly one public input-list session selector" $ do
+            let validSessionId = "00000000-0000-0000-0000-000000000084"
+            validateSessionInputLookup Nothing Nothing `shouldBe` Right (SessionInputByIndex 1)
+            validateSessionInputLookup (Just 2) Nothing `shouldBe` Right (SessionInputByIndex 2)
+            case validateSessionInputLookup Nothing (Just validSessionId) of
+                Right (SessionInputByKey keyVal) ->
+                    toPathPiece keyVal `shouldBe` validSessionId
+                Right other ->
+                    expectationFailure ("Expected sessionId lookup, got: " <> show other)
+                Left serverErr ->
+                    expectationFailure ("Expected valid sessionId lookup, got: " <> show serverErr)
+
+        it "rejects ambiguous or malformed public input-list session selectors" $ do
+            let validSessionId = "00000000-0000-0000-0000-000000000084"
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid input-list selector to be rejected, got: " <> show value)
+            assertInvalid
+                "Provide either index or sessionId, not both"
+                (validateSessionInputLookup (Just 1) (Just validSessionId))
+            assertInvalid
+                "index must be greater than or equal to 1"
+                (validateSessionInputLookup (Just 0) Nothing)
+            assertInvalid
+                "Invalid sessionId"
+                (validateSessionInputLookup Nothing (Just "not-a-session-id"))
 
     describe "parseMcpRequest" $ do
         it "accepts canonical JSON-RPC 2.0 MCP requests" $
