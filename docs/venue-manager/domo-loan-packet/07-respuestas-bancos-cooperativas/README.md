@@ -18,4 +18,5 @@ Prepared files:
 - `email-produbanco.eml`
 - `lender-outreach-drafts.md`
 - `lender-outreach-tracker.csv`
+- `phone-intake-script.md`
 - `domo-lender-outreach-table.pdf`

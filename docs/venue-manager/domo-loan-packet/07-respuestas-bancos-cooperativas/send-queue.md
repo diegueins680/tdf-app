@@ -20,9 +20,14 @@ Official starting points:
 
 - Banco Pichincha PYME credits: https://www.pichincha.com/detalle-catalogo/pymes-creditos
 - Banco Pichincha productivo empresas: https://www.pichincha.com/portal/principal/empresas/creditos/productivo
+- Banco Pichincha banca telefonica: `(02) 2999 999`
 - Produbanco activos fijos PYME: https://www.produbanco.com.ec/pymes/activos-fijos/
 - Produbanco capital de trabajo PYME: https://www.produbanco.com.ec/pymes/capital-de-trabajo/
 - Produbanco phone listed on its PYME page: 02 400 9000, option 5.
+
+Phone/branch script:
+
+- `phone-intake-script.md`
 
 Attach the public-safe packet:
 
