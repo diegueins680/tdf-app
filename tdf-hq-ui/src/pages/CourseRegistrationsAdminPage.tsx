@@ -90,8 +90,8 @@ const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const defaultPublicFormSource = 'landing';
-const MIN_DEFAULT_CSV_EXPORT_ROWS = 4;
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
+const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 
 interface FlashState {
@@ -1193,9 +1193,15 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const suppressDefaultMediumListUtilityRow = !hasCustomFilters
+    && !hasLocalSearch
+    && loadedRegistrationCount > 1
+    && loadedRegistrationCount < MIN_LOCAL_SEARCH_REGISTRATIONS
+    && !viewHitsCurrentLimit;
   const showUtilityCountSummary = !hasLocalSearch
     && !canCopyCsv
     && !showTinyDefaultCountInCurrentView
+    && !suppressDefaultMediumListUtilityRow
     && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const standaloneReachedListLimitSummary = !hasCustomFilters
     && viewHitsCurrentLimit

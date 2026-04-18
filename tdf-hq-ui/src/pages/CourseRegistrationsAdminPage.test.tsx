@@ -4939,6 +4939,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps medium default lists focused until search and export are useful', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+      }),
+      buildRegistration({
+        crId: 104,
+        crFullName: 'Dorothy Vaughan',
+        crEmail: 'dorothy@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(4);
+      expect(hasLabel(container, localSearchLabel)).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Mostrando 4 inscripciones en esta vista.');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(4))).toBe(0);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
