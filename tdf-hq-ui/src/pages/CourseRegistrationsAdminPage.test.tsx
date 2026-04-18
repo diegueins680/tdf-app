@@ -181,7 +181,7 @@ const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const reopenPendingLabel = 'Reabrir como pendiente';
-const copyVisibleCsvLabel = 'Copiar CSV visible';
+const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
@@ -784,8 +784,8 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
-      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
-      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
+      expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
     });
 
     await cleanup();
@@ -942,7 +942,7 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       const summary = container.querySelector<HTMLElement>('[data-testid="course-registration-filter-summary"]');
       expect(summary?.textContent?.trim()).toBe(
-        'Vista filtrada: cohorte Beatmaking 101 (beatmaking-101). Mostrando 2 inscripciones.',
+        'Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).',
       );
       expect(container.querySelectorAll('[data-testid="course-registration-filter-summary"]')).toHaveLength(1);
       const createdAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
@@ -982,7 +982,8 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
+      expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
@@ -2048,7 +2049,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
-      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
     });
 
     await cleanup();
@@ -4417,10 +4418,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Pendiente de pago');
       expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
-      expect(container.textContent).toContain('Mostrando 2 inscripciones.');
+      expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')?.textContent?.trim()).toBe('Restablecer límite');
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
-      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
       expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
       expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
     });
@@ -4500,7 +4501,7 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBe('Mostrando 2 inscripciones en esta vista.');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
-      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Copiar CSV (2 filas)',
@@ -4535,7 +4536,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Grace Hopper"]')).toHaveLength(1);
       expect(countOccurrences(container, 'Ada Lovelace')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
-      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
     });
 
     await cleanup();
@@ -4580,7 +4581,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('ada@example.com · +593999000111');
       expect(container.textContent).toContain('Fuente: instagram · Notas internas');
       expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
-      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
     });
 
     await cleanup();
@@ -4649,11 +4650,11 @@ describe('CourseRegistrationsAdminPage', () => {
       const listUtilities = container.querySelector<HTMLElement>('[data-testid="course-registration-list-utilities"]');
       const createdAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
       expect(listUtilities).not.toBeNull();
-      expect(listUtilities?.textContent).toContain('Mostrando 3 inscripciones en esta vista.');
+      expect(listUtilities?.textContent).not.toContain('Mostrando 3 inscripciones en esta vista.');
       expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
       expect(container.textContent).not.toContain(`Misma fecha de registro: ${createdAtLabel}.`);
       expect(countOccurrences(container, `Creado: ${createdAtLabel}`)).toBe(0);
-      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
+      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel(3))).toBeTruthy();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
     });
@@ -4703,7 +4704,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
-      expect(countButtonsByText(container, copyVisibleCsvLabel)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -4870,13 +4871,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(2);
-      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
       expect(container.textContent).toContain('Mostrando 2 inscripciones de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, copyVisibleCsvLabel));
+      clickButton(getButtonByText(container, copyVisibleCsvLabel(2)));
       await flushPromises();
       await flushPromises();
     });
@@ -4920,19 +4921,19 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los totales de arriba resumen esta vista y usan los mismos colores que cada estado.',
       );
       expect(container.textContent).not.toContain('Leyenda de estados:');
-      expect(container.textContent).toContain('Mostrando 200 inscripciones en esta vista.');
+      expect(container.textContent).not.toContain('Mostrando 200 inscripciones en esta vista.');
       expect(container.textContent).toContain(
         'Se cargó el límite de 200 inscripciones; usa Ajustar límite si necesitas revisar más registros.',
       );
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Copiar CSV (200 filas)',
+          (el) => (el.textContent ?? '').trim() === copyVisibleCsvLabel(200),
         ),
-      ).toBe(false);
+      ).toBe(true);
       expect(listUtilities).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel)).toBeTruthy();
+      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel(200))).toBeTruthy();
     });
 
     await act(async () => {
@@ -4958,11 +4959,11 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
-      expect(container.textContent).toContain('Mostrando 50 inscripciones.');
+      expect(container.textContent).not.toContain('Mostrando 50 inscripciones.');
       expect(container.textContent).not.toContain('Mostrando 50 inscripciones con los filtros actuales.');
       expect(container.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
-      expect(getButtonByText(container, copyVisibleCsvLabel)).toBeTruthy();
+      expect(getButtonByText(container, copyVisibleCsvLabel(50))).toBeTruthy();
       expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
       expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
       expect(

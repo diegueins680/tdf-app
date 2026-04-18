@@ -938,10 +938,6 @@ export default function CourseRegistrationsAdminPage() {
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
   const canCopyCsv = searchedRegistrations.length > 1
     && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
-  const showStandaloneListUtilitySummary = !hasCustomFilters
-    && !hasLocalSearch
-    && !showTinyDefaultCountInCurrentView
-    && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
@@ -972,9 +968,11 @@ export default function CourseRegistrationsAdminPage() {
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
   const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
-  const copyCsvButtonLabel = 'Copiar CSV visible';
-  const showVisibleRegistrationsSummary = !hasLocalSearch
-    && (loadedRegistrationCount > 1 || canCopyCsv || Boolean(copyMessage));
+  const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const showUtilityCountSummary = !hasLocalSearch
+    && !canCopyCsv
+    && !showTinyDefaultCountInCurrentView
+    && (loadedRegistrationCount > 1 || Boolean(copyMessage));
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const standaloneReachedListLimitSummary = !hasCustomFilters && viewHitsCurrentLimit
     ? buildReachedListLimitSummary(limit)
@@ -1050,16 +1048,16 @@ export default function CourseRegistrationsAdminPage() {
   const filteredUtilitySummaryMessage = useMemo(
     () => [
       activeViewSummaryMessage,
-      showVisibleRegistrationsSummary ? visibleRegistrationsSummary : '',
+      showUtilityCountSummary ? visibleRegistrationsSummary : '',
     ].filter(Boolean).join(' '),
-    [activeViewSummaryMessage, showVisibleRegistrationsSummary, visibleRegistrationsSummary],
+    [activeViewSummaryMessage, showUtilityCountSummary, visibleRegistrationsSummary],
   );
   const standaloneUtilitySummaryMessage = useMemo(
     () => [
-      showStandaloneListUtilitySummary ? visibleRegistrationsSummary : '',
+      showUtilityCountSummary ? visibleRegistrationsSummary : '',
       standaloneReachedListLimitSummary,
     ].filter(Boolean).join(' '),
-    [showStandaloneListUtilitySummary, standaloneReachedListLimitSummary, visibleRegistrationsSummary],
+    [showUtilityCountSummary, standaloneReachedListLimitSummary, visibleRegistrationsSummary],
   );
   const showFilteredEmptyState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1089,7 +1087,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasVisibleRegistrations
     && (
       Boolean(activeViewSummaryMessage)
-      || showVisibleRegistrationsSummary
+      || showUtilityCountSummary
       || canCopyCsv
       || Boolean(copyMessage)
       || showFilteredResetAction
