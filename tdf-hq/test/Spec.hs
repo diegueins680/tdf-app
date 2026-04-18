@@ -191,6 +191,7 @@ import TDF.Auth (extractToken, extractTokenFromHeaders, sessionCookieHeader)
 import TDF.Config
     ( appPort,
       chatKitApiBase,
+      chatKitWorkflowId,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
@@ -483,6 +484,53 @@ main = hspec $ do
                 "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+
+        it "normalizes configured ChatKit workflow fallbacks before creating sessions" $ do
+            withEnvOverrides
+                [ ("CHATKIT_WORKFLOW_ID", Just "  wf_default  ")
+                , ("VITE_CHATKIT_WORKFLOW_ID", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    chatKitWorkflowId cfg `shouldBe` Just "wf_default"
+
+            withEnvOverrides
+                [ ("CHATKIT_WORKFLOW_ID", Nothing)
+                , ("VITE_CHATKIT_WORKFLOW_ID", Just "  wf_public  ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    chatKitWorkflowId cfg `shouldBe` Just "wf_public"
+
+        it "rejects malformed ChatKit workflow fallbacks at startup" $ do
+            let assertInvalid :: String -> String -> String -> Expectation
+                assertInvalid envName rawWorkflowId expectedMessage =
+                    withEnvOverrides
+                        [ ( "CHATKIT_WORKFLOW_ID"
+                          , if envName == "CHATKIT_WORKFLOW_ID"
+                              then Just rawWorkflowId
+                              else Nothing
+                          )
+                        , ( "VITE_CHATKIT_WORKFLOW_ID"
+                          , if envName == "VITE_CHATKIT_WORKFLOW_ID"
+                              then Just rawWorkflowId
+                              else Nothing
+                          )
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "CHATKIT_WORKFLOW_ID"
+                "wf default"
+                "CHATKIT_WORKFLOW_ID must not contain whitespace"
+            assertInvalid
+                "VITE_CHATKIT_WORKFLOW_ID"
+                "wf\ndefault"
+                "VITE_CHATKIT_WORKFLOW_ID must not contain whitespace"
+            assertInvalid
+                "CHATKIT_WORKFLOW_ID"
+                (Data.Text.unpack (Data.Text.replicate 257 "a"))
+                "CHATKIT_WORKFLOW_ID must be 256 characters or fewer"
 
         it "normalizes configured public course fallback URLs before serving metadata" $
             withEnvOverrides

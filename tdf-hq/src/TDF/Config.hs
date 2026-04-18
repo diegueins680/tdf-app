@@ -259,7 +259,7 @@ loadConfig = do
   openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
   openAiModelEnv <- lookupEnv "OPENAI_MODEL"
   openAiEmbedModelEnv <- lookupEnv "OPENAI_EMBED_MODEL"
-  chatKitWorkflowEnv <- lookupFirstEnv
+  chatKitWorkflowEnv <- lookupFirstNamedEnv
     ["CHATKIT_WORKFLOW_ID", "VITE_CHATKIT_WORKFLOW_ID"]
   chatKitApiBaseEnv <- lookupEnv "CHATKIT_API_BASE"
   ragTopKEnv <- lookupEnv "RAG_TOP_K"
@@ -299,6 +299,8 @@ loadConfig = do
       "CHATKIT_API_BASE"
       "https://api.openai.com"
       chatKitApiBaseEnv
+  chatKitWorkflowIdVal <-
+    validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -355,7 +357,7 @@ loadConfig = do
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
     , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
     , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
-    , chatKitWorkflowId = chatKitWorkflowEnv >>= nonEmpty . T.pack
+    , chatKitWorkflowId = chatKitWorkflowIdVal
     , chatKitApiBase = chatKitApiBaseVal
     , ragTopK = parseInt 8 ragTopKEnv
     , ragChunkWords = parseInt 220 ragChunkWordsEnv
@@ -403,6 +405,12 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just normalized)
         Nothing -> lookupFirstEnv rest
+    lookupFirstNamedEnv [] = pure Nothing
+    lookupFirstNamedEnv (key:rest) = do
+      value <- lookupEnv key
+      case value >>= normalizeEnvString of
+        Just normalized -> pure (Just (key, normalized))
+        Nothing -> lookupFirstNamedEnv rest
     lookupFirstConnUrlEnv _ [] = pure Nothing
     lookupFirstConnUrlEnv requireValid (key:rest) = do
       value <- lookupEnv key
@@ -587,6 +595,26 @@ validateConfiguredApiBaseUrl envName defaultUrl (Just rawUrl)
         Right urlVal -> pure urlVal
   where
     trimmed = T.strip (T.pack rawUrl)
+
+validateConfiguredChatKitWorkflowId :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredChatKitWorkflowId Nothing = pure Nothing
+validateConfiguredChatKitWorkflowId (Just (envName, rawWorkflowId)) =
+  case normalizeConfiguredChatKitWorkflowId envName rawWorkflowId of
+    Left msg -> fail msg
+    Right workflowId -> pure workflowId
+
+normalizeConfiguredChatKitWorkflowId :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredChatKitWorkflowId envName rawWorkflowId
+  | T.null workflowId = Right Nothing
+  | T.length workflowId > 256 =
+      Left (envName <> " must be 256 characters or fewer")
+  | T.any isSpace workflowId =
+      Left (envName <> " must not contain whitespace")
+  | T.any isControl workflowId =
+      Left (envName <> " must not contain control characters")
+  | otherwise = Right (Just workflowId)
+  where
+    workflowId = T.strip (T.pack rawWorkflowId)
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl
