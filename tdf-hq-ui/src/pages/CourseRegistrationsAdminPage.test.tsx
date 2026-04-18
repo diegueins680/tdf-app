@@ -2709,10 +2709,24 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
+      expect(countButtonsByText(actions!, 'Más contexto')).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(emptyHint).toBeNull();
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Más contexto'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Agregar nota')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Agregar seguimiento')).toBeTruthy();
     });
 
     await cleanup();

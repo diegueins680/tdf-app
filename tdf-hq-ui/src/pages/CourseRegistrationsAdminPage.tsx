@@ -559,7 +559,8 @@ const preferNonEmptyText = (primary?: string | null, fallback?: string | null) =
   const trimmedPrimary = primary?.trim();
   if (trimmedPrimary) return trimmedPrimary;
   const trimmedFallback = fallback?.trim();
-  return trimmedFallback || null;
+  if (trimmedFallback) return trimmedFallback;
+  return null;
 };
 
 const preferPositiveId = (primary?: number | null, fallback?: number | null) => {
@@ -672,6 +673,7 @@ export default function CourseRegistrationsAdminPage() {
     anchorEl: HTMLElement;
     reg: CourseRegistrationDTO;
   } | null>(null);
+  const [dossierContextMenuAnchor, setDossierContextMenuAnchor] = useState<HTMLElement | null>(null);
   const [receiptMenuTarget, setReceiptMenuTarget] = useState<{
     anchorEl: HTMLElement;
     receipt: CourseRegistrationReceiptDTO;
@@ -1349,6 +1351,7 @@ export default function CourseRegistrationsAdminPage() {
       setDossierFlash(null);
       setMarkedPaidRegistrationId(null);
       setShowEmailHistory(false);
+      setDossierContextMenuAnchor(null);
       setReceiptMenuTarget(null);
       setFollowUpMenuTarget(null);
       setNotesDraft('');
@@ -1364,6 +1367,7 @@ export default function CourseRegistrationsAdminPage() {
     }
     setMarkedPaidRegistrationId(null);
     setShowEmailHistory(false);
+    setDossierContextMenuAnchor(null);
     setReceiptMenuTarget(null);
     setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
     setShowNotesComposer(false);
@@ -1451,6 +1455,10 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCloseStatusMenu = () => {
     setStatusMenuTarget(null);
+  };
+
+  const handleCloseDossierContextMenu = () => {
+    setDossierContextMenuAnchor(null);
   };
 
   const handleOpenReceiptMenu = (anchorEl: HTMLElement, receipt: CourseRegistrationReceiptDTO) => {
@@ -1729,7 +1737,15 @@ export default function CourseRegistrationsAdminPage() {
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
   const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && followUps.length === 0;
   const hasPrimaryDossierAction = showMarkPaidAction || showSystemEmailHistoryAction;
-  const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
+  const showGroupedDossierContextActions = showMarkPaidAction
+    && showInlineEmptyNotesAction
+    && showInlineEmptyFollowUpAction;
+  const showDirectInlineEmptyNotesAction = showInlineEmptyNotesAction && !showGroupedDossierContextActions;
+  const showDirectInlineEmptyFollowUpAction = showInlineEmptyFollowUpAction && !showGroupedDossierContextActions;
+  const showDossierActionRow = hasPrimaryDossierAction
+    || showGroupedDossierContextActions
+    || showDirectInlineEmptyNotesAction
+    || showDirectInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
   const showEvidenceOnlyEmptyReceiptCopy = activeRegistration?.crStatus === 'paid'
     || activeRegistration?.crStatus === 'cancelled';
@@ -2778,7 +2794,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Button>
               )}
             >
-              No hay coincidencias para "{localSearchTerm}" en las {formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.
+              {`No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`}
             </Alert>
           )}
           {searchedRegistrations.length ? (
@@ -2947,6 +2963,33 @@ export default function CourseRegistrationsAdminPage() {
       </Menu>
 
       <Menu
+        open={Boolean(dossierContextMenuAnchor)}
+        anchorEl={dossierContextMenuAnchor}
+        onClose={handleCloseDossierContextMenu}
+      >
+        {showInlineEmptyNotesAction && (
+          <MenuItem
+            onClick={() => {
+              handleCloseDossierContextMenu();
+              handleOpenNotesComposer();
+            }}
+          >
+            Agregar nota
+          </MenuItem>
+        )}
+        {showInlineEmptyFollowUpAction && (
+          <MenuItem
+            onClick={() => {
+              handleCloseDossierContextMenu();
+              setShowFollowUpComposer(true);
+            }}
+          >
+            Agregar seguimiento
+          </MenuItem>
+        )}
+      </Menu>
+
+      <Menu
         open={Boolean(followUpMenuTarget)}
         anchorEl={followUpMenuTarget?.anchorEl ?? null}
         onClose={handleCloseFollowUpMenu}
@@ -3049,7 +3092,18 @@ export default function CourseRegistrationsAdminPage() {
                           {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
                         </Button>
                       )}
-                      {showInlineEmptyNotesAction && (
+                      {showGroupedDossierContextActions && (
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowDropDownIcon />}
+                          aria-haspopup="menu"
+                          aria-expanded={Boolean(dossierContextMenuAnchor)}
+                          onClick={(event) => setDossierContextMenuAnchor(event.currentTarget)}
+                        >
+                          Más contexto
+                        </Button>
+                      )}
+                      {showDirectInlineEmptyNotesAction && (
                         <Button
                           variant="outlined"
                           onClick={handleOpenNotesComposer}
@@ -3057,7 +3111,7 @@ export default function CourseRegistrationsAdminPage() {
                           Agregar nota
                         </Button>
                       )}
-                      {showInlineEmptyFollowUpAction && (
+                      {showDirectInlineEmptyFollowUpAction && (
                         <Button
                           variant="outlined"
                           onClick={() => setShowFollowUpComposer(true)}
