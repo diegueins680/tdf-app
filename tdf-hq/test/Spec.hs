@@ -3448,19 +3448,20 @@ main = hspec $ do
 
     describe "validateLeadCompletionRequest" $ do
         it "accepts canonical lead-completion request bodies and rejects unexpected keys" $ do
-            case eitherDecode "{\"token\":\"token-123\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\"}" of
+            case eitherDecode "{\"token\":\"Abc123Def456Ghi789Jk\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical lead completion payload to decode, got: " <> err)
                 Right payload ->
-                    payload `shouldBe` CompleteReq "token-123" "Ada Lovelace" "ada@example.com"
-            (eitherDecode "{\"token\":\"token-123\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"unexpected\":true}" :: Either String CompleteReq)
+                    payload `shouldBe` CompleteReq "Abc123Def456Ghi789Jk" "Ada Lovelace" "ada@example.com"
+            (eitherDecode "{\"token\":\"Abc123Def456Ghi789Jk\",\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"unexpected\":true}" :: Either String CompleteReq)
                 `shouldSatisfy` isLeft
 
         it "trims and canonicalizes meaningful lead-completion payload fields before persistence" $ do
-            validateLeadCompletionRequest (CompleteReq " token-123 " " Ada Lovelace " " Ada@Example.com ")
-                `shouldBe` Right (CompleteReq "token-123" "Ada Lovelace" "ada@example.com")
+            validateLeadCompletionRequest (CompleteReq " Abc123Def456Ghi789Jk " " Ada Lovelace " " Ada@Example.com ")
+                `shouldBe` Right (CompleteReq "Abc123Def456Ghi789Jk" "Ada Lovelace" "ada@example.com")
 
         it "rejects blank tokens, blank names, and malformed emails with precise 400s" $ do
+            let validToken = "Abc123Def456Ghi789Jk"
             let assertInvalid payload expected = case validateLeadCompletionRequest payload of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
@@ -3468,16 +3469,16 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid lead completion payload to be rejected, got " <> show value)
             assertInvalid (CompleteReq "   " "Ada Lovelace" "ada@example.com") "Completion token is required"
-            assertInvalid (CompleteReq "token-123" "   " "ada@example.com") "Invalid name: must be 1-200 characters"
-            assertInvalid (CompleteReq "token-123" "Ada\nLovelace" "ada@example.com") "Invalid name: must not contain control characters"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada @example.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example..com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@-example.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada@example-.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" ".ada@example.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada.@example.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"
-            assertInvalid (CompleteReq "token-123" "Ada Lovelace" "ada()@example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "   " "ada@example.com") "Invalid name: must be 1-200 characters"
+            assertInvalid (CompleteReq validToken "Ada\nLovelace" "ada@example.com") "Invalid name: must not contain control characters"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada @example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example..com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example-.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" ".ada@example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada.@example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada()@example.com") "Invalid email format"
 
         it "rejects malformed completion tokens before lookup falls through to a misleading 403" $ do
             let assertInvalid rawToken = case validateLeadCompletionRequest (CompleteReq rawToken "Ada Lovelace" "ada@example.com") of
@@ -3486,10 +3487,13 @@ main = hspec $ do
                         BL.unpack (errBody err) `shouldContain` "Completion token format is invalid"
                     Right value ->
                         expectationFailure ("Expected malformed completion token to be rejected, got " <> show value)
+            assertInvalid "token-123"
             assertInvalid "token 123"
             assertInvalid "token/123"
             assertInvalid "token?123"
-            assertInvalid (Data.Text.replicate 129 "a")
+            assertInvalid "Abc123Def456Ghi789J-"
+            assertInvalid (Data.Text.replicate 19 "a")
+            assertInvalid (Data.Text.replicate 21 "a")
 
     describe "validateLeadCompletionId" $ do
         it "accepts only positive lead identifiers before the completion lookup runs" $
@@ -3507,12 +3511,15 @@ main = hspec $ do
 
     describe "validateLeadCompletionLookup" $ do
         it "allows only matching non-completed lead records" $ do
-            validateLeadCompletionLookup "token-123" (Just ("NEW", Just "token-123"))
+            let validToken = "Abc123Def456Ghi789Jk"
+            validateLeadCompletionLookup validToken (Just ("NEW", Just validToken))
                 `shouldBe` Right ()
-            validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "token-123"))
+            validateLeadCompletionLookup validToken (Just ("LINK_SENT", Just validToken))
                 `shouldBe` Right ()
 
         it "returns explicit 404/403/409 errors for missing, invalid-token, unavailable, blocked, and completed links" $ do
+            let validToken = "Abc123Def456Ghi789Jk"
+                otherToken = "Zyx987Wvu654Tsr321Qp"
             let assertLookupFailure result expectedStatus expectedBody = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` expectedStatus
@@ -3520,31 +3527,31 @@ main = hspec $ do
                     Right _ ->
                         expectationFailure ("Expected lookup failure with body containing " <> show expectedBody)
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" Nothing)
+                (validateLeadCompletionLookup validToken Nothing)
                 404
                 "Lead not found"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "other-token")))
+                (validateLeadCompletionLookup validToken (Just ("LINK_SENT", Just otherToken)))
                 403
                 "Invalid completion token"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Nothing)))
+                (validateLeadCompletionLookup validToken (Just ("LINK_SENT", Nothing)))
                 409
                 "Lead completion is not available"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("LINK_SENT", Just "   ")))
+                (validateLeadCompletionLookup validToken (Just ("LINK_SENT", Just "   ")))
                 409
                 "Lead completion is not available"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("COLD", Just "token-123")))
+                (validateLeadCompletionLookup validToken (Just ("COLD", Just validToken)))
                 409
                 "Lead completion is not available"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("ARCHIVED", Just "token-123")))
+                (validateLeadCompletionLookup validToken (Just ("ARCHIVED", Just validToken)))
                 409
                 "Lead completion is not available"
             assertLookupFailure
-                (validateLeadCompletionLookup "token-123" (Just ("completed", Nothing)))
+                (validateLeadCompletionLookup validToken (Just ("completed", Nothing)))
                 409
                 "Lead already completed"
 

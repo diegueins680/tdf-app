@@ -199,12 +199,15 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
 
 isValidLeadCompletionToken :: Text -> Bool
 isValidLeadCompletionToken tokenValue =
-  T.length tokenValue <= 128
+  T.length tokenValue == leadCompletionTokenLength
     && T.all isValidLeadCompletionTokenChar tokenValue
+
+leadCompletionTokenLength :: Int
+leadCompletionTokenLength = 20
 
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =
-  isAscii c && (isAlphaNum c || c == '-' || c == '_')
+  isAscii c && isAlphaNum c
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId
