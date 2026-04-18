@@ -80,6 +80,7 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
+    validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
     parseSocialDirectionParam,
     validateSocialReplyExternalId,
@@ -1085,6 +1086,51 @@ spec = do
       assertInvalid
         "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
         ((parseSocialBoolParam (Just "maybe")) :: Either ServerError Bool)
+
+  describe "validateMetaWebhookVerifyRequest" $ do
+    it "returns the explicit challenge only for complete subscribe handshakes with a matching token" $
+      validateMetaWebhookVerifyRequest
+        "instagram"
+        (Just " SuBsCrIbE ")
+        (Just " challenge-123 ")
+        (Just " secret ")
+        [Just "   ", Just "secret"]
+        `shouldBe` Right "challenge-123"
+
+    it "rejects incomplete or ambiguous Meta webhook verification handshakes" $ do
+      let assertInvalid expectedCode expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` expectedCode
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right challenge ->
+                expectationFailure
+                  ("Expected invalid Meta webhook verification, got " <> T.unpack challenge)
+          validate = validateMetaWebhookVerifyRequest "facebook"
+      assertInvalid
+        400
+        "hub.mode is required"
+        (validate Nothing (Just "challenge-123") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.mode must be subscribe"
+        (validate (Just "publish") (Just "challenge-123") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.challenge is required"
+        (validate (Just "subscribe") (Just "   ") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token is required"
+        (validate (Just "subscribe") (Just "challenge-123") Nothing [Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token mismatch for facebook"
+        (validate (Just "subscribe") (Just "challenge-123") (Just "wrong") [Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token not configured"
+        (validate (Just "subscribe") (Just "challenge-123") (Just "secret") [Just "   "])
 
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do

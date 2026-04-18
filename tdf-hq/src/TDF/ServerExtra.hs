@@ -17,7 +17,7 @@ import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
 import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isSpace, ord)
@@ -2256,19 +2256,63 @@ verifyMetaWebhook
   => Text
   -> Maybe Text
   -> Maybe Text
+  -> Maybe Text
   -> m Text
-verifyMetaWebhook platformLabel mToken mChallenge = do
+verifyMetaWebhook platformLabel mMode mToken mChallenge = do
   Env{envConfig} <- ask
-  let expected =
-        instagramVerifyToken envConfig
-          <|> instagramMessagingToken envConfig
-          <|> instagramAppToken envConfig
-  case expected of
-    Nothing -> throwError err403 { errBody = "Meta verify token not configured" }
-    Just token ->
-      case mToken of
-        Just provided | provided == token -> pure (fromMaybe "" mChallenge)
-        _ -> throwError err403 { errBody = BL8.pack ("Meta verify token mismatch for " <> T.unpack platformLabel) }
+  either throwError pure $
+    validateMetaWebhookVerifyRequest
+      platformLabel
+      mMode
+      mChallenge
+      mToken
+      [ instagramVerifyToken envConfig
+      , instagramMessagingToken envConfig
+      , instagramAppToken envConfig
+      ]
+
+validateMetaWebhookVerifyRequest
+  :: Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> [Maybe Text]
+  -> Either ServerError Text
+validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedCandidates =
+  case firstNonBlankText expectedCandidates of
+    Nothing ->
+      Left err403 { errBody = "Meta verify token not configured" }
+    Just expected ->
+      case fmap T.toLower (nonBlankText mMode) of
+        Nothing ->
+          Left err400 { errBody = "hub.mode is required" }
+        Just "subscribe" ->
+          case nonBlankText mChallenge of
+            Nothing ->
+              Left err400 { errBody = "hub.challenge is required" }
+            Just challenge ->
+              case nonBlankText mToken of
+                Nothing ->
+                  Left err400 { errBody = "hub.verify_token is required" }
+                Just provided
+                  | provided == expected -> Right challenge
+                  | otherwise ->
+                      Left err403
+                        { errBody =
+                            BL8.pack
+                              ("Meta verify token mismatch for " <> T.unpack platformLabel)
+                        }
+        Just _ ->
+          Left err400 { errBody = "hub.mode must be subscribe" }
+  where
+    firstNonBlankText :: [Maybe Text] -> Maybe Text
+    firstNonBlankText = listToMaybe . mapMaybe nonBlankText
+
+    nonBlankText :: Maybe Text -> Maybe Text
+    nonBlankText mTxt =
+      case fmap T.strip mTxt of
+        Just txt | not (T.null txt) -> Just txt
+        _ -> Nothing
 
 instagramWebhookServer
   :: ( MonadIO m
@@ -2280,7 +2324,8 @@ instagramWebhookServer =
        verifyWebhook
   :<|> handleWebhook
   where
-    verifyWebhook _ mToken mChallenge = verifyMetaWebhook "instagram" mToken mChallenge
+    verifyWebhook mMode mToken mChallenge =
+      verifyMetaWebhook "instagram" mMode mToken mChallenge
 
     handleWebhook payload = do
       Env{..} <- ask
@@ -2303,7 +2348,8 @@ facebookWebhookServer =
        verifyWebhook
   :<|> handleWebhook
   where
-    verifyWebhook _ mToken mChallenge = verifyMetaWebhook "facebook" mToken mChallenge
+    verifyWebhook mMode mToken mChallenge =
+      verifyMetaWebhook "facebook" mMode mToken mChallenge
 
     handleWebhook payload = do
       Env{..} <- ask
