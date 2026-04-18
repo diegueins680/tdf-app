@@ -2148,6 +2148,11 @@ describe('AdminConsolePage', () => {
       expect(
         screen.queryByText(/Vista actual:/i),
       ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(
+          /Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i,
+        ),
+      ).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
       expect(screen.getByText('777')).toBeInTheDocument();

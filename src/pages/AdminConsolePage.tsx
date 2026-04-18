@@ -771,13 +771,10 @@ export default function AdminConsolePage() {
     ? null
     : (
       showAuditTable
-        ? (
-          buildAuditSectionDescription({
-            showActorColumn: showAuditActorColumn,
-            showDetailColumn: showAuditDetailColumn,
-          })
-          ?? 'Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos.'
-        )
+        ? buildAuditSectionDescription({
+          showActorColumn: showAuditActorColumn,
+          showDetailColumn: showAuditDetailColumn,
+        })
         : null
     );
   const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);

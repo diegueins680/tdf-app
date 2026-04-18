@@ -4,8 +4,10 @@ Fecha: 2026-04-18
 
 ## Delivery status
 
-- 2026-04-18: Banco Pichincha public WhatsApp outreach was attempted through OpenClaw after adding the public WhatsApp number to the account allowlist. Delivery was not confirmed; the gateway HTTP service and WhatsApp listener came up, but gateway RPC timed out before returning a message id.
-- Next practical action: send `email-pichincha.eml` with `../00-resumen/domo-public-lender-packet.zip` from the real TDF sender mailbox, or retry WhatsApp after OpenClaw gateway RPC is healthy.
+- 2026-04-18: Banco Pichincha public WhatsApp outreach was delivered through OpenClaw to `+593962992999`.
+- Confirmed delivery metadata: `messageId=3EB0BC2D72A97C56DDFE0D`, `runId=711e732a-820a-4fac-825b-114ea23320c9`, `toJid=593962992999@s.whatsapp.net`.
+- Pichincha replied with an automated assistant that says it cannot understand specific text or additional images, then asked to choose an identification type to authenticate.
+- Next practical action: follow up through Pichincha PYME phone or branch and send `email-pichincha.eml` with `../00-resumen/domo-public-lender-packet.zip` only through a secure lender-confirmed channel. Do not send cedula, RUC, tax filings, title documents, bank statements, or other sensitive documents in the bot chat.
 - Produbanco remains ready for manual phone/email intake because the public PYME page lists phone support but not a secure document-upload channel.
 
 ## Ready to send first
@@ -42,7 +44,7 @@ Or attach the ZIP:
 
 | Order | Institution | Draft | Status |
 | ---: | --- | --- | --- |
-| 1 | Banco Pichincha | `email-pichincha.eml` | WhatsApp not delivered; email ready |
+| 1 | Banco Pichincha | `email-pichincha.eml` | WhatsApp bot replied; secure intake needed |
 | 2 | Produbanco | `email-produbanco.eml` | Ready to send |
 | 3 | Banco Guayaquil | `lender-outreach-drafts.md` | Drafted |
 | 4 | Banco Internacional | `lender-outreach-drafts.md` | Drafted |
