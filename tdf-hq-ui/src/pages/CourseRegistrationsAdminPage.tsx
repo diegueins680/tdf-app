@@ -462,6 +462,43 @@ const registrationActionTargetLabel = (
   return `registro #${reg.crId}`;
 };
 
+const normalizeRegistrationActionTargetKey = (
+  reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+) => registrationActionTargetLabel(reg).trim().toLocaleLowerCase('es');
+
+const getRegistrationIdsRequiringActionDisambiguator = (
+  registrations: readonly CourseRegistrationDTO[],
+) => {
+  const targetCounts = new Map<string, number>();
+
+  registrations.forEach((reg) => {
+    const targetKey = normalizeRegistrationActionTargetKey(reg);
+    targetCounts.set(targetKey, (targetCounts.get(targetKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    registrations
+      .filter((reg) => (targetCounts.get(normalizeRegistrationActionTargetKey(reg)) ?? 0) > 1)
+      .map((reg) => reg.crId),
+  );
+};
+
+const registrationActionTargetLabelWithContext = (
+  reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+  needsDisambiguator: boolean,
+) => {
+  const baseLabel = registrationActionTargetLabel(reg);
+  if (!needsDisambiguator) return baseLabel;
+
+  const identity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164, reg.crId);
+  const secondary = identity.secondary.trim();
+  if (secondary && secondary !== 'Sin correo ni teléfono') {
+    return `${baseLabel} (${secondary})`;
+  }
+
+  return `${baseLabel} (registro #${reg.crId})`;
+};
+
 const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
@@ -850,6 +887,24 @@ export default function CourseRegistrationsAdminPage() {
       return haystack.includes(localSearchKey);
     });
   }, [cohortLabelsBySlug, localSearchKey, registrations]);
+  const registrationIdsRequiringActionDisambiguator = useMemo(
+    () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
+    [searchedRegistrations],
+  );
+  const actionTargetLabelsByRegistrationId = useMemo(
+    () => new Map(
+      searchedRegistrations.map((reg) => [
+        reg.crId,
+        registrationActionTargetLabelWithContext(
+          reg,
+          registrationIdsRequiringActionDisambiguator.has(reg.crId),
+        ),
+      ]),
+    ),
+    [registrationIdsRequiringActionDisambiguator, searchedRegistrations],
+  );
+  const getActionTargetLabelForRegistration = (reg: CourseRegistrationDTO) =>
+    actionTargetLabelsByRegistrationId.get(reg.crId) ?? registrationActionTargetLabel(reg);
   const singleVisibleCohortLabel = useMemo(() => {
     if (selectedSlug || searchedRegistrations.length < 2) return '';
     const uniqueCohortSlugs = Array.from(
@@ -1420,7 +1475,7 @@ export default function CourseRegistrationsAdminPage() {
       .then(() => {
         setPageFlash({
           severity: 'success',
-          message: `Estado actualizado para ${registrationActionTargetLabel(reg)}.`,
+          message: `Estado actualizado para ${getActionTargetLabelForRegistration(reg)}.`,
         });
       })
       .catch((err: Error) => {
@@ -2739,7 +2794,8 @@ export default function CourseRegistrationsAdminPage() {
                   const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
                     && !reg.crEmail?.trim()
                     && !reg.crPhoneE164?.trim();
-                  const rowActionTarget = registrationActionTargetLabel(reg);
+                  const rowNeedsActionDisambiguator = registrationIdsRequiringActionDisambiguator.has(reg.crId);
+                  const rowActionTarget = getActionTargetLabelForRegistration(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
@@ -2796,6 +2852,11 @@ export default function CourseRegistrationsAdminPage() {
                         {rowIdentity.secondary && !rowUsesGeneratedIdentity && (
                           <Typography variant="body2" color="text.secondary">
                             {rowIdentity.secondary}
+                          </Typography>
+                        )}
+                        {rowNeedsActionDisambiguator && (
+                          <Typography variant="caption" color="text.secondary">
+                            Registro #{reg.crId}
                           </Typography>
                         )}
                       </Box>

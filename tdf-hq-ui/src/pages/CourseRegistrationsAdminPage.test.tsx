@@ -296,7 +296,9 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
 };
 
 const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
-  const button = root.querySelector(`button[aria-label="${labelText}"]`);
+  const button = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+    (candidate) => candidate.getAttribute('aria-label') === labelText,
+  );
   if (!(button instanceof HTMLButtonElement)) {
     throw new Error(`Button not found: ${labelText}`);
   }
@@ -1118,6 +1120,60 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(dialog, 'Party #9')).toBe(false);
       expect(dialog.textContent).not.toContain('Sin correo ni teléfono');
       expect(dialog.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
+  it('disambiguates duplicate named registrations in row actions without adding generic row controls', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.primary@example.com',
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.alt@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crPhoneE164: '+593999000333',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('button[aria-label="Abrir expediente de Ana Torres"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Ana Torres"]')).toBeNull();
+      expect(
+        getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.primary@example.com)'),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(container, 'Cambiar estado para Ana Torres (ana.primary@example.com)'),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.alt@example.com · +593999000222)'),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(container, 'Cambiar estado para Ana Torres (ana.alt@example.com · +593999000222)'),
+      ).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+      expect(countOccurrences(container, 'Registro #101')).toBe(1);
+      expect(countOccurrences(container, 'Registro #102')).toBe(1);
+      expect(countOccurrences(container, 'Registro #103')).toBe(0);
+      expect(countButtonsByText(container, 'Expediente')).toBe(0);
     });
 
     await cleanup();

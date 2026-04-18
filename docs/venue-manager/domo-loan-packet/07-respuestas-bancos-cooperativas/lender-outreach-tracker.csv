@@ -1,6 +1,6 @@
 Institution,Priority,ContactName,ContactChannel,DateContacted,AmountRequested,TermOfferedMonths,RateEA,MonthlyPayment,GracePeriod,Collateral,DebtorSuggested,DocumentsRequested,Status,NextStep,Notes
-Banco Pichincha,1,,,,100000,,,,,,,,Ready to send,Send email-pichincha.eml with public-safe packet,
-Produbanco,2,,,,100000,,,,,,,,Ready to send,Send email-produbanco.eml with public-safe packet,
+Banco Pichincha,1,,https://www.pichincha.com/detalle-catalogo/pymes-creditos,,100000,,,,,,,,Ready to send,Send email-pichincha.eml with public-safe packet,
+Produbanco,2,,https://www.produbanco.com.ec/pymes/activos-fijos/ and 02 400 9000 option 5,,100000,,,,,,,,Ready to send,Send email-produbanco.eml with public-safe packet,
 Banco Guayaquil,3,,,,100000,,,,,,,,Not contacted,Send initial draft,
 Banco Internacional,4,,,,100000,,,,,,,,Not contacted,Send initial draft,
 Jardin Azuayo,5,,,,100000,,,,,,,,Not contacted,Send initial draft,

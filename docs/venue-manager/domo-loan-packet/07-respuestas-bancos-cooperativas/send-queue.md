@@ -7,6 +7,14 @@ Fecha: 2026-04-18
 1. Banco Pichincha
 2. Produbanco
 
+Official starting points:
+
+- Banco Pichincha PYME credits: https://www.pichincha.com/detalle-catalogo/pymes-creditos
+- Banco Pichincha productivo empresas: https://www.pichincha.com/portal/principal/empresas/creditos/productivo
+- Produbanco activos fijos PYME: https://www.produbanco.com.ec/pymes/activos-fijos/
+- Produbanco capital de trabajo PYME: https://www.produbanco.com.ec/pymes/capital-de-trabajo/
+- Produbanco phone listed on its PYME page: 02 400 9000, option 5.
+
 Attach the public-safe packet:
 
 - `../00-resumen/domo-lender-one-pager.pdf`
