@@ -6962,9 +6962,10 @@ listReceipts user = do
 createReceipt :: AuthedUser -> CreateReceiptReq -> AppM ReceiptDTO
 createReceipt user CreateReceiptReq{..} = do
   requireModule user ModuleInvoicing
+  invoiceIdValid <- either throwError pure (validatePositiveIdField "invoiceId" crInvoiceId)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
-  let iid = toSqlKey crInvoiceId :: Key Invoice
+  let iid = toSqlKey invoiceIdValid :: Key Invoice
   result <- liftIO $ flip runSqlPool pool $ do
     mInvoice <- getEntity iid
     case mInvoice of

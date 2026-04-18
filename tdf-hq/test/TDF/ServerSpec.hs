@@ -163,6 +163,7 @@ import TDF.Server
     , resolveResourcesForBooking
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
+    , createReceipt
     , resolvePartyRoleAssignmentTarget
     , fanUnfollowArtist
     , chatListMessages
@@ -1345,6 +1346,26 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected inactive package product to be rejected, got: " <> show value)
+
+    describe "createReceipt" $ do
+        it "rejects non-positive invoice ids before receipt lookup can collapse malformed requests into 404s" $ do
+            result <-
+                runHandler $
+                    runReaderT
+                        ( createReceipt
+                            (mkUser [Accounting])
+                            (DTO.CreateReceiptReq 0 Nothing Nothing Nothing Nothing)
+                        )
+                        (error "createReceipt should reject invalid invoiceId before reading Env")
+
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "invoiceId must be a positive integer"
+                Right receipt ->
+                    expectationFailure
+                        ("Expected invalid invoiceId to be rejected, got: " <> show receipt)
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts either a unique booking id or broader party filters" $ do
