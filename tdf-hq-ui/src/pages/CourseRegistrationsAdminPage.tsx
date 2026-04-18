@@ -447,10 +447,13 @@ const receiptDisplayLabelWithContext = (
   return needsDisambiguator ? `${label} · #${receipt.crrId}` : label;
 };
 
+const normalizeCohortLabelKey = (value: string) =>
+  value.trim().toLocaleLowerCase('es');
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
-  if (!title) return slug;
+  if (!title || normalizeCohortLabelKey(title) === normalizeCohortLabelKey(slug)) return slug;
   return `${title} (${slug})`;
 };
 
