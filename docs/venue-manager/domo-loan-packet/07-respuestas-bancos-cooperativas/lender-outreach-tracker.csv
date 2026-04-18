@@ -1,0 +1,9 @@
+Institution,Priority,ContactName,ContactChannel,DateContacted,AmountRequested,TermOfferedMonths,RateEA,MonthlyPayment,GracePeriod,Collateral,DebtorSuggested,DocumentsRequested,Status,NextStep,Notes
+Banco Pichincha,1,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Produbanco,2,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Banco Guayaquil,3,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Banco Internacional,4,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Jardin Azuayo,5,,,,100000,,,,,,,,Not contacted,Send initial draft,
+JEP,6,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Cooprogreso,7,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Cooperativa 29 de Octubre,8,,,,100000,,,,,,,,Not contacted,Send initial draft,

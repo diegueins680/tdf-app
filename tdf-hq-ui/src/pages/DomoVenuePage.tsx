@@ -59,6 +59,7 @@ interface QuoteLine {
 const DOMO_IMAGE_URL = 'https://static.wixstatic.com/media/f190ea_ef16226d21554287a1d1e0c66e8cf6af~mv2.jpg';
 const TAX_RATE = 0.12;
 const CURRENCY = 'USD';
+const MAX_QUOTE_GUESTS = 220;
 const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   wedding: {
     label: 'Boda',
@@ -146,7 +147,7 @@ const clampNumber = (value: number, min: number, max: number) => {
 
 const calculateQuote = (form: BookingFormState) => {
   const config = EVENT_TYPES[form.eventType];
-  const guests = clampNumber(form.guests, 1, 500);
+  const guests = clampNumber(form.guests, 1, MAX_QUOTE_GUESTS);
   const billableHours = Math.max(config.minimumHours, clampNumber(form.durationHours, 1, 24));
   const setupHours = clampNumber(form.setupHours, 0, 12);
   const extraGuests = Math.max(0, guests - config.includedGuests);
@@ -162,10 +163,10 @@ const calculateQuote = (form: BookingFormState) => {
     lines.push({ label: `${extraGuests} invitados adicionales`, amountCents: extraGuests * config.perGuestCents });
   }
   if (form.catering) {
-    lines.push({ label: 'Coordinacion de catering y barra', amountCents: Math.max(35000, guests * 650) });
+    lines.push({ label: 'Catering y barra operados por Domo', amountCents: Math.max(35000, guests * 650) });
   }
   if (form.production) {
-    lines.push({ label: 'Produccion tecnica base', amountCents: 42000 });
+    lines.push({ label: 'Sonido e iluminacion base', amountCents: 42000 });
   }
   if (form.transport) {
     lines.push({ label: 'Coordinacion de transporte Quito - Pululahua', amountCents: 30000 });
@@ -188,7 +189,7 @@ const toBookingIso = (value: string) => {
 const buildBookingNotes = (form: BookingFormState, quote: ReturnType<typeof calculateQuote>) => {
   const selectedAddons = [
     form.catering ? 'catering/barra' : null,
-    form.production ? 'produccion tecnica' : null,
+    form.production ? 'sonido e iluminacion' : null,
     form.transport ? 'transporte' : null,
   ].filter(Boolean);
 
@@ -394,9 +395,11 @@ export default function DomoVenuePage() {
                       <TextField
                         label="Invitados"
                         value={form.guests}
-                        onChange={(event) => updateForm('guests', clampNumber(Number(event.target.value), 1, 500))}
+                        onChange={(event) => updateForm('guests', clampNumber(Number(event.target.value), 1, MAX_QUOTE_GUESTS))}
                         type="number"
                         fullWidth
+                        helperText="Capacidad final sujeta a permisos, montaje y plan de seguridad."
+                        inputProps={{ min: 1, max: MAX_QUOTE_GUESTS }}
                         InputProps={{ startAdornment: <InputAdornment position="start"><GroupsIcon fontSize="small" /></InputAdornment> }}
                       />
                     </Grid>
@@ -437,7 +440,7 @@ export default function DomoVenuePage() {
                         />
                         <FormControlLabel
                           control={<Checkbox checked={form.production} onChange={(event) => updateForm('production', event.target.checked)} />}
-                          label="Tecnica"
+                          label="Sonido y luces"
                         />
                         <FormControlLabel
                           control={<Checkbox checked={form.transport} onChange={(event) => updateForm('transport', event.target.checked)} />}

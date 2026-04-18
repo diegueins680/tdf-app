@@ -57,6 +57,7 @@ import TDF.ServerAdmin (
     validateAdminLogsLimit,
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
+    validateAdminPassword,
   )
 
 spec :: Spec
@@ -148,6 +149,22 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Username must be 60 characters or fewer"
                 (validateOptionalAdminUsername (Just (T.replicate 61 "a")))
+
+    describe "validateAdminPassword" $ do
+        it "trims valid explicit admin passwords before hashing or emailing them" $
+            validateAdminPassword "  TempPass123!  " `shouldBe` Right "TempPass123!"
+
+        it "rejects blank, short, or control-character admin passwords" $ do
+            let assertInvalid expectedMessage rawPassword =
+                    case validateAdminPassword rawPassword of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL8.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid admin password to be rejected, got " <> show value)
+            assertInvalid "Password must not be empty" "   "
+            assertInvalid "Password must be at least 8 characters" "short"
+            assertInvalid "Password must not contain control characters" "Long\nPass123"
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $

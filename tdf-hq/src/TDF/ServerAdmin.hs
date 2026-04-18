@@ -21,6 +21,7 @@ module TDF.ServerAdmin
   , validateAdminEmailSubject
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
+  , validateAdminPassword
   ) where
 
 import           Control.Exception      (SomeException, try)
@@ -31,7 +32,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum, isAsciiLower, isDigit, isSpace)
+import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
 import           Data.List              (nub)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Int               (Int64)
@@ -732,10 +733,7 @@ adminServer user =
       tempPassword <- case uacPassword of
         Nothing -> liftIO Email.generateTempPassword
         Just rawPassword ->
-          let trimmed = T.strip rawPassword
-          in if T.null trimmed
-               then throwError err400 { errBody = "Password must not be empty" }
-               else pure trimmed
+          either throwError pure (validateAdminPassword rawPassword)
       hashed <- liftIO (hashPasswordText tempPassword)
       credId <- withPool $ insert UserCredential
         { userCredentialPartyId      = partyKey
@@ -799,11 +797,9 @@ adminServer user =
       usernameUpdate <- either throwError pure (validateOptionalAdminUsername uauUsername)
       passwordHash <- case uauPassword of
         Nothing -> pure Nothing
-        Just rawPwd ->
-          let trimmed = T.strip rawPwd
-          in if T.null trimmed
-               then throwError err400 { errBody = "Password must not be empty" }
-               else Just <$> liftIO (hashPasswordText trimmed)
+        Just rawPwd -> do
+          passwordValue <- either throwError pure (validateAdminPassword rawPwd)
+          Just <$> liftIO (hashPasswordText passwordValue)
       mCred <- withPool $ getEntity credKey
       case mCred of
         Nothing -> throwError err404
@@ -1328,6 +1324,19 @@ validateOptionalAdminUsername (Just raw) =
                 BL.fromStrict
                   (TE.encodeUtf8 "Username may only contain letters, numbers, dots, dashes, or underscores")
             }
+
+validateAdminPassword :: Text -> Either ServerError Text
+validateAdminPassword rawPassword
+  | T.null trimmed =
+      Left err400 { errBody = "Password must not be empty" }
+  | T.length trimmed < 8 =
+      Left err400 { errBody = "Password must be at least 8 characters" }
+  | T.any isControl trimmed =
+      Left err400 { errBody = "Password must not contain control characters" }
+  | otherwise =
+      Right trimmed
+  where
+    trimmed = T.strip rawPassword
 
 isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
