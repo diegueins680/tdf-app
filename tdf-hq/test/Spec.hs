@@ -131,6 +131,9 @@ import TDF.Server
     ( buildWhatsappCtaFor,
       resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
+      validateWhatsAppConsentDisplayName,
+      validateWhatsAppConsentSource,
+      validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateDatafastBaseUrl )
 import TDF.ServerLiveSessions
@@ -1140,6 +1143,41 @@ main = hspec $ do
                     :: Either String WhatsAppOptOutRequest
                 )
                 `shouldBe` True
+
+        it "normalizes optional consent metadata before storage or confirmation messages" $ do
+            validateWhatsAppConsentDisplayName (Just "  Ada  ")
+                `shouldBe` Right (Just "Ada")
+            validateWhatsAppConsentDisplayName (Just "   ")
+                `shouldBe` Right Nothing
+            validateWhatsAppConsentSource "public" Nothing
+                `shouldBe` Right (Just "public")
+            validateWhatsAppConsentSource "public" (Just "  landing  ")
+                `shouldBe` Right (Just "landing")
+            validateWhatsAppOptOutReason (Just "  stop  ")
+                `shouldBe` Right (Just "stop")
+
+        it "rejects oversized or control-character consent metadata explicitly" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected WhatsApp consent metadata rejection, got " <> show value)
+            assertInvalid
+                "name is too long"
+                ( validateWhatsAppConsentDisplayName
+                    (Just (Data.Text.replicate 121 "a"))
+                )
+            assertInvalid
+                "source must not contain control characters"
+                (validateWhatsAppConsentSource "public" (Just "landing\npage"))
+            assertInvalid
+                "reason is too long"
+                ( validateWhatsAppOptOutReason
+                    (Just (Data.Text.replicate 501 "x"))
+                )
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do

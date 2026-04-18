@@ -956,10 +956,10 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
       requireGate
       unless wcrConsent $ throwBadRequest "Debes aceptar el consentimiento para continuar."
       phoneVal <- normalizePhoneOrFail wcrPhone
+      nameClean <- either throwError pure (validateWhatsAppConsentDisplayName wcrName)
+      sourceClean <- either throwError pure (validateWhatsAppConsentSource defaultSource wcrSource)
       now <- liftIO getCurrentTime
-      let nameClean = cleanOptional wcrName
-          sourceClean = cleanOptional wcrSource <|> Just defaultSource
-          noteClean = Just "consent"
+      let noteClean = Just "consent"
           shouldSend = fromMaybe True wcrSendMessage
       _ <- persistConsent phoneVal nameClean sourceClean noteClean now
       (sent, msgText) <- if shouldSend
@@ -994,9 +994,9 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
     revokeConsent WhatsAppOptOutRequest{..} = do
       requireGate
       phoneVal <- normalizePhoneOrFail worPhone
+      reasonClean <- either throwError pure (validateWhatsAppOptOutReason worReason)
       now <- liftIO getCurrentTime
-      let reasonClean = cleanOptional worReason
-          shouldSend = fromMaybe True worSendMessage
+      let shouldSend = fromMaybe True worSendMessage
       _ <- persistOptOut phoneVal reasonClean now
       (sent, msgText) <- if shouldSend
         then do
@@ -1033,6 +1033,53 @@ whatsappConsentRoutes defaultSource exposeDisplayName requireGate =
       phoneVal <- normalizePhoneOrFail phoneRaw
       mRow <- runDB $ getBy (ME.UniqueWhatsAppConsent phoneVal)
       pure (toStatus phoneVal mRow)
+
+validateWhatsAppConsentDisplayName :: Maybe Text -> Either ServerError (Maybe Text)
+validateWhatsAppConsentDisplayName =
+  validateOptionalWhatsAppConsentText "name" maxWhatsAppConsentDisplayNameChars
+
+validateWhatsAppConsentSource :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateWhatsAppConsentSource defaultSource rawSource =
+  fmap (<|> Just defaultSource) $
+    validateOptionalWhatsAppConsentText "source" maxWhatsAppConsentSourceChars rawSource
+
+validateWhatsAppOptOutReason :: Maybe Text -> Either ServerError (Maybe Text)
+validateWhatsAppOptOutReason =
+  validateOptionalWhatsAppConsentText "reason" maxWhatsAppOptOutReasonChars
+
+validateOptionalWhatsAppConsentText
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateOptionalWhatsAppConsentText fieldName maxLength rawValue =
+  case cleanOptional rawValue of
+    Nothing -> Right Nothing
+    Just value
+      | T.length value > maxLength ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    fieldName <> " is too long (max " <> T.pack (show maxLength) <> " characters)"
+            }
+      | T.any isControl value ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    fieldName <> " must not contain control characters"
+            }
+      | otherwise -> Right (Just value)
+
+maxWhatsAppConsentDisplayNameChars :: Int
+maxWhatsAppConsentDisplayNameChars = 120
+
+maxWhatsAppConsentSourceChars :: Int
+maxWhatsAppConsentSourceChars = 80
+
+maxWhatsAppOptOutReasonChars :: Int
+maxWhatsAppOptOutReasonChars = 500
 
 validateWhatsAppMessagesLimit :: Maybe Int -> Either ServerError Int
 validateWhatsAppMessagesLimit Nothing = Right 100
