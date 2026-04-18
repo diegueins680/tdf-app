@@ -298,6 +298,38 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('removes the live-start helper once the editor already matches live', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(container.textContent).toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
+      expect(container.textContent).toContain('Editor coincide con live');
+      expect(container.textContent).toContain(
+        'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
+      );
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('hides the clear-payload action until the editor has JSON to clear', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
