@@ -110,31 +110,39 @@ export default function SideNav({ collapsed, onToggle, id }: SideNavProps) {
   const roles = normalizeRoles(user?.roles);
   const location = useLocation();
   const modulesRootId = React.useId();
+  const isCollapsed = Boolean(collapsed);
   const [expandedModules, setExpandedModules] = React.useState<Record<string, boolean>>(() => {
+    if (isCollapsed) {
+      return {};
+    }
+
     const active = findActiveModule(location.pathname);
     return active ? { [active]: true } : {};
   });
 
   React.useEffect(() => {
+    if (isCollapsed) {
+      setExpandedModules({});
+      return;
+    }
+
     const active = findActiveModule(location.pathname);
     if (active) {
       setExpandedModules((prev) => {
         if (prev[active]) {
           return prev;
         }
-        return { ...prev, [active]: true };
+        return { [active]: true };
       });
     }
-  }, [location.pathname]);
+  }, [isCollapsed, location.pathname]);
 
   const handleToggleModule = React.useCallback((moduleName: string) => {
     setExpandedModules((prev) => ({
-      ...prev,
       [moduleName]: !prev[moduleName],
     }));
   }, []);
 
-  const isCollapsed = Boolean(collapsed);
   const navClassName = `side-nav${isCollapsed ? ' is-collapsed' : ''}`;
 
   return (
