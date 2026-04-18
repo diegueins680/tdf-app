@@ -1021,10 +1021,11 @@ spec = do
       let assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "attachmentUrl must be an absolute http(s) URL"
+              BL8.unpack (errBody err) `shouldContain` "attachmentUrl must be an absolute https URL"
             Right value ->
               expectationFailure ("Expected invalid payment attachment URL error, got " <> show value)
       assertInvalid (validatePaymentAttachmentUrl (Just "proof.pdf"))
+      assertInvalid (validatePaymentAttachmentUrl (Just "http://files.example.com/proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://files.example.com/proof copy.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://files/proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://2130706433/proof.pdf"))

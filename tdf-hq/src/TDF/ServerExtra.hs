@@ -1750,9 +1750,11 @@ validatePaymentAttachmentUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just attachmentUrl
-      | TrialsServer.isValidHttpUrl attachmentUrl -> Right (Just attachmentUrl)
+      | "https://" `T.isPrefixOf` T.toLower attachmentUrl
+          && TrialsServer.isValidHttpUrl attachmentUrl ->
+          Right (Just attachmentUrl)
       | otherwise ->
-          Left err400 { errBody = "attachmentUrl must be an absolute http(s) URL" }
+          Left err400 { errBody = "attachmentUrl must be an absolute https URL" }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
