@@ -173,6 +173,7 @@ const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
+const optionalDossierContextActionsLabel = 'Notas y seguimiento';
 const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
@@ -2511,7 +2512,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(actions).toBeTruthy();
       expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
       expect(countButtonsByText(actions!, showSystemEmailsLabel)).toBe(1);
-      expect(countButtonsByText(actions!, 'Más contexto')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
@@ -2716,7 +2718,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
-      expect(countButtonsByText(actions!, 'Más contexto')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
@@ -2726,7 +2729,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Más contexto'));
+      clickButton(getButtonByText(document.body, optionalDossierContextActionsLabel));
       await flushPromises();
       await flushPromises();
     });
