@@ -1406,6 +1406,39 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps non-default lone-user access in the header instead of adding row copy', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-manager',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Manager · Módulos: crm.',
+        );
+
+        const loneRow = getRowByUserId(container, 101);
+        expect(loneRow.textContent).not.toContain('Roles:');
+        expect(loneRow.textContent).not.toContain('Módulos:');
+        expect(countExactText(
+          container,
+          'Acceso de este usuario: Roles: Manager · Módulos: crm.',
+        )).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

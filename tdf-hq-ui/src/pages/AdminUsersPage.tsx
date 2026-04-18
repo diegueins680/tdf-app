@@ -246,6 +246,22 @@ const isDefaultAdminAccessSummary = ({
   && modulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
 );
 
+const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'roles'> | null) => {
+  if (!user) return '';
+
+  const rolesSummary = getUserAccessSummary(user.roles);
+  const modulesSummary = getUserAccessSummary(user.modules);
+
+  if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
+    return '';
+  }
+
+  return buildUserAccessSummary({
+    roles: user.roles,
+    modules: user.modules,
+  });
+};
+
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) => {
   const displayName = user.partyName.trim();
   const username = user.username.trim();
@@ -571,22 +587,12 @@ export default function AdminUsersPage() {
     )
     : '';
   const singleSearchResultAccessSummary = useMemo(
-    () => {
-      if (!singleSearchResult) return '';
-
-      const rolesSummary = getUserAccessSummary(singleSearchResult.roles);
-      const modulesSummary = getUserAccessSummary(singleSearchResult.modules);
-
-      if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
-        return '';
-      }
-
-      return buildUserAccessSummary({
-        roles: singleSearchResult.roles,
-        modules: singleSearchResult.modules,
-      });
-    },
+    () => buildNonDefaultUserAccessSummary(singleSearchResult),
     [singleSearchResult],
+  );
+  const singleUserAccessSummary = useMemo(
+    () => buildNonDefaultUserAccessSummary(singleVisibleUser),
+    [singleVisibleUser],
   );
   const primaryGuidance = showSingleUserGuidance
     ? singleUserGuidance
@@ -598,6 +604,7 @@ export default function AdminUsersPage() {
   const pageGuidance = [
     primaryGuidance,
     viewGuidance,
+    singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
     singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
     sharedAccessGuidance,
   ].filter(Boolean).join(' ');
