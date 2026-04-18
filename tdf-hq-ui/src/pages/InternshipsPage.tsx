@@ -528,6 +528,7 @@ export default function InternshipsPage() {
   const entries = entriesQuery.data ?? [];
   const showFirstRunAdminHoursEmptyState =
     isAdmin && internsQuery.isSuccess && entriesQuery.isSuccess && interns.length === 0 && entries.length === 0;
+  const showRegistrationLinkCard = isAdmin && !showFirstRunAdminHoursEmptyState;
   const permissions = permissionsQuery.data ?? [];
   const showPermissionCountChip = permissions.length > 0;
   const singleAvailableIntern = isAdmin && interns.length === 1 ? interns[0] : null;
@@ -611,7 +612,7 @@ export default function InternshipsPage() {
         </Typography>
       </Stack>
 
-      {isAdmin && (
+      {showRegistrationLinkCard && (
         <Card>
           <CardContent>
             <Stack spacing={1.5}>
@@ -852,9 +853,26 @@ export default function InternshipsPage() {
             </Stack>
 
             {showFirstRunAdminHoursEmptyState ? (
-              <Alert severity="info" variant="outlined">
-                Todavía no hay pasantes ni registros de horas. Comparte el link de registro; cuando llegue el
-                primer pasante, aquí aparecerán filtros y registros horarios.
+              <Alert
+                severity="info"
+                variant="outlined"
+                action={(
+                  <Button color="inherit" size="small" onClick={() => void handleCopySignup()}>
+                    Copiar link
+                  </Button>
+                )}
+              >
+                <Stack spacing={0.5}>
+                  <span>
+                    Todavía no hay pasantes ni registros de horas. Comparte el link de registro; cuando llegue el
+                    primer pasante, aquí aparecerán filtros y registros horarios.
+                  </span>
+                  {signupFeedback && (
+                    <Typography component="span" variant="caption" color="text.secondary">
+                      {signupFeedback}
+                    </Typography>
+                  )}
+                </Stack>
               </Alert>
             ) : showInternFilter ? (
               <FormControl size="small" sx={{ maxWidth: 320 }}>

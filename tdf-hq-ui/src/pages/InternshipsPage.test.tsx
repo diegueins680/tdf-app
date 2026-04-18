@@ -426,6 +426,9 @@ describe('InternshipsPage', () => {
           'Todavía no hay pasantes ni registros de horas. Comparte el link de registro;',
         );
         expect(container.textContent).toContain('primer pasante');
+        expect(container.textContent).not.toContain('Link de registro para pasantes');
+        expect(hasLabel(container, 'Link de registro')).toBe(false);
+        expect(getButtonsByText(container, 'Copiar link')).toHaveLength(1);
         expect(container.textContent).not.toContain('Filtro por pasante');
         expect(container.textContent).not.toContain('Aparecerá cuando exista más de un pasante');
         expect(container.textContent).not.toContain('0.00 h registradas');
@@ -469,6 +472,9 @@ describe('InternshipsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(container.textContent).toContain('Link de registro para pasantes');
+        expect(hasLabel(container, 'Link de registro')).toBe(true);
+        expect(getButtonsByText(container, 'Copiar link')).toHaveLength(1);
         expect(hasLabel(container, 'Filtrar por pasante')).toBe(false);
         expect(container.textContent).toContain('Pasante disponible');
         expect(container.textContent).toContain('Ada Lovelace');
