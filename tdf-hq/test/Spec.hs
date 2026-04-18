@@ -204,6 +204,7 @@ import TDF.Config
       instagramGraphBase,
       instagramMessagingApiBase,
       loadConfig,
+      openAiEmbedModel,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
       sessionCookieDomain,
@@ -486,6 +487,20 @@ main = hspec $ do
                 "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+
+        it "normalizes configured OpenAI embedding models before sizing RAG storage" $
+            withEnvOverrides
+                [ ("OPENAI_EMBED_MODEL", Just " TEXT-EMBEDDING-3-LARGE ") ]
+                $ do
+                    cfg <- loadConfig
+                    openAiEmbedModel cfg `shouldBe` "text-embedding-3-large"
+
+        it "rejects unknown OpenAI embedding models instead of defaulting RAG dimensions" $
+            withEnvOverrides
+                [ ("OPENAI_EMBED_MODEL", Just "text-embedding-unknown") ]
+                $ loadConfig `shouldThrow` \err ->
+                    "OPENAI_EMBED_MODEL must be one of"
+                        `isInfixOf` show (err :: IOException)
 
         it "normalizes configured ChatKit workflow fallbacks before creating sessions" $ do
             withEnvOverrides

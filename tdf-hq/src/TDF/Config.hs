@@ -301,6 +301,8 @@ loadConfig = do
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
+  openAiEmbedModelVal <-
+    validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -356,7 +358,7 @@ loadConfig = do
     , courseDefaultInstructorAvatar = courseInstructorAvatar
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
     , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
-    , openAiEmbedModel = fromMaybe "text-embedding-3-small" (openAiEmbedModelEnv >>= nonEmpty . T.pack)
+    , openAiEmbedModel = openAiEmbedModelVal
     , chatKitWorkflowId = chatKitWorkflowIdVal
     , chatKitApiBase = chatKitApiBaseVal
     , ragTopK = parseInt 8 ragTopKEnv
@@ -602,6 +604,24 @@ validateConfiguredChatKitWorkflowId (Just (envName, rawWorkflowId)) =
   case normalizeConfiguredChatKitWorkflowId envName rawWorkflowId of
     Left msg -> fail msg
     Right workflowId -> pure workflowId
+
+validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
+validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
+validateConfiguredOpenAiEmbedModel (Just rawModel)
+  | T.null model = pure defaultOpenAiEmbedModel
+  | otherwise =
+      case openAiEmbedDimensions model of
+        Just _ -> pure model
+        Nothing ->
+          fail
+            ( "OPENAI_EMBED_MODEL must be one of: text-embedding-3-small, "
+              <> "text-embedding-3-large, text-embedding-ada-002"
+            )
+  where
+    model = T.toLower (T.strip (T.pack rawModel))
+
+defaultOpenAiEmbedModel :: Text
+defaultOpenAiEmbedModel = "text-embedding-3-small"
 
 normalizeConfiguredChatKitWorkflowId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredChatKitWorkflowId envName rawWorkflowId

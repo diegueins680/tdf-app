@@ -106,7 +106,8 @@ Treat that sequence as the canonical proof target for both provider runs.
 
 Before swapping any packet reference away from `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`, capture one refreshed Instagram Login run and treat this as the replacement gate:
 
-- Replacement candidate path: `screencast/meta-app-review/output/final-instagram-business-login-2026-03-28.mp4`
+- Planned replacement candidate path once captured: `screencast/meta-app-review/output/final-instagram-business-login-2026-03-28.mp4`
+- Current repo state: that `final-instagram-business-login-2026-03-28.mp4` file is not present under `screencast/meta-app-review/output/`; until it exists, `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4` remains the only Instagram output-path MP4 in the repo.
 - The candidate cut must visibly show, in order:
   1. `/social/instagram?review=1` with the connected professional/business account clearly identified on screen
   2. the selected asset summary for the approved messaging asset
