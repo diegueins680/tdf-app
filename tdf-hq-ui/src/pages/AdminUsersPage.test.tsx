@@ -1099,6 +1099,51 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('confirms when the inactive filter finds no inactive users so admins do not repeat the same check', async () => {
+    listUsersMock.mockImplementation(() => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+        );
+      });
+
+      const includeInactiveCheckbox = getCheckboxByLabelText(container, 'Incluir inactivos');
+
+      await clickButton(includeInactiveCheckbox);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. No hay usuarios inactivos en esta vista.',
+        );
+        expect(container.textContent).not.toContain('Vista actual: solo usuarios activos.');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
+        expect(countExactText(container, 'Inactivo')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps a single inactive search result focused on the row instead of adding a separate inactive section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive

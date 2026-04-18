@@ -480,6 +480,15 @@ export default function AdminUsersPage() {
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
+  const showNoInactiveScopeSummary =
+    includeInactive
+    && hasMultipleUsers
+    && !hasActiveSearch
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === 0;
+  const inactiveScopeSummary = showNoInactiveScopeSummary
+    ? 'No hay usuarios inactivos en esta vista.'
+    : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
       !includeInactive
@@ -547,10 +556,15 @@ export default function AdminUsersPage() {
       : '';
   }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
   const viewGuidance = useMemo(
-    () => [visibleUsersSummary, showSearchThresholdGuidance ? SEARCH_THRESHOLD_GUIDANCE : '', activeScopeSummary]
+    () => [
+      visibleUsersSummary,
+      showSearchThresholdGuidance ? SEARCH_THRESHOLD_GUIDANCE : '',
+      activeScopeSummary,
+      inactiveScopeSummary,
+    ]
       .filter(Boolean)
       .join(' '),
-    [activeScopeSummary, showSearchThresholdGuidance, visibleUsersSummary],
+    [activeScopeSummary, inactiveScopeSummary, showSearchThresholdGuidance, visibleUsersSummary],
   );
   const generalIntro = hasVisibleWhatsAppAction
     ? hasVisibleLinkedProfile
