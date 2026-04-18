@@ -468,6 +468,12 @@ const normalizeRegistrationSourceKey = (sourceLabel: string) =>
 const isDefaultPublicFormSource = (sourceLabel: string) =>
   sourceLabel.trim().toLowerCase() === defaultPublicFormSource;
 
+const getSearchableRegistrationSource = (source: string | null | undefined) => {
+  const trimmedSource = source?.trim() ?? '';
+  if (!trimmedSource || isDefaultPublicFormSource(trimmedSource)) return '';
+  return trimmedSource;
+};
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
@@ -619,6 +625,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   let hasNamedOrContactIdentity = false;
   let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
+  let hasHiddenDefaultOrEmptySource = false;
 
   registrations.forEach((reg) => {
     const hasVisibleIdentity = Boolean(
@@ -635,8 +642,12 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     const statusKey = reg.crStatus.trim().toLocaleLowerCase('es');
     if (statusKey) statusKeys.add(statusKey);
 
-    const sourceLabel = registrationSourceLabel(reg.crSource);
-    sourceKeys.add(normalizeRegistrationSourceKey(sourceLabel));
+    const searchableSource = getSearchableRegistrationSource(reg.crSource);
+    if (searchableSource) {
+      sourceKeys.add(normalizeRegistrationSourceKey(searchableSource));
+    } else {
+      hasHiddenDefaultOrEmptySource = true;
+    }
 
     const cohortKey = reg.crCourseSlug.trim().toLocaleLowerCase('es');
     if (cohortKey) cohortKeys.add(cohortKey);
@@ -648,7 +659,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   if (hasNamedOrContactIdentity && hasGeneratedRegistrationIdentity) terms.push('registro');
   if (hasNotes) terms.push('nota');
   if (statusKeys.size > 1) terms.push('estado');
-  if (sourceKeys.size > 1) terms.push('fuente');
+  if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
 
   return formatLocalSearchPlaceholder(terms);
@@ -1013,7 +1024,7 @@ export default function CourseRegistrationsAdminPage() {
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
         registrationStatusLabel(reg.crStatus),
-        reg.crSource,
+        getSearchableRegistrationSource(reg.crSource),
       ].join(' ');
       const searchableText = normalizeLocalSearchText(haystack);
       return searchableText.includes(localSearchKey);
