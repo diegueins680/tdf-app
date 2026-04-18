@@ -109,6 +109,18 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'if you need to prioritize this section',
   'share the requirements with the product team',
 ] as const;
+const BUILT_IN_ADMIN_CARD_BODY_COPY = [
+  'valida el estado del servicio antes de cambiar permisos o repetir una accion',
+  'check whether the api and database are ready before changing permissions',
+  'la asignacion de roles se administra desde la pantalla de parties',
+  'administra aqui la asignacion de roles y permisos del equipo',
+  'administra accesos y permisos del equipo desde esta vista',
+  'ajusta los accesos desde usuarios y roles para resolver el caso actual',
+  'adjust team access from the users and roles workflow',
+  'confirma el resultado en auditoria reciente antes de seguir con otro cambio',
+  'confirm who changed what before repeating an admin action',
+  'review service health users roles and audit activity from one admin landing page',
+] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
   { label: '2. Usuarios y roles', targetId: 'admin-users-and-roles' },
@@ -161,6 +173,9 @@ const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
 const BUILT_IN_ADMIN_CARD_TITLE_KEYS = new Set(
   BUILT_IN_ADMIN_CARD_TITLES.map((value) => normalizeAdminConsoleSectionKey(value)),
 );
+const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
+  BUILT_IN_ADMIN_CARD_BODY_COPY.map((value) => normalizeAdminConsoleParagraphKey(value)),
+);
 
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
@@ -170,6 +185,7 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
       .map((paragraph) => paragraph.trim())
       .filter((paragraph) => paragraph.length > 0)
       .filter((paragraph) => !isPlaceholderAdminConsoleParagraph(paragraph))
+      .filter((paragraph) => !isBuiltInAdminConsoleParagraph(paragraph))
       .filter((paragraph) => {
         const paragraphKey = normalizeAdminConsoleParagraphKey(paragraph);
 
@@ -195,6 +211,10 @@ function isPlaceholderAdminConsoleParagraph(paragraph: string) {
   return ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS.some((fragment) => (
     normalizedParagraph.includes(fragment)
   ));
+}
+
+function isBuiltInAdminConsoleParagraph(paragraph: string) {
+  return BUILT_IN_ADMIN_CARD_BODY_KEYS.has(normalizeAdminConsoleParagraphKey(paragraph));
 }
 
 function isDedicatedAdminSectionCard(card: AdminConsoleCard) {

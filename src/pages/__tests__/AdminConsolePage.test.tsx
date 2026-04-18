@@ -592,6 +592,48 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('strips built-in admin copy from custom fallback cards before showing optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-start-here',
+          title: 'Revisión inicial',
+          body: [
+            'Valida el estado del servicio antes de cambiar permisos o repetir una acción.',
+            'Ajusta los accesos desde Usuarios y roles para resolver el caso actual.',
+            'Confirma el resultado en Auditoría reciente antes de seguir con otro cambio.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Opcional: ver Revisión inicial/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Revisión inicial')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Valida el estado del servicio antes de cambiar permisos o repetir una acción\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Ajusta los accesos desde Usuarios y roles para resolver el caso actual\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma el resultado en Auditoría reciente antes de seguir con otro cambio\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps unique preview cards collapsed during first-run until the admin asks to see them inline', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
