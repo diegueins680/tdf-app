@@ -15,7 +15,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
-import           Data.Char (toLower)
+import           Data.Char (isControl, isSpace, toLower)
 import           Data.Aeson (ToJSON(..), FromJSON(..), Object, Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, rejectUnknownFields)
 import           Data.Aeson.Types (Parser, camelTo2, withObject, (.:?))
 import qualified Data.Aeson.Key as AesonKey
@@ -604,6 +604,21 @@ data ChatKitSessionRequest = ChatKitSessionRequest
   { cksWorkflowId :: Maybe Text
   } deriving (Show, Generic)
 
+normalizeChatKitWorkflowId :: Text -> Text -> Either Text Text
+normalizeChatKitWorkflowId fieldName rawWorkflowId
+  | T.null trimmedWorkflowId =
+      Left (fieldName <> " cannot be blank")
+  | T.length trimmedWorkflowId > 256 =
+      Left (fieldName <> " must be 256 characters or fewer")
+  | T.any isSpace trimmedWorkflowId =
+      Left (fieldName <> " must not contain whitespace")
+  | T.any isControl trimmedWorkflowId =
+      Left (fieldName <> " must not contain control characters")
+  | otherwise =
+      Right trimmedWorkflowId
+  where
+    trimmedWorkflowId = T.strip rawWorkflowId
+
 instance FromJSON ChatKitSessionRequest where
   parseJSON = withObject "ChatKitSessionRequest" $ \o -> do
     rejectUnexpectedObjectFields "ChatKitSessionRequest" ["workflowId", "workflow"] o
@@ -629,10 +644,8 @@ instance FromJSON ChatKitSessionRequest where
       }
     where
       normalizeWorkflowId fieldName rawWorkflowId =
-        let trimmedWorkflowId = T.strip rawWorkflowId
-        in if T.null trimmedWorkflowId
-             then fail (T.unpack fieldName <> " cannot be blank")
-             else pure trimmedWorkflowId
+        either (fail . T.unpack) pure $
+          normalizeChatKitWorkflowId fieldName rawWorkflowId
 
 rejectUnexpectedObjectFields :: String -> [Text] -> Object -> Parser ()
 rejectUnexpectedObjectFields objectName allowedFields rawObject =

@@ -134,6 +134,8 @@ spec = do
         it "rejects blank, conflicting, or malformed workflow selectors instead of silently picking a fallback" $ do
             decodeChatKitSession "{\"workflowId\":\"   \"}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"   \"}}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflowId\":\"wf primary\"}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflow\":{\"id\":\"wf\\u0000nested\"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"workflow\":{\"id\":\"wf_nested\"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":true}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{}}" `shouldSatisfy` isLeft

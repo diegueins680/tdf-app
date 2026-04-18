@@ -1904,13 +1904,35 @@ spec = describe "TDF.Server helpers" $ do
     describe "resolveWorkflowId" $ do
         it "uses the configured ChatKit workflow when the request override is omitted or blank" $ do
             resolveWorkflowId Nothing (Just "  wf_default  ")
-                `shouldBe` Just "wf_default"
+                `shouldBe` Right "wf_default"
             resolveWorkflowId (Just "   ") (Just "  wf_default  ")
-                `shouldBe` Just "wf_default"
+                `shouldBe` Right "wf_default"
 
         it "prefers a meaningful request workflow over the configured fallback" $
             resolveWorkflowId (Just "  wf_override  ") (Just "wf_default")
-                `shouldBe` Just "wf_override"
+                `shouldBe` Right "wf_override"
+
+        it "rejects malformed workflow ids without falling back to another source" $ do
+            let assertInvalid expectedCode expectedMessage result =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` expectedCode
+                            BL8.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid workflow id to be rejected, got: " <> show value)
+            assertInvalid
+                400
+                "workflowId must not contain whitespace"
+                (resolveWorkflowId (Just "wf override") (Just "wf_default"))
+            assertInvalid
+                500
+                "CHATKIT_WORKFLOW_ID must not contain whitespace"
+                (resolveWorkflowId Nothing (Just "wf default"))
+            assertInvalid
+                400
+                "workflowId requerido"
+                (resolveWorkflowId Nothing Nothing)
 
     describe "DriveUploadForm FromMultipart" $ do
         it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do

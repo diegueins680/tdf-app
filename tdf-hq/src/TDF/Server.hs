@@ -7986,9 +7986,7 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
     throwError err403 { errBody = "Missing required module access" }
   Env{..} <- ask
   let cfg = envConfig
-  workflowId <- case resolveWorkflowId cksWorkflowId (chatKitWorkflowId cfg) of
-    Nothing -> throwBadRequest "workflowId requerido"
-    Just val -> pure val
+  workflowId <- either throwError pure (resolveWorkflowId cksWorkflowId (chatKitWorkflowId cfg))
   apiKey <- case openAiApiKey cfg of
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
@@ -8031,9 +8029,21 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
               msg = fromMaybe baseMsg (extractApiErrorMessage payload)
           throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-resolveWorkflowId :: Maybe Text -> Maybe Text -> Maybe Text
+resolveWorkflowId :: Maybe Text -> Maybe Text -> Either ServerError Text
 resolveWorkflowId primary fallback =
-  (primary >>= nonEmptyText) <|> (fallback >>= nonEmptyText)
+  case (primary >>= nonEmptyText, fallback >>= nonEmptyText) of
+    (Just rawWorkflowId, _) ->
+      toServerError err400 (normalizeChatKitWorkflowId "workflowId" rawWorkflowId)
+    (Nothing, Just rawWorkflowId) ->
+      toServerError err500 (normalizeChatKitWorkflowId "CHATKIT_WORKFLOW_ID" rawWorkflowId)
+    (Nothing, Nothing) ->
+      Left err400 { errBody = "workflowId requerido" }
+  where
+    toServerError status result =
+      case result of
+        Right workflowId -> Right workflowId
+        Left msg ->
+          Left status { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
