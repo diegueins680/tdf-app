@@ -1923,9 +1923,7 @@ export default function CourseRegistrationsAdminPage() {
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
   const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && followUps.length === 0;
   const hasPrimaryDossierAction = showMarkPaidAction || showSystemEmailHistoryAction;
-  const showGroupedDossierContextActions = hasPrimaryDossierAction
-    && showInlineEmptyNotesAction
-    && showInlineEmptyFollowUpAction;
+  const showGroupedDossierContextActions = showInlineEmptyNotesAction && showInlineEmptyFollowUpAction;
   const showDirectInlineEmptyNotesAction = showInlineEmptyNotesAction && !showGroupedDossierContextActions;
   const showDirectInlineEmptyFollowUpAction = showInlineEmptyFollowUpAction && !showGroupedDossierContextActions;
   const showDossierActionRow = hasPrimaryDossierAction
