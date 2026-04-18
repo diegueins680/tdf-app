@@ -54,6 +54,7 @@ type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
 const emptyReceiptAlertMessage = 'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const emptyReceiptEvidenceAlertMessage = 'Agrega el primer comprobante solo si necesitas documentar evidencia de pago. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
@@ -1663,6 +1664,11 @@ export default function CourseRegistrationsAdminPage() {
   const hasPrimaryDossierAction = canMarkPaid || showSystemEmailHistoryAction;
   const showDossierActionRow = hasPrimaryDossierAction || showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
+  const showEvidenceOnlyEmptyReceiptCopy = activeRegistration?.crStatus === 'paid'
+    || activeRegistration?.crStatus === 'cancelled';
+  const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
+    ? emptyReceiptEvidenceAlertMessage
+    : emptyReceiptAlertMessage;
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
     && !hasSavedNotes;
@@ -2023,7 +2029,7 @@ export default function CourseRegistrationsAdminPage() {
                         </Button>
                       )}
                     >
-                      {emptyReceiptAlertMessage}
+                      {emptyReceiptReviewMessage}
                     </Alert>
                   )}
                   {receipts.map((receipt) => (

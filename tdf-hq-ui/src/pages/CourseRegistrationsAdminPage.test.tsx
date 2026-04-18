@@ -161,6 +161,8 @@ const buildEmailEvent = (
 
 const emptyReceiptAlertMessage =
   'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const emptyReceiptEvidenceAlertMessage =
+  'Agrega el primer comprobante solo si necesitas documentar evidencia de pago. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText =
   'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText =
@@ -2797,6 +2799,41 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBe(false);
       expect(document.body.textContent).not.toContain('Abrir comprobante');
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps empty receipt guidance from referencing mark-paid after the registration is already paid', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration({ crStatus: 'paid' }),
+        crdReceipts: [],
+        crdCanMarkPaid: false,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Pagado');
+      expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain('habilitar Marcar pagado');
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
+      expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
     });
 
     await cleanup();
