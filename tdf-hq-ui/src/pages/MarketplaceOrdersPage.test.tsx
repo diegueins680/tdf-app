@@ -233,6 +233,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Método de pago')).toBe(0);
         expect(countLabelsByText(container, 'Desde')).toBe(0);
         expect(countLabelsByText(container, 'Hasta')).toBe(0);
+        expect(container.textContent).not.toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
         expect(container.textContent).toContain(
           'Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.',
         );
@@ -259,6 +262,9 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Cargando órdenes...');
+        expect(container.textContent).not.toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
       });
@@ -282,6 +288,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Método de pago')).toBe(0);
         expect(countLabelsByText(container, 'Desde')).toBe(0);
         expect(countLabelsByText(container, 'Hasta')).toBe(0);
+        expect(container.textContent).not.toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
         expect(container.textContent).toContain(
           'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
         );
@@ -317,6 +326,9 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });

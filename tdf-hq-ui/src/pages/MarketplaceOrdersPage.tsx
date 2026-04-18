@@ -306,6 +306,8 @@ export default function MarketplaceOrdersPage() {
       : 'Mostrar fechas y pago';
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && (orders.length > 1 || filtersDirty));
+  const showPermissionNotice =
+    !ordersQuery.isLoading && !showFirstOrderEmptyState && !showSingleOrderFocusedState;
   const emptyOrdersMessage = showSearchOwnedFilterHelper
     ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
     : 'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.';
@@ -502,9 +504,11 @@ export default function MarketplaceOrdersPage() {
 
   return (
     <Box p={2}>
-      <Alert severity="info" sx={{ mb: 2 }}>
-        Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.
-      </Alert>
+      {showPermissionNotice && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.
+        </Alert>
+      )}
       <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
         <LocalMallIcon color="primary" />
         <Typography variant="h4" fontWeight={700}>
