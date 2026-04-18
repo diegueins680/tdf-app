@@ -4761,6 +4761,78 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes shared cohort and source once after local search narrows a mixed list', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crCourseSlug: 'beatmaking-101',
+        crSource: 'landing',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crCourseSlug: 'mixing-bootcamp',
+        crSource: 'referral',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crCourseSlug: 'mixing-bootcamp',
+        crSource: ' referral ',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(6, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+        crSource: index % 2 === 0 ? 'instagram' : 'landing',
+        crStatus: index % 3 === 0 ? 'pending_payment' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, 'Buscar registros cargados');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, estado, fuente o curso');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Buscar registros cargados'), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).toContain('Nina Garcia');
+      expect(container.textContent).toContain('Mostrando 2 inscripciones de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain(
+        'Mostrando una sola cohorte: Mixing Bootcamp (mixing-bootcamp). Fuente visible: referral.',
+      );
+      expect(container.textContent).not.toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
+      expect(container.textContent).not.toContain('Fuente: referral');
+    });
+
+    await cleanup();
+  });
+
   it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
     const pendingRegistrations = buildRegistrations(9);
     const initialRegistrations = [

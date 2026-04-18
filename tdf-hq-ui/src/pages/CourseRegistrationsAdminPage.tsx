@@ -730,44 +730,6 @@ export default function CourseRegistrationsAdminPage() {
     [regsQuery.data],
   );
 
-  const singleVisibleCohortLabel = useMemo(() => {
-    if (selectedSlug || registrations.length < 2) return '';
-    const uniqueCohortSlugs = Array.from(
-      new Set(
-        registrations
-          .map((reg) => reg.crCourseSlug.trim())
-          .filter((value) => value !== ''),
-      ),
-    );
-    if (uniqueCohortSlugs.length !== 1) return '';
-    const cohortSlug = uniqueCohortSlugs[0];
-    if (!cohortSlug) return '';
-    return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
-  }, [cohortLabelsBySlug, registrations, selectedSlug]);
-  const singleVisibleSourceLabel = useMemo(() => {
-    if (registrations.length === 0) return '';
-    const sourceLabelsByKey = new Map<string, string>();
-
-    registrations.forEach((reg) => {
-      const sourceLabel = registrationSourceLabel(reg.crSource);
-      const sourceKey = normalizeRegistrationSourceKey(sourceLabel);
-      if (!sourceLabelsByKey.has(sourceKey)) {
-        sourceLabelsByKey.set(sourceKey, sourceLabel);
-      }
-    });
-
-    const [onlySourceLabel] = Array.from(sourceLabelsByKey.values());
-    return sourceLabelsByKey.size === 1 && onlySourceLabel ? onlySourceLabel : '';
-  }, [registrations]);
-  const hasNamedVisibleSource = Boolean(
-    singleVisibleSourceLabel
-    && singleVisibleSourceLabel !== 'Sin fuente'
-    && !isDefaultPublicFormSource(singleVisibleSourceLabel),
-  );
-  const sharedVisibleSourceSummary = hasNamedVisibleSource
-    ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
-    : '';
-
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
     enabled: Boolean(selectedDossier && selectedDossierId != null),
@@ -882,6 +844,43 @@ export default function CourseRegistrationsAdminPage() {
       return haystack.includes(localSearchKey);
     });
   }, [cohortLabelsBySlug, localSearchKey, registrations]);
+  const singleVisibleCohortLabel = useMemo(() => {
+    if (selectedSlug || searchedRegistrations.length < 2) return '';
+    const uniqueCohortSlugs = Array.from(
+      new Set(
+        searchedRegistrations
+          .map((reg) => reg.crCourseSlug.trim())
+          .filter((value) => value !== ''),
+      ),
+    );
+    if (uniqueCohortSlugs.length !== 1) return '';
+    const cohortSlug = uniqueCohortSlugs[0];
+    if (!cohortSlug) return '';
+    return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
+  }, [cohortLabelsBySlug, searchedRegistrations, selectedSlug]);
+  const singleVisibleSourceLabel = useMemo(() => {
+    if (searchedRegistrations.length === 0) return '';
+    const sourceLabelsByKey = new Map<string, string>();
+
+    searchedRegistrations.forEach((reg) => {
+      const sourceLabel = registrationSourceLabel(reg.crSource);
+      const sourceKey = normalizeRegistrationSourceKey(sourceLabel);
+      if (!sourceLabelsByKey.has(sourceKey)) {
+        sourceLabelsByKey.set(sourceKey, sourceLabel);
+      }
+    });
+
+    const [onlySourceLabel] = Array.from(sourceLabelsByKey.values());
+    return sourceLabelsByKey.size === 1 && onlySourceLabel ? onlySourceLabel : '';
+  }, [searchedRegistrations]);
+  const hasNamedVisibleSource = Boolean(
+    singleVisibleSourceLabel
+    && singleVisibleSourceLabel !== 'Sin fuente'
+    && !isDefaultPublicFormSource(singleVisibleSourceLabel),
+  );
+  const sharedVisibleSourceSummary = hasNamedVisibleSource
+    ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
+    : '';
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
@@ -2643,7 +2642,7 @@ export default function CourseRegistrationsAdminPage() {
                   setHasUsedFilterControl(true);
                   setLocalSearch(e.target.value);
                 }}
-                placeholder="Nombre, email, teléfono, estado o curso"
+                placeholder="Nombre, email, teléfono, estado, fuente o curso"
                 helperText={localSearchHelperText}
                 size="small"
                 fullWidth
