@@ -124,6 +124,7 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
 
 instance FromMultipart Tmp LiveSessionIntakePayload where
   fromMultipart multipart = do
+    rejectUnexpectedParts multipart
     bandName <- lookupText "bandName" multipart
     bandDescription <- optionalText "bandDescription" multipart
     primaryGenre <- optionalText "primaryGenre" multipart
@@ -324,6 +325,38 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           "no" -> Right False
           "off" -> Right False
           _ -> Left ("Invalid field: " <> T.unpack fieldName <> " must be a boolean")
+
+      rejectUnexpectedParts mp =
+        case (unexpectedInputs, unexpectedFiles) of
+          (fieldName : _, _) -> Left ("Unexpected field: " <> T.unpack fieldName)
+          (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
+          _ -> Right ()
+        where
+          expectedInputs =
+            [ "bandName"
+            , "bandDescription"
+            , "primaryGenre"
+            , "inputList"
+            , "contactEmail"
+            , "contactPhone"
+            , "sessionDate"
+            , "availability"
+            , "acceptedTerms"
+            , "termsVersion"
+            , "musicians"
+            , "setlist"
+            ]
+          expectedFiles = ["rider"]
+          unexpectedInputs =
+            [ name
+            | Input name _ <- inputs mp
+            , name `notElem` expectedInputs
+            ]
+          unexpectedFiles =
+            [ fdInputName file
+            | file <- files mp
+            , fdInputName file `notElem` expectedFiles
+            ]
 
       lookupSingleInput name mp =
         case filter (\(Input nm _) -> nm == name) (inputs mp) of

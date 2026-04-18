@@ -3500,6 +3500,28 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected duplicate rider files to be rejected, got: " <> show payload)
 
+        it "rejects unexpected top-level multipart fields and files instead of ignoring typoed intake data" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("nickname", "House")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected field: nickname"
+                Right payload ->
+                    expectationFailure ("Expected unexpected multipart field to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipartWithFiles
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    ]
+                    [ mkLiveSessionFile "stagePlot" "stage.pdf"
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected file field: stagePlot"
+                Right payload ->
+                    expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
+
     APITypesSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
@@ -3527,8 +3549,12 @@ mkLiveSessionMultipartWithFiles fields uploads =
 
 mkLiveSessionRider :: Text -> FileData Tmp
 mkLiveSessionRider fileName =
+    mkLiveSessionFile "rider" fileName
+
+mkLiveSessionFile :: Text -> Text -> FileData Tmp
+mkLiveSessionFile inputName fileName =
     FileData
-        { fdInputName = "rider"
+        { fdInputName = inputName
         , fdFileName = fileName
         , fdFileCType = "application/pdf"
         , fdPayload = "/tmp/mock-live-session-rider"
