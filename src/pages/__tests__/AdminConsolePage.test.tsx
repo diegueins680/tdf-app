@@ -558,6 +558,40 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Audit')).not.toBeInTheDocument();
   });
 
+  it('keeps generic admin-console fallback cards out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-console',
+          title: 'Admin console',
+          body: ['Review service health, users, roles, and audit activity from one admin landing page.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin console')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review service health, users, roles, and audit activity/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps unique preview cards collapsed during first-run until the admin asks to see them inline', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

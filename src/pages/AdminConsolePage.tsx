@@ -57,8 +57,17 @@ const BUILT_IN_ADMIN_CARD_IDS = [
   'health',
   'demo-seed',
   'seed',
+  'admin-console',
+  'admin-panel',
+  'administration',
 ] as const;
 const BUILT_IN_ADMIN_CARD_TITLES = [
+  'consola de administracion',
+  'panel de administracion',
+  'administracion',
+  'admin console',
+  'admin panel',
+  'administration',
   'estado del servicio',
   'salud del servicio',
   'salud',
