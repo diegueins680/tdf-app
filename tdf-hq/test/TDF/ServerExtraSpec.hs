@@ -1041,6 +1041,17 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
+    it "rejects oversized or control-character concepts before storing manual payment rows" $ do
+      let assertInvalid expectedMessage rawConcept =
+            case validatePaymentConcept rawConcept of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid payment concept error, got " <> show value)
+      assertInvalid "concept must be 240 characters or fewer" (T.replicate 241 "a")
+      assertInvalid "concept must not contain control characters" "Honorarios\nabril"
+
   describe "validatePaymentReferences" $ do
     it "accepts existing party, order, and invoice references when the invoice includes that order" $ do
       now <- getCurrentTime

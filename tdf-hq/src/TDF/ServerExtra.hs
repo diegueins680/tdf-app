@@ -1695,7 +1695,11 @@ validatePaymentConcept rawConcept =
   let trimmed = T.strip rawConcept
   in if T.null trimmed
        then Left err400 { errBody = "concept is required" }
-       else Right trimmed
+       else if T.length trimmed > 240
+         then Left err400 { errBody = "concept must be 240 characters or fewer" }
+         else if T.any isControl trimmed
+           then Left err400 { errBody = "concept must not contain control characters" }
+           else Right trimmed
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod =
