@@ -117,6 +117,7 @@ import TDF.Server
     , validateChatMessageListLookup
     , validateOptionalMarketplaceOrderStatus
     , validateMarketplaceOrderUpdateStatus
+    , validateOptionalMarketplacePaymentProviderUpdate
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
@@ -2702,6 +2703,32 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   " "status cannot be blank"
             assertInvalid "refunded" "pending, contact, paid, cancelled"
+
+    describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
+        it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do
+            validateOptionalMarketplacePaymentProviderUpdate Nothing
+                `shouldBe` Right Nothing
+            validateOptionalMarketplacePaymentProviderUpdate (Just Nothing)
+                `shouldBe` Right (Just Nothing)
+            validateOptionalMarketplacePaymentProviderUpdate (Just (Just " PayPal "))
+                `shouldBe` Right (Just (Just "paypal"))
+            validateOptionalMarketplacePaymentProviderUpdate (Just (Just "bank_transfer"))
+                `shouldBe` Right (Just (Just "bank_transfer"))
+
+        it "rejects blank or malformed provider updates instead of silently clearing or storing opaque labels" $ do
+            let assertInvalid rawProvider expectedMessage =
+                    case validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider)) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right providerVal ->
+                            expectationFailure
+                                ( "Expected invalid marketplace payment provider to be rejected, got: "
+                                    <> show providerVal
+                                )
+            assertInvalid "   " "use null to clear it"
+            assertInvalid "datafast/paypal" "ASCII letters"
+            assertInvalid (T.replicate 65 "a") "64 characters or fewer"
 
     describe "validateMarketplacePathId" $ do
         it "accepts positive decimal marketplace path ids before DB lookup" $ do

@@ -6251,6 +6251,28 @@ validateMarketplaceOrderUpdateStatus (Just rawStatus) =
         Just normalized -> Right (Just normalized)
         Nothing -> Left err400 { errBody = marketplaceOrderStatusErrorBody }
 
+validateOptionalMarketplacePaymentProviderUpdate :: Maybe (Maybe Text) -> Either ServerError (Maybe (Maybe Text))
+validateOptionalMarketplacePaymentProviderUpdate Nothing =
+  Right Nothing
+validateOptionalMarketplacePaymentProviderUpdate (Just Nothing) =
+  Right (Just Nothing)
+validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
+  | T.null normalized =
+      Left err400 { errBody = "paymentProvider cannot be blank; use null to clear it" }
+  | T.length normalized > 64 =
+      Left err400 { errBody = "paymentProvider must be 64 characters or fewer" }
+  | not (T.all isPaymentProviderSlugChar normalized) =
+      Left err400
+        { errBody =
+            "paymentProvider must contain only ASCII letters, digits, hyphen, or underscore"
+        }
+  | otherwise =
+      Right (Just (Just normalized))
+  where
+    normalized = T.toLower (T.strip rawProvider)
+    isPaymentProviderSlugChar ch =
+      isAsciiLower ch || isDigit ch || ch == '-' || ch == '_'
+
 marketplaceOrderStatusErrorBody :: BL.ByteString
 marketplaceOrderStatusErrorBody =
   "status must be one of: pending, contact, paid, cancelled, failed, "
@@ -8753,6 +8775,7 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   requireMarketplaceAccess user
   orderKey <- parseOrderId rawId
   nextStatus <- either throwError pure (validateMarketplaceOrderUpdateStatus mouStatus)
+  nextProvider <- either throwError pure (validateOptionalMarketplacePaymentProviderUpdate mouPaymentProvider)
   now <- liftIO getCurrentTime
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ do
@@ -8760,11 +8783,7 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
     case mOrder of
       Nothing -> pure Nothing
       Just order -> do
-        let cleanTxt txt =
-              let trimmed = T.strip txt
-              in if T.null trimmed then Nothing else Just trimmed
-            nextProvider = mouPaymentProvider >>= \mp -> pure (mp >>= cleanTxt)
-            paidAtInput  = mouPaidAt
+        let paidAtInput  = mouPaidAt
             paidAtBase   = case paidAtInput of
               Nothing -> ME.marketplaceOrderPaidAt order
               Just v  -> v
