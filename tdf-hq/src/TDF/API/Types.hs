@@ -884,6 +884,12 @@ instance FromJSON RolePayload where
     case v of
       String t -> pure (RolePayload t)
       Object o -> do
+        let allowedKeys = ["role", "value"]
+            unknownKeys =
+              filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        case unknownKeys of
+          key:_ -> fail ("Unknown field in RolePayload: " <> T.unpack key)
+          [] -> pure ()
         mRole <- o .:? "role"
         mValue <- o .:? "value"
         case (mRole, mValue) of

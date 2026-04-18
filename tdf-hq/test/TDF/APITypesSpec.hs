@@ -62,12 +62,16 @@ spec = do
         it "fails when both role and value are present to avoid ambiguous role assignment bodies" $
             decodeRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
 
+        it "rejects unexpected object keys so role assignment cannot silently ignore over-posted fields" $
+            decodeRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
+
     describe "RolePayload LooseJSON MimeUnrender" $ do
         it "still accepts plain text role bodies sent as application/json" $
             decodeLooseRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
 
         it "rejects malformed or ambiguous JSON-like bodies instead of treating them as raw role text" $ do
             decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
+            decodeLooseRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
             decodeLooseRole "{}" `shouldSatisfy` isLeft
 
     describe "UserRoleUpdatePayload FromJSON" $ do
