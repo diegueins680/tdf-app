@@ -216,6 +216,7 @@ import TDF.Config
       sessionCookieSameSite,
       sessionCookieSecure,
       smtpPort )
+import TDF.Seed (seededCredentialSeedingAllowed)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
@@ -266,6 +267,27 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "seededCredentialSeedingAllowed" $ do
+        it "allows seeded demo credentials in local development by default" $
+            seededCredentialSeedingAllowed []
+                `shouldBe` True
+
+        it "blocks seeded demo credentials in hosted runtimes" $ do
+            seededCredentialSeedingAllowed [("FLY_APP_NAME", "tdf-hq")]
+                `shouldBe` False
+            seededCredentialSeedingAllowed [("KOYEB_APP_NAME", "tdf-hq")]
+                `shouldBe` False
+            seededCredentialSeedingAllowed [("FLY_APP_NAME", "   ")]
+                `shouldBe` True
+
+        it "blocks seeded demo credentials in production-like environments" $ do
+            seededCredentialSeedingAllowed [("APP_ENV", "production")]
+                `shouldBe` False
+            seededCredentialSeedingAllowed [("ENVIRONMENT", " prod ")]
+                `shouldBe` False
+            seededCredentialSeedingAllowed [("NODE_ENV", "test")]
+                `shouldBe` True
+
     describe "loadConfig" $ do
         it "falls back to default ports when Fly-style env values are malformed" $
             withEnvOverrides

@@ -19,7 +19,7 @@ import           Data.Time              (NominalDiffTime, UTCTime(..), addUTCTim
                                          secondsToDiffTime)
 import qualified Data.Map.Strict       as Map
 import           System.Directory       (doesFileExist)
-import           System.Environment     (lookupEnv)
+import           System.Environment     (getEnvironment, lookupEnv)
 import           GHC.Generics           (Generic)
 import           TDF.Models
 import           TDF.ModelsExtra        (DropdownOption(..))
@@ -32,6 +32,7 @@ import           TDF.Config             (resolveAppBase)
 seedAll :: SqlPersistT IO ()
 seedAll = do
   now <- liftIO getCurrentTime
+  allowSeededCredentials <- liftIO seededCredentialSeedingAllowedFromEnv
 
   -- Parties: Artists & Teachers
   let artists =
@@ -182,12 +183,18 @@ seedAll = do
         , ("Scheduling", Nothing, Engineer, "scheduling-token", "scheduling", "password123")
         , ("Packages", Nothing, Customer, "packages-token", "packages", "password123")
         ]
-  mapM_ (\(disp, mlegal, role, token, uname, pwd) -> do
-           _ <- ensureStaff now disp mlegal role token uname pwd
-           pure ()
-        ) staffAccounts
+  if allowSeededCredentials
+    then
+      mapM_ (\(disp, mlegal, role, token, uname, pwd) -> do
+               _ <- ensureStaff now disp mlegal role token uname pwd
+               pure ()
+            ) staffAccounts
+    else
+      liftIO $
+        putStrLn
+          "Skipping static demo staff credentials/tokens in hosted or production runtime."
 
-  seedCoreStaffRoles now
+  seedCoreStaffRoles allowSeededCredentials now
 
   -- Dropdown options for admin-managed metadata
   let dropdowns =
@@ -443,19 +450,57 @@ data CredentialStatus
   = CredentialCreated
   | CredentialUpdated
   | CredentialUnchanged
+  | CredentialSkipped
 
-seedCoreStaffRoles :: UTCTime -> SqlPersistT IO ()
-seedCoreStaffRoles now = do
+seededCredentialSeedingAllowedFromEnv :: IO Bool
+seededCredentialSeedingAllowedFromEnv = seededCredentialSeedingAllowed <$> getEnvironment
+
+seededCredentialSeedingAllowed :: [(String, String)] -> Bool
+seededCredentialSeedingAllowed env =
+  not (hasHostedRuntimeEnv || hasProductionEnv)
+  where
+    hasHostedRuntimeEnv =
+      any hasNonEmptyEnv
+        [ "FLY_APP_NAME"
+        , "KOYEB_APP_NAME"
+        , "RENDER"
+        , "RAILWAY_ENVIRONMENT"
+        , "HEROKU_APP_NAME"
+        , "VERCEL"
+        , "CF_PAGES"
+        , "K_SERVICE"
+        ]
+    hasProductionEnv =
+      any
+        (maybe False isProductionValue . lookupNonEmptyEnv)
+        [ "APP_ENV"
+        , "ENVIRONMENT"
+        , "NODE_ENV"
+        , "RUNTIME_ENV"
+        ]
+    hasNonEmptyEnv key = maybe False (const True) (lookupNonEmptyEnv key)
+    lookupNonEmptyEnv key =
+      case lookup key env of
+        Just raw | not (T.null (T.strip (T.pack raw))) -> Just raw
+        _ -> Nothing
+    isProductionValue raw =
+      T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
+
+seedCoreStaffRoles :: Bool -> UTCTime -> SqlPersistT IO ()
+seedCoreStaffRoles allowCredentials now = do
   liftIO $ putStrLn "Seeding core staff roles..."
-  mapM_ (seedStaff now) coreStaffSeeds
+  mapM_ (seedStaff allowCredentials now) coreStaffSeeds
 
-seedStaff :: UTCTime -> StaffSeed -> SqlPersistT IO ()
-seedStaff now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles = rolesVal} = do
+seedStaff :: Bool -> UTCTime -> StaffSeed -> SqlPersistT IO ()
+seedStaff allowCredentials now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles = rolesVal} = do
   let normalizedEmail = normalizeEmail emailVal
       cleanName       = T.strip nameVal
   (pid, partyChange) <- ensureStaffParty now cleanName normalizedEmail
   newRoles <- ensureStaffRoles pid rolesVal
-  credStatus <- ensureStaffCredential pid normalizedEmail
+  credStatus <-
+    if allowCredentials
+      then ensureStaffCredential pid normalizedEmail
+      else pure CredentialSkipped
   logStaffSeed cleanName rolesVal partyChange newRoles credStatus
 
 ensureStaffParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
@@ -573,6 +618,7 @@ logStaffSeed nameTxt rolesList partyChange newRoles credStatus = do
             CredentialCreated   -> Just "created credential"
             CredentialUpdated   -> Just "updated credential"
             CredentialUnchanged -> Nothing
+            CredentialSkipped   -> Just "skipped credential"
         , if null newRoles
             then Nothing
             else Just ("added roles: " <> T.intercalate ", " (map roleSlug newRoles))

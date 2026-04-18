@@ -106,6 +106,13 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'working on this view',
   'full functionality will be available here soon',
   'coming soon',
+  'not implemented yet',
+  'not implemented',
+  'under construction',
+  'placeholder',
+  'tbd',
+  'pendiente de implementacion',
+  'en construccion',
   'if you need to prioritize this section',
   'share the requirements with the product team',
 ] as const;

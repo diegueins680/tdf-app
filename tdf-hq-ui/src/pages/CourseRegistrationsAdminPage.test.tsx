@@ -4372,6 +4372,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('disambiguates repeated follow-up subjects so saved follow-up actions stay distinct', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [
+          buildFollowUp(),
+          buildFollowUp({
+            crfId: 402,
+            crfSubject: 'Confirmó transferencia',
+            crfNotes: 'Pidió que confirmemos recepción.',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(
+        document.body.querySelector('button[aria-label="Abrir acciones para seguimiento Confirmó transferencia"]'),
+      ).toBeNull();
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para seguimiento Confirmó transferencia · #401"]'),
+      ).toHaveLength(1);
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para seguimiento Confirmó transferencia · #402"]'),
+      ).toHaveLength(1);
+      expect(countOccurrences(document.body, 'Confirmó transferencia')).toBe(2);
+      expect(document.body.textContent).toContain('2 entradas');
+    });
+
+    await cleanup();
+  });
+
   it('deduplicates repeated dossier artifacts before showing saved-item counts or actions', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

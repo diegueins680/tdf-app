@@ -1311,6 +1311,44 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores terse implementation-placeholder cards so first-run keeps only actionable modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-placeholder',
+          title: 'Service tokens',
+          body: ['Not implemented yet.', 'TBD'],
+        },
+        {
+          cardId: 'api-access-placeholder',
+          title: 'Acceso API',
+          body: ['Pendiente de implementación.', 'En construcción.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Service tokens|Acceso API/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Not implemented yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Pendiente de implementación/i)).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
