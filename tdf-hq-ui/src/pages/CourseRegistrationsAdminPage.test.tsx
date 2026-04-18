@@ -5487,7 +5487,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps capped default-list utilities focused on limit guidance instead of a refresh action', async () => {
+  it('folds capped default-list guidance into local search instead of adding utility copy', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -5515,8 +5515,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Mostrando 200 inscripciones en esta vista.');
       expect(container.textContent).toContain(
-        'Se cargó el límite de 200 inscripciones; usa Ajustar límite si necesitas revisar más registros.',
+        'Busca dentro de las 200 inscripciones cargadas. Usa Ajustar límite si necesitas revisar más registros.',
       );
+      expect(listUtilities?.textContent).not.toContain('Se cargó el límite de 200 inscripciones');
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === copyVisibleCsvLabel(200),

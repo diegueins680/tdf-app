@@ -957,6 +957,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
     : '';
   const loadedRegistrationCount = registrations.length;
+  const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const localSearchTerm = localSearch.trim();
   const localSearchKey = normalizeLocalSearchText(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
@@ -1062,7 +1063,9 @@ export default function CourseRegistrationsAdminPage() {
     ? showEmptyLocalSearchResults
       ? undefined
       : formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
-    : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
+    : viewHitsCurrentLimit
+      ? `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas. Usa Ajustar límite si necesitas revisar más registros.`
+      : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1156,8 +1159,9 @@ export default function CourseRegistrationsAdminPage() {
     && !canCopyCsv
     && !showTinyDefaultCountInCurrentView
     && (loadedRegistrationCount > 1 || Boolean(copyMessage));
-  const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
-  const standaloneReachedListLimitSummary = !hasCustomFilters && viewHitsCurrentLimit
+  const standaloneReachedListLimitSummary = !hasCustomFilters
+    && viewHitsCurrentLimit
+    && !(showLocalSearchControl && !hasLocalSearch)
     ? buildReachedListLimitSummary(limit)
     : '';
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
