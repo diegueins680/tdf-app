@@ -474,6 +474,7 @@ export default function TrialLessonsPage() {
   });
 
   const data = rangeError ? [] : classesQuery.data ?? [];
+  const showExportAction = data.length > 0 && !rangeError;
   const loading =
     subjectsQuery.isLoading ||
     teachersQuery.isLoading ||
@@ -605,9 +606,11 @@ export default function TrialLessonsPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => downloadCsv(data)}>
-            Exportar CSV
-          </Button>
+          {showExportAction && (
+            <Button variant="outlined" onClick={() => downloadCsv(data)}>
+              Exportar CSV
+            </Button>
+          )}
           <Button variant="outlined" onClick={openStudentDialog}>
             Nuevo alumno
           </Button>
@@ -680,7 +683,13 @@ export default function TrialLessonsPage() {
             </Alert>
           )}
           {data.length === 0 && !loading && !rangeError && (
-            <Typography color="text.secondary">No hay clases de prueba para este filtro.</Typography>
+            <Alert severity="info" variant="outlined" data-testid="trial-lessons-empty-state">
+              <Typography variant="subtitle2">Primeros pasos</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Aún no hay clases de prueba en este rango. Crea una nueva clase para registrar horario,
+                profesor y sala; si esperabas ver datos, amplía las fechas o restablece filtros.
+              </Typography>
+            </Alert>
           )}
           <Stack spacing={1.25}>
             {data.map((cls) => {
