@@ -1782,8 +1782,10 @@ driveUploadServer _ mAccessToken DriveUploadForm{..} = do
       in "invalid_grant" `isInfixOf` body
 
 resolveProvidedDriveAccessToken :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
-resolveProvidedDriveAccessToken mHeaderToken mFormToken =
-  case (cleanOptional mHeaderToken, cleanOptional mFormToken) of
+resolveProvidedDriveAccessToken mHeaderToken mFormToken = do
+  mHeaderTokenClean <- traverse validateDriveAccessToken (cleanOptional mHeaderToken)
+  mFormTokenClean <- traverse validateDriveAccessToken (cleanOptional mFormToken)
+  case (mHeaderTokenClean, mFormTokenClean) of
     (Just headerToken, Just formToken)
       | headerToken == formToken -> Right (Just headerToken)
       | otherwise ->
@@ -1792,6 +1794,14 @@ resolveProvidedDriveAccessToken mHeaderToken mFormToken =
     (Just headerToken, Nothing) -> Right (Just headerToken)
     (Nothing, Just formToken) -> Right (Just formToken)
     (Nothing, Nothing) -> Right Nothing
+
+validateDriveAccessToken :: Text -> Either ServerError Text
+validateDriveAccessToken token
+  | T.any isSpace token =
+      Left err400 { errBody = "Google Drive access token must not contain whitespace" }
+  | T.any isControl token =
+      Left err400 { errBody = "Google Drive access token must not contain control characters" }
+  | otherwise = Right token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
 driveTokenExchangeServer _ payload = do

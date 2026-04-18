@@ -1357,6 +1357,26 @@ main = hspec $ do
                             <> show value
                         )
 
+        it "rejects malformed upload access tokens before building Authorization headers" $ do
+            let assertInvalid headerToken formToken expectedMessage =
+                    case resolveProvidedDriveAccessToken headerToken formToken of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Drive upload token to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (Just "ya29.valid token")
+                Nothing
+                "Google Drive access token must not contain whitespace"
+            assertInvalid
+                Nothing
+                (Just "ya29.valid\NULtoken")
+                "Google Drive access token must not contain control characters"
+
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
             sanitizeFeedbackAttachmentFileName "  ../Bug report final?.png  "
