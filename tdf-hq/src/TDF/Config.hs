@@ -251,7 +251,7 @@ loadConfig = do
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
   fbMsgTokenEnv <- lookupFirstEnv
     ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
-  fbMsgPageIdEnv <- lookupFirstEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
+  fbMsgPageIdEnv <- lookupFirstNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
   fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -313,6 +313,7 @@ loadConfig = do
       "FACEBOOK_MESSAGING_API_BASE"
       fbGraphBase
       fbMsgBaseEnv
+  fbMsgPageId <- validateConfiguredGraphNodeId fbMsgPageIdEnv
   igGraphBase <-
     validateConfiguredApiBaseUrl
       "INSTAGRAM_GRAPH_BASE"
@@ -323,6 +324,9 @@ loadConfig = do
       "INSTAGRAM_MESSAGING_API_BASE"
       "https://graph.facebook.com/v20.0"
       igMsgBaseEnv
+  igMsgAccountId <-
+    validateConfiguredGraphNodeId
+      (fmap (\value -> ("INSTAGRAM_MESSAGING_ACCOUNT_ID", value)) igMsgAccountEnv)
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
@@ -374,7 +378,7 @@ loadConfig = do
     , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
     , facebookGraphBase = fbGraphBase
     , facebookMessagingToken = fmap (T.strip . T.pack) fbMsgTokenEnv >>= nonEmpty
-    , facebookMessagingPageId = fmap (T.strip . T.pack) fbMsgPageIdEnv >>= nonEmpty
+    , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
     , instagramGraphBase = igGraphBase
@@ -382,7 +386,7 @@ loadConfig = do
         case fmap (T.strip . T.pack) igMsgTokenEnv of
           Just val | not (T.null val) -> Just val
           _ -> fmap (T.strip . T.pack) igTokenEnv
-    , instagramMessagingAccountId = fmap (T.strip . T.pack) igMsgAccountEnv
+    , instagramMessagingAccountId = igMsgAccountId
     , instagramMessagingApiBase = igMsgBase
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
     , sessionCookieName = cookieName
@@ -605,6 +609,13 @@ validateConfiguredChatKitWorkflowId (Just (envName, rawWorkflowId)) =
     Left msg -> fail msg
     Right workflowId -> pure workflowId
 
+validateConfiguredGraphNodeId :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredGraphNodeId Nothing = pure Nothing
+validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
+  case normalizeConfiguredGraphNodeId envName rawNodeId of
+    Left msg -> fail msg
+    Right nodeId -> pure nodeId
+
 validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
 validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
 validateConfiguredOpenAiEmbedModel (Just rawModel)
@@ -635,6 +646,26 @@ normalizeConfiguredChatKitWorkflowId envName rawWorkflowId
   | otherwise = Right (Just workflowId)
   where
     workflowId = T.strip (T.pack rawWorkflowId)
+
+normalizeConfiguredGraphNodeId :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredGraphNodeId envName rawNodeId
+  | T.null nodeId = Right Nothing
+  | T.length nodeId > 128 = invalid
+  | T.any (not . isGraphNodeIdChar) nodeId = invalid
+  | otherwise = Right (Just nodeId)
+  where
+    nodeId = T.strip (T.pack rawNodeId)
+    invalid =
+      Left
+        ( envName
+            <> " must be a Graph node id using only ASCII letters, numbers, "
+            <> "'.', '_' or '-' (128 chars max)"
+        )
+    isGraphNodeIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl

@@ -201,8 +201,10 @@ import TDF.Config
       emailConfig,
       facebookGraphBase,
       facebookMessagingApiBase,
+      facebookMessagingPageId,
       instagramGraphBase,
       instagramMessagingApiBase,
+      instagramMessagingAccountId,
       loadConfig,
       openAiEmbedModel,
       resolveConfiguredAppBase,
@@ -487,6 +489,39 @@ main = hspec $ do
                 "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+
+        it "normalizes configured Graph messaging node ids before building send URLs" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_PAGE_ID", Just "  page_123-abc.456  ")
+                , ("FACEBOOK_PAGE_ID", Nothing)
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "  17841400000000000  ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    facebookMessagingPageId cfg `shouldBe` Just "page_123-abc.456"
+                    instagramMessagingAccountId cfg
+                        `shouldBe` Just "17841400000000000"
+
+        it "rejects malformed Graph messaging node ids before token-bearing requests are built" $ do
+            let graphIdKeys =
+                    [ "FACEBOOK_MESSAGING_PAGE_ID"
+                    , "FACEBOOK_PAGE_ID"
+                    , "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+                    ]
+                onlyGraphId envName rawNodeId =
+                    [ (key, if key == envName then Just rawNodeId else Nothing)
+                    | key <- graphIdKeys
+                    ]
+                assertInvalid envName rawNodeId =
+                    withEnvOverrides (onlyGraphId envName rawNodeId) $
+                        loadConfig `shouldThrow` \err ->
+                            ( envName
+                                <> " must be a Graph node id using only ASCII letters"
+                            )
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page/123"
+            assertInvalid "FACEBOOK_PAGE_ID" "page?debug=1"
+            assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $
             withEnvOverrides
