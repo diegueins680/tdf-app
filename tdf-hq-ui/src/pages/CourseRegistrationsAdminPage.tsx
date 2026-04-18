@@ -1203,7 +1203,8 @@ export default function CourseRegistrationsAdminPage() {
     ? sharedListContextSummaries.join(' ')
     : '';
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
-  const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonLabel = `Copiar visibles (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
     && !hasLocalSearch
     && loadedRegistrationCount > 1
@@ -2821,6 +2822,8 @@ export default function CourseRegistrationsAdminPage() {
                   <Button
                     size="small"
                     startIcon={<ContentCopyIcon fontSize="small" />}
+                    aria-label={copyCsvButtonAccessibleLabel}
+                    title="Copia solo las filas visibles en esta vista como CSV."
                     onClick={() => void handleCopyCsv()}
                   >
                     {copyCsvButtonLabel}
@@ -2896,6 +2899,8 @@ export default function CourseRegistrationsAdminPage() {
                   <Button
                     size="small"
                     startIcon={<ContentCopyIcon fontSize="small" />}
+                    aria-label={copyCsvButtonAccessibleLabel}
+                    title="Copia solo las filas visibles en esta vista como CSV."
                     onClick={() => void handleCopyCsv()}
                   >
                     {copyCsvButtonLabel}
