@@ -612,6 +612,7 @@ sessionsServer user =
 
     createSessionH req = do
       ensureModule ModuleScheduling user
+      either throwError pure (validateSessionInputRowsWrite (scInputListRows req))
       parsedRoomKeys <- traverse (parseKey @Room) (scRoomIds req)
       roomKeys <- either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
@@ -661,6 +662,7 @@ sessionsServer user =
 
     patchSessionH rawId req = do
       ensureModule ModuleScheduling user
+      either throwError pure (validateSessionInputRowsWrite (suInputListRows req))
       sessionKey <- parseKey @Session rawId
       existingSession <- withPool $ getEntity sessionKey
       existing <- maybe (throwError err404) pure existingSession
@@ -1494,6 +1496,14 @@ validateSessionTimeRange startAt endAt
   | otherwise = Left err400
       { errBody = "sessionEndAt must be after sessionStartAt"
       }
+
+validateSessionInputRowsWrite :: Maybe [SessionInputRow] -> Either ServerError ()
+validateSessionInputRowsWrite Nothing = Right ()
+validateSessionInputRowsWrite (Just _) = Left err400
+  { errBody =
+      "Session input list rows are read-only on session writes; "
+        <> "omit scInputListRows/suInputListRows"
+  }
 
 validateDistinctSessionRooms :: [Key Room] -> Either ServerError [Key Room]
 validateDistinctSessionRooms roomKeys

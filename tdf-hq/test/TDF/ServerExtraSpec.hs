@@ -46,6 +46,7 @@ import TDF.API.Types
   , RoomCreate (..)
   , RoomDTO
   , RoomUpdate (..)
+  , SessionInputRow (SessionInputRow)
   )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
@@ -103,6 +104,7 @@ import TDF.ServerExtra (
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
     validateSessionTimeRange,
+    validateSessionInputRowsWrite,
     validateCheckoutTargets,
     validateCheckoutTargetReferences,
     validateServiceCatalogCurrency,
@@ -825,6 +827,35 @@ spec = do
               expectationFailure ("Expected invalid session time range error, got " <> show value)
       assertInvalid (validateSessionTimeRange startAt startAt)
       assertInvalid (validateSessionTimeRange startAt (addUTCTime (-60) startAt))
+
+  describe "validateSessionInputRowsWrite" $ do
+    let inputRow =
+          SessionInputRow
+            1
+            (Just "Lead vocal")
+            (Just "Voice")
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            (Just True)
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+        assertRejected result = case result of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` "input list rows are read-only"
+          Right value ->
+            expectationFailure ("Expected session input rows to be rejected, got " <> show value)
+
+    it "allows omitted input rows but rejects arrays the session write path cannot persist" $ do
+      validateSessionInputRowsWrite Nothing `shouldBe` Right ()
+      assertRejected (validateSessionInputRowsWrite (Just []))
+      assertRejected (validateSessionInputRowsWrite (Just [inputRow]))
 
   describe "validateDistinctSessionRooms" $ do
     let roomIdA = case (fromPathPiece "00000000-0000-0000-0000-000000000042" :: Maybe (Key Room)) of
