@@ -8419,12 +8419,14 @@ toMarketplaceDTO assetsBase (lid, listing, Just asset) = do
 
 resolveMarketplacePhotoUrl :: Text -> Maybe Text -> IO (Maybe Text)
 resolveMarketplacePhotoUrl _ Nothing = pure Nothing
-resolveMarketplacePhotoUrl assetsBase (Just raw0) = do
-  let trimmed = T.strip raw0
-      path = T.dropWhile (== '/') trimmed
-  if "inventory/" `T.isPrefixOf` path
-    then pure (Just (normalizePhoto assetsBase path))
-    else pure (Just (normalizePhoto assetsBase trimmed))
+resolveMarketplacePhotoUrl assetsBase (Just raw0) =
+  case normalizeOptionalInput (Just raw0) of
+    Nothing -> pure Nothing
+    Just raw -> do
+      let path = T.dropWhile (== '/') raw
+      if "inventory/" `T.isPrefixOf` path
+        then pure (Just (normalizePhoto assetsBase path))
+        else pure (Just (normalizePhoto assetsBase raw))
 
 normalizePhoto :: Text -> Text -> Text
 normalizePhoto assetsBase raw =

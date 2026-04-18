@@ -175,6 +175,7 @@ import TDF.Server
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
     , listMarketplace
+    , resolveMarketplacePhotoUrl
     )
 import TDF.ServerAuth
     ( findReusableActiveToken
@@ -2812,6 +2813,19 @@ spec = describe "TDF.Server helpers" $ do
                 Right items ->
                     items `shouldSatisfy` null
             activeListings `shouldBe` 0
+
+    describe "resolveMarketplacePhotoUrl" $ do
+        it "treats omitted or blank stored photo URLs as absent instead of the assets root" $ do
+            resolveMarketplacePhotoUrl "https://assets.example.com/static" Nothing
+                `shouldReturn` Nothing
+            resolveMarketplacePhotoUrl "https://assets.example.com/static" (Just "   ")
+                `shouldReturn` Nothing
+
+        it "normalizes stored inventory paths relative to the configured assets base" $
+            resolveMarketplacePhotoUrl
+                "https://assets.example.com/static/"
+                (Just " /assets/inventory/moog.jpg ")
+                `shouldReturn` Just "https://assets.example.com/static/inventory/moog.jpg"
 
     describe "marketplace order list pagination validation" $ do
         it "keeps marketplace order defaults only when the caller omits pagination" $ do
