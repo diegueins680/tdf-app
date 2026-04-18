@@ -6,6 +6,7 @@
 
 module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
+  , resolveInstagramRedirectUri
   ) where
 
 import           Control.Exception          (SomeException, displayException, try)
@@ -35,7 +36,11 @@ import           Servant
 
 import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..))
-import           TDF.Config                 (AppConfig(..), resolveConfiguredAppBase)
+import           TDF.Config
+  ( AppConfig(..)
+  , normalizeConfiguredBaseUrl
+  , resolveConfiguredAppBase
+  )
 import           TDF.DB                     (Env(..))
 import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
 
@@ -146,7 +151,7 @@ instagramOAuthServer user = exchangeHandler
     exchangeHandler InstagramOAuthExchangeRequest{..} = do
       Env{envConfig, envPool} <- asks id
       (appId, appSecret) <- loadFacebookCreds envConfig
-      let redirectUri = resolveInstagramRedirectUri envConfig ioeRedirectUri
+      redirectUri <- either throwError pure (resolveInstagramRedirectUri envConfig ioeRedirectUri)
       manager <- liftIO $ newManager tlsManagerSettings
 
       shortToken <- requestFacebookToken manager envConfig appId appSecret redirectUri ioeCode
@@ -270,13 +275,24 @@ loadFacebookCreds cfg =
       throwError err503
         { errBody = "Facebook app credentials not configured (FACEBOOK_APP_ID / FACEBOOK_APP_SECRET)." }
 
-resolveInstagramRedirectUri :: AppConfig -> Maybe Text -> Text
+resolveInstagramRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
 resolveInstagramRedirectUri cfg mProvided =
-  fromMaybe (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback") (mProvided >>= nonEmptyText)
+  maybe
+    (Right (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback"))
+    validateInstagramRedirectUri
+    (mProvided >>= cleanRedirectText)
   where
-    nonEmptyText txt =
+    cleanRedirectText txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
+
+validateInstagramRedirectUri :: Text -> Either ServerError Text
+validateInstagramRedirectUri rawRedirect =
+  case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
+    Right (Just uri) -> Right uri
+    _ ->
+      Left err400
+        { errBody = "redirectUri must be an absolute http(s) URL without query or fragment" }
 
 requestFacebookToken
   :: (MonadError ServerError m, MonadIO m)

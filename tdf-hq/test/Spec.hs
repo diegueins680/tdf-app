@@ -125,6 +125,7 @@ import TDF.ServerFeedback
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
       validateOptionalFeedbackContactEmail )
+import TDF.ServerInstagramOAuth (resolveInstagramRedirectUri)
 import TDF.Server
     ( buildWhatsappCtaFor,
       sanitizeStoredCoursePublicUrl,
@@ -955,6 +956,41 @@ main = hspec $ do
                 (Just "Token header-token")
                 (Just "tdf_session_test=cookie-token")
                 `shouldBe` Left "Invalid Authorization header"
+
+    describe "resolveInstagramRedirectUri" $ do
+        let loadInstagramConfig =
+                withEnvOverrides [("HQ_APP_URL", Just "https://hq.example.com/admin")] loadConfig
+
+        it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
+            cfg <- loadInstagramConfig
+            resolveInstagramRedirectUri cfg Nothing
+                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+            resolveInstagramRedirectUri cfg (Just "   ")
+                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+
+        it "normalizes valid explicit Instagram redirect URIs before token exchange" $ do
+            cfg <- loadInstagramConfig
+            resolveInstagramRedirectUri
+                cfg
+                (Just " https://tdf-app.pages.dev/oauth/instagram/callback ")
+                `shouldBe` Right "https://tdf-app.pages.dev/oauth/instagram/callback"
+
+        it "rejects malformed explicit Instagram redirect URIs before contacting Facebook" $ do
+            cfg <- loadInstagramConfig
+            let assertInvalid rawRedirect =
+                    case resolveInstagramRedirectUri cfg (Just rawRedirect) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute http(s) URL without query or fragment"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
+            assertInvalid "/oauth/instagram/callback"
+            assertInvalid "javascript:alert(1)"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
