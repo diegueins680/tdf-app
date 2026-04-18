@@ -55,7 +55,8 @@ import TDF.API.WhatsApp
       validateHookVerifyRequest,
       validateLeadCompletionId,
       validateLeadCompletionLookup,
-      validateLeadCompletionRequest )
+      validateLeadCompletionRequest,
+      leadCompletionConsumedToken )
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cors
     ( corsPolicy,
@@ -3463,6 +3464,19 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "Lead completion could not be applied"
                 Right _ -> expectationFailure "Expected zero-row lead completion update to be rejected"
+
+    describe "leadCompletionConsumedToken" $ do
+        it "creates a non-null tombstone that cannot be resubmitted as a completion credential" $ do
+            let consumed = leadCompletionConsumedToken 42
+            consumed `shouldBe` "completed:42"
+            consumed `shouldNotBe` leadCompletionConsumedToken 43
+            Data.Text.null consumed `shouldBe` False
+            case validateLeadCompletionRequest (CompleteReq consumed "Ada Lovelace" "ada@example.com") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Completion token format is invalid"
+                Right value ->
+                    expectationFailure ("Expected consumed lead token to be rejected, got " <> show value)
 
     describe "parseSocialErrorsChannel" $ do
         it "normalizes valid channel values" $ do

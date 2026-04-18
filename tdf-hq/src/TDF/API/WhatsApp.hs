@@ -13,6 +13,7 @@ module TDF.API.WhatsApp
   , validateLeadCompletionId
   , validateLeadCompletionLookup
   , ensureLeadCompletionUpdated
+  , leadCompletionConsumedToken
   , extractFirstWebhookMessage
   , PreviewReq(..)
   , CompleteReq(..)
@@ -129,9 +130,10 @@ leadsCompleteServer conn lid rawReq = do
       (Only leadId)
   either throwError pure (validateLeadCompletionLookup tok (listToMaybe existing))
 
+  let consumedToken = leadCompletionConsumedToken leadId
   n <- liftIO $ execute conn
-       "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=NULL WHERE id=? AND token=? AND status IN ('NEW','LINK_SENT')"
-       (nm, em, leadId, tok)
+       "UPDATE lead SET display_name=?, email=?, status='COMPLETED', token=? WHERE id=? AND token=? AND status IN ('NEW','LINK_SENT')"
+       (nm, em, consumedToken, leadId, tok)
   either throwError pure (ensureLeadCompletionUpdated n)
   pure $ object ["ok" .= True]
 
@@ -244,6 +246,12 @@ ensureLeadCompletionUpdated updatedRows
       Right ()
   | otherwise =
       Left err409 { errBody = "Lead completion could not be applied" }
+
+leadCompletionConsumedToken :: Int -> Text
+leadCompletionConsumedToken leadId =
+  -- Preserve the legacy NOT NULL token column while replacing the reusable
+  -- credential with a value clients cannot submit through completion validation.
+  "completed:" <> T.pack (show leadId)
 
 validateHookVerifyRequest :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Either ServerError Text
 validateHookVerifyRequest mmode mchall mtoken mExpected =
