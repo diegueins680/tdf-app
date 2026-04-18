@@ -1072,6 +1072,8 @@ export default function CourseRegistrationsAdminPage() {
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
   const canCopyCsv = searchedRegistrations.length > 1
     && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
+  const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
+  const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
@@ -1231,7 +1233,7 @@ export default function CourseRegistrationsAdminPage() {
     && (
       Boolean(activeViewSummaryMessage)
       || showUtilityCountSummary
-      || canCopyCsv
+      || showCopyCsvAction
       || Boolean(copyMessage)
       || showFilteredResetAction
     );
@@ -1239,7 +1241,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasVisibleRegistrations
     && (
       Boolean(standaloneUtilitySummaryMessage)
-      || canCopyCsv
+      || showCopyCsvAction
       || Boolean(copyMessage)
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
@@ -2704,7 +2706,7 @@ export default function CourseRegistrationsAdminPage() {
                     {resetViewLabel}
                   </Button>
                 )}
-                {canCopyCsv && (
+                {showCopyCsvAction && (
                   <Button
                     size="small"
                     startIcon={<ContentCopyIcon fontSize="small" />}
@@ -2779,7 +2781,7 @@ export default function CourseRegistrationsAdminPage() {
                     {standaloneUtilitySummaryMessage}
                   </Typography>
                 )}
-                {canCopyCsv && (
+                {showCopyCsvAction && (
                   <Button
                     size="small"
                     startIcon={<ContentCopyIcon fontSize="small" />}

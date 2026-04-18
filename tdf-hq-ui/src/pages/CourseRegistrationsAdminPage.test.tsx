@@ -5297,6 +5297,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(csv).toContain('"Nina Garcia"');
       expect(csv).not.toContain('"Estudiante 1"');
       expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
     });
 
     await cleanup();
