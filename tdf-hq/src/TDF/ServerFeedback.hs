@@ -6,6 +6,7 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
+  , validateFeedbackDescription
   , validateFeedbackTitle
   , validateOptionalFeedbackContactEmail
   , validateFeedbackAttachmentSize
@@ -13,7 +14,7 @@ module TDF.ServerFeedback
   ) where
 
 import           Control.Exception         (SomeException, displayException, try)
-import           Control.Monad              (forM_, when)
+import           Control.Monad              (forM_)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
@@ -51,11 +52,9 @@ feedbackServer user = submitFeedback
     submitFeedback :: FeedbackPayload -> m NoContent
     submitFeedback FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
-      let body  = T.strip fpDescription
-          category = normalizeOptionalFeedbackText fpCategory
+      body <- either throwError pure (validateFeedbackDescription fpDescription)
+      let category = normalizeOptionalFeedbackText fpCategory
           severity = normalizeOptionalFeedbackText fpSeverity
-      when (T.null body) $
-        throwError err400 { errBody = "description is required" }
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
@@ -118,6 +117,9 @@ validateOptionalFeedbackContactEmail (Just rawEmail) =
 maxFeedbackTitleChars :: Int
 maxFeedbackTitleChars = 160
 
+maxFeedbackDescriptionChars :: Int
+maxFeedbackDescriptionChars = 5000
+
 validateFeedbackTitle :: Text -> Either ServerError Text
 validateFeedbackTitle rawTitle
   | T.null title =
@@ -130,6 +132,21 @@ validateFeedbackTitle rawTitle
       Right title
   where
     title = T.strip rawTitle
+
+validateFeedbackDescription :: Text -> Either ServerError Text
+validateFeedbackDescription rawDescription
+  | T.null description =
+      Left err400 { errBody = "description is required" }
+  | T.length description > maxFeedbackDescriptionChars =
+      Left err400 { errBody = "description must be 5000 characters or fewer" }
+  | T.any isDisallowedDescriptionControl description =
+      Left err400 { errBody = "description must not contain control characters" }
+  | otherwise =
+      Right description
+  where
+    description = T.strip rawDescription
+    isDisallowedDescriptionControl ch =
+      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
 
 maxFeedbackAttachmentBytes :: Integer
 maxFeedbackAttachmentBytes = 10 * 1024 * 1024

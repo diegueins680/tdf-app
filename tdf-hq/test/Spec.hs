@@ -127,6 +127,7 @@ import TDF.ServerProposals
 import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
+      validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
       validateOptionalFeedbackContactEmail )
@@ -1385,6 +1386,28 @@ main = hspec $ do
                 "Bug\nBcc: attacker@example.com"
                 "title must not contain control characters"
             assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
+
+    describe "validateFeedbackDescription" $ do
+        it "trims descriptions while preserving normal multiline details" $
+            validateFeedbackDescription "  Step 1\topen cart\nStep 2: retry  "
+                `shouldBe` Right "Step 1\topen cart\nStep 2: retry"
+
+        it "rejects blank, oversized, or hidden-control feedback descriptions before storage" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackDescription raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid feedback description, got " <> show value)
+            assertInvalid "   " "description is required"
+            assertInvalid
+                (Data.Text.replicate 5001 "x")
+                "description must be 5000 characters or fewer"
+            assertInvalid
+                "steps\NULhidden"
+                "description must not contain control characters"
 
     describe "validateOptionalFeedbackContactEmail" $ do
         it "normalizes valid optional feedback contact emails and keeps blanks unset" $ do
