@@ -168,8 +168,11 @@ validateRadioImportSources (Just rawSources) =
   case dedupeCanonicalSources (filter (not . T.null) (map (T.strip . canonicalRadioImportSource) rawSources)) of
     [] ->
       Left err400 { errBody = "sources must include at least one public http(s) URL" }
-    cleanedSources ->
-      traverse validateExplicitSource cleanedSources
+    cleanedSources
+      | length cleanedSources > maxRadioImportSources ->
+          Left err400 { errBody = "sources must include at most 8 public http(s) URLs" }
+      | otherwise ->
+          traverse validateExplicitSource cleanedSources
   where
     validateExplicitSource source =
       case validateRadioStreamUrl source of
@@ -195,6 +198,9 @@ validateRadioImportSources (Just rawSources) =
                     then (deduped, seen)
                     else (source : deduped, Map.insert sourceKey () seen))
             ([], Map.empty)
+
+maxRadioImportSources :: Int
+maxRadioImportSources = 8
 
 defaultRadioImportSources :: [Text]
 defaultRadioImportSources =

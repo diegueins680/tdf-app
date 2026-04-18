@@ -2658,6 +2658,20 @@ main = hspec $ do
             validateRadioImportSources (Just [spoofedHost, repoPrefix])
                 `shouldBe` Right [spoofedHost, repoPrefix]
 
+        it "rejects explicit source lists above the importer fan-out budget" $ do
+            let source n =
+                    "https://radio"
+                        <> Data.Text.pack (show n)
+                        <> ".example.com/catalog.csv"
+            case validateRadioImportSources (Just (map source [(1 :: Int) .. 9])) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "sources must include at most 8 public http(s) URLs"
+                Right value ->
+                    expectationFailure
+                        ("Expected too many radio import sources to be rejected, got " <> show value)
+
         it "rejects explicit empty or invalid source lists instead of silently falling back to defaults" $ do
             let assertInvalid rawSources expected = case validateRadioImportSources rawSources of
                     Left err -> do
