@@ -2252,6 +2252,23 @@ main = hspec $ do
             assertPrivateTarget "https://[fd12::1234]/live"
             assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
 
+        it "rejects reserved IPv4 ranges before metadata/import fetches can target them" $ do
+            let assertReservedTarget rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "reserved ranges"
+                        Right value ->
+                            expectationFailure
+                                ("Expected reserved streamUrl target to be rejected, got " <> show value)
+            assertReservedTarget "https://192.0.2.10/live"
+            assertReservedTarget "https://198.51.100.20/live"
+            assertReservedTarget "https://203.0.113.5/live"
+            assertReservedTarget "https://198.19.0.1/live"
+            assertReservedTarget "https://224.0.0.1/live"
+            assertReservedTarget "https://255.255.255.255/live"
+
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of
                 Left err -> do

@@ -292,25 +292,28 @@ validateRadioAuthority rawAuthority
 validatePublicRadioHost :: Text -> Either ServerError ()
 validatePublicRadioHost rawHost
   | normalized == "localhost" || ".localhost" `T.isSuffixOf` normalized =
-      Left privateRadioHostError
+      Left nonPublicRadioHostError
   | Just octets <- parseIpv4Octets normalized
-  , isPrivateIpv4 octets =
-      Left privateRadioHostError
+  , isNonPublicIpv4 octets =
+      Left nonPublicRadioHostError
   | hasAmbiguousTrailingIpv4 normalized =
       Left err400 { errBody = "streamUrl must include a valid host" }
   | Just octets <- trailingIpv4Octets normalized
-  , isPrivateIpv4 octets =
-      Left privateRadioHostError
+  , isNonPublicIpv4 octets =
+      Left nonPublicRadioHostError
   | isPrivateIpv6 normalized =
-      Left privateRadioHostError
+      Left nonPublicRadioHostError
   | requiresExplicitPublicHostname normalized =
       Left err400 { errBody = "streamUrl host must be a public hostname or IP address" }
   | otherwise =
       Right ()
   where
     normalized = T.toLower rawHost
-    privateRadioHostError =
-      err400 { errBody = "streamUrl must not target localhost or private network addresses" }
+    nonPublicRadioHostError =
+      err400
+        { errBody =
+            "streamUrl must not target localhost or private network addresses, including reserved ranges"
+        }
 
     requiresExplicitPublicHostname host =
       not (T.any (== '.') host)
@@ -356,15 +359,21 @@ trailingIpv4Octets host =
        then parseIpv4Octets suffix
        else Nothing
 
-isPrivateIpv4 :: (Int, Int, Int, Int) -> Bool
-isPrivateIpv4 (a, b, _, _) =
+isNonPublicIpv4 :: (Int, Int, Int, Int) -> Bool
+isNonPublicIpv4 (a, b, c, _) =
   a == 0
     || a == 10
     || a == 127
     || (a == 100 && b >= 64 && b <= 127)
     || (a == 169 && b == 254)
     || (a == 172 && b >= 16 && b <= 31)
+    || (a == 192 && b == 0 && c == 0)
+    || (a == 192 && b == 0 && c == 2)
     || (a == 192 && b == 168)
+    || (a == 198 && (b == 18 || b == 19))
+    || (a == 198 && b == 51 && c == 100)
+    || (a == 203 && b == 0 && c == 113)
+    || (a >= 224 && a <= 255)
 
 isPrivateIpv6 :: Text -> Bool
 isPrivateIpv6 host =
