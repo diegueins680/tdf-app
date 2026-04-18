@@ -3123,6 +3123,37 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('omits missing receipt upload dates instead of rendering placeholder text', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [buildReceipt({ crrCreatedAt: undefined })],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).not.toContain('Subido: -');
+      expect(document.body.textContent).not.toContain('Subido:');
+    });
+
+    await cleanup();
+  });
+
   it('lets admins hide an empty receipt URL fallback after opening it by mistake', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

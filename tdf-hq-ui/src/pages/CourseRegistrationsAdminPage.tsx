@@ -2307,6 +2307,7 @@ export default function CourseRegistrationsAdminPage() {
                       receipt,
                       receiptIdsRequiringFileDisambiguator.has(receipt.crrId),
                     );
+                    const receiptCreatedLabel = formatOptionalDate(receipt.crrCreatedAt);
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
@@ -2339,9 +2340,11 @@ export default function CourseRegistrationsAdminPage() {
                                 {receiptLabel}
                                 <OpenInNewIcon sx={{ fontSize: 16 }} />
                               </Link>
-                              <Typography variant="caption" color="text.secondary">
-                                Subido: {formatDate(receipt.crrCreatedAt)}
-                              </Typography>
+                              {receiptCreatedLabel && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Subido: {receiptCreatedLabel}
+                                </Typography>
+                              )}
                             </Box>
                             <IconButton
                               size="small"
