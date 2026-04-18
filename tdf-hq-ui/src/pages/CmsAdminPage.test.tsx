@@ -706,6 +706,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Editar en formulario')).toBe(0);
+      expect(countActionsByText(container, 'Borrar')).toBe(0);
       expect(countExactText(container, 'En formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
       expect(container.textContent).toContain('Base: v3 · ID 102');

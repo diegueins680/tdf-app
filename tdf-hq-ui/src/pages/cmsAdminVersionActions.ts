@@ -18,7 +18,7 @@ export const getCmsVersionRowActions = (
   return {
     showPublish: !isPublished,
     showLoadInEditor: !loadedStateLabel,
-    showDelete: !isCurrentLive,
+    showDelete: !isCurrentLive && !isLoadedInEditor,
     loadedStateLabel,
   };
 };

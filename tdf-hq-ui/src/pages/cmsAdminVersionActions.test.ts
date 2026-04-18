@@ -55,7 +55,23 @@ describe('getCmsVersionRowActions', () => {
     expect(getCmsVersionRowActions('draft', { isLoadedInEditor: true })).toEqual({
       showPublish: true,
       showLoadInEditor: false,
-      showDelete: true,
+      showDelete: false,
+      loadedStateLabel: 'En formulario',
+    });
+  });
+
+  it('hides destructive row actions from the version currently loaded in the editor', () => {
+    expect(getCmsVersionRowActions('published', { isLoadedInEditor: true })).toEqual({
+      showPublish: false,
+      showLoadInEditor: false,
+      showDelete: false,
+      loadedStateLabel: 'En formulario',
+    });
+
+    expect(getCmsVersionRowActions('archived', { isLoadedInEditor: true })).toEqual({
+      showPublish: true,
+      showLoadInEditor: false,
+      showDelete: false,
       loadedStateLabel: 'En formulario',
     });
   });
