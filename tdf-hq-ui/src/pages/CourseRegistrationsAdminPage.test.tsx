@@ -4317,6 +4317,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('disambiguates repeated receipt filenames so saved receipt actions stay distinct', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt(),
+          buildReceipt({
+            crrId: 302,
+            crrFileUrl: 'https://example.com/receipt-copy.pdf',
+            crrFileName: 'receipt.pdf',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('receipt.pdf · #301');
+      expect(document.body.textContent).toContain('receipt.pdf · #302');
+      expect(
+        document.body.querySelector('button[aria-label="Abrir acciones para comprobante receipt.pdf"]'),
+      ).toBeNull();
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para comprobante receipt.pdf · #301"]'),
+      ).toHaveLength(1);
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para comprobante receipt.pdf · #302"]'),
+      ).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('deduplicates repeated dossier artifacts before showing saved-item counts or actions', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

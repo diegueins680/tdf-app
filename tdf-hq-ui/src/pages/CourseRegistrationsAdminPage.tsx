@@ -374,6 +374,37 @@ const eventTypeLabel = (eventType: string) =>
 const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
   entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
 
+const receiptDisplayLabel = (receipt: CourseRegistrationReceiptDTO) =>
+  receipt.crrFileName?.trim() || `Comprobante #${receipt.crrId}`;
+
+const normalizeReceiptDisplayLabelKey = (receipt: CourseRegistrationReceiptDTO) =>
+  receiptDisplayLabel(receipt).toLocaleLowerCase('es');
+
+const getReceiptIdsRequiringFileDisambiguator = (
+  receipts: readonly CourseRegistrationReceiptDTO[],
+) => {
+  const labelCounts = new Map<string, number>();
+
+  receipts.forEach((receipt) => {
+    const labelKey = normalizeReceiptDisplayLabelKey(receipt);
+    labelCounts.set(labelKey, (labelCounts.get(labelKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    receipts
+      .filter((receipt) => (labelCounts.get(normalizeReceiptDisplayLabelKey(receipt)) ?? 0) > 1)
+      .map((receipt) => receipt.crrId),
+  );
+};
+
+const receiptDisplayLabelWithContext = (
+  receipt: CourseRegistrationReceiptDTO,
+  needsDisambiguator: boolean,
+) => {
+  const label = receiptDisplayLabel(receipt);
+  return needsDisambiguator ? `${label} · #${receipt.crrId}` : label;
+};
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
@@ -1806,6 +1837,7 @@ export default function CourseRegistrationsAdminPage() {
   const dossierData = dossierQuery.data;
   const activeRegistration = dossierData?.crdRegistration ?? selectedDossier?.reg ?? null;
   const receipts = dedupeCourseRegistrationReceipts(dossierData?.crdReceipts ?? []);
+  const receiptIdsRequiringFileDisambiguator = getReceiptIdsRequiringFileDisambiguator(receipts);
   const followUps = dedupeCourseRegistrationFollowUps(dossierData?.crdFollowUps ?? []);
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
@@ -2197,59 +2229,66 @@ export default function CourseRegistrationsAdminPage() {
                       {emptyReceiptReviewMessage}
                     </Alert>
                   )}
-                  {receipts.map((receipt) => (
-                    <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
-                      <Stack spacing={1}>
-                        {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
-                          <Box
-                            component="img"
-                            src={receipt.crrFileUrl}
-                            alt={receipt.crrFileName ?? `Comprobante ${receipt.crrId}`}
-                            sx={{
-                              width: '100%',
-                              maxHeight: 220,
-                              objectFit: 'cover',
-                              borderRadius: 1.5,
-                              bgcolor: 'grey.100',
-                            }}
-                          />
-                        )}
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
-                          <Box>
-                            <Link
-                              href={receipt.crrFileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              underline="hover"
-                              color="text.primary"
-                              variant="subtitle2"
-                              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, fontWeight: 600 }}
+                  {receipts.map((receipt) => {
+                    const receiptLabel = receiptDisplayLabelWithContext(
+                      receipt,
+                      receiptIdsRequiringFileDisambiguator.has(receipt.crrId),
+                    );
+
+                    return (
+                      <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
+                        <Stack spacing={1}>
+                          {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
+                            <Box
+                              component="img"
+                              src={receipt.crrFileUrl}
+                              alt={receiptLabel}
+                              sx={{
+                                width: '100%',
+                                maxHeight: 220,
+                                objectFit: 'cover',
+                                borderRadius: 1.5,
+                                bgcolor: 'grey.100',
+                              }}
+                            />
+                          )}
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
+                            <Box>
+                              <Link
+                                href={receipt.crrFileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="hover"
+                                color="text.primary"
+                                variant="subtitle2"
+                                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, fontWeight: 600 }}
+                              >
+                                {receiptLabel}
+                                <OpenInNewIcon sx={{ fontSize: 16 }} />
+                              </Link>
+                              <Typography variant="caption" color="text.secondary">
+                                Subido: {formatDate(receipt.crrCreatedAt)}
+                              </Typography>
+                            </Box>
+                            <IconButton
+                              size="small"
+                              title="Opciones del comprobante"
+                              aria-label={`Abrir acciones para comprobante ${receiptLabel}`}
+                              aria-haspopup="menu"
+                              onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
                             >
-                              {receipt.crrFileName ?? `Comprobante #${receipt.crrId}`}
-                              <OpenInNewIcon sx={{ fontSize: 16 }} />
-                            </Link>
-                            <Typography variant="caption" color="text.secondary">
-                              Subido: {formatDate(receipt.crrCreatedAt)}
+                              <MoreVertIcon fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                          {receipt.crrNotes && (
+                            <Typography variant="body2" color="text.secondary">
+                              {receipt.crrNotes}
                             </Typography>
-                          </Box>
-                          <IconButton
-                            size="small"
-                            title="Opciones del comprobante"
-                            aria-label={`Abrir acciones para comprobante ${receipt.crrFileName ?? `comprobante ${receipt.crrId}`}`}
-                            aria-haspopup="menu"
-                            onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
-                          >
-                            <MoreVertIcon fontSize="small" />
-                          </IconButton>
+                          )}
                         </Stack>
-                        {receipt.crrNotes && (
-                          <Typography variant="body2" color="text.secondary">
-                            {receipt.crrNotes}
-                          </Typography>
-                        )}
-                      </Stack>
-                    </Paper>
-                  ))}
+                      </Paper>
+                    );
+                  })}
                 </Stack>
               </Grid>
             )}
