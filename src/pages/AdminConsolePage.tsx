@@ -128,8 +128,6 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 ] as const;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
-const ADMIN_USER_TABLE_BASE_COLUMN_COUNT = 2;
-const AUDIT_TABLE_BASE_COLUMN_COUNT = 3;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
   'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
@@ -622,6 +620,19 @@ function renderAdditionalModuleCardsGrid({
   );
 }
 
+function renderSectionLoading(label: string) {
+  return (
+    <Box sx={{ px: 2, pb: 2 }}>
+      <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
+        <CircularProgress size={18} />
+        <Typography variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+      </Stack>
+    </Box>
+  );
+}
+
 export default function AdminConsolePage() {
   const qc = useQueryClient();
   const [rotationWarning, setRotationWarning] = useState(false);
@@ -720,17 +731,15 @@ export default function AdminConsolePage() {
   const singleAdminUserStatusLabel = shouldShowSingleAdminUserStatus && singleAdminUser?.status
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
-  const showUsersTable = isUsersLoading || users.length > 1;
-  const showUsersLastAccessColumn = isUsersLoading || users.some((user) => getAdminUserLastAccess(user) != null);
-  const showUsersStatusColumn = isUsersLoading || users.some((user) => user.status != null && user.status !== 'ACTIVE');
+  const showUsersTable = users.length > 1;
+  const showUsersLastAccessColumn = users.some((user) => getAdminUserLastAccess(user) != null);
+  const showUsersStatusColumn = users.some((user) => user.status != null && user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
-  const showAuditTable = auditQuery.isLoading || audits.length > 1;
-  const showAuditActorColumn = auditQuery.isLoading || audits.some((entry) => hasAuditActor(entry.actorId));
-  const showAuditDetailColumn = auditQuery.isLoading || audits.some((entry) => hasAuditDetail(entry.diff));
-  const hasUsersSectionData = showUsersTable || singleAdminUser !== null;
-  const hasAuditSectionData = showAuditTable || singleAuditEntry !== null;
+  const showAuditTable = audits.length > 1;
+  const showAuditActorColumn = audits.some((entry) => hasAuditActor(entry.actorId));
+  const showAuditDetailColumn = audits.some((entry) => hasAuditDetail(entry.diff));
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -1058,7 +1067,9 @@ export default function AdminConsolePage() {
             {usersError}
           </Alert>
         )}
-        {showUsersTable ? (
+        {isUsersLoading ? (
+          renderSectionLoading('Cargando usuarios…')
+        ) : showUsersTable ? (
           <TableContainer>
             <Table size="small">
               <TableHead>
@@ -1070,24 +1081,6 @@ export default function AdminConsolePage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {isUsersLoading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        ADMIN_USER_TABLE_BASE_COLUMN_COUNT
-                        + (showUsersLastAccessColumn ? 1 : 0)
-                        + (showUsersStatusColumn ? 1 : 0)
-                      }
-                    >
-                      <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ py: 2 }}>
-                        <CircularProgress size={18} />
-                        <Typography variant="body2" color="text.secondary">
-                          Cargando usuarios…
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                )}
                 {users.map((user) => {
                   const identity = summarizeAdminUserIdentity(user);
                   const editRoleLabel = buildAdminUserRoleEditLabel(user);
@@ -1219,7 +1212,9 @@ export default function AdminConsolePage() {
             {(auditQuery.error as Error).message}
           </Alert>
         )}
-        {showAuditTable ? (
+        {auditQuery.isLoading ? (
+          renderSectionLoading('Cargando auditoría…')
+        ) : showAuditTable ? (
           <TableContainer>
             <Table size="small">
               <TableHead>
@@ -1247,21 +1242,6 @@ export default function AdminConsolePage() {
                     )}
                   </TableRow>
                 ))}
-                {auditQuery.isLoading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        AUDIT_TABLE_BASE_COLUMN_COUNT
-                        + (showAuditActorColumn ? 1 : 0)
-                        + (showAuditDetailColumn ? 1 : 0)
-                      }
-                    >
-                      <Typography variant="body2" align="center" color="text.secondary" sx={{ py: 2 }}>
-                        Cargando auditoría…
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           </TableContainer>

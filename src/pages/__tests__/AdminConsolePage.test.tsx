@@ -190,6 +190,32 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/^Base de datos:\s*—$/i)).not.toBeInTheDocument();
   });
 
+  it('keeps users and audit loading states compact until comparable data exists', async () => {
+    mockListUsers.mockImplementation(() => new Promise(() => undefined));
+    mockAuditLogs.mockImplementation(() => new Promise(() => undefined));
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Cargando usuarios…')).toBeInTheDocument();
+      expect(screen.getByText('Cargando auditoría…')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Todavía no hay usuarios administrables/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Todavía no hay eventos de auditoría/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps detailed service checks visible when one dependency is not healthy', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
 
