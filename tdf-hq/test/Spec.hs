@@ -918,6 +918,16 @@ main = hspec $ do
                     ])
                 `shouldBe` Left "Multiple Authorization headers found"
 
+        it "rejects duplicate Cookie headers instead of choosing an ambiguous session token" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Cookie", "tdf_session_test=old-token")
+                    , ("Cookie", "tdf_session_test=new-token")
+                    ])
+                `shouldBe` Left "Multiple Cookie headers found"
+
     describe "extractTokenFromHeaders" $ do
         let loadAuthConfig =
                 withEnvOverrides [("SESSION_COOKIE_NAME", Just "tdf_session_test")] loadConfig

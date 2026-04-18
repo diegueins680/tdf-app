@@ -228,12 +228,19 @@ extractToken cfg req =
       ]
 
     extractCookieToken AppConfig{sessionCookieName} request =
-      case lookup "Cookie" (requestHeaders request) of
-        Nothing -> Left "Missing or invalid auth token"
-        Just rawHeader ->
+      case cookieHeaders request of
+        [] -> Left "Missing or invalid auth token"
+        [rawHeader] ->
           case TE.decodeUtf8' rawHeader of
             Left _ -> Left "Missing or invalid auth token"
             Right header -> lookupCookie sessionCookieName header
+        _ -> Left "Multiple Cookie headers found"
+
+    cookieHeaders request =
+      [ rawHeader
+      | (headerName, rawHeader) <- requestHeaders request
+      , headerName == "Cookie"
+      ]
 
 extractTokenFromHeaders :: AppConfig -> Maybe Text -> Maybe Text -> Either Text Text
 extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCookieHeader =
