@@ -221,7 +221,8 @@ data CampaignUpsert = CampaignUpsert
   , cuStartDate   :: Maybe Day
   , cuEndDate     :: Maybe Day
   } deriving (Show, Generic)
-instance FromJSON CampaignUpsert
+instance FromJSON CampaignUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data AdCreativeDTO = AdCreativeDTO
   { adId        :: Int64
@@ -249,7 +250,8 @@ data AdCreativeUpsert = AdCreativeUpsert
   , acuStatus     :: Maybe Text
   , acuNotes      :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON AdCreativeUpsert
+instance FromJSON AdCreativeUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data AdConversationExampleDTO = AdConversationExampleDTO
   { aceId              :: Int64
@@ -265,7 +267,8 @@ data AdConversationExampleCreate = AdConversationExampleCreate
   , aecAssistantMessage :: Text
   , aecTags            :: Maybe [Text]
   } deriving (Show, Generic)
-instance FromJSON AdConversationExampleCreate
+instance FromJSON AdConversationExampleCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data AdsAssistRequest = AdsAssistRequest
   { aarAdId       :: Maybe Int64

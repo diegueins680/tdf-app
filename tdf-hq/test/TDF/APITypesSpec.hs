@@ -283,6 +283,55 @@ spec = do
                 "{\"aarMessage\":\"Responder al lead\",\"message\":\"typoed duplicate\"}"
                 `shouldSatisfy` isLeft
 
+    describe "Ads admin write payload FromJSON" $ do
+        it "accepts canonical campaign, ad creative, and example write payloads" $ do
+            case decodeCampaignUpsert
+                "{\"cuName\":\"Meta Leads\",\"cuObjective\":\"book trials\",\"cuPlatform\":\"instagram\",\"cuStatus\":\"active\",\"cuBudgetCents\":12000}"
+             of
+                Left err ->
+                    expectationFailure ("Expected campaign payload to decode, got: " <> err)
+                Right (DTO.CampaignUpsert idVal nameVal objectiveVal platformVal statusVal budgetVal _ _) -> do
+                    idVal `shouldBe` Nothing
+                    nameVal `shouldBe` "Meta Leads"
+                    objectiveVal `shouldBe` Just "book trials"
+                    platformVal `shouldBe` Just "instagram"
+                    statusVal `shouldBe` Just "active"
+                    budgetVal `shouldBe` Just 12000
+
+            case decodeAdCreativeUpsert
+                "{\"acuCampaignId\":7,\"acuExternalId\":\"ad-123\",\"acuName\":\"Trial class reel\",\"acuChannel\":\"instagram\",\"acuStatus\":\"active\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected ad creative payload to decode, got: " <> err)
+                Right (DTO.AdCreativeUpsert idVal campaignIdVal externalIdVal nameVal channelVal _ _ _ statusVal _) -> do
+                    idVal `shouldBe` Nothing
+                    campaignIdVal `shouldBe` Just 7
+                    externalIdVal `shouldBe` Just "ad-123"
+                    nameVal `shouldBe` "Trial class reel"
+                    channelVal `shouldBe` Just "instagram"
+                    statusVal `shouldBe` Just "active"
+
+            case decodeAdConversationExampleCreate
+                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro, te cuento opciones\",\"aecTags\":[\"lead\",\"trial\"]}"
+             of
+                Left err ->
+                    expectationFailure ("Expected ad conversation example payload to decode, got: " <> err)
+                Right (DTO.AdConversationExampleCreate userMessageVal assistantMessageVal tagsVal) -> do
+                    userMessageVal `shouldBe` "Quiero info"
+                    assistantMessageVal `shouldBe` "Claro, te cuento opciones"
+                    tagsVal `shouldBe` Just ["lead", "trial"]
+
+        it "rejects unexpected ads admin write keys instead of silently dropping operator intent" $ do
+            decodeCampaignUpsert
+                "{\"cuName\":\"Meta Leads\",\"name\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
+            decodeAdCreativeUpsert
+                "{\"acuName\":\"Trial class reel\",\"campaignId\":7}"
+                `shouldSatisfy` isLeft
+            decodeAdConversationExampleCreate
+                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro\",\"assistantMessage\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
+
     describe "CmsContentIn FromJSON" $ do
         it "accepts canonical CMS content payloads" $
             case decodeCmsContent
@@ -951,6 +1000,12 @@ spec = do
     decodeAdsInquiry = eitherDecode
     decodeAdsAssist :: BL8.ByteString -> Either String DTO.AdsAssistRequest
     decodeAdsAssist = eitherDecode
+    decodeCampaignUpsert :: BL8.ByteString -> Either String DTO.CampaignUpsert
+    decodeCampaignUpsert = eitherDecode
+    decodeAdCreativeUpsert :: BL8.ByteString -> Either String DTO.AdCreativeUpsert
+    decodeAdCreativeUpsert = eitherDecode
+    decodeAdConversationExampleCreate :: BL8.ByteString -> Either String DTO.AdConversationExampleCreate
+    decodeAdConversationExampleCreate = eitherDecode
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
     decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode
