@@ -186,7 +186,7 @@ const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage =
-  'Los estados visibles no coinciden con los filtros estándar. Usa Cambiar estado en cada inscripción para normalizarlos.';
+  'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const dossierOnlyScopeHint = 'Abre el expediente desde el nombre.';
@@ -2307,6 +2307,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(customStatusSummary?.textContent).toContain('Sin filtros de estado');
       expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(customStatusSummary?.textContent).not.toContain('Usa Cambiar estado');
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
