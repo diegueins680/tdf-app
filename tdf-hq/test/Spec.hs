@@ -16,7 +16,7 @@ import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Key, insert_)
+import Database.Persist (Entity (..), Key, insert_, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Network.Wai (defaultRequest)
@@ -81,10 +81,14 @@ import TDF.DTO.SocialEventsDTO
       iudMessageUpdate,
       vcuPhone,
       vudContactUpdate )
-import TDF.DTO.SocialSyncDTO (SocialSyncIngestRequest, SocialSyncPostDTO (..))
+import TDF.DTO.SocialSyncDTO
+    ( SocialSyncIngestRequest (..),
+      SocialSyncIngestResponse (..),
+      SocialSyncPostDTO (..),
+      SocialSyncPostIn (..) )
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..))
+import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
@@ -1909,6 +1913,44 @@ main = hspec $ do
             assertInvalid "commentCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"commentCount\":-1}]}"
             assertInvalid "shareCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"shareCount\":-1}]}"
             assertInvalid "viewCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"viewCount\":-1}]}"
+
+    describe "social sync ingest handler" $
+        it "records mixed batch audit labels explicitly instead of inheriting the first post" $ do
+            let mkIngestPost platform externalPostId ingestSource =
+                    SocialSyncPostIn
+                        { sspPlatform = platform
+                        , sspExternalPostId = externalPostId
+                        , sspCaption = Nothing
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Nothing
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = ingestSource
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                request =
+                    SocialSyncIngestRequest
+                        [ mkIngestPost "instagram" "ig-media-42" (Just "manual")
+                        , mkIngestPost "facebook" "fb-post-7" (Just "meta_ads")
+                        ]
+            (result, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err ->
+                    expectationFailure ("Expected mixed social sync ingest to succeed, got: " <> show err)
+                Right response -> do
+                    ssirInserted response `shouldBe` 2
+                    ssirUpdated response `shouldBe` 0
+                    ssirTotal response `shouldBe` 2
+            case runs of
+                [run] -> do
+                    socialSyncRunPlatform run `shouldBe` "mixed"
+                    socialSyncRunIngestSource run `shouldBe` "mixed"
+                _ ->
+                    expectationFailure ("Expected one social sync run audit row, got: " <> show runs)
 
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
@@ -4181,6 +4223,26 @@ currentSocialSyncTestTime :: UTCTime
 currentSocialSyncTestTime =
     UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 3600)
 
+runSocialSyncIngestHandler
+    :: SocialSyncIngestRequest
+    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncRun])
+runSocialSyncIngestHandler request =
+    runNoLoggingT $ do
+        pool <- createSqlitePool ":memory:" 1
+        liftIO $ runSqlPool initializeSocialSyncSchema pool
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused in social sync ingest tests"
+                    }
+        result <- liftIO $
+            runExceptT (runReaderT (socialSyncIngestHandlerFor socialSyncAdminUser request) env)
+        runs <- liftIO $
+            runSqlPool
+                (fmap entityVal <$> selectList [] [])
+                pool
+        pure (result, runs)
+
 runSocialSyncListHandler
     :: SqlPersistT IO ()
     -> Maybe Text
@@ -4221,6 +4283,15 @@ socialSyncListHandlerFor user =
     case (socialSyncServer user :: ServerT SocialSyncAPI SocialSyncTestM) of
         _ingest :<|> listPosts ->
             listPosts
+
+socialSyncIngestHandlerFor
+    :: AuthedUser
+    -> SocialSyncIngestRequest
+    -> SocialSyncTestM SocialSyncIngestResponse
+socialSyncIngestHandlerFor user =
+    case (socialSyncServer user :: ServerT SocialSyncAPI SocialSyncTestM) of
+        ingestPosts :<|> _listPosts ->
+            ingestPosts
 
 type RadioPresenceTestM = ReaderT Env (ExceptT ServerError IO)
 
@@ -4288,6 +4359,19 @@ initializeSocialSyncSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \UNIQUE(\"platform\", \"external_post_id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"social_sync_run\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"platform\" VARCHAR NOT NULL,\
+        \\"ingest_source\" VARCHAR NOT NULL,\
+        \\"started_at\" TIMESTAMP NOT NULL,\
+        \\"ended_at\" TIMESTAMP NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"new_posts\" INTEGER NOT NULL,\
+        \\"updated_posts\" INTEGER NOT NULL,\
+        \\"error_message\" VARCHAR NULL\
         \)"
         []
 

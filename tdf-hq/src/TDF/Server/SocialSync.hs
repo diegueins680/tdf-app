@@ -20,7 +20,7 @@ import qualified Data.ByteString.Lazy       as BL
 import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit, isSpace)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
-import           Data.Maybe                 (catMaybes, fromMaybe, listToMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
@@ -97,7 +97,7 @@ socialSyncServer user =
                     ]
                   ]
             withPool $ update key updates
-            pure (False, ingestSrc)
+            pure (False, platform, ingestSrc)
           Nothing -> do
             let record = SocialSyncPost
                   { socialSyncPostAccountId = Nothing
@@ -121,11 +121,13 @@ socialSyncServer user =
                   , socialSyncPostUpdatedAt = now
                   }
             withPool $ insert_ record
-            pure (True, ingestSrc)
-      let inserted = length (filter fst results)
+            pure (True, platform, ingestSrc)
+      let inserted = length (filter (\(wasInserted, _, _) -> wasInserted) results)
           updated = length results - inserted
-      let platformLabel = maybe "mixed" (normalizePlatform . sspPlatform) (listToMaybe ssirPosts)
-      let runSource = maybe "manual" snd (listToMaybe results)
+      let platformLabel =
+            resolveSocialSyncRunLabel "mixed" [platform | (_, platform, _) <- results]
+      let runSource =
+            resolveSocialSyncRunLabel "manual" [source | (_, _, source) <- results]
       _ <- withPool $ insert SocialSyncRun
         { socialSyncRunPlatform = platformLabel
         , socialSyncRunIngestSource = runSource
@@ -283,6 +285,13 @@ nonEmptyText :: Text -> Maybe Text
 nonEmptyText t =
   let trimmed = T.strip t
   in if T.null trimmed then Nothing else Just trimmed
+
+resolveSocialSyncRunLabel :: Text -> [Text] -> Text
+resolveSocialSyncRunLabel fallback rawValues =
+  case nub (catMaybes (map nonEmptyText rawValues)) of
+    [] -> fallback
+    [label] -> label
+    _ -> "mixed"
 
 normalizeSocialSyncTagFilter :: Maybe Text -> Maybe Text
 normalizeSocialSyncTagFilter mTag = T.toLower <$> (mTag >>= nonEmptyText)
