@@ -87,7 +87,12 @@ const countExactText = (root: ParentNode, labelText: string) =>
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
-    (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
+    (element) => {
+      const ariaLabel = element.getAttribute('aria-label') ?? '';
+      return buttonText(element) === labelText
+        || ariaLabel === labelText
+        || (labelText === 'WhatsApp' && ariaLabel.startsWith('Abrir WhatsApp para '));
+    },
   );
 
 const hasLinkWithTextAndHref = (root: ParentNode, labelText: string, href: string) =>
@@ -618,7 +623,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps repeated WhatsApp row actions compact while naming each target clearly', async () => {
+  it('keeps repeated WhatsApp row actions as compact icons while naming each target clearly', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -661,12 +666,12 @@ describe('AdminUsersPage', () => {
         )[0]!;
         const linusAction = getButtonsByText(container, 'Abrir WhatsApp para linus-view')[0]!;
 
-        expect(buttonText(adaAction)).toBe('WhatsApp');
-        expect(buttonText(graceAction)).toBe('WhatsApp');
-        expect(buttonText(linusAction)).toBe('WhatsApp');
-        expect(adaAction.getAttribute('title')).toBe('Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin)');
-        expect(graceAction.getAttribute('title')).toBe('Abrir WhatsApp para Grace Hopper (Usuario: grace-admin)');
-        expect(linusAction.getAttribute('title')).toBe('Abrir WhatsApp para linus-view');
+        expect(buttonText(adaAction)).toBe('');
+        expect(buttonText(graceAction)).toBe('');
+        expect(buttonText(linusAction)).toBe('');
+        expect(adaAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin)');
+        expect(graceAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para Grace Hopper (Usuario: grace-admin)');
+        expect(linusAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para linus-view');
       });
     } finally {
       await cleanup();

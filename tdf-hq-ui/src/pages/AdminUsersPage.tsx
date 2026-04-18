@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ClearIcon from '@mui/icons-material/Clear';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
@@ -865,15 +866,20 @@ function UserRow({
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         {hasWhatsAppChannel ? (
-          <Button
-            size="small"
-            variant="contained"
-            aria-label={whatsappActionLabel}
-            title={whatsappActionLabel}
-            onClick={onOpenCommunications}
-          >
-            WhatsApp
-          </Button>
+          <Tooltip title={whatsappActionLabel}>
+            <IconButton
+              size="small"
+              color="primary"
+              aria-label={whatsappActionLabel}
+              onClick={onOpenCommunications}
+              sx={{
+                border: '1px solid',
+                borderColor: 'primary.main',
+              }}
+            >
+              <WhatsAppIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         ) : !hidePendingStateChip ? (
           <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
         ) : null}
