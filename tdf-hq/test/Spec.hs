@@ -1115,6 +1115,34 @@ main = hspec $ do
             assertInvalid "https://app.example.com/admin"
             assertInvalid "javascript:alert(1)"
 
+        it "rejects malformed boolean CORS flags instead of treating typos as false" $ do
+            let baseOverrides =
+                    [ ("ALLOWED_ORIGINS", Nothing)
+                    , ("ALLOW_ORIGINS", Nothing)
+                    , ("ALLOW_ORIGIN", Nothing)
+                    , ("CORS_ALLOW_ORIGINS", Nothing)
+                    , ("CORS_ALLOW_ORIGIN", Nothing)
+                    , ("HQ_APP_URL", Nothing)
+                    ]
+                assertInvalid flagOverrides expectedMessage =
+                    withEnvOverrides (baseOverrides <> flagOverrides) $
+                        corsPolicy `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                [ ("ALLOW_ALL_ORIGINS", Just "treu")
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_DISABLE_DEFAULTS", Nothing)
+                , ("DISABLE_DEFAULT_CORS", Nothing)
+                ]
+                "ALLOW_ALL_ORIGINS must be a boolean CORS flag"
+            assertInvalid
+                [ ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_DISABLE_DEFAULTS", Just "maybe")
+                , ("DISABLE_DEFAULT_CORS", Nothing)
+                ]
+                "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
+
     describe "CORS trusted preview origins" $ do
         it "allows only the known TDF Pages projects and their preview subdomains" $ do
             isTrustedPreviewOrigin "https://tdfui.pages.dev" `shouldBe` True

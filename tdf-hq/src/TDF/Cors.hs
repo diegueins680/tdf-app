@@ -31,6 +31,10 @@ corsPolicy = do
     [ "CORS_DISABLE_DEFAULTS"
     , "DISABLE_DEFAULT_CORS"
     ]
+  allowAllFlag <- either (ioError . userError) pure $
+    maybe (Right False) (parseBoolFlag "ALLOW_ALL_ORIGINS") allowAllEnv
+  disableDefaultsFlag <- either (ioError . userError) pure $
+    maybe (Right False) (parseBoolFlag "CORS_DISABLE_DEFAULTS") disableDefaultsEnv
   let defaultsCore =
         [ "http://localhost:5173"
         , "http://127.0.0.1:5173"
@@ -44,10 +48,10 @@ corsPolicy = do
     traverse normalizeConfiguredCorsOrigin (filter (not . null) parsed)
   let
       defaults = defaultsCore ++ hqBaseDefaults
-      includeDefaults = not (maybe False parseBool disableDefaultsEnv)
+      includeDefaults = not disableDefaultsFlag
       merged = (if includeDefaults then defaults else []) ++ filtered
       deduped = nub merged
-      allowAll = maybe False parseBool allowAllEnv || any (== "*") deduped
+      allowAll = allowAllFlag || any (== "*") deduped
       effective =
         if null deduped
           then if includeDefaults then defaults else []
@@ -215,15 +219,23 @@ normalizeOrigin = dropTrailingSlash . trim
 trim :: String -> String
 trim = dropWhileEnd isSpace . dropWhile isSpace
 
-parseBool :: String -> Bool
-parseBool raw =
+parseBoolFlag :: String -> String -> Either String Bool
+parseBoolFlag name raw =
   case map toLower (trim raw) of
-    "1"      -> True
-    "true"   -> True
-    "yes"    -> True
-    "on"     -> True
-    "*"      -> True
-    _        -> False
+    "1"     -> Right True
+    "true"  -> Right True
+    "yes"   -> Right True
+    "on"    -> Right True
+    "*"     -> Right True
+    "0"     -> Right False
+    "false" -> Right False
+    "no"    -> Right False
+    "off"   -> Right False
+    value ->
+      Left $
+        name
+          <> " must be a boolean CORS flag (true/false, 1/0, yes/no, on/off), got: "
+          <> value
 
 lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
 lookupFirstNonEmptyEnv [] = pure Nothing
