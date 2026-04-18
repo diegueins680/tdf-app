@@ -933,6 +933,14 @@ spec = do
         Right value ->
           expectationFailure ("Expected duplicate band member ids to be rejected, got " <> show value)
 
+    it "rejects non-positive member ids before band creation falls through to unknown-party lookups" $
+      case validateDistinctBandMemberIds [toSqlKey 0 :: Key M.Party] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "band member party ids must be positive"
+        Right value ->
+          expectationFailure ("Expected non-positive band member ids to be rejected, got " <> show value)
+
   describe "validatePaymentMethod" $ do
     it "accepts supported manual-payment aliases, including persisted enum labels reused by the UI" $ do
       validatePaymentMethod " Produbanco " `shouldBe` Right M.BankTransferM

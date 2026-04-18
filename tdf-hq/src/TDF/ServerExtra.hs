@@ -1547,6 +1547,9 @@ validateCheckoutTargetReferences mRoomKey mSessionKey = do
 
 validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
 validateDistinctBandMemberIds partyKeys
+  | any ((<= 0) . fromSqlKey) partyKeys = Left err400
+      { errBody = "band member party ids must be positive"
+      }
   | length partyKeys == Set.size (Set.fromList partyKeys) = Right partyKeys
   | otherwise = Left err400
       { errBody = "band members must not contain duplicates"
