@@ -64,37 +64,47 @@ export default function LogsPage() {
     }
   };
 
+  const logs = logsQuery.data ?? [];
+  const hasLogs = logs.length > 0;
+  const showLogsTable = logsQuery.isLoading || hasLogs;
+
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
         <Typography variant="h5" component="h1">
-          Server Logs
+          Logs del servidor
         </Typography>
         <Stack direction="row" spacing={1}>
           <TextField
             type="number"
-            label="Limit"
+            label="Limite"
             value={limit}
             onChange={(e) => setLimit(parseLogLimit(e.target.value))}
             size="small"
             sx={{ width: 100 }}
             inputProps={{ min: 1, max: 1000 }}
           />
-          <Tooltip title="Refresh logs">
-            <IconButton aria-label="Refresh logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
-              <RefreshIcon />
-            </IconButton>
+          <Tooltip title="Refrescar logs">
+            <span>
+              <IconButton aria-label="Refrescar logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
-          <Tooltip title="Clear all logs">
-            <IconButton
-              aria-label="Clear all logs"
-              onClick={() => clearLogsMutation.mutate()}
-              disabled={clearLogsMutation.isPending}
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
+          {hasLogs && (
+            <Tooltip title="Vaciar logs">
+              <span>
+                <IconButton
+                  aria-label="Vaciar logs"
+                  onClick={() => clearLogsMutation.mutate()}
+                  disabled={clearLogsMutation.isPending}
+                  color="error"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
         </Stack>
       </Stack>
 
@@ -112,66 +122,65 @@ export default function LogsPage() {
 
       {clearLogsMutation.isSuccess && (
         <Alert severity="success" onClose={() => clearLogsMutation.reset()}>
-          Logs cleared successfully
+          Logs vaciados correctamente
         </Alert>
       )}
 
-      <Paper>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: 180 }}>Timestamp</TableCell>
-                <TableCell sx={{ width: 100 }}>Level</TableCell>
-                <TableCell>Message</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {logsQuery.isLoading && (
+      {!logsQuery.isLoading && !logsQuery.isError && !hasLogs && (
+        <Alert severity="info" variant="outlined" data-testid="server-logs-empty-state">
+          Todavia no hay logs disponibles. Esta vista mostrara eventos del servidor cuando exista el primer registro.
+        </Alert>
+      )}
+
+      {showLogsTable && (
+        <Paper>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={3} align="center">
-                    <CircularProgress size={24} />
-                  </TableCell>
+                  <TableCell sx={{ width: 180 }}>Timestamp</TableCell>
+                  <TableCell sx={{ width: 100 }}>Level</TableCell>
+                  <TableCell>Message</TableCell>
                 </TableRow>
-              )}
-              {logsQuery.data?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      No logs available
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {logsQuery.data?.map((log, idx) => (
-                <TableRow key={idx} hover>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                      {formatTimestampForDisplay(log.logTimestamp)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={log.logLevel} size="small" color={getLevelColor(log.logLevel)} />
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.875rem',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {log.logMessage}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {logsQuery.isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      <CircularProgress size={24} />
+                    </TableCell>
+                  </TableRow>
+                )}
+                {logs.map((log, idx) => (
+                  <TableRow key={idx} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                        {formatTimestampForDisplay(log.logTimestamp)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={log.logLevel} size="small" color={getLevelColor(log.logLevel)} />
+                    </TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {log.logMessage}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
     </Stack>
   );
 }
