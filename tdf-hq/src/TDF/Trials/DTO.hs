@@ -73,7 +73,8 @@ data TrialAvailabilityUpsert = TrialAvailabilityUpsert
   , teacherId      :: Maybe Int
   } deriving (Show, Generic)
 instance ToJSON TrialAvailabilityUpsert
-instance FromJSON TrialAvailabilityUpsert
+instance FromJSON TrialAvailabilityUpsert where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data TrialAssignIn = TrialAssignIn
   { teacherId :: Int

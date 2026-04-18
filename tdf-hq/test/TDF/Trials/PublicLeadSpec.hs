@@ -675,6 +675,40 @@ spec = do
         Right value ->
           expectationFailure ("Expected inverted availability window to be rejected, got " <> show value)
 
+  describe "TrialAvailabilityUpsert request decoding" $ do
+    it "rejects typoed teacher keys so teacherId fallback cannot publish slots for the wrong teacher" $ do
+      let canonicalPayload = BL8.pack $ concat
+            [ "{\"subjectId\":3"
+            , ",\"roomId\":\"sala-a\""
+            , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+            , ",\"teacherId\":2}"
+            ]
+      case A.eitherDecode canonicalPayload of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical availability payload to decode, got " <> decodeErr)
+        Right (TrialAvailabilityUpsert availabilityIdValue subjectIdValue roomIdValue startValue endValue notesValue teacherIdValue) -> do
+          availabilityIdValue `shouldBe` Nothing
+          subjectIdValue `shouldBe` 3
+          roomIdValue `shouldBe` "sala-a"
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          notesValue `shouldBe` Nothing
+          teacherIdValue `shouldBe` Just 2
+
+      isLeft
+        ( A.eitherDecode
+            (BL8.pack $ concat
+              [ "{\"subjectId\":3"
+              , ",\"roomId\":\"sala-a\""
+              , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+              , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+              , ",\"teacherID\":2}"
+              ])
+            :: Either String TrialAvailabilityUpsert
+        )
+        `shouldBe` True
+
   describe "private teacher class filtering" $ do
     it "rejects non-positive teacher or subject filters before querying class history" $ do
       let assertRejected expectedMessage rawTeacherId rawSubjectId = do
