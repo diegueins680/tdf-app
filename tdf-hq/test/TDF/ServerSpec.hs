@@ -461,6 +461,13 @@ spec = describe "TDF.Server helpers" $ do
                     , "params" .= ([1, 2] :: [Int])
                     ]
                 )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("tools/list" :: T.Text)
+                    , "paramsTypo" .= object []
+                    ]
+                )
 
     describe "parseToolCallParams" $ do
         it "defaults omitted MCP tool arguments to an object" $

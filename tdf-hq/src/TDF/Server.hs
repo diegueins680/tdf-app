@@ -303,6 +303,7 @@ mcpTools =
 
 parseMcpRequest :: Value -> Maybe McpRequest
 parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
+  rejectUnexpectedObjectFields "McpRequest" ["jsonrpc", "id", "method", "params"] o
   version <- o .: "jsonrpc"
   when (version /= ("2.0" :: Text)) $
     fail "jsonrpc must be 2.0"
