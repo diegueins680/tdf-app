@@ -4796,7 +4796,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).not.toContain('Estudiante 1');
-      expect(container.textContent).toContain('Mostrando 1 inscripción de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
@@ -4882,7 +4882,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).toContain('Nina Garcia');
-      expect(container.textContent).toContain('Mostrando 2 inscripciones de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).toContain(
         'Mostrando una sola cohorte: Mixing Bootcamp (mixing-bootcamp). Fuente visible: referral.',
       );
@@ -4976,7 +4976,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.');
       expect(container.textContent).toContain('Búsqueda local en el lote cargado (9 inscripciones).');
-      expect(container.textContent).not.toContain('Mostrando 0 inscripciones de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
@@ -5041,7 +5041,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
-      expect(container.textContent).toContain('Mostrando 2 inscripciones de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
     });
 

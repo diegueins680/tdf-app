@@ -230,6 +230,10 @@ const getResetViewLabel = ({
 
 const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
+const formatLoadedRegistrationCountLabel = (count: number) =>
+  `${count} inscripci${count === 1 ? 'ón cargada' : 'ones cargadas'}`;
+const formatLocalSearchResultSummary = (visibleCount: number, loadedCount: number) =>
+  `Mostrando ${visibleCount} de ${formatLoadedRegistrationCountLabel(loadedCount)}.`;
 const buildReachedListLimitSummary = (limit: number) =>
   `Se cargó el límite de ${limit} inscripciones; usa Ajustar límite si necesitas revisar más registros.`;
 
@@ -890,7 +894,7 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? `Búsqueda local en el lote cargado (${formatRegistrationCountLabel(loadedRegistrationCount)}).`
-      : `Mostrando ${formatRegistrationCountLabel(searchedRegistrations.length)} de ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`
+      : formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
     : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
