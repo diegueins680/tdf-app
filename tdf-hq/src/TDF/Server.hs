@@ -6510,6 +6510,11 @@ validateServiceMarketplaceCatalog (Just catalog)
 validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
 validateServiceAdCurrency = validateCurrencyCode
 
+validateReceiptCurrency :: Maybe Text -> Either ServerError (Maybe Text)
+validateReceiptCurrency Nothing = Right Nothing
+validateReceiptCurrency (Just rawCurrency) =
+  Just <$> validateCurrencyCode (Just rawCurrency)
+
 validateCurrencyCode :: Maybe Text -> Either ServerError Text
 validateCurrencyCode Nothing = Right "USD"
 validateCurrencyCode (Just rawCurrency) =
@@ -6963,6 +6968,7 @@ createReceipt :: AuthedUser -> CreateReceiptReq -> AppM ReceiptDTO
 createReceipt user CreateReceiptReq{..} = do
   requireModule user ModuleInvoicing
   invoiceIdValid <- either throwError pure (validatePositiveIdField "invoiceId" crInvoiceId)
+  currencyOverride <- either throwError pure (validateReceiptCurrency crCurrency)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   let iid = toSqlKey invoiceIdValid :: Key Invoice
@@ -6983,7 +6989,7 @@ createReceipt user CreateReceiptReq{..} = do
               else do
                 (receiptEnt, receiptLines) <-
                   issueReceipt now (normalizeOptionalText crBuyerName) (normalizeOptionalText crBuyerEmail)
-                               (normalizeOptionalText crNotes) (normalizeOptionalText crCurrency)
+                               (normalizeOptionalText crNotes) currencyOverride
                                invEnt invoiceLines
                 pure (Right (receiptToDTO receiptEnt receiptLines))
   case result of

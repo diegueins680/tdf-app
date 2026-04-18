@@ -87,6 +87,7 @@ import TDF.Server
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateServiceAdCurrency
+    , validateReceiptCurrency
     , validateServiceAdSlotMinutes
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
@@ -1366,6 +1367,33 @@ spec = describe "TDF.Server helpers" $ do
                 Right receipt ->
                     expectationFailure
                         ("Expected invalid invoiceId to be rejected, got: " <> show receipt)
+
+        it "validates explicit receipt currency overrides before reading receipts" $ do
+            validateReceiptCurrency Nothing `shouldBe` Right Nothing
+            validateReceiptCurrency (Just " usd ") `shouldBe` Right (Just "USD")
+
+            let assertInvalid rawCurrency = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                ( createReceipt
+                                    (mkUser [Accounting])
+                                    (DTO.CreateReceiptReq 1 Nothing Nothing Nothing (Just rawCurrency))
+                                )
+                                (error "createReceipt should reject invalid crCurrency before reading Env")
+
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "currency must be a 3-letter ISO code"
+                        Right receipt ->
+                            expectationFailure
+                                ("Expected invalid receipt currency to be rejected, got: " <> show receipt)
+
+            assertInvalid "usdollars"
+            assertInvalid "12$"
+            assertInvalid "   "
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts either a unique booking id or broader party filters" $ do
