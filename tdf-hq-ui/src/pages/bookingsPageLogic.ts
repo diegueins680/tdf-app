@@ -8,6 +8,7 @@ interface BookingCustomerFieldState {
 }
 
 interface BookingCalendarStatusState {
+  clearFilterActionLabel?: string;
   message: string;
   severity: 'info';
 }
@@ -117,7 +118,8 @@ export const getBookingCalendarStatusState = ({
 
   if (hasActiveFilter) {
     return {
-      message: 'No hay sesiones para este filtro. Quita el filtro o selecciona un horario en el calendario para crear una sesión nueva.',
+      clearFilterActionLabel: 'Ver toda la agenda',
+      message: 'No hay sesiones para este filtro. Selecciona un horario en el calendario para crear una sesión nueva.',
       severity: 'info',
     };
   }

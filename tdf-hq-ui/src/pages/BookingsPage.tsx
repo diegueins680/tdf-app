@@ -30,7 +30,7 @@ import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { Services } from '../api/services';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   defaultMinutesForService,
   describeServiceDefaults,
@@ -53,6 +53,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
 
 export default function BookingsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const calendarRef = useRef<FullCalendar | null>(null);
   const autoOpenHandled = useRef(false);
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -96,6 +97,9 @@ export default function BookingsPage() {
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
+  const handleClearBookingFilters = useCallback(() => {
+    navigate({ pathname: location.pathname, search: '' }, { replace: true });
+  }, [location.pathname, navigate]);
   const calendarStatusState = getBookingCalendarStatusState({
     bookingCount: bookings.length,
     hasActiveFilter: hasActiveBookingFilter,
@@ -751,7 +755,19 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
-      {calendarStatusState && <Alert severity={calendarStatusState.severity} sx={{ mb: 1 }}>{calendarStatusState.message}</Alert>}
+      {calendarStatusState && (
+        <Alert
+          severity={calendarStatusState.severity}
+          sx={{ mb: 1 }}
+          action={calendarStatusState.clearFilterActionLabel ? (
+            <Button color="inherit" size="small" onClick={handleClearBookingFilters}>
+              {calendarStatusState.clearFilterActionLabel}
+            </Button>
+          ) : undefined}
+        >
+          {calendarStatusState.message}
+        </Alert>
+      )}
       {bookingsQuery.error && <Alert severity="error" sx={{ mb: 1 }}>Error al cargar agenda: {bookingsQuery.error.message}</Alert>}
       <Paper sx={{ p: 1 }}>
         <FullCalendar
