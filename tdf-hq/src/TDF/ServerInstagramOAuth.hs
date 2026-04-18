@@ -291,10 +291,16 @@ resolveInstagramRedirectUri cfg mProvided =
 validateInstagramRedirectUri :: Text -> Either ServerError Text
 validateInstagramRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
-    Right (Just uri) -> Right uri
+    Right (Just uri)
+      | instagramOAuthCallbackPath `T.isSuffixOf` uri -> Right uri
+      | otherwise -> invalidRedirect
     _ ->
+      invalidRedirect
+  where
+    instagramOAuthCallbackPath = "/oauth/instagram/callback"
+    invalidRedirect =
       Left err400
-        { errBody = "redirectUri must be an absolute http(s) URL without query or fragment" }
+        { errBody = "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment" }
 
 requestFacebookToken
   :: (MonadError ServerError m, MonadIO m)

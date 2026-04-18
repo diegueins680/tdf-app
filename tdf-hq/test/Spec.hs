@@ -1100,12 +1100,13 @@ main = hspec $ do
                             errHTTPCode serverErr `shouldBe` 400
                             BL.unpack (errBody serverErr)
                                 `shouldContain`
-                                    "redirectUri must be an absolute http(s) URL without query or fragment"
+                                    "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment"
                         Right value ->
                             expectationFailure
                                 ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
             assertInvalid "/oauth/instagram/callback"
             assertInvalid "javascript:alert(1)"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
 
