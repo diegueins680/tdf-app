@@ -196,7 +196,8 @@ instance ToJSON ChatMessageDTO
 data ChatSendMessageRequest = ChatSendMessageRequest
   { csmBody :: Text
   } deriving (Show, Generic)
-instance FromJSON ChatSendMessageRequest
+instance FromJSON ChatSendMessageRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data CampaignDTO = CampaignDTO
   { campId        :: Int64

@@ -268,6 +268,9 @@ decodePasswordResetRequest = eitherDecode
 decodePasswordResetConfirmRequest :: BL8.ByteString -> Either String DTO.PasswordResetConfirmRequest
 decodePasswordResetConfirmRequest = eitherDecode
 
+decodeChatSendMessageRequest :: BL8.ByteString -> Either String DTO.ChatSendMessageRequest
+decodeChatSendMessageRequest = eitherDecode
+
 decodePublicBookingRequest :: BL8.ByteString -> Either String PublicBookingReq
 decodePublicBookingRequest = eitherDecode
 
@@ -884,6 +887,19 @@ spec = describe "TDF.Server helpers" $ do
                 Entity resolvedKey resolvedSlot -> do
                     resolvedKey `shouldBe` expectedSlotId
                     serviceAdSlotStatus resolvedSlot `shouldBe` "open"
+
+    describe "ChatSendMessageRequest" $ do
+        it "accepts canonical chat body payloads" $
+            case decodeChatSendMessageRequest "{\"csmBody\":\"Hola\"}" of
+                Right payload -> DTO.csmBody payload `shouldBe` "Hola"
+                Left err -> expectationFailure ("Expected chat send payload to parse, got: " <> err)
+
+        it "rejects unknown send-message fields before handler validation" $
+            case decodeChatSendMessageRequest "{\"csmBody\":\"Hola\",\"threadId\":12}" of
+                Left err -> err `shouldContain` "unknown field"
+                Right payload ->
+                    expectationFailure
+                        ("Expected unknown chat send field to be rejected, got: " <> show payload)
 
     describe "validateChatMessageListLookup" $ do
         it "accepts a positive thread id plus at most one positive pagination cursor" $ do
