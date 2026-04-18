@@ -67,6 +67,8 @@ export default function LogsPage() {
   const logs = logsQuery.data ?? [];
   const hasLogs = logs.length > 0;
   const showLogsTable = logsQuery.isLoading || hasLogs;
+  const showLimitControl = logsQuery.isLoading || logsQuery.isError || hasLogs;
+  const showRefreshAction = logsQuery.isError || hasLogs;
 
   return (
     <Stack spacing={3}>
@@ -74,23 +76,27 @@ export default function LogsPage() {
         <Typography variant="h5" component="h1">
           Logs del servidor
         </Typography>
-        <Stack direction="row" spacing={1}>
-          <TextField
-            type="number"
-            label="Limite"
-            value={limit}
-            onChange={(e) => setLimit(parseLogLimit(e.target.value))}
-            size="small"
-            sx={{ width: 100 }}
-            inputProps={{ min: 1, max: 1000 }}
-          />
-          <Tooltip title="Refrescar logs">
-            <span>
-              <IconButton aria-label="Refrescar logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+        <Stack direction="row" spacing={1} alignItems="center">
+          {showLimitControl && (
+            <TextField
+              type="number"
+              label="Limite"
+              value={limit}
+              onChange={(e) => setLimit(parseLogLimit(e.target.value))}
+              size="small"
+              sx={{ width: 100 }}
+              inputProps={{ min: 1, max: 1000 }}
+            />
+          )}
+          {showRefreshAction && (
+            <Tooltip title="Refrescar logs">
+              <span>
+                <IconButton aria-label="Refrescar logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
+                  <RefreshIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
           {hasLogs && (
             <Tooltip title="Vaciar logs">
               <span>
@@ -128,7 +134,7 @@ export default function LogsPage() {
 
       {!logsQuery.isLoading && !logsQuery.isError && !hasLogs && (
         <Alert severity="info" variant="outlined" data-testid="server-logs-empty-state">
-          Todavia no hay logs disponibles. Esta vista mostrara eventos del servidor cuando exista el primer registro.
+          Todavia no hay logs disponibles. Esta vista se actualiza automaticamente y mostrara filtros cuando exista el primer registro.
         </Alert>
       )}
 

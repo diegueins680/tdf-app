@@ -121,12 +121,13 @@ describe('LogsPage', () => {
         expect(getLogsMock).toHaveBeenCalledWith(100);
         expect(container.textContent).toContain('Logs del servidor');
         expect(container.textContent).toContain(
-          'Todavia no hay logs disponibles. Esta vista mostrara eventos del servidor cuando exista el primer registro.',
+          'Todavia no hay logs disponibles. Esta vista se actualiza automaticamente y mostrara filtros cuando exista el primer registro.',
         );
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).not.toBeNull();
         expect(container.querySelector('table')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
-        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
+        expect(container.textContent).not.toContain('Limite');
         expect(container.textContent).not.toContain('No logs available');
         expect(container.textContent).not.toContain('Timestamp');
         expect(container.textContent).not.toContain('Level');
@@ -149,6 +150,8 @@ describe('LogsPage', () => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Servidor listo');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
+        expect(container.textContent).toContain('Limite');
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
       });
 
@@ -156,6 +159,26 @@ describe('LogsPage', () => {
 
       await waitForExpectation(() => {
         expect(clearLogsMock).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps refresh available when the log request fails', async () => {
+    getLogsMock.mockRejectedValue(new Error('logs unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Failed to load logs: logs unavailable');
+        expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
+        expect(container.textContent).toContain('Limite');
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
       });
     } finally {
       await cleanup();
