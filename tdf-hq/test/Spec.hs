@@ -136,6 +136,7 @@ import TDF.Server
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateDatafastCheckoutId,
+      validateDatafastCredential,
       validateDatafastBaseUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
@@ -1297,6 +1298,31 @@ main = hspec $ do
             assertInvalid "https://test.oppwa.com/v1"
             assertInvalid "https://test.oppwa.com?proxy=1"
             assertInvalid "http://localhost:8080"
+
+    describe "validateDatafastCredential" $ do
+        it "trims required Datafast credentials before payment requests are built" $ do
+            validateDatafastCredential "DATAFAST_ENTITY_ID" (Just " entity-123 ")
+                `shouldBe` Right "entity-123"
+            validateDatafastCredential "DATAFAST_BEARER_TOKEN" (Just "\tbearer-token\n")
+                `shouldBe` Right "bearer-token"
+
+        it "rejects missing, blank, or control-character Datafast credentials before gateway calls" $ do
+            let assertInvalid envName rawValue expectedMessage =
+                    case validateDatafastCredential envName rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (envName <> " " <> expectedMessage)
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Datafast credential, got " <> show value)
+            assertInvalid "DATAFAST_ENTITY_ID" Nothing "must be configured"
+            assertInvalid "DATAFAST_ENTITY_ID" (Just "   ") "must be configured"
+            assertInvalid
+                "DATAFAST_BEARER_TOKEN"
+                (Just "bearer\nvalue")
+                "must not contain control characters"
 
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do

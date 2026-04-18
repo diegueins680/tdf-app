@@ -9192,9 +9192,9 @@ loadDatafastEnv = do
   mUserData2 <- liftIO $ lookupEnv "DATAFAST_USER_DATA2"
   mVersionDf <- liftIO $ lookupEnv "DATAFAST_VERSIONDF"
   baseUrl <- either throwError pure (validateDatafastBaseUrl mBase)
-  let entityId = fmap (T.strip . T.pack) mEntity
-      bearer   = fmap (T.strip . T.pack) mBearer
-      testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
+  entityId <- either throwError pure (validateDatafastCredential "DATAFAST_ENTITY_ID" mEntity)
+  bearer <- either throwError pure (validateDatafastCredential "DATAFAST_BEARER_TOKEN" mBearer)
+  let testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
         catMaybes
@@ -9204,16 +9204,16 @@ loadDatafastEnv = do
           , optPair "risk.parameters[USER_DATA2]" (T.strip . T.pack <$> mUserData2)
           , optPair "customParameters[SHOPPER_VERSIONDF]" (Just (maybe "2" (T.pack) mVersionDf))
           ]
-  case (entityId, bearer) of
-    (Just eid, Just tok) ->
-      pure DatafastEnv
-        { dfEntityId = eid
-        , dfBearerToken = tok
-        , dfBaseUrl = baseUrl
-        , dfTestMode = testModeVal
-        , dfExtraParams = extras
-        }
-    _ -> throwError err500 { errBody = "Faltan DATAFAST_ENTITY_ID / DATAFAST_BEARER_TOKEN" }
+  pure DatafastEnv
+    { dfEntityId = entityId
+    , dfBearerToken = bearer
+    , dfBaseUrl = baseUrl
+    , dfTestMode = testModeVal
+    , dfExtraParams = extras
+    }
+
+validateDatafastCredential :: Text -> Maybe String -> Either ServerError Text
+validateDatafastCredential = validateRequiredGatewayCredential
 
 validateDatafastBaseUrl :: Maybe String -> Either ServerError String
 validateDatafastBaseUrl mRawBase
@@ -9282,7 +9282,10 @@ loadPaypalEnv = do
   pure (cid, secret, baseUrl)
 
 validatePayPalCredential :: Text -> Maybe String -> Either ServerError Text
-validatePayPalCredential envName mRawCredential =
+validatePayPalCredential = validateRequiredGatewayCredential
+
+validateRequiredGatewayCredential :: Text -> Maybe String -> Either ServerError Text
+validateRequiredGatewayCredential envName mRawCredential =
   case normalizeOptionalInput (T.pack <$> mRawCredential) of
     Nothing ->
       Left err500
