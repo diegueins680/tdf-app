@@ -197,24 +197,24 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('Editar roles');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
-        expect(adaRow.textContent).toContain('ID 101');
+        expect(adaRow.textContent).not.toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
         expect(getContactCellText(adaRow)).toBe('ada@example.com');
         expect(adaRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]')).not.toBeNull();
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
-        expect(graceRow.textContent).toContain('ID 102');
+        expect(graceRow.textContent).not.toContain('ID 102');
         expect(graceRow.textContent).toContain('+593999000222');
         expect(getContactCellText(graceRow)).toBe('+593999000222');
         expect(graceRow.textContent).not.toContain('Sin email ni teléfono');
 
         const linusRow = getRowByName(container, 'Linus QA');
-        expect(linusRow.textContent).toContain('ID 103');
+        expect(linusRow.textContent).not.toContain('ID 103');
         expect(getContactCellText(linusRow)).toBe('linus@example.com · +593999000333');
 
         const missingContactRow = getRowByName(container, 'Sin Contacto');
-        expect(missingContactRow.textContent).toContain('ID 104');
+        expect(missingContactRow.textContent).not.toContain('ID 104');
         expect(getContactCellText(missingContactRow)).toBe('Sin email ni teléfono');
         expect(missingContactRow.textContent).not.toContain('--');
       });
@@ -256,10 +256,54 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('Active');
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
-        expect(adaRow.textContent).toContain('ID 201');
+        expect(adaRow.textContent).not.toContain('ID 201');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
-        expect(graceRow.textContent).toContain('ID 202');
+        expect(graceRow.textContent).not.toContain('ID 202');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows internal ids only when duplicate names need disambiguation', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 211,
+        name: 'Ana Admin',
+        email: 'ana.one@example.com',
+      }),
+      buildUser({
+        id: 212,
+        name: 'Ana Admin',
+        email: 'ana.two@example.com',
+        roles: ['Manager'],
+      }),
+      buildUser({
+        id: 213,
+        name: 'Grace Hopper',
+        email: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const duplicateRows = Array.from(container.querySelectorAll('tbody tr')).filter((row) =>
+          (row.textContent ?? '').includes('Ana Admin'),
+        );
+
+        expect(duplicateRows).toHaveLength(2);
+        expect(duplicateRows[0]?.textContent).toContain('ID 211');
+        expect(duplicateRows[1]?.textContent).toContain('ID 212');
+        expect(getRowByName(container, 'Grace Hopper').textContent).not.toContain('ID 213');
+        expect(container.querySelector('button[aria-label="Editar roles de Ana Admin (ID 211)"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Editar roles de Ana Admin (ID 212)"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper (ID 213)"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -296,7 +340,7 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('Active');
 
         expect(container.textContent).toContain('Grace Hopper');
-        expect(container.textContent).toContain('ID 301');
+        expect(container.textContent).not.toContain('ID 301');
         expect(container.textContent).toContain('grace@example.com');
         expect(container.textContent).toContain('Admin');
         expect(container.textContent).toContain('Manager');

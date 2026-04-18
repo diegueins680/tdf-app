@@ -91,6 +91,29 @@ const getContactSummary = (user: Pick<NormalizedUser, 'email' | 'phone'>) => {
   return contactValues.join(' · ');
 };
 
+const getUserIdentityKey = (user: Pick<NormalizedUser, 'name'>) =>
+  user.name.trim().toLocaleLowerCase('es');
+
+const getUserIdsRequiringIdentityDisambiguator = (users: readonly NormalizedUser[]) => {
+  const identityCounts = new Map<string, number>();
+
+  users.forEach((user) => {
+    const identityKey = getUserIdentityKey(user);
+    identityCounts.set(identityKey, (identityCounts.get(identityKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    users
+      .filter((user) => (identityCounts.get(getUserIdentityKey(user)) ?? 0) > 1)
+      .map((user) => user.id),
+  );
+};
+
+const buildEditRolesLabel = (user: Pick<NormalizedUser, 'id' | 'name'>, showIdentityDisambiguator: boolean) =>
+  showIdentityDisambiguator
+    ? `Editar roles de ${user.name} (ID ${user.id})`
+    : `Editar roles de ${user.name}`;
+
 const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) =>
   Array.from(new Set((roles ?? []).map((role) => role.trim()).filter(Boolean)))
     .sort((left, right) => left.localeCompare(right));
@@ -160,6 +183,7 @@ export default function UserRoleManagement() {
   const singleUser = users.length === 1 ? users[0] : null;
   const singleUserContactSummary = singleUser ? getContactSummary(singleUser) : null;
   const showComparisonTable = users.length > 1;
+  const userIdsRequiringIdentityDisambiguator = getUserIdsRequiringIdentityDisambiguator(users);
   const hasPendingRoleChanges = selectedUser
     ? hasRoleSelectionChanged(selectedUser.roles, selectedRoles)
     : false;
@@ -283,9 +307,11 @@ export default function UserRoleManagement() {
                     <Typography variant="body2" fontWeight={600}>
                       {singleUser.name}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      ID {singleUser.id}
-                    </Typography>
+                    {userIdsRequiringIdentityDisambiguator.has(singleUser.id) && (
+                      <Typography variant="caption" color="text.secondary">
+                        ID {singleUser.id}
+                      </Typography>
+                    )}
                     {singleUserContactSummary && (
                       <Typography variant="body2" color="text.secondary">
                         {singleUserContactSummary}
@@ -302,7 +328,10 @@ export default function UserRoleManagement() {
                       </Typography>
                       <ButtonBase
                         onClick={() => handleEditClick(singleUser)}
-                        aria-label={`Editar roles de ${singleUser.name}`}
+                        aria-label={buildEditRolesLabel(
+                          singleUser,
+                          userIdsRequiringIdentityDisambiguator.has(singleUser.id),
+                        )}
                         sx={{
                           borderRadius: 1,
                           display: 'inline-flex',
@@ -337,6 +366,7 @@ export default function UserRoleManagement() {
                 <TableBody>
                   {users.map((user) => {
                     const contactSummary = getContactSummary(user);
+                    const showIdentityDisambiguator = userIdsRequiringIdentityDisambiguator.has(user.id);
 
                     return (
                       <TableRow key={user.id}>
@@ -345,9 +375,11 @@ export default function UserRoleManagement() {
                             <Typography variant="body2" fontWeight={600}>
                               {user.name}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              ID {user.id}
-                            </Typography>
+                            {showIdentityDisambiguator && (
+                              <Typography variant="caption" color="text.secondary">
+                                ID {user.id}
+                              </Typography>
+                            )}
                           </Stack>
                         </TableCell>
                         {showContactColumn && (
@@ -373,7 +405,7 @@ export default function UserRoleManagement() {
                         <TableCell>
                           <ButtonBase
                             onClick={() => handleEditClick(user)}
-                            aria-label={`Editar roles de ${user.name}`}
+                            aria-label={buildEditRolesLabel(user, showIdentityDisambiguator)}
                             sx={{
                               borderRadius: 1,
                               display: 'inline-flex',
