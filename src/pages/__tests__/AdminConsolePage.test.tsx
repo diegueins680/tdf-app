@@ -265,7 +265,7 @@ describe('AdminConsolePage', () => {
     expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
   });
 
-  it('keeps demo reset as one compact header action once the console already has data', async () => {
+  it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
     renderPage();
@@ -274,9 +274,9 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Restablecer datos demo/i })).toBeInTheDocument();
     });
 
+    expect(screen.queryByRole('button', { name: /Restablecer datos demo/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
     expect(
       screen.queryByText(

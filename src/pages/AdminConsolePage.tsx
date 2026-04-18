@@ -759,8 +759,8 @@ export default function AdminConsolePage() {
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
-  const showHeaderDemoSeedAction = !isAdminPanelBaselining && !showGettingStartedGuidance;
-  const showHeaderRefreshAction = hasAdminPanelError || showHeaderDemoSeedAction;
+  const showHeaderRefreshAction =
+    hasAdminPanelError || (!isAdminPanelBaselining && !showGettingStartedGuidance);
   const showHeaderActions = showHeaderRefreshAction;
   const usersSectionDescription = showGettingStartedGuidance
     ? null
@@ -852,8 +852,6 @@ export default function AdminConsolePage() {
     pendingLabel: 'Cargando ejemplo…',
   } as const;
   const demoSeedActionCopy = {
-    buttonLabel: 'Restablecer datos demo',
-    pendingLabel: 'Restableciendo demo…',
     successMessage: 'Datos de demostración preparados correctamente.',
   } as const;
 
@@ -906,16 +904,6 @@ export default function AdminConsolePage() {
                 disabled={isRefreshingPanel}
               >
                 {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
-              </Button>
-            )}
-            {showHeaderDemoSeedAction && (
-              <Button
-                variant="text"
-                startIcon={<AutoFixHighIcon />}
-                onClick={() => seedMutation.mutate()}
-                disabled={seedMutation.isPending}
-              >
-                {seedMutation.isPending ? demoSeedActionCopy.pendingLabel : demoSeedActionCopy.buttonLabel}
               </Button>
             )}
           </Stack>
