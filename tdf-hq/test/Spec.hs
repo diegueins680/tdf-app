@@ -356,6 +356,27 @@ main = hspec $ do
             assertInvalid "/hq admin"
             assertInvalid "/hq,admin"
 
+        it "rejects malformed session cookie max-age values instead of silently using the default" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_MAX_AGE", Just " 3600 ") ]
+                $ do
+                    cfg <- loadConfig
+                    let expectedHeader =
+                            "tdf_session=session-token; Path=/; HttpOnly; SameSite=Lax; "
+                                <> "Max-Age=3600"
+                    sessionCookieHeader cfg "session-token"
+                        `shouldBe` expectedHeader
+
+            let assertInvalid rawMaxAge =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_MAX_AGE", Just rawMaxAge) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "SESSION_COOKIE_MAX_AGE must be a positive integer number of seconds"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "0"
+            assertInvalid "-1"
+            assertInvalid "thirty-days"
+
         it "normalizes configured backend public base URLs before generating fallback links" $
             withEnvOverrides
                 [ ("HQ_APP_URL", Just " https://hq.example.com/app/ ")

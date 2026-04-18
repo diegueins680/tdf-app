@@ -331,6 +331,7 @@ loadConfig = do
           fromMaybe
             (if cookieSecure then "None" else "Lax")
             sessionCookieSameSiteEnv
+  cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
   pure AppConfig
     { dbHost = h
@@ -385,7 +386,7 @@ loadConfig = do
     , sessionCookiePath = cookiePath
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
-    , sessionCookieMaxAgeSeconds = parsePositiveInt sessionCookieMaxAgeEnv <|> Just (60 * 60 * 24 * 30)
+    , sessionCookieMaxAgeSeconds = cookieMaxAge
     }
   where
     get k def = fmap (fromMaybe def) (lookupEnv k)
@@ -426,10 +427,6 @@ loadConfig = do
       case mVal >>= readMaybe of
         Just n | n > 0 -> n
         _ -> def
-    parsePositiveInt mVal =
-      case mVal >>= readMaybe of
-        Just n | n > 0 -> Just n
-        _ -> Nothing
     mkSeedToken mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> Nothing
@@ -464,6 +461,20 @@ validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
   when (T.toLower cookieSameSite == "none" && not cookieSecure) $
     fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+
+validateSessionCookieMaxAge :: Maybe String -> IO (Maybe Int)
+validateSessionCookieMaxAge Nothing = pure (Just defaultSessionCookieMaxAgeSeconds)
+validateSessionCookieMaxAge (Just rawMaxAge)
+  | T.null trimmed = pure (Just defaultSessionCookieMaxAgeSeconds)
+  | otherwise =
+      case readMaybe (T.unpack trimmed) of
+        Just maxAge | maxAge > 0 -> pure (Just maxAge)
+        _ -> fail "SESSION_COOKIE_MAX_AGE must be a positive integer number of seconds"
+  where
+    trimmed = T.strip (T.pack rawMaxAge)
+
+defaultSessionCookieMaxAgeSeconds :: Int
+defaultSessionCookieMaxAgeSeconds = 60 * 60 * 24 * 30
 
 validateSessionCookieDomain :: Maybe String -> IO (Maybe Text)
 validateSessionCookieDomain rawDomain =
