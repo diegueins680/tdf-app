@@ -2,7 +2,7 @@
 module TDF.Config where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad      (filterM, when)
+import           Control.Monad      ((>=>), filterM, when)
 import           Data.Char          (isControl, isDigit, isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
 import           Data.Maybe         (catMaybes, fromMaybe, isNothing, listToMaybe)
@@ -330,6 +330,7 @@ loadConfig = do
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
+  emailCfg <- mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
   let normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
@@ -372,7 +373,7 @@ loadConfig = do
     , ragAvailabilityPerResource = parseInt 6 ragAvailabilityPerResourceEnv
     , ragRefreshHours = parseInt 24 ragRefreshHoursEnv
     , ragEmbedBatchSize = parseInt 64 ragEmbedBatchSizeEnv
-    , emailConfig = mkEmailConfig smtpHostEnv smtpUserEnv smtpPassEnv smtpFromEnv smtpFromNameEnv smtpPortEnv smtpTlsEnv
+    , emailConfig = emailCfg
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
     , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
@@ -447,22 +448,89 @@ loadConfig = do
         Just txt | T.null txt -> Nothing
                  | otherwise -> Just txt
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
-      host <- fmap (T.strip . T.pack) mHost
-      user <- fmap (T.strip . T.pack) mUser
-      pass <- fmap (T.strip . T.pack) mPass
-      addr <- fmap (T.strip . T.pack) mFrom
-      let name = maybe "TDF Records" (T.strip . T.pack) mFromName
-          portVal = parseInt 587 mPort
-          useTls = maybe True asBool mTls
-      pure EmailConfig
-        { emailFromName = if T.null name then "TDF Records" else name
-        , emailFromAddress = addr
-        , smtpHost = host
-        , smtpPort = portVal
-        , smtpUsername = user
-        , smtpPassword = pass
-        , smtpUseTLS = useTls
-        }
+      let host = normalizeRequiredSmtpValue mHost
+          user = normalizeRequiredSmtpValue mUser
+          pass = normalizeRequiredSmtpValue mPass
+          fromAddr = normalizeRequiredSmtpValue mFrom
+          required :: [(String, Maybe Text)]
+          required =
+            [ ("SMTP_HOST", host)
+            , ("SMTP_USERNAME/SMTP_USER", user)
+            , ("SMTP_PASSWORD/SMTP_PASS", pass)
+            , ("SMTP_FROM", fromAddr)
+            ]
+          anyConfigured = any (maybe False (const True) . snd) required
+          missing = [label | (label, Nothing) <- required]
+      if not anyConfigured
+        then pure Nothing
+        else case (missing, host, user, pass, fromAddr) of
+          ([], Just hostVal, Just userVal, Just passVal, Just rawFromAddr) -> do
+            when (T.any (\ch -> isControl ch || isSpace ch) hostVal) $
+              fail "SMTP_HOST must not contain whitespace or control characters"
+            normalizedFrom <- case normalizeConfiguredEmailAddress rawFromAddr of
+              Just email -> pure email
+              Nothing -> fail "SMTP_FROM must be a valid email address"
+            let name = maybe "TDF Records" (T.strip . T.pack) mFromName
+                portVal = parseInt 587 mPort
+                useTls = maybe True asBool mTls
+            pure $
+              Just EmailConfig
+                { emailFromName = if T.null name then "TDF Records" else name
+                , emailFromAddress = normalizedFrom
+                , smtpHost = hostVal
+                , smtpPort = portVal
+                , smtpUsername = userVal
+                , smtpPassword = passVal
+                , smtpUseTLS = useTls
+                }
+          _ ->
+            fail $
+              "SMTP configuration requires non-empty SMTP_HOST, SMTP_USERNAME/SMTP_USER, "
+                <> "SMTP_PASSWORD/SMTP_PASS, and SMTP_FROM"
+
+    normalizeRequiredSmtpValue =
+      fmap (T.strip . T.pack) >=> nonEmpty
+
+    normalizeConfiguredEmailAddress rawEmail =
+      let normalized = T.toLower (T.strip rawEmail)
+      in if isValidConfiguredEmailAddress normalized then Just normalized else Nothing
+
+    isValidConfiguredEmailAddress email =
+      case T.splitOn "@" email of
+        [localPart, domainPart] ->
+          validEmailPart localPart
+            && validDomain domainPart
+            && not (".." `T.isInfixOf` localPart)
+            && not (".." `T.isInfixOf` domainPart)
+            && not (T.isPrefixOf "." localPart)
+            && not (T.isSuffixOf "." localPart)
+        _ -> False
+
+    validEmailPart part =
+      not (T.null part)
+        && T.all
+          (\ch ->
+            (ch >= 'a' && ch <= 'z')
+              || (ch >= '0' && ch <= '9')
+              || ch `elem` (".!#$%&'*+/=?^_`{|}~-" :: String)
+          )
+          part
+
+    validDomain domain =
+      let labels = T.splitOn "." domain
+      in length labels >= 2 && all validDomainLabel labels
+
+    validDomainLabel label =
+      not (T.null label)
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all
+          (\ch ->
+            (ch >= 'a' && ch <= 'z')
+              || (ch >= '0' && ch <= '9')
+              || ch == '-'
+          )
+          label
 
 normalizeSameSiteValue :: String -> Text
 normalizeSameSiteValue raw =

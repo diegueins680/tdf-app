@@ -280,6 +280,47 @@ main = hspec $ do
                     appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
 
+        it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
+            withEnvOverrides
+                [ ("SMTP_HOST", Just "   ")
+                , ("SMTP_USERNAME", Nothing)
+                , ("SMTP_USER", Just " ")
+                , ("SMTP_PASSWORD", Nothing)
+                , ("SMTP_PASS", Just "\t")
+                , ("SMTP_FROM", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    case emailConfig cfg of
+                        Nothing -> pure ()
+                        Just value ->
+                            expectationFailure
+                                ("Expected blank SMTP settings to stay unconfigured, got " <> show value)
+
+            withEnvOverrides
+                [ ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Nothing)
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASSWORD", Nothing)
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP configuration requires non-empty SMTP_HOST"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Nothing)
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASSWORD", Nothing)
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf @example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_FROM must be a valid email address"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects SameSite=None unless session cookies are secure" $ do
             withEnvOverrides
                 [ ("SESSION_COOKIE_SAMESITE", Just "None")
