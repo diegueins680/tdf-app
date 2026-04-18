@@ -187,6 +187,7 @@ const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
 const localSearchLabel = 'Buscar inscripciones';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
@@ -2024,14 +2025,15 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(1);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel)).toBeTruthy();
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).getAttribute('aria-pressed')).toBe('true');
       expect(container.textContent).toContain(activeStatusFilterHelperText);
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
@@ -2040,7 +2042,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado'));
+      clickButton(getButtonByAriaLabel(container, clearPaidStatusFilterLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -2104,11 +2106,12 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).getAttribute('aria-pressed')).toBe('true');
       expect(container.textContent).toContain(activeStatusFilterHelperText);
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
@@ -2156,8 +2159,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (2)');
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').getAttribute('aria-pressed')).toBe('true');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).textContent?.trim()).toBe('Pagado (2)');
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).getAttribute('aria-pressed')).toBe('true');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);

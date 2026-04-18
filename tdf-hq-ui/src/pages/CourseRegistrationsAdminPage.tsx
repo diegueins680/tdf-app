@@ -306,6 +306,13 @@ const statusFilterChipLabel = (
   return `${label} (${counts[status]})`;
 };
 
+const statusFilterChipAriaLabel = (status: StatusFilter, isActive: boolean) => {
+  const statusLabel = statusFilterLabels[status];
+  return isActive
+    ? `Quitar filtro de estado ${statusLabel}`
+    : `Filtrar inscripciones por estado ${statusLabel}`;
+};
+
 const statusChip = (status: string) => {
   return (
     <Chip
@@ -2681,7 +2688,7 @@ export default function CourseRegistrationsAdminPage() {
                               color={registrationStatusChipColor(value)}
                               label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
                               variant={status === value ? 'filled' : 'outlined'}
-                              aria-label={`Filtrar inscripciones por estado ${statusFilterLabels[value]}`}
+                              aria-label={statusFilterChipAriaLabel(value, status === value)}
                               aria-pressed={status === value}
                               onClick={() => {
                                 setHasUsedFilterControl(true);
