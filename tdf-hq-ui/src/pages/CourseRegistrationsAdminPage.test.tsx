@@ -4858,6 +4858,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(hasLabel(container, 'Buscar registros cargados')).toBe(false);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, email, teléfono o estado',
+      );
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
         dossierOnlyScopeHint,
@@ -4948,7 +4951,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, nota, estado, fuente o curso');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, estado, fuente o curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -5058,7 +5061,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toContain('nota');
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, email, teléfono o nota',
+      );
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 

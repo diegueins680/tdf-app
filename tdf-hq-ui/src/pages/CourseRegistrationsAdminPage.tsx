@@ -238,6 +238,12 @@ const formatLocalSearchResultSummary = (visibleCount: number, loadedCount: numbe
 const buildReachedListLimitSummary = (limit: number) =>
   `Se cargó el límite de ${limit} inscripciones; usa Ajustar límite si necesitas revisar más registros.`;
 
+const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
+  if (terms.length <= 1) return terms[0] ?? '';
+  if (terms.length === 2) return `${terms[0]} o ${terms[1]}`;
+  return `${terms.slice(0, -1).join(', ')} o ${terms[terms.length - 1]}`;
+};
+
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
   const formatted = formatDate(iso);
@@ -528,6 +534,34 @@ const registrationListContextSummary = ({
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
+};
+
+const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
+  const terms = ['Nombre', 'email', 'teléfono'];
+  const statusKeys = new Set<string>();
+  const sourceKeys = new Set<string>();
+  const cohortKeys = new Set<string>();
+  let hasNotes = false;
+
+  registrations.forEach((reg) => {
+    const statusKey = reg.crStatus.trim().toLocaleLowerCase('es');
+    if (statusKey) statusKeys.add(statusKey);
+
+    const sourceLabel = registrationSourceLabel(reg.crSource);
+    sourceKeys.add(normalizeRegistrationSourceKey(sourceLabel));
+
+    const cohortKey = reg.crCourseSlug.trim().toLocaleLowerCase('es');
+    if (cohortKey) cohortKeys.add(cohortKey);
+
+    if (reg.crAdminNotes?.trim()) hasNotes = true;
+  });
+
+  if (hasNotes) terms.push('nota');
+  if (statusKeys.size > 1) terms.push('estado');
+  if (sourceKeys.size > 1) terms.push('fuente');
+  if (cohortKeys.size > 1) terms.push('curso');
+
+  return formatLocalSearchPlaceholder(terms);
 };
 
 const registrationDossierContextSummary = ({
@@ -965,6 +999,10 @@ export default function CourseRegistrationsAdminPage() {
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
+  const localSearchPlaceholder = useMemo(
+    () => buildLocalSearchPlaceholder(registrations),
+    [registrations],
+  );
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
@@ -2769,7 +2807,7 @@ export default function CourseRegistrationsAdminPage() {
                   setHasUsedFilterControl(true);
                   setLocalSearch(e.target.value);
                 }}
-                placeholder="Nombre, email, teléfono, nota, estado, fuente o curso"
+                placeholder={localSearchPlaceholder}
                 helperText={localSearchHelperText}
                 size="small"
                 fullWidth
