@@ -3448,6 +3448,17 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected blank setlist title to be rejected, got: " <> show payload)
 
+        it "rejects non-positive setlist bpm values instead of persisting impossible tempo metadata" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":0}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "setlist song bpm must be a positive integer"
+                Right payload ->
+                    expectationFailure ("Expected non-positive setlist bpm to be rejected, got: " <> show payload)
+
         it "rejects negative or duplicate resolved setlist sortOrder values instead of accepting ambiguous ordering" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

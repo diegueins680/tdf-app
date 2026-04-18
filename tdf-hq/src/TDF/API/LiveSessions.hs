@@ -252,7 +252,11 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
                 }
         in if T.null normalizedTitle
              then Left "each setlist song must include a non-blank title"
-             else Right normalizedSong
+             else
+               case lssBpm song of
+                 Just bpm | bpm <= 0 ->
+                   Left "setlist song bpm must be a positive integer"
+                 _ -> Right normalizedSong
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =
