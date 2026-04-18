@@ -183,7 +183,10 @@ sanitizeFeedbackAttachmentFileName rawName =
       cleaned = T.map normalizeAttachmentChar baseName
       stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
   in
-    if T.null stripped || stripped == "." || stripped == ".."
+    if T.null stripped
+        || stripped == "."
+        || stripped == ".."
+        || not (T.any isAlphaNum stripped)
       then "attachment"
       else stripped
   where

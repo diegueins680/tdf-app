@@ -1278,6 +1278,8 @@ main = hspec $ do
             sanitizeFeedbackAttachmentFileName "   " `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName "." `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName ".." `shouldBe` "attachment"
+            sanitizeFeedbackAttachmentFileName "..." `shouldBe` "attachment"
+            sanitizeFeedbackAttachmentFileName "__--__" `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName "/\\///" `shouldBe` "attachment"
 
     describe "validateFeedbackAttachmentSize" $ do
