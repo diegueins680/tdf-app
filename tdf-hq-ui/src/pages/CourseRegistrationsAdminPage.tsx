@@ -1875,6 +1875,7 @@ export default function CourseRegistrationsAdminPage() {
     || showSystemEmailHistoryAction;
   const showDossierRefreshAction = Boolean(selectedDossier)
     && !dossierQuery.isLoading
+    && !isMarkPaidIntent
     && hasDossierRefreshContext;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
     ? 'Refrescar expediente y correos'

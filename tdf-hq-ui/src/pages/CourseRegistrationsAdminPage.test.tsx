@@ -3625,7 +3625,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
       expect(document.body.textContent).not.toContain('Recordatorio de pago enviado.');
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
-      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(listRegistrationEmailsMock).not.toHaveBeenCalled();
     });
 
