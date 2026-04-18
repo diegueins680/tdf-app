@@ -738,8 +738,14 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
+        'La única versión guardada ya está resumida arriba; el historial aparecerá cuando guardes otra versión.',
+      );
+      expect(container.textContent).not.toContain(
         'Los filtros aparecerán cuando exista más historial para comparar versiones.',
       );
+      expect(countExactText(container, 'v4')).toBe(1);
+      expect(countExactText(container, 'En vivo')).toBe(0);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(0);
       expect(container.textContent).not.toContain('1/1');
       expect(container.textContent).not.toContain('1 versión');
       expect(countLabelsByText(container, 'Estado')).toBe(1);

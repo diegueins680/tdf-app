@@ -486,6 +486,14 @@ export default function CmsAdminPage() {
       ),
     [versions],
   );
+  const hasActiveVersionFilters = statusFilter.trim().toLowerCase() !== 'all' || minVersionFilter != null;
+  const showSingleLiveVersionSummary =
+    !hasActiveVersionFilters &&
+    versions.length === 1 &&
+    filteredVersions.length === 1 &&
+    liveContent?.ccdId === versions[0]?.ccdId;
+  const visibleVersionRows = showSingleLiveVersionSummary ? [] : filteredVersions;
+  const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
   const showHistoryStatusFilter = historyStatuses.length > 1 || statusFilter !== 'all';
   const versionCountLabel = useMemo(() => {
     const totalVersions = versions.length;
@@ -931,9 +939,9 @@ export default function CmsAdminPage() {
                   Contexto compartido: {sharedVersionContextSummary}.
                 </Typography>
               )}
-              {versionListUiState.toolbarHint && (
+              {versionToolbarHint && (
                 <Typography variant="body2" color="text.secondary">
-                  {versionListUiState.toolbarHint}
+                  {versionToolbarHint}
                 </Typography>
               )}
             </Stack>
@@ -993,7 +1001,7 @@ export default function CmsAdminPage() {
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {filteredVersions.map((v) => {
+            {visibleVersionRows.map((v) => {
               const rowActions = getCmsVersionRowActions(v.ccdStatus, {
                 isCurrentLive: liveContent?.ccdId === v.ccdId,
                 isLoadedInEditor: editingFromId === v.ccdId,
@@ -1068,6 +1076,11 @@ export default function CmsAdminPage() {
                 </Paper>
               );
             })}
+            {showSingleLiveVersionSummary && !listQuery.isLoading && (
+              <Typography color="text.secondary">
+                La única versión guardada ya está resumida arriba; el historial aparecerá cuando guardes otra versión.
+              </Typography>
+            )}
             {versionListUiState.emptyMessage && !listQuery.isLoading && (
               versionListUiState.showEmptyReset ? (
                 <Alert
