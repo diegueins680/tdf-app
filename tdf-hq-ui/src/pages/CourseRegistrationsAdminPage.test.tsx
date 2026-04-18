@@ -4894,7 +4894,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes shared cohort and source once after local search narrows a mixed list', async () => {
+  it('summarizes shared status, cohort, and source once after local search narrows a mixed list', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -4957,8 +4957,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Garcia');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).toContain(
-        'Mostrando una sola cohorte: Mixing Bootcamp (mixing-bootcamp). Fuente visible: referral.',
+        'Estado visible: Pagado. Mostrando una sola cohorte: Mixing Bootcamp (mixing-bootcamp). Fuente visible: referral.',
       );
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Simone').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Garcia').textContent?.trim()).toBe('Cambiar estado');
+      expect(countButtonsByText(container, 'Pagado')).toBe(0);
       expect(container.textContent).not.toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
       expect(container.textContent).not.toContain('Fuente: referral');
     });

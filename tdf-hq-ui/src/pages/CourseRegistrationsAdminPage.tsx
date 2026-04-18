@@ -942,6 +942,21 @@ export default function CourseRegistrationsAdminPage() {
     && singleVisibleSourceLabel !== 'Sin fuente'
     && !isDefaultPublicFormSource(singleVisibleSourceLabel),
   );
+  const singleSearchedStatusLabel = useMemo(() => {
+    if (searchedRegistrations.length < 2) return '';
+    const statusLabelsByKey = new Map<string, string>();
+
+    searchedRegistrations.forEach((reg) => {
+      const trimmedStatus = reg.crStatus.trim();
+      const statusKey = trimmedStatus.toLocaleLowerCase('es');
+      if (!statusLabelsByKey.has(statusKey)) {
+        statusLabelsByKey.set(statusKey, trimmedStatus);
+      }
+    });
+
+    const [onlyStatus] = Array.from(statusLabelsByKey.values());
+    return statusLabelsByKey.size === 1 && onlyStatus ? registrationStatusLabel(onlyStatus) : '';
+  }, [searchedRegistrations]);
   const sharedVisibleSourceSummary = hasNamedVisibleSource
     ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
     : '';
@@ -1008,6 +1023,15 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
+  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
+  const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
+  const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
+    && !showSingleStatusSummary
+    && !statusAlreadyVisibleInFilterStrip
+    && !showSingleCustomStatusSummary;
+  const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
+    ? `Estado visible: ${singleSearchedStatusLabel}.`
+    : '';
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (registrations.length < 2) return '';
     const createdLabels = registrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
@@ -1022,6 +1046,7 @@ export default function CourseRegistrationsAdminPage() {
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';
   const sharedListContextSummaries = [
+    sharedVisibleStatusSummary,
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
     sharedVisibleNotesSummary,
@@ -1029,8 +1054,6 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
     : '';
-  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
-  const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
   const showUtilityCountSummary = !hasLocalSearch
@@ -1050,7 +1073,8 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummary && !showSingleResultWithOnlyPassiveFilterContext;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInFilterStrip
-    || showSingleCustomStatusSummary;
+    || showSingleCustomStatusSummary
+    || shouldShowSharedStatusSummary;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
@@ -2647,13 +2671,26 @@ export default function CourseRegistrationsAdminPage() {
               </Typography>
             ) : (
               <>
-                {shouldShowSharedCohortSummary && (
+                {shouldShowSharedStatusSummary && (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+                    {sharedVisibleStatusSummary}
+                  </Typography>
+                )}
+                {shouldShowSharedCohortSummary && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: shouldShowSharedStatusSummary ? 0.75 : 1.5 }}
+                  >
                     Mostrando una sola cohorte: {singleVisibleCohortLabel}.
                   </Typography>
                 )}
                 {shouldShowSharedSourceSummary && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: shouldShowSharedCohortSummary ? 0.75 : 1.5 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: shouldShowSharedStatusSummary || shouldShowSharedCohortSummary ? 0.75 : 1.5 }}
+                  >
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
@@ -2661,7 +2698,11 @@ export default function CourseRegistrationsAdminPage() {
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mt: shouldShowSharedCohortSummary || shouldShowSharedSourceSummary ? 0.75 : 1.5 }}
+                    sx={{
+                      mt: shouldShowSharedStatusSummary || shouldShowSharedCohortSummary || shouldShowSharedSourceSummary
+                        ? 0.75
+                        : 1.5,
+                    }}
                   >
                     {sharedVisibleNotesSummary}
                   </Typography>
