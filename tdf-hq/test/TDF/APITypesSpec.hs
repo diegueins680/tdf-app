@@ -17,7 +17,9 @@ import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import qualified TDF.DTO as DTO
 import TDF.API.Types
-    ( ClockInRequest (..)
+    ( BandCreate (..)
+    , BandMemberInput (..)
+    , ClockInRequest (..)
     , ClockOutRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
@@ -697,6 +699,38 @@ spec = do
                 "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\",\"status\":\"closed\"}"
                 `shouldSatisfy` isLeft
 
+    describe "BandCreate FromJSON" $ do
+        it "accepts canonical CRM band creation payloads" $
+            case decodeBandCreate (BL8.concat
+                [ "{\"bcName\":\"TDF House Band\""
+                , ",\"bcLabelArtist\":true"
+                , ",\"bcPrimaryGenre\":\"jazz\""
+                , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\"}]}"
+                ])
+             of
+                Left err ->
+                    expectationFailure ("Expected band create payload to decode, got: " <> err)
+                Right payload -> do
+                    bcName payload `shouldBe` "TDF House Band"
+                    bcLabelArtist payload `shouldBe` Just True
+                    bcPrimaryGenre payload `shouldBe` Just "jazz"
+                    case bcMembers payload of
+                        [BandMemberInput memberPartyIdVal roleVal] -> do
+                            memberPartyIdVal `shouldBe` 42
+                            roleVal `shouldBe` Just "keys"
+                        members ->
+                            expectationFailure ("Expected one band member, got: " <> show members)
+
+        it "rejects unexpected top-level or member keys instead of silently ignoring CRM typos" $ do
+            decodeBandCreate
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"members\":[]}"
+                `shouldSatisfy` isLeft
+            decodeBandCreate (BL8.concat
+                [ "{\"bcName\":\"TDF House Band\""
+                , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
+                ])
+                `shouldSatisfy` isLeft
+
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads" $
             case decodeMarketplaceCheckout
@@ -958,6 +992,8 @@ spec = do
     decodeServiceAdSlotCreate = eitherDecode
     decodeServiceMarketplaceBooking :: BL8.ByteString -> Either String API.ServiceMarketplaceBookingReq
     decodeServiceMarketplaceBooking = eitherDecode
+    decodeBandCreate :: BL8.ByteString -> Either String BandCreate
+    decodeBandCreate = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
     decodeMarketplaceCheckout = eitherDecode
     decodeMarketplaceCartItemUpdate :: BL8.ByteString -> Either String MarketplaceCartItemUpdate

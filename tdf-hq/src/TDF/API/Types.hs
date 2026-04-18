@@ -964,10 +964,19 @@ instance ToJSON BandMemberInput where
     ]
 
 instance FromJSON BandMemberInput where
-  parseJSON = withObject "BandMemberInput" $ \o ->
-    BandMemberInput
-      <$> o .:  "bmPartyId"
-      <*> o .:? "bmRole"
+  parseJSON = withObject "BandMemberInput" $ \o -> do
+    let allowedKeys =
+          [ "bmPartyId"
+          , "bmRole"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in BandMemberInput: " <> T.unpack key)
+      [] ->
+        BandMemberInput
+          <$> o .:  "bmPartyId"
+          <*> o .:? "bmRole"
 
 -- Minimal Payment DTO for UI/backend bridging
 data SimplePaymentDTO = SimplePaymentDTO
@@ -997,7 +1006,8 @@ data BandCreate = BandCreate
   } deriving (Show, Generic)
 
 instance ToJSON BandCreate
-instance FromJSON BandCreate
+instance FromJSON BandCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data RadioStreamDTO = RadioStreamDTO
   { rsId            :: Int64
