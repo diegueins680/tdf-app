@@ -94,6 +94,11 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'proximamente encontraras la funcionalidad completa aqui',
   'si necesitas priorizar esta seccion',
   'comparte los requisitos con el equipo de producto',
+  'working on this view',
+  'full functionality will be available here soon',
+  'coming soon',
+  'if you need to prioritize this section',
+  'share the requirements with the product team',
 ] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
