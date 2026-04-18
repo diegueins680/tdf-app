@@ -2365,9 +2365,9 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(container.textContent).not.toContain('Limpiar');
+        expect(container.textContent).toContain('Limpiar búsqueda');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
-        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).not.toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
@@ -2378,7 +2378,7 @@ describe('AdminUsersPage', () => {
         expect(searchInput.value).toBe('');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
-        expect(container.querySelector('[data-testid="admin-users-empty-search-reset"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
         expect(getRowByUserId(container, 103).textContent).toContain('linus-view');

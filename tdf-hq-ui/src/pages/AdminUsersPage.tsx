@@ -445,7 +445,7 @@ export default function AdminUsersPage() {
   const showInactiveFilterAction = hasMultipleUsers || includeInactive;
   const showRefreshAction = Boolean(usersQuery.error)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
   const activeVisibleUsers = useMemo(
@@ -691,6 +691,14 @@ export default function AdminUsersPage() {
                 <Typography color="text.secondary">
                   {searchEmptyStateMessage}
                 </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={handleClearSearch}
+                  data-testid="admin-users-empty-search-clear"
+                >
+                  Limpiar búsqueda
+                </Button>
               </Stack>
             ) : null}
             {visibleUsers.length ? (
