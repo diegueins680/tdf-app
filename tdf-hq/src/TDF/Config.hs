@@ -320,6 +320,7 @@ loadConfig = do
       "https://graph.facebook.com/v20.0"
       igMsgBaseEnv
   cookieName <- validateSessionCookieName sessionCookieNameEnv
+  cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
   let normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
@@ -380,7 +381,7 @@ loadConfig = do
     , instagramMessagingApiBase = igMsgBase
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
     , sessionCookieName = cookieName
-    , sessionCookieDomain = fmap (T.strip . T.pack) sessionCookieDomainEnv >>= nonEmpty
+    , sessionCookieDomain = cookieDomain
     , sessionCookiePath = cookiePath
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
@@ -463,6 +464,50 @@ validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
   when (T.toLower cookieSameSite == "none" && not cookieSecure) $
     fail "SESSION_COOKIE_SAMESITE=None requires secure session cookies"
+
+validateSessionCookieDomain :: Maybe String -> IO (Maybe Text)
+validateSessionCookieDomain rawDomain =
+  case normalizeSessionCookieDomain rawDomain of
+    Left msg -> fail msg
+    Right domainVal -> pure domainVal
+
+normalizeSessionCookieDomain :: Maybe String -> Either String (Maybe Text)
+normalizeSessionCookieDomain Nothing = Right Nothing
+normalizeSessionCookieDomain (Just rawDomain)
+  | T.null trimmed = Right Nothing
+  | "http://" `T.isPrefixOf` lowered || "https://" `T.isPrefixOf` lowered =
+      invalid
+  | T.any invalidDomainChar trimmed =
+      invalid
+  | T.null canonical =
+      invalid
+  | T.isPrefixOf "." canonical || T.isSuffixOf "." canonical =
+      invalid
+  | any (not . isValidDomainLabel) (T.splitOn "." canonical) =
+      invalid
+  | otherwise =
+      Right (Just canonical)
+  where
+    trimmed = T.strip (T.pack rawDomain)
+    lowered = T.toLower trimmed
+    canonical =
+      case T.stripPrefix "." lowered of
+        Just rest -> rest
+        Nothing -> lowered
+    invalid =
+      Left
+        "SESSION_COOKIE_DOMAIN must be a cookie domain without scheme, port, path, whitespace, separators, or control characters"
+    invalidDomainChar ch =
+      isControl ch
+        || isSpace ch
+        || ch `elem` (";,:/\\@[]()" :: String)
+    isValidDomainLabel label =
+      not (T.null label)
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all isDomainChar label
+    isDomainChar ch =
+      (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
 
 validateSessionCookieName :: Maybe String -> IO Text
 validateSessionCookieName rawName =

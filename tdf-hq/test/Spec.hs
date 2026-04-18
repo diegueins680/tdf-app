@@ -178,7 +178,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventMetadataUpdate,
     validateBudgetLineTypeInput,
  )
-import TDF.Auth (extractToken, extractTokenFromHeaders)
+import TDF.Auth (extractToken, extractTokenFromHeaders, sessionCookieHeader)
 import TDF.Config
     ( appPort,
       chatKitApiBase,
@@ -194,6 +194,7 @@ import TDF.Config
       loadConfig,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
+      sessionCookieDomain,
       sessionCookieName,
       sessionCookiePath,
       sessionCookieSameSite,
@@ -290,6 +291,22 @@ main = hspec $ do
                     cfg <- loadConfig
                     sessionCookiePath cfg `shouldBe` "/hq"
 
+        it "normalizes configured session cookie domains before emitting Set-Cookie headers" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Nothing)
+                , ("SESSION_COOKIE_NAME", Nothing)
+                , ("SESSION_COOKIE_DOMAIN", Just " .Example.COM ")
+                , ("SESSION_COOKIE_PATH", Nothing)
+                , ("SESSION_COOKIE_SECURE", Nothing)
+                , ("SESSION_COOKIE_SAMESITE", Nothing)
+                , ("SESSION_COOKIE_MAX_AGE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sessionCookieDomain cfg `shouldBe` Just "example.com"
+                    sessionCookieHeader cfg "session-token"
+                        `shouldBe` "tdf_session=session-token; Path=/; HttpOnly; SameSite=Lax; Domain=example.com; Max-Age=2592000"
+
         it "rejects malformed session cookie names before emitting ambiguous Set-Cookie headers" $ do
             withEnvOverrides
                 [ ("SESSION_COOKIE_NAME", Just " tdf_session_admin ") ]
@@ -307,6 +324,22 @@ main = hspec $ do
             assertInvalid "tdf_session; Secure"
             assertInvalid "tdf/session"
             assertInvalid "tdf_session,alt"
+
+        it "rejects malformed session cookie domains before emitting ambiguous Set-Cookie headers" $ do
+            let assertInvalid rawDomain =
+                    withEnvOverrides
+                        [ ("SESSION_COOKIE_NAME", Nothing)
+                        , ("SESSION_COOKIE_DOMAIN", Just rawDomain)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "SESSION_COOKIE_DOMAIN must be a cookie domain"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "https://example.com"
+            assertInvalid "example.com:443"
+            assertInvalid "example.com; Secure"
+            assertInvalid "bad_domain.example.com"
+            assertInvalid "bad..example.com"
+            assertInvalid "-bad.example.com"
 
         it "rejects malformed session cookie paths before emitting ambiguous Set-Cookie headers" $ do
             let assertInvalid rawPath =
