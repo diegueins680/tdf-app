@@ -1298,6 +1298,13 @@ export default function SocialInboxPage() {
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
   const showManualRefresh = !reviewMode && !showUnifiedEmptyState;
   const showHeaderControls = showLimitControl || showManualRefresh;
+  const activeFilterLabel = getFilterLabel(filter, reviewMode);
+  const showStatusFilterEmptyState =
+    allChannelsLoaded
+    && !hasChannelLoadErrors
+    && filter !== 'all'
+    && filterCounts.all > 0
+    && filterCounts[filter] === 0;
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1535,28 +1542,38 @@ export default function SocialInboxPage() {
               )}
             </Stack>
           </Paper>
-          {hiddenEmptyChannelLabels.length > 0 && (
+          {showStatusFilterEmptyState ? (
+            <Alert severity="info" variant="outlined">
+              <Typography variant="body2">
+                {reviewMode
+                  ? `No messages match ${activeFilterLabel} in this view. Use All or a status with a count to see existing inbound messages.`
+                  : `No hay mensajes con estado ${activeFilterLabel} en esta vista. Cambia a Todos o a un estado con contador para ver los mensajes entrantes existentes.`}
+              </Typography>
+            </Alert>
+          ) : hiddenEmptyChannelLabels.length > 0 && (
             <Typography variant="body2" color="text.secondary">
               {reviewMode
                 ? `Showing only channels with messages in this view. No messages right now: ${hiddenEmptyChannelLabels.join(', ')}.`
                 : `Mostrando solo canales con mensajes en esta vista. Sin mensajes ahora: ${hiddenEmptyChannelLabels.join(', ')}.`}
             </Typography>
           )}
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
-            {visibleChannelPanels.map((panel) => (
-              <ChannelPanel
-                key={panel.channel}
-                label={panel.label}
-                channel={panel.channel}
-                stats={panel.stats}
-                messages={panel.messages}
-                loading={panel.loading}
-                reviewMode={reviewMode}
-                showStatusChips={showChannelStatusChips}
-                onSelect={(next) => setSelection(next)}
-              />
-            ))}
-          </Stack>
+          {!showStatusFilterEmptyState && (
+            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
+              {visibleChannelPanels.map((panel) => (
+                <ChannelPanel
+                  key={panel.channel}
+                  label={panel.label}
+                  channel={panel.channel}
+                  stats={panel.stats}
+                  messages={panel.messages}
+                  loading={panel.loading}
+                  reviewMode={reviewMode}
+                  showStatusChips={showChannelStatusChips}
+                  onSelect={(next) => setSelection(next)}
+                />
+              ))}
+            </Stack>
+          )}
         </>
       )}
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (

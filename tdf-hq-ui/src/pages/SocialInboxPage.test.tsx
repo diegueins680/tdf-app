@@ -182,8 +182,9 @@ const getTextControlByLabel = (root: ParentNode, labelText: string) => {
 };
 
 const setTextControlValue = (control: HTMLInputElement | HTMLTextAreaElement, value: string) => {
-  const valueSetter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(control), 'value')?.set;
-  valueSetter?.call(control, value);
+  const prototype = control instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set?.bind(control);
+  valueSetter?.(value);
   control.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
@@ -641,7 +642,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('keeps inbox filters visible when the default filter would hide the only available status', async () => {
+  it('replaces empty channel tables with one empty-filter notice when the default filter has no messages', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage({
         repliedAt: '2030-01-03T03:04:05.000Z',
@@ -659,7 +660,12 @@ describe('SocialInboxPage', () => {
       expect(queryFilterChip(container, 'Replied')).not.toBeNull();
       expect(queryFilterChip(container, 'Failed')).toBeNull();
       expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
-      expect(container.textContent).toContain('No messages for this filter.');
+      expect(container.textContent).toContain(
+        'No messages match Pending in this view. Use All or a status with a count to see existing inbound messages.',
+      );
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(container.textContent).not.toContain('No messages for this filter.');
+      expect(container.textContent).not.toContain('Showing only channels with messages in this view.');
       expect(container.textContent).not.toContain('Status available');
     });
 
