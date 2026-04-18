@@ -902,19 +902,25 @@ export default function CourseBuilderPage() {
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6" fontWeight={800}>Revisar y publicar</Typography>
-            <Card variant="outlined" sx={{ backgroundColor: 'rgba(148,163,184,0.06)' }}>
-              <CardContent>
-                <Typography variant="subtitle2" gutterBottom>CTA preview</Typography>
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary">
-                    Landing: {landingUrl || '—'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    WhatsApp CTA: {whatsappCtaUrl || '—'}
-                  </Typography>
-                </Stack>
-              </CardContent>
-            </Card>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 1.5,
+                backgroundColor: 'rgba(148,163,184,0.06)',
+              }}
+            >
+              <Typography variant="subtitle2" gutterBottom>Resumen de publicación</Typography>
+              <Stack spacing={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  Landing: {landingUrl || '—'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  WhatsApp: {whatsappCtaUrl || '—'}
+                </Typography>
+              </Stack>
+            </Box>
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
                 Publica desde este resumen. Abre el payload técnico solo si necesitas revisar el JSON que se enviará al servidor.

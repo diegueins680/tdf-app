@@ -262,6 +262,10 @@ describe('CourseBuilderPage', () => {
     try {
       await waitForExpectation(() => {
         expect(text(document.getElementById('publicacion'))).toContain('Revisar y publicar');
+        expect(text(document.getElementById('publicacion'))).toContain('Resumen de publicación');
+        expect(text(document.getElementById('publicacion'))).toContain('WhatsApp:');
+        expect(text(document.getElementById('publicacion'))).not.toContain('CTA preview');
+        expect(text(document.getElementById('publicacion'))).not.toContain('WhatsApp CTA:');
         expect(text(document.getElementById('publicacion'))).toContain(
           'Publica desde este resumen. Abre el payload técnico solo si necesitas revisar el JSON que se enviará al servidor.',
         );
