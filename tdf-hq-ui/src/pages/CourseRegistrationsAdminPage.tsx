@@ -882,6 +882,7 @@ export default function CourseRegistrationsAdminPage() {
         reg.crFullName,
         reg.crEmail,
         reg.crPhoneE164,
+        reg.crAdminNotes,
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
         registrationStatusLabel(reg.crStatus),
@@ -2768,7 +2769,7 @@ export default function CourseRegistrationsAdminPage() {
                   setHasUsedFilterControl(true);
                   setLocalSearch(e.target.value);
                 }}
-                placeholder="Nombre, email, teléfono, estado, fuente o curso"
+                placeholder="Nombre, email, teléfono, nota, estado, fuente o curso"
                 helperText={localSearchHelperText}
                 size="small"
                 fullWidth

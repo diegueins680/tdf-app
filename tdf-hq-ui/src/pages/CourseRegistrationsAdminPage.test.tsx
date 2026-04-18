@@ -4948,7 +4948,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, estado, fuente o curso');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, email, teléfono, nota, estado, fuente o curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -5031,6 +5031,52 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).toContain('Nina Garcia');
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
+  it('lets admins find registrations by internal note text without exposing the note in the row', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crAdminNotes: 'Necesita beca parcial antes de confirmar.',
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crAdminNotes: null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toContain('nota');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'beca parcial');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Notas internas');
+      expect(container.textContent).not.toContain('Necesita beca parcial antes de confirmar.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
     await cleanup();
