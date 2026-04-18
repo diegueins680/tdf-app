@@ -8706,8 +8706,9 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
       let code = dfrCode (dfcResult dfResp)
       unless (isDfCheckoutSuccess code) $
         throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
-      let checkoutId = dfcId dfResp
-          widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+      checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
+      let widgetUrl =
+            baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
       pure (checkoutId, widgetUrl)
 
 datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
@@ -8788,9 +8789,35 @@ datafastCheckoutIdFromSegments ["v1", "checkouts", checkoutId, "payment"]
 datafastCheckoutIdFromSegments _ =
   Nothing
 
+validateDatafastCheckoutId :: Text -> Either ServerError Text
+validateDatafastCheckoutId rawCheckoutId
+  | T.null checkoutId =
+      invalidDatafastCheckoutId
+  | T.length checkoutId > 256 =
+      invalidDatafastCheckoutId
+  | checkoutId == "." || checkoutId == ".." =
+      invalidDatafastCheckoutId
+  | T.any (not . isDatafastCheckoutIdChar) checkoutId =
+      invalidDatafastCheckoutId
+  | otherwise =
+      Right checkoutId
+  where
+    checkoutId = T.strip rawCheckoutId
+
+isDatafastCheckoutIdChar :: Char -> Bool
+isDatafastCheckoutIdChar c =
+  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_." :: String)
+
 isDatafastResourcePathChar :: Char -> Bool
 isDatafastResourcePathChar c =
   isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_./" :: String)
+
+invalidDatafastCheckoutId :: Either ServerError a
+invalidDatafastCheckoutId =
+  Left err502
+    { errBody =
+        "Datafast returned an invalid checkout id"
+    }
 
 invalidDatafastResourcePath :: Either ServerError a
 invalidDatafastResourcePath =

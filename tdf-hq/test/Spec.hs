@@ -135,6 +135,7 @@ import TDF.Server
       validateWhatsAppConsentSource,
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
+      validateDatafastCheckoutId,
       validateDatafastBaseUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
@@ -1295,6 +1296,27 @@ main = hspec $ do
             assertInvalid "https://test.oppwa.com/v1"
             assertInvalid "https://test.oppwa.com?proxy=1"
             assertInvalid "http://localhost:8080"
+
+    describe "validateDatafastCheckoutId" $ do
+        it "normalizes safe Datafast checkout ids before building widget URLs" $ do
+            validateDatafastCheckoutId "  8ac7a4a18c9d_test-01.02  "
+                `shouldBe` Right "8ac7a4a18c9d_test-01.02"
+
+        it "rejects malformed Datafast checkout ids before widget URLs are built" $ do
+            let assertInvalid rawValue =
+                    case validateDatafastCheckoutId rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "Datafast returned an invalid checkout id"
+                        Right value ->
+                            expectationFailure ("Expected invalid Datafast checkout id, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "../payment"
+            assertInvalid "checkout?entityId=other"
+            assertInvalid "checkout&entityId=other"
+            assertInvalid "checkout#fragment"
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
