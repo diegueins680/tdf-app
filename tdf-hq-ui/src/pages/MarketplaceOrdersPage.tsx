@@ -262,6 +262,7 @@ export default function MarketplaceOrdersPage() {
     });
   }, [baseContextOrders, normalizedProviderFilter, statusFilter]);
   const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
+  const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
@@ -811,7 +812,7 @@ export default function MarketplaceOrdersPage() {
                   <TableCell align="right">Total</TableCell>
                   <TableCell>Pago</TableCell>
                   <TableCell>Creado</TableCell>
-                  <TableCell>Pagado</TableCell>
+                  {showPaidAtColumn && <TableCell>Pagado</TableCell>}
                   <TableCell>Items</TableCell>
                 </TableRow>
               </TableHead>
@@ -907,7 +908,7 @@ export default function MarketplaceOrdersPage() {
                         </Stack>
                       </TableCell>
                       <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
-                      <TableCell>{formatDate(order.moPaidAt)}</TableCell>
+                      {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
                       <TableCell>
                         <Typography variant="body2">{order.moItems.length}</Typography>
                         <Typography variant="caption" color="text.secondary">

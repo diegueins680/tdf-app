@@ -639,6 +639,67 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('shows the paid-at column only when the visible order list includes a payment timestamp', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moPaidAt: null,
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaidAt: null,
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const firstRender = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).not.toContain('Pagado');
+      });
+    } finally {
+      await firstRender.cleanup();
+    }
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moPaidAt: null,
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const nextContainer = document.createElement('div');
+    document.body.appendChild(nextContainer);
+    const secondRender = await renderPage(nextContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(nextContainer.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(nextContainer)).toContain('Pagado');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('keeps the header breakdown tied to the visible order list and hides it once search leaves one bucket', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
