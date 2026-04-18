@@ -128,6 +128,7 @@ import TDF.Server
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
     , resolvePaypalBaseUrl
+    , validatePayPalCredential
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -2953,6 +2954,37 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected invalid PayPal environment to be rejected, got: "
                             <> show baseUrl
                         )
+
+    describe "validatePayPalCredential" $ do
+        it "trims configured PayPal credentials before Basic auth headers are built" $ do
+            validatePayPalCredential "PAYPAL_CLIENT_ID" (Just " client-id ")
+                `shouldBe` Right "client-id"
+            validatePayPalCredential "PAYPAL_CLIENT_SECRET" (Just "\tsecret-value\n")
+                `shouldBe` Right "secret-value"
+
+        it "rejects missing, blank, or control-bearing PayPal credentials before calling PayPal" $ do
+            let assertInvalid envName rawValue expectedMessage =
+                    case validatePayPalCredential envName rawValue of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right credential ->
+                            expectationFailure
+                                ( "Expected invalid PayPal credential to be rejected, got: "
+                                    <> show credential
+                                )
+            assertInvalid
+                "PAYPAL_CLIENT_ID"
+                Nothing
+                "PAYPAL_CLIENT_ID must be configured"
+            assertInvalid
+                "PAYPAL_CLIENT_SECRET"
+                (Just "   ")
+                "PAYPAL_CLIENT_SECRET must be configured"
+            assertInvalid
+                "PAYPAL_CLIENT_SECRET"
+                (Just "secret\nwith-break")
+                "PAYPAL_CLIENT_SECRET must not contain control characters"
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do

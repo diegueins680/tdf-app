@@ -9259,11 +9259,28 @@ loadPaypalEnv = do
   mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
   mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
   baseUrl <- either throwError pure (resolvePaypalBaseUrl mEnv)
-  let cid = fmap (T.strip . T.pack) mCid
-      secret = fmap (T.strip . T.pack) mSecret
-  case (cid, secret) of
-    (Just cid', Just sec') -> pure (cid', sec', baseUrl)
-    _ -> throwError err500 { errBody = "Faltan PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET" }
+  cid <- either throwError pure (validatePayPalCredential "PAYPAL_CLIENT_ID" mCid)
+  secret <- either throwError pure (validatePayPalCredential "PAYPAL_CLIENT_SECRET" mSecret)
+  pure (cid, secret, baseUrl)
+
+validatePayPalCredential :: Text -> Maybe String -> Either ServerError Text
+validatePayPalCredential envName mRawCredential =
+  case normalizeOptionalInput (T.pack <$> mRawCredential) of
+    Nothing ->
+      Left err500
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              envName <> " must be configured"
+        }
+    Just credential
+      | T.any isControl credential ->
+          Left err500
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must not contain control characters"
+            }
+      | otherwise ->
+          Right credential
 
 resolvePaypalBaseUrl :: Maybe String -> Either ServerError String
 resolvePaypalBaseUrl mEnv =
