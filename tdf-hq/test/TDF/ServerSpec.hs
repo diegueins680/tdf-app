@@ -147,6 +147,7 @@ import TDF.Server
     , validatePublicBookingContactDetails
     , validateRequiredCmsField
     , validateRequiredCmsLocale
+    , validateRequiredCmsSlug
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validateWhatsAppReplyBody
@@ -1559,6 +1560,27 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure ("Expected blank CMS field to be rejected, got: " <> show value)
             assertInvalid "slug" "   "
             assertInvalid "locale" "\n\t"
+
+    describe "validateRequiredCmsSlug" $ do
+        it "canonicalizes CMS slugs before public lookup and admin create handlers use them" $ do
+            validateRequiredCmsSlug "  Records-Release-01  "
+                `shouldBe` Right "records-release-01"
+            validateRequiredCmsSlug "fan-hub" `shouldBe` Right "fan-hub"
+
+        it "rejects ambiguous CMS slugs before they can miss public fallback lookup" $ do
+            let assertInvalid rawSlug expectedMessage =
+                    case validateRequiredCmsSlug rawSlug of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right slugVal ->
+                            expectationFailure ("Expected invalid CMS slug, got: " <> show slugVal)
+            assertInvalid "   " "slug requerido"
+            assertInvalid "records release" "slug must contain only ASCII letters"
+            assertInvalid "records/release" "slug must contain only ASCII letters"
+            assertInvalid "records?draft=true" "slug must contain only ASCII letters"
+            assertInvalid "---" "include at least one letter or number"
+            assertInvalid (T.replicate 97 "a") "96 characters or fewer"
 
     describe "normalizeAuthEmailAddress" $ do
         it "trims and lowercases valid auth emails before signup or reset flows use them" $ do

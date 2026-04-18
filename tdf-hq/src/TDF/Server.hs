@@ -6061,6 +6061,28 @@ validateRequiredCmsLocale rawLocale =
     Just _ ->
       validateCmsLocaleFilter (Just rawLocale)
 
+validateRequiredCmsSlug :: Text -> Either ServerError Text
+validateRequiredCmsSlug rawSlug =
+  let slugVal = normalizeSlug rawSlug
+      isSlugAtom ch = isAsciiLower ch || isDigit ch
+      isSlugChar ch = isSlugAtom ch || ch == '-'
+  in if T.null slugVal
+    then Left err400 { errBody = "slug requerido" }
+    else
+      if T.length slugVal <= cmsSlugMaxLength
+          && T.all isSlugChar slugVal
+          && T.any isSlugAtom slugVal
+        then Right slugVal
+        else Left invalidCmsSlug
+  where
+    cmsSlugMaxLength = 96
+    invalidCmsSlug =
+      err400
+        { errBody =
+            "slug must contain only ASCII letters, numbers, and hyphens, "
+              <> "include at least one letter or number, and be 96 characters or fewer"
+        }
+
 validateRequiredCmsField :: Text -> Text -> Either ServerError Text
 validateRequiredCmsField fieldName rawValue =
   case normalizeOptionalCmsFilter (Just rawValue) of
@@ -8225,7 +8247,7 @@ cmsPublicServer = cmsGet :<|> cmsList
     cmsGet mSlug mLocale = do
       slug <-
         maybe (throwError err400 { errBody = "slug requerido" })
-          (either throwError pure . validateRequiredCmsField "slug")
+          (either throwError pure . validateRequiredCmsSlug)
           mSlug
       locale <- either throwError pure (validateCmsLocaleFilter mLocale)
       mPublished <- runDB $ selectFirst
@@ -9589,7 +9611,7 @@ cmsAdminServer user =
       requireWebmaster
       now <- liftIO getCurrentTime
       statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
-      slug <- either throwError pure (validateRequiredCmsField "slug" cciSlug)
+      slug <- either throwError pure (validateRequiredCmsSlug cciSlug)
       locale <- either throwError pure (validateRequiredCmsLocale cciLocale)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
