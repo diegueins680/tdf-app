@@ -49,6 +49,7 @@ import TDF.API.WhatsApp
     ( CompleteReq (..),
       PreviewReq (..),
       ensureLeadCompletionUpdated,
+      extractFirstWebhookMessage,
       validateHookVerifyRequest,
       validateLeadCompletionId,
       validateLeadCompletionLookup,
@@ -216,6 +217,7 @@ import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 import qualified TDF.WhatsApp.Service as WhatsAppService
+import qualified TDF.WhatsApp.Types as WA
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
 withEnvOverrides overrides action =
@@ -3102,6 +3104,46 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 503
                     BL.unpack (errBody err) `shouldContain` "WhatsApp verify token not configured"
                 Right _ -> expectationFailure "Expected missing verify-token config to be rejected"
+
+    describe "extractFirstWebhookMessage" $ do
+        it "scans all webhook entries and changes before treating a batch as no-message" $ do
+            let enrollmentMessage =
+                    WA.WAMessage
+                        (Just "wamid.1")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000000")
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    Nothing
+                                    Nothing
+                                    (Just [WA.WAStatus Nothing (Just "sent") Nothing Nothing Nothing])
+                                )
+                            ]
+                        , WA.WAEntry
+                            [ WA.WAChange (WA.WAValue (Just []) Nothing Nothing)
+                            , WA.WAChange (WA.WAValue (Just [enrollmentMessage]) Nothing Nothing)
+                            ]
+                        ]
+            case extractFirstWebhookMessage payload of
+                Just (WA.WAMessage msgId msgType senderId msgText _ _ msgTimestamp) -> do
+                    msgId `shouldBe` Just "wamid.1"
+                    msgType `shouldBe` "text"
+                    senderId `shouldBe` "+593991234567"
+                    case msgText of
+                        Just (WA.WAText messageBody) ->
+                            messageBody `shouldBe` "INSCRIBIRME"
+                        Nothing ->
+                            expectationFailure "Expected enrollment text to be selected"
+                    msgTimestamp `shouldBe` Just "1770000000"
+                Nothing ->
+                    expectationFailure "Expected batched webhook message to be selected"
 
     describe "PreviewReq" $ do
         it "accepts only the canonical preview-link request body" $ do

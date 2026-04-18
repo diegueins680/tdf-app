@@ -13,6 +13,7 @@ module TDF.API.WhatsApp
   , validateLeadCompletionId
   , validateLeadCompletionLookup
   , ensureLeadCompletionUpdated
+  , extractFirstWebhookMessage
   , PreviewReq(..)
   , CompleteReq(..)
   ) where
@@ -31,7 +32,7 @@ import Data.Aeson
 import Control.Monad (unless)
 import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import Data.Int (Int64)
-import Data.Maybe (isNothing, listToMaybe)
+import Data.Maybe (isNothing, listToMaybe, maybeToList)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (liftIO)
@@ -72,11 +73,7 @@ hookVerifyH mmode mchall mtoken = do
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value
 hookReceiveH conn payload = do
   svc <- liftIO mkWhatsAppService
-  let mMsg = do
-        ent <- listToMaybe (entry payload)
-        chg <- listToMaybe (changes ent)
-        msgs <- messages (value chg)
-        listToMaybe msgs
+  let mMsg = extractFirstWebhookMessage payload
   case mMsg of
     Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
     Just msg ->
@@ -97,6 +94,16 @@ previewH conn (PreviewReq p) = do
   unless (isValidE164 p) $
     throwError err400 { errBody = "Invalid phone number format" }
   liftIO $ previewEnrollment svc conn p
+
+extractFirstWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
+extractFirstWebhookMessage payload =
+  listToMaybe
+    [ msg
+    | ent <- entry payload
+    , chg <- changes ent
+    , msgs <- maybeToList (messages (value chg))
+    , msg <- msgs
+    ]
 
 -- Link minting & sender -------------------------------------------------------
 
