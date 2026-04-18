@@ -476,6 +476,7 @@ export default function AdminUsersPage() {
   );
   const shouldCollapseInactiveUsers = showInactiveUsersGroup && !hasActiveSearch;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
+  const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const userIdsRequiringIdentityDisambiguator = useMemo(
     () => getUserIdsRequiringIdentityDisambiguator(visibleUsers),
     [visibleUsers],
@@ -774,10 +775,13 @@ export default function AdminUsersPage() {
                           onClick={() => setShowInactiveUsers((current) => !current)}
                           aria-controls="admin-users-inactive-list"
                           aria-expanded={showInactiveUsers}
+                          aria-label={showInactiveUsers
+                            ? `Ocultar ${inactiveUsersToggleTarget}`
+                            : `Ver ${inactiveUsersToggleTarget}`}
                         >
                           {showInactiveUsers
-                            ? 'Ocultar inactivos'
-                            : `Ver ${formatInactiveUserCountLabel(visibleInactiveUsersCount)}`}
+                            ? 'Ocultar lista'
+                            : 'Ver lista'}
                         </Button>
                       )}
                     </Stack>
