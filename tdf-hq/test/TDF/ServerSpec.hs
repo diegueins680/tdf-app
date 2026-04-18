@@ -166,6 +166,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
+    , resolveWorkflowId
     , shouldRetryWithFallbackModel
     )
 import TDF.ServerAuth
@@ -1861,6 +1862,17 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 500 "invalid model response format"
                 `shouldBe` False
+
+    describe "resolveWorkflowId" $ do
+        it "uses the configured ChatKit workflow when the request override is omitted or blank" $ do
+            resolveWorkflowId Nothing (Just "  wf_default  ")
+                `shouldBe` Just "wf_default"
+            resolveWorkflowId (Just "   ") (Just "  wf_default  ")
+                `shouldBe` Just "wf_default"
+
+        it "prefers a meaningful request workflow over the configured fallback" $
+            resolveWorkflowId (Just "  wf_override  ") (Just "wf_default")
+                `shouldBe` Just "wf_override"
 
     describe "DriveUploadForm FromMultipart" $ do
         it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do

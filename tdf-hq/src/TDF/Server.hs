@@ -7930,7 +7930,7 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
 
 resolveWorkflowId :: Maybe Text -> Maybe Text -> Maybe Text
 resolveWorkflowId primary fallback =
-  (primary <|> fallback) >>= nonEmptyText
+  (primary >>= nonEmptyText) <|> (fallback >>= nonEmptyText)
 
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
