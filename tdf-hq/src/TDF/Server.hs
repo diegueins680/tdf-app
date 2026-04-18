@@ -323,6 +323,7 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
 
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
+  rejectUnexpectedObjectFields "ToolCallParams" ["name", "arguments"] o
   toolName <- o .: "name"
   when (T.null (T.strip toolName)) $
     fail "name is required"

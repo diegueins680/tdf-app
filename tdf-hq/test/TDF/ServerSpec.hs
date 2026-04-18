@@ -481,6 +481,12 @@ spec = describe "TDF.Server helpers" $ do
                     , "arguments" .= ("not-an-object" :: T.Text)
                     ]
                 )
+            assertInvalid
+                ( object
+                    [ "name" .= ("tdf_health_check" :: T.Text)
+                    , "argument" .= object []
+                    ]
+                )
 
     describe "resolveInvoiceCustomerId" $ do
         it "rejects non-positive customer ids before invoice creation can hit persistence" $ do
