@@ -169,6 +169,26 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('keeps social inbox errors focused on recovery instead of empty channel cards', async () => {
+    listInstagramMessagesMock.mockRejectedValue(new Error('instagram unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Instagram: instagram unavailable');
+        expect(container.textContent).toContain('Actualizar mensajes');
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Entrantes: 0');
+        expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the detailed history table only for channels that already have replied messages', async () => {
     listInstagramMessagesMock.mockResolvedValue([buildMessage()]);
 

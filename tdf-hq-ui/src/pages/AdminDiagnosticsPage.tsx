@@ -144,9 +144,7 @@ export default function AdminDiagnosticsPage() {
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
   const hasSocialQueryError = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
-  const visibleSocialChannels = showGlobalSocialQuietGuidance || hasSocialQueryError
-    ? socialChannels
-    : socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
+  const visibleSocialChannels = socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
   const quietSocialChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
     ? []
     : socialChannels
