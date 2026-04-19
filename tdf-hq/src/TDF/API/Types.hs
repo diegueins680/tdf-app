@@ -1227,7 +1227,28 @@ data InternTaskUpdate = InternTaskUpdate
   , ituDueAt       :: Maybe (Maybe Day)
   } deriving (Show, Generic)
 instance ToJSON InternTaskUpdate
-instance FromJSON InternTaskUpdate
+instance FromJSON InternTaskUpdate where
+  parseJSON = withObject "InternTaskUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ituTitle"
+          , "ituDescription"
+          , "ituStatus"
+          , "ituProgress"
+          , "ituAssignedTo"
+          , "ituDueAt"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternTaskUpdate: " <> T.unpack key)
+      [] ->
+        InternTaskUpdate
+          <$> o .:? "ituTitle"
+          <*> o .:! "ituDescription"
+          <*> o .:? "ituStatus"
+          <*> o .:? "ituProgress"
+          <*> o .:! "ituAssignedTo"
+          <*> o .:! "ituDueAt"
 
 data InternTodoDTO = InternTodoDTO
   { itdId        :: Text

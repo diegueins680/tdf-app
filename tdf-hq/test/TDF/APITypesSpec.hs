@@ -23,6 +23,7 @@ import TDF.API.Types
     , ClockOutRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
+    , InternTaskUpdate (..)
     , LooseJSON
     , MarketplaceCheckoutReq (..)
     , MarketplaceCartItemUpdate (..)
@@ -920,6 +921,32 @@ spec = do
                 "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternTaskUpdate FromJSON" $ do
+        it "distinguishes omitted nullable fields from explicit clears for task admin updates" $ do
+            case decodeInternTaskUpdate "{\"ituStatus\":\"doing\",\"ituProgress\":55}" of
+                Left err ->
+                    expectationFailure ("Expected intern task status update to decode, got: " <> err)
+                Right payload -> do
+                    ituTitle payload `shouldBe` Nothing
+                    ituDescription payload `shouldBe` Nothing
+                    ituStatus payload `shouldBe` Just "doing"
+                    ituProgress payload `shouldBe` Just 55
+                    ituAssignedTo payload `shouldBe` Nothing
+                    ituDueAt payload `shouldBe` Nothing
+
+            case decodeInternTaskUpdate "{\"ituDescription\":null,\"ituAssignedTo\":null,\"ituDueAt\":null}" of
+                Left err ->
+                    expectationFailure ("Expected intern task clear update to decode, got: " <> err)
+                Right payload -> do
+                    ituDescription payload `shouldBe` Just Nothing
+                    ituAssignedTo payload `shouldBe` Just Nothing
+                    ituDueAt payload `shouldBe` Just Nothing
+
+        it "rejects unexpected task update keys instead of silently ignoring intern task intent" $
+            decodeInternTaskUpdate
+                "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -1123,6 +1150,8 @@ spec = do
     decodeClockIn = eitherDecode
     decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest
     decodeClockOut = eitherDecode
+    decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate
+    decodeInternTaskUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq
