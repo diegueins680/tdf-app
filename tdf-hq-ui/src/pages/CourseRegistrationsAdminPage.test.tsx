@@ -5340,13 +5340,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
+      expect(getButtonByText(container, 'Limpiar búsqueda')).toBeTruthy();
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
@@ -5930,6 +5932,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, copyVisibleCsvLabel(2))).toBeTruthy();
+      expect(getButtonByText(searchUtilities!, 'Limpiar búsqueda')).toBeTruthy();
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
@@ -6067,7 +6071,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });

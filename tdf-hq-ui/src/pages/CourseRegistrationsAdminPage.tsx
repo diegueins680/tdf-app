@@ -32,7 +32,6 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -1174,7 +1173,12 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
-  const showLocalSearchUtilityRow = hasLocalSearch && (showCopyCsvAction || Boolean(copyMessage));
+  const showLocalSearchClearAction = hasLocalSearch && !showEmptyLocalSearchResults;
+  const showLocalSearchUtilityRow = hasLocalSearch && (
+    showCopyCsvAction
+    || Boolean(copyMessage)
+    || showLocalSearchClearAction
+  );
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
@@ -2964,20 +2968,6 @@ export default function CourseRegistrationsAdminPage() {
                         <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
-                    endAdornment: localSearchKey && !showEmptyLocalSearchResults ? (
-                      <InputAdornment position="end">
-                        <Tooltip title="Limpiar búsqueda">
-                          <IconButton
-                            aria-label="Limpiar búsqueda"
-                            size="small"
-                            edge="end"
-                            onClick={() => setLocalSearch('')}
-                          >
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </InputAdornment>
-                    ) : undefined,
                   }}
                 />
                 {showLocalSearchUtilityRow && (
@@ -2990,6 +2980,11 @@ export default function CourseRegistrationsAdminPage() {
                     data-testid="course-registration-local-search-utilities"
                   >
                     {copyCsvActionButton}
+                    {showLocalSearchClearAction && (
+                      <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
+                        Limpiar búsqueda
+                      </Button>
+                    )}
                     {copyMessage && (
                       <Typography variant="caption" color="text.secondary">
                         {copyMessage}
