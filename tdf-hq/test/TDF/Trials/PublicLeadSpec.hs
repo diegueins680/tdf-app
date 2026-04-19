@@ -22,6 +22,7 @@ import TDF.Trials.DTO
   ( ClassSessionDTO
   , ClassSessionUpdate (..)
   , PreferredSlot (..)
+  , StudentCreate (StudentCreate)
   , StudentDTO
   , StudentUpdate (StudentUpdate)
   , TrialAvailabilityUpsert (..)
@@ -325,6 +326,36 @@ spec = do
         (A.eitherDecode
           "{\"active\":false,\"unexpected\":true}"
             :: Either String SubjectUpdate)
+        `shouldBe` True
+
+  describe "StudentCreate request decoding" $ do
+    it "accepts canonical private student create payloads" $ do
+      let payload = BL8.pack $ concat
+            [ "{\"fullName\":\"Ada Lovelace\""
+            , ",\"email\":\"ada@example.com\""
+            , ",\"phone\":\"+593991234567\""
+            , ",\"notes\":\"trial referral\"}"
+            ]
+      case (A.eitherDecode payload :: Either String StudentCreate) of
+        Left err ->
+          expectationFailure ("Expected canonical student create payload to decode, got " <> err)
+        Right (StudentCreate fullNameValue emailValue phoneValue notesValue) -> do
+          fullNameValue `shouldBe` "Ada Lovelace"
+          emailValue `shouldBe` "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+          notesValue `shouldBe` Just "trial referral"
+
+    it "rejects typoed or unexpected JSON keys so student creates cannot silently drop fields" $ do
+      isLeft
+        ( A.eitherDecode "{\"fullNam\":\"Ada\",\"email\":\"ada@example.com\"}"
+            :: Either String StudentCreate
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode
+            "{\"fullName\":\"Ada\",\"email\":\"ada@example.com\",\"role\":\"Admin\"}"
+            :: Either String StudentCreate
+        )
         `shouldBe` True
 
   describe "StudentUpdate request decoding" $ do
@@ -1375,6 +1406,17 @@ spec = do
       assertRejected 400 "bookingId" 0
       assertRejected 404 "Reserva no encontrada" 9999
 
+  describe "private student creates" $ do
+    it "rejects blank names instead of falling back to email display names" $ do
+      result <- try $ runTrialsInMemory $
+        privateStudentCreateHandler (StudentCreate "   " "student@example.com" Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "El nombre es obligatorio"
+        Right _ ->
+          expectationFailure "Expected blank student names to be rejected"
+
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
       result <- try $ runTrialsInMemory $ do
@@ -1668,6 +1710,14 @@ privateUpdateClassHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> updateH :<|> _ =
         privateTrialsServer adminUser
   in updateH
+
+privateStudentCreateHandler :: StudentCreate -> SqlPersistT IO StudentDTO
+privateStudentCreateHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> studentsH :<|> createH :<|> _ =
+          privateTrialsServer adminUser
+  in studentsH `seq` createH
 
 privateStudentUpdateHandler :: Int -> StudentUpdate -> SqlPersistT IO StudentDTO
 privateStudentUpdateHandler =

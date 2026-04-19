@@ -1862,8 +1862,11 @@ privateTrialsServer user@AuthedUser{..} =
     studentCreateH :: StudentCreate -> AppM StudentDTO
     studentCreateH StudentCreate{..} = do
       ensureSchoolAccess
+      let fullNameVal = T.strip fullName
+      when (T.null fullNameVal) $
+        liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
       now <- liftIO getCurrentTime
-      partyId <- createOrFetchParty (Just fullName) (Just email) phone now
+      partyId <- createOrFetchParty (Just fullNameVal) (Just email) phone now
       void $ upsert (PartyRole partyId Student True) [Models.PartyRoleActive =. True]
       unless isSchoolStaff $
         void $ upsert (TeacherStudent auPartyId partyId True now) [TeacherStudentActive =. True]

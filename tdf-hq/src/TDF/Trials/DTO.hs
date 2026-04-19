@@ -155,7 +155,8 @@ data StudentCreate = StudentCreate
   , notes    :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON StudentCreate
-instance FromJSON StudentCreate
+instance FromJSON StudentCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data StudentDTO = StudentDTO
   { studentId   :: Int
