@@ -129,7 +129,7 @@ const statusFilterLabels: Record<StatusFilter, string> = {
   paid: 'Pagado',
   cancelled: 'Cancelado',
 };
-const followUpTypeOptions = ['note', 'call', 'whatsapp', 'email', 'payment_receipt', 'status_change', 'registration'];
+const manualFollowUpTypeOptions = ['note', 'call', 'whatsapp', 'email'] as const;
 
 const emptyReceiptForm = (): ReceiptFormState => ({
   editingId: null,
@@ -385,6 +385,18 @@ const eventTypeLabel = (eventType: string) =>
     .toLowerCase()
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
+
+const getFollowUpTypeOptions = (entryType: string) => {
+  const normalizedEntryType = entryType.trim().toLowerCase();
+  if (
+    !normalizedEntryType
+    || manualFollowUpTypeOptions.some((option) => option === normalizedEntryType)
+  ) {
+    return manualFollowUpTypeOptions;
+  }
+
+  return [...manualFollowUpTypeOptions, normalizedEntryType];
+};
 
 const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
   entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
@@ -2020,6 +2032,7 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Primer seguimiento'
       : 'Seguimiento';
   const followUpComposerTitle = followUpForm.editingId == null ? 'Registrar seguimiento' : 'Editar seguimiento';
+  const followUpTypeOptions = getFollowUpTypeOptions(followUpForm.entryType);
   const followUpComposerSummary = followUpForm.editingId != null
     ? editingFollowUpComposerHelpText
     : isCreatingFirstFollowUp

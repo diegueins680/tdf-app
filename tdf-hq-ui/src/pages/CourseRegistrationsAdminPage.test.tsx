@@ -371,8 +371,30 @@ const clickElement = (element: Element) => {
   element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 };
 
+const mouseDownElement = (element: Element) => {
+  element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+};
+
 const clickButton = (button: HTMLButtonElement) => {
   clickElement(button);
+};
+
+const getComboboxByLabel = (root: ParentNode, labelText: string) => {
+  const labels = Array.from(root.querySelectorAll('label'));
+  const label = labels.find((el) => {
+    const text = (el.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+  if (!label) throw new Error(`Label not found: ${labelText}`);
+
+  const labelId = label.id;
+  const combobox = Array.from(root.querySelectorAll<HTMLElement>('[role="combobox"]')).find((candidate) => {
+    const labelledBy = candidate.getAttribute('aria-labelledby') ?? '';
+    return labelId && labelledBy.split(/\s+/).includes(labelId);
+  });
+  if (!combobox) throw new Error(`Combobox not found for label: ${labelText}`);
+
+  return combobox;
 };
 
 const openDossierContextAction = async (labelText: string) => {
@@ -3982,6 +4004,59 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('limits new follow-up type choices to manual contact actions', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+      });
+
+      await act(async () => {
+        clickButton(getButtonByText(container, 'Expediente'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+      });
+
+      await openDossierContextAction('Agregar seguimiento');
+
+      await act(async () => {
+        clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(hasLabel(document.body, 'Tipo')).toBe(true);
+      });
+
+      await act(async () => {
+        mouseDownElement(getComboboxByLabel(document.body, 'Tipo'));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const options = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]'))
+          .map((option) => (option.textContent ?? '').trim())
+          .filter(Boolean);
+
+        expect(options).toEqual(['Nota', 'Llamada', 'WhatsApp', 'Correo']);
+        expect(options).not.toContain('Comprobante de pago');
+        expect(options).not.toContain('Cambio de estado');
+        expect(options).not.toContain('Inscripción');
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('keeps the first follow-up flow focused until there is something saved to review', async () => {
