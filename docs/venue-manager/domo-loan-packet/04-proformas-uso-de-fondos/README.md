@@ -12,3 +12,8 @@ Collect quotes and use-of-funds evidence here:
 - Execution schedule.
 
 Prefer summary PDFs without personal contact data if anything is committed.
+
+Prepared public-safe planning file:
+
+- `domo-use-of-funds-schedule.md`
+- `domo-use-of-funds-schedule.pdf`

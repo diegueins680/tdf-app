@@ -56,7 +56,9 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Plan financiero completo |  | Listo: `docs/venue-manager/domo-del-pululahua-financial-plan.md` |
 | Pro forma 36 meses CSV |  | Listo: `docs/venue-manager/domo-36-month-pro-forma.csv` |
 | Tabla de bancos y cooperativas |  | Listo: `docs/venue-manager/domo-lender-outreach-table.md` |
-| Presupuesto final de uso de fondos por categoría |  | Borrador |
+| Carta de presentacion para bancos/cooperativas |  | Listo: `docs/venue-manager/domo-loan-packet/00-resumen/domo-submission-cover-letter.md` |
+| Indice de carpeta para bancos/cooperativas |  | Listo: `docs/venue-manager/domo-loan-packet/00-resumen/domo-bank-submission-index.md` |
+| Presupuesto final de uso de fondos por categoría |  | Listo como borrador publico: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/domo-use-of-funds-schedule.md` |
 | Proformas de paisajismo |  | Pendiente |
 | Proformas de camino y acceso |  | Pendiente |
 | Proformas de mobiliario |  | Pendiente |
@@ -64,7 +66,7 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Proformas de sonido e iluminación |  | Pendiente |
 | Proformas de barra/catering operativo |  | Pendiente |
 | Cotizaciones de seguros, permisos, legal e ingeniería |  | Pendiente |
-| Cronograma de ejecución de fondos |  | Pendiente |
+| Cronograma de ejecución de fondos |  | Listo como borrador publico: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/domo-use-of-funds-schedule.md` |
 
 ## 5. Permisos y operación
 
@@ -122,6 +124,8 @@ Prepared outreach files:
 ```text
 docs/venue-manager/domo-loan-packet/
   00-resumen/
+    domo-submission-cover-letter.pdf
+    domo-bank-submission-index.pdf
     domo-lender-one-pager.pdf
     domo-del-pululahua-financial-plan.pdf
     domo-36-month-pro-forma.pdf
@@ -129,6 +133,7 @@ docs/venue-manager/domo-loan-packet/
   02-finanzas/
   03-propiedad-garantia/
   04-proformas-uso-de-fondos/
+    domo-use-of-funds-schedule.pdf
   05-permisos-operacion/
   06-evidencia-comercial/
   07-respuestas-bancos-cooperativas/

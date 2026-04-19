@@ -11,6 +11,8 @@ Do not commit generated PDFs if they contain private data.
 
 Prepared public-safe exports:
 
+- `domo-submission-cover-letter.pdf`
+- `domo-bank-submission-index.pdf`
 - `domo-lender-one-pager.pdf`
 - `domo-del-pululahua-financial-plan.pdf`
 - `domo-36-month-pro-forma.pdf`

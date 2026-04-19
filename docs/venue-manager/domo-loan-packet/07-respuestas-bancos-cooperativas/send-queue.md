@@ -1,6 +1,6 @@
 # Domo lender send queue
 
-Fecha: 2026-04-18
+Fecha: 2026-04-19
 
 ## Delivery status
 
@@ -10,6 +10,7 @@ Fecha: 2026-04-18
 - OpenClaw auto-replied twice before the bank number was removed from the WhatsApp allowlist. Pichincha's bot rejected the free text and repeated the identification menu, so the thread should not be used for the loan packet.
 - Next practical action: follow up through Pichincha PYME phone or branch and send `email-pichincha.eml` with `../00-resumen/domo-public-lender-packet.zip` only through a secure lender-confirmed channel. Do not send cedula, RUC, tax filings, title documents, bank statements, or other sensitive documents in the bot chat.
 - Produbanco remains ready for manual phone/email intake because the public PYME page lists phone support but not a secure document-upload channel.
+- 2026-04-19: The public-safe lender ZIP was rebuilt with a cover letter, bank submission index, corrected USD 100,000 use-of-funds allocation, 36-month pro forma, use-of-funds schedule, and lender comparison table.
 
 ## Ready to send first
 
@@ -31,9 +32,12 @@ Phone/branch script:
 
 Attach the public-safe packet:
 
+- `../00-resumen/domo-submission-cover-letter.pdf`
+- `../00-resumen/domo-bank-submission-index.pdf`
 - `../00-resumen/domo-lender-one-pager.pdf`
 - `../00-resumen/domo-del-pululahua-financial-plan.pdf`
 - `../00-resumen/domo-36-month-pro-forma.pdf`
+- `../04-proformas-uso-de-fondos/domo-use-of-funds-schedule.pdf`
 
 Or attach the ZIP:
 

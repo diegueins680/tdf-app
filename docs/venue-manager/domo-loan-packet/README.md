@@ -22,3 +22,12 @@ Working source docs:
 - `../domo-36-month-pro-forma.csv`
 - `../domo-lender-outreach-table.md`
 - `../domo-loan-document-checklist.md`
+
+Public-safe submission bundle:
+
+- `00-resumen/domo-public-lender-packet.zip`
+- `00-resumen/domo-submission-cover-letter.pdf`
+- `00-resumen/domo-bank-submission-index.pdf`
+- `04-proformas-uso-de-fondos/domo-use-of-funds-schedule.pdf`
+
+Before formal submission, replace planning budgets with signed proformas and deliver private identity, tax, bank, property, and guarantee documents only through a secure lender-confirmed channel.

@@ -118,13 +118,13 @@ Working loan allocation for lender discussion:
 
 | Category | Base budget | Notes |
 | --- | ---: | --- |
-| Landscaping and site finish | USD 22,000 | Paths, exterior areas, guest flow, photo spots, drainage, weather resilience. |
-| Road and access completion | USD 18,000 | Final road work, parking flow, arrival safety, basic wayfinding. |
-| Event furniture and operating equipment | USD 20,000 | Tables, chairs, linens, storage, service equipment, heaters or covers as needed. |
-| Signage, launch content, and sales collateral | USD 7,000 | Road signage, venue signage, photo/video, lender deck, quote collateral. |
-| Catering and bar launch kit | USD 10,000 | Service stations, bar equipment, inventory start, food safety setup. |
-| Sound and lighting operating base | USD 8,000 | Core package for speeches, background music, ceremonies, small performances. |
-| Permits, legal, insurance, engineering | USD 7,000 | Permit processing, contracts, inspection support, civil liability coverage. |
+| Landscaping and site finish | USD 20,000 | Paths, exterior areas, guest flow, photo spots, drainage, weather resilience. |
+| Road and access completion | USD 16,000 | Final road work, parking flow, arrival safety, basic wayfinding. |
+| Event furniture and operating equipment | USD 18,000 | Tables, chairs, linens, storage, service equipment, heaters or covers as needed. |
+| Signage, launch content, and sales collateral | USD 6,000 | Road signage, venue signage, photo/video, lender deck, quote collateral. |
+| Catering and bar launch kit | USD 9,000 | Service stations, bar equipment, inventory start, food safety setup. |
+| Sound and lighting operating base | USD 7,000 | Core package for speeches, background music, ceremonies, small performances. |
+| Permits, legal, insurance, engineering | USD 6,000 | Permit processing, contracts, inspection support, civil liability coverage. |
 | Working capital reserve | USD 13,000 | Staff, marketing, utilities, maintenance, deposits, and vendor float. |
 | Contingency | USD 5,000 | Weather, price increases, road surprises, maintenance. |
 | Total loan request | USD 100,000 | Matches requested principal. |

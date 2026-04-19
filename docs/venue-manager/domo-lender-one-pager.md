@@ -24,13 +24,13 @@ El espacio ya está construido. El financiamiento se usará para completar las p
 
 | Uso de fondos | Monto |
 | --- | ---: |
-| Paisajismo y acabados exteriores | USD 22,000 |
-| Camino, acceso y flujo de parqueo | USD 18,000 |
-| Mobiliario y equipo operativo | USD 20,000 |
-| Señalética, contenido y material comercial | USD 7,000 |
-| Kit inicial de catering y barra | USD 10,000 |
-| Base de sonido e iluminación | USD 8,000 |
-| Permisos, legal, seguros e ingeniería | USD 7,000 |
+| Paisajismo y acabados exteriores | USD 20,000 |
+| Camino, acceso y flujo de parqueo | USD 16,000 |
+| Mobiliario y equipo operativo | USD 18,000 |
+| Señalética, contenido y material comercial | USD 6,000 |
+| Kit inicial de catering y barra | USD 9,000 |
+| Base de sonido e iluminación | USD 7,000 |
+| Permisos, legal, seguros e ingeniería | USD 6,000 |
 | Capital de trabajo | USD 13,000 |
 | Contingencia | USD 5,000 |
 | Total | USD 100,000 |
