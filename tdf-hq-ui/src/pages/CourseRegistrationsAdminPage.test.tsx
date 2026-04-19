@@ -1160,6 +1160,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps named list rows from repeating the missing-contact fallback', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: 'Ada Lovelace',
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: '   ',
+        crPhoneE164: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+      expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain('Ada Lovelace');
+      expect(hasExactText(dialog, 'Sin correo ni teléfono')).toBe(true);
+    });
+
+    await cleanup();
+  });
+
   it('disambiguates duplicate named registrations in row actions without adding generic row controls', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

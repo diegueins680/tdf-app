@@ -93,6 +93,7 @@ const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
+const missingContactSummary = 'Sin correo ni teléfono';
 
 interface FlashState {
   severity: FlashSeverity;
@@ -508,7 +509,7 @@ const registrationIdentityDisplay = (
 
   return {
     primary: fallbackIdentity,
-    secondary: 'Sin correo ni teléfono',
+    secondary: missingContactSummary,
   };
 };
 
@@ -535,7 +536,7 @@ const registrationContactSummary = (email: string | null | undefined, phone: str
   const trimmedEmail = email?.trim() ?? '';
   const trimmedPhone = phone?.trim() ?? '';
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
-  if (parts.length === 0) return 'Sin correo ni teléfono';
+  if (parts.length === 0) return missingContactSummary;
   return parts.join(' · ');
 };
 
@@ -581,7 +582,7 @@ const registrationActionTargetLabelWithContext = (
 
   const identity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164, reg.crId);
   const secondary = identity.secondary.trim();
-  if (secondary && secondary !== 'Sin correo ni teléfono') {
+  if (secondary && secondary !== missingContactSummary) {
     return `${baseLabel} (${secondary})`;
   }
 
@@ -3033,6 +3034,8 @@ export default function CourseRegistrationsAdminPage() {
                     reg.crPhoneE164,
                     reg.crId,
                   );
+                  const rowSecondaryIdentity =
+                    rowIdentity.secondary === missingContactSummary ? '' : rowIdentity.secondary;
                   const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
                     && !reg.crEmail?.trim()
                     && !reg.crPhoneE164?.trim();
@@ -3091,9 +3094,9 @@ export default function CourseRegistrationsAdminPage() {
                             {rowIdentity.primary}
                           </Link>
                         </Typography>
-                        {rowIdentity.secondary && !rowUsesGeneratedIdentity && (
+                        {rowSecondaryIdentity && !rowUsesGeneratedIdentity && (
                           <Typography variant="body2" color="text.secondary">
-                            {rowIdentity.secondary}
+                            {rowSecondaryIdentity}
                           </Typography>
                         )}
                         {rowNeedsActionDisambiguator && (
