@@ -837,25 +837,11 @@ export default function MarketplaceOrdersPage() {
                     >
                       <TableCell>
                         <Stack spacing={0.5}>
-                          <Stack direction="row" spacing={0.5} alignItems="center">
-                            <Tooltip title={order.moOrderId}>
-                              <Typography variant="body2" fontWeight={600}>
-                                {order.moOrderId.slice(0, 8)}
-                              </Typography>
-                            </Tooltip>
-                            <Tooltip title="Copiar ID">
-                              <IconButton
-                                size="small"
-                                aria-label={`Copiar ID del pedido ${order.moOrderId}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void handleCopyOrderId(order.moOrderId);
-                                }}
-                              >
-                                <ContentCopyIcon fontSize="inherit" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
+                          <Tooltip title={order.moOrderId}>
+                            <Typography variant="body2" fontWeight={600} sx={{ width: 'fit-content' }}>
+                              {order.moOrderId.slice(0, 8)}
+                            </Typography>
+                          </Tooltip>
                           <Typography variant="caption" color="text.secondary">
                             {order.moCurrency.toUpperCase()}
                           </Typography>

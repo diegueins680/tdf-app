@@ -850,6 +850,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain('Revisa el estado, pagos y detalles de cada pedido.');
         expect(container.textContent).not.toContain('Acciones');
         expect(container.querySelectorAll('button[aria-label^="Copiar fila del pedido "]')).toHaveLength(0);
+        expect(container.querySelectorAll('tbody button[aria-label^="Copiar ID del pedido "]')).toHaveLength(0);
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
 
@@ -857,6 +858,7 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.querySelectorAll('button[aria-label^="Copiar ID del pedido "]')).toHaveLength(1);
         expect(queryActionByText(document.body, 'Copiar resumen')).not.toBeNull();
       });
     } finally {
