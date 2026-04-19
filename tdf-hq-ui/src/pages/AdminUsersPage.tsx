@@ -158,6 +158,9 @@ const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto o acceso';
+const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
+const ADMIN_USERS_EMPTY_STATE =
+  'Todavía no hay cuentas admin. Cuando exista la primera, verás perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -655,7 +658,7 @@ export default function AdminUsersPage() {
             spacing={2}
           >
             <Stack spacing={1} sx={{ minWidth: 0, flex: '1 1 360px' }}>
-              <Typography variant="h4" fontWeight={700}>Usuarios</Typography>
+              <Typography variant="h4" fontWeight={700}>{ADMIN_USERS_PAGE_TITLE}</Typography>
               {showSearchField && (
                 <TextField
                   label="Buscar usuarios"
@@ -736,7 +739,7 @@ export default function AdminUsersPage() {
             )}
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
               <Typography color="text.secondary">
-                No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.
+                {ADMIN_USERS_EMPTY_STATE}
               </Typography>
             )}
             {showSearchEmptyState ? (

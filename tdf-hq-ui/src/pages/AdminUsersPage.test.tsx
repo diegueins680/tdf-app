@@ -20,6 +20,10 @@ jest.unstable_mockModule('../components/AdminUserCommunicationDialog', () => ({
 
 const { default: AdminUsersPage } = await import('./AdminUsersPage');
 
+const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
+const ADMIN_USERS_EMPTY_STATE =
+  'Todavía no hay cuentas admin. Cuando exista la primera, verás perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.';
+
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
@@ -210,13 +214,14 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
-        expect(hasExactText(container, 'Usuarios')).toBe(true);
+        expect(hasExactText(container, ADMIN_USERS_PAGE_TITLE)).toBe(true);
+        expect(hasExactText(container, 'Usuarios')).toBe(false);
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
         expect(container.textContent).not.toContain('admin API');
         expect(container.textContent).toContain(
-          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
+          ADMIN_USERS_EMPTY_STATE,
         );
         expect(container.textContent).not.toContain('señales de contacto para revisar la lista más rápido');
         expect(container.textContent).not.toContain('Buscar usuarios');
@@ -239,11 +244,11 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(hasExactText(container, 'Usuarios')).toBe(true);
+        expect(hasExactText(container, ADMIN_USERS_PAGE_TITLE)).toBe(true);
         expect(container.textContent).toContain('Cargando usuarios…');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.textContent).not.toContain(
-          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
+          ADMIN_USERS_EMPTY_STATE,
         );
       });
     } finally {
@@ -263,7 +268,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('No se pudieron cargar los usuarios: admin users unavailable.');
         expect(container.textContent).not.toContain('Error al cargar usuarios');
         expect(container.textContent).not.toContain(
-          'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
+          ADMIN_USERS_EMPTY_STATE,
         );
         expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(1);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
