@@ -128,6 +128,8 @@ validateFallbackConnUrl envName raw
     validateAuthority scheme
       | T.any isSpace value =
           Left (envName <> " must not contain whitespace")
+      | "#" `T.isInfixOf` value =
+          Left (envName <> " must not include a fragment")
       | otherwise =
           let remainder = T.drop (length scheme) value
               authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
