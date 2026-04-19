@@ -1584,6 +1584,34 @@ describe('CourseRegistrationsAdminPage', () => {
     await secondRender.cleanup();
   });
 
+  it('keeps cohort context visible when one configured cohort does not cover every loaded registration', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'legacy-workshop',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Cohorte única por ahora.');
+      expect(hasExactText(container, 'Cohorte: Beatmaking 101 (beatmaking-101)')).toBe(true);
+      expect(hasExactText(container, 'Cohorte: legacy-workshop')).toBe(true);
+      expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101 (beatmaking-101).');
+    });
+
+    await cleanup();
+  });
+
   it('keeps the helper copy focused on cohort when status is already implied by the current view', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

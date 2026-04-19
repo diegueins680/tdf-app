@@ -1004,7 +1004,6 @@ export default function CourseRegistrationsAdminPage() {
     if (!onlyConfiguredCohort) return null;
     return !selectedSlug || selectedSlug === onlyConfiguredCohort.value ? onlyConfiguredCohort : null;
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
-  const singleAvailableCohortLabel = singleAvailableCohort?.label ?? '';
 
   const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
 
@@ -1021,6 +1020,21 @@ export default function CourseRegistrationsAdminPage() {
     () => dedupeCourseRegistrations(regsQuery.data ?? []),
     [regsQuery.data],
   );
+  const hasVisibleRegistrations = registrations.length > 0;
+  const visibleCohortSlugs = useMemo(() => new Set(
+    registrations
+      .map((reg) => reg.crCourseSlug.trim())
+      .filter((value) => value !== ''),
+  ), [registrations]);
+  const singleAvailableCohortLabel = useMemo(() => {
+    if (!singleAvailableCohort) return '';
+    if (!hasVisibleRegistrations || selectedSlug === singleAvailableCohort.value) {
+      return singleAvailableCohort.label;
+    }
+    return visibleCohortSlugs.size === 1 && visibleCohortSlugs.has(singleAvailableCohort.value)
+      ? singleAvailableCohort.label
+      : '';
+  }, [hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
@@ -1063,7 +1077,6 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [registrations]);
-  const hasVisibleRegistrations = registrations.length > 0;
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
