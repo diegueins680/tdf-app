@@ -104,6 +104,9 @@ extractFirstWebhookMessage payload =
     , chg <- changes ent
     , msgs <- maybeToList (messages (value chg))
     , msg <- msgs
+    , waType msg == "text"
+    , Just txt <- [text msg]
+    , not (T.null (T.strip (body txt)))
     ]
 
 -- Link minting & sender -------------------------------------------------------

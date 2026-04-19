@@ -3606,6 +3606,57 @@ main = hspec $ do
                 Nothing ->
                     expectationFailure "Expected batched webhook message to be selected"
 
+        it "skips non-text or blank text rows before selecting an actionable webhook message" $ do
+            let imageMessage =
+                    WA.WAMessage
+                        (Just "wamid.image")
+                        "image"
+                        "+593991234567"
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just "1770000000")
+                blankTextMessage =
+                    WA.WAMessage
+                        (Just "wamid.blank")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "   "))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                enrollmentMessage =
+                    WA.WAMessage
+                        (Just "wamid.2")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [imageMessage, blankTextMessage, enrollmentMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            case extractFirstWebhookMessage payload of
+                Just (WA.WAMessage msgId msgType _ msgText _ _ _) -> do
+                    msgId `shouldBe` Just "wamid.2"
+                    msgType `shouldBe` "text"
+                    case msgText of
+                        Just (WA.WAText messageBody) ->
+                            messageBody `shouldBe` "INSCRIBIRME"
+                        Nothing ->
+                            expectationFailure "Expected text body to be selected"
+                Nothing ->
+                    expectationFailure "Expected actionable webhook text to be selected"
+
     describe "PreviewReq" $ do
         it "accepts only the canonical preview-link request body" $ do
             case eitherDecode "{\"phone\":\"+593991234567\"}" of
