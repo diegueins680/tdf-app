@@ -216,6 +216,9 @@ import TDF.Config
       openAiEmbedModel,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
+      resetDb,
+      runMigrations,
+      seedDatabase,
       sessionCookieDomain,
       sessionCookieName,
       sessionCookiePath,
@@ -375,6 +378,27 @@ main = hspec $ do
                     cfg <- loadConfig
                     appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
+
+        it "rejects malformed startup boolean flags instead of silently changing boot behavior" $ do
+            withEnvOverrides
+                [ ("RUN_MIGRATIONS", Just "tru")
+                , ("RESET_DB", Nothing)
+                , ("SEED_DB", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "RUN_MIGRATIONS must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("RUN_MIGRATIONS", Just " off ")
+                , ("RESET_DB", Just "1")
+                , ("SEED_DB", Just "yes")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    runMigrations cfg `shouldBe` False
+                    resetDb cfg `shouldBe` True
+                    seedDatabase cfg `shouldBe` True
 
         it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
             withEnvOverrides

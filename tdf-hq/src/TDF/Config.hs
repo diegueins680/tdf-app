@@ -240,9 +240,9 @@ loadConfig = do
   d          <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
   sslModeEnv <- lookupFirstEnv ["DB_SSLMODE", "PGSSLMODE"]
   ap         <- get "APP_PORT" "8080"
-  rdb        <- get "RESET_DB" "false"
-  sdb        <- get "SEED_DB" "false"
-  mig        <- get "RUN_MIGRATIONS" "true"
+  rdbEnv     <- lookupEnv "RESET_DB"
+  sdbEnv     <- lookupEnv "SEED_DB"
+  migEnv     <- lookupEnv "RUN_MIGRATIONS"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
@@ -305,6 +305,9 @@ loadConfig = do
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
   openAiEmbedModelVal <-
     validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
+  resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
+  seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
+  runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -349,9 +352,9 @@ loadConfig = do
     , dbConnUrl = connUrl
     , dbSslMode = sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
     , appPort = parseInt 8080 (Just ap)
-    , resetDb = asBool rdb
-    , seedDatabase = asBool sdb
-    , runMigrations = asBool mig
+    , resetDb = resetDbVal
+    , seedDatabase = seedDatabaseVal
+    , runMigrations = runMigrationsVal
     , seedTriggerToken = mkSeedToken seedEnv
     , appBaseUrl = normalizedAppBase
     , assetsBaseUrl = assetsBaseUrlVal
@@ -564,6 +567,27 @@ validateSessionCookieMaxAge (Just rawMaxAge)
 
 defaultSessionCookieMaxAgeSeconds :: Int
 defaultSessionCookieMaxAgeSeconds = 60 * 60 * 24 * 30
+
+validateStartupBooleanFlag :: String -> Bool -> Maybe String -> IO Bool
+validateStartupBooleanFlag _ defaultValue Nothing = pure defaultValue
+validateStartupBooleanFlag envName defaultValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case T.unpack normalized of
+        "true" -> pure True
+        "1" -> pure True
+        "yes" -> pure True
+        "on" -> pure True
+        "false" -> pure False
+        "0" -> pure False
+        "no" -> pure False
+        "off" -> pure False
+        _ ->
+          fail $
+            envName
+              <> " must be a boolean flag (true/false, 1/0, yes/no, on/off)"
+  where
+    normalized = T.toLower (T.strip (T.pack rawValue))
 
 validateSessionCookieDomain :: Maybe String -> IO (Maybe Text)
 validateSessionCookieDomain rawDomain =
