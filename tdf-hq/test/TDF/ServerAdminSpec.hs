@@ -284,6 +284,26 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "ArtistReleaseUpsert FromJSON" $ do
+        it "accepts canonical admin release write keys" $
+            case decodeArtistReleaseUpsert
+                "{\"aruArtistId\":42,\"aruTitle\":\"Live at TDF\",\"aruReleaseDate\":\"2026-05-01\",\"aruSpotifyUrl\":\"https://open.spotify.com/album/example\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical artist release payload to decode, got: " <> err)
+                Right payload -> do
+                    aruArtistId payload `shouldBe` 42
+                    aruTitle payload `shouldBe` "Live at TDF"
+                    aruDescription payload `shouldBe` Nothing
+                    aruSpotifyUrl payload `shouldBe` Just "https://open.spotify.com/album/example"
+
+        it "rejects unexpected release keys instead of silently dropping admin intent" $ do
+            decodeArtistReleaseUpsert
+                "{\"aruArtistId\":42,\"aruTitle\":\"Live at TDF\",\"artistId\":7}"
+                `shouldSatisfy` isLeft
+            decodeArtistReleaseUpsert
+                "{\"aruArtistId\":42,\"aruTitle\":\"Live at TDF\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
     describe "BrainEntry payload FromJSON" $ do
         it "accepts canonical brain entry create and update keys while preserving explicit null clears" $ do
             case decodeBrainEntryCreate
@@ -821,6 +841,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeUserAccountCreate = eitherDecode
     decodeUserAccountUpdate :: BL8.ByteString -> Either String UserAccountUpdate
     decodeUserAccountUpdate = eitherDecode
+    decodeArtistReleaseUpsert :: BL8.ByteString -> Either String ArtistReleaseUpsert
+    decodeArtistReleaseUpsert = eitherDecode
     decodeBrainEntryCreate :: BL8.ByteString -> Either String BrainEntryCreate
     decodeBrainEntryCreate = eitherDecode
     decodeBrainEntryUpdate :: BL8.ByteString -> Either String BrainEntryUpdate

@@ -114,7 +114,8 @@ data ArtistReleaseUpsert = ArtistReleaseUpsert
   , aruSpotifyUrl  :: Maybe Text
   , aruYoutubeUrl  :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON ArtistReleaseUpsert
+instance FromJSON ArtistReleaseUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data FanProfileDTO = FanProfileDTO
   { fpArtistId      :: Int64
