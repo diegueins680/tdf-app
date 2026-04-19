@@ -256,6 +256,13 @@ const formatOptionalDate = (iso: string | null | undefined) => {
   const formatted = formatDate(iso);
   return formatted === '-' ? '' : formatted;
 };
+const getSharedOptionalDateLabel = (values: readonly (string | null | undefined)[]) => {
+  if (values.length < 2) return '';
+  const labels = values.map(formatOptionalDate);
+  const [firstLabel] = labels;
+  if (!firstLabel || labels.some((label) => label === '')) return '';
+  return labels.every((label) => label === firstLabel) ? firstLabel : '';
+};
 
 const isRegistrationStatus = (
   status: string,
@@ -1932,6 +1939,8 @@ export default function CourseRegistrationsAdminPage() {
   const receiptIdsRequiringFileDisambiguator = getReceiptIdsRequiringFileDisambiguator(receipts);
   const followUps = dedupeCourseRegistrationFollowUps(dossierData?.crdFollowUps ?? []);
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
+  const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
+  const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -2216,6 +2225,11 @@ export default function CourseRegistrationsAdminPage() {
                   {receiptSectionHelpText}
                 </Typography>
               )}
+              {sharedReceiptCreatedLabel && (
+                <Typography variant="body2" color="text.secondary">
+                  Todos subidos: {sharedReceiptCreatedLabel}
+                </Typography>
+              )}
             </Box>
             {showAddReceiptAction && (
               <Button
@@ -2339,7 +2353,9 @@ export default function CourseRegistrationsAdminPage() {
                       receipt,
                       receiptIdsRequiringFileDisambiguator.has(receipt.crrId),
                     );
-                    const receiptCreatedLabel = formatOptionalDate(receipt.crrCreatedAt);
+                    const receiptCreatedLabel = sharedReceiptCreatedLabel
+                      ? ''
+                      : formatOptionalDate(receipt.crrCreatedAt);
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
@@ -3463,6 +3479,11 @@ export default function CourseRegistrationsAdminPage() {
                         </Button>
                       )}
                     </Stack>
+                    {sharedFollowUpCreatedLabel && (
+                      <Typography variant="body2" color="text.secondary">
+                        Todos registrados: {sharedFollowUpCreatedLabel}
+                      </Typography>
+                    )}
 
                     <Grid container spacing={2}>
                       {showFollowUpComposer && (
@@ -3637,6 +3658,9 @@ export default function CourseRegistrationsAdminPage() {
                                 entry,
                                 followUpIdsRequiringActionDisambiguator.has(entry.crfId),
                               );
+                              const followUpCreatedLabel = sharedFollowUpCreatedLabel
+                                ? ''
+                                : formatOptionalDate(entry.crfCreatedAt);
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
@@ -3644,9 +3668,11 @@ export default function CourseRegistrationsAdminPage() {
                                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
                                       <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
                                         <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
-                                        <Typography variant="caption" color="text.secondary">
-                                          {formatDate(entry.crfCreatedAt)}
-                                        </Typography>
+                                        {followUpCreatedLabel && (
+                                          <Typography variant="caption" color="text.secondary">
+                                            {followUpCreatedLabel}
+                                          </Typography>
+                                        )}
                                         {entry.crfNextFollowUpAt && (
                                           <Chip
                                             size="small"

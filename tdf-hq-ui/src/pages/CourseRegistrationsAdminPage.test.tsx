@@ -4617,6 +4617,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes shared saved-activity dates once instead of repeating them on every dossier item', async () => {
+    const sharedReceiptCreatedAt = '2030-03-01T12:00:00.000Z';
+    const sharedFollowUpCreatedAt = '2030-03-02T12:00:00.000Z';
+    const sharedReceiptCreatedLabel = formatTimestampForDisplay(sharedReceiptCreatedAt, '-');
+    const sharedFollowUpCreatedLabel = formatTimestampForDisplay(sharedFollowUpCreatedAt, '-');
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt({ crrCreatedAt: sharedReceiptCreatedAt }),
+          buildReceipt({
+            crrId: 302,
+            crrCreatedAt: sharedReceiptCreatedAt,
+            crrFileName: 'receipt-2.pdf',
+          }),
+        ],
+        crdFollowUps: [
+          buildFollowUp({ crfCreatedAt: sharedFollowUpCreatedAt }),
+          buildFollowUp({
+            crfId: 402,
+            crfCreatedAt: sharedFollowUpCreatedAt,
+            crfSubject: 'Pidió confirmación final',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(`Todos subidos: ${sharedReceiptCreatedLabel}`);
+      expect(countOccurrences(document.body, `Subido: ${sharedReceiptCreatedLabel}`)).toBe(0);
+      expect(countOccurrences(document.body, sharedReceiptCreatedLabel)).toBe(1);
+      expect(document.body.textContent).toContain(`Todos registrados: ${sharedFollowUpCreatedLabel}`);
+      expect(countOccurrences(document.body, sharedFollowUpCreatedLabel)).toBe(1);
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).toContain('receipt-2.pdf');
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+      expect(document.body.textContent).toContain('Pidió confirmación final');
+    });
+
+    await cleanup();
+  });
+
   it('disambiguates repeated receipt filenames so saved receipt actions stay distinct', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
