@@ -410,6 +410,7 @@ export default function CmsAdminPage() {
     const draftPretty = (formattedPayload ?? '').trim();
     return livePretty !== '' && draftPretty !== '' && livePretty !== draftPretty;
   }, [formattedPayload, livePayloadPretty]);
+  const editorHasMeaningfulPayloadDraft = payload.trim() !== '{}' || editingFromId !== null;
   const titleChangedFromLive = liveContent
     ? title.trim() !== (liveContent.ccdTitle ?? '').trim()
     : false;
@@ -553,11 +554,13 @@ export default function CmsAdminPage() {
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
       : payloadChanged
-        ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+        ? editorHasMeaningfulPayloadDraft
+          ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+          : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
         : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
-  const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
+  const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
 
