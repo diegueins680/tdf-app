@@ -9580,28 +9580,44 @@ validatePayPalApprovalUrl (Just rawUrl)
       invalidPayPalApprovalUrl
   | not (TrialsServer.isValidHttpUrl url) =
       invalidPayPalApprovalUrl
-  | not (isApprovedPayPalHost url) =
+  | not (isPayPalCheckoutApprovalUrl url) =
       invalidPayPalApprovalUrl
   | otherwise =
       Right url
   where
     url = T.strip rawUrl
 
-    isApprovedPayPalHost rawApprovalUrl =
-      case paypalApprovalHost rawApprovalUrl of
-        Just host ->
-          host == "paypal.com" || ".paypal.com" `T.isSuffixOf` host
+    isPayPalCheckoutApprovalUrl rawApprovalUrl =
+      case paypalApprovalUrlParts rawApprovalUrl of
+        Just (host, portSuffix, pathAndQuery) ->
+          host `elem` ["www.paypal.com", "www.sandbox.paypal.com"]
+            && T.null portSuffix
+            && "/checkoutnow?" `T.isPrefixOf` pathAndQuery
+            && not ("#" `T.isInfixOf` pathAndQuery)
+            && hasNonEmptyTokenParam (T.drop 13 pathAndQuery)
         Nothing ->
           False
 
-    paypalApprovalHost rawApprovalUrl =
-      let authority =
+    paypalApprovalUrlParts rawApprovalUrl =
+      let afterScheme = T.drop 8 rawApprovalUrl
+          authority =
             T.takeWhile
               (\c -> c /= '/' && c /= '?' && c /= '#')
-              (T.drop 8 rawApprovalUrl)
-          (host, _portSuffix) = T.breakOn ":" authority
+              afterScheme
+          pathAndQuery = T.drop (T.length authority) afterScheme
+          (host, portSuffix) = T.breakOn ":" authority
           normalizedHost = T.toLower host
-      in if T.null normalizedHost then Nothing else Just normalizedHost
+      in if T.null normalizedHost
+           then Nothing
+           else Just (normalizedHost, portSuffix, pathAndQuery)
+
+    hasNonEmptyTokenParam query =
+      any hasTokenValue (T.splitOn "&" query)
+
+    hasTokenValue param =
+      case T.stripPrefix "token=" param of
+        Just tokenValue -> not (T.null tokenValue)
+        Nothing -> False
 
 invalidPayPalApprovalUrl :: Either ServerError a
 invalidPayPalApprovalUrl =

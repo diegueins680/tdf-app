@@ -1920,7 +1920,7 @@ main = hspec $ do
             validatePayPalApprovalUrl (Just sandboxApproval)
                 `shouldBe` Right sandboxApproval
 
-        it "rejects missing or non-PayPal approval URLs from the upstream response" $ do
+        it "rejects missing or non-checkout PayPal approval URLs from the upstream response" $ do
             let invalidMessage = "PayPal returned an invalid approval URL"
             let assertInvalid rawValue expectedMessage =
                     case validatePayPalApprovalUrl rawValue of
@@ -1940,6 +1940,24 @@ main = hspec $ do
                 invalidMessage
             assertInvalid
                 (Just "https://www.paypal.com@evil.example/checkoutnow?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://api.paypal.com/checkoutnow?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com:8443/checkoutnow?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com/signin?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?flow=1")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?token=")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?token=ORDER-123#fragment")
                 invalidMessage
 
     describe "buildWhatsappCtaFor" $ do
