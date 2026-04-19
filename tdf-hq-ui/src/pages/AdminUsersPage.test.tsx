@@ -959,7 +959,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos.',
         );
         expect(countExactText(
           container,
@@ -969,6 +969,7 @@ describe('AdminUsersPage', () => {
           container,
           'La búsqueda aparecerá desde el tercer usuario.',
         )).toBe(0);
+        expect(container.textContent).not.toContain('La búsqueda aparecerá desde el tercer usuario.');
         expect(countExactText(
           container,
           'Vista actual: solo usuarios activos.',

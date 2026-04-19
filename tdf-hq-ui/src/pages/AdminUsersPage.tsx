@@ -465,7 +465,10 @@ export default function AdminUsersPage() {
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
-  const showSearchThresholdGuidance = !showSearchField && totalUsersCount === MIN_USERS_FOR_SEARCH - 1;
+  const showSearchThresholdGuidance =
+    !showSearchField
+    && totalUsersCount === MIN_USERS_FOR_SEARCH - 1
+    && !showSharedContactStateGuidance;
   const activeVisibleUsers = useMemo(
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => user.active) : visibleUsers),
     [showInactiveUsersGroup, visibleUsers],
