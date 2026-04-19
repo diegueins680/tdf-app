@@ -1072,11 +1072,13 @@ validateAssetPhotoUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just trimmedUrl
-      | TrialsServer.isValidHttpUrl trimmedUrl -> Right (Just trimmedUrl)
+      | "https://" `T.isPrefixOf` T.toLower trimmedUrl
+          && TrialsServer.isValidHttpUrl trimmedUrl ->
+          Right (Just trimmedUrl)
       | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
       | otherwise ->
           Left err400
-            { errBody = "photoUrl must be an absolute http(s) URL or an inventory asset path"
+            { errBody = "photoUrl must be an absolute https URL or an inventory asset path"
             }
 
 validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))

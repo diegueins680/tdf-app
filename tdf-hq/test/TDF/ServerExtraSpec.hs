@@ -372,10 +372,11 @@ spec = do
       let assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute http(s) URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
             Right value ->
               expectationFailure ("Expected invalid asset photo URL error, got " <> show value)
       assertInvalid (validateAssetPhotoUrl (Just "roland-juno.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "http://cdn.example.com/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://cdn/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
@@ -395,7 +396,7 @@ spec = do
       let assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute http(s) URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
             Right value ->
               expectationFailure ("Expected invalid asset photo update error, got " <> show value)
       assertInvalid (validateAssetPhotoUrlUpdate (Just "roland-juno.jpg"))
