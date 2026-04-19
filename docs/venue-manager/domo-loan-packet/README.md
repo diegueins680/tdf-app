@@ -12,6 +12,7 @@ Orden sugerido del expediente:
 6. `05-permisos-operacion`
 7. `06-evidencia-comercial`
 8. `07-respuestas-bancos-cooperativas`
+9. `08-canal-seguro-privado`
 
 Documentos fuente de trabajo:
 
@@ -32,5 +33,11 @@ Paquete publico seguro para envio inicial:
 - `06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
 - `06-evidencia-comercial/domo-public-quote-page-desktop-2026-04-19.png`
 - `06-evidencia-comercial/domo-public-quote-page-mobile-2026-04-19.png`
+
+Material interno de preparacion, no incluido en el ZIP publico:
+
+- `00-resumen/domo-lender-readiness-review-2026-04-19.md`
+- `00-resumen/domo-lender-readiness-review-2026-04-19.pdf`
+- `08-canal-seguro-privado/`
 
 Antes de una solicitud formal, reemplazar presupuestos de planificacion con proformas firmadas y entregar documentos privados de identidad, impuestos, banco, propiedad y garantia solo por un canal seguro confirmado por el prestamista.

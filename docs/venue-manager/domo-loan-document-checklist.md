@@ -1,4 +1,4 @@
-# Domo del Pululahua checklist para solicitud de crédito
+# Domo del Pululahua lista de verificacion para solicitud de credito
 
 Fecha: 2026-04-18
 
@@ -58,6 +58,7 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Tabla de bancos y cooperativas |  | Listo: `docs/venue-manager/domo-lender-outreach-table.md` |
 | Carta de presentacion para bancos/cooperativas |  | Listo: `docs/venue-manager/domo-loan-packet/00-resumen/domo-submission-cover-letter.md` |
 | Indice de carpeta para bancos/cooperativas |  | Listo: `docs/venue-manager/domo-loan-packet/00-resumen/domo-bank-submission-index.md` |
+| Revision de preparacion bancaria |  | Listo: `docs/venue-manager/domo-loan-packet/00-resumen/domo-lender-readiness-review-2026-04-19.md` |
 | Presupuesto final de uso de fondos por categoría |  | Listo como borrador publico: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/domo-use-of-funds-schedule.md` |
 | Proformas de paisajismo |  | Pendiente |
 | Proformas de camino y acceso |  | Pendiente |
@@ -67,6 +68,7 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Proformas de barra/catering operativo |  | Pendiente |
 | Cotizaciones de seguros, permisos, legal e ingeniería |  | Pendiente |
 | Cronograma de ejecución de fondos |  | Listo como borrador publico: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/domo-use-of-funds-schedule.md` |
+| Lista de verificacion de reemplazo por proformas firmadas |  | Listo: `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/signed-proforma-replacement-checklist.md` |
 
 ## 5. Permisos y operación
 
@@ -118,6 +120,8 @@ Archivos de contacto preparados:
 
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-drafts.md`
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-tracker.csv`
+- `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/private-submission-index.md`
+- `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/secure-upload-manifest-template.csv`
 
 ## 8. Carpeta sugerida
 
@@ -137,6 +141,10 @@ docs/venue-manager/domo-loan-packet/
   05-permisos-operacion/
   06-evidencia-comercial/
   07-respuestas-bancos-cooperativas/
+  08-canal-seguro-privado/
+    private-submission-index.md
+    secure-upload-manifest-template.csv
+    signed-proforma-replacement-checklist.md
 ```
 
 ## 9. Regla de decisión

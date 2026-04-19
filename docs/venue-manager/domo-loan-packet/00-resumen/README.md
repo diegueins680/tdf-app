@@ -18,3 +18,8 @@ Exportaciones publicas seguras preparadas:
 - `domo-36-month-pro-forma.pdf`
 - `../06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
 - `domo-public-lender-packet.zip`
+
+Material interno:
+
+- `domo-lender-readiness-review-2026-04-19.md`
+- `domo-lender-readiness-review-2026-04-19.pdf`
