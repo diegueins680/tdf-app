@@ -12,6 +12,7 @@ module TDF.ServerRadio
   , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
+  , resolveRadioNowPlayingFetchResult
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -39,7 +40,7 @@ import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
                                          selectList, selectFirst, update)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, errBody, throwError, (:<|>)(..))
+import           Servant                (NoContent(..), ServerError, ServerT, err400, err502, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, newManager, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -426,6 +427,41 @@ validateRadioBatchLimit defaultLimit (Just rawLimit)
   | otherwise =
       Right rawLimit
 
+resolveRadioNowPlayingFetchResult
+  :: Either Text (Maybe Text)
+  -> Either ServerError RadioNowPlayingResult
+resolveRadioNowPlayingFetchResult (Left _) =
+  Left err502 { errBody = "Unable to fetch now-playing metadata" }
+resolveRadioNowPlayingFetchResult (Right title) =
+  let cleaned = normalizeNonEmptyText title
+      (artist, track) = maybe (Nothing, Nothing) splitStreamTitle cleaned
+  in Right (RadioNowPlayingResult cleaned artist track)
+
+normalizeNonEmptyText :: Maybe Text -> Maybe Text
+normalizeNonEmptyText mTxt =
+  case fmap T.strip mTxt of
+    Just txt | not (T.null txt) -> Just txt
+    _                           -> Nothing
+
+splitStreamTitle :: Text -> (Maybe Text, Maybe Text)
+splitStreamTitle title =
+  let trimmed = T.strip title
+      separators = [" - ", " -- ", " / ", " | ", " : "]
+      splitOn sep =
+        let (left, right) = T.breakOn sep trimmed
+        in if T.null right
+          then Nothing
+          else
+            let after = T.drop (T.length sep) right
+                artist = T.strip left
+                track = T.strip after
+            in if T.null artist || T.null track
+              then Nothing
+              else Just (artist, track)
+  in case catMaybes (map splitOn separators) of
+       (artist, track):_ -> (Just artist, Just track)
+       [] -> (Nothing, Nothing)
+
 radioServer
   :: forall m.
      ( MonadReader Env m
@@ -546,12 +582,7 @@ radioServer user =
       streamUrl <- either throwError pure (validateRadioStreamUrl rnpStreamUrl)
       manager <- liftIO $ newManager tlsManagerSettings
       result <- liftIO $ fetchNowPlaying manager streamUrl
-      case result of
-        Left _ -> pure (RadioNowPlayingResult Nothing Nothing Nothing)
-        Right title ->
-          let cleaned = normalizeMaybe title
-              (artist, track) = maybe (Nothing, Nothing) splitStreamTitle cleaned
-          in pure (RadioNowPlayingResult cleaned artist track)
+      either throwError pure (resolveRadioNowPlayingFetchResult result)
 
     saveStream :: UTCTime -> RadioStreamUpsert -> SqlPersistT IO (Entity RadioStream, Bool)
     saveStream now RadioStreamUpsert{..} = do
@@ -779,25 +810,6 @@ radioServer user =
       let decoded = TE.decodeUtf8With lenientDecode raw
           cleaned = T.strip (T.takeWhile (/= '\0') decoded)
       in extractFieldInsensitive "StreamTitle" cleaned
-
-    splitStreamTitle :: Text -> (Maybe Text, Maybe Text)
-    splitStreamTitle title =
-      let trimmed = T.strip title
-          separators = [" - ", " -- ", " / ", " | ", " : "]
-          splitOn sep =
-            let (left, right) = T.breakOn sep trimmed
-            in if T.null right
-              then Nothing
-              else
-                let after = T.drop (T.length sep) right
-                    artist = T.strip left
-                    track = T.strip after
-                in if T.null artist || T.null track
-                  then Nothing
-                  else Just (artist, track)
-      in case catMaybes (map splitOn separators) of
-           (artist, track):_ -> (Just artist, Just track)
-           [] -> (Nothing, Nothing)
 
     extractFieldInsensitive :: Text -> Text -> Maybe Text
     extractFieldInsensitive field txt =

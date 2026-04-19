@@ -44,6 +44,7 @@ import TDF.API.Types
       RadioImportRequest (..),
       RadioMetadataRefreshRequest (..),
       RadioNowPlayingRequest (..),
+      RadioNowPlayingResult (..),
       RadioPresenceDTO (..),
       RadioPresenceUpsert (..),
       RadioStreamUpsert (..),
@@ -97,6 +98,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( radioServer,
+      resolveRadioNowPlayingFetchResult,
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
@@ -3172,6 +3174,36 @@ main = hspec $ do
                             expectationFailure ("Expected invalid radio refresh limit to be rejected, got " <> show value)
             assertRejected 0
             assertRejected 401
+
+    describe "resolveRadioNowPlayingFetchResult" $ do
+        it "keeps reachable-but-empty metadata distinct from upstream fetch failures" $ do
+            case resolveRadioNowPlayingFetchResult (Right Nothing) of
+                Right value -> do
+                    rnpTitle value `shouldBe` Nothing
+                    rnpArtist value `shouldBe` Nothing
+                    rnpTrack value `shouldBe` Nothing
+                Left err ->
+                    expectationFailure
+                        ("Expected absent now-playing metadata to stay successful, got " <> show err)
+
+            case resolveRadioNowPlayingFetchResult (Left "connection timed out") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 502
+                    BL.unpack (errBody err)
+                        `shouldContain` "Unable to fetch now-playing metadata"
+                Right value ->
+                    expectationFailure
+                        ("Expected now-playing fetch failure to be rejected, got " <> show value)
+
+        it "normalizes stream titles into title, artist, and track fields" $
+            case resolveRadioNowPlayingFetchResult (Right (Just "  Los Nin - Tarika  ")) of
+                Right value -> do
+                    rnpTitle value `shouldBe` Just "Los Nin - Tarika"
+                    rnpArtist value `shouldBe` Just "Los Nin"
+                    rnpTrack value `shouldBe` Just "Tarika"
+                Left err ->
+                    expectationFailure
+                        ("Expected now-playing title metadata to parse, got " <> show err)
 
     describe "radio request JSON contracts" $ do
         it "accepts canonical radio request payloads used by current handlers" $ do
