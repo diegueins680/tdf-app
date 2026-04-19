@@ -649,7 +649,8 @@ data CreateReceiptReq = CreateReceiptReq
   , crNotes      :: Maybe Text
   , crCurrency   :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON CreateReceiptReq
+instance FromJSON CreateReceiptReq where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 -- Auth
 data LoginRequest = LoginRequest

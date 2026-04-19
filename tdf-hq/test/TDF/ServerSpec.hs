@@ -292,6 +292,9 @@ decodeCreateBookingRequest = eitherDecode
 decodeUpdateBookingRequest :: BL8.ByteString -> Either String UpdateBookingReq
 decodeUpdateBookingRequest = eitherDecode
 
+decodeCreateReceiptReq :: BL8.ByteString -> Either String DTO.CreateReceiptReq
+decodeCreateReceiptReq = eitherDecode
+
 decodePartyCreate :: BL8.ByteString -> Either String DTO.PartyCreate
 decodePartyCreate = eitherDecode
 
@@ -1358,6 +1361,36 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected inactive package product to be rejected, got: " <> show value)
 
     describe "createReceipt" $ do
+        it "accepts canonical receipt create payloads and rejects over-posted fields" $ do
+            case decodeCreateReceiptReq
+                (BL8.pack $ concat
+                    [ "{\"crInvoiceId\":42"
+                    , ",\"crBuyerName\":\"Ada Lovelace\""
+                    , ",\"crBuyerEmail\":\"ada@example.com\""
+                    , ",\"crNotes\":\"Paid in cash\""
+                    , ",\"crCurrency\":\"USD\"}"
+                    ]) of
+                Left decodeErr ->
+                    expectationFailure
+                        ("Expected canonical receipt create payload to decode, got: " <> decodeErr)
+                Right
+                    ( DTO.CreateReceiptReq
+                        invoiceIdValue
+                        buyerNameValue
+                        buyerEmailValue
+                        notesValue
+                        currencyValue
+                    ) -> do
+                    invoiceIdValue `shouldBe` 42
+                    buyerNameValue `shouldBe` Just "Ada Lovelace"
+                    buyerEmailValue `shouldBe` Just "ada@example.com"
+                    notesValue `shouldBe` Just "Paid in cash"
+                    currencyValue `shouldBe` Just "USD"
+
+            decodeCreateReceiptReq
+                "{\"crInvoiceId\":42,\"crBuyerEmail\":\"ada@example.com\",\"status\":\"paid\"}"
+                `shouldSatisfy` isLeft
+
         it "rejects non-positive invoice ids before receipt lookup can collapse malformed requests into 404s" $ do
             result <-
                 runHandler $
