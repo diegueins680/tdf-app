@@ -388,6 +388,19 @@ main = hspec $ do
                     sessionCookieSecure cfg `shouldBe` True
                     sessionCookieSameSite cfg `shouldBe` "None"
 
+        it "rejects malformed session cookie SameSite values instead of silently using Lax" $ do
+            withEnvOverrides
+                [ ("SESSION_COOKIE_SAMESITE", Just " Strict ") ]
+                $ do
+                    cfg <- loadConfig
+                    sessionCookieSameSite cfg `shouldBe` "Strict"
+
+            withEnvOverrides
+                [ ("SESSION_COOKIE_SAMESITE", Just "nonee") ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SESSION_COOKIE_SAMESITE must be one of: Lax, Strict, None"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes valid session cookie paths before emitting Set-Cookie headers" $
             withEnvOverrides
                 [ ("SESSION_COOKIE_PATH", Just " /hq ") ]

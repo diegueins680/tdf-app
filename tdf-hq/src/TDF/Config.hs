@@ -337,11 +337,7 @@ loadConfig = do
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
       cookieSecure = maybe cookieSecureDefault asBool sessionCookieSecureEnv
-      cookieSameSite =
-        normalizeSameSiteValue $
-          fromMaybe
-            (if cookieSecure then "None" else "Lax")
-            sessionCookieSameSiteEnv
+  cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
   pure AppConfig
@@ -534,12 +530,21 @@ loadConfig = do
           )
           label
 
-normalizeSameSiteValue :: String -> Text
-normalizeSameSiteValue raw =
-  case map toLower (T.unpack (T.strip (T.pack raw))) of
-    "strict" -> "Strict"
-    "none" -> "None"
-    _ -> "Lax"
+validateSessionCookieSameSite :: Bool -> Maybe String -> IO Text
+validateSessionCookieSameSite cookieSecure rawSameSite =
+  case rawSameSite of
+    Nothing -> pure defaultValue
+    Just raw ->
+      let trimmed = T.strip (T.pack raw)
+      in if T.null trimmed
+           then pure defaultValue
+           else case map toLower (T.unpack trimmed) of
+             "lax" -> pure "Lax"
+             "strict" -> pure "Strict"
+             "none" -> pure "None"
+             _ -> fail "SESSION_COOKIE_SAMESITE must be one of: Lax, Strict, None"
+  where
+    defaultValue = if cookieSecure then "None" else "Lax"
 
 validateSessionCookiePolicy :: Bool -> Text -> IO ()
 validateSessionCookiePolicy cookieSecure cookieSameSite =
