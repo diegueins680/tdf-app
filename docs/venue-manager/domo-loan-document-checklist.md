@@ -72,6 +72,8 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Plantilla de solicitud de proforma firmada |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/proforma-request-template.md` |
 | Paquetes de alcance para proveedores |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-proforma-scope-packages.md` |
 | Tracker de proformas de proveedores |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-proforma-tracker.csv` |
+| Lista corta de proveedores candidatos con fuentes publicas |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-shortlist-public-sources-2026-04-19.md` / `.pdf` |
+| Cola de contacto con proveedores reales |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-outreach-queue.csv` |
 
 ## 5. Permisos y operación
 
@@ -147,6 +149,9 @@ docs/venue-manager/domo-loan-packet/
     proforma-request-template.md
     vendor-proforma-scope-packages.md
     vendor-proforma-tracker.csv
+    vendor-shortlist-public-sources-2026-04-19.md
+    vendor-shortlist-public-sources-2026-04-19.pdf
+    vendor-outreach-queue.csv
   05-permisos-operacion/
   06-evidencia-comercial/
   07-respuestas-bancos-cooperativas/

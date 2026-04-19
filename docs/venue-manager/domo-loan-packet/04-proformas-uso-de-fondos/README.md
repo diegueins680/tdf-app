@@ -25,3 +25,6 @@ Solicitudes de proforma preparadas:
 - `vendor-proforma-scope-packages.md`
 - `vendor-proforma-scope-packages.pdf`
 - `vendor-proforma-tracker.csv`
+- `vendor-shortlist-public-sources-2026-04-19.md`
+- `vendor-shortlist-public-sources-2026-04-19.pdf`
+- `vendor-outreach-queue.csv`
