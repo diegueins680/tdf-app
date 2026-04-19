@@ -648,20 +648,20 @@ spec = do
       assertInvalid "retired" Retired
 
   describe "parseCheckoutTargetKind" $ do
-    it "defaults omitted target kinds to party and normalizes supported values" $ do
-      parseCheckoutTargetKind Nothing `shouldBe` Right TargetParty
+    it "requires explicit target kinds and normalizes supported values" $ do
       parseCheckoutTargetKind (Just " room ") `shouldBe` Right TargetRoom
       parseCheckoutTargetKind (Just "SESSION") `shouldBe` Right TargetSession
 
-    it "rejects blank or unknown target kinds instead of silently treating them as party checkouts" $ do
-      let assertInvalid result = case result of
+    it "rejects missing, blank, or unknown target kinds instead of silently treating them as party checkouts" $ do
+      let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "targetKind must be one of: party, room, session"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid checkout target kind error, got " <> show value)
-      assertInvalid (parseCheckoutTargetKind (Just "   "))
-      assertInvalid (parseCheckoutTargetKind (Just "locker"))
+      assertInvalid "targetKind is required" (parseCheckoutTargetKind Nothing)
+      assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "   "))
+      assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "locker"))
 
   describe "parseOptionalKeyField" $ do
     it "treats missing or blank optional ids as absent and trims valid identifiers" $ do

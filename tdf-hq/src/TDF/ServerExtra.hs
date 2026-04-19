@@ -88,7 +88,8 @@ parseUTCTimeText t =
     Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
 
 parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
-parseCheckoutTargetKind Nothing = Right TargetParty
+parseCheckoutTargetKind Nothing =
+  Left err400 { errBody = "targetKind is required and must be one of: party, room, session" }
 parseCheckoutTargetKind (Just raw) =
   case T.toLower (T.strip raw) of
     "session" -> Right TargetSession
