@@ -44,7 +44,26 @@ jest.unstable_mockModule('../api/courses', () => ({
 }));
 
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
-  default: () => null,
+  default: ({
+    label,
+    onComplete,
+  }: {
+    label?: unknown;
+    onComplete?: (files: Array<{ name: string; publicUrl: string }>) => void;
+  }) => {
+    const labelText = String(label ?? '');
+    const isReceiptUpload = labelText.includes('comprobante') || labelText.includes('Archivo listo');
+    const fileName = isReceiptUpload ? 'mock-receipt.pdf' : 'mock-follow-up.pdf';
+
+    return (
+      <button
+        type="button"
+        aria-label={isReceiptUpload ? 'Completar comprobante de prueba' : 'Completar adjunto de prueba'}
+        data-testid={isReceiptUpload ? 'mock-receipt-upload' : 'mock-follow-up-upload'}
+        onClick={() => onComplete?.([{ name: fileName, publicUrl: `https://example.com/${fileName}` }])}
+      />
+    );
+  },
 }));
 
 const { default: CourseRegistrationsAdminPage } = await import('./CourseRegistrationsAdminPage');
@@ -3299,6 +3318,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('removes the alternate receipt-link action once a receipt file is ready', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+    });
+
+    const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-receipt-upload"]');
+    if (!uploadButton) throw new Error('Mock receipt upload not found');
+
+    await act(async () => {
+      clickButton(uploadButton);
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countButtonsByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBe(0);
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(getInputByLabel(document.body, 'Nombre visible').value).toBe('mock-receipt.pdf');
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('opens the payment dossier from the status menu without duplicating the receipt-upload action', async () => {
     const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
     const container = document.createElement('div');
@@ -4181,6 +4257,61 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto').getAttribute('aria-expanded')).toBe('false');
       expect(countButtonsByText(document.body, 'Ocultar enlace existente')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('removes the alternate follow-up link action once an attachment is ready', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+    });
+
+    await openDossierContextAction('Agregar seguimiento');
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-follow-up-upload"]');
+    if (!uploadButton) throw new Error('Mock follow-up upload not found');
+
+    await act(async () => {
+      clickButton(uploadButton);
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countButtonsByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBe(0);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+      expect(hasLabel(document.body, 'Asunto')).toBe(true);
+      expect(countButtonsByText(document.body, 'Ocultar detalles opcionales')).toBe(0);
     });
 
     await cleanup();

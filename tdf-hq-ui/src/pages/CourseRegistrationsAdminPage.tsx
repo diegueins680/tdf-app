@@ -1969,6 +1969,7 @@ export default function CourseRegistrationsAdminPage() {
     && receiptForm.editingId == null
     && !canSubmitReceipt
     && !hasReceiptMetadataDraft;
+  const showReceiptExistingLinkAction = !showReceiptUrlField && !canSubmitReceipt;
   const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
   const showReceiptMetadataFields = (
     receiptForm.editingId != null
@@ -2002,7 +2003,9 @@ export default function CourseRegistrationsAdminPage() {
   );
   const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
-  const canHideFollowUpUrlField = showFollowUpUrlField && !trimToNull(followUpForm.attachmentUrl);
+  const hasFollowUpAttachmentUrl = Boolean(trimToNull(followUpForm.attachmentUrl));
+  const canHideFollowUpUrlField = showFollowUpUrlField && !hasFollowUpAttachmentUrl;
+  const showFollowUpExistingLinkAction = !showFollowUpUrlField && !hasFollowUpAttachmentUrl;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
@@ -2226,7 +2229,7 @@ export default function CourseRegistrationsAdminPage() {
                     onComplete={handleReceiptUpload}
                     dense
                   />
-                  {!showReceiptUrlField && (
+                  {showReceiptExistingLinkAction && (
                     <Button
                       size="small"
                       variant="text"
@@ -3536,7 +3539,7 @@ export default function CourseRegistrationsAdminPage() {
                                     onComplete={handleFollowUpUpload}
                                     dense
                                   />
-                                  {!showFollowUpUrlField && (
+                                  {showFollowUpExistingLinkAction && (
                                     <Button
                                       size="small"
                                       variant="text"
