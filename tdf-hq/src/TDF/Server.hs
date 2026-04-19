@@ -2054,6 +2054,26 @@ protectedServer user =
   :<|> countriesServer
   :<|> futureServer user
 
+validateCalendarRedirectUri :: Text -> Either ServerError Text
+validateCalendarRedirectUri rawRedirect =
+  case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
+    Right (Just uri) -> Right uri
+    _ ->
+      Left err400
+        { errBody =
+            "redirectUri must be an absolute http(s) Google Calendar OAuth callback URL without query or fragment"
+        }
+
+validateConfiguredCalendarRedirectUri :: Text -> Either ServerError Text
+validateConfiguredCalendarRedirectUri rawRedirect =
+  case normalizeConfiguredBaseUrl "GOOGLE_REDIRECT_URI" (T.unpack rawRedirect) of
+    Right (Just uri) -> Right uri
+    _ ->
+      Left err503
+        { errBody =
+            "GOOGLE_REDIRECT_URI must be an absolute http(s) URL without query or fragment"
+        }
+
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =
        calendarAuthUrlH
@@ -2066,16 +2086,19 @@ calendarServer user =
 
     loadGoogleEnv :: Maybe Text -> AppM (Text, Text, Text)
     loadGoogleEnv mRedirect = do
-      mCid <- liftIO $ lookupEnv "GOOGLE_CLIENT_ID"
-      mSecret <- liftIO $ lookupEnv "GOOGLE_CLIENT_SECRET"
-      mRedirectEnv <- liftIO $ lookupEnv "GOOGLE_REDIRECT_URI"
-      let cid = fmap T.strip (T.pack <$> mCid)
-          secret = fmap T.strip (T.pack <$> mSecret)
-          redirect = case mRedirect of
-            Just txt | not (T.null (T.strip txt)) -> Just (T.strip txt)
-            _ -> fmap T.strip (T.pack <$> mRedirectEnv)
-      case (cid, secret, redirect) of
-        (Just cid', Just sec', Just redir') -> pure (cid', sec', redir')
+      mCid <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
+      mSecret <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
+      mRedirectEnv <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_REDIRECT_URI"
+      let mProvidedRedirect = cleanOptional mRedirect
+          mRedirectRaw = mProvidedRedirect <|> mRedirectEnv
+      case (mCid, mSecret, mRedirectRaw) of
+        (Just cid', Just sec', Just redirRaw) -> do
+          redir' <-
+            either throwError pure $
+              case mProvidedRedirect of
+                Just _ -> validateCalendarRedirectUri redirRaw
+                Nothing -> validateConfiguredCalendarRedirectUri redirRaw
+          pure (cid', sec', redir')
         _ ->
           throwError err503
             { errBody = "Google Calendar no configurado (faltan GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI)." }
@@ -2099,29 +2122,13 @@ calendarServer user =
       requireAdmin
       (cid, sec, redirect) <- loadGoogleEnv redirectUri
       manager <- liftIO $ newManager tlsManagerSettings
-      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
-      let form =
-            renderSimpleQuery False
-              [ ("code", TE.encodeUtf8 code)
-              , ("client_id", TE.encodeUtf8 cid)
-              , ("client_secret", TE.encodeUtf8 sec)
-              , ("redirect_uri", TE.encodeUtf8 redirect)
-              , ("grant_type", "authorization_code")
-              ]
-          req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS (BL.fromStrict form)
-            , requestHeaders =
-                [ ("Content-Type", "application/x-www-form-urlencoded")
-                ]
-            }
-      resp <- liftIO $ httpLbs req manager
-      let codeStatus = statusCode (responseStatus resp)
-      when (codeStatus >= 400) $
-        throwError err502 { errBody = "Intercambio de token falló con Google." }
-      token <- case eitherDecode (responseBody resp) of
-        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token: " <> err) }
-        Right tok -> pure tok
+      token <- requestGoogleToken manager
+        [ ("code", TE.encodeUtf8 code)
+        , ("client_id", TE.encodeUtf8 cid)
+        , ("client_secret", TE.encodeUtf8 sec)
+        , ("redirect_uri", TE.encodeUtf8 redirect)
+        , ("grant_type", "authorization_code")
+        ]
       now <- liftIO getCurrentTime
       let GoogleToken
             { access_token = gAccessToken
@@ -2242,27 +2249,13 @@ calendarServer user =
     refreshAccessToken :: Text -> Text -> Text -> Cal.GoogleCalendarConfig -> Text -> UTCTime -> AppM Cal.GoogleCalendarConfig
     refreshAccessToken cid sec redirect cfg rt now = do
       manager <- liftIO $ newManager tlsManagerSettings
-      req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
-      let form =
-            renderSimpleQuery False
-              [ ("client_id", TE.encodeUtf8 cid)
-              , ("client_secret", TE.encodeUtf8 sec)
-              , ("refresh_token", TE.encodeUtf8 rt)
-              , ("grant_type", "refresh_token")
-              , ("redirect_uri", TE.encodeUtf8 redirect)
-              ]
-          req = req0
-            { method = "POST"
-            , requestBody = RequestBodyLBS (BL.fromStrict form)
-            , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
-            }
-      resp <- liftIO $ httpLbs req manager
-      let codeStatus = statusCode (responseStatus resp)
-      when (codeStatus >= 400) $
-        throwError err502 { errBody = "Refresh token falló con Google." }
-      token <- case eitherDecode (responseBody resp) of
-        Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear refresh token: " <> err) }
-        Right tok -> pure tok
+      token <- requestGoogleToken manager
+        [ ("client_id", TE.encodeUtf8 cid)
+        , ("client_secret", TE.encodeUtf8 sec)
+        , ("refresh_token", TE.encodeUtf8 rt)
+        , ("grant_type", "refresh_token")
+        , ("redirect_uri", TE.encodeUtf8 redirect)
+        ]
       let GoogleToken
             { access_token = gAccessToken
             , expires_in = gExpiresIn

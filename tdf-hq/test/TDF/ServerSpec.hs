@@ -176,6 +176,7 @@ import TDF.Server
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
+    , validateCalendarRedirectUri
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
     , resolveDrivePublicUrl
@@ -2402,6 +2403,30 @@ spec = describe "TDF.Server helpers" $ do
                 :: Either String DriveTokenExchangeRequest
             )
                 `shouldSatisfy` isLeft
+
+    describe "validateCalendarRedirectUri" $ do
+        it "normalizes absolute Calendar OAuth callbacks and rejects ambiguous redirect shapes" $ do
+            validateCalendarRedirectUri
+                "  https://tdf-app.pages.dev/configuracion/integraciones/calendario  "
+                `shouldBe`
+                    Right "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+
+            let assertInvalid rawRedirect =
+                    case validateCalendarRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute http(s) Google Calendar OAuth callback URL without query or fragment"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Calendar redirect URI, got: "
+                                    <> show value
+                                )
+            assertInvalid "/configuracion/integraciones/calendario"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?code=abc"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#code"
+            assertInvalid "https://user:secret@tdf-app.pages.dev/configuracion/integraciones/calendario"
 
     describe "validateDriveTokenRefreshRequest" $ do
         it "normalizes valid Drive refresh tokens before contacting Google" $
