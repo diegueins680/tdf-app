@@ -1221,10 +1221,17 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
-  const showLocalSearchClearAction = hasLocalSearch && !showEmptyLocalSearchResults;
+  const showLocalSearchExplicitClearAction = hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && searchedRegistrations.length === 1
+    && !showEmptyLocalSearchResults;
+  const showLocalSearchClearAction = hasLocalSearch
+    && !showEmptyLocalSearchResults
+    && !showLocalSearchExplicitClearAction;
   const showLocalSearchUtilityRow = hasLocalSearch && (
     showCopyCsvAction
     || Boolean(copyMessage)
+    || showLocalSearchExplicitClearAction
   );
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
@@ -3059,6 +3066,14 @@ export default function CourseRegistrationsAdminPage() {
                     useFlexGap
                     data-testid="course-registration-local-search-utilities"
                   >
+                    {showLocalSearchExplicitClearAction && (
+                      <Button
+                        size="small"
+                        onClick={() => setLocalSearch('')}
+                      >
+                        Limpiar búsqueda
+                      </Button>
+                    )}
                     {copyCsvActionButton}
                     {copyMessage && (
                       <Typography variant="caption" color="text.secondary">
