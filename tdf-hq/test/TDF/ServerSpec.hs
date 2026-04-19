@@ -3890,6 +3890,18 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user..name@example.com"
             assertInvalid "user()@example.com"
             assertInvalid "usér@example.com"
+            assertInvalid (T.replicate 65 "a" <> "@example.com")
+            assertInvalid ("ada@" <> T.replicate 64 "a" <> ".com")
+            assertInvalid
+                ( T.replicate 64 "a" <> "@"
+                    <> T.intercalate
+                        "."
+                        [ T.replicate 63 "b"
+                        , T.replicate 63 "c"
+                        , T.replicate 63 "d"
+                        , "com"
+                        ]
+                )
 
     describe "validateMarketplaceBuyerName" $ do
         it "trims checkout buyer names before contact or payment order creation" $

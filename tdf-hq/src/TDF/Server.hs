@@ -4024,7 +4024,8 @@ isValidCourseRegistrationEmail :: Text -> Bool
 isValidCourseRegistrationEmail candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      isValidEmailLocalPart localPart
+      T.length candidate <= 254
+        && isValidEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && T.isInfixOf "." domain
@@ -4034,6 +4035,7 @@ isValidCourseRegistrationEmail candidate =
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= 64
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (T.isInfixOf ".." localPart)
@@ -4046,6 +4048,7 @@ isValidEmailLocalChar c =
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= 63
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidEmailDomainChar label
