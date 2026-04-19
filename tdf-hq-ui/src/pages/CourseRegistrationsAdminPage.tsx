@@ -1318,14 +1318,8 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
-  const showLocalSearchResultUtilityActions = showCopyCsvAction || Boolean(copyMessage);
   const showLocalSearchExplicitClearAction = hasLocalSearch
-    && localSearchNarrowsRegistrations
-    && (searchedRegistrations.length === 1 || showLocalSearchResultUtilityActions)
     && !showEmptyLocalSearchResults;
-  const showLocalSearchClearAction = hasLocalSearch
-    && !showEmptyLocalSearchResults
-    && !showLocalSearchExplicitClearAction;
   const showLocalSearchUtilityRow = hasLocalSearch && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -3149,20 +3143,6 @@ export default function CourseRegistrationsAdminPage() {
                         <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
-                    endAdornment: showLocalSearchClearAction ? (
-                      <InputAdornment position="end">
-                        <Tooltip title="Limpiar búsqueda">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            aria-label="Limpiar búsqueda"
-                            onClick={() => setLocalSearch('')}
-                          >
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </InputAdornment>
-                    ) : null,
                   }}
                 />
                 {showLocalSearchUtilityRow && (
@@ -3177,6 +3157,7 @@ export default function CourseRegistrationsAdminPage() {
                     {showLocalSearchExplicitClearAction && (
                       <Button
                         size="small"
+                        startIcon={<ClearIcon fontSize="small" />}
                         onClick={() => setLocalSearch('')}
                       >
                         Limpiar búsqueda
