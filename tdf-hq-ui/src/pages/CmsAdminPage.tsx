@@ -451,6 +451,14 @@ export default function CmsAdminPage() {
     ));
     return localesInView.length === 1 ? (localesInView[0] ?? null) : null;
   }, [filteredVersions]);
+  const sharedVersionTitle = useMemo(() => {
+    const titlesInView = Array.from(new Set(
+      filteredVersions
+        .map((version) => (version.ccdTitle ?? '').trim())
+        .filter((value) => value !== ''),
+    ));
+    return titlesInView.length === 1 ? (titlesInView[0] ?? null) : null;
+  }, [filteredVersions]);
   const sharedVersionStatus = useMemo(() => {
     const statusesInView = Array.from(new Set(
       filteredVersions
@@ -461,11 +469,12 @@ export default function CmsAdminPage() {
   }, [filteredVersions]);
   const sharedVersionContextSummary = useMemo(() => {
     const parts: string[] = [];
+    if (sharedVersionTitle) parts.push(`título ${sharedVersionTitle}`);
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
     if (sharedVersionLocale) parts.push(`locale ${sharedVersionLocale}`);
     if (sharedVersionStatus) parts.push(`estado ${formatCmsStatusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
-  }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus]);
+  }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: filteredVersions.length,
@@ -934,7 +943,7 @@ export default function CmsAdminPage() {
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2.5 }}>
+      <Paper variant="outlined" sx={{ p: 2.5 }} data-testid="cms-admin-version-history">
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
             <Stack spacing={0.75}>
@@ -1014,6 +1023,7 @@ export default function CmsAdminPage() {
                 isCurrentLive: liveContent?.ccdId === v.ccdId,
                 isLoadedInEditor: editingFromId === v.ccdId,
               });
+              const rowTitle = sharedVersionTitle ? `Versión v${v.ccdVersion}` : (v.ccdTitle ?? v.ccdSlug);
 
               return (
                 <Paper key={v.ccdId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
@@ -1023,11 +1033,11 @@ export default function CmsAdminPage() {
                     alignItems={{ xs: 'flex-start', sm: 'center' }}
                   >
                     <Box sx={{ flexGrow: 1 }}>
-                      <Typography fontWeight={700}>{v.ccdTitle ?? v.ccdSlug}</Typography>
+                      <Typography fontWeight={700}>{rowTitle}</Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
                         {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
-                        <Chip label={`v${v.ccdVersion}`} size="small" />
+                        {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
                         {!sharedVersionStatus && (
                           <Chip
                             label={formatCmsStatusLabel(v.ccdStatus)}

@@ -632,13 +632,20 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('shows shared slug and locale context once above the versions list instead of repeating them on each row', async () => {
+  it('shows shared title, slug, and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Contexto compartido: slug records-public · locale es.');
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain(
+        'Contexto compartido: título Landing principal · slug records-public · locale es.',
+      );
+      expect((history?.textContent ?? '').split('Landing principal').length - 1).toBe(1);
+      expect(history?.textContent).toContain('Versión v4');
+      expect(history?.textContent).toContain('Versión v3');
       expect(countExactText(container, 'records-public')).toBe(1);
       expect(countExactText(container, 'es')).toBe(1);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
@@ -851,7 +858,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Contexto compartido: slug records-public · locale es · estado Publicado.',
+        'Contexto compartido: título Landing principal · slug records-public · locale es · estado Publicado.',
       );
       expect(countExactText(container, 'Publicado')).toBe(1);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
