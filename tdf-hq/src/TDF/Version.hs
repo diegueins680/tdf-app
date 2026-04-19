@@ -8,6 +8,7 @@ module TDF.Version
   ) where
 
 import           Data.Aeson                   (ToJSON(..), object, (.=))
+import           Data.Char                    (isControl)
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Version                 (showVersion)
@@ -70,7 +71,10 @@ canonRuntimeMetadata :: Text -> Maybe Text
 canonRuntimeMetadata txt =
   let trimmed = T.strip txt
       upper   = T.toUpper trimmed
-  in if T.null trimmed || upper == "UNKNOWN" || upper == "DEV"
+  in if T.null trimmed
+        || upper == "UNKNOWN"
+        || upper == "DEV"
+        || T.any isControl trimmed
        then Nothing
        else Just trimmed
 
