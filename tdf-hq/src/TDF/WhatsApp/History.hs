@@ -27,7 +27,7 @@ import           Data.Maybe (catMaybes, isJust, fromMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (UTCTime)
+import           Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import           Database.Persist
 import           Database.Persist.Sql (SqlPersistT, fromSqlKey)
 
@@ -243,11 +243,12 @@ recordOutgoingWhatsAppMessage
 recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
   snapshot <- resolveWhatsAppContactSnapshot owrRecipientPartyId (Just owrRecipientPhone)
   let recipientPhone = fromMaybe (nonEmptyOr "unknown" owrRecipientPhone) (normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot)
-      safeBase = if T.null (T.strip recipientPhone) then "unknown" else T.strip recipientPhone
-      fallbackExternalId = safeBase <> "-out-" <> T.pack (show now)
-      externalId = case sendResult of
-        Left _ -> fallbackExternalId
-        Right resp -> fromMaybe fallbackExternalId (cleanMaybeText (sendTextMessageId resp))
+      fallbackExternalId = generatedWhatsAppExternalIdBase recipientPhone now
+      providedExternalId = case sendResult of
+        Left _ -> Nothing
+        Right resp -> cleanMaybeText (sendTextMessageId resp)
+  externalId <- maybe (allocateGeneratedWhatsAppExternalId fallbackExternalId) pure providedExternalId
+  let
       isFailure =
         case sendResult of
           Left _ -> True
@@ -316,6 +317,28 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
       , "resendOfMessageId" .= fmap (T.pack . show . fromSqlKey) owrResendOfMessageId
       ]
   pure entity
+
+generatedWhatsAppExternalIdBase :: Text -> UTCTime -> Text
+generatedWhatsAppExternalIdBase recipientPhone now =
+  safeBase <> "-out-" <> T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" now)
+  where
+    safeBase =
+      case cleanMaybeText (Just recipientPhone) of
+        Nothing -> "unknown"
+        Just value -> value
+
+allocateGeneratedWhatsAppExternalId :: Text -> SqlPersistT IO Text
+allocateGeneratedWhatsAppExternalId baseExternalId = go (0 :: Int)
+  where
+    go suffix = do
+      let candidate =
+            if suffix == 0
+              then baseExternalId
+              else baseExternalId <> "-" <> T.pack (show (suffix + 1))
+      mExisting <- getBy (ME.UniqueWhatsAppMessage candidate)
+      case mExisting of
+        Nothing -> pure candidate
+        Just _ -> go (suffix + 1)
 
 applyWhatsAppDeliveryUpdate
   :: UTCTime

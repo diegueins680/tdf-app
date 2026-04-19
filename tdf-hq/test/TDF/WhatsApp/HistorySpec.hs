@@ -7,6 +7,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (object)
+import Data.Char (isSpace)
 import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -60,6 +61,40 @@ spec = do
       let externalId = ME.whatsAppMessageExternalId (entityVal stored)
       externalId `shouldSatisfy` (\val -> not (T.null (T.strip val)))
       externalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
+      externalId `shouldSatisfy` (T.all (not . isSpace))
+
+    it "allocates distinct fallback external ids for repeated blank-id sends at the same timestamp" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          sendResult =
+            Right SendTextResult
+              { sendTextPayload = object []
+              , sendTextMessageId = Just "   "
+              }
+          outgoing body = OutgoingWhatsAppRecord
+            { owrRecipientPhone = "+593991234567"
+            , owrRecipientPartyId = Nothing
+            , owrRecipientName = Just "Ada"
+            , owrRecipientEmail = Nothing
+            , owrActorPartyId = Nothing
+            , owrBody = body
+            , owrSource = Just "history_spec"
+            , owrReplyToMessageId = Nothing
+            , owrReplyToExternalId = Nothing
+            , owrResendOfMessageId = Nothing
+            , owrMetadata = Nothing
+            }
+      (firstExternalId, secondExternalId) <- runWhatsAppHistorySql $ do
+        first <- recordOutgoingWhatsAppMessage now (outgoing "Hola") sendResult
+        second <- recordOutgoingWhatsAppMessage now (outgoing "Hola otra vez") sendResult
+        pure
+          ( ME.whatsAppMessageExternalId (entityVal first)
+          , ME.whatsAppMessageExternalId (entityVal second)
+          )
+
+      firstExternalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
+      secondExternalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
+      secondExternalId `shouldNotBe` firstExternalId
+      secondExternalId `shouldBe` firstExternalId <> "-2"
 
     it "applies reply outcomes only to incoming reply targets when linked by message id" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
