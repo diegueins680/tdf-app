@@ -28,3 +28,5 @@ Solicitudes de proforma preparadas:
 - `vendor-shortlist-public-sources-2026-04-19.md`
 - `vendor-shortlist-public-sources-2026-04-19.pdf`
 - `vendor-outreach-queue.csv`
+- `vendor-email-form-round-2-2026-04-20.md`
+- `vendor-email-form-round-2-2026-04-20.pdf`
