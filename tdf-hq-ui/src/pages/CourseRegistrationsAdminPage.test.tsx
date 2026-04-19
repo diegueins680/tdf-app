@@ -2847,6 +2847,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(emptyHint).toBeNull();
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
     });
 
     await act(async () => {

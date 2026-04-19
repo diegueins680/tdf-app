@@ -2072,7 +2072,6 @@ export default function CourseRegistrationsAdminPage() {
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
   const hasDossierRefreshContext = dossierQuery.isError
-    || canMarkPaid
     || hasReceipts
     || followUps.length > 0
     || hasSavedNotes
