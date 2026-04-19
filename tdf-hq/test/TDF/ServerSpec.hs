@@ -2286,10 +2286,22 @@ spec = describe "TDF.Server helpers" $ do
                 "codeVerifier must be a PKCE verifier"
                 baseRequest { codeVerifier = T.replicate 42 "a" <> "!" }
             assertInvalid
-                "redirectUri must be an absolute http(s) URL without a fragment"
+                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
                 baseRequest { redirectUri = Just "/oauth/google-drive/callback" }
             assertInvalid
-                "redirectUri must be an absolute http(s) URL without a fragment"
+                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                baseRequest
+                    { redirectUri =
+                        Just "https://tdf-app.pages.dev/oauth/google-drive/other"
+                    }
+            assertInvalid
+                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                baseRequest
+                    { redirectUri =
+                        Just "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
+                    }
+            assertInvalid
+                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
                 baseRequest
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/callback#token"

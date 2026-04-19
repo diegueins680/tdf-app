@@ -1899,15 +1899,16 @@ validateDriveRedirectUri :: Text -> Either ServerError Text
 validateDriveRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
     Right (Just uri)
-      | "#" `T.isInfixOf` uri ->
-          invalid
-      | otherwise ->
-          Right uri
+      | googleDriveOAuthCallbackPath `T.isSuffixOf` uri -> Right uri
+      | otherwise -> invalid
     _ -> invalid
   where
+    googleDriveOAuthCallbackPath = "/oauth/google-drive/callback"
     invalid =
       Left err400
-        { errBody = "redirectUri must be an absolute http(s) URL without a fragment" }
+        { errBody =
+            "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+        }
 
 driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
 driveTokenResponseFrom GoogleToken{..} fallbackRefresh =
