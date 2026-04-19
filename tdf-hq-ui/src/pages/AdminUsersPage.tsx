@@ -275,11 +275,11 @@ const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'rol
   });
 };
 
-const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) => {
+const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
   const displayName = user.partyName.trim();
   const username = user.username.trim();
-  const primary = displayName || username;
-  const showUsername = displayName !== '' && displayName.toLowerCase() !== username.toLowerCase();
+  const primary = displayName || username || `Cuenta #${user.userId}`;
+  const showUsername = displayName !== '' && username !== '' && displayName.toLowerCase() !== username.toLowerCase();
   const secondaryParts: string[] = [];
 
   if (showUsername) secondaryParts.push(`Usuario: ${username}`);
@@ -290,7 +290,7 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username'>) 
   };
 };
 
-const getUserVisibleIdentityKey = (user: Pick<AdminUser, 'partyName' | 'username'>) => {
+const getUserVisibleIdentityKey = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
   const identity = summarizeUserIdentity(user);
   return [identity.primary, identity.secondary]
     .map((value) => value.trim().toLocaleLowerCase('es'))

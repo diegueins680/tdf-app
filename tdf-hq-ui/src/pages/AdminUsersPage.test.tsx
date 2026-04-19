@@ -561,6 +561,47 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('uses a single account fallback when admin identity fields are still blank', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        partyName: '   ',
+        username: '   ',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: '   ',
+        primaryEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const fallbackRow = getRowByUserId(container, 101);
+        expect(hasExactText(fallbackRow, 'Cuenta #101')).toBe(true);
+        expect(fallbackRow.textContent?.match(/Cuenta #101/g) ?? []).toHaveLength(1);
+        expect(fallbackRow.textContent).not.toContain('Usuario:');
+
+        const namedRow = getRowByUserId(container, 102);
+        expect(hasLinkWithTextAndHref(namedRow, 'Grace Hopper', '/perfil/10')).toBe(true);
+        expect(namedRow.textContent).not.toContain('Usuario:');
+        expect(namedRow.textContent).not.toContain('Perfil #10');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
