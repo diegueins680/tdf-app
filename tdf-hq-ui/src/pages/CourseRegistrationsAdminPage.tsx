@@ -619,7 +619,6 @@ const registrationListContextSummary = ({
 };
 
 const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
-  const statusKeys = new Set<string>();
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
   let hasNamedOrContactIdentity = false;
@@ -639,9 +638,6 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
       hasGeneratedRegistrationIdentity = true;
     }
 
-    const statusKey = reg.crStatus.trim().toLocaleLowerCase('es');
-    if (statusKey) statusKeys.add(statusKey);
-
     const searchableSource = getSearchableRegistrationSource(reg.crSource);
     if (searchableSource) {
       sourceKeys.add(normalizeRegistrationSourceKey(searchableSource));
@@ -658,7 +654,6 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   const terms = hasNamedOrContactIdentity ? ['Nombre', 'contacto'] : ['Registro'];
   if (hasNamedOrContactIdentity && hasGeneratedRegistrationIdentity) terms.push('registro');
   if (hasNotes) terms.push('nota');
-  if (statusKeys.size > 1) terms.push('estado');
   if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
 

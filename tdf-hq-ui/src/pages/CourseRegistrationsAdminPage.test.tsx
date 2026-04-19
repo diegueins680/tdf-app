@@ -5038,8 +5038,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(hasLabel(container, 'Buscar registros cargados')).toBe(false);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, contacto o estado',
+        'Nombre o contacto',
       );
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
         dossierOnlyScopeHint,
@@ -5271,7 +5272,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, estado, fuente o curso');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, fuente o curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
