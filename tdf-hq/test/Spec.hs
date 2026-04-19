@@ -57,6 +57,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
+import TDF.App.Boot (validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cors
     ( corsPolicy,
@@ -292,6 +293,24 @@ main = hspec $ do
                 `shouldBe` False
             seededCredentialSeedingAllowed [("NODE_ENV", "test")]
                 `shouldBe` True
+
+    describe "validateSeedDatabaseStartup" $ do
+        it "allows database seeding in local development" $
+            validateSeedDatabaseStartup True []
+                `shouldBe` Right ()
+
+        it "allows hosted or production startup when database seeding is disabled" $
+            validateSeedDatabaseStartup False [("FLY_APP_NAME", "tdf-hq")]
+                `shouldBe` Right ()
+
+        it "rejects database seeding in hosted or production runtimes" $ do
+            let seedDbGuardMessage (Left msg) =
+                    "SEED_DB=true is not allowed" `isInfixOf` msg
+                seedDbGuardMessage _ = False
+            validateSeedDatabaseStartup True [("FLY_APP_NAME", "tdf-hq")]
+                `shouldSatisfy` seedDbGuardMessage
+            validateSeedDatabaseStartup True [("APP_ENV", "production")]
+                `shouldSatisfy` seedDbGuardMessage
 
     describe "loadConfig" $ do
         it "falls back to default ports when Fly-style env values are malformed" $

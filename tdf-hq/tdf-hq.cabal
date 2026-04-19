@@ -160,6 +160,7 @@ test-suite tdf-hq-test
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
+    TDF.App.Boot
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future

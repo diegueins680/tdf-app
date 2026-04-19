@@ -592,6 +592,12 @@ spec = do
             decodeSessionUpdate
                 "{\"suNotes\":null,\"notes\":null}"
                 `shouldSatisfy` isLeft
+            decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scInputListRows\":[{\"channelNumber\":1,\"mic\":\"typo\"}]}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suInputListRows\":[{\"channelNumber\":1,\"mic\":\"typo\"}]}"
+                `shouldSatisfy` isLeft
 
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
         it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do

@@ -713,7 +713,8 @@ data SessionInputRow = SessionInputRow
   } deriving (Show, Generic)
 
 instance ToJSON SessionInputRow
-instance FromJSON SessionInputRow
+instance FromJSON SessionInputRow where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data SessionDTO = SessionDTO
   { sessionId            :: Text

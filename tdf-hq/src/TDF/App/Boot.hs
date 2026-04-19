@@ -3,6 +3,7 @@
 
 module TDF.App.Boot
   ( runBootServer
+  , validateSeedDatabaseStartup
   ) where
 
 import Control.Concurrent (forkFinally, myThreadId, threadDelay, throwTo)
@@ -36,6 +37,7 @@ import Network.Wai (
     responseLBS,
   )
 import qualified Network.Wai.Handler.Warp as Warp
+import System.Environment (getEnvironment)
 import System.IO (hPutStrLn, stderr)
 import Text.Read (readMaybe)
 
@@ -66,13 +68,19 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
-import TDF.Seed (seedAll)
+import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.Trials.Models (migrateTrials)
 
 runBootServer :: IO ()
 runBootServer = do
   cfg <- loadConfig
+  startupEnv <- getEnvironment
+  case validateSeedDatabaseStartup (seedDatabase cfg) startupEnv of
+    Right () -> pure ()
+    Left msg -> do
+      hPutStrLn stderr msg
+      throwIO (userError msg)
   appCors <- corsPolicy
 
   let
@@ -155,6 +163,14 @@ runBootServer = do
   Warp.runSettings warpSettings $ \req send -> do
     app <- readIORef appRef
     app req send
+
+validateSeedDatabaseStartup :: Bool -> [(String, String)] -> Either String ()
+validateSeedDatabaseStartup shouldSeed env
+  | shouldSeed && not (seededCredentialSeedingAllowed env) =
+      Left
+        "SEED_DB=true is not allowed in hosted or production runtimes. \
+        \Disable SEED_DB before starting this service."
+  | otherwise = Right ()
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do
