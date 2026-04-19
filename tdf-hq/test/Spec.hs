@@ -1220,7 +1220,7 @@ main = hspec $ do
                 "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
                 "DATABASE_URL port must be between 1 and 65535"
 
-    describe "Instagram messaging context fallback" $
+    describe "Instagram messaging context fallback" $ do
         it "does not use the configured fallback token when a targeted account has no connected token" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)
@@ -1237,6 +1237,39 @@ main = hspec $ do
                         "recipient-1"
                         "hola"
                         `shouldReturn` Left "Instagram connected asset token no configurado"
+
+        it "requires an account id before building Instagram messaging send attempts" $ do
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Nothing)
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "INSTAGRAM_MESSAGING_ACCOUNT_ID no configurado"
+
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Nothing)
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected-token")
+                        Nothing
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset account id no configurado"
 
     describe "SRI invoice script discovery" $
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $

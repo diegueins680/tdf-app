@@ -6,7 +6,6 @@ module TDF.Services.InstagramMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.List (nub)
 import           Data.Maybe (catMaybes, isJust, maybeToList)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -27,7 +26,7 @@ sendInstagramText cfg recipientId body =
 data InstagramAttemptSource = InstagramAttemptSource
   { iasLabel     :: Text
   , iasToken     :: Text
-  , iasAccountId :: Maybe Text
+  , iasAccountId :: Text
   }
 
 data InstagramAttempt = InstagramAttempt
@@ -39,10 +38,8 @@ data InstagramAttempt = InstagramAttempt
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
   case buildAttempts cfg mTokenOverride mAccountIdOverride of
-    []
-      | hasExplicitMessagingContext mTokenOverride mAccountIdOverride ->
-          pure (Left "Instagram connected asset token no configurado")
-      | otherwise -> pure (Left "INSTAGRAM_MESSAGING_TOKEN no configurado")
+    [] ->
+      pure (Left (missingMessagingContextError cfg mTokenOverride mAccountIdOverride))
     attempts -> do
       manager <- newManager tlsManagerSettings
       runAttempts manager recipientId body attempts []
@@ -73,7 +70,19 @@ buildAttempts cfg mTokenOverride mAccountIdOverride =
   in nubAttempts (concatMap (sourceAttempts base) sources)
   where
     buildSource label mToken mAccountId =
-      InstagramAttemptSource label <$> mToken <*> pure mAccountId
+      InstagramAttemptSource label <$> mToken <*> mAccountId
+
+missingMessagingContextError :: AppConfig -> Maybe Text -> Maybe Text -> Text
+missingMessagingContextError cfg mTokenOverride mAccountIdOverride
+  | hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
+      case (mTokenOverride >>= nonEmptyText, mAccountIdOverride >>= nonEmptyText) of
+        (Nothing, _) -> "Instagram connected asset token no configurado"
+        (_, Nothing) -> "Instagram connected asset account id no configurado"
+        (Just _, Just _) -> "Instagram messaging context no configurado"
+  | isJust (instagramMessagingToken cfg >>= nonEmptyText) =
+      "INSTAGRAM_MESSAGING_ACCOUNT_ID no configurado"
+  | otherwise =
+      "INSTAGRAM_MESSAGING_TOKEN no configurado"
 
 hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
 hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
@@ -82,7 +91,7 @@ hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
 
 nubSources :: [InstagramAttemptSource] -> [InstagramAttemptSource]
 nubSources =
-  nubByText (\src -> iasLabel src <> "|" <> iasToken src <> "|" <> maybe "" id (iasAccountId src))
+  nubByText (\src -> iasLabel src <> "|" <> iasToken src <> "|" <> iasAccountId src)
 
 nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
 nubAttempts =
@@ -100,8 +109,11 @@ nubByText toKey = go []
 
 sourceAttempts :: Text -> InstagramAttemptSource -> [InstagramAttempt]
 sourceAttempts base source =
-  let urls = nub (map (\accountId -> base <> "/" <> accountId <> "/messages") (maybeToList (iasAccountId source)) <> [base <> "/me/messages"])
-  in map (\urlTxt -> InstagramAttempt (iasLabel source) (iasToken source) urlTxt) urls
+  [ InstagramAttempt
+      (iasLabel source)
+      (iasToken source)
+      (base <> "/" <> iasAccountId source <> "/messages")
+  ]
 
 runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
 runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")
