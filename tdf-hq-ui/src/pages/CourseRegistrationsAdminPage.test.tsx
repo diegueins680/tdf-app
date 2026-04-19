@@ -2899,6 +2899,60 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes shared system-email dates once instead of repeating them per email', async () => {
+    const sharedEmailCreatedAt = '2030-03-03T12:00:00.000Z';
+    const sharedEmailCreatedLabel = formatTimestampForDisplay(sharedEmailCreatedAt, '-');
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent({
+        ceId: 501,
+        ceEventType: 'registration_confirmation',
+        ceMessage: 'Confirmación enviada.',
+        ceCreatedAt: sharedEmailCreatedAt,
+      }),
+      buildEmailEvent({
+        ceId: 502,
+        ceEventType: 'payment_reminder',
+        ceMessage: 'Recordatorio enviado.',
+        ceCreatedAt: sharedEmailCreatedAt,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(`Correos registrados: ${sharedEmailCreatedLabel}`);
+      expect(document.body.textContent).toContain('Confirmación enviada.');
+      expect(document.body.textContent).toContain('Recordatorio enviado.');
+      expect(document.body.textContent).toContain('Confirmación de inscripción');
+      expect(document.body.textContent).toContain('Recordatorio de pago');
+      expect(countOccurrences(document.body, sharedEmailCreatedLabel)).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('resets expanded system-email history when moving to another dossier', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

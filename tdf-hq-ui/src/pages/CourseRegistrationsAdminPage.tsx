@@ -2024,6 +2024,7 @@ export default function CourseRegistrationsAdminPage() {
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
+  const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel((emailEventsQuery.data ?? []).map((entry) => entry.ceCreatedAt));
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -3517,6 +3518,11 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       </Stack>
+                      {sharedEmailEventCreatedLabel && (
+                        <Typography variant="body2" color="text.secondary">
+                          Correos registrados: {sharedEmailEventCreatedLabel}
+                        </Typography>
+                      )}
 
                       {emailEventsQuery.isLoading && (
                         <Stack direction="row" spacing={1} alignItems="center">
@@ -3537,25 +3543,31 @@ export default function CourseRegistrationsAdminPage() {
 
                       {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) > 0 && (
                         <Stack spacing={1}>
-                          {(emailEventsQuery.data ?? []).map((entry) => (
-                            <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
-                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                                <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
-                                <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
-                                <Typography variant="caption" color="text.secondary">
-                                  {formatDate(entry.ceCreatedAt)}
-                                </Typography>
-                              </Stack>
-                              {entry.ceMessage && (
-                                <Typography
-                                  variant="body2"
-                                  sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                                >
-                                  {entry.ceMessage}
-                                </Typography>
-                              )}
-                            </Paper>
-                          ))}
+                          {(emailEventsQuery.data ?? []).map((entry) => {
+                            const emailEventCreatedLabel = sharedEmailEventCreatedLabel ? '' : formatDate(entry.ceCreatedAt);
+
+                            return (
+                              <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
+                                  <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
+                                  <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                  {emailEventCreatedLabel && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      {emailEventCreatedLabel}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                                {entry.ceMessage && (
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                                  >
+                                    {entry.ceMessage}
+                                  </Typography>
+                                )}
+                              </Paper>
+                            );
+                          })}
                         </Stack>
                       )}
                     </Stack>
