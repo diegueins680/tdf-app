@@ -9597,7 +9597,7 @@ validatePayPalApprovalUrl (Just rawUrl)
             && T.null portSuffix
             && "/checkoutnow?" `T.isPrefixOf` pathAndQuery
             && not ("#" `T.isInfixOf` pathAndQuery)
-            && hasNonEmptyTokenParam (T.drop 13 pathAndQuery)
+            && hasSingleNonEmptyTokenParam (T.drop 13 pathAndQuery)
         Nothing ->
           False
 
@@ -9614,13 +9614,13 @@ validatePayPalApprovalUrl (Just rawUrl)
            then Nothing
            else Just (normalizedHost, portSuffix, pathAndQuery)
 
-    hasNonEmptyTokenParam query =
-      any hasTokenValue (T.splitOn "&" query)
+    hasSingleNonEmptyTokenParam query =
+      case mapMaybe tokenValue (T.splitOn "&" query) of
+        [token] -> not (T.null token)
+        _ -> False
 
-    hasTokenValue param =
-      case T.stripPrefix "token=" param of
-        Just tokenValue -> not (T.null tokenValue)
-        Nothing -> False
+    tokenValue param =
+      T.stripPrefix "token=" param
 
 invalidPayPalApprovalUrl :: Either ServerError a
 invalidPayPalApprovalUrl =

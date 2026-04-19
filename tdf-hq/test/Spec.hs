@@ -1959,6 +1959,12 @@ main = hspec $ do
                 (Just "https://www.paypal.com/checkoutnow?token=")
                 invalidMessage
             assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?token=ORDER-123&token=ORDER-456")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?token=&token=ORDER-123")
+                invalidMessage
+            assertInvalid
                 (Just "https://www.paypal.com/checkoutnow?token=ORDER-123#fragment")
                 invalidMessage
 
