@@ -1084,7 +1084,8 @@ export default function CourseRegistrationsAdminPage() {
 
     registrations.forEach((reg) => {
       const trimmedStatus = reg.crStatus.trim();
-      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus) ?? trimmedStatus.toLowerCase();
+      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus)
+        ?? normalizeRegistrationStatusKey(trimmedStatus);
       if (!statusesByKey.has(statusKey)) {
         statusesByKey.set(statusKey, trimmedStatus);
       }
@@ -1208,7 +1209,8 @@ export default function CourseRegistrationsAdminPage() {
 
     searchedRegistrations.forEach((reg) => {
       const trimmedStatus = reg.crStatus.trim();
-      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus) ?? trimmedStatus.toLocaleLowerCase('es');
+      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus)
+        ?? normalizeRegistrationStatusKey(trimmedStatus);
       if (!statusLabelsByKey.has(statusKey)) {
         statusLabelsByKey.set(statusKey, trimmedStatus);
       }
