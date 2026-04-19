@@ -512,13 +512,21 @@ export default function CmsAdminPage() {
       : `Base: ID ${editingFromId}`
     : null;
   const samplePayload = samplePayloads[normalizedSlugFilter];
+  const liveLookupFailed = liveQuery.isError;
+  const liveLookupPending = liveQuery.isLoading || liveQuery.isFetching;
+  const liveLookupUnresolved = liveLookupPending || liveLookupFailed;
   const payloadHelperText = payloadError
     ? `Error: ${payloadError}`
     : schemaHints[normalizedSlugFilter]
       ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
-  const showExampleAction = Boolean(samplePayload) && !liveContent;
-  const samplePayloadGuidance = liveContent
+  const hasSamplePayload = Boolean(samplePayload);
+  const showExampleAction = hasSamplePayload && !liveContent && !liveLookupUnresolved;
+  const samplePayloadGuidance = liveLookupPending && hasSamplePayload
+    ? 'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.'
+    : liveLookupFailed && hasSamplePayload
+    ? 'No pudimos confirmar si ya existe una versión en vivo. Reintenta la carga en vivo antes de partir de un ejemplo.'
+    : liveContent
     ? 'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.'
     : samplePayload
       ? 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
@@ -758,7 +766,7 @@ export default function CmsAdminPage() {
                         showCorsHint
                         helper={
                           <Typography variant="caption">
-                            También puedes usar el botón del editor para traer la versión publicada al formulario.
+                            Reintenta esta carga antes de partir de un ejemplo genérico.
                           </Typography>
                         }
                       />

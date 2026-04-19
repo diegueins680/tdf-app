@@ -298,6 +298,28 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the generic example action while the live version lookup is unresolved by an error', async () => {
+    getPublicMock.mockRejectedValue(new Error('live unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getPublicMock).toHaveBeenCalledWith('records-public', 'es');
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
+      expect(container.textContent).toMatch(
+        /Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos\.|No pudimos confirmar si ya existe una versión en vivo\. Reintenta la carga en vivo antes de partir de un ejemplo\./,
+      );
+      expect(container.textContent).not.toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('removes the live-start helper once the editor already matches live', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
