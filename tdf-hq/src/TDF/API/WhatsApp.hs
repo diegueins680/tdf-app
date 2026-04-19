@@ -191,6 +191,8 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
   | T.any isControl nameValue =
       Left err400 { errBody = "Invalid name: must not contain control characters" }
+  | T.length emailValue > maxLeadCompletionEmailChars =
+      Left err400 { errBody = "Invalid email: must be 254 characters or fewer" }
   | not (isValidEmail emailValue) =
       Left err400 { errBody = "Invalid email format" }
   | otherwise =
@@ -207,6 +209,9 @@ isValidLeadCompletionToken tokenValue =
 
 leadCompletionTokenLength :: Int
 leadCompletionTokenLength = 20
+
+maxLeadCompletionEmailChars :: Int
+maxLeadCompletionEmailChars = 254
 
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =
