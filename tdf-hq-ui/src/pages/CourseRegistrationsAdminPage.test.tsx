@@ -3000,6 +3000,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(emptyHint).toBeNull();
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
+      expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain('habilitar Marcar pagado');
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
     });

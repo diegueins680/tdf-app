@@ -2030,7 +2030,8 @@ export default function CourseRegistrationsAdminPage() {
   const activeRegistrationKnownStatus = activeRegistration
     ? normalizeKnownRegistrationStatus(activeRegistration.crStatus)
     : null;
-  const showEvidenceOnlyEmptyReceiptCopy = activeRegistrationKnownStatus === 'paid'
+  const showEvidenceOnlyEmptyReceiptCopy = canMarkPaid
+    || activeRegistrationKnownStatus === 'paid'
     || activeRegistrationKnownStatus === 'cancelled';
   const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
     ? emptyReceiptEvidenceAlertMessage
