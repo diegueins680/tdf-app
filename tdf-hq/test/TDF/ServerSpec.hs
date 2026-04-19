@@ -2400,27 +2400,27 @@ spec = describe "TDF.Server helpers" $ do
 
             resolveDrivePublicUrl
                 "file-123"
-                (Just "https://drive.example.com/download/file-123")
+                (Just "https://drive.google.com/download/file-123")
                 Nothing
                 (Just "rk 123")
                 `shouldBe`
-                    "https://drive.example.com/download/file-123?resourcekey=rk%20123"
+                    "https://drive.google.com/download/file-123?resourcekey=rk%20123"
 
             resolveDrivePublicUrl
                 "file-123"
-                (Just "https://drive.example.com/download/file-123?alt=media#viewer")
+                (Just "https://drive.google.com/download/file-123?alt=media#viewer")
                 (Just "rk-123")
                 Nothing
                 `shouldBe`
-                    "https://drive.example.com/download/file-123?alt=media&resourcekey=rk-123#viewer"
+                    "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123#viewer"
 
             resolveDrivePublicUrl
                 "file-123"
-                (Just "https://drive.example.com/download/file-123?ResourceKey=existing")
+                (Just "https://drive.google.com/download/file-123?ResourceKey=existing")
                 (Just "rk-123")
                 Nothing
                 `shouldBe`
-                    "https://drive.example.com/download/file-123?ResourceKey=existing"
+                    "https://drive.google.com/download/file-123?ResourceKey=existing"
 
         it "encodes fallback file ids before adding resource-key query params" $
             resolveDrivePublicUrl "file 123&alt=media" Nothing (Just "rk-123") Nothing
@@ -2443,6 +2443,14 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=file-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com.evil.example/file-123")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
 
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do

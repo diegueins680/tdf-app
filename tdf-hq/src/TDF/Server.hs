@@ -10043,9 +10043,34 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
 sanitizeDriveWebContentLink :: Maybe Text -> Maybe Text
 sanitizeDriveWebContentLink mWebContentLink = do
   url <- cleanOptional mWebContentLink
-  if "https://" `T.isPrefixOf` T.toLower url && TrialsServer.isValidHttpUrl url
+  if "https://" `T.isPrefixOf` T.toLower url
+      && TrialsServer.isValidHttpUrl url
+      && isGoogleDriveDownloadHost url
     then Just url
     else Nothing
+
+isGoogleDriveDownloadHost :: Text -> Bool
+isGoogleDriveDownloadHost rawUrl =
+  case httpsUrlHost rawUrl of
+    Just host ->
+      host `elem` ["drive.google.com", "drive.usercontent.google.com"]
+    Nothing ->
+      False
+
+httpsUrlHost :: Text -> Maybe Text
+httpsUrlHost rawUrl
+  | "https://" `T.isPrefixOf` lowerUrl =
+      let remainder = T.drop 8 rawUrl
+          authority =
+            T.takeWhile
+              (\c -> c /= '/' && c /= '?' && c /= '#')
+              remainder
+          host = T.toLower (fst (T.breakOn ":" authority))
+      in if T.null host then Nothing else Just host
+  | otherwise =
+      Nothing
+  where
+    lowerUrl = T.toLower rawUrl
 
 appendDriveResourceKey :: Maybe Text -> Text -> Text
 appendDriveResourceKey mResourceKey url =
