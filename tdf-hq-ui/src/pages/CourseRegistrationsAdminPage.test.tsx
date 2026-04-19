@@ -223,11 +223,11 @@ const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Ya hay formularios configurados; abre Cursos para decidir cuál compartir primero.';
+  'Todavía no hay inscripciones. Elige qué formulario compartir primero.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Abrir Cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialCohortResolutionMessage =
   'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
