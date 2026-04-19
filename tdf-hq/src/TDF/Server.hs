@@ -452,10 +452,8 @@ listInventory mFieldParam mSessionParam mChannelParam = do
       case fromPathPiece raw of
         Nothing -> throwBadRequest "Invalid sessionId"
         Just k  -> pure (Just k)
-  when (isJust mChannelParam && isNothing sessionKey) $
-    throwBadRequest "channel requires sessionId"
-  when (maybe False (< 1) mChannelParam) $
-    throwBadRequest "channel must be greater than or equal to 1"
+  either throwError pure $
+    validateInputListInventoryFilters parsedField sessionKey mChannelParam
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField sessionKey mChannelParam)
 
@@ -526,6 +524,21 @@ validateSessionInputLookup mIndex Nothing =
     Just n
       | n >= 1    -> Right (SessionInputByIndex n)
       | otherwise -> Left err400 { errBody = "index must be greater than or equal to 1" }
+
+validateInputListInventoryFilters
+  :: Maybe InputList.AssetField
+  -> Maybe ME.SessionId
+  -> Maybe Int
+  -> Either ServerError ()
+validateInputListInventoryFilters mField mSession mChannel = do
+  when (maybe False (< 1) mChannel) $
+    Left err400 { errBody = "channel must be greater than or equal to 1" }
+  when (isJust mChannel && isNothing mField) $
+    Left err400 { errBody = "channel requires field" }
+  when (isJust mSession && isNothing mField) $
+    Left err400 { errBody = "sessionId requires field" }
+  when (isJust mChannel && isNothing mSession) $
+    Left err400 { errBody = "channel requires sessionId" }
 
 resolveSessionInputData
   :: Maybe Int

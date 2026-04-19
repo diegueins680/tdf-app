@@ -39,6 +39,7 @@ import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.Config (AppConfig(..))
 import TDF.DB (Env (..))
+import TDF.Handlers.InputList (AssetField (..))
 import TDF.Models
     ( ApiToken (..)
     , ArtistProfile (..)
@@ -144,6 +145,7 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateSessionInputLookup
+    , validateInputListInventoryFilters
     , resolveSocialTargetPartyId
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
@@ -203,7 +205,7 @@ import TDF.ServerProposals
     )
 import TDF.ServerFuture (validateFutureAdminAccess)
 import Test.Hspec
-import Web.PathPieces (toPathPiece)
+import Web.PathPieces (fromPathPiece, toPathPiece)
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
@@ -212,6 +214,12 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         }
+
+inputListSessionKey :: ME.SessionId
+inputListSessionKey =
+    case fromPathPiece ("00000000-0000-0000-0000-000000000084" :: Text) of
+        Just keyVal -> keyVal
+        Nothing -> error "Expected fixture input-list session id to parse"
 
 mkDriveMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
 mkDriveMultipart fields uploads =
@@ -414,6 +422,45 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Invalid sessionId"
                 (validateSessionInputLookup Nothing (Just "not-a-session-id"))
+
+    describe "validateInputListInventoryFilters" $ do
+        it "accepts broad inventory browsing and scoped field availability lookups" $ do
+            validateInputListInventoryFilters Nothing Nothing Nothing `shouldBe` Right ()
+            validateInputListInventoryFilters (Just AssetFieldMic) Nothing Nothing
+                `shouldBe` Right ()
+            validateInputListInventoryFilters
+                (Just AssetFieldMic)
+                (Just inputListSessionKey)
+                (Just 3)
+                `shouldBe` Right ()
+
+        it "rejects ignored availability context before inventory queries run" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid inventory filters to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "channel must be greater than or equal to 1"
+                ( validateInputListInventoryFilters
+                    (Just AssetFieldMic)
+                    (Just inputListSessionKey)
+                    (Just 0)
+                )
+            assertInvalid
+                "channel requires field"
+                (validateInputListInventoryFilters Nothing Nothing (Just 1))
+            assertInvalid
+                "sessionId requires field"
+                (validateInputListInventoryFilters Nothing (Just inputListSessionKey) Nothing)
+            assertInvalid
+                "channel requires sessionId"
+                (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
 
     describe "parseMcpRequest" $ do
         it "accepts canonical JSON-RPC 2.0 MCP requests" $
