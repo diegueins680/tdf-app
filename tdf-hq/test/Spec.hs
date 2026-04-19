@@ -676,6 +676,10 @@ main = hspec $ do
                 "https://169.254.169.254/latest"
                 "INSTAGRAM_MESSAGING_API_BASE must be an absolute https URL"
             assertInvalid
+                "FACEBOOK_GRAPH_BASE"
+                "https://192.0.2.10/v20.0"
+                "FACEBOOK_GRAPH_BASE must be an absolute https URL"
+            assertInvalid
                 "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"

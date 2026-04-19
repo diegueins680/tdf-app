@@ -972,7 +972,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
         && not (normalizedHost == "localhost" || ".localhost" `T.isSuffixOf` normalizedHost)
         && all isValidHostLabel labels
         && not (isAmbiguousNumericHost normalizedHost)
-        && not (isPrivateIpv4Host normalizedHost)
+        && not (isNonPublicIpv4Host normalizedHost)
 
     isValidHostLabel label =
       not (T.null label)
@@ -997,17 +997,23 @@ normalizeConfiguredHttpsUrl envName rawUrl
                 (readMaybe (T.unpack port))
       | otherwise = False
 
-    isPrivateIpv4Host host =
+    isNonPublicIpv4Host host =
       case parseIpv4Octets host of
         Nothing -> False
-        Just (a, b, _, _) ->
+        Just (a, b, c, _) ->
           a == (0 :: Int)
             || a == 10
             || a == 127
             || (a == 100 && b >= 64 && b <= 127)
             || (a == 169 && b == 254)
             || (a == 172 && b >= 16 && b <= 31)
+            || (a == 192 && b == 0 && c == 0)
+            || (a == 192 && b == 0 && c == 2)
             || (a == 192 && b == 168)
+            || (a == 198 && (b == 18 || b == 19))
+            || (a == 198 && b == 51 && c == 100)
+            || (a == 203 && b == 0 && c == 113)
+            || (a >= 224 && a <= 255)
 
     parseIpv4Octets host =
       case T.splitOn "." host of
