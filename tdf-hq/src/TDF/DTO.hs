@@ -307,7 +307,8 @@ instance FromJSON RadioPresenceUpsert
 data VCardExchangeRequest = VCardExchangeRequest
   { vcerPartyId :: Int64
   } deriving (Show, Generic)
-instance FromJSON VCardExchangeRequest
+instance FromJSON VCardExchangeRequest where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 -- Course registrations (admin)
 data CourseRegistrationDTO = CourseRegistrationDTO

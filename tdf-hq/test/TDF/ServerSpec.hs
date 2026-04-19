@@ -308,6 +308,9 @@ decodePasswordResetConfirmRequest = eitherDecode
 decodeChatSendMessageRequest :: BL8.ByteString -> Either String DTO.ChatSendMessageRequest
 decodeChatSendMessageRequest = eitherDecode
 
+decodeVCardExchangeRequest :: BL8.ByteString -> Either String DTO.VCardExchangeRequest
+decodeVCardExchangeRequest = eitherDecode
+
 decodePublicBookingRequest :: BL8.ByteString -> Either String PublicBookingReq
 decodePublicBookingRequest = eitherDecode
 
@@ -1050,6 +1053,19 @@ spec = describe "TDF.Server helpers" $ do
                 Right payload ->
                     expectationFailure
                         ("Expected unknown chat send field to be rejected, got: " <> show payload)
+
+    describe "VCardExchangeRequest" $ do
+        it "accepts canonical vCard exchange payloads" $
+            case decodeVCardExchangeRequest "{\"vcerPartyId\":42}" of
+                Right payload -> DTO.vcerPartyId payload `shouldBe` 42
+                Left err -> expectationFailure ("Expected vCard exchange payload to parse, got: " <> err)
+
+        it "rejects response-shaped or typoed vCard fields before social follow fallback handling" $
+            case decodeVCardExchangeRequest "{\"vcerPartyId\":42,\"partyId\":84}" of
+                Left err -> err `shouldContain` "unknown field"
+                Right payload ->
+                    expectationFailure
+                        ("Expected unknown vCard exchange field to be rejected, got: " <> show payload)
 
     describe "validateChatMessageListLookup" $ do
         it "accepts a positive thread id plus at most one positive pagination cursor" $ do
