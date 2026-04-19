@@ -1331,6 +1331,48 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('summarizes mixed pending contact blockers once when no visible row is WhatsApp-ready', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 201,
+        partyId: 21,
+        username: 'ada-email-only',
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 202,
+        partyId: 22,
+        username: 'grace-no-contact',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. 2 usuarios en esta vista. 1 pendiente de WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos.',
+        );
+        expect(container.textContent).not.toContain('La búsqueda aparecerá desde el tercer usuario.');
+        expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
+        expect(getRowByUserId(container, 201).textContent).toContain('ada@example.com');
+        expect(getRowByUserId(container, 201).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 201).textContent).not.toContain('Contacto pendiente');
+        expect(getRowByUserId(container, 202).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 202).textContent).not.toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('swaps the lone-user intro to number setup guidance when the first admin still lacks a WhatsApp-ready number', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

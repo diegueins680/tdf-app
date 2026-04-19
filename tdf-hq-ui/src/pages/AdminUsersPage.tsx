@@ -436,7 +436,9 @@ export default function AdminUsersPage() {
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
-  const showMixedContactStateGuidance = hasVisibleWhatsAppAction
+  const hasMixedPendingContactStates = visibleUsersPendingWhatsAppCount > 0 && visibleUsersMissingContactCount > 0;
+  const showMixedContactStateGuidance =
+    (hasVisibleWhatsAppAction || hasMixedPendingContactStates)
     && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
   const showSharedPendingProfileGuidance = visibleUsers.length > 1
     && visibleUsersPendingProfileCount > 1
