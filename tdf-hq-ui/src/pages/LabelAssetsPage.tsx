@@ -492,6 +492,7 @@ export default function LabelAssetsPage() {
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
   const showFilterCard = assetsQuery.isLoading || assets.length > 0;
+  const showRefreshAction = assetsQuery.isError || assets.length > 0;
 
   const handleOpenNew = () => {
     setEditingAsset(null);
@@ -610,9 +611,11 @@ export default function LabelAssetsPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => void qc.invalidateQueries({ queryKey: ['assets'] })}>
-            Actualizar
-          </Button>
+          {showRefreshAction && (
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => void qc.invalidateQueries({ queryKey: ['assets'] })}>
+              Actualizar
+            </Button>
+          )}
           {canManageCategories && (
             <Button
               variant="outlined"

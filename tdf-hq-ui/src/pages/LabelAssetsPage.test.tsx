@@ -251,6 +251,7 @@ describe('LabelAssetsPage', () => {
         );
         expect(countLabelsByText(container, 'Buscar assets')).toBe(0);
         expect(countLabelsByText(container, 'Categoría')).toBe(0);
+        expect(queryButtonByText(container, 'Actualizar')).toBeNull();
         expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.querySelector('table')).toBeNull();
       });
