@@ -2904,6 +2904,14 @@ spec = describe "TDF.Server helpers" $ do
                 (Just " /assets/inventory/moog.jpg ")
                 `shouldReturn` Just "https://assets.example.com/static/inventory/moog.jpg"
 
+        it "omits malformed stored photo URLs instead of publishing unsafe fallback paths" $ do
+            resolveMarketplacePhotoUrl "https://assets.example.com/static" (Just "moog.jpg")
+                `shouldReturn` Nothing
+            resolveMarketplacePhotoUrl "https://assets.example.com/static" (Just "inventory/../moog.jpg")
+                `shouldReturn` Nothing
+            resolveMarketplacePhotoUrl "https://assets.example.com/static" (Just "javascript:alert(1)")
+                `shouldReturn` Nothing
+
     describe "marketplace order list pagination validation" $ do
         it "keeps marketplace order defaults only when the caller omits pagination" $ do
             validateMarketplaceOrderListLimit Nothing `shouldBe` Right 50
