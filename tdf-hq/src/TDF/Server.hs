@@ -315,8 +315,11 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
     Just (Bool _)   -> fail "id must be a string, number, or null"
     _               -> pure ()
   method <- o .: "method"
-  when (T.null (T.strip method)) $
+  let methodClean = T.strip method
+  when (T.null methodClean) $
     fail "method is required"
+  when (method /= methodClean) $
+    fail "method must not include surrounding whitespace"
   mParams <- o .:? "params"
   case mParams of
     Nothing -> pure (McpRequest reqId method Nothing)
@@ -327,8 +330,11 @@ parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
   rejectUnexpectedObjectFields "ToolCallParams" ["name", "arguments"] o
   toolName <- o .: "name"
-  when (T.null (T.strip toolName)) $
+  let toolNameClean = T.strip toolName
+  when (T.null toolNameClean) $
     fail "name is required"
+  when (toolName /= toolNameClean) $
+    fail "name must not include surrounding whitespace"
   mArgs <- o .:? "arguments"
   args <- case mArgs of
     Nothing -> pure (object [])

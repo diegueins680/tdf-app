@@ -497,6 +497,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ( object
                     [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= (" tools/list " :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
                     , "id" .= object ["nested" .= True]
                     , "method" .= ("tools/list" :: T.Text)
                     ]
@@ -537,6 +543,7 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure
                                 ("Expected malformed MCP tool params to be rejected, got: " <> show value)
             assertInvalid (object ["name" .= ("   " :: T.Text)])
+            assertInvalid (object ["name" .= (" tdf_health_check " :: T.Text)])
             assertInvalid
                 ( object
                     [ "name" .= ("tdf_health_check" :: T.Text)
