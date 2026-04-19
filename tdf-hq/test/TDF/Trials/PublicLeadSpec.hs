@@ -38,6 +38,7 @@ import TDF.Trials.API
   , PackageDTO
   , PurchaseIn (..)
   , SignupIn (..)
+  , SubjectCreate (SubjectCreate)
   , SubjectUpdate (..)
   , TrialQueueItem
   )
@@ -478,6 +479,22 @@ spec = do
                 expectationFailure ("Expected unavailable public subject to be rejected, got " <> show value)
       assertRejected Nothing
       assertRejected (Just (Subject "Piano" False))
+
+  describe "SubjectCreate request decoding" $ do
+    it "rejects unexpected create keys so admin subject creation cannot silently default fields" $ do
+      case (A.eitherDecode "{\"name\":\"Piano\",\"active\":false}" :: Either String SubjectCreate) of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical subject create payload to decode, got: " <> decodeErr)
+        Right (SubjectCreate nameValue activeValue) -> do
+          nameValue `shouldBe` "Piano"
+          activeValue `shouldBe` Just False
+
+      isLeft
+        (A.eitherDecode "{\"name\":\"Piano\",\"activee\":false}" :: Either String SubjectCreate)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode "{\"name\":\"Piano\",\"active\":false,\"roomIds\":[1]}" :: Either String SubjectCreate)
+        `shouldBe` True
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do

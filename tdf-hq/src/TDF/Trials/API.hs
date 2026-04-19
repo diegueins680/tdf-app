@@ -98,7 +98,9 @@ data SubjectCreate = SubjectCreate
   { name   :: Text
   , active :: Maybe Bool
   } deriving (Generic)
-instance ToJSON SubjectCreate; instance FromJSON SubjectCreate
+instance ToJSON SubjectCreate
+instance FromJSON SubjectCreate where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 
 data SubjectUpdate = SubjectUpdate
   { name   :: Maybe Text
