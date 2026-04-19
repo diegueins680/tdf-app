@@ -1023,6 +1023,42 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any"
 
+        it "requires target_session_attrs to be an actual non-blank URL query parameter" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    ]
+
+            withEnvOverrides
+                ( withoutKeywordDb
+                    (baseUrl <> "?application_name=target_session_attrs=debug")
+                )
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg
+                        `shouldBe` baseUrl
+                            <> "?application_name=target_session_attrs=debug"
+                            <> "&target_session_attrs=read-write"
+
+            withEnvOverrides
+                (withoutKeywordDb (baseUrl <> "?target_session_attrs="))
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL target_session_attrs must not be blank"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")

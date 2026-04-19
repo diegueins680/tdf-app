@@ -146,6 +146,7 @@ validateFallbackConnUrl envName raw
                else
                  validateConnectionHostPort hostPort
                    *> validateConnectionDatabasePath databasePath
+                   *> validateConnectionQueryParams databasePath
                    *> Right raw
 
     validateConnectionHostPort :: Text -> Either String ()
@@ -184,6 +185,22 @@ validateFallbackConnUrl envName raw
                then Left (envName <> " must include a database name")
                else Right ()
 
+    validateConnectionQueryParams :: Text -> Either String ()
+    validateConnectionQueryParams path =
+      case T.dropWhile (/= '?') path of
+        "" -> Right ()
+        queryWithMarker ->
+          let query = T.drop 1 queryWithMarker
+              targetSessionAttrs =
+                [ T.strip (T.drop 1 rest)
+                | pair <- T.splitOn "&" query
+                , let (key, rest) = T.breakOn "=" pair
+                , T.toLower key == "target_session_attrs"
+                ]
+          in if any T.null targetSessionAttrs
+               then Left (envName <> " target_session_attrs must not be blank")
+               else Right ()
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -209,13 +226,21 @@ extractConnUrlParam rawKey connUrl =
 
 ensureReadWriteTargetSession :: String -> String
 ensureReadWriteTargetSession rawConn
-  | hasTargetSessionAttrs normalized = rawConn
+  | isPostgresUrl normalized && hasTargetSessionAttrsUrlParam rawConn = rawConn
   | isPostgresUrl normalized =
-      rawConn <> if '?' `elem` rawConn then "&target_session_attrs=read-write" else "?target_session_attrs=read-write"
+      rawConn
+        <> if '?' `elem` rawConn
+             then "&target_session_attrs=read-write"
+             else "?target_session_attrs=read-write"
+  | hasTargetSessionAttrsKeyword normalized = rawConn
   | otherwise = rawConn <> " target_session_attrs=read-write"
   where
     normalized = map toLower rawConn
-    hasTargetSessionAttrs conn = "target_session_attrs=" `isInfixOf` conn
+    hasTargetSessionAttrsUrlParam conn =
+      case extractConnUrlParam "target_session_attrs" conn of
+        Just _ -> True
+        Nothing -> False
+    hasTargetSessionAttrsKeyword conn = "target_session_attrs=" `isInfixOf` conn
     isPostgresUrl conn =
       "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
 
