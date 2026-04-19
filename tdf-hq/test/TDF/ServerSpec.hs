@@ -173,6 +173,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
+    , resolveDrivePublicUrl
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
     , listMarketplace
@@ -2132,6 +2133,36 @@ spec = describe "TDF.Server helpers" $ do
                     []
                     [(mkDriveUploadFile "file.pdf") { fdInputName = "document" }]
                 )
+
+    describe "resolveDrivePublicUrl" $ do
+        it "keeps Drive resource-key links well-shaped across fallback URL forms" $ do
+            resolveDrivePublicUrl "file-123" Nothing (Just " rk-123 ") Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.example.com/download/file-123")
+                Nothing
+                (Just "rk 123")
+                `shouldBe`
+                    "https://drive.example.com/download/file-123?resourcekey=rk%20123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.example.com/download/file-123?alt=media#viewer")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.example.com/download/file-123?alt=media&resourcekey=rk-123#viewer"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.example.com/download/file-123?ResourceKey=existing")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.example.com/download/file-123?ResourceKey=existing"
 
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do

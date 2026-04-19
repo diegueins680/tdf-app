@@ -9872,18 +9872,61 @@ uploadToDrive manager accessToken file mName mFolder = do
               Right (DriveMetaResp key) -> key
               Left _ -> Nothing
           Left _ -> Nothing
-      resolvedResourceKey = darResourceKey driveResp <|> metaResourceKey
-      fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> darId driveResp
-      appendResourceKey url =
-        case resolvedResourceKey of
-          Just key
-            | not (T.null (T.strip key)) && "resourcekey=" `T.isInfixOf` url == False ->
-                url <> "&resourcekey=" <> T.strip key
-          _ -> url
-      publicUrl = Just $ appendResourceKey $ fromMaybe fallbackPublicUrl (darWebContentLink driveResp)
+      publicUrl =
+        Just $
+          resolveDrivePublicUrl
+            (darId driveResp)
+            (darWebContentLink driveResp)
+            (darResourceKey driveResp)
+            metaResourceKey
   pure DriveUploadDTO
     { duFileId = darId driveResp
     , duWebViewLink = darWebViewLink driveResp
     , duWebContentLink = darWebContentLink driveResp
     , duPublicUrl = publicUrl
     }
+
+resolveDrivePublicUrl :: Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
+resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey =
+  appendDriveResourceKey resolvedResourceKey baseUrl
+  where
+    fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> fileId
+    baseUrl = fromMaybe fallbackPublicUrl (cleanOptional mWebContentLink)
+    resolvedResourceKey = cleanOptional mUploadResourceKey <|> cleanOptional mMetaResourceKey
+
+appendDriveResourceKey :: Maybe Text -> Text -> Text
+appendDriveResourceKey mResourceKey url =
+  case cleanOptional mResourceKey of
+    Nothing -> url
+    Just resourceKey
+      | hasQueryParam "resourcekey" url -> url
+      | otherwise -> appendQueryParam "resourcekey" resourceKey url
+
+hasQueryParam :: Text -> Text -> Bool
+hasQueryParam paramName url =
+  any matchesName params
+  where
+    (withoutFragment, _) = T.breakOn "#" url
+    queryWithMarker = snd (T.breakOn "?" withoutFragment)
+    query = T.drop 1 queryWithMarker
+    params = filter (not . T.null) (T.splitOn "&" query)
+    expectedName = T.toLower paramName
+    matchesName rawParam =
+      let rawName = fst (T.breakOn "=" rawParam)
+      in T.toLower rawName == expectedName
+
+appendQueryParam :: Text -> Text -> Text -> Text
+appendQueryParam paramName paramValue url =
+  withoutFragment <> separator <> paramName <> "=" <> encodeQueryValue paramValue <> fragment
+  where
+    (withoutFragment, fragment) = T.breakOn "#" url
+    separator
+      | "?" `T.isInfixOf` withoutFragment =
+          if T.isSuffixOf "?" withoutFragment || T.isSuffixOf "&" withoutFragment
+            then ""
+            else "&"
+      | otherwise = "?"
+
+encodeQueryValue :: Text -> Text
+encodeQueryValue =
+  TE.decodeUtf8 . urlEncode True . TE.encodeUtf8
