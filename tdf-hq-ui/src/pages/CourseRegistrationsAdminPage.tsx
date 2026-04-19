@@ -1179,12 +1179,12 @@ export default function CourseRegistrationsAdminPage() {
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
   const sharedVisibleCreatedAtLabel = useMemo(() => {
-    if (registrations.length < 2) return '';
-    const createdLabels = registrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
+    if (searchedRegistrations.length < 2) return '';
+    const createdLabels = searchedRegistrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
     if (createdLabels.some((label) => label === '')) return '';
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
-  }, [registrations]);
+  }, [searchedRegistrations]);
   const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel)
     && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1

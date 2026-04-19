@@ -10,3 +10,4 @@
 - Keep workflow guidance concrete and repo-specific.
 - Prefer small automation that catches setup drift early over more prompt text.
 - Para el trabajo de préstamo de Domo del Pululahua, todo material usado para pedir, sustentar, negociar o dar seguimiento al financiamiento debe entregarse en español y adaptado al contexto ecuatoriano. Si la investigación fuente está en inglés, traducir y localizar el entregable final a español ecuatoriano.
+- Para operaciones del préstamo de Domo del Pululahua, usar los flujos ya creados en `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/` para proformas firmadas y en `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/` para llamadas a bancos/cooperativas. No contactar bancos o proveedores ni enviar documentos privados sin confirmación explícita del operador y sin canal seguro confirmado.

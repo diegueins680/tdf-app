@@ -5207,6 +5207,64 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps repeated created dates out of locally narrowed filtered lists', async () => {
+    const sharedCreatedAt = '2030-02-03T03:04:05.000Z';
+    const sharedCreatedAtLabel = formatTimestampForDisplay(sharedCreatedAt, '-');
+
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crStatus: 'paid',
+        crCreatedAt: sharedCreatedAt,
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crStatus: 'paid',
+        crCreatedAt: sharedCreatedAt,
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crStatus: 'paid',
+        crCreatedAt: `2030-02-${String(index + 10).padStart(2, '0')}T03:04:05.000Z`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).toContain('Nina Garcia');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain(`Misma fecha de registro: ${sharedCreatedAtLabel}.`);
+      expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('uses registration ids as the busy-list search fallback when rows lack contact identity', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
