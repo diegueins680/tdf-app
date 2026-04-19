@@ -265,7 +265,8 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'No hay usuarios todavía. Cuando exista el primero, verás su perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.',
         );
-        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {

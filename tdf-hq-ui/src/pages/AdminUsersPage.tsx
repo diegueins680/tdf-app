@@ -467,7 +467,8 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInactiveFilterAction = hasMultipleUsers || includeInactive;
-  const showRefreshAction = Boolean(usersQuery.error)
+  const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
+  const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
@@ -722,9 +723,16 @@ export default function AdminUsersPage() {
           <CardContent>
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
             {usersQuery.error && (
-              <Typography color="error">
-                No se pudieron cargar los usuarios{usersErrorMessage ? `: ${usersErrorMessage}` : ''}.
-              </Typography>
+              <Stack spacing={1} alignItems="flex-start">
+                <Typography color="error">
+                  No se pudieron cargar los usuarios{usersErrorMessage ? `: ${usersErrorMessage}` : ''}.
+                </Typography>
+                {showInlineErrorRetryAction && (
+                  <Button size="small" variant="outlined" onClick={handleRefresh} disabled={usersQuery.isFetching}>
+                    Reintentar usuarios
+                  </Button>
+                )}
+              </Stack>
             )}
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
               <Typography color="text.secondary">
