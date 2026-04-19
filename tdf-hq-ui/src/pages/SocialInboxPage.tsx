@@ -1468,7 +1468,7 @@ export default function SocialInboxPage() {
             <Typography variant="body2">
               {reviewMode
                 ? activeAsset
-                  ? 'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
+                  ? 'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.'
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                 : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
             </Typography>

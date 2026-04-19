@@ -135,6 +135,9 @@ const countButtonsByText = (root: ParentNode, labelText: string) =>
 const countInteractiveElementsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button, a')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
 
+const countTextOccurrences = (root: ParentNode, text: string) =>
+  ((root.textContent ?? '').split(text).length - 1);
+
 const getLinkByText = (root: ParentNode, labelText: string) => {
   const link = Array.from(root.querySelectorAll('a')).find((candidate) => (candidate.textContent ?? '').trim() === labelText);
   if (!(link instanceof HTMLAnchorElement)) {
@@ -285,10 +288,17 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('IG User ID: ig-user-1');
       expect(container.textContent).toContain('No inbound messages yet.');
       expect(container.textContent).toContain(
-        'Send one test message to the selected professional/business account and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+        'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.',
       );
       expect(container.textContent).toContain(
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
+      );
+      expect(countTextOccurrences(
+        container,
+        'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
+      )).toBe(1);
+      expect(container.textContent).not.toContain(
+        'The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
       );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
