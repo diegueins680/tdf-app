@@ -3898,6 +3898,25 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected invalid explicit booking room ids to be rejected, got: " <> show resourceKeys)
 
+        it "rejects duplicate explicit room ids instead of silently deduplicating booking intent" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            result <- try $
+                runResourceSqlite $
+                    resolveResourcesForBooking
+                        (Just "mixing")
+                        ["room-control", " room-control "]
+                        startsAt
+                        endsAt
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "resourceIds must not contain duplicate entries: room-control"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected duplicate explicit booking room ids to be rejected, got: " <> show resourceKeys)
+
     describe "CreateBookingReq / UpdateBookingReq FromJSON" $ do
         it "accepts canonical HQ booking create and update payloads" $ do
             case decodeCreateBookingRequest

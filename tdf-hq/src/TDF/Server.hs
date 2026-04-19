@@ -6627,7 +6627,28 @@ normalizeRequestedResourceIds rawIds =
   let normalized = map T.strip rawIds
   in if any T.null normalized
        then Left err400 { errBody = "resourceIds must not contain blank entries" }
-       else Right (dedupeStable normalized)
+       else case duplicateRequestedResourceIds normalized of
+         [] -> Right normalized
+         duplicateIds ->
+           Left err400
+             { errBody =
+                 BL.fromStrict . TE.encodeUtf8 $
+                   "resourceIds must not contain duplicate entries: "
+                     <> T.intercalate ", " duplicateIds
+             }
+
+duplicateRequestedResourceIds :: [Text] -> [Text]
+duplicateRequestedResourceIds = go Set.empty Set.empty []
+  where
+    go _ _ duplicates [] = reverse duplicates
+    go seen reported duplicates (rid:rest) =
+      let normalized = T.toLower rid
+      in if Set.member normalized seen
+           then
+             if Set.member normalized reported
+               then go seen reported duplicates rest
+               else go seen (Set.insert normalized reported) (rid : duplicates) rest
+           else go (Set.insert normalized seen) reported duplicates rest
 
 resolveRequestedResources :: [Text] -> SqlPersistT IO [Key Resource]
 resolveRequestedResources requestedIds = do
