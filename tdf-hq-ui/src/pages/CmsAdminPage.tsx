@@ -173,6 +173,7 @@ export default function CmsAdminPage() {
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
   const [showDraftDiff, setShowDraftDiff] = useState(false);
+  const [showLivePayload, setShowLivePayload] = useState(false);
   const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
   const normalizedSlugFilter = slugFilter.trim();
   const hasSlugSelection = normalizedSlugFilter.length > 0;
@@ -274,6 +275,11 @@ export default function CmsAdminPage() {
     [editingFromId, versions],
   );
   const liveContent = liveQuery.data;
+
+  useEffect(() => {
+    setShowLivePayload(false);
+  }, [liveContent?.ccdId]);
+
   const liveVersion = liveContent?.ccdVersion ?? null;
   const draftBehindLive =
     editingVersion !== null && liveVersion !== null ? editingVersion < liveVersion : false;
@@ -804,13 +810,27 @@ export default function CmsAdminPage() {
                             />
                           )}
                         </Stack>
-                        <TextField
-                          label="Payload actual"
-                          value={livePayloadPretty}
-                          multiline
-                          minRows={8}
-                          InputProps={{ readOnly: true }}
-                        />
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+                            Payload en vivo disponible.
+                          </Typography>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setShowLivePayload((current) => !current)}
+                          >
+                            {showLivePayload ? 'Ocultar payload en vivo' : 'Ver payload en vivo'}
+                          </Button>
+                        </Stack>
+                        {showLivePayload && (
+                          <TextField
+                            label="Payload actual"
+                            value={livePayloadPretty}
+                            multiline
+                            minRows={8}
+                            InputProps={{ readOnly: true }}
+                          />
+                        )}
                         <Typography variant="caption" color="text.secondary">
                           La página pública se abre con el botón principal de arriba. Para editar lo publicado, usa el botón del editor para traer la versión en vivo.
                         </Typography>

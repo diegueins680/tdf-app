@@ -471,19 +471,32 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('replaces the duplicate payload preview grid with one compare hint inside the editor', async () => {
+  it('keeps the live payload collapsed by default and opens it only on request', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Payload JSON');
-      expect(container.textContent).toContain('Payload actual');
+      expect(container.textContent).toContain('Payload en vivo disponible.');
+      expect(container.textContent).toContain('Ver payload en vivo');
+      expect(container.textContent).not.toContain('Payload actual');
+      expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
-      expect(container.textContent).not.toContain('Payload en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
       );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Ver payload en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Payload actual');
+      expect(container.textContent).toContain('Ocultar payload en vivo');
     });
 
     await cleanup();
