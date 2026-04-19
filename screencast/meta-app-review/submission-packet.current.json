@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-14 America/Guayaquil",
+  "updatedAt": "2026-04-18 America/Guayaquil",
   "ownerDirection": "Keep tdf-label focused on the Meta permissions lane until the current App Review submission is reworked and resubmitted with the active evidence set.",
   "app": {
     "appId": "1098715965613487",
@@ -33,16 +33,21 @@
   ],
   "artifacts": {
     "primaryVideo": {
-      "path": "/Users/diegosaa/.openclaw/media/inbound/file_2---f9b3a254-c56b-434b-a00f-31ad19b0c4c8.mp4",
-      "purpose": "Strongest current evidence artifact. Shows the business profile identity, Business chat context, prior TDF-side reply context, and a realistic booking/support message flow.",
+      "path": "/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4",
+      "sizeBytes": 11514833,
+      "sha256": "7ef9113729e5c1d66897b057d30c38edc9d4ffd64c3496b803aaf8ddd3f4a578",
+      "durationSeconds": 301.233333,
+      "width": 1920,
+      "height": 1080,
+      "purpose": "Canonical combined reviewer proof covering all four requested Instagram permissions. Segment 1 is the Facebook Login run for instagram_basic and instagram_manage_messages; segment 2 is the Instagram Login run for instagram_business_basic and instagram_business_manage_messages.",
+      "sourceVideos": [
+        "screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4",
+        "screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4"
+      ],
       "proofAnchors": [
-        "00:00:10 -> shows tdf.records.label / TDF Records with category Entrepreneur",
-        "00:00:11 -> shows Business chat"
+        "00:00:00 -> Facebook Login run covers instagram_basic and instagram_manage_messages",
+        "00:02:59 -> Instagram Login run covers instagram_business_basic and instagram_business_manage_messages"
       ]
-    },
-    "secondaryVideo": {
-      "path": "/Users/diegosaa/.openclaw/media/inbound/file_0---897b03ee-8915-48b1-94b3-3297b40b05de.mp4",
-      "purpose": "Supporting evidence for the personal-account-to-business-chat flow."
     },
     "supportingStill": {
       "path": "/Users/diegosaa/.openclaw/media/inbound/file_1---50bbbdeb-66c4-46d5-ae57-004bfb20a67b.jpg",
@@ -57,15 +62,17 @@
         "primaryVideo"
       ],
       "proofAnchors": [
-        "00:00:10 -> connected Instagram account identity"
+        "00:00:00 -> Facebook Login run shows connected account setup and identity context"
       ]
     },
     "instagram_manage_messages": {
       "intent": "Reply from the TDF business side to customer messages sent to the business account.",
       "noteFile": "screencast/meta-app-review/permission-notes/instagram_manage_messages.txt",
       "evidenceArtifacts": [
-        "primaryVideo",
-        "secondaryVideo"
+        "primaryVideo"
+      ],
+      "proofAnchors": [
+        "00:00:00 -> Facebook Login run covers setup, inbox, reply, delivery, and cleanup flow"
       ]
     },
     "instagram_business_basic": {
@@ -75,18 +82,17 @@
         "primaryVideo"
       ],
       "proofAnchors": [
-        "00:00:10 -> profile shows category Entrepreneur"
+        "00:02:59 -> Instagram Login run shows professional/business account context"
       ]
     },
     "instagram_business_manage_messages": {
       "intent": "Read and manage inbound customer messages sent to the TDF business/professional account.",
       "noteFile": "screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt",
       "evidenceArtifacts": [
-        "primaryVideo",
-        "secondaryVideo"
+        "primaryVideo"
       ],
       "proofAnchors": [
-        "00:00:11 -> thread header shows Business chat"
+        "00:02:59 -> Instagram Login run covers business messaging flow"
       ]
     }
   },
@@ -98,5 +104,10 @@
       "docs/meta-app-review-war-room-2026-03-27.md",
       "/Users/diegosaa/.openclaw/workspace/tdf-label-meta-permissions-handoff.md"
     ]
+  },
+  "releaseGate": {
+    "canonicalReviewerProofPath": "/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4",
+    "state": "frozen",
+    "note": "Use this single output-path MP4 as the reviewer-facing video for the next live Meta action. Previous inbound videos are historical context only."
   }
 }

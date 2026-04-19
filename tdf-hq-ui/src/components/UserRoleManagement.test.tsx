@@ -472,9 +472,12 @@ describe('UserRoleManagement', () => {
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).not.toContain('Active');
         expect(adaRow.textContent).not.toContain('Inactive');
+        expect(adaRow.textContent).not.toContain('Activo');
+        expect(adaRow.textContent).not.toContain('Inactivo');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
-        expect(graceRow.textContent).toContain('Inactive');
+        expect(graceRow.textContent).toContain('Inactivo');
+        expect(graceRow.textContent).not.toContain('Inactive');
       });
     } finally {
       await cleanup();

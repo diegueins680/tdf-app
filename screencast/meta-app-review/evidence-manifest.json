@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-03T04:22:38.574Z",
+  "generatedAt": "2026-04-18T00:00:00-05:00",
   "reviewAppSurface": {
     "setupRoute": "/social/instagram?review=1",
     "inboxRoute": "/social/inbox?review=1",
@@ -79,5 +79,24 @@
       "instagram_business_manage_messages": "screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt"
     },
     "screencastGuide": "docs/META_APP_REVIEW_SCREENCAST.md"
+  },
+  "canonicalReviewerProof": {
+    "file": "screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4",
+    "sha256": "7ef9113729e5c1d66897b057d30c38edc9d4ffd64c3496b803aaf8ddd3f4a578",
+    "sizeBytes": 11514833,
+    "durationSeconds": 301.233333,
+    "width": 1920,
+    "height": 1080,
+    "codec": "h264",
+    "permissions": [
+      "instagram_basic",
+      "instagram_manage_messages",
+      "instagram_business_basic",
+      "instagram_business_manage_messages"
+    ],
+    "sourceVideos": [
+      "screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4",
+      "screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4"
+    ]
   }
 }

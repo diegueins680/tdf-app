@@ -47,6 +47,10 @@ const STATUS_COLORS: Record<'Active' | 'Inactive', 'success' | 'default'> = {
   Active: 'success',
   Inactive: 'default',
 };
+const STATUS_LABELS: Record<'Active' | 'Inactive', string> = {
+  Active: 'Activo',
+  Inactive: 'Inactivo',
+};
 
 const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info' | 'default'>> = {
   Admin: 'error',
@@ -320,7 +324,7 @@ export default function UserRoleManagement() {
                   </Stack>
                   <Stack spacing={0.75} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                     {singleUser.status === 'Inactive' && (
-                      <Chip label={singleUser.status} color={STATUS_COLORS[singleUser.status]} size="small" />
+                      <Chip label={STATUS_LABELS[singleUser.status]} color={STATUS_COLORS[singleUser.status]} size="small" />
                     )}
                     <Stack spacing={0.25} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                       <Typography variant="caption" color="text.secondary">
@@ -398,7 +402,7 @@ export default function UserRoleManagement() {
                         {showStatusColumn && (
                           <TableCell>
                             {user.status === 'Inactive' ? (
-                              <Chip label={user.status} color={STATUS_COLORS[user.status]} size="small" />
+                              <Chip label={STATUS_LABELS[user.status]} color={STATUS_COLORS[user.status]} size="small" />
                             ) : null}
                           </TableCell>
                         )}

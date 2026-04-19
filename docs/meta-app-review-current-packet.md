@@ -1,13 +1,14 @@
 # Meta App Review Current Packet
 
-Updated: 2026-04-17 America/Guayaquil
+Updated: 2026-04-18 America/Guayaquil
 
 ## Owner Direction
 Keep tdf-label focused on the Meta permissions lane until the current App Review submission is reworked and resubmitted with the active evidence set.
 
 ## Release Gate
-- Do not take any live Meta `Request again`, `Ask a question`, or `Submit` action until exactly one canonical reviewer-proof replacement screencast path under `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/` is frozen in this file and in `screencast/meta-app-review/submission-packet.current.json`.
-- Until that freeze happens, the inbound carry-forward artifacts below remain the packet of record and the freeze decision stays with `tdf-label-platform`.
+- Canonical reviewer-proof replacement screencast path: `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4`.
+- This path is frozen in this file and in `screencast/meta-app-review/submission-packet.current.json`; use it as the single reviewer-facing video for the next live Meta action.
+- The previous inbound carry-forward videos are retired from the packet of record and remain historical context only.
 
 ## Live Submission
 - App ID: `1098715965613487`
@@ -35,19 +36,18 @@ These permissions are used only so TDF can identify the connected Instagram busi
 
 ## Evidence Artifacts
 ### primaryVideo
-- Path: `/Users/diegosaa/.openclaw/media/inbound/file_2---f9b3a254-c56b-434b-a00f-31ad19b0c4c8.mp4`
-- Size: 3279872 bytes
-- SHA256: `b55342c2dbe0f3d9bf878b86f18141001e4db16a6edc43f097097d2fa743d77e`
-- Purpose: Strongest current evidence artifact. Shows the business profile identity, Business chat context, prior TDF-side reply context, and a realistic booking/support message flow.
+- Path: `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4`
+- Size: 11514833 bytes
+- SHA256: `7ef9113729e5c1d66897b057d30c38edc9d4ffd64c3496b803aaf8ddd3f4a578`
+- Duration: 301.233333 seconds
+- Resolution: 1920x1080
+- Purpose: Canonical combined reviewer proof. The first segment is the manifest-backed Facebook Login run for `instagram_basic` and `instagram_manage_messages`; the second segment is the manifest-backed Instagram Login run for `instagram_business_basic` and `instagram_business_manage_messages`.
+- Source videos:
+  - `screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4`
+  - `screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4`
 - Proof anchors:
-  - 00:00:10 -> shows tdf.records.label / TDF Records with category Entrepreneur
-  - 00:00:11 -> shows Business chat
-
-### secondaryVideo
-- Path: `/Users/diegosaa/.openclaw/media/inbound/file_0---897b03ee-8915-48b1-94b3-3297b40b05de.mp4`
-- Size: 737761 bytes
-- SHA256: `e73a6f1f6234c118f9351a51d270564cb3102b535483e2bc74d46fe933c3d7e6`
-- Purpose: Supporting evidence for the personal-account-to-business-chat flow.
+  - 00:00:00 -> Facebook Login run begins; covers setup and selected account context for `instagram_basic` and `instagram_manage_messages`.
+  - 00:02:59 -> Instagram Login run begins; covers business/professional account context for `instagram_business_basic` and `instagram_business_manage_messages`.
 
 ### supportingStill
 - Path: `/Users/diegosaa/.openclaw/media/inbound/file_1---50bbbdeb-66c4-46d5-ae57-004bfb20a67b.jpg`
@@ -61,35 +61,37 @@ These permissions are used only so TDF can identify the connected Instagram busi
 - Note file: `screencast/meta-app-review/permission-notes/instagram_basic.txt`
 - Evidence artifacts: `primaryVideo`
 - Proof anchors:
-  - 00:00:10 -> connected Instagram account identity
+  - 00:00:00 -> Facebook Login run shows connected account setup and identity context.
 
 ### instagram_manage_messages
 - Intent: Reply from the TDF business side to customer messages sent to the business account.
 - Note file: `screencast/meta-app-review/permission-notes/instagram_manage_messages.txt`
-- Evidence artifacts: `primaryVideo`, `secondaryVideo`
+- Evidence artifacts: `primaryVideo`
+- Proof anchors:
+  - 00:00:00 -> Facebook Login run covers setup, inbox, reply, delivery, and cleanup flow.
 
 ### instagram_business_basic
 - Intent: Identify and access the connected TDF Instagram business/professional account.
 - Note file: `screencast/meta-app-review/permission-notes/instagram_business_basic.txt`
 - Evidence artifacts: `primaryVideo`
 - Proof anchors:
-  - 00:00:10 -> profile shows category Entrepreneur
+  - 00:02:59 -> Instagram Login run shows professional/business account context.
 
 ### instagram_business_manage_messages
 - Intent: Read and manage inbound customer messages sent to the TDF business/professional account.
 - Note file: `screencast/meta-app-review/permission-notes/instagram_business_manage_messages.txt`
-- Evidence artifacts: `primaryVideo`, `secondaryVideo`
+- Evidence artifacts: `primaryVideo`
 - Proof anchors:
-  - 00:00:11 -> thread header shows Business chat
+  - 00:02:59 -> Instagram Login run covers business messaging flow.
 
 ## Operator Files
 - Combined reviewer notes: `screencast/meta-app-review/submission-notes.txt`
 - Screencast guide: `docs/META_APP_REVIEW_SCREENCAST.md`
+- Evidence manifest: `screencast/meta-app-review/evidence-manifest.json`
 - Historical context:
   - `docs/meta-app-review-submission-packet-2026-03-26.md`
   - `docs/meta-app-review-war-room-2026-03-27.md`
   - `/Users/diegosaa/.openclaw/workspace/tdf-label-meta-permissions-handoff.md`
 
 ## Submission Action
-Open https://developers.facebook.com/apps/1098715965613487/app-review/submissions/feedback/?submission_id=1166713985480351&business_id=171424997819091 in an authenticated Meta App Review session, use the files above, paste the matching permission notes, and resubmit only after the active evidence bundle is attached.
-
+Open https://developers.facebook.com/apps/1098715965613487/app-review/submissions/feedback/?submission_id=1166713985480351&business_id=171424997819091 in an authenticated Meta App Review session, attach `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4`, paste the matching permission notes, and use a live Meta action only if the page exposes an enabled reopen, escalation, or send path.
