@@ -219,6 +219,7 @@ const contactDossierOnlyScopeHint =
   'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
+const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateMultiCohortMessage =
@@ -646,6 +647,50 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain('Seguimiento');
       expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('puts the dossier load retry inside the error instead of hiding it behind the title icon', async () => {
+    getRegistrationDossierMock
+      .mockRejectedValueOnce(new Error('Dossier unavailable'))
+      .mockResolvedValueOnce(buildDossier());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getOnlyDossierTrigger(container)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getOnlyDossierTrigger(container));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('No se pudo cargar el expediente: Dossier unavailable');
+      expect(getButtonByText(document.body, dossierErrorRetryLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, dossierErrorRetryLabel)).toBe(1);
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, dossierErrorRetryLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getRegistrationDossierMock).toHaveBeenCalledTimes(2);
+      expect(document.body.textContent).not.toContain('No se pudo cargar el expediente: Dossier unavailable');
+      expect(countButtonsByText(document.body, dossierErrorRetryLabel)).toBe(0);
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
     });
 
     await cleanup();

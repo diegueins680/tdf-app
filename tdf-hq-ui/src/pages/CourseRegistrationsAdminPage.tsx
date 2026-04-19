@@ -2133,18 +2133,19 @@ export default function CourseRegistrationsAdminPage() {
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
-  const hasDossierRefreshContext = dossierQuery.isError
-    || hasReceipts
+  const hasDossierRefreshContext = hasReceipts
     || followUps.length > 0
     || hasSavedNotes
     || showSystemEmailHistoryAction;
   const showDossierRefreshAction = Boolean(selectedDossier)
     && !dossierQuery.isLoading
+    && !dossierQuery.isError
     && !isMarkPaidIntent
     && hasDossierRefreshContext;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
     ? 'Refrescar expediente y correos'
     : 'Refrescar expediente';
+  const dossierErrorRetryLabel = 'Reintentar expediente';
 
   useEffect(() => {
     if (selectedDossier?.intent !== 'markPaid' || !canMarkPaid) return;
@@ -3356,7 +3357,19 @@ export default function CourseRegistrationsAdminPage() {
           )}
 
           {dossierQuery.isError && (
-            <Alert severity="error">
+            <Alert
+              severity="error"
+              action={(
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={handleRefreshDossier}
+                  disabled={!selectedDossier || isRefreshingDossier}
+                >
+                  {dossierErrorRetryLabel}
+                </Button>
+              )}
+            >
               No se pudo cargar el expediente: {dossierQuery.error instanceof Error ? dossierQuery.error.message : 'Error'}
             </Alert>
           )}
