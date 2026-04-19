@@ -964,6 +964,24 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
 
+        it "rejects malformed keyword sslmode values before building ambiguous DB connection strings" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Nothing)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Just "tdf-hq-db.flycast")
+                , ("DB_PORT", Just "5432")
+                , ("DB_USER", Just "tdf_hq")
+                , ("DB_PASS", Just "secret")
+                , ("DB_NAME", Just "tdf_hq")
+                , ("DB_SSLMODE", Just "require target_session_attrs=any")
+                , ("PGSSLMODE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_SSLMODE must be a single sslmode value"
+                        `isInfixOf` show (err :: IOException)
+
         it "uses DATABASE_URL-style connection strings when keyword-style DB env vars are absent" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
@@ -1083,6 +1101,37 @@ main = hspec $ do
                 $ loadConfig `shouldThrow` \err ->
                     "DATABASE_URL target_session_attrs must not be blank"
                         `isInfixOf` show (err :: IOException)
+
+        it "rejects blank or unsupported DATABASE_URL sslmode values before fallback use" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                expectInvalid databaseUrl expected =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just databaseUrl)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        , ("DB_SSLMODE", Nothing)
+                        , ("PGSSLMODE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expected `isInfixOf` show (err :: IOException)
+
+            expectInvalid
+                (baseUrl <> "?sslmode=")
+                "DATABASE_URL sslmode must not be blank"
+            expectInvalid
+                (baseUrl <> "?sslmode=require%20target_session_attrs=any")
+                "DATABASE_URL sslmode must be one of"
 
         it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
             withEnvOverrides

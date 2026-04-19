@@ -197,9 +197,45 @@ validateFallbackConnUrl envName raw
                 , let (key, rest) = T.breakOn "=" pair
                 , T.toLower key == "target_session_attrs"
                 ]
+              sslModes =
+                [ T.strip (T.drop 1 rest)
+                | pair <- T.splitOn "&" query
+                , let (key, rest) = T.breakOn "=" pair
+                , T.toLower key == "sslmode"
+                ]
           in if any T.null targetSessionAttrs
                then Left (envName <> " target_session_attrs must not be blank")
+               else if any T.null sslModes
+                 then Left (envName <> " sslmode must not be blank")
+               else if any (not . isValidConnectionSslMode) sslModes
+                 then Left (invalidConnectionSslModeMessage envName)
                else Right ()
+
+isValidConnectionSslMode :: Text -> Bool
+isValidConnectionSslMode rawMode =
+  T.toLower (T.strip rawMode)
+    `elem` [ "disable"
+           , "allow"
+           , "prefer"
+           , "require"
+           , "verify-ca"
+           , "verify-full"
+           ]
+
+invalidConnectionSslModeMessage :: String -> String
+invalidConnectionSslModeMessage envName =
+  envName <> " sslmode must be one of: disable, allow, prefer, require, verify-ca, verify-full"
+
+validateDbSslMode :: String -> String -> Either String String
+validateDbSslMode envName rawMode
+  | T.any isSpace sslMode || T.any isControl sslMode =
+      Left (envName <> " must be a single sslmode value")
+  | isValidConnectionSslMode sslMode =
+      Right (T.unpack sslMode)
+  | otherwise =
+      Left (invalidConnectionSslModeMessage envName)
+  where
+    sslMode = T.toLower (T.strip (T.pack rawMode))
 
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
@@ -263,7 +299,14 @@ loadConfig = do
   u          <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
   w          <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
   d          <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
-  sslModeEnv <- lookupFirstEnv ["DB_SSLMODE", "PGSSLMODE"]
+  sslModeEnvRaw <- lookupFirstNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
+  sslModeEnv <-
+    case sslModeEnvRaw of
+      Nothing -> pure Nothing
+      Just (envName, rawMode) ->
+        case validateDbSslMode envName rawMode of
+          Left msg -> fail msg
+          Right mode -> pure (Just mode)
   ap         <- get "APP_PORT" "8080"
   rdbEnv     <- lookupEnv "RESET_DB"
   sdbEnv     <- lookupEnv "SEED_DB"
