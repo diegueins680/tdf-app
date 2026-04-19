@@ -25,7 +25,15 @@ import Servant
 import Data.Text (Text)
 import qualified Data.Text as T
 import GHC.Generics (Generic)
-import Servant.Multipart (FileData, FromMultipart(..), MultipartForm, Tmp, lookupFile, lookupInput)
+import Servant.Multipart
+  ( FileData
+  , FromMultipart(..)
+  , Input(..)
+  , MultipartData(..)
+  , MultipartForm
+  , Tmp
+  , fdInputName
+  )
 
 import TDF.DTO.SocialEventsDTO
   ( EventDTO
@@ -63,17 +71,44 @@ data EventImageUploadForm = EventImageUploadForm
 
 instance FromMultipart Tmp EventImageUploadForm where
   fromMultipart multipart = do
-    file <- lookupFile "file" multipart
-    let mName =
-          case lookupInput "name" multipart of
-            Right v ->
-              let trimmed = T.strip v
-              in if T.null trimmed then Nothing else Just trimmed
-            _ -> Nothing
+    rejectUnexpectedParts multipart
+    file <- lookupSingleFile "file" multipart
+    mName <- lookupOptionalInput "name" multipart
     pure EventImageUploadForm
       { eiuFile = file
       , eiuName = mName
       }
+    where
+      rejectUnexpectedParts mp =
+        case (unexpectedInputs, unexpectedFiles) of
+          (fieldName : _, _) -> Left ("Unexpected field: " <> T.unpack fieldName)
+          (_, fileField : _) -> Left ("Unexpected file field: " <> T.unpack fileField)
+          _ -> Right ()
+        where
+          unexpectedInputs =
+            [ name
+            | Input name _ <- inputs mp
+            , name /= "name"
+            ]
+          unexpectedFiles =
+            [ fdInputName file
+            | file <- files mp
+            , fdInputName file /= "file"
+            ]
+
+      lookupOptionalInput name mp =
+        case filter (\(Input inputName _) -> inputName == name) (inputs mp) of
+          [] -> Right Nothing
+          [Input _ raw] ->
+            let trimmed = T.strip raw
+            in Right (if T.null trimmed then Nothing else Just trimmed)
+          _ -> Left ("Duplicate field: " <> T.unpack name)
+
+      lookupSingleFile name mp =
+        case [file | file <- files mp, fdInputName file == name] of
+          [] -> Left ("Missing file field: " <> T.unpack name)
+          [file] -> Right file
+          _ -> Left ("Duplicate file field: " <> T.unpack name)
 
 data EventImageUploadDTO = EventImageUploadDTO
   { eiuEventId   :: Text

@@ -37,6 +37,7 @@ import TDF.API.LiveSessions
       LiveSessionSongPayload (..),
       resolveLiveSessionSetlistSortOrders )
 import TDF.API.Radio (RadioAPI)
+import TDF.API.SocialEventsAPI (EventImageUploadForm (..))
 import TDF.API.SocialSyncAPI (SocialSyncAPI)
 import TDF.API.Types
     ( InternTaskUpdate (..),
@@ -2322,6 +2323,64 @@ main = hspec $ do
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
 
+    describe "social event image upload multipart parsing" $ do
+        it "accepts the canonical file plus optional display name" $
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "  Poster final  ")]
+                    [mkEventImageFile "file" "poster.png"])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    expectationFailure ("Expected canonical image upload form to parse, got: " <> err)
+                Right parsed -> do
+                    eiuName parsed `shouldBe` Just "Poster final"
+                    fdFileName (eiuFile parsed) `shouldBe` "poster.png"
+
+        it "rejects duplicate or unexpected multipart parts instead of silently ignoring upload intent" $ do
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "Poster"), ("name", "Other")]
+                    [mkEventImageFile "file" "poster.png"])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err `shouldContain` "Duplicate field: name"
+                Right _ ->
+                    expectationFailure "Expected duplicate name field to be rejected"
+
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("alt", "Poster")]
+                    [mkEventImageFile "file" "poster.png"])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err `shouldContain` "Unexpected field: alt"
+                Right _ ->
+                    expectationFailure "Expected unexpected image field to be rejected"
+
+            case fromMultipart
+                (mkEventImageMultipart
+                    []
+                    [ mkEventImageFile "file" "poster.png"
+                    , mkEventImageFile "stagePlot" "stage.pdf"
+                    ])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err `shouldContain` "Unexpected file field: stagePlot"
+                Right _ ->
+                    expectationFailure "Expected unexpected image file field to be rejected"
+
+            case fromMultipart
+                (mkEventImageMultipart
+                    []
+                    [ mkEventImageFile "file" "poster.png"
+                    , mkEventImageFile "file" "poster-copy.png"
+                    ])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err `shouldContain` "Duplicate file field: file"
+                Right _ ->
+                    expectationFailure "Expected duplicate image file field to be rejected"
+
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
                 { emuTicketUrl = FieldMissing
@@ -4574,6 +4633,22 @@ mkLiveSessionFile inputName fileName =
         , fdFileName = fileName
         , fdFileCType = "application/pdf"
         , fdPayload = "/tmp/mock-live-session-rider"
+        }
+
+mkEventImageMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkEventImageMultipart fields uploads =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = uploads
+        }
+
+mkEventImageFile :: Text -> Text -> FileData Tmp
+mkEventImageFile inputName fileName =
+    FileData
+        { fdInputName = inputName
+        , fdFileName = fileName
+        , fdFileCType = "image/png"
+        , fdPayload = "/tmp/mock-event-image"
         }
 
 mkFeedbackMultipart :: [(Text, Text)] -> MultipartData Tmp
