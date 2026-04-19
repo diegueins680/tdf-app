@@ -2871,6 +2871,9 @@ validateSocialReplyIdentifier fieldName value
   | T.any isSpace value =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain whitespace")) }
+  | T.any isControl value =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
   | T.length value > 256 =
       Left err400
         { errBody =

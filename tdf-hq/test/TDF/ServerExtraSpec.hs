@@ -1123,6 +1123,36 @@ spec = do
       assertInvalid 0
       assertInvalid 201
 
+  describe "social reply identifier validation" $ do
+    it "normalizes omitted and explicit reply ids without inventing fallbacks" $ do
+      validateSocialReplySenderId " ig-user-1 "
+        `shouldBe` Right "ig-user-1"
+      validateSocialReplyExternalId Nothing
+        `shouldBe` Right Nothing
+      validateSocialReplyExternalId (Just " msg-1 ")
+        `shouldBe` Right (Just "msg-1")
+
+    it "rejects blank, whitespace, control, or oversized ids before reply dispatch" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid social reply identifier error, got " <> show value)
+      assertInvalid "senderId is required" (validateSocialReplySenderId "   ")
+      assertInvalid
+        "externalId must be omitted or a non-empty string"
+        (validateSocialReplyExternalId (Just "   "))
+      assertInvalid
+        "senderId must not contain whitespace"
+        (validateSocialReplySenderId "ig user")
+      assertInvalid
+        "externalId must not contain control characters"
+        (validateSocialReplyExternalId (Just ("msg" <> T.singleton '\NUL' <> "1")))
+      assertInvalid
+        "senderId must be 256 characters or fewer"
+        (validateSocialReplySenderId (T.replicate 257 "a"))
+
   describe "social list filter parsing" $ do
     it "uses defaults only when direction and repliedOnly are omitted, while still normalizing supported explicit values" $ do
       (parseSocialDirectionParam Nothing :: Either ServerError (Maybe Text))
