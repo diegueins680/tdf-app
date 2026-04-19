@@ -7516,6 +7516,9 @@ validateAdsAssistChannel (Just rawChannel) =
     Just "whatsapp" -> Right (Just "whatsapp")
     _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
+validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
+
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
 adsAssistPublic req = do
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
@@ -7655,6 +7658,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
 adsUpsertAd :: AuthedUser -> AdCreativeUpsert -> AppM AdCreativeDTO
 adsUpsertAd user AdCreativeUpsert{..} = do
   requireModule user ModuleAdmin
+  landingUrlVal <- either throwError pure (validateAdCreativeLandingUrl acuLandingUrl)
   let nameClean = T.strip acuName
       mCampaign = fmap toSqlKey acuCampaignId :: Maybe ME.CampaignId
       statusVal =
@@ -7677,7 +7681,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       , ME.adCreativeName = nameClean
       , ME.adCreativeChannel = T.strip <$> acuChannel
       , ME.adCreativeAudience = T.strip <$> acuAudience
-      , ME.adCreativeLandingUrl = T.strip <$> acuLandingUrl
+      , ME.adCreativeLandingUrl = landingUrlVal
       , ME.adCreativeCta = T.strip <$> acuCta
       , ME.adCreativeStatus = statusVal
       , ME.adCreativeNotes = T.strip <$> acuNotes
@@ -7694,7 +7698,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
         , ME.AdCreativeName =. nameClean
         , ME.AdCreativeChannel =. (T.strip <$> acuChannel)
         , ME.AdCreativeAudience =. (T.strip <$> acuAudience)
-        , ME.AdCreativeLandingUrl =. (T.strip <$> acuLandingUrl)
+        , ME.AdCreativeLandingUrl =. landingUrlVal
         , ME.AdCreativeCta =. (T.strip <$> acuCta)
         , ME.AdCreativeStatus =. statusVal
         , ME.AdCreativeNotes =. (T.strip <$> acuNotes)
