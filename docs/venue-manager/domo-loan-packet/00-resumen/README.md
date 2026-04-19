@@ -16,4 +16,5 @@ Prepared public-safe exports:
 - `domo-lender-one-pager.pdf`
 - `domo-del-pululahua-financial-plan.pdf`
 - `domo-36-month-pro-forma.pdf`
+- `../06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
 - `domo-public-lender-packet.zip`

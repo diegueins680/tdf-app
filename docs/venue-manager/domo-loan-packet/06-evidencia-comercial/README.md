@@ -13,3 +13,10 @@ Collect commercial traction here:
 - Professional photos and video links.
 
 Remove private client names, phone numbers, and emails before committing.
+
+Prepared public-safe evidence:
+
+- `domo-public-quote-page-evidence.md`
+- `domo-public-quote-page-evidence.pdf`
+- `domo-public-quote-page-desktop-2026-04-19.png`
+- `domo-public-quote-page-mobile-2026-04-19.png`

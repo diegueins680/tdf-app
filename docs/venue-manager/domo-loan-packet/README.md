@@ -29,5 +29,8 @@ Public-safe submission bundle:
 - `00-resumen/domo-submission-cover-letter.pdf`
 - `00-resumen/domo-bank-submission-index.pdf`
 - `04-proformas-uso-de-fondos/domo-use-of-funds-schedule.pdf`
+- `06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
+- `06-evidencia-comercial/domo-public-quote-page-desktop-2026-04-19.png`
+- `06-evidencia-comercial/domo-public-quote-page-mobile-2026-04-19.png`
 
 Before formal submission, replace planning budgets with signed proformas and deliver private identity, tax, bank, property, and guarantee documents only through a secure lender-confirmed channel.

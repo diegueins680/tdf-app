@@ -88,7 +88,7 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Documento | Responsable | Estado |
 | --- | --- | --- |
 | Página pública de cotización y reserva |  | Listo: https://tdf-app.pages.dev/domo-del-pululahua |
-| Capturas de la página pública |  | Pendiente |
+| Capturas de la página pública |  | Listo: `docs/venue-manager/domo-loan-packet/06-evidencia-comercial/domo-public-quote-page-evidence.md` |
 | Reporte de leads o solicitudes recibidas |  | Pendiente |
 | Cartas de intención o conversaciones con clientes potenciales |  | Pendiente |
 | Rate card preliminar por tipo de evento |  | Pendiente |

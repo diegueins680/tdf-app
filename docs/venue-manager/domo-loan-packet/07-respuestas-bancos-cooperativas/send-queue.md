@@ -38,6 +38,7 @@ Attach the public-safe packet:
 - `../00-resumen/domo-del-pululahua-financial-plan.pdf`
 - `../00-resumen/domo-36-month-pro-forma.pdf`
 - `../04-proformas-uso-de-fondos/domo-use-of-funds-schedule.pdf`
+- `../06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
 
 Or attach the ZIP:
 
