@@ -28,6 +28,7 @@ import           Control.Applicative        ((<|>))
 import           Control.Monad              (forM_, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
+import           Data.Char                  (isControl, isSpace)
 import           Data.List                  (foldl')
 import           Data.Maybe                 (listToMaybe, maybeToList)
 import           Data.Set                   (Set)
@@ -248,7 +249,9 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
     Just rawHeader ->
       case T.words rawHeader of
         [scheme, value]
-          | T.toLower scheme == "bearer" -> Right value
+          | T.toLower scheme == "bearer" ->
+              maybe (Left "Invalid Authorization header") Right
+                (normalizeAuthToken value)
         _ -> Left "Invalid Authorization header"
     Nothing ->
       maybe
@@ -271,16 +274,22 @@ lookupCookie cookieName rawHeader =
          maybe
            (Left "Missing or invalid auth token")
            Right
-           (nonEmptyText value)
+           (normalizeAuthToken value)
        _ -> Left "Multiple session cookies found"
   where
     breakOnEquals chunk =
       let (name, rest) = T.breakOn "=" chunk
       in (name, T.drop 1 rest)
 
-    nonEmptyText txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
+normalizeAuthToken :: Text -> Maybe Text
+normalizeAuthToken rawToken =
+  let token = T.strip rawToken
+  in if T.null token || T.any invalidAuthTokenChar token
+       then Nothing
+       else Just token
+
+invalidAuthTokenChar :: Char -> Bool
+invalidAuthTokenChar ch = isSpace ch || isControl ch
 
 sessionCookieHeader :: AppConfig -> Text -> Text
 sessionCookieHeader cfg token =

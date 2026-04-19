@@ -1357,6 +1357,16 @@ main = hspec $ do
                     ])
                 `shouldBe` Left "Invalid Authorization header"
 
+        it "rejects malformed bearer token values before auth DB lookup" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Bearer header\NULtoken")
+                    , ("Cookie", "tdf_session_test=cookie-token")
+                    ])
+                `shouldBe` Left "Invalid Authorization header"
+
         it "rejects duplicate Authorization headers instead of choosing an ambiguous token" $ do
             cfg <- loadAuthConfig
             extractToken
@@ -1405,6 +1415,14 @@ main = hspec $ do
                 Nothing
                 (Just "tdf_session_test=active-token; tdf_session_test=   ")
                 `shouldBe` Left "Multiple session cookies found"
+
+        it "rejects malformed session cookie token values before auth DB lookup" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                Nothing
+                (Just "tdf_session_test=cookie token")
+                `shouldBe` Left "Missing or invalid auth token"
 
         it "keeps malformed authorization headers authoritative over cookies" $ do
             cfg <- loadAuthConfig
