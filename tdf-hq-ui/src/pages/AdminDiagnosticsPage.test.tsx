@@ -120,6 +120,26 @@ describe('AdminDiagnosticsPage', () => {
     window.localStorage.clear();
   });
 
+  it('replaces empty calendar dash rows with one setup hint', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-empty"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'Todavía no hay calendario configurado. Abre la sincronización para conectar Google Calendar.',
+        );
+        expect(container.textContent).toContain('Abrir página de sincronización');
+        expect(container.textContent).not.toContain('Calendar ID: —');
+        expect(container.textContent).not.toContain('Última sincronización: —');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces repeated quiet-channel empty states with one first-run summary for the whole section', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

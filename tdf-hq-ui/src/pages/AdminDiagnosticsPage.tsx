@@ -115,8 +115,9 @@ export default function AdminDiagnosticsPage() {
     typeof window !== 'undefined'
       ? ((window as typeof window & { __MISSING_ENV__?: string[] }).__MISSING_ENV__ ?? [])
       : [];
-  const calendarId = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.calendarId') ?? '—' : '—';
-  const lastSyncAt = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.lastSyncAt') ?? '—' : '—';
+  const calendarId = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.calendarId') : null;
+  const lastSyncAt = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.lastSyncAt') : null;
+  const hasCalendarSyncState = Boolean(calendarId || lastSyncAt);
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ direction: 'incoming' }),
@@ -178,12 +179,20 @@ export default function AdminDiagnosticsPage() {
       </Paper>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Typography variant="h6">Sincronización de calendario</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Calendar ID: {calendarId}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Última sincronización: {lastSyncAt}
-        </Typography>
+        {hasCalendarSyncState ? (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              Calendar ID: {calendarId ?? '—'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Última sincronización: {lastSyncAt ?? '—'}
+            </Typography>
+          </>
+        ) : (
+          <Alert severity="info" variant="outlined" sx={{ mt: 1 }} data-testid="admin-diagnostics-calendar-empty">
+            Todavía no hay calendario configurado. Abre la sincronización para conectar Google Calendar.
+          </Alert>
+        )}
         <Button
           variant="outlined"
           size="small"
