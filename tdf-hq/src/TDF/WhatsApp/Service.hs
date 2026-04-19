@@ -8,6 +8,7 @@ module TDF.WhatsApp.Service
   , enrollPhone
   , previewEnrollment
   , verifyTokenMatches
+  , requireWhatsAppSendSuccess
   ) where
 
 import Data.Aeson (Value, object, (.=))
@@ -136,8 +137,14 @@ sendViaWA WhatsAppService{waManager, waConfig} to url = do
   let msg = "¡Gracias por tu interés en el Curso de Producción Musical! Aquí está tu enlace de inscripción: "
             <> url <> "\nCupos limitados (10)."
       version = waApiVersion waConfig
-  _ <- sendText waManager version (waToken waConfig) (waPhoneId waConfig) to msg
-  pure (object ["ok" .= True])
+  result <- sendText waManager version (waToken waConfig) (waPhoneId waConfig) to msg
+  either fail pure (requireWhatsAppSendSuccess result)
+
+requireWhatsAppSendSuccess :: Either String a -> Either String Value
+requireWhatsAppSendSuccess (Left err) =
+  Left ("WhatsApp send failed: " <> err)
+requireWhatsAppSendSuccess (Right _) =
+  Right (object ["ok" .= True])
 
 mintLink :: WhatsAppService -> Connection -> Text -> IO (Text, Int)
 mintLink WhatsAppService{waConfig} conn phone = do

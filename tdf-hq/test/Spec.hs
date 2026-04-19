@@ -913,6 +913,12 @@ main = hspec $ do
                 , ("WHATSAPP_API_VERSION", Just "2024-01")
                 ]
 
+        it "surfaces WhatsApp provider send failures before reporting enrollment success" $ do
+            WhatsAppService.requireWhatsAppSendSuccess (Left "HTTP 401: bad token" :: Either String ())
+                `shouldBe` Left "WhatsApp send failed: HTTP 401: bad token"
+            WhatsAppService.requireWhatsAppSendSuccess (Right ())
+                `shouldBe` Right (A.object ["ok" .= True])
+
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
