@@ -111,10 +111,13 @@ validateOptionalEmail Nothing = Right Nothing
 validateOptionalEmail (Just rawEmail) =
   case normalizeEmail (Just rawEmail) of
     Nothing -> Right Nothing
-    Just emailVal ->
-      if isValidEmail emailVal
-           then Right (Just emailVal)
-           else Left err400 { errBody = "email inválido" }
+    Just emailVal
+      | emailVal == publicLeadFallbackEmail ->
+          Left err400 { errBody = "email is reserved for anonymous public interests" }
+      | isValidEmail emailVal ->
+          Right (Just emailVal)
+      | otherwise ->
+          Left err400 { errBody = "email inválido" }
 
 validateEmailUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
 validateEmailUpdate Nothing = Right Nothing

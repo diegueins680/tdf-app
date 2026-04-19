@@ -45,6 +45,7 @@ import TDF.Trials.Server
   ( createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
+  , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
   , validatePurchaseInput
   , validatePreferredSlots
@@ -142,6 +143,14 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "reserved for anonymous public interests"
         Right _ ->
           expectationFailure "Expected the fallback email to be reserved"
+
+    it "rejects assigning the reserved fallback email through student updates" $
+      case validateEmailUpdate (Just " public-interest@tdf.local ") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "reserved for anonymous public interests"
+        Right value ->
+          expectationFailure ("Expected fallback email update to be rejected, got " <> show value)
 
     it "rejects free-form text that merely contains digits instead of extracting a misleading partial phone" $ do
       result <- tryCreateOrFetchParty (Just "Test User") (Just "user@example.com") (Just "call me at 099 123 4567")
