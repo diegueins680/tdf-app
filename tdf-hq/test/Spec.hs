@@ -4230,6 +4230,16 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected invalid acceptedTerms to be rejected, got: " <> show payload)
 
+        it "rejects blank required text fields before persistence sees empty identifiers" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "   ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Missing field: bandName"
+                Right payload ->
+                    expectationFailure ("Expected blank bandName to be rejected, got: " <> show payload)
+
         it "rejects malformed contact or musician emails instead of storing unusable addresses" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

@@ -163,7 +163,9 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         case lookupSingleInput name mp of
           Left err -> Left err
           Right Nothing -> Left ("Missing field: " <> T.unpack name)
-          Right (Just val) -> Right (inputValueText val)
+          Right (Just val) ->
+            let txt = T.strip (inputValueText val)
+            in if T.null txt then Left ("Missing field: " <> T.unpack name) else Right txt
       optionalText name mp =
         case lookupSingleInput name mp of
           Left err -> Left err
