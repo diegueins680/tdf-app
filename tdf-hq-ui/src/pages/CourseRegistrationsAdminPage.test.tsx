@@ -486,6 +486,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, dossierOnlyScopeHint)).toBe(1);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').getAttribute('title')).toBe(
+        'Abrir expediente de Ada Lovelace',
+      );
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);

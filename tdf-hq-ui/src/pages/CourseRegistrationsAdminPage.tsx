@@ -3211,6 +3211,7 @@ export default function CourseRegistrationsAdminPage() {
                             underline="hover"
                             color="inherit"
                             aria-label={`Abrir expediente de ${rowActionTarget}`}
+                            title={`Abrir expediente de ${rowActionTarget}`}
                             onClick={() => handleOpenDossier(reg, 'review')}
                             sx={{
                               p: 0,
