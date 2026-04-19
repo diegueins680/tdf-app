@@ -659,6 +659,19 @@ const registrationListContextSummary = ({
   return parts.join(' · ');
 };
 
+const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseRegistrationDTO[]) => {
+  const statusKeys = new Set<string>();
+  let hasCustomStatus = false;
+
+  registrations.forEach((reg) => {
+    const statusLabel = registrationStatusLabel(reg.crStatus).trim();
+    if (statusLabel) statusKeys.add(normalizeLocalSearchText(statusLabel));
+    if (!normalizeKnownRegistrationStatus(reg.crStatus)) hasCustomStatus = true;
+  });
+
+  return hasCustomStatus && statusKeys.size > 1;
+};
+
 const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
@@ -696,6 +709,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   if (hasContactIdentity) terms.push(hasNameIdentity ? 'contacto' : 'Contacto');
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (hasNotes) terms.push('nota');
+  if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
   if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
 
@@ -1144,6 +1158,10 @@ export default function CourseRegistrationsAdminPage() {
     () => buildLocalSearchPlaceholder(registrations),
     [registrations],
   );
+  const hasCustomStatusSearch = useMemo(
+    () => hasSearchableCustomRegistrationStatus(registrations),
+    [registrations],
+  );
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
@@ -1443,6 +1461,9 @@ export default function CourseRegistrationsAdminPage() {
   const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
     && !showSingleStatusSummary
     && actionableStatusFilters.length === 0;
+  const customStatusFilterGuidance = showLocalSearchControl && hasCustomStatusSearch
+    ? 'Busca por estado en las inscripciones cargadas o usa Cambiar estado para normalizarlos.'
+    : customStatusFilterUnavailableMessage;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'Vista única por ahora: una cohorte y un estado.';
@@ -2769,7 +2790,7 @@ export default function CourseRegistrationsAdminPage() {
                           {customRegistrationStatusLabel(singleVisibleCustomStatus)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {customStatusFilterUnavailableMessage}
+                          {customStatusFilterGuidance}
                         </Typography>
                       </Stack>
                     ) : showCustomStatusFilterUnavailableSummary ? (
@@ -2790,7 +2811,7 @@ export default function CourseRegistrationsAdminPage() {
                           Sin filtros de estado
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {customStatusFilterUnavailableMessage}
+                          {customStatusFilterGuidance}
                         </Typography>
                       </Stack>
                     ) : (
