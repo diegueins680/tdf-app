@@ -1,0 +1,10 @@
+Categoria,MontoReferencial,Proveedor,Contacto,Canal,FechaSolicitud,FechaRespuesta,MontoProforma,Vigencia,IncluyeIVA,Estado,SiguientePaso,Notas
+Paisajismo y acabados exteriores,20000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Camino acceso y flujo de parqueo,16000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Mobiliario y equipo operativo,18000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Senaletica contenido y material comercial,6000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Catering y barra,9000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Sonido e iluminacion,7000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Permisos legal seguros e ingenieria,6000,,,,,,,,,Pendiente identificar proveedor,Buscar proveedor y enviar solicitud,
+Capital de trabajo,13000,TDF Records,Interno,Presupuesto interno,,,,,,Pendiente preparar presupuesto,Firmar presupuesto interno,
+Contingencia,5000,TDF Records,Interno,Reserva interna,,,,,,Pendiente justificar reserva,Firmar justificacion interna,

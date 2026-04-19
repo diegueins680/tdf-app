@@ -17,3 +17,11 @@ Archivo publico seguro de planificacion preparado:
 
 - `domo-use-of-funds-schedule.md`
 - `domo-use-of-funds-schedule.pdf`
+
+Solicitudes de proforma preparadas:
+
+- `proforma-request-template.md`
+- `proforma-request-template.pdf`
+- `vendor-proforma-scope-packages.md`
+- `vendor-proforma-scope-packages.pdf`
+- `vendor-proforma-tracker.csv`

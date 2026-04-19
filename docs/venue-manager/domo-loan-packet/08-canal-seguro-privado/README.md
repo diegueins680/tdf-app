@@ -16,3 +16,5 @@ Regla operativa:
 2. Subir el paquete privado solo al canal confirmado.
 3. Registrar cada documento en el manifiesto.
 4. Guardar copias reales en una boveda cifrada o drive privado, no en este repositorio.
+
+La subcarpeta `documentos-reales/` existe solo como punto local de armado y esta ignorada por git. No colocar ahi nada que deba compartirse por commit; usarla solo como area temporal privada de esta maquina.

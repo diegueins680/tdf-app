@@ -18,5 +18,10 @@ Archivos preparados:
 - `email-produbanco.eml`
 - `lender-outreach-drafts.md`
 - `lender-outreach-tracker.csv`
+- `lender-call-tracker.csv`
 - `phone-intake-script.md`
+- `pichincha-call-sheet.md`
+- `pichincha-call-sheet.pdf`
+- `produbanco-call-sheet.md`
+- `produbanco-call-sheet.pdf`
 - `domo-lender-outreach-table.pdf`

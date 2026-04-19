@@ -69,6 +69,9 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 | Cotizaciones de seguros, permisos, legal e ingeniería |  | Pendiente |
 | Cronograma de ejecución de fondos |  | Listo como borrador publico: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/domo-use-of-funds-schedule.md` |
 | Lista de verificacion de reemplazo por proformas firmadas |  | Listo: `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/signed-proforma-replacement-checklist.md` |
+| Plantilla de solicitud de proforma firmada |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/proforma-request-template.md` |
+| Paquetes de alcance para proveedores |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-proforma-scope-packages.md` |
+| Tracker de proformas de proveedores |  | Listo: `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/vendor-proforma-tracker.csv` |
 
 ## 5. Permisos y operación
 
@@ -120,6 +123,9 @@ Archivos de contacto preparados:
 
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-drafts.md`
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-tracker.csv`
+- `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-call-tracker.csv`
+- `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/pichincha-call-sheet.md`
+- `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/produbanco-call-sheet.md`
 - `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/private-submission-index.md`
 - `docs/venue-manager/domo-loan-packet/08-canal-seguro-privado/secure-upload-manifest-template.csv`
 
@@ -138,9 +144,15 @@ docs/venue-manager/domo-loan-packet/
   03-propiedad-garantia/
   04-proformas-uso-de-fondos/
     domo-use-of-funds-schedule.pdf
+    proforma-request-template.md
+    vendor-proforma-scope-packages.md
+    vendor-proforma-tracker.csv
   05-permisos-operacion/
   06-evidencia-comercial/
   07-respuestas-bancos-cooperativas/
+    lender-call-tracker.csv
+    pichincha-call-sheet.md
+    produbanco-call-sheet.md
   08-canal-seguro-privado/
     private-submission-index.md
     secure-upload-manifest-template.csv

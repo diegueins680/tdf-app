@@ -29,6 +29,9 @@ Puntos oficiales de partida:
 Guion para telefono o agencia:
 
 - `phone-intake-script.md`
+- `pichincha-call-sheet.md`
+- `produbanco-call-sheet.md`
+- `lender-call-tracker.csv`
 
 Adjuntar el paquete publico seguro:
 
@@ -55,8 +58,8 @@ O adjuntar el ZIP:
 
 | Orden | Institucion | Borrador | Estado |
 | ---: | --- | --- | --- |
-| 1 | Banco Pichincha | `email-pichincha.eml` | Bucle de bot de WhatsApp; falta canal seguro |
-| 2 | Produbanco | `email-produbanco.eml` | Listo para enviar |
+| 1 | Banco Pichincha | `pichincha-call-sheet.md` / `email-pichincha.eml` | Listo para llamada manual; falta canal seguro |
+| 2 | Produbanco | `produbanco-call-sheet.md` / `email-produbanco.eml` | Listo para llamada manual |
 | 3 | Banco Guayaquil | `lender-outreach-drafts.md` | Borrador listo |
 | 4 | Banco Internacional | `lender-outreach-drafts.md` | Borrador listo |
 | 5 | Jardin Azuayo | `lender-outreach-drafts.md` | Borrador listo |
