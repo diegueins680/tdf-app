@@ -153,7 +153,8 @@ const isStatusFilter = (value: string): value is StatusFilter =>
 
 const parseStatusFilter = (value: string | null): StatusFilter => {
   const trimmed = value?.trim() ?? '';
-  return isStatusFilter(trimmed) ? trimmed : 'all';
+  const normalized = trimmed.toLowerCase().replace(/[\s-]+/g, '_');
+  return isStatusFilter(normalized) ? normalized : 'all';
 };
 
 const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): number => {

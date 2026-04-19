@@ -207,6 +207,7 @@ const copyVisibleCsvLabel = (count: number) => `Copiar visibles (${count} fila${
 const localSearchLabel = 'Buscar inscripciones';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
+const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
@@ -2226,6 +2227,43 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
       );
+    });
+
+    await cleanup();
+  });
+
+  it('normalizes shared URL status variants before showing the registration list', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'pending_payment'
+        ? [pendingRegistration]
+        : [pendingRegistration, paidRegistration],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=pending-payment');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'pending_payment',
+        limit: 200,
+      });
+      expect(getButtonByAriaLabel(container, clearPendingStatusFilterLabel).textContent?.trim()).toBe(
+        'Pendiente de pago (1)',
+      );
+      expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(container.textContent).not.toContain('Grace Hopper');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
     });
 
     await cleanup();
