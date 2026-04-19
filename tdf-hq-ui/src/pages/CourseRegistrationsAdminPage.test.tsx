@@ -6037,16 +6037,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Busca dentro de las 200 inscripciones cargadas. Usa Ajustar límite si necesitas revisar más registros.',
       );
-      expect(listUtilities?.textContent).not.toContain('Se cargó el límite de 200 inscripciones');
+      expect(container.textContent).not.toContain('Se cargó el límite de 200 inscripciones');
       expect(
         Array.from(container.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === copyVisibleCsvLabel(200),
         ),
-      ).toBe(true);
-      expect(listUtilities).not.toBeNull();
+      ).toBe(false);
+      expect(listUtilities).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(getButtonByText(listUtilities!, copyVisibleCsvLabel(200))).toBeTruthy();
     });
 
     await act(async () => {

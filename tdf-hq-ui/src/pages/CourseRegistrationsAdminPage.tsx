@@ -1158,7 +1158,7 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const hasExplicitCsvExportScope = hasCustomFilters || hasLocalSearch || viewHitsCurrentLimit;
+  const hasExplicitCsvExportScope = hasCustomFilters || hasLocalSearch;
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
@@ -1212,8 +1212,7 @@ export default function CourseRegistrationsAdminPage() {
     && loadedRegistrationCount < MIN_LOCAL_SEARCH_REGISTRATIONS
     && !viewHitsCurrentLimit;
   const suppressDefaultUnscopedListUtilityRow = !hasCustomFilters
-    && !hasLocalSearch
-    && !viewHitsCurrentLimit;
+    && !hasLocalSearch;
   const showUtilityCountSummary = !hasLocalSearch
     && !canCopyCsv
     && !showTinyDefaultCountInCurrentView
