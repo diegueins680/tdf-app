@@ -305,6 +305,9 @@ decodeCreateBookingRequest = eitherDecode
 decodeUpdateBookingRequest :: BL8.ByteString -> Either String UpdateBookingReq
 decodeUpdateBookingRequest = eitherDecode
 
+decodePackagePurchaseReq :: BL8.ByteString -> Either String DTO.PackagePurchaseReq
+decodePackagePurchaseReq = eitherDecode
+
 decodeCreateReceiptReq :: BL8.ByteString -> Either String DTO.CreateReceiptReq
 decodeCreateReceiptReq = eitherDecode
 
@@ -1315,6 +1318,20 @@ spec = describe "TDF.Server helpers" $ do
             omittedResult `shouldBe` Right Nothing
             clearResult `shouldBe` Right (Just Nothing)
             resolvedResult `shouldBe` Right (Just (Just pipelineCardId))
+
+    describe "PackagePurchaseReq FromJSON" $ do
+        it "accepts canonical package purchase bodies and rejects over-posted fields" $ do
+            case decodePackagePurchaseReq "{\"buyerId\":42,\"productId\":7}" of
+                Left decodeErr ->
+                    expectationFailure
+                        ("Expected canonical package purchase payload to decode, got: " <> decodeErr)
+                Right (DTO.PackagePurchaseReq buyerValue productValue) -> do
+                    buyerValue `shouldBe` 42
+                    productValue `shouldBe` 7
+
+            decodePackagePurchaseReq
+                "{\"buyerId\":42,\"productId\":7,\"packageId\":9}"
+                `shouldSatisfy` isLeft
 
     describe "resolvePackagePurchaseRefs" $ do
         it "resolves existing active package products for known buyers" $ do

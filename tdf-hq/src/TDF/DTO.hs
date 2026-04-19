@@ -497,7 +497,8 @@ data PackagePurchaseReq = PackagePurchaseReq
   { buyerId   :: Int64
   , productId :: Int64
   } deriving (Show, Generic)
-instance FromJSON PackagePurchaseReq
+instance FromJSON PackagePurchaseReq where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 -- Invoices
 data InvoiceLineDTO = InvoiceLineDTO
