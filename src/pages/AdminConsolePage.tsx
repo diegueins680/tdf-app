@@ -164,6 +164,13 @@ function normalizeAdminConsoleSectionKey(value: string) {
     .trim();
 }
 
+function normalizeBuiltInAdminConsoleSectionKey(value: string) {
+  return normalizeAdminConsoleSectionKey(value)
+    .replace(/\b(?:and|y)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normalizeAdminConsoleParagraphKey(value: string) {
   return normalizeAdminConsoleSectionKey(value);
 }
@@ -176,10 +183,10 @@ function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
 }
 
 const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
-  BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeAdminConsoleSectionKey(value)),
+  BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeBuiltInAdminConsoleSectionKey(value)),
 );
 const BUILT_IN_ADMIN_CARD_TITLE_KEYS = new Set(
-  BUILT_IN_ADMIN_CARD_TITLES.map((value) => normalizeAdminConsoleSectionKey(value)),
+  BUILT_IN_ADMIN_CARD_TITLES.map((value) => normalizeBuiltInAdminConsoleSectionKey(value)),
 );
 const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
   BUILT_IN_ADMIN_CARD_BODY_COPY.map((value) => normalizeAdminConsoleParagraphKey(value)),
@@ -226,8 +233,8 @@ function isBuiltInAdminConsoleParagraph(paragraph: string) {
 }
 
 function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
-  const normalizedId = normalizeAdminConsoleSectionKey(card.cardId);
-  const normalizedTitle = normalizeAdminConsoleSectionKey(card.title);
+  const normalizedId = normalizeBuiltInAdminConsoleSectionKey(card.cardId);
+  const normalizedTitle = normalizeBuiltInAdminConsoleSectionKey(card.title);
 
   return BUILT_IN_ADMIN_CARD_ID_KEYS.has(normalizedId) || BUILT_IN_ADMIN_CARD_TITLE_KEYS.has(normalizedTitle);
 }
