@@ -949,6 +949,54 @@ spec = do
                     emailVal `shouldBe` "ada@example.com"
                     codeVal `shouldBe` "REF-42"
 
+        it "normalizes academy identity fields before handlers write or look up rows" $ do
+            case decodeEnroll
+                "{\"email\":\" Ada@Example.COM \",\"role\":\" Artist \",\"platform\":\" instagram \",\"referralCode\":\" ref-42 \"}" of
+                Left err ->
+                    expectationFailure ("Expected padded academy enroll payload to decode, got: " <> err)
+                Right (Academy.EnrollReq emailVal roleVal platformVal referralCodeVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    roleVal `shouldBe` "artist"
+                    platformVal `shouldBe` Just "instagram"
+                    referralCodeVal `shouldBe` Just "REF-42"
+
+            case decodeProgress
+                "{\"email\":\" Ada@Example.COM \",\"slug\":\" Mixing-Basics \",\"day\":3}" of
+                Left err ->
+                    expectationFailure ("Expected padded academy progress payload to decode, got: " <> err)
+                Right (Academy.ProgressReq emailVal slugVal dayVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    slugVal `shouldBe` "mixing-basics"
+                    dayVal `shouldBe` 3
+
+            case decodeReferralClaim
+                "{\"email\":\" Ada@Example.COM \",\"code\":\" ref-42 \"}" of
+                Left err ->
+                    expectationFailure ("Expected padded academy referral-claim payload to decode, got: " <> err)
+                Right (Academy.ReferralClaimReq emailVal codeVal) -> do
+                    emailVal `shouldBe` "ada@example.com"
+                    codeVal `shouldBe` "REF-42"
+
+        it "rejects blank, malformed, or non-positive academy fields before ambiguous handler fallback" $ do
+            decodeEnroll
+                "{\"email\":\"   \",\"role\":\"artist\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada.example.com\",\"role\":\"artist\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing-basics\",\"day\":0}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"   \",\"day\":3}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                "{\"email\":\"ada@example.com\",\"code\":\"   \"}"
+                `shouldSatisfy` isLeft
+
         it "rejects unexpected keys so malformed academy bodies fail explicitly" $ do
             decodeEnroll
                 "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"instagram\",\"unexpected\":true}"
