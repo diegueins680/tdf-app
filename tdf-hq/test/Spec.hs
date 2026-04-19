@@ -2752,8 +2752,8 @@ main = hspec $ do
         it "accepts explicit numeric ports, including bracketed IPv6 hosts" $ do
             validateRadioStreamUrl "https://radio.example.com:8443/live"
                 `shouldBe` Right "https://radio.example.com:8443/live"
-            validateRadioStreamUrl "https://[2001:db8::1]:8000/live"
-                `shouldBe` Right "https://[2001:db8::1]:8000/live"
+            validateRadioStreamUrl "https://[2001:4860:4860::8888]:8000/live"
+                `shouldBe` Right "https://[2001:4860:4860::8888]:8000/live"
 
         it "rejects blank stream URLs with a precise 400" $
             case validateRadioStreamUrl "   " of
@@ -2801,7 +2801,7 @@ main = hspec $ do
                             expectationFailure ("Expected invalid streamUrl port to be rejected, got " <> show value)
             assertInvalid "https://radio.example.com:0/live"
             assertInvalid "https://radio.example.com:65536/live"
-            assertInvalid "https://[2001:db8::1]:70000/live"
+            assertInvalid "https://[2001:4860:4860::8888]:70000/live"
 
         it "rejects malformed host labels instead of storing unusable stream endpoints" $ do
             let assertInvalid rawUrl =
@@ -2862,7 +2862,7 @@ main = hspec $ do
             assertPrivateTarget "https://[fd12::1234]/live"
             assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
 
-        it "rejects reserved IPv4 ranges before metadata/import fetches can target them" $ do
+        it "rejects reserved IP ranges before metadata/import fetches can target them" $ do
             let assertReservedTarget rawUrl =
                     case validateRadioStreamUrl rawUrl of
                         Left err -> do
@@ -2878,6 +2878,8 @@ main = hspec $ do
             assertReservedTarget "https://198.19.0.1/live"
             assertReservedTarget "https://224.0.0.1/live"
             assertReservedTarget "https://255.255.255.255/live"
+            assertReservedTarget "https://[2001:db8::1]/live"
+            assertReservedTarget "https://[ff02::1]/live"
 
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of

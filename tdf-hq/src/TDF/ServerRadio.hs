@@ -307,7 +307,7 @@ validatePublicRadioHost rawHost
   | Just octets <- trailingIpv4Octets normalized
   , isNonPublicIpv4 octets =
       Left nonPublicRadioHostError
-  | isPrivateIpv6 normalized =
+  | isNonPublicIpv6 normalized =
       Left nonPublicRadioHostError
   | requiresExplicitPublicHostname normalized =
       Left err400 { errBody = "streamUrl host must be a public hostname or IP address" }
@@ -381,14 +381,30 @@ isNonPublicIpv4 (a, b, c, _) =
     || (a == 203 && b == 0 && c == 113)
     || (a >= 224 && a <= 255)
 
-isPrivateIpv6 :: Text -> Bool
-isPrivateIpv6 host =
+isNonPublicIpv6 :: Text -> Bool
+isNonPublicIpv6 host =
   host == "::"
     || host == "::1"
+    || isDocumentation firstSegment secondSegment
+    || isMulticast firstSegment
     || isUniqueLocal firstSegment
     || isLinkLocal firstSegment
   where
-    firstSegment = T.takeWhile (/= ':') host
+    segments = T.splitOn ":" host
+    firstSegment = headOrEmpty segments
+    secondSegment =
+      case drop 1 segments of
+        segment:_ -> segment
+        [] -> ""
+
+    headOrEmpty [] = ""
+    headOrEmpty (segment:_) = segment
+
+    isDocumentation first second =
+      first == "2001" && second `elem` ["db8", "0db8"]
+
+    isMulticast segment =
+      "ff" `T.isPrefixOf` segment
 
     isUniqueLocal segment =
       "fc" `T.isPrefixOf` segment || "fd" `T.isPrefixOf` segment
