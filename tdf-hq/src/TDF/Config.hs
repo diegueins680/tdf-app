@@ -5,7 +5,7 @@ import           Control.Applicative ((<|>))
 import           Control.Monad      ((>=>), filterM, when)
 import           Data.Char          (isControl, isDigit, isSpace, toLower)
 import           Data.List          (isInfixOf, isPrefixOf)
-import           Data.Maybe         (catMaybes, fromMaybe, isNothing, listToMaybe)
+import           Data.Maybe         (fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import           System.Directory  (doesDirectoryExist)
@@ -1078,10 +1078,15 @@ normalizeConfiguredHttpsUrl envName rawUrl
             else Nothing
 
 resolveAssetsRootDir :: Maybe FilePath -> IO FilePath
-resolveAssetsRootDir mEnv = do
-  let candidates = catMaybes [mEnv] ++ ["/app/assets", "tdf-hq/assets", "assets"]
+resolveAssetsRootDir (Just configuredPath) = do
+  exists <- doesDirectoryExist configuredPath
+  if exists
+    then pure configuredPath
+    else fail "HQ_ASSETS_DIR must point to an existing directory"
+resolveAssetsRootDir Nothing = do
+  let candidates = ["/app/assets", "tdf-hq/assets", "assets"]
   existing <- filterM doesDirectoryExist candidates
-  pure $ fromMaybe (fromMaybe "assets" mEnv) (listToMaybe existing)
+  pure $ fromMaybe "assets" (listToMaybe existing)
 
 defaultAppBase :: Text
 defaultAppBase = "https://tdf-app.pages.dev"

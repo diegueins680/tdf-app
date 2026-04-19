@@ -202,6 +202,7 @@ import TDF.Server.SocialEventsHandlers (
 import TDF.Auth (extractToken, extractTokenFromHeaders, sessionCookieHeader)
 import TDF.Config
     ( appPort,
+      assetsRootDir,
       chatKitApiBase,
       chatKitWorkflowId,
       courseInstructorAvatarFallback,
@@ -590,6 +591,19 @@ main = hspec $ do
                     cfg <- loadConfig
                     resolveConfiguredAppBase cfg `shouldBe` "https://hq.example.com/app"
                     resolveConfiguredAssetsBase cfg `shouldBe` "https://cdn.example.com/assets"
+
+        it "keeps explicit asset root directories authoritative during startup" $ do
+            withEnvOverrides
+                [ ("HQ_ASSETS_DIR", Just " assets ") ]
+                $ do
+                    cfg <- loadConfig
+                    assetsRootDir cfg `shouldBe` "assets"
+
+            withEnvOverrides
+                [ ("HQ_ASSETS_DIR", Just "/tmp/tdf-hq-missing-assets-dir-never-created") ]
+                $ loadConfig `shouldThrow` \err ->
+                    "HQ_ASSETS_DIR must point to an existing directory"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed backend public base URLs at startup" $ do
             let assertInvalid envName rawUrl expectedMessage =
