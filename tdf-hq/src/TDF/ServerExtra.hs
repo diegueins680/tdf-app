@@ -2032,7 +2032,7 @@ extractMetaInbound payload =
             , fromMaybe "" meta
             ]
           fallbackId = senderId <> "-" <> toHashText fallbackBase
-          externalId = fromMaybe fallbackId mMid
+          externalId = fromMaybe fallbackId (stripNonEmptyText mMid)
       pure (MetaInboundMessage IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = senderId

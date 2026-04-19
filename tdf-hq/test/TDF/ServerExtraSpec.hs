@@ -1354,6 +1354,38 @@ spec = do
           expectationFailure ("Expected invalid service catalog tax update error, got " <> show value)
 
   describe "Meta inbox deletion handling" $ do
+    it "uses the deterministic external id fallback when Meta sends a blank message id" $ do
+        let payload =
+                A.object
+                    [ "object" .= ("instagram" :: Text)
+                    , "entry"
+                        .=
+                            [ A.object
+                                [ "id" .= ("17841400000000000" :: Text)
+                                , "messaging"
+                                    .=
+                                        [ A.object
+                                            [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                                            , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
+                                            , "timestamp" .= (1773630000 :: Int)
+                                            , "message"
+                                                .= A.object
+                                                    [ "mid" .= ("   " :: Text)
+                                                    , "text" .= ("hola" :: Text)
+                                                    ]
+                                            ]
+                                        ]
+                                ]
+                            ]
+                    ]
+            events = extractMetaInbound payload
+        case events of
+            [MetaInboundMessage inbound] -> do
+                igInboundExternalId inbound `shouldSatisfy` T.isPrefixOf "user-1-"
+                igInboundExternalId inbound `shouldNotBe` "   "
+                igInboundText inbound `shouldBe` "hola"
+            _ -> expectationFailure ("Expected an inbound event, got " <> show events)
+
     it "parses deleted Instagram webhook events" $ do
         let payload =
                 A.object
