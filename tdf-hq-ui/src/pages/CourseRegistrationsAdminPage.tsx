@@ -1326,7 +1326,8 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
     && !hasCustomFilters
     && !hasSlugFilter
-    && Boolean(combinedSingleChoiceSummary);
+    && !showCohortFilterUnavailableSummary
+    && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummary && !showSingleResultWithOnlyPassiveFilterContext;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInFilterStrip

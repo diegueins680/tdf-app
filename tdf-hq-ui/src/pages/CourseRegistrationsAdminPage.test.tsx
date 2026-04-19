@@ -1600,6 +1600,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps one registration focused on the row even when multiple cohorts are configured', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierOnlyScopeHint,
+      );
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('absorbs a shared source into the same single-choice summary block instead of adding another summary line', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram' }),
