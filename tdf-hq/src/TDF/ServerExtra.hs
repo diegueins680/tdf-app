@@ -1269,8 +1269,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       if found then pure NoContent else throwError err404
 
     normalizeName txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then throwError err400 { errBody = "Nombre requerido" } else pure trimmed
+      either throwError pure (normalizeServiceCatalogName txt)
 
     normalizeTextMaybe mTxt = case mTxt of
       Nothing -> Nothing
@@ -1281,10 +1280,18 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeServiceCatalogNameUpdate Nothing = Right Nothing
 normalizeServiceCatalogNameUpdate (Just rawName) =
+  Just <$> normalizeServiceCatalogName rawName
+
+normalizeServiceCatalogName :: Text -> Either ServerError Text
+normalizeServiceCatalogName rawName =
   let trimmed = T.strip rawName
   in if T.null trimmed
        then Left err400 { errBody = "Nombre requerido" }
-       else Right (Just trimmed)
+       else if T.length trimmed > 160
+         then Left err400 { errBody = "Nombre debe tener 160 caracteres o menos" }
+         else if T.any isControl trimmed
+           then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
+           else Right trimmed
 
 validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
 validateServiceCatalogCurrency Nothing = Right "USD"

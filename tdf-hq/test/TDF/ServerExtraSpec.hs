@@ -100,6 +100,7 @@ import TDF.ServerExtra (
     validatePaymentConcept,
     validatePositivePaymentReferenceId,
     validateOptionalPositivePaymentReferenceId,
+    normalizeServiceCatalogName,
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
@@ -1309,18 +1310,30 @@ spec = do
       socialReplyOutcomeFields (Right (A.object ["ok" .= True]) :: Either Text A.Value)
         `shouldBe` ("sent", Nothing)
 
-  describe "normalizeServiceCatalogNameUpdate" $ do
-    it "preserves omitted names and trims meaningful updates" $ do
+  describe "normalizeServiceCatalogName" $ do
+    it "normalizes bounded service catalog names before create/update persistence" $ do
+      normalizeServiceCatalogName "  Mezcla Full  " `shouldBe` Right "Mezcla Full"
       normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
       normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
 
-    it "rejects explicit blank names instead of silently treating them as no-op updates" $
-      case normalizeServiceCatalogNameUpdate (Just "   ") of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Nombre requerido"
-        Right value ->
-          expectationFailure ("Expected blank service catalog update name to be rejected, got " <> show value)
+    it "rejects malformed service catalog names before persistence" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid service catalog name error, got " <> show value)
+      assertInvalid "Nombre requerido" (normalizeServiceCatalogName "   ")
+      assertInvalid
+        "160 caracteres o menos"
+        (normalizeServiceCatalogName (T.replicate 161 "a"))
+      assertInvalid
+        "caracteres de control"
+        (normalizeServiceCatalogName "Podcast\nLive")
+      assertInvalid "Nombre requerido" (normalizeServiceCatalogNameUpdate (Just "   "))
+      assertInvalid
+        "caracteres de control"
+        (normalizeServiceCatalogNameUpdate (Just "Podcast\tLive"))
 
   describe "validateServiceCatalogCurrency" $ do
     it "defaults omitted values to USD and normalizes supported ISO codes" $ do
