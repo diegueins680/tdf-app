@@ -25,7 +25,16 @@ import TDF.API
     )
 import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types (DriveTokenExchangeRequest (..), DriveTokenRefreshRequest (..))
-import TDF.Auth (AuthedUser (..), hasAiToolingAccess, hasOperationsAccess, hasSocialInboxAccess, hasSocialSyncAccess, hasStrictAdminAccess, modulesForRoles)
+import TDF.Auth
+    ( AuthedUser (..)
+    , extractTokenFromHeaders
+    , hasAiToolingAccess
+    , hasOperationsAccess
+    , hasSocialInboxAccess
+    , hasSocialSyncAccess
+    , hasStrictAdminAccess
+    , modulesForRoles
+    )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
@@ -1879,6 +1888,32 @@ spec = describe "TDF.Server helpers" $ do
             normalizeAuthEmailAddress "user@example..com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@-example.com" `shouldBe` Nothing
             normalizeAuthEmailAddress "user@example-.com" `shouldBe` Nothing
+
+    describe "extractTokenFromHeaders" $ do
+        it "normalizes bearer and session cookie tokens before lookup" $ do
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just " Bearer session-token ")
+                Nothing
+                `shouldBe` Right "session-token"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                Nothing
+                (Just "theme=dark; tdf_session= cookie-token ; lang=es")
+                `shouldBe` Right "cookie-token"
+
+        it "rejects oversized auth tokens before database lookup" $ do
+            let tooLongToken = T.replicate 513 "a"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just ("Bearer " <> tooLongToken))
+                Nothing
+                `shouldBe` Left "Auth token must be 512 characters or fewer"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                Nothing
+                (Just ("tdf_session=" <> tooLongToken))
+                `shouldBe` Left "Auth token must be 512 characters or fewer"
 
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do

@@ -250,8 +250,7 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
       case T.words rawHeader of
         [scheme, value]
           | T.toLower scheme == "bearer" ->
-              maybe (Left "Invalid Authorization header") Right
-                (normalizeAuthToken value)
+              validateAuthToken value
         _ -> Left "Invalid Authorization header"
     Nothing ->
       maybe
@@ -271,22 +270,26 @@ lookupCookie cookieName rawHeader =
   in case matchingValues of
        [] -> Left "Missing or invalid auth token"
        [value] ->
-         maybe
-           (Left "Missing or invalid auth token")
-           Right
-           (normalizeAuthToken value)
+         validateAuthToken value
        _ -> Left "Multiple session cookies found"
   where
     breakOnEquals chunk =
       let (name, rest) = T.breakOn "=" chunk
       in (name, T.drop 1 rest)
 
-normalizeAuthToken :: Text -> Maybe Text
-normalizeAuthToken rawToken =
+validateAuthToken :: Text -> Either Text Text
+validateAuthToken rawToken =
   let token = T.strip rawToken
-  in if T.null token || T.any invalidAuthTokenChar token
-       then Nothing
-       else Just token
+  in if T.null token
+       then Left "Missing or invalid auth token"
+       else if T.length token > authTokenMaxLength
+         then Left "Auth token must be 512 characters or fewer"
+         else if T.any invalidAuthTokenChar token
+           then Left "Missing or invalid auth token"
+           else Right token
+
+authTokenMaxLength :: Int
+authTokenMaxLength = 512
 
 invalidAuthTokenChar :: Char -> Bool
 invalidAuthTokenChar ch = isSpace ch || isControl ch
