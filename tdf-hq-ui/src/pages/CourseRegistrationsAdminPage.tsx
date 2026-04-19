@@ -32,6 +32,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -1205,7 +1206,6 @@ export default function CourseRegistrationsAdminPage() {
   const showLocalSearchUtilityRow = hasLocalSearch && (
     showCopyCsvAction
     || Boolean(copyMessage)
-    || showLocalSearchClearAction
   );
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
@@ -3008,6 +3008,20 @@ export default function CourseRegistrationsAdminPage() {
                         <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
+                    endAdornment: showLocalSearchClearAction ? (
+                      <InputAdornment position="end">
+                        <Tooltip title="Limpiar búsqueda">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            aria-label="Limpiar búsqueda"
+                            onClick={() => setLocalSearch('')}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ) : null,
                   }}
                 />
                 {showLocalSearchUtilityRow && (
@@ -3020,11 +3034,6 @@ export default function CourseRegistrationsAdminPage() {
                     data-testid="course-registration-local-search-utilities"
                   >
                     {copyCsvActionButton}
-                    {showLocalSearchClearAction && (
-                      <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
-                        Limpiar búsqueda
-                      </Button>
-                    )}
                     {copyMessage && (
                       <Typography variant="caption" color="text.secondary">
                         {copyMessage}
