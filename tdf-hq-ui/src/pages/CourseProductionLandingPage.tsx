@@ -33,7 +33,7 @@ import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
@@ -545,7 +545,10 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
   const includesList =
     meta?.includes && meta.includes.length > 0
       ? meta.includes
-      : ['Acceso a grabaciones', 'Certificado de participación', 'Mentorías', 'Grupo de WhatsApp', 'Acceso a la plataforma de TDF Records'];
+      : ['Material de apoyo', 'Seguimiento del instructor', 'Certificado de participación', 'Grupo de WhatsApp'];
+  const focusLabel = meta?.daws?.length ? `Enfoque: ${meta.daws.join(', ')}` : 'Programa práctico';
+  const durationLabel = meta?.duration?.trim() || 'Duración por confirmar';
+  const formatLabel = meta?.format?.trim() || 'Curso TDF';
   return (
     <Stack spacing={3}>
       <Card
@@ -557,10 +560,10 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
       >
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
-            <Badge icon={<CelebrationIcon />} label="Presencial" />
-            <Badge icon={<HeadsetIcon />} label="Cuatro sábados · 16h total" />
-            <Badge icon={<MusicNoteIcon />} label="DAWs: Logic y Luna" />
-            <Badge icon={<CheckCircleIcon />} label="Incluye grabaciones y certificado" />
+            <Badge icon={<CelebrationIcon />} label={formatLabel} />
+            <Badge icon={<HeadsetIcon />} label={durationLabel} />
+            <Badge icon={<MusicNoteIcon />} label={focusLabel} />
+            <Badge icon={<CheckCircleIcon />} label="Incluye seguimiento y certificado" />
           </Stack>
           <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
           <Typography variant="subtitle1" gutterBottom sx={{ color: '#cbd5f5', fontWeight: 700 }}>
@@ -595,11 +598,12 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
           )}
           <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
           <Typography variant="subtitle1" gutterBottom sx={{ color: '#cbd5f5', fontWeight: 700 }}>
-            Syllabus
+            Pensum
           </Typography>
-          {loading && <Typography>Cargando syllabus...</Typography>}
+          {loading && <Typography>Cargando pensum...</Typography>}
           {!loading && (
             <Stack spacing={1.5}>
+              {!meta?.syllabus?.length && <Typography>Pensum por confirmar.</Typography>}
               {meta?.syllabus?.map((item) => {
                 const topics = item.topics ?? [];
                 return (
@@ -608,7 +612,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
                     {item.title}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.8)', mt: 0.5 }}>
-                    {topics.join(' · ')}
+                    {topics.length ? topics.join(' · ') : 'Temas por confirmar'}
                   </Typography>
                 </Box>
               );

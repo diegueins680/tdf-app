@@ -40,10 +40,8 @@ export function renderPublicRoutes() {
       <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />
       <Route path="/oauth/google-drive/callback" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />
       <Route path="/oauth/instagram/callback" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />
-      <Route path="/curso/produccion-musical" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
-      <Route path="/curso/produccion-musical-abr-2026" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
-      <Route path="/curso/produccion-musical-feb-2026" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/curso/produccion-musical-dic-2025" element={<Navigate to="/curso/produccion-musical-abr-2026" replace />} />
+      <Route path="/curso/:slug" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
       <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />

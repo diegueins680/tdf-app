@@ -705,7 +705,7 @@ export default function CourseBuilderPage() {
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
-                label="DAWs"
+                label="Herramientas / enfoque"
                 fullWidth
                 multiline
                 minRows={3}

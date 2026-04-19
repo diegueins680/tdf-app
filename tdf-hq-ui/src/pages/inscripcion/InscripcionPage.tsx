@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -109,6 +109,11 @@ export default function InscripcionPage() {
       </Container>
     </Box>
   );
+
+  const hasAnyTokenParam = Boolean(leadId || token);
+  if (!hasAnyTokenParam && slug) {
+    return <Navigate to={`/curso/${encodeURIComponent(slug)}`} replace />;
+  }
 
   if (!leadId || !token) {
     return renderFrame(

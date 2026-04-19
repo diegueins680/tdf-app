@@ -96,7 +96,7 @@ const defaultWhatsappUrl =
   'https://wa.me/?text=INSCRIBIRME%20Curso%20Produccion%20Musical';
 const defaultInstructorAvatar =
   envTrimmedOrUndefined(envString('VITE_COURSE_INSTRUCTOR_AVATAR')) ??
-  `${PUBLIC_BASE}/assets/esteban-munoz.jpg`;
+  `${PUBLIC_BASE}/assets/tdf-ui/esteban-munoz.jpg`;
 
 export const COURSE_DEFAULTS = {
   slug: defaultCourseSlug,
