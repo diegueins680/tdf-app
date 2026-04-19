@@ -242,17 +242,24 @@ function isDedicatedAdminSectionCard(card: AdminConsoleCard) {
 function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   const cardsByTitle = new Map<string, AdminConsoleCard>();
   const titleKeyByBody = new Map<string, string>();
+  const titleKeyByCardId = new Map<string, string>();
 
   cards.forEach((card) => {
     const titleKey = normalizeAdminConsoleSectionKey(card.title);
+    const cardIdKey = normalizeAdminConsoleSectionKey(card.cardId);
     const bodyKey = getAdminConsoleCardBodyKey(card);
-    const existingTitleKey = cardsByTitle.has(titleKey) ? titleKey : titleKeyByBody.get(bodyKey);
+    const existingTitleKey = cardsByTitle.has(titleKey)
+      ? titleKey
+      : (titleKeyByBody.get(bodyKey) ?? titleKeyByCardId.get(cardIdKey));
     const existingCard = existingTitleKey ? cardsByTitle.get(existingTitleKey) : undefined;
 
     if (!existingTitleKey || !existingCard) {
       cardsByTitle.set(titleKey, { ...card, body: [...card.body] });
       if (bodyKey !== '') {
         titleKeyByBody.set(bodyKey, titleKey);
+      }
+      if (cardIdKey !== '') {
+        titleKeyByCardId.set(cardIdKey, titleKey);
       }
       return;
     }
@@ -276,6 +283,9 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
     cardsByTitle.set(existingTitleKey, { ...existingCard, body: mergedBody });
     if (bodyKey !== '') {
       titleKeyByBody.set(bodyKey, existingTitleKey);
+    }
+    if (cardIdKey !== '') {
+      titleKeyByCardId.set(cardIdKey, existingTitleKey);
     }
   });
 
