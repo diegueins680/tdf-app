@@ -9564,8 +9564,48 @@ createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName bu
   resObj <- case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear respuesta PayPal: " <> err) }
     Right val -> pure (val :: PayPalCreateResponse)
-  let approval = fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj
-  pure (pcrId resObj, approval)
+  approval <-
+    either throwError pure $
+      validatePayPalApprovalUrl
+        (fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj)
+  pure (pcrId resObj, Just approval)
+
+validatePayPalApprovalUrl :: Maybe Text -> Either ServerError Text
+validatePayPalApprovalUrl Nothing =
+  Left err502 { errBody = "PayPal response did not include an approval URL" }
+validatePayPalApprovalUrl (Just rawUrl)
+  | T.null url =
+      invalidPayPalApprovalUrl
+  | not ("https://" `T.isPrefixOf` T.toLower url) =
+      invalidPayPalApprovalUrl
+  | not (TrialsServer.isValidHttpUrl url) =
+      invalidPayPalApprovalUrl
+  | not (isApprovedPayPalHost url) =
+      invalidPayPalApprovalUrl
+  | otherwise =
+      Right url
+  where
+    url = T.strip rawUrl
+
+    isApprovedPayPalHost rawApprovalUrl =
+      case paypalApprovalHost rawApprovalUrl of
+        Just host ->
+          host == "paypal.com" || ".paypal.com" `T.isSuffixOf` host
+        Nothing ->
+          False
+
+    paypalApprovalHost rawApprovalUrl =
+      let authority =
+            T.takeWhile
+              (\c -> c /= '/' && c /= '?' && c /= '#')
+              (T.drop 8 rawApprovalUrl)
+          (host, _portSuffix) = T.breakOn ":" authority
+          normalizedHost = T.toLower host
+      in if T.null normalizedHost then Nothing else Just normalizedHost
+
+invalidPayPalApprovalUrl :: Either ServerError a
+invalidPayPalApprovalUrl =
+  Left err502 { errBody = "PayPal returned an invalid approval URL" }
 
 capturePaypalOrderRemote
   :: Manager

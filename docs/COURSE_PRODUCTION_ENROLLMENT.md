@@ -44,8 +44,10 @@ End-to-end flow for the in-person course **“Curso de Producción Musical – F
 
 ## Frontend (tdf-hq-ui)
 - Public routes:
-  - Selector: `/curso/produccion-musical` (lets users pick a start date).
+  - Generic landing: `/curso/:slug`.
+  - Production selector alias: `/curso/produccion-musical` (uses configured production cohorts).
   - Direct cohort: `/curso/produccion-musical-feb-2026`.
+  - Legacy token flow: `/inscripcion/:slug?lead=<id>&t=<token>` still completes old lead invitations; `/inscripcion/:slug` without token params redirects to `/curso/:slug`.
 - Uses generated API client (`npm run generate:api:ui`) to hit the public registration endpoint.
 - Form auto-includes `source=landing` and UTM params from the URL (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`).
 - Success state locks the form and shows “¡Gracias! Hemos recibido tu inscripción…”. Errors prompt to retry or use WhatsApp.

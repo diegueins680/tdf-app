@@ -149,7 +149,8 @@ import TDF.Server
       validateCoursePublicUrlField,
       validateDatafastCheckoutId,
       validateDatafastCredential,
-      validateDatafastBaseUrl )
+      validateDatafastBaseUrl,
+      validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       sanitizeLiveSessionRiderFileName )
@@ -1908,6 +1909,38 @@ main = hspec $ do
             assertInvalid "checkout?entityId=other"
             assertInvalid "checkout&entityId=other"
             assertInvalid "checkout#fragment"
+
+    describe "validatePayPalApprovalUrl" $ do
+        it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do
+            let liveApproval = "https://www.paypal.com/checkoutnow?token=ORDER-123"
+                sandboxApproval =
+                    "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+            validatePayPalApprovalUrl (Just ("  " <> liveApproval <> "  "))
+                `shouldBe` Right liveApproval
+            validatePayPalApprovalUrl (Just sandboxApproval)
+                `shouldBe` Right sandboxApproval
+
+        it "rejects missing or non-PayPal approval URLs from the upstream response" $ do
+            let invalidMessage = "PayPal returned an invalid approval URL"
+            let assertInvalid rawValue expectedMessage =
+                    case validatePayPalApprovalUrl rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid PayPal approval URL, got " <> show value)
+            assertInvalid Nothing "PayPal response did not include an approval URL"
+            assertInvalid (Just "   ") invalidMessage
+            assertInvalid
+                (Just "http://www.paypal.com/checkoutnow?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://paypal.com.evil.example/checkoutnow?token=ORDER-123")
+                invalidMessage
+            assertInvalid
+                (Just "https://www.paypal.com@evil.example/checkoutnow?token=ORDER-123")
+                invalidMessage
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do

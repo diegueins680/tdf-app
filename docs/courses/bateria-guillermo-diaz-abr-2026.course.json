@@ -1,0 +1,158 @@
+{
+  "slug": "bateria-guillermo-diaz-abr-2026",
+  "title": "Curso de Bateria con Guillermo Diaz",
+  "subtitle": "Programa presencial de 8 niveles para construir tecnica, groove, lectura, independencia y criterio de grabacion en bateria.",
+  "format": "Presencial",
+  "duration": "8 sesiones sabatinas (16 horas en total)",
+  "priceCents": 24000,
+  "currency": "USD",
+  "capacity": 12,
+  "sessionStartHour": 10,
+  "sessionDurationHours": 2,
+  "locationLabel": "TDF Records - Quito",
+  "locationMapUrl": "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6",
+  "whatsappCtaUrl": null,
+  "landingUrl": "https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026",
+  "daws": [
+    "Bateria acustica",
+    "Tecnica de manos",
+    "Independencia",
+    "Groove",
+    "Grabacion en estudio"
+  ],
+  "includes": [
+    "8 sesiones presenciales con Guillermo Diaz",
+    "Rutina de practica para cada nivel",
+    "Material PDF con ejercicios y lectura ritmica",
+    "Feedback individual durante la clase",
+    "Proyecto final grabado o evaluado en TDF Records",
+    "Certificado de participacion"
+  ],
+  "instructorName": "Guillermo Diaz",
+  "instructorBio": "Baterista e instructor enfocado en tecnica funcional, groove, lectura aplicada y preparacion para tocar y grabar con seguridad en contexto de banda.",
+  "instructorAvatarUrl": "https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg",
+  "sessions": [
+    {
+      "label": "Nivel 1 - Fundamentos fisicos y sonido base",
+      "date": "2026-04-25",
+      "order": 1
+    },
+    {
+      "label": "Nivel 2 - Pulso, subdivisiones y manos",
+      "date": "2026-05-02",
+      "order": 2
+    },
+    {
+      "label": "Nivel 3 - Coordinacion e independencia",
+      "date": "2026-05-09",
+      "order": 3
+    },
+    {
+      "label": "Nivel 4 - Grooves esenciales",
+      "date": "2026-05-16",
+      "order": 4
+    },
+    {
+      "label": "Nivel 5 - Fills, dinamica y transiciones",
+      "date": "2026-05-23",
+      "order": 5
+    },
+    {
+      "label": "Nivel 6 - Lectura, forma y repertorio",
+      "date": "2026-05-30",
+      "order": 6
+    },
+    {
+      "label": "Nivel 7 - Sonido y grabacion de bateria",
+      "date": "2026-06-06",
+      "order": 7
+    },
+    {
+      "label": "Nivel 8 - Ensamble, performance y proyecto final",
+      "date": "2026-06-13",
+      "order": 8
+    }
+  ],
+  "syllabus": [
+    {
+      "title": "Nivel 1 - Fundamentos fisicos y sonido base",
+      "topics": [
+        "Postura, agarre y balance en el kit",
+        "Golpes simples: full, down, tap y up stroke",
+        "Lectura ritmica inicial en negras, corcheas y silencios",
+        "Pulso estable con metronomo"
+      ],
+      "order": 1
+    },
+    {
+      "title": "Nivel 2 - Pulso, subdivisiones y manos",
+      "topics": [
+        "Semicorcheas, tresillos y acentos",
+        "Single stroke, double stroke y paradiddle",
+        "Control de rebote y consistencia de baquetas",
+        "Rutina diaria de tecnica con tempo progresivo"
+      ],
+      "order": 2
+    },
+    {
+      "title": "Nivel 3 - Coordinacion e independencia",
+      "topics": [
+        "Patrones bombo-caja-hi-hat con conteo en voz alta",
+        "Ostinatos simples y desplazamiento de acentos",
+        "Control del pie izquierdo en hi-hat",
+        "Independencia aplicada a grooves lentos"
+      ],
+      "order": 3
+    },
+    {
+      "title": "Nivel 4 - Grooves esenciales",
+      "topics": [
+        "Rock, pop, funk, balada y shuffle",
+        "Backbeat, ghost notes y control de dinamica",
+        "Construccion de groove con bajo y guitarra",
+        "Practica con referencias musicales"
+      ],
+      "order": 4
+    },
+    {
+      "title": "Nivel 5 - Fills, dinamica y transiciones",
+      "topics": [
+        "Fills de 1, 2 y 4 compases",
+        "Orquestacion de rudimentos en toms y platos",
+        "Entradas, cortes, breaks y finales",
+        "Fills con proposito sin perder el tiempo"
+      ],
+      "order": 5
+    },
+    {
+      "title": "Nivel 6 - Lectura, forma y repertorio",
+      "topics": [
+        "Lectura de charts basicos y signos de repeticion",
+        "Mapeo de canciones por secciones",
+        "Memoria musical y notas de ensayo",
+        "Preparacion de repertorio para tocar en vivo"
+      ],
+      "order": 6
+    },
+    {
+      "title": "Nivel 7 - Sonido y grabacion de bateria",
+      "topics": [
+        "Afinacion basica y eleccion de baquetas",
+        "Dinamica para microfonos y click track",
+        "Tomas limpias: conteo, compases y punch-in",
+        "Escucha critica del sonido grabado"
+      ],
+      "order": 7
+    },
+    {
+      "title": "Nivel 8 - Ensamble, performance y proyecto final",
+      "topics": [
+        "Preparacion de una pieza completa",
+        "Tocar con pista, banda o referencia",
+        "Evaluacion de groove, tiempo, sonido y musicalidad",
+        "Plan personal de practica para el siguiente ciclo"
+      ],
+      "order": 8
+    }
+  ]
+}

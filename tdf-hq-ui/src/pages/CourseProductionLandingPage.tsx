@@ -230,8 +230,7 @@ export default function CourseProductionLandingPage() {
   }, [cmsQuery.data]);
 
   const utmParams = useMemo(() => {
-    if (typeof window === 'undefined') return undefined;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const source = params.get('utm_source') ?? undefined;
     const medium = params.get('utm_medium') ?? undefined;
     const campaign = params.get('utm_campaign') ?? undefined;
@@ -243,7 +242,7 @@ export default function CourseProductionLandingPage() {
       return { source, medium, campaign, content };
     }
     return undefined;
-  }, []);
+  }, [location.search]);
 
   const registrationMutation = useMutation({
     mutationFn: (payload: CourseRegistrationRequest) => Courses.register(selectedSlug, payload),
