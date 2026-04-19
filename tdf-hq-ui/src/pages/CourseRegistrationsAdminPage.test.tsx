@@ -6026,10 +6026,12 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('Mostrando 9 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Busca dentro de este lote sin cambiar los filtros de cohorte o estado.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, 'Limpiar búsqueda')).toBeTruthy();
+      expect(searchUtilities?.textContent).not.toContain('CSV');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });

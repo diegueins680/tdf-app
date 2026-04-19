@@ -1118,6 +1118,7 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
+  const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations),
@@ -1126,7 +1127,9 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
-      : formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
+      : localSearchNarrowsRegistrations
+        ? formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
+        : undefined
     : viewHitsCurrentLimit
       ? `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas. Usa Ajustar límite si necesitas revisar más registros.`
       : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
@@ -1176,7 +1179,6 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
   const hasExplicitCsvExportScope = hasCustomFilters || localSearchNarrowsRegistrations;
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
