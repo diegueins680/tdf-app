@@ -1724,6 +1724,35 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('keeps demo seeding as a one-shot first-run action while the admin panel refreshes', async () => {
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: /Cargar datos de ejemplo/i }),
+    );
+
+    await waitFor(() => {
+      expect(mockSeed).toHaveBeenCalledTimes(1);
+      expect(
+        screen.getByText(/Datos de demostración preparados correctamente\./i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Datos de ejemplo cargados\. Espera el refresco automático de usuarios y auditoría antes de repetir cualquier revisión\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Cargar datos de ejemplo/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Cargando ejemplo/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps a single detailed users empty state when the page is not in first-run checklist mode', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

@@ -784,7 +784,8 @@ export default function AdminConsolePage() {
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
-  const showFirstRunDemoAction = showGettingStartedGuidance && showCompactHealthyServiceSummary;
+  const showFirstRunDemoAction =
+    showGettingStartedGuidance && showCompactHealthyServiceSummary && !seedMutation.isSuccess;
   const showFirstRunServiceHealthGate =
     showGettingStartedGuidance && !showCompactHealthyServiceSummary;
   const firstRunServiceNeedsRefresh =
@@ -879,6 +880,11 @@ export default function AdminConsolePage() {
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
     ? 'Espera la comprobación de API y base de datos antes de cargar datos de ejemplo.'
     : 'Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas.';
+  const firstRunDemoStatusCopy = seedMutation.isSuccess
+    ? 'Datos de ejemplo cargados. Espera el refresco automático de usuarios y auditoría antes de repetir cualquier revisión.'
+    : showFirstRunDemoAction
+      ? firstRunDemoActionCopy.description
+      : firstRunServiceGateCopy;
   const demoSeedActionCopy = {
     successMessage: 'Datos de demostración preparados correctamente.',
   } as const;
@@ -944,7 +950,7 @@ export default function AdminConsolePage() {
         </Alert>
       )}
 
-      {seedMutation.isSuccess && !showGettingStartedGuidance && (
+      {seedMutation.isSuccess && (
         <Alert severity="success">
           {demoSeedActionCopy.successMessage}
         </Alert>
@@ -1025,7 +1031,7 @@ export default function AdminConsolePage() {
             )}
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
-                {showFirstRunDemoAction ? firstRunDemoActionCopy.description : firstRunServiceGateCopy}
+                {firstRunDemoStatusCopy}
               </Typography>
               {showFirstRunDemoAction && (
                 <Button
