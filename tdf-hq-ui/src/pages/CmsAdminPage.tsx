@@ -1019,8 +1019,9 @@ export default function CmsAdminPage() {
           )}
           <Stack spacing={1.5}>
             {visibleVersionRows.map((v) => {
+              const isCurrentLiveVersion = liveContent?.ccdId === v.ccdId;
               const rowActions = getCmsVersionRowActions(v.ccdStatus, {
-                isCurrentLive: liveContent?.ccdId === v.ccdId,
+                isCurrentLive: isCurrentLiveVersion,
                 isLoadedInEditor: editingFromId === v.ccdId,
               });
               const rowTitle = sharedVersionTitle ? `Versión v${v.ccdVersion}` : (v.ccdTitle ?? v.ccdSlug);
@@ -1045,7 +1046,7 @@ export default function CmsAdminPage() {
                             color={normalizeCmsStatus(v.ccdStatus) === 'published' ? 'success' : 'default'}
                           />
                         )}
-                        {v.ccdPublishedAt && (
+                        {v.ccdPublishedAt && !isCurrentLiveVersion && (
                           <Chip
                             label={`pub: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
                             size="small"

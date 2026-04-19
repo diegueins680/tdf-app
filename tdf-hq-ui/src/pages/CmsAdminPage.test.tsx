@@ -248,6 +248,20 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the current live publish timestamp in the live summary instead of repeating it in history', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Publicado:');
+      expect(container.textContent).not.toContain('pub:');
+      expect(countExactText(container, 'En vivo')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('hides the destructive delete action from the current live version row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
