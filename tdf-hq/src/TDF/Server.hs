@@ -8859,10 +8859,11 @@ validateDatafastResourcePath (Just rawResourcePath)
       invalidDatafastResourcePath
   | any invalidSegment segments =
       invalidDatafastResourcePath
-  | isNothing (datafastCheckoutIdFromSegments segments) =
-      invalidDatafastResourcePath
-  | otherwise =
+  | Just checkoutId <- datafastCheckoutIdFromSegments segments
+  , isValidDatafastCheckoutId checkoutId =
       Right resourcePath
+  | otherwise =
+      invalidDatafastResourcePath
   where
     resourcePath = T.strip rawResourcePath
     lowered = T.toLower resourcePath
@@ -8902,18 +8903,20 @@ datafastCheckoutIdFromSegments _ =
 
 validateDatafastCheckoutId :: Text -> Either ServerError Text
 validateDatafastCheckoutId rawCheckoutId
-  | T.null checkoutId =
-      invalidDatafastCheckoutId
-  | T.length checkoutId > 256 =
-      invalidDatafastCheckoutId
-  | checkoutId == "." || checkoutId == ".." =
-      invalidDatafastCheckoutId
-  | T.any (not . isDatafastCheckoutIdChar) checkoutId =
-      invalidDatafastCheckoutId
-  | otherwise =
+  | isValidDatafastCheckoutId checkoutId =
       Right checkoutId
+  | otherwise =
+      invalidDatafastCheckoutId
   where
     checkoutId = T.strip rawCheckoutId
+
+isValidDatafastCheckoutId :: Text -> Bool
+isValidDatafastCheckoutId checkoutId =
+  not (T.null checkoutId)
+    && T.length checkoutId <= 256
+    && checkoutId /= "."
+    && checkoutId /= ".."
+    && T.all isDatafastCheckoutIdChar checkoutId
 
 isDatafastCheckoutIdChar :: Char -> Bool
 isDatafastCheckoutIdChar c =

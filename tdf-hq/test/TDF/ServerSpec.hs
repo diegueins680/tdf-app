@@ -3194,6 +3194,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "/v1/registrations/ABC/payment")
                 "Datafast relative checkout payment path"
+            assertInvalid
+                (Just ("/v1/checkouts/" <> T.replicate 257 "A" <> "/payment"))
+                "Datafast relative checkout payment path"
 
     describe "validateDatafastOrderResourcePath" $ do
         it "accepts confirmation paths only for the checkout stored on the order" $
