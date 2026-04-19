@@ -634,9 +634,44 @@ const getRegistrationIdsRequiringActionDisambiguator = (
   );
 };
 
+const getRegistrationIdsRequiringActionRecordDisambiguator = (
+  registrations: readonly CourseRegistrationDTO[],
+) => {
+  const contextualLabelCounts = new Map<string, number>();
+
+  registrations.forEach((reg) => {
+    const identity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164, reg.crId);
+    const secondary = identity.secondary.trim();
+
+    if (!secondary || secondary === missingContactSummary) {
+      return;
+    }
+
+    const contextualLabelKey = normalizeLocalSearchText(`${registrationActionTargetLabel(reg)} (${secondary})`);
+    contextualLabelCounts.set(contextualLabelKey, (contextualLabelCounts.get(contextualLabelKey) ?? 0) + 1);
+  });
+
+  return new Set(
+    registrations
+      .filter((reg) => {
+        const identity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164, reg.crId);
+        const secondary = identity.secondary.trim();
+
+        if (!secondary || secondary === missingContactSummary) {
+          return false;
+        }
+
+        const contextualLabelKey = normalizeLocalSearchText(`${registrationActionTargetLabel(reg)} (${secondary})`);
+        return (contextualLabelCounts.get(contextualLabelKey) ?? 0) > 1;
+      })
+      .map((reg) => reg.crId),
+  );
+};
+
 const registrationActionTargetLabelWithContext = (
   reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
   needsDisambiguator: boolean,
+  needsRecordDisambiguator: boolean,
 ) => {
   const baseLabel = registrationActionTargetLabel(reg);
   if (!needsDisambiguator) return baseLabel;
@@ -644,7 +679,10 @@ const registrationActionTargetLabelWithContext = (
   const identity = registrationIdentityDisplay(reg.crFullName, reg.crEmail, reg.crPhoneE164, reg.crId);
   const secondary = identity.secondary.trim();
   if (secondary && secondary !== missingContactSummary) {
-    return `${baseLabel} (${secondary})`;
+    const disambiguatingContext = needsRecordDisambiguator
+      ? `${secondary} · registro #${reg.crId}`
+      : secondary;
+    return `${baseLabel} (${disambiguatingContext})`;
   }
 
   return `${baseLabel} (registro #${reg.crId})`;
@@ -1107,6 +1145,10 @@ export default function CourseRegistrationsAdminPage() {
     () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
     [searchedRegistrations],
   );
+  const registrationIdsRequiringActionRecordDisambiguator = useMemo(
+    () => getRegistrationIdsRequiringActionRecordDisambiguator(searchedRegistrations),
+    [searchedRegistrations],
+  );
   const actionTargetLabelsByRegistrationId = useMemo(
     () => new Map(
       searchedRegistrations.map((reg) => [
@@ -1114,10 +1156,15 @@ export default function CourseRegistrationsAdminPage() {
         registrationActionTargetLabelWithContext(
           reg,
           registrationIdsRequiringActionDisambiguator.has(reg.crId),
+          registrationIdsRequiringActionRecordDisambiguator.has(reg.crId),
         ),
       ]),
     ),
-    [registrationIdsRequiringActionDisambiguator, searchedRegistrations],
+    [
+      registrationIdsRequiringActionDisambiguator,
+      registrationIdsRequiringActionRecordDisambiguator,
+      searchedRegistrations,
+    ],
   );
   const getActionTargetLabelForRegistration = (reg: CourseRegistrationDTO) =>
     actionTargetLabelsByRegistrationId.get(reg.crId) ?? registrationActionTargetLabel(reg);

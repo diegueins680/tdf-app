@@ -1353,6 +1353,75 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps duplicate row actions distinct when name and contact are both repeated', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.shared@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.shared@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crPhoneE164: '+593999000333',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('button[aria-label="Abrir expediente de Ana Torres"]')).toBeNull();
+      expect(
+        container.querySelector(
+          'button[aria-label="Abrir expediente de Ana Torres (ana.shared@example.com · +593999000222)"]',
+        ),
+      ).toBeNull();
+      expect(
+        getButtonByAriaLabel(
+          container,
+          'Abrir expediente de Ana Torres (ana.shared@example.com · +593999000222 · registro #101)',
+        ),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(
+          container,
+          'Cambiar estado para Ana Torres (ana.shared@example.com · +593999000222 · registro #101)',
+        ),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(
+          container,
+          'Abrir expediente de Ana Torres (ana.shared@example.com · +593999000222 · registro #102)',
+        ),
+      ).toBeTruthy();
+      expect(
+        getButtonByAriaLabel(
+          container,
+          'Cambiar estado para Ana Torres (ana.shared@example.com · +593999000222 · registro #102)',
+        ),
+      ).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+      expect(countOccurrences(container, 'Registro #101')).toBe(1);
+      expect(countOccurrences(container, 'Registro #102')).toBe(1);
+      expect(countButtonsByText(container, 'Expediente')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps tiny default row context focused on cohort and source instead of repeated timestamps', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
