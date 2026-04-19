@@ -622,20 +622,19 @@ const registrationListContextSummary = ({
 const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
-  let hasNamedOrContactIdentity = false;
+  let hasNameIdentity = false;
+  let hasContactIdentity = false;
   let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
 
   registrations.forEach((reg) => {
-    const hasVisibleIdentity = Boolean(
-      reg.crFullName?.trim()
-      || reg.crEmail?.trim()
-      || reg.crPhoneE164?.trim()
-    );
-    if (hasVisibleIdentity) {
-      hasNamedOrContactIdentity = true;
-    } else {
+    const hasName = Boolean(reg.crFullName?.trim());
+    const hasContact = Boolean(reg.crEmail?.trim() || reg.crPhoneE164?.trim());
+
+    if (hasName) hasNameIdentity = true;
+    if (hasContact) hasContactIdentity = true;
+    if (!hasName && !hasContact) {
       hasGeneratedRegistrationIdentity = true;
     }
 
@@ -652,8 +651,10 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     if (reg.crAdminNotes?.trim()) hasNotes = true;
   });
 
-  const terms = hasNamedOrContactIdentity ? ['Nombre', 'contacto'] : ['Registro'];
-  if (hasNamedOrContactIdentity && hasGeneratedRegistrationIdentity) terms.push('registro');
+  const terms: string[] = [];
+  if (hasNameIdentity) terms.push('Nombre');
+  if (hasContactIdentity) terms.push(hasNameIdentity ? 'contacto' : 'Contacto');
+  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (hasNotes) terms.push('nota');
   if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');

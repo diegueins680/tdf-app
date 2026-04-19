@@ -5153,6 +5153,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy-list search prompts limited to identity fields that actually exist', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crEmail: '   ',
+        crPhoneE164: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'estudiante 9');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Estudiante 9');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps hidden default and empty sources out of busy-list local search', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
