@@ -93,6 +93,7 @@ import TDF.Server
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
     , validateCmsLocaleFilter
+    , validateOptionalCmsLocaleFilter
     , validateCourseCurrency
     , validateCourseNonNegativeField
     , validateRequiredCourseTextField
@@ -154,6 +155,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
+    , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
@@ -1717,6 +1719,28 @@ spec = describe "TDF.Server helpers" $ do
             normalizeOptionalCmsFilter (Just "  homepage ") `shouldBe` Just "homepage"
             normalizeOptionalCmsFilter (Just "   ") `shouldBe` Nothing
 
+    describe "validateOptionalCmsSlugFilter" $ do
+        it "drops omitted admin CMS slug filters and canonicalizes valid explicit filters" $ do
+            validateOptionalCmsSlugFilter Nothing `shouldBe` Right Nothing
+            validateOptionalCmsSlugFilter (Just "   ") `shouldBe` Right Nothing
+            validateOptionalCmsSlugFilter (Just "  Records-Release  ")
+                `shouldBe` Right (Just "records-release")
+
+        it "rejects malformed admin CMS slug filters instead of issuing ambiguous queries" $ do
+            let assertInvalid rawSlug =
+                    case validateOptionalCmsSlugFilter (Just rawSlug) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "slug must contain only ASCII letters"
+                        Right slugVal ->
+                            expectationFailure
+                                ("Expected invalid admin CMS slug filter, got: " <> show slugVal)
+            assertInvalid "records release"
+            assertInvalid "records/release"
+            assertInvalid "records?draft=true"
+
     describe "validateOptionalCmsSlugPrefix" $ do
         it "canonicalizes public CMS slug prefixes before list filtering" $ do
             validateOptionalCmsSlugPrefix Nothing `shouldBe` Right Nothing
@@ -1763,6 +1787,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "es--EC"
             assertInvalid "english locale"
             assertInvalid "e"
+
+    describe "validateOptionalCmsLocaleFilter" $ do
+        it "drops omitted admin CMS locale filters and canonicalizes valid explicit filters" $ do
+            validateOptionalCmsLocaleFilter Nothing `shouldBe` Right Nothing
+            validateOptionalCmsLocaleFilter (Just "   ") `shouldBe` Right Nothing
+            validateOptionalCmsLocaleFilter (Just " ES-ec ")
+                `shouldBe` Right (Just "es-EC")
+
+        it "rejects malformed admin CMS locale filters instead of issuing ambiguous queries" $ do
+            let assertInvalid rawLocale =
+                    case validateOptionalCmsLocaleFilter (Just rawLocale) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "locale must be omitted"
+                        Right localeVal ->
+                            expectationFailure
+                                ("Expected invalid admin CMS locale filter, got: " <> show localeVal)
+            assertInvalid "../es"
+            assertInvalid "es_EC"
+            assertInvalid "english locale"
 
     describe "validateRequiredCmsLocale" $ do
         it "requires admin-created CMS locale keys and canonicalizes their case" $ do

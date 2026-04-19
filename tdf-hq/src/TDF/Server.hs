@@ -6102,6 +6102,12 @@ canonicalizeCmsLocale rawLocale =
 
     isAsciiLetter ch = isAsciiLower ch || isAsciiUpper ch
 
+validateOptionalCmsLocaleFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCmsLocaleFilter Nothing = Right Nothing
+validateOptionalCmsLocaleFilter (Just rawLocale)
+  | T.null (T.strip rawLocale) = Right Nothing
+  | otherwise = Just <$> validateCmsLocaleFilter (Just rawLocale)
+
 validateRequiredCmsLocale :: Text -> Either ServerError Text
 validateRequiredCmsLocale rawLocale =
   case normalizeOptionalCmsFilter (Just rawLocale) of
@@ -6131,6 +6137,12 @@ validateRequiredCmsSlug rawSlug =
             "slug must contain only ASCII letters, numbers, and hyphens, "
               <> "include at least one letter or number, and be 96 characters or fewer"
         }
+
+validateOptionalCmsSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCmsSlugFilter Nothing = Right Nothing
+validateOptionalCmsSlugFilter (Just rawSlug)
+  | T.null (T.strip rawSlug) = Right Nothing
+  | otherwise = Just <$> validateRequiredCmsSlug rawSlug
 
 validateOptionalCmsSlugPrefix :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCmsSlugPrefix Nothing = Right Nothing
@@ -9749,9 +9761,11 @@ cmsAdminServer user =
 
     cmsListH mSlug mLocale = do
       requireWebmaster
+      slugFilter <- either throwError pure (validateOptionalCmsSlugFilter mSlug)
+      localeFilter <- either throwError pure (validateOptionalCmsLocaleFilter mLocale)
       let filters = catMaybes
-            [ (CMS.CmsContentSlug ==.) <$> normalizeOptionalCmsFilter mSlug
-            , (CMS.CmsContentLocale ==.) <$> normalizeOptionalCmsFilter mLocale
+            [ (CMS.CmsContentSlug ==.) <$> slugFilter
+            , (CMS.CmsContentLocale ==.) <$> localeFilter
             ]
       rows <- runDB $ selectList filters [Desc CMS.CmsContentCreatedAt]
       pure (map toCmsDTO rows)
