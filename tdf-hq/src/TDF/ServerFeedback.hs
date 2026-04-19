@@ -226,13 +226,33 @@ sanitizeFeedbackAttachmentFileName rawName =
         || stripped == ".."
         || not (T.any isAlphaNum stripped)
       then "attachment"
-      else stripped
+      else truncateAttachmentFileName stripped
   where
     normalizeAttachmentChar ch
       | isAscii ch && isAlphaNum ch = ch
       | ch == '.' || ch == '-' || ch == '_' = ch
       | ch == ' ' = '-'
       | otherwise = '-'
+
+maxFeedbackAttachmentFileNameChars :: Int
+maxFeedbackAttachmentFileNameChars = 120
+
+truncateAttachmentFileName :: Text -> Text
+truncateAttachmentFileName name
+  | T.length name <= maxFeedbackAttachmentFileNameChars = name
+  | T.length extension > 20 || T.null stem =
+      T.take maxFeedbackAttachmentFileNameChars name
+  | T.length extension >= maxFeedbackAttachmentFileNameChars =
+      T.take maxFeedbackAttachmentFileNameChars name
+  | otherwise =
+      T.take stemLimit stem <> extension
+  where
+    (stemWithDot, ext) = T.breakOnEnd "." name
+    (stem, extension) =
+      if T.null stemWithDot || T.null ext
+        then (name, "")
+        else (T.dropEnd 1 stemWithDot, "." <> ext)
+    stemLimit = maxFeedbackAttachmentFileNameChars - T.length extension
 
 notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
 notify emailSvc title body mCat mSev mContact attachmentPath = do

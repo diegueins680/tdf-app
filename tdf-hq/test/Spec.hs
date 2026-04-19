@@ -1870,6 +1870,11 @@ main = hspec $ do
             sanitizeFeedbackAttachmentFileName "__--__" `shouldBe` "attachment"
             sanitizeFeedbackAttachmentFileName "/\\///" `shouldBe` "attachment"
 
+        it "bounds sanitized attachment names before writing upload paths" $
+            sanitizeFeedbackAttachmentFileName
+                (Data.Text.replicate 160 "a" <> ".png")
+                `shouldBe` (Data.Text.replicate 116 "a" <> ".png")
+
     describe "validateFeedbackAttachmentSize" $ do
         it "accepts empty and boundary-sized feedback attachments" $ do
             validateFeedbackAttachmentSize 0 `shouldBe` Right ()
