@@ -6,6 +6,7 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
+  , validateOptionalFeedbackMetadata
   , validateFeedbackDescription
   , validateFeedbackTitle
   , validateOptionalFeedbackContactEmail
@@ -21,6 +22,7 @@ import           Control.Monad.Reader       (MonadReader, ask)
 import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
+import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (getCurrentTime)
 import           Database.Persist           (insert)
 import           Database.Persist.Sql       (runSqlPool)
@@ -53,8 +55,8 @@ feedbackServer user = submitFeedback
     submitFeedback FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
       body <- either throwError pure (validateFeedbackDescription fpDescription)
-      let category = normalizeOptionalFeedbackText fpCategory
-          severity = normalizeOptionalFeedbackText fpSeverity
+      category <- either throwError pure (validateOptionalFeedbackMetadata "category" fpCategory)
+      severity <- either throwError pure (validateOptionalFeedbackMetadata "severity" fpSeverity)
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
@@ -102,6 +104,25 @@ normalizeOptionalFeedbackText mVal =
   case fmap T.strip mVal of
     Just txt | T.null txt -> Nothing
     other                 -> other
+
+maxFeedbackMetadataChars :: Int
+maxFeedbackMetadataChars = 80
+
+validateOptionalFeedbackMetadata :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalFeedbackMetadata fieldName rawValue =
+  case normalizeOptionalFeedbackText rawValue of
+    Nothing -> Right Nothing
+    Just value
+      | T.length value > maxFeedbackMetadataChars ->
+          Left (feedbackFieldError fieldName "must be 80 characters or fewer")
+      | T.any isControl value ->
+          Left (feedbackFieldError fieldName "must not contain control characters")
+      | otherwise ->
+          Right (Just value)
+
+feedbackFieldError :: Text -> Text -> ServerError
+feedbackFieldError fieldName message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " " <> message)) }
 
 validateOptionalFeedbackContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalFeedbackContactEmail Nothing = Right Nothing

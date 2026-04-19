@@ -135,6 +135,7 @@ import TDF.ServerFeedback
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
+      validateOptionalFeedbackMetadata,
       validateOptionalFeedbackContactEmail )
 import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
 import TDF.Server
@@ -1592,6 +1593,27 @@ main = hspec $ do
         it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
+
+    describe "validateOptionalFeedbackMetadata" $ do
+        it "normalizes bounded optional feedback metadata before storage and notifications" $ do
+            validateOptionalFeedbackMetadata "category" Nothing `shouldBe` Right Nothing
+            validateOptionalFeedbackMetadata "category" (Just "   ") `shouldBe` Right Nothing
+            validateOptionalFeedbackMetadata "category" (Just "  billing  ")
+                `shouldBe` Right (Just "billing")
+            validateOptionalFeedbackMetadata "severity" (Just " P1 ")
+                `shouldBe` Right (Just "P1")
+
+        it "rejects oversized or control-character feedback metadata explicitly" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateOptionalFeedbackMetadata "severity" (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid feedback metadata, got " <> show value)
+            assertInvalid (Data.Text.replicate 81 "x") "severity must be 80 characters or fewer"
+            assertInvalid "high\nBcc: ops@example.com" "severity must not contain control characters"
 
     describe "validateFeedbackTitle" $ do
         it "trims valid feedback titles before storage and notification" $
