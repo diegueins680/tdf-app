@@ -106,7 +106,7 @@ parseHttpsOriginHost :: BS.ByteString -> Maybe BS.ByteString
 parseHttpsOriginHost origin = do
   remainder <- BS.stripPrefix "https://" (BS.map toLower origin)
   let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
-  if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
+  if BS.null host || not (validOriginHost host) || not (BS.null suffix)
     then Nothing
     else Just host
 
