@@ -91,7 +91,7 @@ proposalsServer user =
       proposalKey <- parseKey @ME.Proposal rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
-        Nothing -> throwError err404
+        Nothing -> throwError proposalNotFound
         Just ent -> do
           mLatest <- withPool $ selectFirst
             [ ME.ProposalVersionProposalId ==. proposalKey ]
@@ -217,12 +217,13 @@ proposalsServer user =
       ensureCRM
       proposalKey <- parseKey @ME.Proposal rawId
       validVersionNumber <- either throwError pure (validateProposalVersionNumber versionNumber)
+      ensureProposalExists proposalKey
       mVersion <- withPool $ selectFirst
         [ ME.ProposalVersionProposalId ==. proposalKey
         , ME.ProposalVersionVersion ==. validVersionNumber
         ]
         []
-      maybe (throwError err404) (pure . proposalVersionToDTO proposalKey) mVersion
+      maybe (throwError proposalVersionNotFound) (pure . proposalVersionToDTO proposalKey) mVersion
 
     proposalPdfH rawId mVersion = do
       ensureCRM
@@ -230,7 +231,7 @@ proposalsServer user =
       validVersion <- traverse (either throwError pure . validateProposalVersionNumber) mVersion
       mProposal <- withPool $ getEntity proposalKey
       case mProposal of
-        Nothing -> throwError err404
+        Nothing -> throwError proposalNotFound
         Just (Entity _ proposal) -> do
           versionEnt <- fetchVersion proposalKey validVersion
           let latex = ME.proposalVersionLatex (entityVal versionEnt)
@@ -255,8 +256,14 @@ ensureProposalExists
 ensureProposalExists proposalKey = do
   mProposal <- withPool $ getEntity proposalKey
   case mProposal of
-    Nothing -> throwError err404 { errBody = "Proposal not found" }
+    Nothing -> throwError proposalNotFound
     Just _  -> pure ()
+
+proposalNotFound :: ServerError
+proposalNotFound = err404 { errBody = "Proposal not found" }
+
+proposalVersionNotFound :: ServerError
+proposalVersionNotFound = err404 { errBody = "Proposal version not found" }
 
 fetchVersion
   :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
@@ -271,12 +278,12 @@ fetchVersion proposalKey mVersion =
         , ME.ProposalVersionVersion ==. versionNum
         ]
         []
-      maybe (throwError err404) pure mVersionEnt
+      maybe (throwError proposalVersionNotFound) pure mVersionEnt
     Nothing -> do
       mVersionEnt <- withPool $ selectFirst
         [ ME.ProposalVersionProposalId ==. proposalKey ]
         [ Desc ME.ProposalVersionVersion, LimitTo 1 ]
-      maybe (throwError err404) pure mVersionEnt
+      maybe (throwError proposalVersionNotFound) pure mVersionEnt
 
 latestVersionMap
   :: (MonadReader Env m, MonadIO m)

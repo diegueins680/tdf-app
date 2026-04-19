@@ -14,7 +14,7 @@ import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Test.Hspec
 
-import TDF.API.Proposals (ProposalVersionSummaryDTO, ProposalsAPI)
+import TDF.API.Proposals (ProposalVersionDTO, ProposalVersionSummaryDTO, ProposalsAPI)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.Models (RoleEnum (..))
@@ -23,7 +23,7 @@ import TDF.ServerProposals (proposalsServer)
 type ProposalTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
-spec = describe "TDF.ServerProposals version listing" $ do
+spec = describe "TDF.ServerProposals proposal versions" $ do
   it "rejects missing proposals instead of returning an empty version list" $ do
     result <-
       runProposalTest $
@@ -38,6 +38,22 @@ spec = describe "TDF.ServerProposals version listing" $ do
       Right versions ->
         expectationFailure
           ("Expected missing proposal lookup to fail, got versions: " <> show versions)
+
+  it "rejects missing proposals before looking up nested version rows" $ do
+    result <-
+      runProposalTest $
+        getVersionHandlerFor
+          (mkUser [Admin])
+          "550e8400-e29b-41d4-a716-446655440000"
+          1
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 404
+        BL8.unpack (errBody err) `shouldContain` "Proposal not found"
+      Right versionDto ->
+        expectationFailure
+          ("Expected missing proposal version lookup to fail, got: " <> show versionDto)
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
@@ -71,6 +87,19 @@ listVersionsHandlerFor user rawId =
           :<|> _getVersion
           :<|> _proposalPdf ->
             listVersions
+
+getVersionHandlerFor :: AuthedUser -> Text -> Int -> ProposalTestM ProposalVersionDTO
+getVersionHandlerFor user rawId versionNumber =
+  case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
+    _listProposals :<|> _createProposal :<|> proposalRoutes ->
+      case proposalRoutes rawId of
+        _getProposal
+          :<|> _updateProposal
+          :<|> _listVersions
+          :<|> _createVersion
+          :<|> getVersion
+          :<|> _proposalPdf ->
+            getVersion versionNumber
 
 initializeProposalSchema :: SqlPersistT IO ()
 initializeProposalSchema = do
