@@ -988,6 +988,50 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('treats default admin access as shared even when API casing differs', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: ['admin'],
+        modules: ['ADMIN'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        roles: ['Admin'],
+        modules: ['admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+        );
+
+        const firstRow = getRowByUserId(container, 101);
+        const secondRow = getRowByUserId(container, 102);
+        expect(firstRow.textContent).not.toContain('Roles:');
+        expect(firstRow.textContent).not.toContain('Módulos:');
+        expect(secondRow.textContent).not.toContain('Roles:');
+        expect(secondRow.textContent).not.toContain('Módulos:');
+        expect(container.textContent).not.toContain('Acceso compartido en esta vista');
+        expect(container.textContent).not.toContain('Acceso de este usuario');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits the baseline shared Admin role when module differences are the only useful access signal', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

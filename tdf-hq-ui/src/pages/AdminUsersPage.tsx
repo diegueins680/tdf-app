@@ -142,8 +142,12 @@ const getSharedAccessSummary = (values: string[]) => {
   const normalizedValues = values.map((value) => value.trim());
   if (normalizedValues.some((value) => value === '')) return '';
   const [firstValue, ...rest] = normalizedValues;
-  return rest.every((value) => value === firstValue) ? (firstValue ?? '') : '';
+  const firstValueKey = normalizeAccessKey(firstValue ?? '');
+  return rest.every((value) => normalizeAccessKey(value) === firstValueKey) ? (firstValue ?? '') : '';
 };
+
+const isSameAccessSummary = (left: string, right: string) =>
+  normalizeAccessKey(left) === normalizeAccessKey(right);
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
@@ -227,8 +231,8 @@ const buildUserAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
-  const showRolesSummary = Boolean(rolesSummary) && rolesSummary !== sharedRolesSummary;
-  const showModulesSummary = Boolean(modulesSummary) && modulesSummary !== sharedModulesSummary;
+  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
+  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
 
   return [
     showRolesSummary ? `Roles: ${rolesSummary}` : '',
@@ -243,8 +247,8 @@ const isDefaultAdminAccessSummary = ({
   modulesSummary: string;
   rolesSummary: string;
 }) => (
-  rolesSummary === DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
-  && modulesSummary === DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
+  isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY)
+  && isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY)
 );
 
 const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'roles'> | null) => {
