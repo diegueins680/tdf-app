@@ -1,17 +1,17 @@
 # 07 respuestas bancos cooperativas
 
-Track lender responses here:
+Registrar aqui respuestas de prestamistas:
 
-- Call notes.
-- Prequalification emails.
-- Simulations.
-- Required document lists.
-- Rate, term, fee, and collateral comparisons.
-- Rejection reasons and follow-up dates.
+- Notas de llamadas.
+- Correos de precalificacion.
+- Simulaciones.
+- Listas de documentos requeridos.
+- Comparaciones de tasa, plazo, cargos y garantias.
+- Razones de rechazo y fechas de seguimiento.
 
-Do not commit emails or simulations that include private IDs, account numbers, or sensitive personal data.
+No hacer commit de correos o simulaciones que incluyan cedulas, numeros de cuenta o datos personales sensibles.
 
-Prepared files:
+Archivos preparados:
 
 - `send-queue.md`
 - `email-pichincha.eml`

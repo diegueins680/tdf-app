@@ -1,36 +1,36 @@
-# Domo lender send queue
+# Cola de envio a bancos y cooperativas
 
 Fecha: 2026-04-19
 
-## Delivery status
+## Estado de entrega
 
-- 2026-04-18: Banco Pichincha public WhatsApp outreach was delivered through OpenClaw to `+593962992999`.
-- Confirmed delivery metadata: `messageId=3EB0BC2D72A97C56DDFE0D`, `runId=711e732a-820a-4fac-825b-114ea23320c9`, `toJid=593962992999@s.whatsapp.net`.
-- Pichincha replied with an automated assistant that says it cannot understand specific text or additional images, then asked to choose an identification type to authenticate.
-- OpenClaw auto-replied twice before the bank number was removed from the WhatsApp allowlist. Pichincha's bot rejected the free text and repeated the identification menu, so the thread should not be used for the loan packet.
-- Next practical action: follow up through Pichincha PYME phone or branch and send `email-pichincha.eml` with `../00-resumen/domo-public-lender-packet.zip` only through a secure lender-confirmed channel. Do not send cedula, RUC, tax filings, title documents, bank statements, or other sensitive documents in the bot chat.
-- Produbanco remains ready for manual phone/email intake because the public PYME page lists phone support but not a secure document-upload channel.
-- 2026-04-19: The public-safe lender ZIP was rebuilt with a cover letter, bank submission index, corrected USD 100,000 use-of-funds allocation, 36-month pro forma, use-of-funds schedule, and lender comparison table.
+- 2026-04-18: El primer contacto por WhatsApp publico de Banco Pichincha fue entregado por OpenClaw a `+593962992999`.
+- Metadatos de entrega confirmados: `messageId=3EB0BC2D72A97C56DDFE0D`, `runId=711e732a-820a-4fac-825b-114ea23320c9`, `toJid=593962992999@s.whatsapp.net`.
+- Pichincha respondio con un asistente automatico que indica que no puede entender texto especifico ni imagenes adicionales, y luego pidio elegir un tipo de identificacion para autenticar.
+- OpenClaw respondio automaticamente dos veces antes de quitar el numero del banco de la lista permitida de WhatsApp. El bot de Pichincha rechazo el texto libre y repitio el menu de identificacion, por lo que ese chat no debe usarse para enviar el expediente de credito.
+- Siguiente accion practica: hacer seguimiento por telefono PYME o agencia de Pichincha y enviar `email-pichincha.eml` con `../00-resumen/domo-public-lender-packet.zip` solo por un canal seguro confirmado por el prestamista. No enviar cedula, RUC, declaraciones, escrituras, estados bancarios ni otros documentos sensibles por el chat del bot.
+- Produbanco queda listo para gestion manual por telefono/correo porque la pagina publica PYME lista soporte telefonico, pero no un canal seguro de carga documental.
+- 2026-04-19: El ZIP publico seguro para prestamistas fue reconstruido con carta de presentacion, indice de entrega, asignacion corregida de uso de fondos por USD 100.000, pro forma de 36 meses, cronograma de uso de fondos y tabla comparativa de prestamistas.
 
-## Ready to send first
+## Prioridad inicial de envio
 
 1. Banco Pichincha
 2. Produbanco
 
-Official starting points:
+Puntos oficiales de partida:
 
 - Banco Pichincha PYME credits: https://www.pichincha.com/detalle-catalogo/pymes-creditos
 - Banco Pichincha productivo empresas: https://www.pichincha.com/portal/principal/empresas/creditos/productivo
 - Banco Pichincha banca telefonica: `(02) 2999 999`
 - Produbanco activos fijos PYME: https://www.produbanco.com.ec/pymes/activos-fijos/
 - Produbanco capital de trabajo PYME: https://www.produbanco.com.ec/pymes/capital-de-trabajo/
-- Produbanco phone listed on its PYME page: 02 400 9000, option 5.
+- Telefono de Produbanco listado en su pagina PYME: 02 400 9000, opcion 5.
 
-Phone/branch script:
+Guion para telefono o agencia:
 
 - `phone-intake-script.md`
 
-Attach the public-safe packet:
+Adjuntar el paquete publico seguro:
 
 - `../00-resumen/domo-submission-cover-letter.pdf`
 - `../00-resumen/domo-bank-submission-index.pdf`
@@ -40,26 +40,26 @@ Attach the public-safe packet:
 - `../04-proformas-uso-de-fondos/domo-use-of-funds-schedule.pdf`
 - `../06-evidencia-comercial/domo-public-quote-page-evidence.pdf`
 
-Or attach the ZIP:
+O adjuntar el ZIP:
 
 - `../00-resumen/domo-public-lender-packet.zip`
 
-## Before sending
+## Antes de enviar
 
-- Add real sender name, phone, and email in the mail client.
-- Confirm whether the recipient is a bank executive, branch email, web form, or WhatsApp business channel.
-- Do not send RUC, cedula, bank statements, tax filings, title documents, or property documents until the lender confirms a secure intake channel.
-- Record the sent date and contact in `lender-outreach-tracker.csv`.
+- Agregar nombre, telefono y correo reales del remitente en el cliente de correo.
+- Confirmar si el destinatario es un ejecutivo bancario, correo de agencia, formulario web o canal empresarial de WhatsApp.
+- No enviar RUC, cedula, estados bancarios, declaraciones, escrituras ni documentos de propiedad hasta que el prestamista confirme un canal seguro de recepcion.
+- Registrar fecha de envio y contacto en `lender-outreach-tracker.csv`.
 
-## Send order
+## Orden de envio
 
-| Order | Institution | Draft | Status |
+| Orden | Institucion | Borrador | Estado |
 | ---: | --- | --- | --- |
-| 1 | Banco Pichincha | `email-pichincha.eml` | WhatsApp bot loop; secure intake needed |
-| 2 | Produbanco | `email-produbanco.eml` | Ready to send |
-| 3 | Banco Guayaquil | `lender-outreach-drafts.md` | Drafted |
-| 4 | Banco Internacional | `lender-outreach-drafts.md` | Drafted |
-| 5 | Jardin Azuayo | `lender-outreach-drafts.md` | Drafted |
-| 6 | JEP | `lender-outreach-drafts.md` | Drafted |
-| 7 | Cooprogreso | `lender-outreach-drafts.md` | Drafted |
-| 8 | Cooperativa 29 de Octubre | `lender-outreach-drafts.md` | Drafted |
+| 1 | Banco Pichincha | `email-pichincha.eml` | Bucle de bot de WhatsApp; falta canal seguro |
+| 2 | Produbanco | `email-produbanco.eml` | Listo para enviar |
+| 3 | Banco Guayaquil | `lender-outreach-drafts.md` | Borrador listo |
+| 4 | Banco Internacional | `lender-outreach-drafts.md` | Borrador listo |
+| 5 | Jardin Azuayo | `lender-outreach-drafts.md` | Borrador listo |
+| 6 | JEP | `lender-outreach-drafts.md` | Borrador listo |
+| 7 | Cooprogreso | `lender-outreach-drafts.md` | Borrador listo |
+| 8 | Cooperativa 29 de Octubre | `lender-outreach-drafts.md` | Borrador listo |

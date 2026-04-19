@@ -78,7 +78,7 @@ La página pública de cotización y solicitud de reserva ya está activa:
 
 - https://tdf-app.pages.dev/domo-del-pululahua
 
-El formulario permite estimar un quote, registrar datos del cliente, evento, fecha, invitados y servicios requeridos. La solicitud entra por el API público de reservas de TDF para seguimiento comercial.
+El formulario permite estimar una cotizacion, registrar datos del cliente, evento, fecha, invitados y servicios requeridos. La solicitud entra por el API público de reservas de TDF para seguimiento comercial.
 
 ## Riesgos y mitigación
 

@@ -1,18 +1,18 @@
-# Domo lender outreach drafts
+# Borradores de contacto con bancos y cooperativas
 
 Fecha: 2026-04-18
 
-Use these drafts for first contact with bank or cooperative executives. Attach:
+Usar estos borradores para el primer contacto con ejecutivos de bancos o cooperativas. Adjuntar:
 
 - `../00-resumen/domo-lender-one-pager.pdf`
 - `../00-resumen/domo-del-pululahua-financial-plan.pdf`
 - `../00-resumen/domo-36-month-pro-forma.pdf`
 
-Do not attach private company, tax, bank, identity, or property documents until the executive confirms the secure intake channel.
+No adjuntar documentos privados de empresa, impuestos, banco, identidad o propiedad hasta que el ejecutivo confirme el canal seguro de recepcion.
 
-## Priority 1: Banco Pichincha
+## Prioridad 1: Banco Pichincha
 
-Subject: Precalificación crédito productivo TDF Records - Domo del Pululahua
+Asunto: Precalificación crédito productivo TDF Records - Domo del Pululahua
 
 Hola,
 
@@ -24,9 +24,9 @@ Adjunto resumen del proyecto y proyección base. ¿Con qué ejecutivo puedo revi
 
 Gracias.
 
-## Priority 2: Produbanco
+## Prioridad 2: Produbanco
 
-Subject: Evaluación PYME activos fijos y capital de trabajo - Domo del Pululahua
+Asunto: Evaluación PYME activos fijos y capital de trabajo - Domo del Pululahua
 
 Hola,
 
@@ -38,9 +38,9 @@ Adjunto resumen y flujo proyectado. ¿Podemos revisar si conviene estructurarlo 
 
 Gracias.
 
-## Priority 3: Banco Guayaquil
+## Prioridad 3: Banco Guayaquil
 
-Subject: Crédito productivo con flujo estacional - Domo del Pululahua
+Asunto: Crédito productivo con flujo estacional - Domo del Pululahua
 
 Hola,
 
@@ -52,9 +52,9 @@ Adjunto resumen y proyección. ¿Podemos revisar opciones de capital de inversi�
 
 Gracias.
 
-## Priority 4: Banco Internacional
+## Prioridad 4: Banco Internacional
 
-Subject: Crédito Pyme para infraestructura productiva - Domo del Pululahua
+Asunto: Crédito Pyme para infraestructura productiva - Domo del Pululahua
 
 Hola,
 
@@ -66,9 +66,9 @@ Adjunto resumen y proyección base. ¿Me pueden indicar requisitos para precalif
 
 Gracias.
 
-## Priority 5: Jardín Azuayo
+## Prioridad 5: Jardín Azuayo
 
-Subject: Consulta crédito productivo PYMES - Domo del Pululahua
+Asunto: Consulta crédito productivo PYMES - Domo del Pululahua
 
 Hola,
 
@@ -80,9 +80,9 @@ Adjunto resumen y proyección. ¿Podrían confirmar requisitos, plazo máximo, t
 
 Gracias.
 
-## Priority 6: JEP
+## Prioridad 6: JEP
 
-Subject: Evaluación CrediPYMES o alternativa productiva - Domo del Pululahua
+Asunto: Evaluación CrediPYMES o alternativa productiva - Domo del Pululahua
 
 Hola,
 
@@ -94,9 +94,9 @@ Adjunto resumen. ¿Podemos revisar si existe una alternativa con garantía real,
 
 Gracias.
 
-## Priority 7: Cooprogreso
+## Prioridad 7: Cooprogreso
 
-Subject: Consulta financiamiento productivo para venue de eventos
+Asunto: Consulta financiamiento productivo para venue de eventos
 
 Hola,
 
@@ -108,9 +108,9 @@ El inmueble es propio y el Domo ya está construido. Buscamos una estructura pro
 
 Gracias.
 
-## Priority 8: Cooperativa 29 de Octubre
+## Prioridad 8: Cooperativa 29 de Octubre
 
-Subject: Consulta crédito productivo o alternativa parcial - Domo del Pululahua
+Asunto: Consulta crédito productivo o alternativa parcial - Domo del Pululahua
 
 Hola,
 

@@ -5017,6 +5017,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy mixed-source rows from repeating the same creation date', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crSource: index % 2 === 0 ? 'instagram' : 'referral',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.textContent).toContain('Fuente: instagram');
+      expect(container.textContent).toContain('Fuente: referral');
+      expect(countOccurrences(container, 'Fuente:')).toBe(9);
+      expect(countOccurrences(container, 'Creado:')).toBe(0);
+      expect(container.textContent).not.toContain(
+        `Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+      );
+    });
+
+    await cleanup();
+  });
+
   it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (

@@ -1,16 +1,16 @@
 # 05 permisos operacion
 
-Collect permits and operating readiness documents here:
+Reunir aqui permisos y documentos de preparacion operativa:
 
-- Land-use or zoning status.
-- Municipal event permits.
-- Alcohol permit status.
-- Food/catering permit status.
-- Sound and operating-hours permit status.
-- Safety, evacuation, and capacity plan.
-- Parking and access plan.
-- Cleaning, waste, and bathroom plan.
-- Event contract and cancellation policy.
-- Deposit and reservation policy.
+- Estado de uso de suelo o zonificacion.
+- Permisos municipales para eventos.
+- Estado de permiso para venta o servicio de alcohol.
+- Estado de permiso para alimentos/catering.
+- Estado de permisos de sonido y horarios de operacion.
+- Plan de seguridad, evacuacion y aforo.
+- Plan de parqueo y acceso.
+- Plan de limpieza, residuos y banos.
+- Contrato de eventos y politica de cancelacion.
+- Politica de reserva y deposito.
 
-Do not commit official permit documents if they contain private details.
+No hacer commit de documentos oficiales de permisos si contienen datos privados.

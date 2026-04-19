@@ -1,9 +1,9 @@
-Institution,Priority,ContactName,ContactChannel,DateContacted,AmountRequested,TermOfferedMonths,RateEA,MonthlyPayment,GracePeriod,Collateral,DebtorSuggested,DocumentsRequested,Status,NextStep,Notes
-Banco Pichincha,1,,https://www.pichincha.com/detalle-catalogo/pymes-creditos and public WhatsApp,2026-04-18,100000,,,,,,,None requested; WhatsApp bot asked for identity authentication,Bot loop - secure intake needed,Call Pichincha PYME or branch; do not send ID tax title or bank documents in bot chat,2026-04-18 WhatsApp delivered via OpenClaw to +593962992999; messageId=3EB0BC2D72A97C56DDFE0D; runId=711e732a-820a-4fac-825b-114ea23320c9; Pichincha bot asked for identity authentication and rejected free text; OpenClaw allowlist restored to prevent further auto replies.
-Produbanco,2,,https://www.produbanco.com.ec/pymes/activos-fijos/ and 02 400 9000 option 5,,100000,,,,,,,,Ready to send,Send email-produbanco.eml with public-safe packet,
-Banco Guayaquil,3,,,,100000,,,,,,,,Not contacted,Send initial draft,
-Banco Internacional,4,,,,100000,,,,,,,,Not contacted,Send initial draft,
-Jardin Azuayo,5,,,,100000,,,,,,,,Not contacted,Send initial draft,
-JEP,6,,,,100000,,,,,,,,Not contacted,Send initial draft,
-Cooprogreso,7,,,,100000,,,,,,,,Not contacted,Send initial draft,
-Cooperativa 29 de Octubre,8,,,,100000,,,,,,,,Not contacted,Send initial draft,
+Institucion,Prioridad,NombreContacto,CanalContacto,FechaContacto,MontoSolicitado,PlazoOfrecidoMeses,TasaEA,CuotaMensual,PeriodoGracia,Garantia,DeudorSugerido,DocumentosSolicitados,Estado,SiguientePaso,Notas
+Banco Pichincha,1,,https://www.pichincha.com/detalle-catalogo/pymes-creditos y WhatsApp publico,2026-04-18,100000,,,,,,,No solicitado; el bot de WhatsApp pidio autenticacion de identidad,Bucle de bot - falta canal seguro,Llamar a Pichincha PYME o agencia; no enviar cedula declaraciones escrituras ni estados bancarios por el chat del bot,2026-04-18 WhatsApp entregado via OpenClaw a +593962992999; messageId=3EB0BC2D72A97C56DDFE0D; runId=711e732a-820a-4fac-825b-114ea23320c9; el bot de Pichincha pidio autenticacion de identidad y rechazo texto libre; se restauro la lista permitida de OpenClaw para prevenir nuevas respuestas automaticas.
+Produbanco,2,,https://www.produbanco.com.ec/pymes/activos-fijos/ y 02 400 9000 opcion 5,,100000,,,,,,,,Listo para enviar,Enviar email-produbanco.eml con paquete publico seguro,
+Banco Guayaquil,3,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,
+Banco Internacional,4,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,
+Jardin Azuayo,5,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,
+JEP,6,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,
+Cooprogreso,7,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,
+Cooperativa 29 de Octubre,8,,,,100000,,,,,,,,No contactado,Enviar borrador inicial,

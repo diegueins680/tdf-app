@@ -1,15 +1,15 @@
 # 00 resumen
 
-Place export-ready summaries here:
+Colocar aqui los resumenes listos para exportar:
 
-- One-page lender summary PDF.
-- Full financial plan PDF.
-- 36-month pro forma PDF or spreadsheet export.
-- Public booking page screenshot.
+- PDF de resumen ejecutivo para prestamistas.
+- PDF del plan financiero completo.
+- Pro forma de 36 meses en PDF o exportacion de hoja de calculo.
+- Captura de la pagina publica de cotizacion/reserva.
 
-Do not commit generated PDFs if they contain private data.
+No hacer commit de PDFs generados si contienen datos privados.
 
-Prepared public-safe exports:
+Exportaciones publicas seguras preparadas:
 
 - `domo-submission-cover-letter.pdf`
 - `domo-bank-submission-index.pdf`

@@ -1,20 +1,20 @@
 # 06 evidencia comercial
 
-Collect commercial traction here:
+Reunir aqui evidencia de traccion comercial:
 
-- Screenshot of public quote page.
-- Lead report.
-- Letters of intent.
-- Client conversations safe to share.
-- Preliminary rate card.
-- Catering, bar, sound, and lighting package sheets.
-- Vendor agreements.
-- Launch calendar.
-- Professional photos and video links.
+- Captura de la pagina publica de cotizacion.
+- Reporte de leads.
+- Cartas de intencion.
+- Conversaciones con clientes seguras para compartir.
+- Tarifario preliminar.
+- Fichas de paquetes de catering, barra, sonido y luces.
+- Acuerdos con proveedores.
+- Calendario de lanzamiento.
+- Fotos profesionales y enlaces de video.
 
-Remove private client names, phone numbers, and emails before committing.
+Eliminar nombres, telefonos y correos privados de clientes antes de hacer commit.
 
-Prepared public-safe evidence:
+Evidencia publica segura preparada:
 
 - `domo-public-quote-page-evidence.md`
 - `domo-public-quote-page-evidence.pdf`

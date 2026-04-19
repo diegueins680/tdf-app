@@ -1,23 +1,23 @@
-# Phone intake script
+# Guion de llamada o agencia
 
-Date prepared: 2026-04-18
+Fecha de preparacion: 2026-04-18
 
-Use this for Pichincha or Produbanco phone/branch intake before sending private documents.
+Usar este guion para llamadas o visitas a agencia de Pichincha o Produbanco antes de enviar documentos privados.
 
-## Contact starting points
+## Puntos de contacto iniciales
 
 - Banco Pichincha banca telefonica: `(02) 2999 999`.
-- Banco Pichincha public WhatsApp: `096 299 2999`. Current result: bot loop, do not use for the loan packet.
-- Produbanco PYME phone: `02 400 9000`, option `5`.
+- WhatsApp publico de Banco Pichincha: `096 299 2999`. Resultado actual: bucle de bot; no usar para el expediente de credito.
+- Telefono PYME de Produbanco: `02 400 9000`, opcion `5`.
 
-Official references:
+Referencias oficiales:
 
 - Pichincha banca telefonica: https://www.pichincha.com/portal/canales-de-atencion/banca-telefonica
 - Pichincha credito productivo empresas: https://www.pichincha.com/detalle-producto/producto-empresas-credito-capital-de-trabajo-y-activo-fijo-credito-productivo
 - Produbanco activos fijos PYME: https://www.produbanco.com.ec/pymes/activos-fijos/
 - Produbanco capital de trabajo PYME: https://www.produbanco.com.ec/pymes/capital-de-trabajo/
 
-## Opening
+## Apertura
 
 Buenos dias. Soy [NOMBRE] de TDF Records. Estoy preparando una solicitud de credito productivo PYME por USD 100.000 para Domo del Pululahua, un venue de eventos en Pululahua.
 
@@ -25,7 +25,7 @@ El proyecto ya tiene la estructura construida. El financiamiento buscado es para
 
 Necesito confirmar el canal correcto para enviar el expediente: un asesor PYME, correo institucional seguro, formulario de solicitud o agencia recomendada.
 
-## If They Ask What Product
+## Si preguntan por el producto
 
 Estamos evaluando capital de trabajo y activos fijos. El objetivo es una estructura de plazo lo mas largo posible, con cuota objetivo maxima de USD 1.000 mensual.
 
@@ -39,7 +39,7 @@ Para Produbanco:
 - Activos fijos PYME.
 - Capital de trabajo PYME.
 
-## Key Questions
+## Preguntas clave
 
 1. Cual es el canal seguro para enviar el expediente inicial?
 2. Debe aplicar TDF Records como empresa, o conviene que aplique el propietario como persona natural con actividad economica?
@@ -49,50 +49,50 @@ Para Produbanco:
 6. Que documentos quieren primero para prefiltrar sin enviar informacion sensible innecesaria?
 7. Pueden asignar un asesor o ejecutivo PYME con nombre, correo y telefono?
 
-## Documents To Offer First
+## Documentos para ofrecer primero
 
-Public-safe documents:
+Documentos publicos seguros:
 
 - `../00-resumen/domo-lender-one-pager.pdf`
 - `../00-resumen/domo-del-pululahua-financial-plan.pdf`
 - `../00-resumen/domo-36-month-pro-forma.pdf`
 - `../00-resumen/domo-public-lender-packet.zip`
 
-Do not send these until the bank confirms the destination channel.
+No enviar estos documentos hasta que el banco confirme el canal de destino.
 
-## Do Not Send Yet
+## No enviar todavia
 
-Do not send the following through WhatsApp bot, public chat, or unverified email:
+No enviar lo siguiente por bot de WhatsApp, chat publico o correo no verificado:
 
-- Cedula or passport.
-- RUC certificate.
-- Tax filings.
-- Bank statements.
-- Property title or appraisal.
+- Cedula o pasaporte.
+- Certificado de RUC.
+- Declaraciones tributarias.
+- Estados bancarios.
+- Escritura o avaluo de propiedad.
 - Permits.
-- Detailed personal/company financial records.
+- Registros financieros personales o empresariales detallados.
 
-Only send sensitive documents after the lender confirms a secure channel and identifies the advisor or formal intake path.
+Enviar documentos sensibles solo despues de que el prestamista confirme un canal seguro e identifique al asesor o ruta formal de recepcion.
 
-## Closing
+## Cierre
 
 Gracias. Entonces confirmo: el siguiente paso es enviar el paquete publico inicial a [CANAL], a nombre de [ASESOR], y esperar la lista formal de requisitos para preaprobacion. Voy a registrar este contacto y hacer seguimiento.
 
-## Call Notes Template
+## Plantilla de notas de llamada
 
-- Institution:
-- Date/time:
-- Phone/branch/channel:
-- Contact person:
-- Role:
-- Secure channel confirmed:
-- Product recommended:
-- Borrower recommendation:
-- Max term:
-- Estimated rate:
-- Estimated monthly payment:
-- Grace period possible:
-- Collateral requested:
-- Documents requested:
-- Follow-up date:
-- Notes:
+- Institucion:
+- Fecha/hora:
+- Telefono/agencia/canal:
+- Persona de contacto:
+- Cargo:
+- Canal seguro confirmado:
+- Producto recomendado:
+- Recomendacion de deudor:
+- Plazo maximo:
+- Tasa estimada:
+- Cuota mensual estimada:
+- Periodo de gracia posible:
+- Garantia solicitada:
+- Documentos solicitados:
+- Fecha de seguimiento:
+- Notas:

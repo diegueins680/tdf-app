@@ -1182,7 +1182,8 @@ export default function CourseRegistrationsAdminPage() {
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [registrations]);
-  const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel) && hasCustomFilters;
+  const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel)
+    && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
     && searchedRegistrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes

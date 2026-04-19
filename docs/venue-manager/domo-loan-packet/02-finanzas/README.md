@@ -1,19 +1,19 @@
 # 02 finanzas
 
-Collect financial underwriting documents here:
+Reunir aqui documentos para analisis financiero:
 
-- Income tax filings.
-- IVA declarations.
-- Bank statements.
-- Internal balances.
-- 36-month cash-flow projection.
-- Debt schedule.
-- Bank references.
-- Commercial references.
+- Declaraciones de impuesto a la renta.
+- Declaraciones de IVA.
+- Estados bancarios.
+- Balances internos.
+- Proyeccion de flujo de caja a 36 meses.
+- Tabla de deudas.
+- Referencias bancarias.
+- Referencias comerciales.
 
-Do not commit bank statements, tax filings, or private financial records.
+No hacer commit de estados bancarios, declaraciones o registros financieros privados.
 
-Prepared public-safe planning files:
+Archivos publicos seguros de planificacion preparados:
 
 - `../../domo-36-month-pro-forma.md`
 - `../../domo-36-month-pro-forma.csv`

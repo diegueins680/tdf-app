@@ -114,7 +114,7 @@ Completar este control por banco o cooperativa:
 | ¿Se pidió simulación con cuota cercana a USD 1,000? |  |  |
 | ¿Se registró el próximo paso en la tabla de outreach? |  |  |
 
-Prepared outreach files:
+Archivos de contacto preparados:
 
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-drafts.md`
 - `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/lender-outreach-tracker.csv`

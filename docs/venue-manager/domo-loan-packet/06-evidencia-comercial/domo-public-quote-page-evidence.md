@@ -23,24 +23,24 @@ Esta evidencia respalda que el proyecto ya tiene un canal publico de captacion y
 
 | Archivo | Vista | Uso |
 | --- | --- | --- |
-| `domo-public-quote-page-desktop-2026-04-19.png` | Desktop, pagina completa | Evidencia de experiencia web completa para escritorio. |
-| `domo-public-quote-page-mobile-2026-04-19.png` | Mobile, pagina completa | Evidencia de experiencia responsive para clientes en telefono. |
+| `domo-public-quote-page-desktop-2026-04-19.png` | Escritorio, pagina completa | Evidencia de experiencia web completa para escritorio. |
+| `domo-public-quote-page-mobile-2026-04-19.png` | Movil, pagina completa | Evidencia de experiencia adaptable para clientes en telefono. |
 
 ## Validacion tecnica
 
-La captura se hizo contra la URL publica desplegada, no contra un servidor local. La verificacion automatica confirmo que el contenido visible incluye textos relacionados con cotizacion y solicitud/reserva tanto en desktop como en mobile.
+La captura se hizo contra la URL publica desplegada, no contra un servidor local. La verificacion automatica confirmo que el contenido visible incluye textos relacionados con cotizacion y solicitud/reserva tanto en escritorio como en movil.
 
 Resultado de captura:
 
 | Control | Resultado |
 | --- | --- |
 | URL publica carga | OK |
-| Texto de cotizacion visible en desktop | OK |
-| Texto de reserva/solicitud visible en desktop | OK |
-| Texto de cotizacion visible en mobile | OK |
-| Texto de reserva/solicitud visible en mobile | OK |
-| Screenshot desktop | 1440 x 2192 PNG |
-| Screenshot mobile | 780 x 6704 PNG |
+| Texto de cotizacion visible en escritorio | OK |
+| Texto de reserva/solicitud visible en escritorio | OK |
+| Texto de cotizacion visible en movil | OK |
+| Texto de reserva/solicitud visible en movil | OK |
+| Captura de escritorio | 1440 x 2192 PNG |
+| Captura movil | 780 x 6704 PNG |
 
 ## Uso en solicitud de credito
 

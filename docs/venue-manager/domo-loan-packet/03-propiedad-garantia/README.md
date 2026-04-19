@@ -1,14 +1,14 @@
 # 03 propiedad garantia
 
-Collect property and collateral support here:
+Reunir aqui respaldo de propiedad y garantia:
 
-- Property title or escritura.
-- Certificate of liens or gravámenes.
-- Updated predial.
-- Appraisal or valuation.
-- Photos of Domo, road, access, parking, and exterior areas.
-- Simple site plan.
-- Owner or guarantor patrimony support.
-- Guarantor identity documents.
+- Titulo de propiedad o escritura.
+- Certificado de gravamenes.
+- Predial actualizado.
+- Avaluo o valoracion.
+- Fotos del Domo, camino, acceso, parqueo y areas exteriores.
+- Plano simple del predio.
+- Respaldo patrimonial del propietario o garante.
+- Documentos de identidad del garante.
 
-Do not commit real property, identity, or patrimony documents.
+No hacer commit de documentos reales de propiedad, identidad o patrimonio.

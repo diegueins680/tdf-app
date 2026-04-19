@@ -1,14 +1,14 @@
 # 01 empresa
 
-Collect company identity documents here:
+Reunir aqui documentos de identidad empresarial:
 
 - RUC vigente de TDF Records.
 - Nombramiento del representante legal.
-- Cédula and papeleta of legal representative.
-- Company constitution or equivalent documents.
-- Superintendencia de Compañías compliance certificate if applicable.
-- IESS compliance certificate or no-employee declaration.
-- Shareholder or partner list if applicable.
-- Internal authorization to contract the loan if required.
+- Cedula y papeleta del representante legal.
+- Constitucion de la compania o documentos equivalentes.
+- Certificado de cumplimiento de la Superintendencia de Companias si aplica.
+- Certificado de cumplimiento del IESS o declaracion de no tener empleados si aplica.
+- Lista de accionistas o socios si aplica.
+- Autorizacion interna para contratar el credito si se requiere.
 
-Do not commit real identity documents.
+No hacer commit de documentos reales de identidad.

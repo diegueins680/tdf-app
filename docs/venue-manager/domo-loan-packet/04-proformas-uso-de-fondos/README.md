@@ -1,19 +1,19 @@
 # 04 proformas uso de fondos
 
-Collect quotes and use-of-funds evidence here:
+Reunir aqui proformas y respaldo de uso de fondos:
 
-- Landscaping quotes.
-- Road and access quotes.
-- Furniture quotes.
-- Signage quotes.
-- Sound and lighting quotes.
-- Catering and bar equipment quotes.
-- Insurance, permit, legal, and engineering quotes.
-- Execution schedule.
+- Proformas de paisajismo.
+- Proformas de camino y acceso.
+- Proformas de mobiliario.
+- Proformas de senalizacion.
+- Proformas de sonido y luces.
+- Proformas de equipos de catering y barra.
+- Proformas de seguros, permisos, servicios legales e ingenieria.
+- Cronograma de ejecucion.
 
-Prefer summary PDFs without personal contact data if anything is committed.
+Si se hace commit de algun documento, preferir PDFs resumen sin datos personales de contacto.
 
-Prepared public-safe planning file:
+Archivo publico seguro de planificacion preparado:
 
 - `domo-use-of-funds-schedule.md`
 - `domo-use-of-funds-schedule.pdf`

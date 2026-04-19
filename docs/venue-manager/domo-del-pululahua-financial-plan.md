@@ -1,26 +1,26 @@
-# Domo del Pululahua financial project draft
+# Proyecto financiero de Domo del Pululahua
 
-Prepared for the `venue-manager` OpenClaw organization.
+Preparado para la organización OpenClaw `venue-manager`.
 
-Last updated: 2026-04-18
+Última actualización: 2026-04-19
 
-## Public facts verified
+## Hechos públicos verificados
 
-- Domo del Pululahua presents itself as an event space on the edge of the Pululahua crater near Quito.
-- Public positioning includes weddings, corporate events, concerts, workshops, spiritual retreats, and photo sessions.
-- The current public Domo website has one visible blog post and a contact form, but no published capacity, rate card, package terms, booking policy, or financing deck.
-- Pululahua is north of Quito in Pichincha province. Public volcanology references describe the Pululahua complex as a depression with lava domes and as potentially active.
-- Nearby event competitor El Crater advertises workshops, seminars, weddings, baptisms, birthdays, group celebrations, lodging support, catering, and outdoor capacity up to 200 people.
-- Banco Central del Ecuador's April 2026 maximum effective annual rates list Productivo PYMES at 10.28%, Productivo Empresarial at 11.00%, and Consumo at 16.77%. This supports positioning the request as productive business financing rather than consumer debt.
+- Domo del Pululahua se presenta públicamente como un espacio para eventos al borde del cráter del Pululahua, cerca de Quito.
+- Su posicionamiento público incluye bodas, eventos corporativos, conciertos, workshops, retiros espirituales y sesiones fotográficas.
+- El sitio público actual de Domo muestra un blog visible y formulario de contacto, pero no publica aforo, tarifario, paquetes, política de reservas ni carpeta de financiamiento.
+- Pululahua está al norte de Quito, en la provincia de Pichincha. Referencias públicas de volcanología describen el complejo Pululahua como una depresión con domos de lava y actividad potencial.
+- El competidor cercano El Cráter ofrece workshops, seminarios, bodas, bautizos, cumpleaños, celebraciones grupales, apoyo de hospedaje, catering y capacidad exterior de hasta 200 personas.
+- Las tasas máximas efectivas anuales publicadas por el Banco Central del Ecuador para abril de 2026 ubican Productivo PYMES en 10.28%, Productivo Empresarial en 11.00% y Consumo en 16.77%. Esto refuerza que la solicitud debe presentarse como financiamiento productivo empresarial, no como consumo personal.
 
-Sources:
+Fuentes:
 
 - https://www.domopululahua.com/
 - https://www.elcrater.com/en/eventos
 - https://www.volcanesdelecuador.com/pululahua
 - https://contenido.bce.fin.ec/documentos/Estadisticas/SectorMonFin/TasasInteres/Indice.htm
 
-Related lender packet documents:
+Documentos relacionados de la carpeta para bancos y cooperativas:
 
 - `docs/venue-manager/domo-lender-one-pager.md`
 - `docs/venue-manager/domo-lender-one-pager-print.html`
@@ -30,189 +30,189 @@ Related lender packet documents:
 - `docs/venue-manager/domo-loan-document-checklist.md`
 - `docs/venue-manager/domo-loan-packet/`
 
-## Owner supplied assumptions
+## Supuestos entregados por el propietario
 
-- Target loan request: USD 100,000.
-- Desired loan term: longest available.
-- Maximum comfortable monthly payment: USD 1,000.
-- The property is owner owned.
-- Borrower options: TDF Records or the owner personally, depending on lender probability.
-- Venue shell is substantially constructed.
-- Remaining funded work: landscaping, part of the road, furniture, signage, and working capital.
-- Permits are in process.
-- Domo will operate catering, bar, sound, and lights directly.
-- Domo will broker the rest through third-party vendors.
-- Confirmed size basis: 16 m diameter, which gives about 201 m2 of gross circular floor area.
-- First lender targets: banks and cooperatives.
+- Monto objetivo de crédito: USD 100,000.
+- Plazo deseado: el más largo disponible.
+- Cuota mensual máxima cómoda: USD 1,000.
+- El inmueble es propio.
+- Opciones de deudor: TDF Records o el propietario como persona natural, según cuál mejore la probabilidad de aprobación.
+- La estructura principal del venue ya está sustancialmente construida.
+- Trabajos pendientes por financiar: paisajismo, parte del camino, mobiliario, señalética y capital de trabajo.
+- Los permisos están en trámite.
+- Domo operará directamente catering, barra, sonido y luces.
+- Domo coordinará el resto de servicios a través de proveedores.
+- Base de tamaño confirmada: diámetro de 16 m, equivalente a aproximadamente 201 m2 de área circular bruta.
+- Primeros objetivos de financiamiento: bancos y cooperativas.
 
-## Loan objective
+## Objetivo del crédito
 
-Launch Domo del Pululahua as a bookable destination venue with a professional quote and reservation funnel, operational readiness, and enough working capital to convert private events into predictable cash flow.
+Poner en marcha Domo del Pululahua como venue de destino con canal profesional de cotización y reserva, preparación operativa y capital de trabajo suficiente para convertir eventos privados en flujo predecible.
 
-Requested financing: USD 100,000.
+Financiamiento solicitado: USD 100,000.
 
-Payment constraint: the structure should keep debt service at or below USD 1,000 per month. At the April 2026 BCE Productivo PYMES ceiling of 10.28% effective annual interest, that requires roughly an 18 year amortization. If lenders only offer 10 to 15 years, the request must either be reduced, supported by a grace period, structured with a balloon/residual payment, or supplemented with owner equity.
+Restricción de pago: la estructura debe mantener el servicio de deuda en USD 1,000 mensuales o menos. Con la tasa máxima efectiva anual Productivo PYMES de 10.28% publicada por el BCE para abril de 2026, eso requiere aproximadamente una amortización de 18 años. Si los bancos o cooperativas solo ofrecen 10 a 15 años, la solicitud debe reducirse, acompañarse con periodo de gracia, estructurarse con saldo residual, o complementarse con aporte del propietario.
 
-Working target: ask for an 18 to 20 year productive/business facility, with the owner property as collateral if needed, and with the right to prepay once event cash flow stabilizes.
+Meta de negociación: pedir una facilidad productiva o empresarial de 18 a 20 años, con el inmueble del propietario como garantía si ayuda, y con derecho de prepago cuando el flujo de eventos se estabilice.
 
-Primary channels: banks and cooperatives. The first outreach should compare at least three offers on rate, term, collateral requirement, grace period, prepayment rules, appraisal treatment, and whether the request can be underwritten as productive SME credit instead of personal consumer credit.
+Canales principales: bancos y cooperativas. La primera ronda debe comparar al menos tres ofertas en tasa, plazo, garantía, periodo de gracia, reglas de prepago, tratamiento del avalúo y posibilidad de que la solicitud se evalúe como crédito productivo PYME o empresarial, no como crédito de consumo.
 
-## Borrower strategy
+## Estrategia de deudor
 
-Best first approach: apply through TDF Records as the operating company, with the owner as guarantor and the property offered as collateral if the lender requires it.
+Primera opción recomendada: aplicar con TDF Records como empresa operadora, con el propietario como garante y el inmueble como garantía real si la institución lo exige.
 
-Reasoning:
+Razones:
 
-- The use of funds is productive: venue launch, infrastructure completion, furniture, signage, operating equipment, and working capital.
-- Productive/business credit is cheaper than consumer credit under current BCE ceilings.
-- Company borrowing keeps venue revenue, expenses, taxes, deposits, and lender reporting in one business ledger.
-- The owner owned property can still strengthen the application through collateral or a personal guarantee.
+- El uso de fondos es productivo: lanzamiento del venue, terminación de infraestructura, mobiliario, señalética, equipo operativo y capital de trabajo.
+- El crédito productivo o empresarial suele ser más barato que el crédito de consumo bajo los techos vigentes del BCE.
+- Dejar el crédito en la empresa mantiene ingresos, gastos, impuestos, depósitos y reportes del proyecto en una sola contabilidad operativa.
+- El inmueble propio puede fortalecer la solicitud mediante garantía real o garantía personal.
 
-Fallback: apply personally only if the company does not yet have enough financial history or if a specific lender can offer materially better approval odds, rate, term, or collateral treatment. A personal loan should still document that proceeds are invested into TDF Records or the Domo venue operation so the accounting trail is clear.
+Plan alternativo: aplicar como persona natural solo si la empresa no tiene historial financiero suficiente o si una institución específica ofrece mejores condiciones de aprobación, tasa, plazo o garantía. Si el crédito sale a nombre personal, debe documentarse que los fondos se invierten en TDF Records o en la operación de Domo para mantener trazabilidad contable.
 
-## Business model
+## Modelo de negocio
 
-Primary revenue:
+Ingresos principales:
 
-- Venue rental for weddings and private celebrations.
-- Corporate offsites, workshops, and brand activations.
-- Retreats and wellness programming.
-- Concerts, intimate performances, and cultural events.
-- Photo, video, and content production sessions.
+- Alquiler de venue para bodas y celebraciones privadas.
+- Eventos corporativos, workshops y activaciones de marca.
+- Retiros y programación de bienestar.
+- Conciertos, presentaciones íntimas y eventos culturales.
+- Sesiones de foto, video y producción de contenido.
 
-Secondary revenue:
+Ingresos secundarios:
 
-- Production coordination fee.
-- Catering and bar packages operated by Domo.
-- Sound and lighting packages operated by Domo.
-- Transport coordination margin.
-- Preferred vendor commissions where legally and commercially appropriate.
-- Overnight or partner lodging package margin if lodging is added later.
+- Fee de coordinación de producción.
+- Paquetes de catering y barra operados por Domo.
+- Paquetes de sonido e iluminación operados por Domo.
+- Margen de coordinación de transporte.
+- Comisiones de proveedores preferidos cuando sea legal y comercialmente apropiado.
+- Margen por hospedaje aliado o paquetes overnight si se agregan más adelante.
 
-## First public funnel
+## Primer embudo público
 
-Implemented target page:
+Página objetivo implementada:
 
-- Canonical route: `https://tdf-app.pages.dev/domo-del-pululahua`
-- Alternate route redirects: `https://tdf-app.pages.dev/venues/domo-del-pululahua`
-- API used for booking intake: `POST https://tdf-hq.fly.dev/bookings/public`
-- Quote logic is currently client-side so the public page works against the deployed API without requiring a backend release.
+- Ruta canónica: `https://tdf-app.pages.dev/domo-del-pululahua`
+- Ruta alterna con redirección: `https://tdf-app.pages.dev/venues/domo-del-pululahua`
+- API usada para ingreso de reservas: `POST https://tdf-hq.fly.dev/bookings/public`
+- La lógica de cotización está actualmente en el cliente, por lo que la página pública funciona contra el API desplegado sin requerir un release de backend.
 
-The quote tool currently estimates:
+La herramienta de cotización estima:
 
-- Event base price by event type.
-- Venue use by hours.
-- Mounting and teardown hours.
-- Extra guest charges above included guests.
-- Optional catering/bar operation.
-- Optional sound and lighting operation.
-- Optional Quito to Pululahua transport coordination.
-- IVA at 12%.
-- Suggested 40% deposit to separate a date.
+- Precio base por tipo de evento.
+- Uso del venue por horas.
+- Horas de montaje y desmontaje.
+- Cargos por invitados adicionales sobre el número incluido.
+- Operación opcional de catering y barra.
+- Operación opcional de sonido e iluminación.
+- Coordinación opcional de transporte Quito - Pululahua.
+- IVA 12%.
+- Depósito sugerido de 40% para separar fecha.
 
-These numbers are planning defaults, not a final published rate card.
+Estos valores son supuestos de planificación, no un tarifario final publicado.
 
-## Startup use of funds
+## Uso inicial de fondos
 
-Working loan allocation for lender discussion:
+Asignación de trabajo para discusión con bancos y cooperativas:
 
-| Category | Base budget | Notes |
+| Categoría | Presupuesto base | Notas |
 | --- | ---: | --- |
-| Landscaping and site finish | USD 20,000 | Paths, exterior areas, guest flow, photo spots, drainage, weather resilience. |
-| Road and access completion | USD 16,000 | Final road work, parking flow, arrival safety, basic wayfinding. |
-| Event furniture and operating equipment | USD 18,000 | Tables, chairs, linens, storage, service equipment, heaters or covers as needed. |
-| Signage, launch content, and sales collateral | USD 6,000 | Road signage, venue signage, photo/video, lender deck, quote collateral. |
-| Catering and bar launch kit | USD 9,000 | Service stations, bar equipment, inventory start, food safety setup. |
-| Sound and lighting operating base | USD 7,000 | Core package for speeches, background music, ceremonies, small performances. |
-| Permits, legal, insurance, engineering | USD 6,000 | Permit processing, contracts, inspection support, civil liability coverage. |
-| Working capital reserve | USD 13,000 | Staff, marketing, utilities, maintenance, deposits, and vendor float. |
-| Contingency | USD 5,000 | Weather, price increases, road surprises, maintenance. |
-| Total loan request | USD 100,000 | Matches requested principal. |
+| Paisajismo y acabados exteriores | USD 20,000 | Senderos, áreas exteriores, flujo de invitados, puntos fotográficos, drenaje y resiliencia climática. |
+| Camino y acceso | USD 16,000 | Obra final de camino, flujo de parqueo, seguridad de llegada y señalización básica. |
+| Mobiliario y equipo operativo | USD 18,000 | Mesas, sillas, mantelería, almacenamiento, equipo de servicio, calefactores o cubiertas si aplica. |
+| Señalética, contenido y material comercial | USD 6,000 | Señalización vial y del venue, foto, video, carpeta comercial y material de cotización. |
+| Kit inicial de catering y barra | USD 9,000 | Estaciones de servicio, equipo de barra, inventario inicial y preparación sanitaria. |
+| Base operativa de sonido e iluminación | USD 7,000 | Paquete base para discursos, música ambiental, ceremonias y presentaciones pequeñas. |
+| Permisos, legal, seguros e ingeniería | USD 6,000 | Trámites, contratos, soporte de inspecciones y cobertura de responsabilidad civil. |
+| Reserva de capital de trabajo | USD 13,000 | Staff, marketing, servicios, mantenimiento, depósitos y flotación de proveedores. |
+| Contingencia | USD 5,000 | Clima, aumentos de precio, sorpresas de acceso y mantenimiento. |
+| Total solicitado | USD 100,000 | Coincide con el principal solicitado. |
 
-## Debt service fit
+## Encaje del servicio de deuda
 
-Payment estimates for USD 100,000 at 10.28% effective annual interest:
+Cuotas estimadas para USD 100,000 a 10.28% efectivo anual:
 
-| Term | Estimated monthly payment | Fit vs USD 1,000 target |
+| Plazo | Cuota mensual estimada | Encaje frente a meta de USD 1,000 |
 | --- | ---: | --- |
-| 10 years | USD 1,312 | Too high |
-| 12 years | USD 1,185 | Too high |
-| 15 years | USD 1,064 | Slightly high |
-| 18 years | USD 989 | Fits |
-| 20 years | USD 953 | Fits |
+| 10 años | USD 1,312 | Muy alta |
+| 12 años | USD 1,185 | Alta |
+| 15 años | USD 1,064 | Ligeramente alta |
+| 18 años | USD 989 | Encaja |
+| 20 años | USD 953 | Encaja |
 
-If a lender caps the term below 18 years at a similar rate, keep the USD 1,000 payment ceiling by reducing principal to approximately:
+Si una institución limita el plazo por debajo de 18 años con una tasa similar, para mantener la cuota de USD 1,000 se debe reducir el principal aproximadamente a:
 
-| Term | Principal supported by USD 1,000/month |
+| Plazo | Principal soportado por USD 1,000/mes |
 | --- | ---: |
-| 10 years | USD 76,000 |
-| 12 years | USD 84,000 |
-| 15 years | USD 94,000 |
+| 10 años | USD 76,000 |
+| 12 años | USD 84,000 |
+| 15 años | USD 94,000 |
 
-## Unit economics assumptions
+## Supuestos de economía unitaria
 
-Planning assumptions to validate:
+Supuestos de planificación por validar:
 
-- Planning gross indoor area: about 201 m2, based on the confirmed 16 m diameter.
-- Practical event capacity before final permits: 70 to 100 guests for seated premium events; 60 to 90 for workshops or retreats; 120 to 160 for cocktail, standing, or concert layouts if exits, bathrooms, parking, and safety plan support it.
-- Average booked event duration: 6 to 8 hours plus 1 to 3 hours setup.
-- Average venue revenue per event: USD 1,600 to USD 3,400 before optional services.
-- Average gross margin on venue rental: 55% to 70% after cleaning, staffing, utilities, coordination, and maintenance.
-- Average gross margin on direct catering/bar/sound/lights: 30% to 55%, depending on staffing, inventory waste, rental needs, and supplier pricing.
-- Average gross margin on brokered vendor services: 10% to 25%, depending on referral or coordination agreements.
+- Área bruta interior de planificación: aproximadamente 201 m2, con base en el diámetro confirmado de 16 m.
+- Aforo práctico antes de permisos finales: 70 a 100 invitados para eventos premium sentados; 60 a 90 para workshops o retiros; 120 a 160 para cóctel, formatos de pie o conciertos si salidas, baños, parqueo y plan de seguridad lo permiten.
+- Duración promedio de evento reservado: 6 a 8 horas más 1 a 3 horas de montaje.
+- Ingreso promedio por alquiler del venue por evento: USD 1,600 a USD 3,400 antes de servicios opcionales.
+- Margen bruto promedio del alquiler de venue: 55% a 70% después de limpieza, staff, servicios básicos, coordinación y mantenimiento.
+- Margen bruto promedio de catering, barra, sonido y luces operados directamente: 30% a 55%, según staff, merma de inventario, necesidad de alquiler y precios de proveedores.
+- Margen bruto promedio de servicios tercerizados coordinados: 10% a 25%, según acuerdos de referido o coordinación.
 
-## 12 month revenue scenarios
+## Escenarios de ingresos a 12 meses
 
-| Scenario | Events/month | Average invoice | Contribution margin | Monthly contribution before fixed costs |
+| Escenario | Eventos/mes | Factura promedio | Margen de contribución | Contribución mensual antes de costos fijos |
 | --- | ---: | ---: | ---: | ---: |
-| Conservative | 2 | USD 3,500 | 45% | USD 3,150 |
+| Conservador | 2 | USD 3,500 | 45% | USD 3,150 |
 | Base | 4 | USD 5,000 | 50% | USD 10,000 |
-| Growth | 6 | USD 6,500 | 52% | USD 20,280 |
+| Crecimiento | 6 | USD 6,500 | 52% | USD 20,280 |
 
-Base case break-even target: with USD 4,000 of lean fixed cost and USD 1,000 of debt service, the venue needs about USD 5,000 of monthly contribution. That is roughly two strong events per month at USD 5,000 average invoice and 50% contribution margin.
+Punto de equilibrio del caso base: con USD 4,000 de costo fijo lean y USD 1,000 de deuda, el venue necesita aproximadamente USD 5,000 de contribución mensual. Eso equivale a unos dos eventos fuertes por mes con factura promedio de USD 5,000 y margen de contribución de 50%.
 
-## Fixed operating cost assumptions
+## Supuestos de costos fijos operativos
 
-Lean monthly cost target:
+Meta mensual lean:
 
-- Venue lead and booking coordination: USD 900 to USD 1,400.
-- Cleaning, maintenance, and grounds: USD 500 to USD 900.
-- Utilities, internet, security, and waste: USD 350 to USD 700.
-- Insurance, accounting, legal retainers: USD 300 to USD 650.
-- Marketing and content: USD 600 to USD 1,200.
-- Software, payment, CRM, hosting: USD 120 to USD 300.
+- Responsable comercial y coordinación de reservas: USD 900 a USD 1,400.
+- Limpieza, mantenimiento y exteriores: USD 500 a USD 900.
+- Servicios básicos, internet, seguridad y residuos: USD 350 a USD 700.
+- Seguros, contabilidad y soporte legal: USD 300 a USD 650.
+- Marketing y contenido: USD 600 a USD 1,200.
+- Software, pagos, CRM y hosting: USD 120 a USD 300.
 
-Target fixed cost range: USD 2,770 to USD 5,150 per month before debt service.
+Rango objetivo de costo fijo: USD 2,770 a USD 5,150 mensuales antes de deuda.
 
-Debt service target: no more than USD 1,000 per month.
+Meta de servicio de deuda: máximo USD 1,000 mensuales.
 
-## Lender package outline
+## Contenido esperado de la carpeta bancaria
 
-The final application packet should include:
+La solicitud final debe incluir:
 
-- Executive summary with Domo positioning and target customer segments.
-- Verified site capacity and permitted use.
-- Owner property documentation and any collateral appraisal available.
-- TDF Records corporate documents, tax history, bank statements, and owner guarantee package if applying through the company.
-- Capex quotes and contractor/vendor quotes.
-- 12, 24, and 36 month pro forma.
-- Cash flow schedule with loan payment coverage.
-- Booking pipeline evidence: inquiries, letters of intent, launch partnerships.
-- Rate card and contract/deposit policy.
-- Risk plan for weather, access, noise, safety, cancellation, and volcano/geological disclosures.
+- Resumen ejecutivo con posicionamiento de Domo y segmentos objetivo.
+- Aforo verificado y uso permitido del sitio.
+- Documentos de propiedad y avalúo disponible para garantía.
+- Documentos societarios de TDF Records, historial tributario, estados de cuenta y paquete de garantía del propietario si aplica como empresa.
+- Proformas de inversión y cotizaciones de contratistas o proveedores.
+- Pro forma a 12, 24 y 36 meses.
+- Flujo de caja con cobertura del pago de crédito.
+- Evidencia de embudo comercial: solicitudes, cartas de intención y alianzas de lanzamiento.
+- Tarifario preliminar y política de contrato, depósito y cancelación.
+- Plan de riesgo para clima, acceso, ruido, seguridad, cancelación y divulgaciones geológicas/volcánicas.
 
-## Immediate next work
+## Trabajo inmediato pendiente
 
-- Confirm the final public route and deploy the new quote/booking page.
-- Replace planning rates with approved Domo rate card.
-- Seed Domo venue metadata in the protected Social Events venue catalog when an admin token is available.
-- Add a staff workflow to convert public booking requests into holds, invoices, deposits, and confirmed events.
-- Add a financing dashboard that tracks inquiry count, quote count, deposits, booked revenue, and debt service coverage.
+- Confirmar la ruta pública final y mantener desplegada la página de cotización y reserva.
+- Reemplazar tarifas de planificación con tarifario aprobado de Domo.
+- Cargar metadatos de Domo en el catálogo protegido de Social Events cuando exista token admin disponible.
+- Agregar flujo interno para convertir solicitudes públicas en bloqueos de fecha, facturas, depósitos y eventos confirmados.
+- Agregar panel de financiamiento para medir consultas, cotizaciones, depósitos, ingresos reservados y cobertura de deuda.
 
-## Questions needed before submitting a loan packet
+## Preguntas antes de entregar una solicitud formal
 
-1. Does TDF Records already have financial statements, tax filings, and bank statements strong enough for underwriting?
-2. Is the owner willing to mortgage or pledge the Domo property, or should the request avoid property collateral if possible?
-3. What is the latest expected date for permits needed for events, alcohol, amplified music, food service, and late-night operations?
-4. What is the target first paid event date and how many leads or soft commitments already exist?
-5. Should quote prices stay public estimates or become private-by-request after enough leads arrive?
+1. ¿TDF Records ya tiene estados financieros, declaraciones tributarias y estados de cuenta suficientes para análisis crediticio?
+2. ¿El propietario está dispuesto a hipotecar o pignorar el inmueble de Domo, o se prefiere evitar garantía real si es posible?
+3. ¿Cuál es la fecha esperada más reciente para permisos de eventos, alcohol, música amplificada, alimentos y operación nocturna?
+4. ¿Cuál es la fecha objetivo del primer evento pagado y cuántos leads o compromisos blandos existen?
+5. ¿Las tarifas de cotización deben mantenerse como estimados públicos o pasar a cotización privada cuando existan suficientes leads?

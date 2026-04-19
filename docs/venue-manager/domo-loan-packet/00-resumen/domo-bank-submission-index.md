@@ -14,8 +14,8 @@ Objetivo: entregar una carpeta clara para que un ejecutivo de banco o cooperativ
 | `domo-36-month-pro-forma.pdf` | Flujo operativo proyectado a 36 meses. | Listo |
 | `domo-use-of-funds-schedule.pdf` | Uso de fondos, prioridades, cronograma y soportes pendientes. | Listo |
 | `domo-public-quote-page-evidence.pdf` | Evidencia de pagina publica de cotizacion y solicitud de reserva. | Listo |
-| `domo-public-quote-page-desktop-2026-04-19.png` | Captura desktop de la pagina publica. | Listo |
-| `domo-public-quote-page-mobile-2026-04-19.png` | Captura mobile de la pagina publica. | Listo |
+| `domo-public-quote-page-desktop-2026-04-19.png` | Captura de escritorio de la pagina publica. | Listo |
+| `domo-public-quote-page-mobile-2026-04-19.png` | Captura movil de la pagina publica. | Listo |
 | `domo-lender-outreach-table.pdf` | Tabla de bancos/cooperativas y preguntas de comparacion. | Listo |
 
 ## 2. Documentos privados que faltan antes de una solicitud formal

@@ -1,38 +1,38 @@
-# Domo del Pululahua 36 month pro forma
+# Pro forma de 36 meses de Domo del Pululahua
 
-Fecha: 2026-04-18
+Fecha: 2026-04-19
 
-## Purpose
+## Propósito
 
-This projection gives banks and cooperatives a simple operating view for Domo del Pululahua after a USD 100,000 productive loan. It is a planning model, not an accounting statement. Replace these assumptions with actual quotes, signed contracts, tax treatment, payroll structure, permits, and lender terms before submitting a final application.
+Esta proyección da a bancos y cooperativas una vista operativa simple de Domo del Pululahua después de un crédito productivo de USD 100,000. Es un modelo de planificación, no un estado contable. Antes de presentar una solicitud formal, estos supuestos deben reemplazarse por proformas reales, contratos firmados, tratamiento tributario, estructura de nómina, permisos y condiciones finales del financiador.
 
-## Base assumptions
+## Supuestos base
 
-| Assumption | Value |
+| Supuesto | Valor |
 | --- | ---: |
-| Loan request | USD 100,000 |
-| Debt service reserve used in model | USD 1,000/month |
-| Gross indoor planning area | 201 m2 |
-| Launch fixed cost range | USD 3,000 to USD 5,000/month |
-| Direct services | Catering, bar, sound, lights |
-| Brokered services | Transport, security, lodging, special production |
-| Month 1 opening cash buffer from loan working capital | USD 13,000 |
+| Monto solicitado | USD 100,000 |
+| Servicio de deuda usado en el modelo | USD 1,000/mes |
+| Área interior bruta de planificación | 201 m2 |
+| Rango de costo fijo de lanzamiento | USD 3,000 a USD 5,000/mes |
+| Servicios directos | Catering, barra, sonido, luces |
+| Servicios coordinados con proveedores | Transporte, seguridad, hospedaje, producción especial |
+| Caja inicial de mes 1 desde capital de trabajo del crédito | USD 13,000 |
 
-The model uses contribution margin rather than gross margin because Domo operates some add-ons directly and brokers others. Contribution margin means revenue after direct event costs such as staffing, cleaning, catering inventory, bar inventory, sound/light operating cost, event utilities, payment fees, and direct vendor coordination.
+El modelo usa margen de contribución en lugar de margen bruto porque Domo opera algunos adicionales directamente y coordina otros con proveedores. Margen de contribución significa ingresos después de costos directos por evento, como staff, limpieza, inventario de catering, inventario de barra, costo operativo de sonido/luces, servicios básicos del evento, comisiones de pago y coordinación directa de proveedores.
 
-## Annual summary
+## Resumen anual
 
-| Year | Events | Revenue | Contribution | Fixed costs | Debt service | Net cash after debt | DSCR |
+| Año | Eventos | Ingresos | Contribución | Costos fijos | Servicio de deuda | Caja neta después de deuda | Cobertura de deuda |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Year 1 | 33 | USD 153,400 | USD 71,910 | USD 43,500 | USD 12,000 | USD 16,410 | 2.37x |
-| Year 2 | 62 | USD 341,000 | USD 170,500 | USD 54,000 | USD 12,000 | USD 104,500 | 9.71x |
-| Year 3 | 74 | USD 458,800 | USD 238,576 | USD 60,000 | USD 12,000 | USD 166,576 | 14.88x |
+| Año 1 | 33 | USD 153,400 | USD 71,910 | USD 43,500 | USD 12,000 | USD 16,410 | 2.37x |
+| Año 2 | 62 | USD 341,000 | USD 170,500 | USD 54,000 | USD 12,000 | USD 104,500 | 9.71x |
+| Año 3 | 74 | USD 458,800 | USD 238,576 | USD 60,000 | USD 12,000 | USD 166,576 | 14.88x |
 
-DSCR is calculated as `(contribution - fixed costs) / debt service`.
+La cobertura de deuda se calcula como `(contribución - costos fijos) / servicio de deuda`.
 
-## Monthly projection
+## Proyección mensual
 
-| Month | Events | Avg invoice | Revenue | Contrib. margin | Contribution | Fixed costs | Debt service | Net cash | Cumulative net |
+| Mes | Eventos | Factura promedio | Ingresos | Margen contrib. | Contribución | Costos fijos | Servicio deuda | Caja neta | Caja neta acumulada |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | M01 | 1 | USD 3,500 | USD 3,500 | 42% | USD 1,470 | USD 3,000 | USD 1,000 | -USD 2,530 | -USD 2,530 |
 | M02 | 1 | USD 3,500 | USD 3,500 | 42% | USD 1,470 | USD 3,000 | USD 1,000 | -USD 2,530 | -USD 5,060 |
@@ -71,19 +71,19 @@ DSCR is calculated as `(contribution - fixed costs) / debt service`.
 | M35 | 7 | USD 6,200 | USD 43,400 | 52% | USD 22,568 | USD 5,000 | USD 1,000 | USD 16,568 | USD 270,918 |
 | M36 | 7 | USD 6,200 | USD 43,400 | 52% | USD 22,568 | USD 5,000 | USD 1,000 | USD 16,568 | USD 287,486 |
 
-## Interpretation
+## Interpretación
 
-- The first five months are cash-negative while the project ramps. The USD 13,000 working capital reserve covers the deepest modeled cumulative deficit of USD 7,560.
-- The model crosses cumulative break-even in month 9.
-- Year 1 debt coverage is acceptable in aggregate, but the ramp period is weak. A 3 to 6 month grace period on principal would make the lender story materially stronger.
-- The model assumes steady demand development. Replace event counts with actual leads, deposits, and signed contracts as soon as possible.
-- Any lender offer with monthly debt service above USD 1,000 should be stress-tested by lowering event count or delaying ramp by 3 months.
+- Los primeros cinco meses son negativos mientras el proyecto acelera ventas. La reserva de capital de trabajo de USD 13,000 cubre el déficit acumulado más profundo del modelo: USD 7,560.
+- El modelo cruza punto de equilibrio acumulado en el mes 9.
+- La cobertura de deuda del año 1 es aceptable en agregado, pero el periodo de arranque es débil. Un periodo de gracia de capital de 3 a 6 meses fortalece materialmente la historia para el financiador.
+- El modelo asume desarrollo constante de demanda. Reemplazar número de eventos con leads reales, depósitos y contratos firmados tan pronto existan.
+- Cualquier oferta con servicio mensual de deuda mayor a USD 1,000 debe probarse bajando número de eventos o retrasando el ramp-up por 3 meses.
 
-## Stress checks
+## Pruebas de estrés
 
-| Stress case | Impact | Mitigation |
+| Caso de estrés | Impacto | Mitigación |
 | --- | --- | --- |
-| Ramp delayed by 3 months | Working capital must cover a longer deficit before month 9 break-even. | Ask for grace period and keep at least USD 13,000 working capital untouched. |
-| Average invoice 15% lower | Year 1 contribution falls materially and debt coverage tightens. | Keep quote discipline and sell direct add-ons: catering, bar, sound, lights. |
-| Permit delay blocks large events | Revenue mix shifts to smaller workshops, shoots, and private gatherings. | Launch lower-risk events first and keep major events conditional on permits. |
-| Debt service above USD 1,000 | Break-even requires more than 2 strong events/month. | Reduce principal, extend term, negotiate grace, or add owner equity. |
+| Ramp-up retrasado 3 meses | El capital de trabajo debe cubrir un déficit más largo antes del equilibrio en mes 9. | Pedir periodo de gracia y mantener al menos USD 13,000 de capital de trabajo sin tocar. |
+| Factura promedio 15% menor | La contribución del año 1 cae de forma material y la cobertura de deuda se ajusta. | Mantener disciplina de cotización y vender adicionales directos: catering, barra, sonido y luces. |
+| Retraso de permisos bloquea eventos grandes | La mezcla de ingresos cambia hacia workshops, sesiones y reuniones privadas más pequeñas. | Lanzar primero eventos de menor riesgo y condicionar eventos mayores a permisos. |
+| Servicio de deuda sobre USD 1,000 | El equilibrio requiere más de 2 eventos fuertes por mes. | Reducir principal, extender plazo, negociar gracia o agregar aporte del propietario. |
