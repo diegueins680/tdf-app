@@ -2164,6 +2164,11 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.example.com/download/file-123?ResourceKey=existing"
 
+        it "encodes fallback file ids before adding resource-key query params" $
+            resolveDrivePublicUrl "file 123&alt=media" Nothing (Just "rk-123") Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file%20123%26alt%3Dmedia&resourcekey=rk-123"
+
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do
             let verifier = T.replicate 43 "a"

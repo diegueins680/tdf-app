@@ -9890,7 +9890,7 @@ resolveDrivePublicUrl :: Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
 resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey =
   appendDriveResourceKey resolvedResourceKey baseUrl
   where
-    fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> fileId
+    fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
     baseUrl = fromMaybe fallbackPublicUrl (cleanOptional mWebContentLink)
     resolvedResourceKey = cleanOptional mUploadResourceKey <|> cleanOptional mMetaResourceKey
 
