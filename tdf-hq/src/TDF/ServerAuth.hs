@@ -40,7 +40,7 @@ import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, valida
 import Data.Aeson (FromJSON (..), Value (..), eitherDecode, withObject, (.:), (.:?))
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
-import Data.Char (isAsciiLower, isDigit, isSpace)
+import Data.Char (isAsciiLower, isControl, isDigit, isSpace)
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
@@ -498,9 +498,15 @@ parsePasswordChangeAuthToken :: Text -> Either ServerError Text
 parsePasswordChangeAuthToken rawHeader =
   case T.words (T.strip rawHeader) of
     [scheme, value]
-      | T.toLower scheme == "bearer" -> Right value
+      | T.toLower scheme == "bearer"
+      , let token = T.strip value
+      , not (T.null token)
+      , not (T.any invalidPasswordChangeAuthTokenChar token) -> Right token
     _ ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>") }
+
+invalidPasswordChangeAuthTokenChar :: Char -> Bool
+invalidPasswordChangeAuthTokenChar ch = isSpace ch || isControl ch
 
 passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do

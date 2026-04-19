@@ -2656,6 +2656,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Bearer"
             assertInvalid "Basic session-token"
             assertInvalid "Bearer too many parts"
+            assertInvalid "Bearer session\NULtoken"
 
     describe "signupEmailExists" $ do
         it "treats mixed-case stored usernames or party emails as the same signup identity" $ do
