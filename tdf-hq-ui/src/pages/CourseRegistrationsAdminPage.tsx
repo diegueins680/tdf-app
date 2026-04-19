@@ -264,11 +264,24 @@ const getSharedOptionalDateLabel = (values: readonly (string | null | undefined)
   return labels.every((label) => label === firstLabel) ? firstLabel : '';
 };
 
-const isRegistrationStatus = (
-  status: string,
-): status is Exclude<StatusFilter, 'all'> => (
-  status === 'pending_payment' || status === 'paid' || status === 'cancelled'
-);
+type RegistrationStatus = Exclude<StatusFilter, 'all'>;
+
+const normalizeRegistrationStatusKey = (status: string) =>
+  status.trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | null => {
+  const normalizedStatus = normalizeRegistrationStatusKey(status);
+
+  if (
+    normalizedStatus === 'pending_payment'
+    || normalizedStatus === 'paid'
+    || normalizedStatus === 'cancelled'
+  ) {
+    return normalizedStatus;
+  }
+
+  return null;
+};
 
 const customRegistrationStatusLabel = (status: string) => {
   const normalized = status.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
@@ -276,8 +289,10 @@ const customRegistrationStatusLabel = (status: string) => {
   return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
 };
 
-const registrationStatusLabel = (status: string) =>
-  isRegistrationStatus(status) ? statusFilterLabels[status] : customRegistrationStatusLabel(status);
+const registrationStatusLabel = (status: string) => {
+  const knownStatus = normalizeKnownRegistrationStatus(status);
+  return knownStatus ? statusFilterLabels[knownStatus] : customRegistrationStatusLabel(status);
+};
 
 const registrationStatusButtonLabel = (
   status: string,
@@ -287,18 +302,20 @@ const registrationStatusButtonLabel = (
 const registrationStatusChipColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' => {
-  if (status === 'paid') return 'success';
-  if (status === 'cancelled') return 'error';
-  if (status === 'pending_payment') return 'warning';
+  const knownStatus = normalizeKnownRegistrationStatus(status);
+  if (knownStatus === 'paid') return 'success';
+  if (knownStatus === 'cancelled') return 'error';
+  if (knownStatus === 'pending_payment') return 'warning';
   return 'default';
 };
 
 const registrationStatusButtonColor = (
   status: string,
 ): 'inherit' | 'success' | 'warning' | 'error' => {
-  if (status === 'paid') return 'success';
-  if (status === 'cancelled') return 'error';
-  if (status === 'pending_payment') return 'warning';
+  const knownStatus = normalizeKnownRegistrationStatus(status);
+  if (knownStatus === 'paid') return 'success';
+  if (knownStatus === 'cancelled') return 'error';
+  if (knownStatus === 'pending_payment') return 'warning';
   return 'inherit';
 };
 
@@ -332,20 +349,24 @@ const statusChip = (status: string) => {
 
 const canTransitionToStatus = (
   currentStatus: string,
-  nextStatus: Exclude<StatusFilter, 'all'>,
+  nextStatus: RegistrationStatus,
 ) => {
-  if (!isRegistrationStatus(currentStatus)) return true;
-  return currentStatus !== nextStatus;
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  if (!knownStatus) return true;
+  return knownStatus !== nextStatus;
 };
 
 const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
-  currentStatus !== 'cancelled' && canTransitionToStatus(currentStatus, 'paid');
+  normalizeKnownRegistrationStatus(currentStatus) !== 'cancelled'
+  && canTransitionToStatus(currentStatus, 'paid');
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
-  currentStatus === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';
 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
-  currentStatus === 'cancelled' ? 'reabrir la inscripción como pendiente' : 'marcarla pendiente';
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
+    ? 'reabrir la inscripción como pendiente'
+    : 'marcarla pendiente';
 
 const eventStatusColor = (
   status: string,
@@ -957,13 +978,10 @@ export default function CourseRegistrationsAdminPage() {
     const base = { total: 0, pending_payment: 0, paid: 0, cancelled: 0 };
     return registrations.reduce(
       (acc, reg) => {
+        const knownStatus = normalizeKnownRegistrationStatus(reg.crStatus);
         acc.total += 1;
-        if (
-          reg.crStatus === 'pending_payment'
-          || reg.crStatus === 'paid'
-          || reg.crStatus === 'cancelled'
-        ) {
-          acc[reg.crStatus] += 1;
+        if (knownStatus) {
+          acc[knownStatus] += 1;
         }
         return acc;
       },
@@ -991,14 +1009,14 @@ export default function CourseRegistrationsAdminPage() {
 
     registrations.forEach((reg) => {
       const trimmedStatus = reg.crStatus.trim();
-      const statusKey = trimmedStatus.toLowerCase();
+      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus) ?? trimmedStatus.toLowerCase();
       if (!statusesByKey.has(statusKey)) {
         statusesByKey.set(statusKey, trimmedStatus);
       }
     });
 
     const [onlyStatus] = Array.from(statusesByKey.values());
-    return statusesByKey.size === 1 && onlyStatus && !isRegistrationStatus(onlyStatus) ? onlyStatus : '';
+    return statusesByKey.size === 1 && onlyStatus && !normalizeKnownRegistrationStatus(onlyStatus) ? onlyStatus : '';
   }, [hasVisibleRegistrations, registrations, status]);
 
   const showSingleStatusSummary = Boolean(singleVisibleStatus && status === 'all');
@@ -1103,7 +1121,7 @@ export default function CourseRegistrationsAdminPage() {
 
     searchedRegistrations.forEach((reg) => {
       const trimmedStatus = reg.crStatus.trim();
-      const statusKey = trimmedStatus.toLocaleLowerCase('es');
+      const statusKey = normalizeKnownRegistrationStatus(trimmedStatus) ?? trimmedStatus.toLocaleLowerCase('es');
       if (!statusLabelsByKey.has(statusKey)) {
         statusLabelsByKey.set(statusKey, trimmedStatus);
       }
@@ -1963,8 +1981,11 @@ export default function CourseRegistrationsAdminPage() {
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
-  const showEvidenceOnlyEmptyReceiptCopy = activeRegistration?.crStatus === 'paid'
-    || activeRegistration?.crStatus === 'cancelled';
+  const activeRegistrationKnownStatus = activeRegistration
+    ? normalizeKnownRegistrationStatus(activeRegistration.crStatus)
+    : null;
+  const showEvidenceOnlyEmptyReceiptCopy = activeRegistrationKnownStatus === 'paid'
+    || activeRegistrationKnownStatus === 'cancelled';
   const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
     ? emptyReceiptEvidenceAlertMessage
     : emptyReceiptAlertMessage;

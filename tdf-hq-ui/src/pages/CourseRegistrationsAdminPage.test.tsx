@@ -2439,6 +2439,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('normalizes known backend status variants before showing filters or row actions', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'PENDING-PAYMENT',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'PAID',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
+      expect(container.textContent).not.toContain('Pending Payment');
+      expect(container.textContent).not.toContain('Paid');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
+      expect(document.body.textContent).not.toContain('Marcar pagado');
+      expect(getMenuItemByText(document.body, 'Marcar pendiente')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('summarizes one shared custom status instead of repeating it across every row action', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
