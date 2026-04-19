@@ -5999,6 +5999,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps broad local searches from reopening default CSV export chrome', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'Estudiante');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const searchUtilities = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-local-search-utilities"]',
+      );
+
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Mostrando 9 de 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
+      expect(searchUtilities).not.toBeNull();
+      expect(getButtonByText(searchUtilities!, 'Limpiar búsqueda')).toBeTruthy();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the visible CSV export scoped to local search results', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
