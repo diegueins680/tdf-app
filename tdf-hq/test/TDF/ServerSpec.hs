@@ -151,6 +151,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
+    , validateOptionalCmsSlugPrefix
     , validateServiceMarketplaceCatalog
     , validateWhatsAppPhoneInput
     , validateWhatsAppReplyBody
@@ -1606,6 +1607,31 @@ spec = describe "TDF.Server helpers" $ do
             normalizeOptionalCmsFilter Nothing `shouldBe` Nothing
             normalizeOptionalCmsFilter (Just "  homepage ") `shouldBe` Just "homepage"
             normalizeOptionalCmsFilter (Just "   ") `shouldBe` Nothing
+
+    describe "validateOptionalCmsSlugPrefix" $ do
+        it "canonicalizes public CMS slug prefixes before list filtering" $ do
+            validateOptionalCmsSlugPrefix Nothing `shouldBe` Right Nothing
+            validateOptionalCmsSlugPrefix (Just "  Records-Release  ")
+                `shouldBe` Right (Just "records-release")
+            validateOptionalCmsSlugPrefix (Just "fan")
+                `shouldBe` Right (Just "fan")
+
+        it "rejects malformed public CMS slug prefixes instead of ambiguous list filtering" $ do
+            let assertInvalid rawPrefix =
+                    case validateOptionalCmsSlugPrefix (Just rawPrefix) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "slugPrefix must be omitted or use only ASCII letters"
+                        Right prefix ->
+                            expectationFailure
+                                ("Expected invalid CMS slug prefix, got: " <> show prefix)
+            assertInvalid "   "
+            assertInvalid "records release"
+            assertInvalid "records/release"
+            assertInvalid "records?draft=true"
+            assertInvalid "---"
 
     describe "validateCmsLocaleFilter" $ do
         it "defaults omitted or blank locales and accepts explicit language tags" $ do

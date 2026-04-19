@@ -6106,6 +6106,22 @@ validateRequiredCmsSlug rawSlug =
               <> "include at least one letter or number, and be 96 characters or fewer"
         }
 
+validateOptionalCmsSlugPrefix :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCmsSlugPrefix Nothing = Right Nothing
+validateOptionalCmsSlugPrefix (Just rawPrefix)
+  | T.null (T.strip rawPrefix) =
+      Left invalidCmsSlugPrefix
+  | otherwise =
+      case validateRequiredCmsSlug rawPrefix of
+        Right prefix -> Right (Just prefix)
+        Left _ -> Left invalidCmsSlugPrefix
+  where
+    invalidCmsSlugPrefix =
+      err400
+        { errBody =
+            "slugPrefix must be omitted or use only ASCII letters, numbers, and hyphens"
+        }
+
 validateRequiredCmsField :: Text -> Text -> Either ServerError Text
 validateRequiredCmsField fieldName rawValue =
   case normalizeOptionalCmsFilter (Just rawValue) of
@@ -8300,6 +8316,7 @@ cmsPublicServer = cmsGet :<|> cmsList
 
     cmsList mLocale mPrefix = do
       locale <- either throwError pure (validateCmsLocaleFilter mLocale)
+      mSlugPrefix <- either throwError pure (validateOptionalCmsSlugPrefix mPrefix)
       entries <- runDB $
         selectList
           [ CMS.CmsContentLocale ==. locale
@@ -8308,7 +8325,7 @@ cmsPublicServer = cmsGet :<|> cmsList
           [ Desc CMS.CmsContentPublishedAt
           , Desc CMS.CmsContentVersion
           ]
-      let filtered = case normalizeOptionalCmsFilter mPrefix of
+      let filtered = case mSlugPrefix of
             Nothing -> entries
             Just prefix -> filter (\(Entity _ c) -> prefix `T.isPrefixOf` CMS.cmsContentSlug c) entries
       pure (map toCmsDTO filtered)
