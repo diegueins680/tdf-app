@@ -460,6 +460,25 @@ validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
+validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
+validatePublicSignupInput (SignupIn rawFirstName rawLastName rawEmail rawPhone passwordVal googleIdTokenVal marketingOptInVal) = do
+  firstNameVal <- validatePublicSignupNamePart "firstName" rawFirstName
+  lastNameVal <- validatePublicSignupNamePart "lastName" rawLastName
+  emailVal <- validateRequiredEmail (Just rawEmail)
+  phoneVal <- validateOptionalPhone rawPhone
+  Right (SignupIn firstNameVal lastNameVal emailVal phoneVal passwordVal googleIdTokenVal marketingOptInVal)
+
+validatePublicSignupNamePart :: Text -> Text -> Either ServerError Text
+validatePublicSignupNamePart fieldName rawName =
+  let nameVal = T.strip rawName
+      fieldLabel = BL8.pack (T.unpack fieldName)
+  in if T.length nameVal > 120
+       then Left err400 { errBody = fieldLabel <> " must be 120 characters or fewer" }
+       else
+         if T.any isControl nameVal
+           then Left err400 { errBody = fieldLabel <> " must not contain control characters" }
+           else Right nameVal
+
 validatePublicSubjectIdInput :: Int -> Either ServerError Int
 validatePublicSubjectIdInput subjectIdInt
   | subjectIdInt <= 0 =
@@ -784,7 +803,8 @@ publicTrialsServer =
     :<|> publicSlotsH
   where
     signupH :: SignupIn -> AppM SignupOut
-    signupH SignupIn{..} = do
+    signupH rawInput = do
+      SignupIn{..} <- either (liftIO . throwIO) pure (validatePublicSignupInput rawInput)
       now <- liftIO getCurrentTime
       let fullName = composeFullName firstName lastName
       partyIdKey <- createOrFetchParty fullName (Just email) phone now

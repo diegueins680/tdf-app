@@ -51,6 +51,7 @@ import TDF.Trials.Server
   , validatePreferredSlots
   , validatePreferredSlotsAt
   , validatePublicInterestInput
+  , validatePublicSignupInput
   , validatePublicSubjectIdInput
   , validatePublicSubjectSelection
   , validatePublicTrialPartyId
@@ -222,6 +223,49 @@ spec = do
           "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"marketingOptIn\":true,\"role\":\"Admin\"}"
             :: Either String SignupIn)
         `shouldBe` True
+
+  describe "validatePublicSignupInput" $ do
+    it "normalizes public signup contact fields before creating parties and lead details" $
+      case validatePublicSignupInput
+        ( SignupIn
+            " Ada "
+            " Lovelace "
+            " ADA@Example.com "
+            (Just " +593 99 123 4567 ")
+            Nothing
+            Nothing
+            True
+        ) of
+        Left err ->
+          expectationFailure ("Expected valid public signup to normalize, got " <> show err)
+        Right (SignupIn firstNameValue lastNameValue emailValue phoneValue passwordValue googleIdTokenValue marketingOptInValue) -> do
+          firstNameValue `shouldBe` "Ada"
+          lastNameValue `shouldBe` "Lovelace"
+          emailValue `shouldBe` "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+          passwordValue `shouldBe` Nothing
+          googleIdTokenValue `shouldBe` Nothing
+          marketingOptInValue `shouldBe` True
+
+    it "rejects malformed signup names before persisting public lead details" $ do
+      let baseSignup =
+            SignupIn
+              "Ada"
+              "Lovelace"
+              "ada@example.com"
+              Nothing
+              Nothing
+              Nothing
+              True
+          assertRejected payload expectedMessage =
+            case validatePublicSignupInput payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed public signup to be rejected"
+      assertRejected baseSignup { firstName = "Ada\nLovelace" } "firstName must not contain control characters"
+      assertRejected baseSignup { lastName = pack (replicate 121 'a') } "lastName must be 120 characters or fewer"
 
   describe "validatePublicInterestInput" $ do
     it "rejects typoed or unexpected JSON keys so subject selections do not silently disappear" $ do
