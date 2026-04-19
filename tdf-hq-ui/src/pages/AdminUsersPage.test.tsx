@@ -2524,6 +2524,61 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('matches accented admin names from an unaccented search so admins do not hit an empty state', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'cohort-manager',
+        partyName: 'José Álvarez',
+        primaryEmail: 'manager@example.com',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'jose alvarez');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+        expect(container.textContent).toContain('José Álvarez');
+        expect(container.textContent).not.toContain('No hay coincidencias para "jose alvarez"');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the search-owned clear action available when a query hides every admin user', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

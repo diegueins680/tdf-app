@@ -149,7 +149,12 @@ const getSharedAccessSummary = (values: string[]) => {
 const isSameAccessSummary = (left: string, right: string) =>
   normalizeAccessKey(left) === normalizeAccessKey(right);
 
-const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
+const normalizeSearchValue = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase('es');
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
