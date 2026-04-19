@@ -2087,6 +2087,10 @@ spec = describe "TDF.Server helpers" $ do
                 (resolveWorkflowId Nothing (Just "wf default"))
             assertInvalid
                 400
+                "workflowId must use only ASCII letters"
+                (resolveWorkflowId (Just "wf/override?preview=1") (Just "wf_default"))
+            assertInvalid
+                400
                 "workflowId requerido"
                 (resolveWorkflowId Nothing Nothing)
 

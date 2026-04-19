@@ -146,6 +146,7 @@ spec = do
             decodeChatKitSession "{\"workflowId\":\"   \"}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"   \"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflowId\":\"wf primary\"}" `shouldSatisfy` isLeft
+            decodeChatKitSession "{\"workflowId\":\"wf/primary?preview=1\"}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"wf\\u0000nested\"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"workflow\":{\"id\":\"wf_nested\"}}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":true}" `shouldSatisfy` isLeft

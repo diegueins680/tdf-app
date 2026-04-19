@@ -614,10 +614,20 @@ normalizeChatKitWorkflowId fieldName rawWorkflowId
       Left (fieldName <> " must not contain whitespace")
   | T.any isControl trimmedWorkflowId =
       Left (fieldName <> " must not contain control characters")
+  | T.any (not . isChatKitWorkflowIdChar) trimmedWorkflowId =
+      Left
+        ( fieldName
+            <> " must use only ASCII letters, digits, '.', '_' or '-'"
+        )
   | otherwise =
       Right trimmedWorkflowId
   where
     trimmedWorkflowId = T.strip rawWorkflowId
+    isChatKitWorkflowIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
 
 instance FromJSON ChatKitSessionRequest where
   parseJSON = withObject "ChatKitSessionRequest" $ \o -> do

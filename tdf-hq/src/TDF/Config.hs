@@ -767,9 +767,16 @@ normalizeConfiguredChatKitWorkflowId envName rawWorkflowId
       Left (envName <> " must not contain whitespace")
   | T.any isControl workflowId =
       Left (envName <> " must not contain control characters")
+  | T.any (not . isChatKitWorkflowIdChar) workflowId =
+      Left (envName <> " must use only ASCII letters, digits, '.', '_' or '-'")
   | otherwise = Right (Just workflowId)
   where
     workflowId = T.strip (T.pack rawWorkflowId)
+    isChatKitWorkflowIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
 
 normalizeConfiguredGraphNodeId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredGraphNodeId envName rawNodeId

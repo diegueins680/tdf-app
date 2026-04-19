@@ -771,6 +771,10 @@ main = hspec $ do
                 "VITE_CHATKIT_WORKFLOW_ID must not contain whitespace"
             assertInvalid
                 "CHATKIT_WORKFLOW_ID"
+                "wf/default?preview=1"
+                "CHATKIT_WORKFLOW_ID must use only ASCII letters"
+            assertInvalid
+                "CHATKIT_WORKFLOW_ID"
                 (Data.Text.unpack (Data.Text.replicate 257 "a"))
                 "CHATKIT_WORKFLOW_ID must be 256 characters or fewer"
 
