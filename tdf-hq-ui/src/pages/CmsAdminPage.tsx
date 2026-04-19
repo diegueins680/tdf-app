@@ -544,7 +544,7 @@ export default function CmsAdminPage() {
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
-  const showClearPayloadAction = payload.trim() !== '{}';
+  const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">

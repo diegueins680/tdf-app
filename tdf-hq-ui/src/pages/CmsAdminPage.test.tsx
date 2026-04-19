@@ -352,7 +352,9 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the clear-payload action until the editor has JSON to clear', async () => {
+  it('keeps the clear-payload fallback for new content until the editor has JSON to clear', async () => {
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -384,6 +386,36 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('hides the generic clear action when a live version is available to restore instead', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(
+        getInputByLabel(container, 'Payload JSON'),
+        JSON.stringify({ heroTitle: 'Landing actualizada' }, null, 2),
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+      );
     });
 
     await cleanup();
