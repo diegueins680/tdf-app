@@ -29,6 +29,7 @@ import TDF.API.Types
     , LooseJSON
     , MarketplaceCheckoutReq (..)
     , MarketplaceCartItemUpdate (..)
+    , maxMarketplaceCartItemQuantity
     , MarketplaceOrderUpdate (..)
     , PaypalCaptureReq (..)
     , PipelineCardCreate (..)
@@ -822,9 +823,31 @@ spec = do
                     mciuListingId payload `shouldBe` "1"
                     mciuQuantity payload `shouldBe` 2
 
+        it "accepts cart item removal and the configured public quantity cap" $ do
+            case decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"1\",\"mciuQuantity\":0}"
+             of
+                Left err ->
+                    expectationFailure ("Expected zero quantity cart item payload to decode, got: " <> err)
+                Right payload ->
+                    mciuQuantity payload `shouldBe` 0
+
+            case decodeMarketplaceCartItemUpdate (cartItemUpdateJson maxMarketplaceCartItemQuantity) of
+                Left err ->
+                    expectationFailure ("Expected capped cart item payload to decode, got: " <> err)
+                Right payload ->
+                    mciuQuantity payload `shouldBe` maxMarketplaceCartItemQuantity
+
         it "rejects unexpected cart item keys so malformed cart writes fail explicitly" $
             decodeMarketplaceCartItemUpdate
                 "{\"mciuListingId\":\"1\",\"mciuQuantity\":2,\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects negative or excessive cart item quantities before handler execution" $ do
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"1\",\"mciuQuantity\":-1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate (cartItemUpdateJson (maxMarketplaceCartItemQuantity + 1))
                 `shouldSatisfy` isLeft
 
     describe "MarketplaceOrderUpdate FromJSON" $ do
@@ -1164,6 +1187,9 @@ spec = do
     decodeMarketplaceCheckout = eitherDecode
     decodeMarketplaceCartItemUpdate :: BL8.ByteString -> Either String MarketplaceCartItemUpdate
     decodeMarketplaceCartItemUpdate = eitherDecode
+    cartItemUpdateJson :: Int -> BL8.ByteString
+    cartItemUpdateJson quantity =
+        BL8.pack ("{\"mciuListingId\":\"1\",\"mciuQuantity\":" <> show quantity <> "}")
     decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
     decodeMarketplaceOrderUpdate = eitherDecode
     decodePaypalCapture :: BL8.ByteString -> Either String PaypalCaptureReq

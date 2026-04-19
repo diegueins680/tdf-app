@@ -62,6 +62,7 @@ import           Database.Persist.Postgresql ()
 
 import           TDF.API
 import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..))
+import           TDF.API.Types (maxMarketplaceCartItemQuantity)
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
@@ -8481,6 +8482,11 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
   cartKey <- parseCartId rawId
   listingKey <- parseListingId mciuListingId
   when (mciuQuantity < 0) $ throwBadRequest "quantity must be non-negative"
+  when (mciuQuantity > maxMarketplaceCartItemQuantity) $
+    throwBadRequest $
+      "quantity must be "
+        <> T.pack (show maxMarketplaceCartItemQuantity)
+        <> " or fewer"
   now <- liftIO getCurrentTime
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ do

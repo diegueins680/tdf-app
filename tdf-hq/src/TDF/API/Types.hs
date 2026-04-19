@@ -334,8 +334,23 @@ data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
   , mciuQuantity  :: Int
   } deriving (Show, Generic)
 
+maxMarketplaceCartItemQuantity :: Int
+maxMarketplaceCartItemQuantity = 99
+
 instance FromJSON MarketplaceCartItemUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    let quantity = mciuQuantity payload
+    if quantity < 0
+      then fail "mciuQuantity must be non-negative"
+      else
+        if quantity > maxMarketplaceCartItemQuantity
+          then
+            fail $
+              "mciuQuantity must be "
+                <> show maxMarketplaceCartItemQuantity
+                <> " or fewer"
+          else pure payload
 instance ToJSON MarketplaceCartItemUpdate
 
 data MarketplaceCheckoutReq = MarketplaceCheckoutReq
