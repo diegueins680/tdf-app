@@ -756,14 +756,24 @@ export default function AdminConsolePage() {
     || auditQuery.isError
     || consoleQuery.isError
     || usersQuery.isError;
+  const shouldShowHealthLoadingState = healthQuery.isPending && healthQuery.data == null;
+  const showCompactHealthyServiceSummary =
+    healthQuery.data != null
+    && isHealthyHealthIndicator(healthQuery.data.status)
+    && isHealthyHealthIndicator(healthQuery.data.db);
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
+  const showFirstRunDemoAction = showGettingStartedGuidance && showCompactHealthyServiceSummary;
+  const showFirstRunServiceHealthGate =
+    showGettingStartedGuidance && !showCompactHealthyServiceSummary;
+  const firstRunServiceNeedsRefresh =
+    showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
   const showHeaderRefreshAction =
-    hasAdminPanelError || (!isAdminPanelBaselining && !showGettingStartedGuidance);
+    hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
   const showHeaderActions = showHeaderRefreshAction;
   const usersSectionDescription = showGettingStartedGuidance
     ? null
@@ -844,16 +854,14 @@ export default function AdminConsolePage() {
     || auditQuery.isFetching
     || consoleQuery.isFetching
     || usersQuery.isFetching;
-  const shouldShowHealthLoadingState = healthQuery.isPending && healthQuery.data == null;
-  const showCompactHealthyServiceSummary =
-    healthQuery.data != null
-    && isHealthyHealthIndicator(healthQuery.data.status)
-    && isHealthyHealthIndicator(healthQuery.data.db);
   const firstRunDemoActionCopy = {
     description: 'Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
     buttonLabel: 'Cargar datos de ejemplo',
     pendingLabel: 'Cargando ejemplo…',
   } as const;
+  const firstRunServiceGateCopy = shouldShowHealthLoadingState
+    ? 'Espera la comprobación de API y base de datos antes de cargar datos de ejemplo.'
+    : 'Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas.';
   const demoSeedActionCopy = {
     successMessage: 'Datos de demostración preparados correctamente.',
   } as const;
@@ -1000,17 +1008,19 @@ export default function AdminConsolePage() {
             )}
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body2" color="text.secondary">
-                {firstRunDemoActionCopy.description}
+                {showFirstRunDemoAction ? firstRunDemoActionCopy.description : firstRunServiceGateCopy}
               </Typography>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<AutoFixHighIcon />}
-                onClick={() => seedMutation.mutate()}
-                disabled={seedMutation.isPending}
-              >
-                {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
-              </Button>
+              {showFirstRunDemoAction && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<AutoFixHighIcon />}
+                  onClick={() => seedMutation.mutate()}
+                  disabled={seedMutation.isPending}
+                >
+                  {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
+                </Button>
+              )}
             </Stack>
           </Stack>
         </Alert>

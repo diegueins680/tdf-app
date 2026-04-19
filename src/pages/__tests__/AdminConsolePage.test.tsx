@@ -247,6 +247,13 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByText(/Todo listo: API y base de datos responden correctamente\./i),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
   it('keeps the header refresh action available when first-run data is empty because a query failed', async () => {
@@ -262,7 +269,12 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
   it('keeps the header focused on refresh once the console already has admin data', async () => {
