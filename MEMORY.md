@@ -9,3 +9,4 @@
 
 - Keep workflow guidance concrete and repo-specific.
 - Prefer small automation that catches setup drift early over more prompt text.
+- Para el trabajo de préstamo de Domo del Pululahua, todo material usado para pedir, sustentar, negociar o dar seguimiento al financiamiento debe entregarse en español y adaptado al contexto ecuatoriano. Si la investigación fuente está en inglés, traducir y localizar el entregable final a español ecuatoriano.
