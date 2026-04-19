@@ -2666,6 +2666,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes shared blank statuses once instead of repeating unknown-state row labels', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: '   ',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: '',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const customStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-custom-status-summary"]',
+      );
+
+      expect(customStatusSummary?.textContent).toContain('Estado no estándar');
+      expect(customStatusSummary?.textContent).toContain('Estado desconocido');
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      expect(countOccurrences(container, 'Estado desconocido')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

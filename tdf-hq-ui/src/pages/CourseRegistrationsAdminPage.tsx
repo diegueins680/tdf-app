@@ -1033,7 +1033,7 @@ export default function CourseRegistrationsAdminPage() {
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
   }, [hasVisibleRegistrations, visibleStatusFilters]);
   const singleVisibleCustomStatus = useMemo(() => {
-    if (!hasVisibleRegistrations || status !== 'all') return '';
+    if (!hasVisibleRegistrations || status !== 'all') return null;
     const statusesByKey = new Map<string, string>();
 
     registrations.forEach((reg) => {
@@ -1045,7 +1045,8 @@ export default function CourseRegistrationsAdminPage() {
     });
 
     const [onlyStatus] = Array.from(statusesByKey.values());
-    return statusesByKey.size === 1 && onlyStatus && !normalizeKnownRegistrationStatus(onlyStatus) ? onlyStatus : '';
+    if (statusesByKey.size !== 1 || onlyStatus == null) return null;
+    return !normalizeKnownRegistrationStatus(onlyStatus) ? onlyStatus : null;
   }, [hasVisibleRegistrations, registrations, status]);
 
   const showSingleStatusSummary = Boolean(singleVisibleStatus && status === 'all');
@@ -1264,7 +1265,7 @@ export default function CourseRegistrationsAdminPage() {
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
-  const showSingleCustomStatusSummary = Boolean(singleVisibleCustomStatus) && actionableStatusFilters.length === 0;
+  const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
     && !statusAlreadyVisibleInFilterStrip
@@ -2803,7 +2804,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Button>
                         )}
                       </Stack>
-                    ) : showSingleCustomStatusSummary ? (
+                    ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
                       <Stack
                         data-testid="course-registration-single-custom-status-summary"
                         spacing={0.5}
