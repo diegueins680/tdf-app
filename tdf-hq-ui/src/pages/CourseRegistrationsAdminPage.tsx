@@ -511,6 +511,12 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   return `${title} (${slug})`;
 };
 
+const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
+  const slug = cohort.ccSlug.trim();
+  const title = cohort.ccTitle?.trim();
+  return title || slug;
+};
+
 const humanizeDelimitedSourceLabel = (source: string) => {
   if (!/[_-]/.test(source)) return source;
   const normalized = source.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -986,14 +992,18 @@ export default function CourseRegistrationsAdminPage() {
     [cohortLabelsBySlug],
   );
   const configuredCohortOptions = useMemo(() => {
-    const options: { value: string; label: string }[] = [];
+    const options: { value: string; label: string; firstRunLabel: string }[] = [];
     const seenSlugs = new Set<string>();
 
     for (const cohort of cohortsQuery.data ?? []) {
       const cohortSlug = cohort.ccSlug.trim();
       if (!cohortSlug || seenSlugs.has(cohortSlug)) continue;
       seenSlugs.add(cohortSlug);
-      options.push({ value: cohortSlug, label: cohortOptionLabel(cohort) });
+      options.push({
+        value: cohortSlug,
+        label: cohortOptionLabel(cohort),
+        firstRunLabel: cohortFirstRunLabel(cohort),
+      });
     }
 
     return options;
@@ -1575,7 +1585,7 @@ export default function CourseRegistrationsAdminPage() {
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
   const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const initialEmptyStateMessage = singleAvailableCohort
-    ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.label)
+    ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
       ? initialEmptyStateMultiCohortMessage
     : initialEmptyStateConfigMessage;

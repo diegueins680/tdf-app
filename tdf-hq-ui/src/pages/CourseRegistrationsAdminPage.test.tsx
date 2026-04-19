@@ -226,7 +226,7 @@ const initialEmptyStateConfigMessage =
 const initialEmptyStateMultiCohortMessage =
   'Todavía no hay inscripciones. Hay varios formularios configurados; elige cuál compartir primero.';
 const singleCohortInitialEmptyStateMessage =
-  'Todavía no hay inscripciones para Beatmaking 101 (beatmaking-101). Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones para Beatmaking 101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir en cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -7025,6 +7025,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Beatmaking 101 (beatmaking-101)');
       expect(emptyState?.textContent).not.toContain('Comparte el formulario público');
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
