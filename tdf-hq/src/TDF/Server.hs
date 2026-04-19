@@ -9615,8 +9615,11 @@ validatePayPalApprovalUrl (Just rawUrl)
            else Just (normalizedHost, portSuffix, pathAndQuery)
 
     hasSingleNonEmptyTokenParam query =
-      case mapMaybe tokenValue (T.splitOn "&" query) of
-        [token] -> not (T.null token)
+      case T.splitOn "&" query of
+        [param] ->
+          case tokenValue param of
+            Just token -> not (T.null token)
+            Nothing -> False
         _ -> False
 
     tokenValue param =
