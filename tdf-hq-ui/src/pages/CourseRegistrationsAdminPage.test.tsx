@@ -5904,6 +5904,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('humanizes technical source slugs in busy-list rows and search', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'instagram_story' }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 102 + index,
+        crPartyId: 10 + index,
+        crFullName: `Estudiante ${index + 2}`,
+        crEmail: `student${index + 2}@example.com`,
+        crSource: index % 2 === 0 ? 'landing' : null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, contacto o fuente',
+      );
+      expect(container.textContent).toContain('Fuente: Instagram story');
+      expect(container.textContent).not.toContain('Fuente: instagram_story');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'instagram story');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).not.toContain('Estudiante 2');
+      expect(container.textContent).toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).not.toContain('instagram_story');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('matches busy-list local search against accent-free cohort names', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

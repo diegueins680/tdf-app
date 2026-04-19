@@ -511,9 +511,16 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   return `${title} (${slug})`;
 };
 
+const humanizeDelimitedSourceLabel = (source: string) => {
+  if (!/[_-]/.test(source)) return source;
+  const normalized = source.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!normalized) return source;
+  return `${normalized.charAt(0).toLocaleUpperCase('es')}${normalized.slice(1)}`;
+};
+
 const registrationSourceLabel = (source: string | null | undefined) => {
   const trimmed = source?.trim() ?? '';
-  return trimmed === '' ? 'Sin fuente' : trimmed;
+  return trimmed === '' ? 'Sin fuente' : humanizeDelimitedSourceLabel(trimmed);
 };
 
 const normalizeRegistrationSourceKey = (sourceLabel: string) =>
@@ -525,7 +532,8 @@ const isDefaultPublicFormSource = (sourceLabel: string) =>
 const getSearchableRegistrationSource = (source: string | null | undefined) => {
   const trimmedSource = source?.trim() ?? '';
   if (!trimmedSource || isDefaultPublicFormSource(trimmedSource)) return '';
-  return trimmedSource;
+  const displayLabel = registrationSourceLabel(trimmedSource);
+  return displayLabel === trimmedSource ? trimmedSource : `${trimmedSource} ${displayLabel}`;
 };
 
 const registrationIdentityDisplay = (
@@ -742,7 +750,7 @@ const registrationDossierContextSummary = ({
   const parts = trimmedCourseLabel ? [`Curso: ${trimmedCourseLabel}`] : [];
   const trimmedSource = source?.trim() ?? '';
   if (trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
-    parts.push(`Fuente: ${trimmedSource}`);
+    parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
   const createdLabel = formatOptionalDate(createdAt);
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
