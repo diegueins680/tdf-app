@@ -6309,6 +6309,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Busca dentro de este lote sin cambiar los filtros de cohorte o estado.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);

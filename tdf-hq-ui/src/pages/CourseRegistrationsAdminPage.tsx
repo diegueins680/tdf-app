@@ -241,6 +241,10 @@ const buildReachedListLimitSummary = (limit: number) =>
   `Se cargó el límite de ${limit} inscripciones; usa Ajustar límite si necesitas revisar más registros.`;
 const buildLoadedSearchScopeHint = (loadedCount: number) =>
   `Busca dentro de las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
+const buildFullLocalSearchMatchHint = (loadedCount: number) =>
+  loadedCount === 1
+    ? 'La búsqueda coincide con la inscripción cargada.'
+    : `La búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
 
@@ -1175,7 +1179,9 @@ export default function CourseRegistrationsAdminPage() {
       ? undefined
       : localSearchNarrowsRegistrations
         ? formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
-        : undefined
+        : loadedRegistrationCount > 0
+          ? buildFullLocalSearchMatchHint(loadedRegistrationCount)
+          : undefined
     : viewHitsCurrentLimit
       ? buildLoadedSearchScopeHint(loadedRegistrationCount)
       : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.`;
