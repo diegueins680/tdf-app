@@ -5586,6 +5586,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
@@ -5620,9 +5622,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierOnlyScopeHint,
-      );
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
     });
 
     listRegistrationsMock.mockClear();

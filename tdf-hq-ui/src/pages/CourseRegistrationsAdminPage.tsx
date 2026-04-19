@@ -1323,8 +1323,11 @@ export default function CourseRegistrationsAdminPage() {
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
     : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
-  const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showDossierScopeHint = loadedRegistrationCount > 0
+    && !hasUsedRowAction
+    && !hasUsedFilterControl
+    && !showBusyListSearchOnboarding;
   const showFirstRunFilterHelper = showFilterOnboardingCopy
     && !showSingleResultWithoutHiddenLimit
     && !showBusyListSearchOnboarding;
