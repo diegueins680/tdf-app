@@ -23,6 +23,8 @@ import TDF.API.Types
     , ClockOutRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
+    , InternPermissionCreate (..)
+    , InternPermissionUpdate (..)
     , InternTodoCreate (..)
     , InternTodoUpdate (..)
     , InternTaskUpdate (..)
@@ -973,6 +975,50 @@ spec = do
                 "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternPermission payload FromJSON" $ do
+        it "accepts canonical permission payloads and preserves explicit note clears" $ do
+            case decodeInternPermissionCreate
+                "{\"ipcCategory\":\"leave\",\"ipcReason\":\"Dentist\",\"ipcStartAt\":\"2026-04-20\",\"ipcEndAt\":\"2026-04-21\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected intern permission create payload to decode, got: " <> err)
+                Right (InternPermissionCreate categoryVal reasonVal startAtVal endAtVal) -> do
+                    categoryVal `shouldBe` "leave"
+                    reasonVal `shouldBe` Just "Dentist"
+                    startAtVal `shouldBe` fromGregorian 2026 4 20
+                    endAtVal `shouldBe` Just (fromGregorian 2026 4 21)
+
+            case decodeInternPermissionUpdate
+                "{\"ipuStatus\":\"approved\",\"ipuDecisionNotes\":\"Approved by admin\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected intern permission update payload to decode, got: " <> err)
+                Right (InternPermissionUpdate statusVal notesVal) -> do
+                    statusVal `shouldBe` Just "approved"
+                    notesVal `shouldBe` Just (Just "Approved by admin")
+
+            case decodeInternPermissionUpdate "{\"ipuDecisionNotes\":null}" of
+                Left err ->
+                    expectationFailure ("Expected intern permission clear payload to decode, got: " <> err)
+                Right (InternPermissionUpdate statusVal notesVal) -> do
+                    statusVal `shouldBe` Nothing
+                    notesVal `shouldBe` Just Nothing
+
+            case decodeInternPermissionUpdate "{}" of
+                Left err ->
+                    expectationFailure ("Expected empty intern permission update payload to decode, got: " <> err)
+                Right (InternPermissionUpdate statusVal notesVal) -> do
+                    statusVal `shouldBe` Nothing
+                    notesVal `shouldBe` Nothing
+
+        it "rejects unexpected permission keys so over-posted review intent fails explicitly" $ do
+            decodeInternPermissionCreate
+                "{\"ipcCategory\":\"leave\",\"ipcStartAt\":\"2026-04-20\",\"ipcStatus\":\"approved\"}"
+                `shouldSatisfy` isLeft
+            decodeInternPermissionUpdate
+                "{\"ipuStatus\":\"approved\",\"reviewedBy\":7}"
+                `shouldSatisfy` isLeft
+
     describe "InternTodo payload FromJSON" $ do
         it "accepts canonical todo create and update payloads" $ do
             case decodeInternTodoCreate "{\"itdcText\":\"Check cables\"}" of
@@ -1204,6 +1250,10 @@ spec = do
     decodeClockOut = eitherDecode
     decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate
     decodeInternTaskUpdate = eitherDecode
+    decodeInternPermissionCreate :: BL8.ByteString -> Either String InternPermissionCreate
+    decodeInternPermissionCreate = eitherDecode
+    decodeInternPermissionUpdate :: BL8.ByteString -> Either String InternPermissionUpdate
+    decodeInternPermissionUpdate = eitherDecode
     decodeInternTodoCreate :: BL8.ByteString -> Either String InternTodoCreate
     decodeInternTodoCreate = eitherDecode
     decodeInternTodoUpdate :: BL8.ByteString -> Either String InternTodoUpdate

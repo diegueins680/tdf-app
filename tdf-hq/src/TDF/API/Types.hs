@@ -1342,11 +1342,25 @@ data InternPermissionCreate = InternPermissionCreate
   , ipcEndAt    :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternPermissionCreate
-instance FromJSON InternPermissionCreate
+instance FromJSON InternPermissionCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternPermissionUpdate = InternPermissionUpdate
   { ipuStatus        :: Maybe Text
   , ipuDecisionNotes :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 instance ToJSON InternPermissionUpdate
-instance FromJSON InternPermissionUpdate
+instance FromJSON InternPermissionUpdate where
+  parseJSON = withObject "InternPermissionUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ipuStatus"
+          , "ipuDecisionNotes"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternPermissionUpdate: " <> T.unpack key)
+      [] ->
+        InternPermissionUpdate
+          <$> o .:? "ipuStatus"
+          <*> o .:! "ipuDecisionNotes"
