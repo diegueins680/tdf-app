@@ -1386,6 +1386,55 @@ spec = do
                 igInboundText inbound `shouldBe` "hola"
             _ -> expectationFailure ("Expected an inbound event, got " <> show events)
 
+    it "normalizes actor ids and drops ambiguous Meta webhook events before persistence" $ do
+        let payload =
+                A.object
+                    [ "object" .= ("instagram" :: Text)
+                    , "entry"
+                        .=
+                            [ A.object
+                                [ "id" .= ("17841400000000000" :: Text)
+                                , "messaging"
+                                    .=
+                                        [ A.object
+                                            [ "sender" .= A.object ["id" .= ("  user-1  " :: Text)]
+                                            , "recipient" .= A.object ["id" .= ("  biz-1  " :: Text)]
+                                            , "timestamp" .= (1773630000 :: Int)
+                                            , "message"
+                                                .= A.object
+                                                    [ "mid" .= ("mid-trimmed" :: Text)
+                                                    , "text" .= ("hola" :: Text)
+                                                    ]
+                                            ]
+                                        , A.object
+                                            [ "sender" .= A.object ["id" .= ("   " :: Text)]
+                                            , "message"
+                                                .= A.object
+                                                    [ "mid" .= ("mid-blank-sender" :: Text)
+                                                    , "text" .= ("ambiguous" :: Text)
+                                                    ]
+                                            ]
+                                        , A.object
+                                            [ "sender" .= A.object ["id" .= ("user 2" :: Text)]
+                                            , "message"
+                                                .= A.object
+                                                    [ "mid" .= ("mid-whitespace-sender" :: Text)
+                                                    , "text" .= ("ambiguous" :: Text)
+                                                    ]
+                                            ]
+                                        ]
+                                ]
+                            ]
+                    ]
+            events = extractMetaInbound payload
+        case events of
+            [MetaInboundMessage inbound] -> do
+                igInboundExternalId inbound `shouldBe` "mid-trimmed"
+                igInboundSenderId inbound `shouldBe` "user-1"
+                igInboundMetadata inbound `shouldSatisfy`
+                    maybe False (T.isInfixOf "\"recipient_id\":\"biz-1\"")
+            _ -> expectationFailure ("Expected one normalized inbound event, got " <> show events)
+
     it "parses deleted Instagram webhook events" $ do
         let payload =
                 A.object

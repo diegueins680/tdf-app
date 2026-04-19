@@ -2008,13 +2008,15 @@ extractMetaInbound payload =
             igChangeReferral
             igChangeTimestamp
 
-    buildInbound senderId senderName mRecipientId mEntryId mMid mText mIsEcho mReferral mAttachments mTs = do
+    buildInbound rawSenderId senderName mRecipientId mEntryId mMid mText mIsEcho mReferral mAttachments mTs = do
       guard (not (fromMaybe False mIsEcho))
+      senderId <- normalizeMetaWebhookActorId rawSenderId
       let (adExt, adName, campExt, campName, refMeta) = toReferralMeta mReferral
+          cleanRecipientId = mRecipientId >>= normalizeMetaWebhookActorId
           attachmentPairs = case mAttachments of
             Just xs | not (null xs) -> ["attachments" .= xs]
             _ -> []
-          meta = encodeMeta refMeta senderName mRecipientId mEntryId attachmentPairs
+          meta = encodeMeta refMeta senderName cleanRecipientId mEntryId attachmentPairs
           rawText = fromMaybe "" mText
           body = if not (T.null (T.strip rawText))
             then rawText
@@ -2025,7 +2027,7 @@ extractMetaInbound payload =
       let fallbackBase = T.intercalate "|"
             [ senderId
             , fromMaybe "" senderName
-            , fromMaybe "" mRecipientId
+            , fromMaybe "" cleanRecipientId
             , fromMaybe "" mEntryId
             , maybe "" (T.pack . show) mTs
             , body
@@ -2045,10 +2047,12 @@ extractMetaInbound payload =
         , igInboundMetadata = meta
         })
 
-    buildDeleted senderId senderName mRecipientId mEntryId mMid mReferral _mTs = do
+    buildDeleted rawSenderId senderName mRecipientId mEntryId mMid mReferral _mTs = do
+      senderId <- normalizeMetaWebhookActorId rawSenderId
       externalId <- stripNonEmptyText mMid
       let (_, _, _, _, refMeta) = toReferralMeta mReferral
-          meta = encodeMeta refMeta senderName mRecipientId mEntryId ["event" .= ("message_deleted" :: Text)]
+          cleanRecipientId = mRecipientId >>= normalizeMetaWebhookActorId
+          meta = encodeMeta refMeta senderName cleanRecipientId mEntryId ["event" .= ("message_deleted" :: Text)]
       pure (MetaInboundDeleted IGInboundDeleted
         { igInboundDeletedExternalId = externalId
         , igInboundDeletedSenderId = senderId
@@ -2661,6 +2665,11 @@ stripNonEmptyText Nothing = Nothing
 stripNonEmptyText (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+normalizeMetaWebhookActorId :: Text -> Maybe Text
+normalizeMetaWebhookActorId rawActorId =
+  stripNonEmptyText (Just rawActorId) >>= \actorId ->
+    either (const Nothing) Just (validateSocialReplyIdentifier "senderId" actorId)
 
 looksLikeOpaqueSenderLabel :: Text -> Bool
 looksLikeOpaqueSenderLabel raw =
