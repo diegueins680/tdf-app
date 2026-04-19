@@ -230,7 +230,7 @@ describe('CourseBuilderPage', () => {
     }
   });
 
-  it('hides the delete-session action until there is more than one session to remove', async () => {
+  it('hides repeated row-session actions until there is more than one session to edit', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -238,8 +238,9 @@ describe('CourseBuilderPage', () => {
     try {
       await waitForExpectation(() => {
         expect(text(document.getElementById('sesiones'))).toContain('Sesiones');
-        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar')).toBe(1);
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar')).toBe(0);
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Borrar')).toBe(0);
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Añadir sesión')).toBe(1);
       });
 
       await clickButton(getButtonByText(document.getElementById('sesiones') ?? container, 'Añadir sesión'));

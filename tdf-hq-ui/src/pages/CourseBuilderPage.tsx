@@ -839,9 +839,11 @@ export default function CourseBuilderPage() {
                   </Grid>
                   <Grid item xs={12} md={2}>
                     <Stack direction="row" spacing={1}>
-                      <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
-                        Duplicar
-                      </Button>
+                      {sessions.length > 1 && (
+                        <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
+                          Duplicar
+                        </Button>
+                      )}
                       {sessions.length > 1 && (
                         <Button
                           variant="text"
