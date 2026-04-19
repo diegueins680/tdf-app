@@ -3901,6 +3901,18 @@ validatePublicBookingContactDetails rawEmail rawPhone = do
   phoneClean <- validateCourseRegistrationPhoneE164 rawPhone
   pure (emailClean, phoneClean)
 
+validatePublicBookingFullName :: Text -> Either ServerError Text
+validatePublicBookingFullName rawName =
+  case cleanOptional (Just rawName) of
+    Nothing -> Left err400 { errBody = "nombre requerido" }
+    Just nameVal
+      | T.length nameVal > 160 ->
+          Left err400 { errBody = "nombre debe tener 160 caracteres o menos" }
+      | T.any isControl nameVal ->
+          Left err400 { errBody = "nombre no debe contener caracteres de control" }
+      | otherwise ->
+          Right nameVal
+
 validatePublicBookingDurationMinutes :: Maybe Int -> Either ServerError Int
 validatePublicBookingDurationMinutes Nothing = Right 60
 validatePublicBookingDurationMinutes (Just durationMinutes)
@@ -5638,7 +5650,7 @@ courseCalendarBookings = do
 
 createPublicBooking :: PublicBookingReq -> AppM BookingDTO
 createPublicBooking PublicBookingReq{..} = do
-  when (T.null (T.strip pbFullName)) (throwBadRequest "nombre requerido")
+  fullNameClean <- either throwError pure (validatePublicBookingFullName pbFullName)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   (emailClean, phoneClean) <-
@@ -5664,14 +5676,14 @@ createPublicBooking PublicBookingReq{..} = do
       >>= either throwError pure
   let endsAt       = addUTCTime (fromIntegral durationMins * 60) startsAtClean
       notesClean   = normalizeOptionalInput pbNotes
-  (partyId, _) <- ensurePartyWithAccount (Just (T.strip pbFullName)) emailClean phoneClean
+  (partyId, _) <- ensurePartyWithAccount (Just fullNameClean) emailClean phoneClean
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =
         engineerNameClean
           <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
   let bookingRecord = Booking
-        { bookingTitle          = buildTitle serviceTypeClean pbFullName
+        { bookingTitle          = buildTitle serviceTypeClean fullNameClean
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = Just partyId
         , bookingServiceType    = serviceTypeClean
@@ -5708,8 +5720,8 @@ createPublicBooking PublicBookingReq{..} = do
           , serviceType        = bookingServiceType bookingRecord
           , serviceOrderId     = Nothing
           , serviceOrderTitle  = Nothing
-          , customerName       = Just pbFullName
-          , partyDisplayName   = Just pbFullName
+          , customerName       = Just fullNameClean
+          , partyDisplayName   = Just fullNameClean
           , resources          = []
           , courseSlug         = Nothing
           , coursePrice        = Nothing

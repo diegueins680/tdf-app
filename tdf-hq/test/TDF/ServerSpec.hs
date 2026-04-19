@@ -150,6 +150,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
+    , validatePublicBookingFullName
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
@@ -3869,6 +3870,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+
+    describe "validatePublicBookingFullName" $ do
+        it "trims public-booking names before booking title and party fallback creation" $
+            validatePublicBookingFullName "  Ana Perez  " `shouldBe` Right "Ana Perez"
+
+        it "rejects blank, control-character, or oversized public-booking names before persistence" $ do
+            let assertInvalid rawName expected = case validatePublicBookingFullName rawName of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expected
+                    Right nameVal ->
+                        expectationFailure
+                            ("Expected invalid public-booking name to be rejected, got: " <> show nameVal)
+            assertInvalid "   " "nombre requerido"
+            assertInvalid "Ana\nPerez" "nombre no debe contener caracteres de control"
+            assertInvalid (T.replicate 161 "A") "nombre debe tener 160 caracteres o menos"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $
