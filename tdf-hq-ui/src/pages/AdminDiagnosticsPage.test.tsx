@@ -173,4 +173,41 @@ describe('AdminDiagnosticsPage', () => {
       await cleanup();
     }
   });
+
+  it('shows only non-zero social state chips so mixed channel panels stay scannable', async () => {
+    listInstagramMessagesMock.mockResolvedValue([buildMessage({ externalId: 'instagram-replied' })]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'facebook-pending',
+        repliedAt: null,
+        replyText: null,
+      }),
+    ]);
+    listWhatsAppMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'whatsapp-failed',
+        repliedAt: null,
+        replyText: null,
+        replyError: 'timeout',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(3);
+        expect(container.textContent).toContain('Respondidos: 1');
+        expect(container.textContent).toContain('Pendientes: 1');
+        expect(container.textContent).toContain('Fallidos: 1');
+        expect(container.textContent).not.toContain('Respondidos: 0');
+        expect(container.textContent).not.toContain('Pendientes: 0');
+        expect(container.textContent).not.toContain('Fallidos: 0');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });

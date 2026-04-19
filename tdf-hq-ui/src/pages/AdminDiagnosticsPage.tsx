@@ -259,14 +259,15 @@ export default function AdminDiagnosticsPage() {
                     <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Chip label={`Respondidos: ${stats.replied.length}`} size="small" color="success" />
-                    <Chip label={`Pendientes: ${stats.pending.length}`} size="small" color="warning" />
-                    <Chip
-                      label={`Fallidos: ${stats.failed.length}`}
-                      size="small"
-                      color={stats.failed.length > 0 ? 'error' : 'default'}
-                      variant={stats.failed.length > 0 ? 'filled' : 'outlined'}
-                    />
+                    {stats.replied.length > 0 && (
+                      <Chip label={`Respondidos: ${stats.replied.length}`} size="small" color="success" />
+                    )}
+                    {stats.pending.length > 0 && (
+                      <Chip label={`Pendientes: ${stats.pending.length}`} size="small" color="warning" />
+                    )}
+                    {stats.failed.length > 0 && (
+                      <Chip label={`Fallidos: ${stats.failed.length}`} size="small" color="error" />
+                    )}
                   </Stack>
                   {loading ? (
                     <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 120 }}>
