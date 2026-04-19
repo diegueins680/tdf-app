@@ -6187,6 +6187,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats whitespace-only local search as empty so admins do not see a false no-results recovery', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), '   ');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain(
+        'Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
+      );
+      expect(container.textContent).not.toContain('No hay coincidencias para');
+      expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps local-search export next to the narrowed result context', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
