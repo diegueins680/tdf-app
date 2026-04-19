@@ -222,6 +222,7 @@ import TDF.Config
       sessionCookieSameSite,
       sessionCookieSecure,
       smtpPort )
+import TDF.Version (VersionInfo (..), getVersionInfo)
 import TDF.Seed (seededCredentialSeedingAllowed)
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -311,6 +312,54 @@ main = hspec $ do
                 `shouldSatisfy` seedDbGuardMessage
             validateSeedDatabaseStartup True [("APP_ENV", "production")]
                 `shouldSatisfy` seedDbGuardMessage
+
+    describe "getVersionInfo" $ do
+        let clearEnv keys = map (\key -> (key, Nothing)) keys
+            commitEnvKeys =
+                [ "GIT_SHA"
+                , "GIT_COMMIT"
+                , "GIT_COMMIT_SHA"
+                , "COMMIT_SHA"
+                , "SOURCE_COMMIT"
+                , "SOURCE_VERSION"
+                , "SOURCE_SHA"
+                , "GITHUB_SHA"
+                , "RENDER_GIT_COMMIT"
+                , "RENDER_GIT_COMMIT_SHA"
+                , "VERCEL_GIT_COMMIT_SHA"
+                , "KOYEB_GIT_SHA"
+                , "KOYEB_GIT_COMMIT"
+                , "KOYEB_GIT_COMMIT_SHA"
+                , "KOYEB_DEPLOYMENT_GIT_SHA"
+                , "KOYEB_DEPLOYMENT_GIT_COMMIT"
+                , "FLY_GIT_SHA"
+                ]
+            buildTimeEnvKeys =
+                [ "BUILD_TIME"
+                , "SOURCE_BUILD_TIME"
+                , "RENDER_BUILD_TIME"
+                , "FLY_BUILD_TIME"
+                ]
+
+        it "skips blank or sentinel commit aliases while discovering deployed metadata" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ [ ("GIT_SHA", Just " UNKNOWN ")
+                       , ("GITHUB_SHA", Just "abc123def456")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+
+        it "skips blank build-time aliases instead of returning empty version metadata" $
+            withEnvOverrides
+                (clearEnv buildTimeEnvKeys
+                    ++ [ ("BUILD_TIME", Just "   ")
+                       , ("SOURCE_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
     describe "loadConfig" $ do
         it "falls back to default ports when Fly-style env values are malformed" $

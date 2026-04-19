@@ -50,18 +50,24 @@ getVersionInfo = do
 
 resolveCommit :: IO Text
 resolveCommit = do
-  mEnv  <- firstJustM lookupEnv commitEnvVars
+  envCommit <- firstJustM lookupCommitEnv commitEnvVars
   mFile <- readMaybeFile commitFilePath
-  let envCommit      = mEnv >>= canonCommit . T.pack
-      fileCommit     = mFile >>= canonCommit
+  let fileCommit     = mFile >>= canonCommit
       fallbackCommit = fromMaybe "dev" compiledCommit
   pure (fromMaybe fallbackCommit (envCommit <|> fileCommit))
   where
     compiledCommit = canonCommit (T.pack $(gitHash))
     commitFilePath = "/app/COMMIT"
+    lookupCommitEnv key = fmap (>>= canonCommit . T.pack) (lookupEnv key)
 
 canonCommit :: Text -> Maybe Text
-canonCommit txt =
+canonCommit = canonRuntimeMetadata
+
+canonBuildTime :: Text -> Maybe Text
+canonBuildTime = canonRuntimeMetadata
+
+canonRuntimeMetadata :: Text -> Maybe Text
+canonRuntimeMetadata txt =
   let trimmed = T.strip txt
       upper   = T.toUpper trimmed
   in if T.null trimmed || upper == "UNKNOWN" || upper == "DEV"
@@ -70,10 +76,12 @@ canonCommit txt =
 
 resolveBuildTime :: IO Text
 resolveBuildTime = do
-  mEnv  <- firstJustM lookupEnv buildTimeEnvVars
+  envVal <- firstJustM lookupBuildTimeEnv buildTimeEnvVars
   mFile <- readMaybeFile "/app/BUILD_TIME"
-  let envVal  = fmap T.pack mEnv
-  pure (fromMaybe compiledBuildTime (envVal <|> mFile))
+  let fileVal = mFile >>= canonBuildTime
+  pure (fromMaybe compiledBuildTime (envVal <|> fileVal))
+  where
+    lookupBuildTimeEnv key = fmap (>>= canonBuildTime . T.pack) (lookupEnv key)
 
 compiledBuildTime :: Text
 compiledBuildTime = T.pack $(do
