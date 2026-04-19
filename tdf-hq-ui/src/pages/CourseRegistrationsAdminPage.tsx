@@ -1160,6 +1160,9 @@ export default function CourseRegistrationsAdminPage() {
     && (hasCustomFilters || loadedRegistrationCount >= MIN_DEFAULT_CSV_EXPORT_ROWS);
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
+  const showLocalSearchUtilityRow = hasLocalSearch && (showCopyCsvAction || Boolean(copyMessage));
+  const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
+  const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
@@ -1328,16 +1331,16 @@ export default function CourseRegistrationsAdminPage() {
     && (
       Boolean(activeViewSummaryMessage)
       || showUtilityCountSummary
-      || showCopyCsvAction
-      || Boolean(copyMessage)
+      || showScopedCopyCsvAction
+      || showScopedCopyMessage
       || showFilteredResetAction
     );
   const showStandaloneListUtilityRow = !hasCustomFilters
     && hasVisibleRegistrations
     && (
       Boolean(standaloneUtilitySummaryMessage)
-      || showCopyCsvAction
-      || Boolean(copyMessage)
+      || showScopedCopyCsvAction
+      || showScopedCopyMessage
     );
   const showInitialFilterGuidance = !regsQuery.isLoading
     && !regsQuery.isError
@@ -2080,6 +2083,17 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Confirmar pago de inscripción'
       : 'Registrar pago de inscripción'
     : 'Expediente de inscripción';
+  const copyCsvActionButton = showCopyCsvAction ? (
+    <Button
+      size="small"
+      startIcon={<ContentCopyIcon fontSize="small" />}
+      aria-label={copyCsvButtonAccessibleLabel}
+      title="Copia solo las filas visibles en esta vista como CSV."
+      onClick={() => void handleCopyCsv()}
+    >
+      {copyCsvButtonLabel}
+    </Button>
+  ) : null;
 
   useEffect(() => {
     setShowEmailHistory(false);
@@ -2815,18 +2829,8 @@ export default function CourseRegistrationsAdminPage() {
                     {resetViewLabel}
                   </Button>
                 )}
-                {showCopyCsvAction && (
-                  <Button
-                    size="small"
-                    startIcon={<ContentCopyIcon fontSize="small" />}
-                    aria-label={copyCsvButtonAccessibleLabel}
-                    title="Copia solo las filas visibles en esta vista como CSV."
-                    onClick={() => void handleCopyCsv()}
-                  >
-                    {copyCsvButtonLabel}
-                  </Button>
-                )}
-                {copyMessage && (
+                {showScopedCopyCsvAction && copyCsvActionButton}
+                {showScopedCopyMessage && copyMessage && (
                   <Typography variant="caption" color="text.secondary">
                     {copyMessage}
                   </Typography>
@@ -2892,18 +2896,8 @@ export default function CourseRegistrationsAdminPage() {
                     {standaloneUtilitySummaryMessage}
                   </Typography>
                 )}
-                {showCopyCsvAction && (
-                  <Button
-                    size="small"
-                    startIcon={<ContentCopyIcon fontSize="small" />}
-                    aria-label={copyCsvButtonAccessibleLabel}
-                    title="Copia solo las filas visibles en esta vista como CSV."
-                    onClick={() => void handleCopyCsv()}
-                  >
-                    {copyCsvButtonLabel}
-                  </Button>
-                )}
-                {copyMessage && (
+                {showScopedCopyCsvAction && copyCsvActionButton}
+                {showScopedCopyMessage && copyMessage && (
                   <Typography variant="caption" color="text.secondary">
                     {copyMessage}
                   </Typography>
@@ -2931,40 +2925,59 @@ export default function CourseRegistrationsAdminPage() {
           {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
           {showLocalSearchControl && (
             <Box sx={{ mb: 2 }}>
-              <TextField
-                label={LOCAL_SEARCH_LABEL}
-                value={localSearch}
-                onChange={(e) => {
-                  setHasUsedFilterControl(true);
-                  setLocalSearch(e.target.value);
-                }}
-                placeholder={localSearchPlaceholder}
-                helperText={localSearchHelperText}
-                size="small"
-                fullWidth
-                data-testid="course-registration-local-search"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: localSearchKey && !showEmptyLocalSearchResults ? (
-                    <InputAdornment position="end">
-                      <Tooltip title="Limpiar búsqueda">
-                        <IconButton
-                          aria-label="Limpiar búsqueda"
-                          size="small"
-                          edge="end"
-                          onClick={() => setLocalSearch('')}
-                        >
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </InputAdornment>
-                  ) : undefined,
-                }}
-              />
+              <Stack spacing={1} alignItems="flex-start">
+                <TextField
+                  label={LOCAL_SEARCH_LABEL}
+                  value={localSearch}
+                  onChange={(e) => {
+                    setHasUsedFilterControl(true);
+                    setLocalSearch(e.target.value);
+                  }}
+                  placeholder={localSearchPlaceholder}
+                  helperText={localSearchHelperText}
+                  size="small"
+                  fullWidth
+                  data-testid="course-registration-local-search"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: localSearchKey && !showEmptyLocalSearchResults ? (
+                      <InputAdornment position="end">
+                        <Tooltip title="Limpiar búsqueda">
+                          <IconButton
+                            aria-label="Limpiar búsqueda"
+                            size="small"
+                            edge="end"
+                            onClick={() => setLocalSearch('')}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ) : undefined,
+                  }}
+                />
+                {showLocalSearchUtilityRow && (
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    flexWrap="wrap"
+                    useFlexGap
+                    data-testid="course-registration-local-search-utilities"
+                  >
+                    {copyCsvActionButton}
+                    {copyMessage && (
+                      <Typography variant="caption" color="text.secondary">
+                        {copyMessage}
+                      </Typography>
+                    )}
+                  </Stack>
+                )}
+              </Stack>
             </Box>
           )}
           {!regsQuery.isLoading && registrations.length === 0 && (
