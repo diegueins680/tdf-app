@@ -23,6 +23,8 @@ import TDF.API.Types
     , ClockOutRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
+    , InternTodoCreate (..)
+    , InternTodoUpdate (..)
     , InternTaskUpdate (..)
     , LooseJSON
     , MarketplaceCheckoutReq (..)
@@ -947,6 +949,29 @@ spec = do
                 "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternTodo payload FromJSON" $ do
+        it "accepts canonical todo create and update payloads" $ do
+            case decodeInternTodoCreate "{\"itdcText\":\"Check cables\"}" of
+                Left err ->
+                    expectationFailure ("Expected intern todo create payload to decode, got: " <> err)
+                Right (InternTodoCreate textVal) ->
+                    textVal `shouldBe` "Check cables"
+
+            case decodeInternTodoUpdate "{\"itduDone\":true}" of
+                Left err ->
+                    expectationFailure ("Expected intern todo update payload to decode, got: " <> err)
+                Right (InternTodoUpdate textVal doneVal) -> do
+                    textVal `shouldBe` Nothing
+                    doneVal `shouldBe` Just True
+
+        it "rejects unexpected todo keys instead of silently ignoring intern todo intent" $ do
+            decodeInternTodoCreate
+                "{\"itdcText\":\"Check cables\",\"text\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
+            decodeInternTodoUpdate
+                "{\"done\":true}"
+                `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
@@ -1152,6 +1177,10 @@ spec = do
     decodeClockOut = eitherDecode
     decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate
     decodeInternTaskUpdate = eitherDecode
+    decodeInternTodoCreate :: BL8.ByteString -> Either String InternTodoCreate
+    decodeInternTodoCreate = eitherDecode
+    decodeInternTodoUpdate :: BL8.ByteString -> Either String InternTodoUpdate
+    decodeInternTodoUpdate = eitherDecode
     decodeEnroll :: BL8.ByteString -> Either String Academy.EnrollReq
     decodeEnroll = eitherDecode
     decodeProgress :: BL8.ByteString -> Either String Academy.ProgressReq

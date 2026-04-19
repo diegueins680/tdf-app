@@ -1264,14 +1264,16 @@ data InternTodoCreate = InternTodoCreate
   { itdcText :: Text
   } deriving (Show, Generic)
 instance ToJSON InternTodoCreate
-instance FromJSON InternTodoCreate
+instance FromJSON InternTodoCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternTodoUpdate = InternTodoUpdate
   { itduText :: Maybe Text
   , itduDone :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON InternTodoUpdate
-instance FromJSON InternTodoUpdate
+instance FromJSON InternTodoUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ClockInRequest = ClockInRequest
   { cirNotes :: Maybe Text
