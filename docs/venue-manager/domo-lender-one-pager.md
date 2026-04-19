@@ -4,7 +4,7 @@ Fecha: 2026-04-18
 
 ## Solicitud
 
-TDF Records solicita evaluar un financiamiento productivo de USD 100,000 para terminar la puesta en marcha comercial de Domo del Pululahua como venue para eventos privados, corporativos, culturales y de bienestar.
+TDF Records solicita evaluar un financiamiento productivo de USD 100,000 para terminar la puesta en marcha comercial de Domo del Pululahua como espacio para eventos privados, corporativos, culturales y de bienestar.
 
 Objetivo de cuota: hasta USD 1,000 mensuales.
 
@@ -39,8 +39,8 @@ El espacio ya está construido. El financiamiento se usará para completar las p
 
 Ingresos principales:
 
-- Alquiler de venue para bodas y celebraciones.
-- Eventos corporativos, workshops y activaciones de marca.
+- Alquiler del espacio para bodas y celebraciones.
+- Eventos corporativos, talleres y activaciones de marca.
 - Retiros, bienestar y experiencias privadas.
 - Conciertos íntimos, sesiones audiovisuales y contenido.
 - Sesiones fotográficas y producciones.
@@ -65,7 +65,7 @@ Servicios tercerizados o coordinados con proveedores:
 Capacidad de planificación antes de permisos finales:
 
 - 70 a 100 invitados sentados para eventos premium.
-- 60 a 90 personas para workshops o retiros.
+- 60 a 90 personas para talleres o retiros.
 - 120 a 160 personas para formato cóctel, conciertos o actividades de pie, sujeto a permisos, baños, salidas, parqueo y plan de seguridad.
 
 Meta comercial base: 4 eventos mensuales con ticket promedio de USD 5,000 y margen de contribución de 50%.
@@ -85,7 +85,7 @@ El formulario permite estimar una cotizacion, registrar datos del cliente, event
 | Riesgo | Mitigación |
 | --- | --- |
 | Permisos en trámite | Avanzar licencias, uso de suelo, seguridad, alcohol, alimentos, sonido y horarios antes de eventos grandes. |
-| Estacionalidad | Diversificar bodas, empresas, workshops, producción audiovisual y retiros. |
+| Estacionalidad | Diversificar bodas, empresas, talleres, producción audiovisual y retiros. |
 | Acceso y clima | Invertir en camino, señalética, drenaje, parqueo y proveedores de transporte. |
 | Capacidad real | Definir aforo final con permisos, baños, salidas, parqueo y plan de seguridad. |
 | Cuota financiera | Negociar plazo, gracia, garantía real y prepago para mantener cuota hasta USD 1,000. |

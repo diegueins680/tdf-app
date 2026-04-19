@@ -12,7 +12,7 @@ Solicitud de evaluacion de financiamiento productivo por USD 100,000 para la pue
 
 ## Resumen de la solicitud
 
-TDF Records solicita evaluar una facilidad de credito productivo por USD 100,000 destinada a terminar la habilitacion comercial de Domo del Pululahua como venue de eventos privados, corporativos, culturales y de bienestar.
+TDF Records solicita evaluar una facilidad de credito productivo por USD 100,000 destinada a terminar la habilitacion comercial de Domo del Pululahua como espacio de eventos privados, corporativos, culturales y de bienestar.
 
 El proyecto ya cuenta con la construccion principal del Domo. Los fondos solicitados se usaran para completar paisajismo, camino y acceso, mobiliario operativo, senaletica, equipamiento inicial de catering y barra, base de sonido e iluminacion, permisos, seguros, legal, ingenieria y capital de trabajo inicial.
 
@@ -20,7 +20,7 @@ La estructura deseada es el plazo mas largo disponible, idealmente con una cuota
 
 ## Solicitante propuesto
 
-La primera opcion de solicitud es TDF Records como deudor operativo, con el propietario como garante si el banco o cooperativa lo requiere. Esta estructura permite que el credito, los ingresos, los gastos, los contratos y los reportes del proyecto queden ligados al negocio que operara el venue.
+La primera opcion de solicitud es TDF Records como deudor operativo, con el propietario como garante si el banco o cooperativa lo requiere. Esta estructura permite que el credito, los ingresos, los gastos, los contratos y los reportes del proyecto queden ligados al negocio que operara el espacio.
 
 Tambien se solicita al ejecutivo evaluar si, para fines de aprobacion, plazo o garantia, conviene presentar una solicitud personal, una solicitud empresarial, o una estructura mixta.
 
@@ -28,7 +28,7 @@ Tambien se solicita al ejecutivo evaluar si, para fines de aprobacion, plazo o g
 
 Domo del Pululahua es un espacio de eventos ubicado en la zona de Pululahua, cerca de Quito. El Domo tiene diametro confirmado de 16 m, equivalente a aproximadamente 201 m2 de area circular bruta.
 
-El modelo comercial combina alquiler de venue con servicios directos operados por Domo:
+El modelo comercial combina alquiler del espacio con servicios directos operados por Domo:
 
 - Catering.
 - Barra.

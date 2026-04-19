@@ -51,8 +51,8 @@ Objetivo: preparar una carpeta única para bancos y cooperativas. La carpeta deb
 
 | Documento | Responsable | Estado |
 | --- | --- | --- |
-| One-pager del proyecto |  | Listo: `docs/venue-manager/domo-lender-one-pager.md` |
-| One-pager listo para imprimir/PDF |  | Listo: `docs/venue-manager/domo-lender-one-pager-print.html` |
+| Resumen ejecutivo del proyecto |  | Listo: `docs/venue-manager/domo-lender-one-pager.md` |
+| Resumen ejecutivo listo para imprimir/PDF |  | Listo: `docs/venue-manager/domo-lender-one-pager-print.html` |
 | Plan financiero completo |  | Listo: `docs/venue-manager/domo-del-pululahua-financial-plan.md` |
 | Pro forma 36 meses CSV |  | Listo: `docs/venue-manager/domo-36-month-pro-forma.csv` |
 | Tabla de bancos y cooperativas |  | Listo: `docs/venue-manager/domo-lender-outreach-table.md` |

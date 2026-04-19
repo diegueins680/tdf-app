@@ -19,7 +19,7 @@ Fecha: 2026-04-19
 
 Puntos oficiales de partida:
 
-- Banco Pichincha PYME credits: https://www.pichincha.com/detalle-catalogo/pymes-creditos
+- Banco Pichincha creditos PYME: https://www.pichincha.com/detalle-catalogo/pymes-creditos
 - Banco Pichincha productivo empresas: https://www.pichincha.com/portal/principal/empresas/creditos/productivo
 - Banco Pichincha banca telefonica: `(02) 2999 999`
 - Produbanco activos fijos PYME: https://www.produbanco.com.ec/pymes/activos-fijos/

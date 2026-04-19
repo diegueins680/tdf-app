@@ -19,7 +19,7 @@ Referencias oficiales:
 
 ## Apertura
 
-Buenos dias. Soy [NOMBRE] de TDF Records. Estoy preparando una solicitud de credito productivo PYME por USD 100.000 para Domo del Pululahua, un venue de eventos en Pululahua.
+Buenos dias. Soy [NOMBRE] de TDF Records. Estoy preparando una solicitud de credito productivo PYME por USD 100.000 para Domo del Pululahua, un espacio de eventos en Pululahua.
 
 El proyecto ya tiene la estructura construida. El financiamiento buscado es para completar paisajismo, una parte del camino, mobiliario, senalizacion y capital de trabajo. Tenemos plan financiero, proforma a 36 meses y un paquete PDF/ZIP listo.
 
@@ -45,7 +45,7 @@ Para Produbanco:
 2. Debe aplicar TDF Records como empresa, o conviene que aplique el propietario como persona natural con actividad economica?
 3. Que plazo maximo pueden evaluar para USD 100.000?
 4. Que garantia normalmente piden para este monto y etapa del negocio?
-5. Pueden evaluar periodo de gracia mientras el venue abre comercialmente?
+5. Pueden evaluar periodo de gracia mientras el espacio abre comercialmente?
 6. Que documentos quieren primero para prefiltrar sin enviar informacion sensible innecesaria?
 7. Pueden asignar un asesor o ejecutivo PYME con nombre, correo y telefono?
 
@@ -69,7 +69,7 @@ No enviar lo siguiente por bot de WhatsApp, chat publico o correo no verificado:
 - Declaraciones tributarias.
 - Estados bancarios.
 - Escritura o avaluo de propiedad.
-- Permits.
+- Permisos.
 - Registros financieros personales o empresariales detallados.
 
 Enviar documentos sensibles solo despues de que el prestamista confirme un canal seguro e identifique al asesor o ruta formal de recepcion.

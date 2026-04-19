@@ -10,12 +10,12 @@ Este documento resume el uso previsto del credito productivo de USD 100,000 para
 | --- | ---: | --- | --- |
 | Paisajismo y acabados exteriores | USD 20,000 | Alta | Proformas de contratista, materiales, drenaje, senderos y areas de foto. |
 | Camino, acceso y flujo de parqueo | USD 16,000 | Alta | Proformas de camino, lastre/pavimento, drenaje, parqueo y seguridad de llegada. |
-| Mobiliario y equipo operativo | USD 18,000 | Alta | Cotizaciones de mesas, sillas, manteleria, storage, servicio y equipos de montaje. |
-| Senaletica, contenido y material comercial | USD 6,000 | Media | Cotizaciones de senales, branding, fotografia, video, piezas comerciales y pauta inicial. |
+| Mobiliario y equipo operativo | USD 18,000 | Alta | Cotizaciones de mesas, sillas, manteleria, almacenamiento, servicio y equipos de montaje. |
+| Senaletica, contenido y material comercial | USD 6,000 | Media | Cotizaciones de senales, marca, fotografia, video, piezas comerciales y pauta inicial. |
 | Kit inicial de catering y barra | USD 9,000 | Alta | Cotizaciones de estaciones, barra, inventario inicial, menaje y requisitos sanitarios. |
 | Base de sonido e iluminacion | USD 7,000 | Alta | Cotizaciones de parlantes, microfonos, consola simple, luces base y cableado seguro. |
 | Permisos, legal, seguros e ingenieria | USD 6,000 | Alta | Tasas, honorarios, polizas, revision tecnica, contratos y apoyo de permisos. |
-| Capital de trabajo | USD 13,000 | Alta | Presupuesto de 3 a 5 meses para staff, marketing, servicios, mantenimiento y float de proveedores. |
+| Capital de trabajo | USD 13,000 | Alta | Presupuesto de 3 a 5 meses para personal, marketing, servicios, mantenimiento y flotacion de proveedores. |
 | Contingencia | USD 5,000 | Media | Reserva para clima, accesos, variacion de precios, reparaciones y ajustes de permisos. |
 | Total | USD 100,000 |  |  |
 
@@ -40,7 +40,7 @@ Si el banco o cooperativa desembolsa por tramos, priorizar:
 4. Catering/barra y sonido/luces base.
 5. Paisajismo y acabados exteriores con mayor impacto comercial.
 6. Senaletica, contenido y pauta de lanzamiento.
-7. Capital de trabajo protegido para operar el ramp-up.
+7. Capital de trabajo protegido para operar la aceleracion comercial.
 8. Contingencia solo con aprobacion interna.
 
 ## Controles de uso de fondos
@@ -68,4 +68,4 @@ Si el banco o cooperativa desembolsa por tramos, priorizar:
 
 ## Nota para el ejecutivo
 
-La construccion principal del Domo ya esta realizada. El credito solicitado no financia una idea sin activo fisico; financia la terminacion comercial, operativa y de venta de un venue ya construido. La capacidad final y el calendario de eventos deben cerrarse contra permisos, seguridad, banos, estacionamiento, horarios y condiciones tecnicas aplicables.
+La construccion principal del Domo ya esta realizada. El credito solicitado no financia una idea sin activo fisico; financia la terminacion comercial, operativa y de venta de un espacio ya construido. La capacidad final y el calendario de eventos deben cerrarse contra permisos, seguridad, banos, estacionamiento, horarios y condiciones tecnicas aplicables.

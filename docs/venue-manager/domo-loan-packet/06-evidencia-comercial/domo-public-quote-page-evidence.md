@@ -5,7 +5,7 @@ URL verificada: https://tdf-app.pages.dev/domo-del-pululahua
 
 ## Resumen
 
-La pagina publica de Domo del Pululahua esta activa y permite que clientes interesados revisen el posicionamiento del venue, obtengan una cotizacion estimada y soliciten una reserva para seguimiento comercial.
+La pagina publica de Domo del Pululahua esta activa y permite que clientes interesados revisen el posicionamiento del espacio, obtengan una cotizacion estimada y soliciten una reserva para seguimiento comercial.
 
 Esta evidencia respalda que el proyecto ya tiene un canal publico de captacion y conversion, no solo una propuesta financiera interna.
 
@@ -34,11 +34,11 @@ Resultado de captura:
 
 | Control | Resultado |
 | --- | --- |
-| URL publica carga | OK |
-| Texto de cotizacion visible en escritorio | OK |
-| Texto de reserva/solicitud visible en escritorio | OK |
-| Texto de cotizacion visible en movil | OK |
-| Texto de reserva/solicitud visible en movil | OK |
+| URL publica carga | Correcto |
+| Texto de cotizacion visible en escritorio | Correcto |
+| Texto de reserva/solicitud visible en escritorio | Correcto |
+| Texto de cotizacion visible en movil | Correcto |
+| Texto de reserva/solicitud visible en movil | Correcto |
 | Captura de escritorio | 1440 x 2192 PNG |
 | Captura movil | 780 x 6704 PNG |
 

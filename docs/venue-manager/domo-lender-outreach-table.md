@@ -60,7 +60,7 @@ Nota: las cuotas son referenciales, no incluyen seguros, comisiones, SOLCA, aval
 
 ## Mensaje inicial para enviar
 
-Hola, busco evaluar un crédito productivo para TDF Records por USD 100,000 destinado a terminar la puesta en marcha de Domo del Pululahua, un venue de eventos ya construido. El inmueble es propio y podemos conversar sobre garantía personal o real si ayuda a mejorar plazo y cuota.
+Hola, busco evaluar un crédito productivo para TDF Records por USD 100,000 destinado a terminar la puesta en marcha de Domo del Pululahua, un espacio de eventos ya construido. El inmueble es propio y podemos conversar sobre garantía personal o real si ayuda a mejorar plazo y cuota.
 
 El objetivo es mantener la cuota cerca de USD 1,000 mensual, por lo que necesitamos revisar el plazo máximo disponible, periodo de gracia, tasa efectiva, garantías y requisitos. Tenemos resumen del proyecto, uso de fondos, flujo proyectado, página de reservas y checklist documental. ¿Con qué ejecutivo puedo revisar una precalificación?
 

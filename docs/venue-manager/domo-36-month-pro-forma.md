@@ -18,7 +18,7 @@ Esta proyección da a bancos y cooperativas una vista operativa simple de Domo d
 | Servicios coordinados con proveedores | Transporte, seguridad, hospedaje, producción especial |
 | Caja inicial de mes 1 desde capital de trabajo del crédito | USD 13,000 |
 
-El modelo usa margen de contribución en lugar de margen bruto porque Domo opera algunos adicionales directamente y coordina otros con proveedores. Margen de contribución significa ingresos después de costos directos por evento, como staff, limpieza, inventario de catering, inventario de barra, costo operativo de sonido/luces, servicios básicos del evento, comisiones de pago y coordinación directa de proveedores.
+El modelo usa margen de contribución en lugar de margen bruto porque Domo opera algunos adicionales directamente y coordina otros con proveedores. Margen de contribución significa ingresos después de costos directos por evento, como personal, limpieza, inventario de catering, inventario de barra, costo operativo de sonido/luces, servicios básicos del evento, comisiones de pago y coordinación directa de proveedores.
 
 ## Resumen anual
 
@@ -77,7 +77,7 @@ La cobertura de deuda se calcula como `(contribución - costos fijos) / servicio
 - El modelo cruza punto de equilibrio acumulado en el mes 9.
 - La cobertura de deuda del año 1 es aceptable en agregado, pero el periodo de arranque es débil. Un periodo de gracia de capital de 3 a 6 meses fortalece materialmente la historia para el financiador.
 - El modelo asume desarrollo constante de demanda. Reemplazar número de eventos con leads reales, depósitos y contratos firmados tan pronto existan.
-- Cualquier oferta con servicio mensual de deuda mayor a USD 1,000 debe probarse bajando número de eventos o retrasando el ramp-up por 3 meses.
+- Cualquier oferta con servicio mensual de deuda mayor a USD 1,000 debe probarse bajando número de eventos o retrasando la aceleracion comercial por 3 meses.
 
 ## Pruebas de estrés
 
@@ -85,5 +85,5 @@ La cobertura de deuda se calcula como `(contribución - costos fijos) / servicio
 | --- | --- | --- |
 | Ramp-up retrasado 3 meses | El capital de trabajo debe cubrir un déficit más largo antes del equilibrio en mes 9. | Pedir periodo de gracia y mantener al menos USD 13,000 de capital de trabajo sin tocar. |
 | Factura promedio 15% menor | La contribución del año 1 cae de forma material y la cobertura de deuda se ajusta. | Mantener disciplina de cotización y vender adicionales directos: catering, barra, sonido y luces. |
-| Retraso de permisos bloquea eventos grandes | La mezcla de ingresos cambia hacia workshops, sesiones y reuniones privadas más pequeñas. | Lanzar primero eventos de menor riesgo y condicionar eventos mayores a permisos. |
+| Retraso de permisos bloquea eventos grandes | La mezcla de ingresos cambia hacia talleres, sesiones y reuniones privadas más pequeñas. | Lanzar primero eventos de menor riesgo y condicionar eventos mayores a permisos. |
 | Servicio de deuda sobre USD 1,000 | El equilibrio requiere más de 2 eventos fuertes por mes. | Reducir principal, extender plazo, negociar gracia o agregar aporte del propietario. |

@@ -16,7 +16,7 @@ Asunto: Precalificación crédito productivo TDF Records - Domo del Pululahua
 
 Hola,
 
-Busco evaluar un crédito productivo para TDF Records por USD 100,000 destinado a terminar la puesta en marcha de Domo del Pululahua, un venue de eventos ya construido en Pululahua.
+Busco evaluar un crédito productivo para TDF Records por USD 100,000 destinado a terminar la puesta en marcha de Domo del Pululahua, un espacio de eventos ya construido en Pululahua.
 
 El inmueble es propio y podemos conversar sobre garantía personal o garantía real si ayuda a mejorar plazo, tasa y cuota. El objetivo es mantener la cuota cerca de USD 1,000 mensual, por lo que necesitamos revisar el plazo máximo disponible, periodo de gracia, tasa efectiva, garantías y requisitos.
 
@@ -44,9 +44,9 @@ Asunto: Crédito productivo con flujo estacional - Domo del Pululahua
 
 Hola,
 
-Estoy buscando una precalificación para TDF Records por USD 100,000, con destino productivo para la puesta en marcha de Domo del Pululahua como venue de eventos.
+Estoy buscando una precalificación para TDF Records por USD 100,000, con destino productivo para la puesta en marcha de Domo del Pululahua como espacio de eventos.
 
-El proyecto tiene ingresos por eventos privados, corporativos, workshops, bodas, retiros y servicios directos de catering, barra, sonido y luces. Como el flujo puede ser estacional, necesitamos revisar una estructura con plazo máximo, posible gracia y pagos alineados a capacidad real.
+El proyecto tiene ingresos por eventos privados, corporativos, talleres, bodas, retiros y servicios directos de catering, barra, sonido y luces. Como el flujo puede ser estacional, necesitamos revisar una estructura con plazo máximo, posible gracia y pagos alineados a capacidad real.
 
 Adjunto resumen y proyección. ¿Podemos revisar opciones de capital de inversión, capital de trabajo o una estructura combinada?
 
@@ -72,7 +72,7 @@ Asunto: Consulta crédito productivo PYMES - Domo del Pululahua
 
 Hola,
 
-Quiero consultar si TDF Records puede calificar a crédito productivo PYMES para financiar USD 100,000 destinados a Domo del Pululahua, un venue de eventos ya construido cerca de Quito.
+Quiero consultar si TDF Records puede calificar a crédito productivo PYMES para financiar USD 100,000 destinados a Domo del Pululahua, un espacio de eventos ya construido cerca de Quito.
 
 El objetivo es completar puesta en marcha comercial: paisajismo, camino, mobiliario, señalética, capital de trabajo y equipos para catering/barra/sonido/luces. El inmueble es propio y se puede conversar sobre garantías si ayuda a mejorar plazo y cuota.
 
@@ -86,7 +86,7 @@ Asunto: Evaluación CrediPYMES o alternativa productiva - Domo del Pululahua
 
 Hola,
 
-Busco evaluar financiamiento productivo para TDF Records por USD 100,000, destinado a la operación comercial de Domo del Pululahua como venue de eventos.
+Busco evaluar financiamiento productivo para TDF Records por USD 100,000, destinado a la operación comercial de Domo del Pululahua como espacio de eventos.
 
 Veo que CrediPYMES puede cubrir montos altos, pero necesitamos entender el plazo máximo real, garantía posible y cuota estimada. Nuestra cuota objetivo es cerca de USD 1,000 mensual, así que necesitamos evitar una estructura demasiado corta para el flujo del proyecto.
 
@@ -96,11 +96,11 @@ Gracias.
 
 ## Prioridad 7: Cooprogreso
 
-Asunto: Consulta financiamiento productivo para venue de eventos
+Asunto: Consulta financiamiento productivo para espacio de eventos
 
 Hola,
 
-Quisiera revisar opciones de financiamiento para TDF Records por USD 100,000, destinado a completar la puesta en marcha de Domo del Pululahua como venue de eventos.
+Quisiera revisar opciones de financiamiento para TDF Records por USD 100,000, destinado a completar la puesta en marcha de Domo del Pululahua como espacio de eventos.
 
 El inmueble es propio y el Domo ya está construido. Buscamos una estructura productiva, no consumo, con el plazo más largo posible y cuota cercana a USD 1,000. Adjuntamos resumen y proyección para revisar si el producto disponible calza con flujo y garantías.
 

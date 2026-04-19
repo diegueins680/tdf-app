@@ -7,10 +7,10 @@ Preparado para la organización OpenClaw `venue-manager`.
 ## Hechos públicos verificados
 
 - Domo del Pululahua se presenta públicamente como un espacio para eventos al borde del cráter del Pululahua, cerca de Quito.
-- Su posicionamiento público incluye bodas, eventos corporativos, conciertos, workshops, retiros espirituales y sesiones fotográficas.
+- Su posicionamiento público incluye bodas, eventos corporativos, conciertos, talleres, retiros espirituales y sesiones fotográficas.
 - El sitio público actual de Domo muestra un blog visible y formulario de contacto, pero no publica aforo, tarifario, paquetes, política de reservas ni carpeta de financiamiento.
 - Pululahua está al norte de Quito, en la provincia de Pichincha. Referencias públicas de volcanología describen el complejo Pululahua como una depresión con domos de lava y actividad potencial.
-- El competidor cercano El Cráter ofrece workshops, seminarios, bodas, bautizos, cumpleaños, celebraciones grupales, apoyo de hospedaje, catering y capacidad exterior de hasta 200 personas.
+- El competidor cercano El Cráter ofrece talleres, seminarios, bodas, bautizos, cumpleaños, celebraciones grupales, apoyo de hospedaje, catering y capacidad exterior de hasta 200 personas.
 - Las tasas máximas efectivas anuales publicadas por el Banco Central del Ecuador para abril de 2026 ubican Productivo PYMES en 10.28%, Productivo Empresarial en 11.00% y Consumo en 16.77%. Esto refuerza que la solicitud debe presentarse como financiamiento productivo empresarial, no como consumo personal.
 
 Fuentes:
@@ -37,7 +37,7 @@ Documentos relacionados de la carpeta para bancos y cooperativas:
 - Cuota mensual máxima cómoda: USD 1,000.
 - El inmueble es propio.
 - Opciones de deudor: TDF Records o el propietario como persona natural, según cuál mejore la probabilidad de aprobación.
-- La estructura principal del venue ya está sustancialmente construida.
+- La estructura principal del espacio ya está sustancialmente construida.
 - Trabajos pendientes por financiar: paisajismo, parte del camino, mobiliario, señalética y capital de trabajo.
 - Los permisos están en trámite.
 - Domo operará directamente catering, barra, sonido y luces.
@@ -47,7 +47,7 @@ Documentos relacionados de la carpeta para bancos y cooperativas:
 
 ## Objetivo del crédito
 
-Poner en marcha Domo del Pululahua como venue de destino con canal profesional de cotización y reserva, preparación operativa y capital de trabajo suficiente para convertir eventos privados en flujo predecible.
+Poner en marcha Domo del Pululahua como espacio de destino con canal profesional de cotización y reserva, preparación operativa y capital de trabajo suficiente para convertir eventos privados en flujo predecible.
 
 Financiamiento solicitado: USD 100,000.
 
@@ -63,7 +63,7 @@ Primera opción recomendada: aplicar con TDF Records como empresa operadora, con
 
 Razones:
 
-- El uso de fondos es productivo: lanzamiento del venue, terminación de infraestructura, mobiliario, señalética, equipo operativo y capital de trabajo.
+- El uso de fondos es productivo: lanzamiento del espacio, terminación de infraestructura, mobiliario, señalética, equipo operativo y capital de trabajo.
 - El crédito productivo o empresarial suele ser más barato que el crédito de consumo bajo los techos vigentes del BCE.
 - Dejar el crédito en la empresa mantiene ingresos, gastos, impuestos, depósitos y reportes del proyecto en una sola contabilidad operativa.
 - El inmueble propio puede fortalecer la solicitud mediante garantía real o garantía personal.
@@ -74,8 +74,8 @@ Plan alternativo: aplicar como persona natural solo si la empresa no tiene histo
 
 Ingresos principales:
 
-- Alquiler de venue para bodas y celebraciones privadas.
-- Eventos corporativos, workshops y activaciones de marca.
+- Alquiler del espacio para bodas y celebraciones privadas.
+- Eventos corporativos, talleres y activaciones de marca.
 - Retiros y programación de bienestar.
 - Conciertos, presentaciones íntimas y eventos culturales.
 - Sesiones de foto, video y producción de contenido.
@@ -101,7 +101,7 @@ Página objetivo implementada:
 La herramienta de cotización estima:
 
 - Precio base por tipo de evento.
-- Uso del venue por horas.
+- Uso del espacio por horas.
 - Horas de montaje y desmontaje.
 - Cargos por invitados adicionales sobre el número incluido.
 - Operación opcional de catering y barra.
@@ -121,7 +121,7 @@ Asignación de trabajo para discusión con bancos y cooperativas:
 | Paisajismo y acabados exteriores | USD 20,000 | Senderos, áreas exteriores, flujo de invitados, puntos fotográficos, drenaje y resiliencia climática. |
 | Camino y acceso | USD 16,000 | Obra final de camino, flujo de parqueo, seguridad de llegada y señalización básica. |
 | Mobiliario y equipo operativo | USD 18,000 | Mesas, sillas, mantelería, almacenamiento, equipo de servicio, calefactores o cubiertas si aplica. |
-| Señalética, contenido y material comercial | USD 6,000 | Señalización vial y del venue, foto, video, carpeta comercial y material de cotización. |
+| Señalética, contenido y material comercial | USD 6,000 | Señalización vial y del espacio, foto, video, carpeta comercial y material de cotización. |
 | Kit inicial de catering y barra | USD 9,000 | Estaciones de servicio, equipo de barra, inventario inicial y preparación sanitaria. |
 | Base operativa de sonido e iluminación | USD 7,000 | Paquete base para discursos, música ambiental, ceremonias y presentaciones pequeñas. |
 | Permisos, legal, seguros e ingeniería | USD 6,000 | Trámites, contratos, soporte de inspecciones y cobertura de responsabilidad civil. |
@@ -154,11 +154,11 @@ Si una institución limita el plazo por debajo de 18 años con una tasa similar,
 Supuestos de planificación por validar:
 
 - Área bruta interior de planificación: aproximadamente 201 m2, con base en el diámetro confirmado de 16 m.
-- Aforo práctico antes de permisos finales: 70 a 100 invitados para eventos premium sentados; 60 a 90 para workshops o retiros; 120 a 160 para cóctel, formatos de pie o conciertos si salidas, baños, parqueo y plan de seguridad lo permiten.
+- Aforo práctico antes de permisos finales: 70 a 100 invitados para eventos premium sentados; 60 a 90 para talleres o retiros; 120 a 160 para cóctel, formatos de pie o conciertos si salidas, baños, parqueo y plan de seguridad lo permiten.
 - Duración promedio de evento reservado: 6 a 8 horas más 1 a 3 horas de montaje.
-- Ingreso promedio por alquiler del venue por evento: USD 1,600 a USD 3,400 antes de servicios opcionales.
-- Margen bruto promedio del alquiler de venue: 55% a 70% después de limpieza, staff, servicios básicos, coordinación y mantenimiento.
-- Margen bruto promedio de catering, barra, sonido y luces operados directamente: 30% a 55%, según staff, merma de inventario, necesidad de alquiler y precios de proveedores.
+- Ingreso promedio por alquiler del espacio por evento: USD 1,600 a USD 3,400 antes de servicios opcionales.
+- Margen bruto promedio del alquiler del espacio: 55% a 70% después de limpieza, personal, servicios básicos, coordinación y mantenimiento.
+- Margen bruto promedio de catering, barra, sonido y luces operados directamente: 30% a 55%, según personal, merma de inventario, necesidad de alquiler y precios de proveedores.
 - Margen bruto promedio de servicios tercerizados coordinados: 10% a 25%, según acuerdos de referido o coordinación.
 
 ## Escenarios de ingresos a 12 meses
@@ -169,11 +169,11 @@ Supuestos de planificación por validar:
 | Base | 4 | USD 5,000 | 50% | USD 10,000 |
 | Crecimiento | 6 | USD 6,500 | 52% | USD 20,280 |
 
-Punto de equilibrio del caso base: con USD 4,000 de costo fijo lean y USD 1,000 de deuda, el venue necesita aproximadamente USD 5,000 de contribución mensual. Eso equivale a unos dos eventos fuertes por mes con factura promedio de USD 5,000 y margen de contribución de 50%.
+Punto de equilibrio del caso base: con USD 4,000 de costo fijo austero y USD 1,000 de deuda, el espacio necesita aproximadamente USD 5,000 de contribución mensual. Eso equivale a unos dos eventos fuertes por mes con factura promedio de USD 5,000 y margen de contribución de 50%.
 
 ## Supuestos de costos fijos operativos
 
-Meta mensual lean:
+Meta mensual austera:
 
 - Responsable comercial y coordinación de reservas: USD 900 a USD 1,400.
 - Limpieza, mantenimiento y exteriores: USD 500 a USD 900.
