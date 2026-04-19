@@ -239,6 +239,10 @@ const formatLocalSearchResultSummary = (visibleCount: number, loadedCount: numbe
   `Mostrando ${visibleCount} de ${formatLoadedRegistrationCountLabel(loadedCount)}.`;
 const buildReachedListLimitSummary = (limit: number) =>
   `Se cargó el límite de ${limit} inscripciones; usa Ajustar límite si necesitas revisar más registros.`;
+const buildLoadedSearchScopeHint = (loadedCount: number) =>
+  `Busca dentro de las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
+const cappedLocalSearchEmptyHint =
+  'Aumenta el límite si el registro puede estar fuera del lote cargado.';
 
 const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
   if (terms.length <= 1) return terms[0] ?? '';
@@ -458,8 +462,11 @@ const followUpActionTargetLabelWithContext = (
   return needsDisambiguator ? `${label} · #${entry.crfId}` : label;
 };
 
-const receiptDisplayLabel = (receipt: CourseRegistrationReceiptDTO) =>
-  receipt.crrFileName?.trim() || `Comprobante #${receipt.crrId}`;
+const receiptDisplayLabel = (receipt: CourseRegistrationReceiptDTO) => {
+  const fileName = receipt.crrFileName?.trim();
+  if (fileName) return fileName;
+  return `Comprobante #${receipt.crrId}`;
+};
 
 const normalizeReceiptDisplayLabelKey = (receipt: CourseRegistrationReceiptDTO) =>
   receiptDisplayLabel(receipt).toLocaleLowerCase('es');
@@ -684,7 +691,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
 
   registrations.forEach((reg) => {
     const hasName = Boolean(reg.crFullName?.trim());
-    const hasContact = Boolean(reg.crEmail?.trim() || reg.crPhoneE164?.trim());
+    const hasContact = Boolean(reg.crEmail?.trim()) || Boolean(reg.crPhoneE164?.trim());
 
     if (hasName) hasNameIdentity = true;
     if (hasContact) hasContactIdentity = true;
@@ -1170,8 +1177,14 @@ export default function CourseRegistrationsAdminPage() {
         ? formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
         : undefined
     : viewHitsCurrentLimit
-      ? `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas. Usa Ajustar límite si necesitas revisar más registros.`
+      ? buildLoadedSearchScopeHint(loadedRegistrationCount)
       : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.`;
+  const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
+    ? [
+      `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+      viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
+    ].filter(Boolean).join(' ')
+    : '';
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -3125,7 +3138,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Button>
               )}
             >
-              {`No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`}
+              {emptyLocalSearchResultsMessage}
             </Alert>
           )}
           {searchedRegistrations.length ? (

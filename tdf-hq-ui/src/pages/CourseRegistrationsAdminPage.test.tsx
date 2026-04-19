@@ -49,9 +49,9 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
     onComplete,
   }: {
     label?: unknown;
-    onComplete?: (files: Array<{ name: string; publicUrl: string }>) => void;
+    onComplete?: (files: { name: string; publicUrl: string }[]) => void;
   }) => {
-    const labelText = String(label ?? '');
+    const labelText = typeof label === 'string' ? label : '';
     const isReceiptUpload = labelText.includes('comprobante') || labelText.includes('Archivo listo');
     const fileName = isReceiptUpload ? 'mock-receipt.pdf' : 'mock-follow-up.pdf';
 
@@ -949,6 +949,9 @@ describe('CourseRegistrationsAdminPage', () => {
           ?.trim(),
       ).toBe('Ajustar límite');
       expect(secondContainer.textContent).toContain(
+        'Busca dentro de las 200 inscripciones cargadas.',
+      );
+      expect(secondContainer.textContent).not.toContain(
         'Busca dentro de las 200 inscripciones cargadas. Usa Ajustar límite si necesitas revisar más registros.',
       );
       expect(secondContainer.textContent).not.toContain(
@@ -6460,7 +6463,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('folds capped default-list guidance into local search instead of adding utility copy', async () => {
+  it('keeps capped default-list guidance scoped to search and empty-search states', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -6488,6 +6491,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Leyenda de estados:');
       expect(container.textContent).not.toContain('Mostrando 200 inscripciones en esta vista.');
       expect(container.textContent).toContain(
+        'Busca dentro de las 200 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain(
         'Busca dentro de las 200 inscripciones cargadas. Usa Ajustar límite si necesitas revisar más registros.',
       );
       expect(container.textContent).not.toContain('Se cargó el límite de 200 inscripciones');
@@ -6499,6 +6505,33 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(listUtilities).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin coincidencias');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas. Aumenta el límite si el registro puede estar fuera del lote cargado.',
+      );
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(200);
+      expect(container.textContent).not.toContain('No hay coincidencias para "sin coincidencias"');
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
     await act(async () => {
