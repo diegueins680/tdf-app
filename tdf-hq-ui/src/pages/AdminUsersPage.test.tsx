@@ -2460,7 +2460,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps search guidance inside the field instead of repeating the same hint in the header summary', async () => {
+  it('keeps precise search guidance inside the field instead of repeating the same hint in the header summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -2494,8 +2494,9 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
         expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('acceso');
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
@@ -2545,8 +2546,9 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
         expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('acceso');
       });
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');

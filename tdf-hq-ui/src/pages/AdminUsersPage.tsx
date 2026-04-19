@@ -162,7 +162,7 @@ const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ?
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
-const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto o acceso';
+const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, verás perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.';
