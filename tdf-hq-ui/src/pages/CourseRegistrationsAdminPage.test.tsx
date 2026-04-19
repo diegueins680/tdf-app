@@ -5604,6 +5604,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
     });
 
     listRegistrationsMock.mockClear();
@@ -5828,7 +5830,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
-      expect(getButtonByText(container, copyVisibleCsvLabel(9))).toBeTruthy();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
