@@ -1070,6 +1070,8 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const loadedRegistrationCount = registrations.length;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
+  const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
+  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const localSearchTerm = localSearch.trim();
   const localSearchKey = normalizeLocalSearchText(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
@@ -1176,6 +1178,9 @@ export default function CourseRegistrationsAdminPage() {
     () => hasSearchableCustomRegistrationStatus(registrations),
     [registrations],
   );
+  const localSearchOnboardingActionHint = showFilterOnboardingCopy
+    ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
+    : '';
   const localSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
@@ -1185,8 +1190,8 @@ export default function CourseRegistrationsAdminPage() {
           ? buildFullLocalSearchMatchHint(loadedRegistrationCount)
           : undefined
     : viewHitsCurrentLimit
-      ? buildLoadedSearchScopeHint(loadedRegistrationCount)
-      : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.`;
+      ? `${buildLoadedSearchScopeHint(loadedRegistrationCount)}${localSearchOnboardingActionHint}`
+      : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
       `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
@@ -1296,7 +1301,6 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
     : '';
-  const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const copyCsvButtonLabel = `Copiar visibles (${formatRowCountLabel(searchedRegistrations.length)})`;
   const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
@@ -1328,7 +1332,6 @@ export default function CourseRegistrationsAdminPage() {
     || statusAlreadyVisibleInFilterStrip
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
-  const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const dossierScopeHint = useCompactStatusActionLabel
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
     : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);

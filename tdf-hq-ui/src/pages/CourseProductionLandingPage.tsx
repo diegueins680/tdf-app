@@ -29,12 +29,11 @@ import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
-import instructorImage from '../assets/tdf-ui/esteban-munoz.jpg';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
@@ -112,12 +111,28 @@ const buildCohortLabel = (meta: CourseMetadata | undefined, slug: string) => {
   if (startLabel) return `Inicio ${startLabel}`;
   return buildFallbackCohortLabel(slug);
 };
-const INSTRUCTOR_IMAGE_URL = (() => {
+
+const PUBLIC_ESTEBAN_IMAGE_URL = `${PUBLIC_BASE}/assets/tdf-ui/esteban-munoz.jpg`;
+const DEFAULT_INSTRUCTOR_IMAGE_URL = (() => {
   const envUrl = COURSE_DEFAULTS.instructorAvatarUrl;
   if (envUrl && isAbsoluteUrl(envUrl)) return envUrl;
-  return instructorImage;
+  if (envUrl?.trim()) return `${PUBLIC_BASE}/${envUrl.trim().replace(/^\/+/, '')}`;
+  return PUBLIC_ESTEBAN_IMAGE_URL;
 })();
-const INSTRUCTOR_IMAGE_FALLBACK = instructorImage;
+const INSTRUCTOR_IMAGE_FALLBACK = PUBLIC_ESTEBAN_IMAGE_URL;
+
+const resolvePublicImageUrl = (
+  url: string | null | undefined,
+  fallback = DEFAULT_INSTRUCTOR_IMAGE_URL,
+): string => {
+  const trimmed = url?.trim();
+  if (!trimmed) return fallback;
+  if (isAbsoluteUrl(trimmed)) return trimmed;
+  return `${PUBLIC_BASE}/${trimmed.replace(/^\/+/, '')}`;
+};
+
+const isProductionCourseSlug = (slug?: string) =>
+  !slug || slug === 'produccion-musical' || slug.startsWith('produccion-musical-');
 
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
@@ -145,24 +160,43 @@ interface CourseCmsPayload {
 export default function CourseProductionLandingPage() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { slug: routeSlug } = useParams<{ slug: string }>();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [howHeard, setHowHeard] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const availableSlugs = useMemo(() => {
+  const productionSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
   }, []);
   const pathSlug = useMemo(() => {
-    const normalizedPath = location.pathname.replace(/\/+$/, '');
-    const match = /\/curso\/([^/]+)$/.exec(normalizedPath);
-    return match?.[1];
-  }, [location.pathname]);
-  const [selectedSlug, setSelectedSlug] = useState(() => {
-    if (pathSlug && availableSlugs.includes(pathSlug)) return pathSlug;
-    return availableSlugs[0] ?? COURSE_DEFAULTS.slug;
-  });
+    const trimmed = routeSlug?.trim();
+    return trimmed || undefined;
+  }, [routeSlug]);
+  const availableSlugs = useMemo(() => {
+    if (!pathSlug || pathSlug === 'produccion-musical') return productionSlugs;
+    if (isProductionCourseSlug(pathSlug) || productionSlugs.includes(pathSlug)) {
+      return normalizeCourseSlugs([pathSlug, ...productionSlugs]);
+    }
+    return [pathSlug];
+  }, [pathSlug, productionSlugs]);
+  const defaultSelectedSlug = useMemo(() => {
+    if (pathSlug && pathSlug !== 'produccion-musical') return pathSlug;
+    return productionSlugs[0] ?? COURSE_DEFAULTS.slug;
+  }, [pathSlug, productionSlugs]);
+  const [selectedSlug, setSelectedSlug] = useState(defaultSelectedSlug);
+  useEffect(() => {
+    setSelectedSlug(defaultSelectedSlug);
+  }, [defaultSelectedSlug]);
+  const handleSelectedSlugChange = (nextSlug: string) => {
+    setSelectedSlug(nextSlug);
+    const nextPath = `/curso/${encodeURIComponent(nextSlug)}`;
+    if (location.pathname !== nextPath) {
+      navigate(`${nextPath}${location.search}`, { replace: false });
+    }
+  };
 
   const metaQuery = useQuery({
     queryKey: ['course-meta', selectedSlug],
@@ -179,7 +213,11 @@ export default function CourseProductionLandingPage() {
           }))
         : [],
   });
-  const cmsQuery = useCmsContent('course-production', 'es');
+  const cmsSlug = useMemo(
+    () => (isProductionCourseSlug(pathSlug) ? 'course-production' : `course-${selectedSlug}`),
+    [pathSlug, selectedSlug],
+  );
+  const cmsQuery = useCmsContent(cmsSlug, 'es');
   const cmsPayload = useMemo<CourseCmsPayload | null>(() => {
     const payload = cmsQuery.data?.ccdPayload;
     if (payload && typeof payload === 'object') {
@@ -247,7 +285,9 @@ export default function CourseProductionLandingPage() {
   });
   const startDateLabel = buildStartDateLabel(meta?.sessions);
   const dateRangeLabel = buildDateRangeLabel(meta?.sessions);
-  const brandTagline = startDateLabel ? `Producción Musical · ${startDateLabel}` : 'Producción Musical';
+  const brandLabel = meta?.title ?? 'Cursos TDF';
+  const brandTagline = startDateLabel ? `${brandLabel} · ${startDateLabel}` : brandLabel;
+  const heroImageUrl = resolvePublicImageUrl(meta?.instructorAvatarUrl);
 
   const submitted = registrationMutation.isSuccess;
   const submitting = registrationMutation.isPending;
@@ -280,6 +320,7 @@ export default function CourseProductionLandingPage() {
             meta={meta}
             onPrimaryClick={scrollToForm}
             whatsappHref={whatsappHref}
+            imageUrl={heroImageUrl}
             loading={metaQuery.isLoading}
             heroOverride={cmsPayload?.hero}
             seatsLabel={seatsLabel}
@@ -309,7 +350,7 @@ export default function CourseProductionLandingPage() {
                 whatsappHref={whatsappHref}
                 cohortOptions={cohortOptions}
                 selectedSlug={selectedSlug}
-                onSlugChange={setSelectedSlug}
+                onSlugChange={handleSelectedSlugChange}
               />
               <InstructorCard meta={meta} />
               {meta?.locationLabel && meta?.locationMapUrl && (
@@ -331,18 +372,11 @@ function InstructorCard({ meta }: { meta?: CourseMetadata }) {
     }
   };
 
-  const name = meta?.instructorName ?? 'Esteban Muñoz';
+  const name = meta?.instructorName ?? 'Instructor TDF';
   const bio =
     meta?.instructorBio ??
-    'Productor e ingeniero residente en TDF Records, con experiencia en grabación, mezcla y masterización en Logic y Luna. Te acompañará en sesiones prácticas dentro del control room del estudio.';
-  const resolveAvatar = (url?: string | null): string => {
-    if (!url) return INSTRUCTOR_IMAGE_URL;
-    const trimmed = url.trim();
-    if (!trimmed) return INSTRUCTOR_IMAGE_URL;
-    if (isAbsoluteUrl(trimmed)) return trimmed;
-    return `${PUBLIC_BASE}/${trimmed.replace(/^\/+/, '')}`;
-  };
-  const avatar = resolveAvatar(meta?.instructorAvatarUrl);
+    'Instructor de TDF Records. Te acompañará con sesiones prácticas, seguimiento claro y ejercicios aplicables desde la primera clase.';
+  const avatar = resolvePublicImageUrl(meta?.instructorAvatarUrl);
 
   return (
     <Card
@@ -372,7 +406,7 @@ function InstructorCard({ meta }: { meta?: CourseMetadata }) {
               {name}
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.7)' }}>
-              Ingeniero de mezcla · Mentor del curso
+              Instructor principal
             </Typography>
           </Box>
         </Stack>
@@ -399,6 +433,7 @@ function Hero({
   loading,
   onPrimaryClick,
   whatsappHref,
+  imageUrl,
   heroOverride,
   seatsLabel,
   isFull,
@@ -408,27 +443,39 @@ function Hero({
   loading: boolean;
   onPrimaryClick: () => void;
   whatsappHref: string;
+  imageUrl: string;
   heroOverride?: HeroOverrides;
   seatsLabel?: string;
   isFull: boolean;
   dateRangeLabel?: string;
 }) {
-  const title = loading ? 'Cargando curso…' : heroOverride?.title ?? meta?.title ?? 'Curso de Producción Musical';
-  const subtitle = loading ? 'Preparando detalles...' : heroOverride?.subtitle ?? meta?.subtitle ?? 'Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 2 de mayo';
+  const title = loading ? 'Cargando curso...' : heroOverride?.title ?? meta?.title ?? 'Curso TDF Records';
+  const subtitle =
+    loading
+      ? 'Preparando detalles...'
+      : heroOverride?.subtitle ??
+        meta?.subtitle ??
+        'Programa presencial de TDF Records con cupos limitados, práctica guiada y seguimiento del instructor.';
   const primaryCta = heroOverride?.cta ?? 'Inscribirme';
   const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
   const badgeDate = heroOverride?.badge3 ?? dateRangeLabel ?? 'Fechas por confirmar';
   return (
     <Box
       sx={{
-        borderRadius: 4,
-        p: { xs: 3, md: 5 },
-        background: 'linear-gradient(120deg, rgba(124,58,237,0.25), rgba(14,165,233,0.2))',
+        borderRadius: { xs: 0, md: 2 },
+        mx: { xs: -2, sm: 0 },
+        minHeight: { xs: 560, md: 520 },
+        p: { xs: 3, sm: 4, md: 5 },
+        display: 'flex',
+        alignItems: 'flex-end',
+        backgroundImage: `linear-gradient(90deg, rgba(8,12,24,0.96) 0%, rgba(8,12,24,0.86) 48%, rgba(8,12,24,0.42) 100%), url(${imageUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: { xs: 'center top', md: 'center right' },
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ maxWidth: 820 }}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip icon={<VerifiedIcon />} label={heroOverride?.badge1 ?? 'Plazas limitadas'} color="default" sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
           <Chip icon={<HeadsetIcon />} label={heroOverride?.badge2 ?? 'Mentorías incluidas'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#e2e8f0' }} />
