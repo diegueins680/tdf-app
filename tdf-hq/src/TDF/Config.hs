@@ -351,7 +351,7 @@ loadConfig = do
     , dbPass = w
     , dbName = d
     , dbConnUrl = connUrl
-    , dbSslMode = sslModeEnv <|> (fallbackConnUrl >>= extractConnUrlParam "sslmode")
+    , dbSslMode = sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
     , appPort = parseInt 8080 (Just ap)
     , resetDb = asBool rdb
     , seedDatabase = asBool sdb

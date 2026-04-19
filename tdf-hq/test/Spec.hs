@@ -801,7 +801,7 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
 
-        it "skips malformed connection URL aliases when complete DB_* settings are authoritative" $
+        it "keeps fallback connection URL aliases from shaping complete DB_* settings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")
                 , ("DATABASE_PRIVATE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require")
@@ -817,9 +817,9 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=require target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
 
-        it "inherits sslmode from DATABASE_URL when DB_* vars stay authoritative" $
+        it "ignores sslmode from DATABASE_URL when DB_* vars stay authoritative" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=disable")
                 , ("DATABASE_PRIVATE_URL", Nothing)
@@ -834,9 +834,9 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
 
-        it "prefers explicit PGSSLMODE over the DATABASE_URL sslmode fallback" $
+        it "prefers explicit PGSSLMODE when DB_* vars stay authoritative" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require")
                 , ("DATABASE_PRIVATE_URL", Nothing)
