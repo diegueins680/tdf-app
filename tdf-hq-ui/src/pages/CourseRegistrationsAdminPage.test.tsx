@@ -4166,6 +4166,11 @@ describe('CourseRegistrationsAdminPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Inscripción marcada como pagada.');
+        const dialog = getDialog();
+        expect(dialog.textContent).toContain('Pago registrado');
+        expect(dialog.textContent).not.toContain('Confirmar pago de inscripción');
+        expect(hasExactText(dialog, 'Pagado')).toBe(true);
+        expect(hasExactText(dialog, 'Pendiente de pago')).toBe(false);
         expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
         expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
         expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);

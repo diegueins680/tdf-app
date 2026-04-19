@@ -2088,6 +2088,9 @@ export default function CourseRegistrationsAdminPage() {
   const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
   const hasMarkedPaidInCurrentDossier =
     isMarkPaidIntent && selectedDossierId != null && markedPaidRegistrationId === selectedDossierId;
+  const activeRegistrationStatus = hasMarkedPaidInCurrentDossier
+    ? 'paid'
+    : activeRegistration?.crStatus ?? '';
   const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
   const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !hasSavedNotes;
   const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && followUps.length === 0;
@@ -2100,8 +2103,8 @@ export default function CourseRegistrationsAdminPage() {
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
   const hasReceipts = receipts.length > 0;
-  const activeRegistrationKnownStatus = activeRegistration
-    ? normalizeKnownRegistrationStatus(activeRegistration.crStatus)
+  const activeRegistrationKnownStatus = activeRegistrationStatus
+    ? normalizeKnownRegistrationStatus(activeRegistrationStatus)
     : null;
   const showEvidenceOnlyEmptyReceiptCopy = canMarkPaid
     || activeRegistrationKnownStatus === 'paid'
@@ -2257,7 +2260,9 @@ export default function CourseRegistrationsAdminPage() {
   const prioritizePaymentSection = isMarkPaidIntent;
   const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
   const dossierDialogTitle = isMarkPaidIntent
-    ? canMarkPaid
+    ? hasMarkedPaidInCurrentDossier
+      ? 'Pago registrado'
+      : canMarkPaid
       ? 'Confirmar pago de inscripción'
       : 'Registrar pago de inscripción'
     : 'Expediente de inscripción';
@@ -3486,7 +3491,7 @@ export default function CourseRegistrationsAdminPage() {
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
-                    {statusChip(activeRegistration.crStatus)}
+                    {activeRegistrationStatus && statusChip(activeRegistrationStatus)}
                   </Stack>
                   {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
