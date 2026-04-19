@@ -2224,6 +2224,23 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=file%20123%26alt%3Dmedia&resourcekey=rk-123"
 
+        it "ignores malformed upstream links instead of publishing unsafe Drive fallbacks" $ do
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "javascript:alert(1)")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "http://drive.example.com/file-123")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123"
+
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do
             let verifier = T.replicate 43 "a"

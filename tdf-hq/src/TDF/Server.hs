@@ -9909,8 +9909,15 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
   appendDriveResourceKey resolvedResourceKey baseUrl
   where
     fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
-    baseUrl = fromMaybe fallbackPublicUrl (cleanOptional mWebContentLink)
+    baseUrl = fromMaybe fallbackPublicUrl (sanitizeDriveWebContentLink mWebContentLink)
     resolvedResourceKey = cleanOptional mUploadResourceKey <|> cleanOptional mMetaResourceKey
+
+sanitizeDriveWebContentLink :: Maybe Text -> Maybe Text
+sanitizeDriveWebContentLink mWebContentLink = do
+  url <- cleanOptional mWebContentLink
+  if "https://" `T.isPrefixOf` T.toLower url && TrialsServer.isValidHttpUrl url
+    then Just url
+    else Nothing
 
 appendDriveResourceKey :: Maybe Text -> Text -> Text
 appendDriveResourceKey mResourceKey url =
