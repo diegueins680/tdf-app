@@ -1151,7 +1151,7 @@ export default function CourseRegistrationsAdminPage() {
         : undefined
     : viewHitsCurrentLimit
       ? `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas. Usa Ajustar límite si necesitas revisar más registros.`
-      : 'Busca dentro de este lote sin cambiar los filtros de cohorte o estado.';
+      : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.`;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1284,7 +1284,10 @@ export default function CourseRegistrationsAdminPage() {
     ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
     : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const showDossierScopeHint = loadedRegistrationCount > 0 && !hasUsedRowAction && !hasUsedFilterControl;
-  const showFirstRunFilterHelper = showFilterOnboardingCopy && !showSingleResultWithoutHiddenLimit;
+  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showFirstRunFilterHelper = showFilterOnboardingCopy
+    && !showSingleResultWithoutHiddenLimit
+    && !showBusyListSearchOnboarding;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);

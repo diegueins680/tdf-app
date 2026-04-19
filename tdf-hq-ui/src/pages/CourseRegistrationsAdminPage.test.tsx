@@ -904,6 +904,9 @@ describe('CourseRegistrationsAdminPage', () => {
           ?.trim(),
       ).toBe('Ajustar límite');
       expect(secondContainer.textContent).toContain(
+        'Busca dentro de las 200 inscripciones cargadas. Usa Ajustar límite si necesitas revisar más registros.',
+      );
+      expect(secondContainer.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
       );
       expect(secondContainer.textContent).not.toContain(
@@ -912,7 +915,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(
         secondContainer,
         'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.',
-      )).toBe(1);
+      )).toBe(0);
       expect(
         Array.from(secondContainer.querySelectorAll('button')).filter(
           (button) => (
@@ -5389,6 +5392,52 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         `Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       );
+    });
+
+    await cleanup();
+  });
+
+  it('uses local search as the first-run helper for busy mixed views instead of duplicating filter guidance', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crCourseSlug: 'beatmaking-101',
+        crStatus: 'pending_payment',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCourseSlug: 'live-production',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 31 + index,
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+        crStatus: index % 3 === 0 ? 'pending_payment' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+      expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     await cleanup();
