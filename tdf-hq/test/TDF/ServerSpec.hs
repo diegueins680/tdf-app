@@ -2682,6 +2682,30 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected reversed internship signup dates to be rejected, got: " <> show value)
 
+        it "rejects non-positive internship hours instead of storing ambiguous commitments" $ do
+            let assertInvalid hours =
+                    case
+                        validateSignupInternshipFields
+                            [Customer, Fan, Intern]
+                            Nothing
+                            Nothing
+                            (Just hours)
+                            Nothing
+                            Nothing
+                    of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "internshipRequiredHours must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected non-positive internship hours to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid 0
+            assertInvalid (-5)
+
         it "rejects internship-only fields when the signup is not requesting the Intern role" $ do
             let result =
                     validateSignupInternshipFields

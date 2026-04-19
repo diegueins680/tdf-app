@@ -235,7 +235,9 @@ validateSignupInternshipFields
   -> Either ServerError ()
 validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
   | null providedFields = Right ()
-  | Intern `elem` rolesVal = validateSignupInternshipDateRange startAt endAt
+  | Intern `elem` rolesVal =
+      validateSignupInternshipRequiredHours requiredHours
+        *> validateSignupInternshipDateRange startAt endAt
   | otherwise =
       let fieldList = T.intercalate ", " providedFields
           msg = "Internship fields require requesting the Intern role: " <> fieldList
@@ -257,6 +259,17 @@ validateSignupInternshipDateRange (Just startAt) (Just endAt)
   | endAt < startAt =
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "internshipEndAt must be on or after internshipStartAt") }
 validateSignupInternshipDateRange _ _ = Right ()
+
+validateSignupInternshipRequiredHours :: Maybe Int -> Either ServerError ()
+validateSignupInternshipRequiredHours Nothing = Right ()
+validateSignupInternshipRequiredHours (Just hours)
+  | hours > 0 = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "internshipRequiredHours must be a positive integer")
+        }
 
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
@@ -401,8 +414,6 @@ signup SignupRequest
   when (T.null passwordClean) $ throwBadRequest "Password is required"
   when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
-  when (maybe False (< 0) rawInternshipRequiredHours) $
-    throwBadRequest "Internship required hours must be non-negative"
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
