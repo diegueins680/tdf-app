@@ -1241,9 +1241,10 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
+  const showLocalSearchResultUtilityActions = showCopyCsvAction || Boolean(copyMessage);
   const showLocalSearchExplicitClearAction = hasLocalSearch
     && localSearchNarrowsRegistrations
-    && searchedRegistrations.length === 1
+    && (searchedRegistrations.length === 1 || showLocalSearchResultUtilityActions)
     && !showEmptyLocalSearchResults;
   const showLocalSearchClearAction = hasLocalSearch
     && !showEmptyLocalSearchResults

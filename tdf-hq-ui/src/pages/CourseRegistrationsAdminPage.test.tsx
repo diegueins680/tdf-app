@@ -6230,7 +6230,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps local-search export next to the narrowed result context', async () => {
+  it('keeps narrowed-search utilities together instead of splitting clear and CSV actions', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
@@ -6272,8 +6272,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, copyVisibleCsvLabel(2))).toBeTruthy();
-      expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(0);
-      expect(getButtonByAriaLabel(container, 'Limpiar búsqueda')).toBeTruthy();
+      expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
@@ -6451,7 +6451,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
