@@ -6913,17 +6913,17 @@ listInvoices user = do
 createInvoice :: AuthedUser -> CreateInvoiceReq -> AppM InvoiceDTO
 createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
-  Env pool _ <- ask
   when (null ciLineItems) $ throwBadRequest "Invoice requires at least one line item"
+  currency <- either throwError pure (validateCurrencyCode ciCurrency)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
+  Env pool _ <- ask
   customerKey <- do
     resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
     either throwError pure resolved
   now <- liftIO getCurrentTime
   let day      = utctDay now
-      currency = normalizeCurrency ciCurrency
       notes    = normalizeOptionalText ciNotes
       number   = normalizeOptionalText ciNumber
       subtotal = sum (map plSubtotal preparedLines)

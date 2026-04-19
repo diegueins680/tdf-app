@@ -166,6 +166,7 @@ import TDF.Server
     , resolveResourcesForBooking
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
+    , createInvoice
     , createReceipt
     , resolvePartyRoleAssignmentTarget
     , fanUnfollowArtist
@@ -557,6 +558,40 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected existing invoice customer to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
+
+    describe "createInvoice" $
+        it "rejects malformed explicit currencies before invoice creation can persist ambiguous totals" $ do
+            let validLine =
+                    CreateInvoiceLineReq
+                        { cilDescription = "Studio session"
+                        , cilQuantity = 1
+                        , cilUnitCents = 9000
+                        , cilTaxBps = Nothing
+                        , cilServiceOrderId = Nothing
+                        , cilPackagePurchaseId = Nothing
+                        }
+                assertInvalid rawCurrency = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                ( createInvoice
+                                    (mkUser [Accounting])
+                                    (DTO.CreateInvoiceReq 42 (Just rawCurrency) Nothing Nothing [validLine] Nothing)
+                                )
+                                (error "createInvoice should reject invalid ciCurrency before reading Env")
+
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "currency must be a 3-letter ISO code"
+                        Right invoice ->
+                            expectationFailure
+                                ("Expected invalid invoice currency to be rejected, got: " <> show invoice)
+
+            assertInvalid "usdollars"
+            assertInvalid "12$"
+            assertInvalid "   "
 
     describe "prepareLine" $ do
         it "accepts a single positive provenance reference and preserves it on the prepared invoice line" $
