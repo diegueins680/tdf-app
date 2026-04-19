@@ -42,6 +42,7 @@ module TDF.Server.SocialEventsHandlers
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
+  , isImageUpload
   ) where
 
 import           Control.Applicative ((<|>))
@@ -629,7 +630,10 @@ socialEventsServer user = eventsServer
           nameWithExt = applyUploadExtension (requestedName <|> fallbackName) fallbackName
           safeName = sanitizeUploadFileName nameWithExt
       unless (isImageUpload mimeTypeVal safeName) $
-        throwError err400 { errBody = "Only image uploads are allowed" }
+        throwError err400
+          { errBody =
+              "Only raster image uploads with matching MIME type and extension are allowed"
+          }
 
       uuid <- liftIO UUIDV4.nextRandom
       let eventIdTxt = renderKeyText eventKey
@@ -2732,10 +2736,19 @@ buildUploadAssetUrl assetsBase relPath =
 
 isImageUpload :: T.Text -> T.Text -> Bool
 isImageUpload mimeType fileName =
-  let mimeOk = "image/" `T.isPrefixOf` mimeType
+  let normalizedMime = normalizeUploadMimeType mimeType
       ext = T.toLower (T.pack (takeExtension (T.unpack fileName)))
-      extOk = ext `elem` [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"]
-  in mimeOk || extOk
+  in case normalizedMime of
+      "image/jpeg" -> ext `elem` [".jpg", ".jpeg"]
+      "image/png" -> ext == ".png"
+      "image/webp" -> ext == ".webp"
+      "image/gif" -> ext == ".gif"
+      "image/bmp" -> ext == ".bmp"
+      _ -> False
+
+normalizeUploadMimeType :: T.Text -> T.Text
+normalizeUploadMimeType raw =
+  T.toLower (T.strip (fst (T.breakOn ";" raw)))
 
 normalizeTicketTierCode :: T.Text -> T.Text
 normalizeTicketTierCode raw =

@@ -185,6 +185,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    isImageUpload,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
     validateInvitationStatusInput,
@@ -2388,6 +2389,15 @@ main = hspec $ do
             assertInvalid
                 (validateEventCreateUpdateDimensions Nothing Nothing (Just (-10)))
                 "event budget must be >= 0"
+
+    describe "isImageUpload" $ do
+        it "requires matching raster MIME and extension for event image uploads" $ do
+            isImageUpload " image/jpeg " "poster.JPG" `shouldBe` True
+            isImageUpload "image/png; charset=binary" "poster.png" `shouldBe` True
+            isImageUpload "application/octet-stream" "poster.jpg" `shouldBe` False
+            isImageUpload "image/jpeg" "poster.txt" `shouldBe` False
+            isImageUpload "image/png" "poster.jpg" `shouldBe` False
+            isImageUpload "image/svg+xml" "poster.svg" `shouldBe` False
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =
