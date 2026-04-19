@@ -1490,7 +1490,8 @@ export default function CourseRegistrationsAdminPage() {
     : hasHiddenStatusFilters
       ? 'Solo aparecen estados con inscripciones en esta vista.'
       : '';
-  const showStatusFilterCaption = !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
+  const showStatusFilterCaption = !showBusyListSearchOnboarding
+    && !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
