@@ -5258,6 +5258,48 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('merges duplicate registration status before deciding whether status filters are useful', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: null,
+        crStatus: '   ',
+      }),
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crStatus: 'pending_payment',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
+      expect(container.textContent).not.toContain('Estado desconocido');
+      expect(countOccurrences(container, 'Registro #101')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('shows status counts on the filter chips instead of a separate totals legend', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

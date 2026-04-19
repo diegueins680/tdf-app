@@ -769,6 +769,7 @@ const mergeCourseRegistrationRecords = (
   crFullName: preferNonEmptyText(primary.crFullName, fallback.crFullName),
   crEmail: preferNonEmptyText(primary.crEmail, fallback.crEmail),
   crPhoneE164: preferNonEmptyText(primary.crPhoneE164, fallback.crPhoneE164),
+  crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
   crSource: preferNonEmptyText(primary.crSource, fallback.crSource),
   crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
   crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
