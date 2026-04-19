@@ -3011,7 +3011,7 @@ export default function CourseRegistrationsAdminPage() {
               </Stack>
             </Box>
           )}
-          {!regsQuery.isLoading && registrations.length === 0 && (
+          {!regsQuery.isLoading && !regsQuery.isError && registrations.length === 0 && (
             hasCustomFilters ? (
               <Alert
                 severity="info"

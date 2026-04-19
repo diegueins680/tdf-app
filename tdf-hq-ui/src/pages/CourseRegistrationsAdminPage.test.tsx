@@ -6264,6 +6264,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
       expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
