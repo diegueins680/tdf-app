@@ -25,6 +25,8 @@ import TDF.API.Types
     , DropdownOptionUpdate (..)
     , InternPermissionCreate (..)
     , InternPermissionUpdate (..)
+    , InternProjectCreate (..)
+    , InternProjectUpdate (..)
     , InternTodoCreate (..)
     , InternTodoUpdate (..)
     , InternTaskUpdate (..)
@@ -978,6 +980,38 @@ spec = do
                 "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternProject payload FromJSON" $ do
+        it "accepts canonical project payloads and preserves explicit clears" $ do
+            case decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected intern project create payload to decode, got: " <> err)
+                Right (InternProjectCreate titleVal descriptionVal statusVal startAtVal dueAtVal) -> do
+                    titleVal `shouldBe` "Studio onboarding"
+                    descriptionVal `shouldBe` Just "Prepare checklist"
+                    statusVal `shouldBe` Just "paused"
+                    startAtVal `shouldBe` Just (fromGregorian 2026 4 20)
+                    dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
+
+            case decodeInternProjectUpdate "{\"ipuDescription\":null,\"ipuStartAt\":null,\"ipuDueAt\":null}" of
+                Left err ->
+                    expectationFailure ("Expected intern project clear payload to decode, got: " <> err)
+                Right (InternProjectUpdate titleVal descriptionVal statusVal startAtVal dueAtVal) -> do
+                    titleVal `shouldBe` Nothing
+                    descriptionVal `shouldBe` Just Nothing
+                    statusVal `shouldBe` Nothing
+                    startAtVal `shouldBe` Just Nothing
+                    dueAtVal `shouldBe` Just Nothing
+
+        it "rejects unexpected project keys so typoed status cannot fall back to active" $ do
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"status\":\"completed\"}"
+                `shouldSatisfy` isLeft
+            decodeInternProjectUpdate
+                "{\"ipuStatus\":\"paused\",\"status\":\"completed\"}"
+                `shouldSatisfy` isLeft
+
     describe "InternPermission payload FromJSON" $ do
         it "accepts canonical permission payloads and preserves explicit note clears" $ do
             case decodeInternPermissionCreate
@@ -1253,6 +1287,10 @@ spec = do
     decodeClockOut = eitherDecode
     decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate
     decodeInternTaskUpdate = eitherDecode
+    decodeInternProjectCreate :: BL8.ByteString -> Either String InternProjectCreate
+    decodeInternProjectCreate = eitherDecode
+    decodeInternProjectUpdate :: BL8.ByteString -> Either String InternProjectUpdate
+    decodeInternProjectUpdate = eitherDecode
     decodeInternPermissionCreate :: BL8.ByteString -> Either String InternPermissionCreate
     decodeInternPermissionCreate = eitherDecode
     decodeInternPermissionUpdate :: BL8.ByteString -> Either String InternPermissionUpdate

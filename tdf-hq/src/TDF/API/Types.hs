@@ -1194,7 +1194,8 @@ data InternProjectCreate = InternProjectCreate
   , ipcDueAt       :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternProjectCreate
-instance FromJSON InternProjectCreate
+instance FromJSON InternProjectCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternProjectUpdate = InternProjectUpdate
   { ipuTitle       :: Maybe Text
@@ -1204,7 +1205,26 @@ data InternProjectUpdate = InternProjectUpdate
   , ipuDueAt       :: Maybe (Maybe Day)
   } deriving (Show, Generic)
 instance ToJSON InternProjectUpdate
-instance FromJSON InternProjectUpdate
+instance FromJSON InternProjectUpdate where
+  parseJSON = withObject "InternProjectUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ipuTitle"
+          , "ipuDescription"
+          , "ipuStatus"
+          , "ipuStartAt"
+          , "ipuDueAt"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternProjectUpdate: " <> T.unpack key)
+      [] ->
+        InternProjectUpdate
+          <$> o .:? "ipuTitle"
+          <*> o .:! "ipuDescription"
+          <*> o .:? "ipuStatus"
+          <*> o .:! "ipuStartAt"
+          <*> o .:! "ipuDueAt"
 
 data InternTaskDTO = InternTaskDTO
   { itId          :: Text
