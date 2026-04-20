@@ -9758,8 +9758,11 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
   parsed <- case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
     Right val -> pure val
-  let statusTxt = fromMaybe "unknown" . join $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed
-      payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
+  statusTxt <-
+    either throwError pure $
+      validatePayPalCaptureStatusField
+        (join $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed)
+  let payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
         payerObj <- o .:? "payer"
         case payerObj of
           Nothing -> pure Nothing
@@ -9768,6 +9771,17 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
     { pcoStatus = statusTxt
     , pcoPayerEmail = join payerEmail
     }
+
+validatePayPalCaptureStatusField :: Maybe Text -> Either ServerError Text
+validatePayPalCaptureStatusField Nothing =
+  Left err502 { errBody = "PayPal capture response did not include a status" }
+validatePayPalCaptureStatusField (Just rawStatus)
+  | T.null statusTxt =
+      Left err502 { errBody = "PayPal capture response status cannot be blank" }
+  | otherwise =
+      Right statusTxt
+  where
+    statusTxt = T.strip rawStatus
 
 
 assetStatusLabel :: ME.AssetStatus -> Text

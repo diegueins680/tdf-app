@@ -152,6 +152,7 @@ import TDF.Server
       validateDatafastCheckoutId,
       validateDatafastCredential,
       validateDatafastBaseUrl,
+      validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
@@ -2076,6 +2077,22 @@ main = hspec $ do
             assertInvalid
                 (Just "https://www.paypal.com/checkoutnow?token=ORDER-123#fragment")
                 invalidMessage
+
+    describe "validatePayPalCaptureStatusField" $ do
+        it "requires PayPal capture responses to include a non-blank status" $ do
+            validatePayPalCaptureStatusField (Just " COMPLETED ")
+                `shouldBe` Right "COMPLETED"
+
+            let assertInvalid rawValue expectedMessage =
+                    case validatePayPalCaptureStatusField rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid PayPal capture status, got " <> show value)
+            assertInvalid Nothing "PayPal capture response did not include a status"
+            assertInvalid (Just "   ") "PayPal capture response status cannot be blank"
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
