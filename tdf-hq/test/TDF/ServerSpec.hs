@@ -2468,6 +2468,15 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.google.com/download/file-123?ResourceKey=existing"
 
+        it "does not let blank upstream resource-key params suppress known Drive resource keys" $
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=&alt=media")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123"
+
         it "encodes fallback file ids before adding resource-key query params" $
             resolveDrivePublicUrl "file 123&alt=media" Nothing (Just "rk-123") Nothing
                 `shouldBe`

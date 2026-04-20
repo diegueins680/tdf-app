@@ -10185,21 +10185,48 @@ appendDriveResourceKey mResourceKey url =
   case cleanOptional mResourceKey of
     Nothing -> url
     Just resourceKey
-      | hasQueryParam "resourcekey" url -> url
-      | otherwise -> appendQueryParam "resourcekey" resourceKey url
+      | hasNonBlankQueryParam "resourcekey" url -> url
+      | otherwise ->
+          appendQueryParam "resourcekey" resourceKey (dropBlankQueryParam "resourcekey" url)
 
-hasQueryParam :: Text -> Text -> Bool
-hasQueryParam paramName url =
-  any matchesName params
+hasNonBlankQueryParam :: Text -> Text -> Bool
+hasNonBlankQueryParam paramName url =
+  any (isNonBlankQueryParam paramName) params
   where
     (withoutFragment, _) = T.breakOn "#" url
     queryWithMarker = snd (T.breakOn "?" withoutFragment)
     query = T.drop 1 queryWithMarker
     params = filter (not . T.null) (T.splitOn "&" query)
-    expectedName = T.toLower paramName
-    matchesName rawParam =
-      let rawName = fst (T.breakOn "=" rawParam)
-      in T.toLower rawName == expectedName
+
+dropBlankQueryParam :: Text -> Text -> Text
+dropBlankQueryParam paramName url =
+  case T.breakOn "?" withoutFragment of
+    (_, "") -> url
+    (base, queryWithMarker) ->
+      let params = filter (not . T.null) (T.splitOn "&" (T.drop 1 queryWithMarker))
+          filtered = filter (not . isBlankNamedParam) params
+          rebuilt =
+            if null filtered
+              then base
+              else base <> "?" <> T.intercalate "&" filtered
+      in rebuilt <> fragment
+  where
+    (withoutFragment, fragment) = T.breakOn "#" url
+    isBlankNamedParam rawParam =
+      isNamedQueryParam paramName rawParam && not (isNonBlankQueryParam paramName rawParam)
+
+isNamedQueryParam :: Text -> Text -> Bool
+isNamedQueryParam paramName rawParam =
+  let rawName = fst (T.breakOn "=" rawParam)
+  in T.toLower rawName == T.toLower paramName
+
+isNonBlankQueryParam :: Text -> Text -> Bool
+isNonBlankQueryParam paramName rawParam =
+  let (_rawName, rawValueWithEquals) = T.breakOn "=" rawParam
+      rawValue = T.drop 1 rawValueWithEquals
+  in isNamedQueryParam paramName rawParam
+      && not (T.null rawValueWithEquals)
+      && not (T.null (T.strip rawValue))
 
 appendQueryParam :: Text -> Text -> Text -> Text
 appendQueryParam paramName paramValue url =
