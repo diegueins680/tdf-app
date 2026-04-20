@@ -3313,6 +3313,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('groups a single optional dossier context action when payment is the primary action', async () => {
+    const registration = buildRegistration({
+      crAdminNotes: 'Confirmó pago por transferencia.',
+    });
+    getRegistrationDossierMock.mockResolvedValue(buildDossier({
+      crdRegistration: registration,
+      crdCanMarkPaid: true,
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+
+      expect(actions).toBeTruthy();
+      expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(document.body.textContent).toContain('Confirmó pago por transferencia.');
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, optionalDossierContextActionsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (item) => (item.textContent ?? '').trim() === 'Agregar nota',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('localizes dossier activity labels so admins do not see raw internal event jargon', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
