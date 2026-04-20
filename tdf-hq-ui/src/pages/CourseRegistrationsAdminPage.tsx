@@ -594,6 +594,14 @@ const registrationIdentityKind = (
   return 'record';
 };
 
+const namedRegistrationNeedsContact = (
+  reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+) => (
+  Boolean(reg.crFullName?.trim())
+  && !reg.crEmail?.trim()
+  && !reg.crPhoneE164?.trim()
+);
+
 const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
   const identityKinds = new Set(registrations.map(registrationIdentityKind));
   if (identityKinds.size === 1) {
@@ -1387,13 +1395,15 @@ export default function CourseRegistrationsAdminPage() {
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
   const allVisibleNamedRegistrationsNeedContact = searchedRegistrations.length > 1
-    && searchedRegistrations.every((reg) => (
-      Boolean(reg.crFullName?.trim())
-      && !reg.crEmail?.trim()
-      && !reg.crPhoneE164?.trim()
-    ));
+    && searchedRegistrations.every(namedRegistrationNeedsContact);
+  const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
+    && searchedRegistrations[0] != null
+    && namedRegistrationNeedsContact(searchedRegistrations[0]);
   const sharedVisibleMissingContactSummary = allVisibleNamedRegistrationsNeedContact
     ? 'Contacto pendiente en todas las inscripciones visibles.'
+    : '';
+  const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
+    ? 'Contacto pendiente en esta inscripción.'
     : '';
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
@@ -1451,9 +1461,12 @@ export default function CourseRegistrationsAdminPage() {
     || statusAlreadyVisibleInFilterStrip
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
-  const dossierScopeHint = useCompactStatusActionLabel
-    ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
-    : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
+  const dossierScopeHint = [
+    useCompactStatusActionLabel
+      ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+      : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),
+    singleVisibleMissingContactSummary,
+  ].filter(Boolean).join(' ');
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
