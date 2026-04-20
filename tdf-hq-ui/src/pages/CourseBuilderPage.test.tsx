@@ -230,6 +230,30 @@ describe('CourseBuilderPage', () => {
     }
   });
 
+  it('keeps the header free of draft-status chrome until publish succeeds', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Crear curso');
+        expect(text(container)).not.toContain('Estado: Borrador');
+        expect(text(container)).not.toContain('Estado: Publicado');
+      });
+
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+
+      await waitForExpectation(() => {
+        expect(upsertMock).toHaveBeenCalledTimes(1);
+        expect(text(container)).toContain('Estado: Publicado');
+        expect(text(container)).not.toContain('Estado: Borrador');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides repeated row-session actions until there is more than one session to edit', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -470,9 +470,11 @@ export default function CourseBuilderPage() {
             Publica un nuevo curso. Requiere permisos de administrador/webmaster (guarda en tablas de Escuela).
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1}>
-          <Chip label={`Estado: ${createMutation.isSuccess ? 'Publicado' : 'Borrador'}`} />
-        </Stack>
+        {createMutation.isSuccess && (
+          <Stack direction="row" spacing={1}>
+            <Chip label="Estado: Publicado" color="success" />
+          </Stack>
+        )}
       </Stack>
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
         {sections.map((section) => (
