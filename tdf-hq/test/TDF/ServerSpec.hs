@@ -81,6 +81,7 @@ import TDF.Server
     , normalizeOptionalInput
     , parseMcpRequest
     , parseToolCallParams
+    , validateMcpToolArguments
     , parseBookingStatus
     , parseBoolParam
     , parseCourseFollowUpType
@@ -582,6 +583,17 @@ spec = describe "TDF.Server helpers" $ do
                     , "argument" .= object []
                     ]
                 )
+
+    describe "validateMcpToolArguments" $ do
+        it "accepts empty arguments for the no-input health check tool" $
+            validateMcpToolArguments "tdf_health_check" (object [])
+                `shouldBe` Right ()
+
+        it "rejects unsupported health check arguments instead of ignoring caller intent" $
+            validateMcpToolArguments
+                "tdf_health_check"
+                (object ["verbose" .= True])
+                `shouldBe` Left "tdf_health_check does not accept arguments"
 
     describe "resolveInvoiceCustomerId" $ do
         it "rejects non-positive customer ids before invoice creation can hit persistence" $ do

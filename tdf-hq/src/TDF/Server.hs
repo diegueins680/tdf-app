@@ -342,6 +342,14 @@ parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
     Just _ -> fail "arguments must be an object"
   pure (toolName, args)
 
+validateMcpToolArguments :: Text -> Value -> Either Text ()
+validateMcpToolArguments "tdf_health_check" (Object args)
+  | AKeyMap.null args = Right ()
+  | otherwise = Left "tdf_health_check does not accept arguments"
+validateMcpToolArguments "tdf_health_check" _ =
+  Left "tdf_health_check arguments must be an object"
+validateMcpToolArguments _ _ = Right ()
+
 handleMcpRequest :: McpRequest -> AppM Value
 handleMcpRequest req@McpRequest{ mcpReqMethod = method, mcpReqParams = params } =
   case method of
@@ -379,30 +387,33 @@ handleMcpToolCall :: McpRequest -> Maybe Value -> AppM Value
 handleMcpToolCall req rawParams =
   case rawParams >>= parseToolCallParams of
     Nothing -> pure (mcpErrorValue (mcpReqId req) (-32602) "Invalid params" Nothing)
-    Just (toolName, _) ->
+    Just (toolName, args) ->
       case toolName of
-        "tdf_health_check" -> do
-          info <- liftIO getVersionInfo
-          now <- liftIO getCurrentTime
-          let VersionInfo { appVer, commit, buildTime } = info
-              timestamp = T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" now)
-              message = T.intercalate "\n"
-                [ "status: ok"
-                , "time: " <> timestamp
-                , "version: " <> appVer
-                , "commit: " <> commit
-                , "buildTime: " <> buildTime
-                ]
-              result =
-                object
-                  [ "content" .=
-                      [ object
-                          [ "type" .= ("text" :: Text)
-                          , "text" .= message
+        "tdf_health_check" ->
+          case validateMcpToolArguments toolName args of
+            Left msg -> pure (mcpErrorValue (mcpReqId req) (-32602) msg Nothing)
+            Right () -> do
+              info <- liftIO getVersionInfo
+              now <- liftIO getCurrentTime
+              let VersionInfo { appVer, commit, buildTime } = info
+                  timestamp = T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" now)
+                  message = T.intercalate "\n"
+                    [ "status: ok"
+                    , "time: " <> timestamp
+                    , "version: " <> appVer
+                    , "commit: " <> commit
+                    , "buildTime: " <> buildTime
+                    ]
+                  result =
+                    object
+                      [ "content" .=
+                          [ object
+                              [ "type" .= ("text" :: Text)
+                              , "text" .= message
+                              ]
                           ]
                       ]
-                  ]
-          pure (mcpSuccess req result)
+              pure (mcpSuccess req result)
         _ ->
           pure (mcpErrorValue (mcpReqId req) (-32602) ("Unknown tool: " <> toolName) Nothing)
 
