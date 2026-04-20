@@ -19,7 +19,7 @@ import           TDF.Config (AppConfig(..))
 
 sendFacebookText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendFacebookText cfg recipientId body =
-  case (facebookMessagingToken cfg, facebookMessagingPageId cfg) of
+  case (facebookMessagingToken cfg >>= nonEmptyText, facebookMessagingPageId cfg >>= nonEmptyText) of
     (Nothing, _) -> pure (Left "FACEBOOK_MESSAGING_TOKEN no configurado")
     (_, Nothing) -> pure (Left "FACEBOOK_MESSAGING_PAGE_ID no configurado")
     (Just token, Just pageId) -> do
@@ -52,3 +52,8 @@ sendFacebookText cfg recipientId body =
               in if status >= 200 && status < 300
                    then Right bodyTxt
                    else Left ("HTTP " <> T.pack (show status) <> ": " <> bodyTxt)
+
+nonEmptyText :: Text -> Maybe Text
+nonEmptyText raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed then Nothing else Just trimmed

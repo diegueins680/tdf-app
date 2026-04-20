@@ -217,6 +217,7 @@ import TDF.ServerAuth
     , validateSignupFanArtistIds
     , validateSignupFanArtistTargets
     )
+import TDF.Services.FacebookMessaging (sendFacebookText)
 import TDF.ServerProposals
     ( resolveOptionalProposalClientPartyReference
     , resolveOptionalProposalPipelineCardReference
@@ -3802,6 +3803,27 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "utm.content must not contain control characters"
                 (validateCourseRegistrationUtm (Just (UTMTags Nothing Nothing Nothing (Just "reel\tvariant"))))
+
+    describe "sendFacebookText messaging context validation" $
+        it "rejects blank configured tokens or page ids before building Graph requests" $ do
+            let cfg = marketplaceTestConfig False
+            sendFacebookText
+                (cfg
+                    { facebookMessagingToken = Just "   "
+                    , facebookMessagingPageId = Just "page_123"
+                    })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left "FACEBOOK_MESSAGING_TOKEN no configurado"
+
+            sendFacebookText
+                (cfg
+                    { facebookMessagingToken = Just "configured-token"
+                    , facebookMessagingPageId = Just "   "
+                    })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left "FACEBOOK_MESSAGING_PAGE_ID no configurado"
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
