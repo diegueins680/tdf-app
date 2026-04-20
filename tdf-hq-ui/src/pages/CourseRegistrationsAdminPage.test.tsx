@@ -6160,6 +6160,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a shared humanized source out of the busy-list search placeholder', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'instagram_story' }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 102 + index,
+        crPartyId: 10 + index,
+        crFullName: `Estudiante ${index + 2}`,
+        crEmail: `student${index + 2}@example.com`,
+        crSource: index % 2 === 0 ? 'Instagram story' : 'instagram-story',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
+      expect(container.textContent).toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).not.toContain('Fuente: Instagram story');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'instagram story');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "instagram story"');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('matches busy-list local search against accent-free cohort names', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

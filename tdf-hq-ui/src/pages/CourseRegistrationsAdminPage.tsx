@@ -763,7 +763,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
 
     const searchableSource = getSearchableRegistrationSource(reg.crSource);
     if (searchableSource) {
-      sourceKeys.add(normalizeRegistrationSourceKey(searchableSource));
+      sourceKeys.add(normalizeRegistrationSourceKey(reg.crSource ?? ''));
     } else {
       hasHiddenDefaultOrEmptySource = true;
     }
