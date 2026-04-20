@@ -15,6 +15,7 @@ import           GHC.Generics (Generic)
 import           System.Directory (doesFileExist, makeAbsolute)
 import           System.Environment (lookupEnv)
 import           System.Exit (ExitCode(..))
+import           System.FilePath (takeExtension)
 import           System.Process (proc, readCreateProcessWithExitCode)
 
 import qualified Data.Aeson as Aeson
@@ -80,12 +81,7 @@ resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do
   envPath <- lookupEnv "SRI_INVOICE_SCRIPT"
   case envPath >>= nonEmptyPath of
-    Just scriptPath -> do
-      exists <- doesFileExist scriptPath
-      pure $
-        if exists
-          then Right scriptPath
-          else Left (missingConfiguredScriptMessage scriptPath)
+    Just scriptPath -> validateConfiguredScriptPath scriptPath
     Nothing -> do
       mDefaultPath <-
         firstExisting ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
@@ -95,9 +91,29 @@ resolveScriptPath = do
           Right
           mDefaultPath
 
+validateConfiguredScriptPath :: FilePath -> IO (Either Text FilePath)
+validateConfiguredScriptPath scriptPath = do
+  exists <- doesFileExist scriptPath
+  pure $
+    if not exists
+      then Left (missingConfiguredScriptMessage scriptPath)
+      else
+        if isNodeScriptPath scriptPath
+          then Right scriptPath
+          else Left (invalidConfiguredScriptMessage scriptPath)
+
+isNodeScriptPath :: FilePath -> Bool
+isNodeScriptPath scriptPath =
+  T.toLower (T.pack (takeExtension scriptPath)) `elem` [".mjs", ".js", ".cjs"]
+
 missingConfiguredScriptMessage :: FilePath -> Text
 missingConfiguredScriptMessage scriptPath =
   "SRI_INVOICE_SCRIPT does not point to an existing file: " <> T.pack scriptPath
+
+invalidConfiguredScriptMessage :: FilePath -> Text
+invalidConfiguredScriptMessage scriptPath =
+  "SRI_INVOICE_SCRIPT must point to a .mjs, .js, or .cjs Node script: "
+    <> T.pack scriptPath
 
 missingDefaultScriptMessage :: Text
 missingDefaultScriptMessage =

@@ -24,6 +24,8 @@ import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
+import System.IO (hClose)
+import System.IO.Temp (withSystemTempFile)
 import Test.Hspec
 import Web.PathPieces (toPathPiece)
 
@@ -1450,7 +1452,7 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
 
-    describe "SRI invoice script discovery" $
+    describe "SRI invoice script discovery" $ do
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
@@ -1466,6 +1468,19 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected missing SRI script path to fail, got: " <> show value)
+
+        it "rejects existing non-JavaScript script paths before invoking node" $
+            withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
+                hClose handle
+                withEnvOverrides [("SRI_INVOICE_SCRIPT", Just scriptPath)] $ do
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err
+                                `shouldContain` "SRI_INVOICE_SCRIPT must point to a .mjs, .js, or .cjs Node script"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid SRI script path to fail, got: " <> show value)
 
     describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
