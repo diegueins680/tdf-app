@@ -5425,6 +5425,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats a redundant single-cohort limit as passive in the first-run empty state', async () => {
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101&limit=50');
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: undefined,
+        limit: 50,
+      });
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateFormActionLabel);
+      expect(container.textContent).not.toContain('No hay inscripciones con el límite actual');
+      expect(container.textContent).not.toContain('Revisa los filtros o restablece la vista');
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(hasLabel(container, 'Límite')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a URL-only cohort slug as a filter instead of treating it as a configured form', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([]);

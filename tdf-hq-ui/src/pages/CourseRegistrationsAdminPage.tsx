@@ -1131,6 +1131,11 @@ export default function CourseRegistrationsAdminPage() {
   const hasManualFilters = hasEffectiveSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
+  const showPassiveSingleCohortLimitEmptyState = !hasVisibleRegistrations
+    && Boolean(singleAvailableCohort)
+    && hasRedundantSingleCohortFilter
+    && hasCustomLimit
+    && !hasStatusFilter;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
@@ -1488,6 +1493,7 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && !cohortsQuery.isError
     && hasCustomFilters
+    && !showPassiveSingleCohortLimitEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1528,7 +1534,7 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && !cohortsQuery.isError
     && !cohortsQuery.isLoading
-    && !hasCustomFilters
+    && (!hasCustomFilters || showPassiveSingleCohortLimitEmptyState)
     && !hasVisibleRegistrations;
   const showInitialCohortResolutionState = !regsQuery.isLoading
     && !regsQuery.isError
