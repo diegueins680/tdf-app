@@ -520,10 +520,19 @@ data ServiceMarketplaceBookingReq = ServiceMarketplaceBookingReq
   , smbPaymentMethod :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON ServiceMarketplaceBookingReq where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    req <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } value
+    titleValue <- traverse normalizeTitle (smbTitle req)
+    pure req { smbTitle = titleValue }
+    where
+      normalizeTitle rawTitle =
+        let trimmedTitle = T.strip rawTitle
+        in if T.null trimmedTitle
+             then fail "title cannot be blank; omit title to use the service ad headline"
+             else pure trimmedTitle
 
 data ServiceMarketplaceBookingDTO = ServiceMarketplaceBookingDTO
   { smbBookingId         :: Int64
