@@ -52,6 +52,8 @@ import TDF.Handlers.InputList (AssetField (..))
 import TDF.Models
     ( ApiToken (..)
     , ArtistProfile (..)
+    , Booking (..)
+    , BookingResource (..)
     , BookingStatus (..)
     , ChatMessage (..)
     , ChatThread (..)
@@ -4184,6 +4186,45 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected invalid explicit booking room ids to be rejected, got: " <> show resourceKeys)
 
+        it "rejects unavailable explicit room ids instead of double-booking active rooms" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            result <- try $
+                runResourceSqlite $ do
+                    controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
+                    bookingId <- insert Booking
+                        { bookingTitle = "Existing booking"
+                        , bookingServiceOrderId = Nothing
+                        , bookingPartyId = Nothing
+                        , bookingServiceType = Just "mixing"
+                        , bookingEngineerPartyId = Nothing
+                        , bookingEngineerName = Nothing
+                        , bookingStartsAt = startsAt
+                        , bookingEndsAt = endsAt
+                        , bookingStatus = Confirmed
+                        , bookingCreatedBy = Nothing
+                        , bookingNotes = Nothing
+                        , bookingCreatedAt = startsAt
+                        }
+                    _ <- insert BookingResource
+                        { bookingResourceBookingId = bookingId
+                        , bookingResourceResourceId = controlRoomId
+                        , bookingResourceRole = "primary"
+                        }
+                    resolveResourcesForBooking
+                        (Just "mixing")
+                        ["room-control"]
+                        startsAt
+                        endsAt
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "resourceIds contain unavailable rooms: room-control"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected unavailable explicit booking room ids to be rejected, got: " <> show resourceKeys)
+
         it "rejects duplicate explicit room ids instead of silently deduplicating booking intent" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -5042,6 +5083,32 @@ initializeResourceSchema = do
         \\"capacity\" INTEGER NULL,\
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_resource_slug\" UNIQUE (\"slug\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"booking\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"title\" VARCHAR NOT NULL,\
+        \\"service_order_id\" INTEGER NULL,\
+        \\"party_id\" INTEGER NULL,\
+        \\"service_type\" VARCHAR NULL,\
+        \\"engineer_party_id\" INTEGER NULL,\
+        \\"engineer_name\" VARCHAR NULL,\
+        \\"starts_at\" TIMESTAMP NOT NULL,\
+        \\"ends_at\" TIMESTAMP NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"created_by\" INTEGER NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"booking_resource\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"booking_id\" INTEGER NOT NULL,\
+        \\"resource_id\" INTEGER NOT NULL,\
+        \\"role\" VARCHAR NOT NULL,\
+        \CONSTRAINT \"unique_booking_res\" UNIQUE (\"booking_id\", \"resource_id\", \"role\")\
         \)"
         []
 

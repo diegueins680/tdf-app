@@ -6729,7 +6729,7 @@ resolveResourcesForBooking service requested start end =
   case normalizeRequestedResourceIds requested of
     Left err -> liftIO (throwIO err)
     Right [] -> defaultResourcesForService service start end
-    Right explicit -> resolveRequestedResources explicit
+    Right explicit -> resolveRequestedResources explicit start end
 
 normalizeRequestedResourceIds :: [Text] -> Either ServerError [Text]
 normalizeRequestedResourceIds rawIds =
@@ -6759,8 +6759,8 @@ duplicateRequestedResourceIds = go Set.empty Set.empty []
                else go seen (Set.insert normalized reported) (rid : duplicates) rest
            else go (Set.insert normalized seen) reported duplicates rest
 
-resolveRequestedResources :: [Text] -> SqlPersistT IO [Key Resource]
-resolveRequestedResources requestedIds = do
+resolveRequestedResources :: [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
+resolveRequestedResources requestedIds start end = do
   rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
   let indexById = Map.fromList $ map (\(Entity k room) -> (k, room)) rooms
       indexBySlug = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceSlug room), k)) rooms
@@ -6773,7 +6773,29 @@ resolveRequestedResources requestedIds = do
             in Map.lookup normalized indexBySlug <|> Map.lookup normalized indexByName
       unresolved = [rid | rid <- requestedIds, isNothing (resolveOne rid)]
   case dedupeStable unresolved of
-    [] -> pure (dedupeStable (mapMaybe resolveOne requestedIds))
+    [] -> do
+      let resolved = dedupeStable (mapMaybe resolveOne requestedIds)
+      availability <- forM resolved $ \key -> do
+        available <- isResourceAvailableDB key start end
+        pure (key, available)
+      let unavailable = [key | (key, False) <- availability]
+          unavailableIds =
+            dedupeStable
+              [ rid
+              | rid <- requestedIds
+              , Just key <- [resolveOne rid]
+              , key `elem` unavailable
+              ]
+      case unavailableIds of
+        [] -> pure resolved
+        invalidIds ->
+          liftIO . throwIO $
+            err409
+              { errBody =
+                  BL.fromStrict . TE.encodeUtf8 $
+                    "resourceIds contain unavailable rooms: "
+                      <> T.intercalate ", " invalidIds
+              }
     invalidIds ->
       liftIO . throwIO $
         err400
