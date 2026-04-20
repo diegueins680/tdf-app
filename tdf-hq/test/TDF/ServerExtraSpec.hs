@@ -49,6 +49,8 @@ import TDF.API.Types
   , SessionInputRow (SessionInputRow)
   )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Config (AppConfig (..))
+import qualified TDF.Config as Config
 import TDF.DB (Env (..))
 import qualified TDF.ModelsExtra as ME
 import TDF.ModelsExtra
@@ -81,6 +83,8 @@ import TDF.ServerExtra (
     normalizeRoomName,
     normalizeRoomNameUpdate,
     validateSocialLimit,
+    metaWebhookVerifyTokenCandidates,
+    verifyMetaWebhook,
     validateMetaWebhookChannel,
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
@@ -1240,6 +1244,41 @@ spec = do
         (Just " secret ")
         [Just "   ", Just "secret"]
         `shouldBe` Right "challenge-123"
+
+    it "keeps Facebook webhook verification scoped to Facebook tokens" $ do
+      cfg <- Config.loadConfig
+      let configured =
+            cfg
+              { facebookMessagingToken = Just "fb-secret"
+              , instagramVerifyToken = Just "ig-secret"
+              , instagramMessagingToken = Just "ig-msg-secret"
+              , instagramAppToken = Just "ig-app-secret"
+              }
+          env =
+            Env
+              { envPool = error "verifyMetaWebhook test does not use the database pool"
+              , envConfig = configured
+              }
+          verify :: Text -> Either ServerError Text
+          verify token =
+            runReaderT
+              (verifyMetaWebhook MetaFacebook (Just "subscribe") (Just token) (Just "challenge-123"))
+              env
+      metaWebhookVerifyTokenCandidates MetaFacebook configured
+        `shouldBe` [Just "fb-secret"]
+      case verify "fb-secret" of
+        Left err ->
+          expectationFailure
+            ("Expected Facebook verify token to be accepted, got " <> show (errHTTPCode err))
+        Right challenge ->
+          challenge `shouldBe` "challenge-123"
+      case verify "ig-secret" of
+        Left err -> do
+          errHTTPCode err `shouldBe` 403
+          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for facebook"
+        Right challenge ->
+          expectationFailure
+            ("Expected Instagram verify token to be rejected, got " <> T.unpack challenge)
 
     it "rejects incomplete or ambiguous Meta webhook verification handshakes" $ do
       let assertInvalid expectedCode expectedMessage result =

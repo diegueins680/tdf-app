@@ -2337,22 +2337,31 @@ verifyMetaWebhook
   :: ( MonadReader Env m
      , MonadError ServerError m
      )
-  => Text
+  => MetaChannel
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
   -> m Text
-verifyMetaWebhook platformLabel mMode mToken mChallenge = do
+verifyMetaWebhook channel mMode mToken mChallenge = do
   Env{envConfig} <- ask
   either throwError pure $
     validateMetaWebhookVerifyRequest
-      platformLabel
+      (metaChannelLabel channel)
       mMode
       mChallenge
       mToken
-      [ instagramVerifyToken envConfig
-      , instagramMessagingToken envConfig
-      , instagramAppToken envConfig
+      (metaWebhookVerifyTokenCandidates channel envConfig)
+
+metaWebhookVerifyTokenCandidates :: MetaChannel -> AppConfig -> [Maybe Text]
+metaWebhookVerifyTokenCandidates channel cfg =
+  case channel of
+    MetaInstagram ->
+      [ instagramVerifyToken cfg
+      , instagramMessagingToken cfg
+      , instagramAppToken cfg
+      ]
+    MetaFacebook ->
+      [ facebookMessagingToken cfg
       ]
 
 validateMetaWebhookVerifyRequest
@@ -2409,7 +2418,7 @@ instagramWebhookServer =
   :<|> handleWebhook
   where
     verifyWebhook mMode mToken mChallenge =
-      verifyMetaWebhook "instagram" mMode mToken mChallenge
+      verifyMetaWebhook MetaInstagram mMode mToken mChallenge
 
     handleWebhook payload = do
       Env{..} <- ask
@@ -2433,7 +2442,7 @@ facebookWebhookServer =
   :<|> handleWebhook
   where
     verifyWebhook mMode mToken mChallenge =
-      verifyMetaWebhook "facebook" mMode mToken mChallenge
+      verifyMetaWebhook MetaFacebook mMode mToken mChallenge
 
     handleWebhook payload = do
       Env{..} <- ask
