@@ -236,7 +236,7 @@ const initialCohortErrorMessage =
   'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage =
-  'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
+  'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -6990,6 +6990,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
+      expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
