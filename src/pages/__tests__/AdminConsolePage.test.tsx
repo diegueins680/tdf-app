@@ -1642,6 +1642,51 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('strips repeated card titles from fallback bodies so optional modules do not echo themselves', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Tokens de servicio',
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Opcional: ver Tokens de servicio$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Opcional: ver Tokens de servicio$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Tokens de servicio$/i)).toHaveLength(1);
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('shows the first-run checklist only when the console is actually empty', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([

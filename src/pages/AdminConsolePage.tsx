@@ -200,6 +200,7 @@ const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
     const title = card.title.trim();
+    const titleParagraphKey = normalizeAdminConsoleParagraphKey(title);
     const seenParagraphs = new Set<string>();
     const body = card.body
       .map((paragraph) => paragraph.trim())
@@ -210,6 +211,10 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
         const paragraphKey = normalizeAdminConsoleParagraphKey(paragraph);
 
         if (paragraphKey === '' || seenParagraphs.has(paragraphKey)) {
+          return false;
+        }
+
+        if (titleParagraphKey !== '' && paragraphKey === titleParagraphKey) {
           return false;
         }
 
