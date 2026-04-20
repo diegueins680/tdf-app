@@ -1606,6 +1606,8 @@ paymentsServer user =
       _ <- either throwError pure (validatePaymentCurrency pcCurrency)
       conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
+      referenceVal <- either throwError pure (validatePaymentReference pcReference)
+      periodVal <- either throwError pure (validatePaymentPeriod pcPeriod)
       attachmentUrl <- either throwError pure (validatePaymentAttachmentUrl pcAttachmentUrl)
       let partyKey   = toSqlKey partyId
           mOrderKey  = toSqlKey <$> orderId
@@ -1619,9 +1621,9 @@ paymentsServer user =
           , paymentMethod      = paymentMethodVal
           , paymentAmountCents = amountCents
           , paymentReceivedAt  = paidAt
-          , paymentReference   = normalizeOptionalTextField pcReference
+          , paymentReference   = referenceVal
           , paymentConcept     = Just conceptVal
-          , paymentPeriod      = normalizeOptionalTextField pcPeriod
+          , paymentPeriod      = periodVal
           , paymentAttachment  = attachmentUrl
           , paymentCreatedBy   = Just (auPartyId user)
           , paymentCreatedAt   = Just now
@@ -1716,6 +1718,36 @@ validatePaymentConcept rawConcept =
          else if T.any isControl trimmed
            then Left err400 { errBody = "concept must not contain control characters" }
            else Right trimmed
+
+validatePaymentReference :: Maybe Text -> Either ServerError (Maybe Text)
+validatePaymentReference =
+  validateOptionalPaymentTextField "reference" 160
+
+validatePaymentPeriod :: Maybe Text -> Either ServerError (Maybe Text)
+validatePaymentPeriod =
+  validateOptionalPaymentTextField "period" 80
+
+validateOptionalPaymentTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalPaymentTextField fieldName maxLength rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just value
+      | T.length value > maxLength ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
+            }
+      | T.any isControl value ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    fieldName <> " must not contain control characters"
+            }
+      | otherwise ->
+          Right (Just value)
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod =

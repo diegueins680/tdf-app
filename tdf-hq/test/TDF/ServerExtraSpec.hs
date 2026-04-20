@@ -98,6 +98,8 @@ import TDF.ServerExtra (
     validatePaymentReferences,
     validatePaymentCurrency,
     validatePaymentConcept,
+    validatePaymentReference,
+    validatePaymentPeriod,
     validatePositivePaymentReferenceId,
     validateOptionalPositivePaymentReferenceId,
     normalizeServiceCatalogName,
@@ -1073,6 +1075,33 @@ spec = do
                 expectationFailure ("Expected invalid payment concept error, got " <> show value)
       assertInvalid "concept must be 240 characters or fewer" (T.replicate 241 "a")
       assertInvalid "concept must not contain control characters" "Honorarios\nabril"
+
+  describe "validatePaymentReference and validatePaymentPeriod" $ do
+    it "normalizes optional manual payment labels before persistence" $ do
+      validatePaymentReference Nothing `shouldBe` Right Nothing
+      validatePaymentReference (Just "   ") `shouldBe` Right Nothing
+      validatePaymentReference (Just "  REC-42  ") `shouldBe` Right (Just "REC-42")
+      validatePaymentPeriod (Just "  2026-04  ") `shouldBe` Right (Just "2026-04")
+
+    it "rejects oversized or control-character optional payment labels" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid payment label error, got " <> show value)
+      assertInvalid
+        "reference must be 160 characters or fewer"
+        (validatePaymentReference (Just (T.replicate 161 "a")))
+      assertInvalid
+        "reference must not contain control characters"
+        (validatePaymentReference (Just "REC\n42"))
+      assertInvalid
+        "period must be 80 characters or fewer"
+        (validatePaymentPeriod (Just (T.replicate 81 "a")))
+      assertInvalid
+        "period must not contain control characters"
+        (validatePaymentPeriod (Just "2026\n04"))
 
   describe "validatePaymentReferences" $ do
     it "accepts existing party, order, and invoice references when the invoice includes that order" $ do
