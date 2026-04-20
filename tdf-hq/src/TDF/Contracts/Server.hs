@@ -13,6 +13,7 @@ import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import           Data.Aeson ((.=), (.:))
 import           Data.Aeson.Types (withObject)
+import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAsciiLower, isDigit)
@@ -46,12 +47,23 @@ instance A.ToJSON StoredContract where
     ]
 
 instance A.FromJSON StoredContract where
-  parseJSON = withObject "StoredContract" $ \o ->
+  parseJSON = withObject "StoredContract" $ \o -> do
+    case filter (`notElem` storedContractAllowedKeys) (map K.toText (KM.keys o)) of
+      [] -> pure ()
+      unexpected ->
+        fail ("Unexpected StoredContract keys: " <> show unexpected)
     StoredContract
       <$> o .: "id"
       <*> o .: "kind"
       <*> o .: "payload"
       <*> o .: "created_at"
+    where
+      storedContractAllowedKeys =
+        [ "id"
+        , "kind"
+        , "payload"
+        , "created_at"
+        ]
 
 contractsDir :: FilePath
 contractsDir = "contracts" </> "store"

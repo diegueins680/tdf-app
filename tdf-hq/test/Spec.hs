@@ -3712,6 +3712,13 @@ main = hspec $ do
                 Right _ ->
                     expectationFailure "Expected malformed stored contract row to be rejected"
 
+        it "rejects unexpected stored contract keys instead of silently accepting schema drift" $
+            case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\",\"pdf_path\":\"contracts/store/generic.pdf\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored contract payload is unreadable"
+                Right _ ->
+                    expectationFailure "Expected stored contract with unexpected keys to be rejected"
+
         it "rejects stored contracts with invalid persisted ids instead of rendering the wrong contract identity" $
             case decodeStoredContract "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
                 Left err ->
