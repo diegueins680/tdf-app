@@ -2301,7 +2301,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasDossierRefreshContext = hasReceipts
     || followUps.length > 0
     || hasSavedNotes
-    || showSystemEmailHistoryAction;
+    || (showSystemEmailHistoryAction && showEmailHistory);
   const showDossierRefreshAction = Boolean(selectedDossier)
     && !dossierQuery.isLoading
     && !dossierQuery.isError

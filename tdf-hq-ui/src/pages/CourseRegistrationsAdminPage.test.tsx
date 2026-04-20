@@ -3059,6 +3059,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
       expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
       expect(document.body.textContent).not.toContain(systemEmailHistoryHelperText);
     });
