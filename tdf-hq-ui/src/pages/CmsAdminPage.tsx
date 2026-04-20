@@ -293,6 +293,7 @@ export default function CmsAdminPage() {
   );
   const pendingHasLiveComparison = Boolean(pendingVersion && liveContent);
   const pendingEqualsLive = pendingHasLiveComparison ? pendingPayloadPreview === livePayloadPreview : false;
+  const showPendingLivePayloadComparison = pendingHasLiveComparison && !pendingEqualsLive;
   const pendingPayloadLabel = pendingHasLiveComparison ? 'Payload de la versión seleccionada' : 'Payload a cargar';
   const pendingVersionSummary = pendingHasLiveComparison
     ? pendingEqualsLive
@@ -618,7 +619,7 @@ export default function CmsAdminPage() {
                     {pendingPayloadPreview || '{}'}
                   </Box>
                 </Box>
-                {pendingHasLiveComparison && (
+                {showPendingLivePayloadComparison && (
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" color="text.secondary">
                       Payload en vivo

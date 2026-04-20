@@ -660,6 +660,32 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the load-version dialog single-column when the selected payload already matches live', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Editar en formulario').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+      expect(dialog?.textContent).toContain('El payload coincide con la versión en vivo.');
+      expect(dialog?.textContent).toContain('Payload de la versión seleccionada');
+      expect(dialog?.textContent).not.toContain('Payload en vivo');
+    });
+
+    await cleanup();
+  });
+
   it('shows shared title, slug, and locale context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
