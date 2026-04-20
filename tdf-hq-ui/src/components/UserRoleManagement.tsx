@@ -95,6 +95,47 @@ const getContactSummary = (user: Pick<NormalizedUser, 'email' | 'phone'>) => {
   return contactValues.join(' · ');
 };
 
+const preferContactValue = (primary?: string | null, fallback?: string | null) =>
+  normalizeContactValue(primary) ?? normalizeContactValue(fallback);
+
+const preferUserName = (primary: string, fallback: string) => {
+  const normalizedPrimary = normalizeContactValue(primary);
+  if (normalizedPrimary && normalizedPrimary !== 'Sin nombre') return normalizedPrimary;
+  return normalizeContactValue(fallback) ?? primary;
+};
+
+const mergeNormalizedUserRecords = (primary: NormalizedUser, fallback: NormalizedUser): NormalizedUser => ({
+  ...primary,
+  name: preferUserName(primary.name, fallback.name),
+  email: preferContactValue(primary.email, fallback.email),
+  phone: preferContactValue(primary.phone, fallback.phone),
+  status: primary.status === 'Active' || fallback.status === 'Active' ? 'Active' : 'Inactive',
+  roles: normalizeRoleSelection([...primary.roles, ...fallback.roles]),
+});
+
+const dedupeNormalizedUsers = (users: readonly NormalizedUser[]) => {
+  const dedupedUsers: NormalizedUser[] = [];
+  const indexByUserId = new Map<number, number>();
+
+  users.forEach((user) => {
+    if (!Number.isInteger(user.id) || user.id <= 0) {
+      dedupedUsers.push(user);
+      return;
+    }
+
+    const existingIndex = indexByUserId.get(user.id);
+    if (existingIndex == null) {
+      indexByUserId.set(user.id, dedupedUsers.length);
+      dedupedUsers.push(user);
+      return;
+    }
+
+    dedupedUsers[existingIndex] = mergeNormalizedUserRecords(dedupedUsers[existingIndex]!, user);
+  });
+
+  return dedupedUsers;
+};
+
 const getUserIdentityKey = (user: Pick<NormalizedUser, 'name'>) =>
   user.name.trim().toLocaleLowerCase('es');
 
@@ -264,7 +305,7 @@ export default function UserRoleManagement() {
         status: u.status ?? 'Inactive',
         roles: normalizeRoleSelection((u.roles ?? []) as RoleValue[]),
       }));
-      setUsers(normalized);
+      setUsers(dedupeNormalizedUsers(normalized));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron cargar los usuarios');
     } finally {

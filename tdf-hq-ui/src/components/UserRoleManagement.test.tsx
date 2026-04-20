@@ -409,10 +409,61 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('normalizes API role casing before rendering editable role chips', async () => {
+  it('merges repeated API user records before rendering duplicate role edit actions', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 303,
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        phone: null,
+        roles: ['Admin'],
+      }),
+      buildUser({
+        id: 303,
+        name: '   ',
+        email: null,
+        phone: '+593999000111',
+        roles: ['Manager', 'Admin'],
+      }),
+      buildUser({
+        id: 304,
+        name: 'Grace Hopper',
+        email: 'grace@example.com',
+        phone: null,
+        roles: ['Teacher'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.querySelectorAll('button[aria-label="Editar roles de Ada Lovelace"]')).toHaveLength(1);
+        expect(container.textContent?.match(/Ada Lovelace/g) ?? []).toHaveLength(1);
+
+        const mergedRow = getRowByName(container, 'Ada Lovelace');
+        expect(getContactCellText(mergedRow)).toBe('ada@example.com · +593999000111');
+
+        const editButton = mergedRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]');
+        if (!(editButton instanceof HTMLButtonElement)) {
+          throw new Error('Edit roles button not found');
+        }
+
+        const chipLabels = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
+        expect(chipLabels).toEqual(['Admin', 'Manager']);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('normalizes API role casing before rendering editable role chips', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 305,
         name: 'Linus QA',
         email: 'linus@example.com',
         roles: ['admin', 'Admin', ' manager ', 'Manager'],
