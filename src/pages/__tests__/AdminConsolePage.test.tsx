@@ -569,6 +569,49 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Recent audit')).not.toBeInTheDocument();
   });
 
+  it('keeps system-status fallback cards out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-system-status',
+          title: 'System status',
+          body: ['Monitor API, database, and uptime before changing access.'],
+        },
+        {
+          cardId: 'estado-sistema',
+          title: 'Estado del sistema',
+          body: ['Consulta disponibilidad, base de datos y latencia antes de ajustar accesos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('System status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Estado del sistema')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Monitor API, database, and uptime before changing access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Consulta disponibilidad, base de datos y latencia antes de ajustar accesos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps connector-formatted built-in access titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
