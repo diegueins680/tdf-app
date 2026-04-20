@@ -409,10 +409,41 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps save disabled until the admin makes a real role change', async () => {
+  it('normalizes API role casing before rendering editable role chips', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 303,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['admin', 'Admin', ' manager ', 'Manager'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+        if (!(editButton instanceof HTMLButtonElement)) {
+          throw new Error('Edit roles button not found');
+        }
+
+        const chipLabels = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
+        expect(chipLabels).toEqual(['Admin', 'Manager']);
+        expect(chipLabels).not.toContain('admin');
+        expect(chipLabels).not.toContain('manager');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps save disabled until the admin makes a real role change', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 304,
         name: 'Linus QA',
         email: 'linus@example.com',
         roles: ['Admin', 'Manager'],
@@ -456,7 +487,7 @@ describe('UserRoleManagement', () => {
   it('summarizes the exact pending role addition before saving permissions', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
-        id: 304,
+        id: 305,
         name: 'Linus QA',
         email: 'linus@example.com',
         roles: ['Admin'],

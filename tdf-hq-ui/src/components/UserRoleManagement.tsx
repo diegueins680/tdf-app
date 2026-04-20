@@ -118,9 +118,26 @@ const buildEditRolesLabel = (user: Pick<NormalizedUser, 'id' | 'name'>, showIden
     ? `Editar roles de ${user.name} (ID ${user.id})`
     : `Editar roles de ${user.name}`;
 
-const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) =>
-  Array.from(new Set((roles ?? []).map((role) => role.trim()).filter(Boolean)))
+const CANONICAL_ROLES_BY_KEY = new Map(
+  ALL_ROLES.map((role) => [role.toLocaleLowerCase('es'), role as RoleValue]),
+);
+
+const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) => {
+  const rolesByKey = new Map<string, RoleValue>();
+
+  (roles ?? []).forEach((role) => {
+    const trimmedRole = role.trim();
+    if (!trimmedRole) return;
+
+    const roleKey = trimmedRole.toLocaleLowerCase('es');
+    if (rolesByKey.has(roleKey)) return;
+
+    rolesByKey.set(roleKey, CANONICAL_ROLES_BY_KEY.get(roleKey) ?? trimmedRole);
+  });
+
+  return [...rolesByKey.values()]
     .sort((left, right) => left.localeCompare(right));
+};
 
 const hasRoleSelectionChanged = (
   currentRoles?: readonly RoleValue[] | null,
