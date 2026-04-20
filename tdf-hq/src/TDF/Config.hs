@@ -417,7 +417,11 @@ loadConfig = do
   let normalizedAppBase = appBaseUrlVal
       cookieSecureDefault =
         maybe False (\base -> "https://" `T.isPrefixOf` T.toLower base) normalizedAppBase
-      cookieSecure = maybe cookieSecureDefault asBool sessionCookieSecureEnv
+  cookieSecure <-
+    validateStartupBooleanFlag
+      "SESSION_COOKIE_SECURE"
+      cookieSecureDefault
+      sessionCookieSecureEnv
   cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite

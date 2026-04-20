@@ -483,6 +483,15 @@ main = hspec $ do
                     sessionCookieSecure cfg `shouldBe` True
                     sessionCookieSameSite cfg `shouldBe` "None"
 
+        it "rejects malformed session cookie Secure values instead of emitting ambiguous cookies" $
+            withEnvOverrides
+                [ ("SESSION_COOKIE_SECURE", Just "maybe")
+                , ("HQ_APP_URL", Just "https://hq.example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SESSION_COOKIE_SECURE must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed session cookie SameSite values instead of silently using Lax" $ do
             withEnvOverrides
                 [ ("SESSION_COOKIE_SAMESITE", Just " Strict ") ]
