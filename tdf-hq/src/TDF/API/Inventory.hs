@@ -15,6 +15,7 @@ import           Servant.Multipart ( FileData
                                     , MultipartForm
                                     , Tmp
                                     , fdInputName
+                                    , fdFileName
                                     )
 import qualified Data.Text         as T
 
@@ -30,6 +31,7 @@ instance FromMultipart Tmp AssetUploadForm where
     rejectUnexpectedParts multipart
     file <- lookupSingleFile "file" multipart
     nameTxt <- optionalText "name" multipart
+    rejectAmbiguousFileName nameTxt file
     pure AssetUploadForm
       { aufFile = file
       , aufName = nameTxt
@@ -53,6 +55,12 @@ instance FromMultipart Tmp AssetUploadForm where
           [] -> Left ("Missing file field: " <> T.unpack field)
           [file] -> Right file
           _ -> Left ("Duplicate file field: " <> T.unpack field)
+
+      rejectAmbiguousFileName nameTxt file =
+        case (nameTxt, T.strip (fdFileName file)) of
+          (Nothing, fileName) | T.null fileName ->
+            Left "Either field name or uploaded file name must be provided"
+          _ -> Right ()
 
       rejectUnexpectedParts mp =
         case (unexpectedInputs, unexpectedFiles) of

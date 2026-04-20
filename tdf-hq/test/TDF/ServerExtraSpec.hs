@@ -264,6 +264,18 @@ spec = do
         Right payload ->
           aufName payload `shouldBe` Nothing
 
+    it "rejects uploads with no usable form name or browser filename" $
+      case fromMultipart
+        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "   "])
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Either field name or uploaded file name must be provided"
+        Right payload ->
+          expectationFailure
+            ( "Expected unnamed asset upload multipart to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =
