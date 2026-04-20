@@ -886,7 +886,7 @@ export default function AdminConsolePage() {
     ? 'Espera la comprobación de API y base de datos antes de cargar datos de ejemplo.'
     : 'Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas.';
   const firstRunDemoStatusCopy = seedMutation.isSuccess
-    ? 'Datos de ejemplo cargados. Espera el refresco automático de usuarios y auditoría antes de repetir cualquier revisión.'
+    ? null
     : showFirstRunDemoAction
       ? firstRunDemoActionCopy.description
       : firstRunServiceGateCopy;
@@ -1034,22 +1034,26 @@ export default function AdminConsolePage() {
                 })}
               </Stack>
             )}
-            <Stack spacing={1} alignItems="flex-start">
-              <Typography variant="body2" color="text.secondary">
-                {firstRunDemoStatusCopy}
-              </Typography>
-              {showFirstRunDemoAction && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<AutoFixHighIcon />}
-                  onClick={() => seedMutation.mutate()}
-                  disabled={seedMutation.isPending}
-                >
-                  {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
-                </Button>
-              )}
-            </Stack>
+            {(firstRunDemoStatusCopy || showFirstRunDemoAction) && (
+              <Stack spacing={1} alignItems="flex-start">
+                {firstRunDemoStatusCopy && (
+                  <Typography variant="body2" color="text.secondary">
+                    {firstRunDemoStatusCopy}
+                  </Typography>
+                )}
+                {showFirstRunDemoAction && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AutoFixHighIcon />}
+                    onClick={() => seedMutation.mutate()}
+                    disabled={seedMutation.isPending}
+                  >
+                    {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
+                  </Button>
+                )}
+              </Stack>
+            )}
           </Stack>
         </Alert>
       )}

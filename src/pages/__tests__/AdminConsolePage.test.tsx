@@ -1767,7 +1767,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('keeps demo seeding as a one-shot first-run action while the admin panel refreshes', async () => {
+  it('keeps demo seeding as a one-shot first-run action with one post-seed success cue', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -1782,10 +1782,10 @@ describe('AdminConsolePage', () => {
         screen.getByText(/Datos de demostración preparados correctamente\./i),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
+        screen.queryByText(
           /Datos de ejemplo cargados\. Espera el refresco automático de usuarios y auditoría antes de repetir cualquier revisión\./i,
         ),
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
 
     expect(
