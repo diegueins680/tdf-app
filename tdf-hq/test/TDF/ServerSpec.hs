@@ -751,6 +751,22 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected contradictory invoice line provenance to be rejected, got: " <> show (plServiceOrderId preparedLine, plPackagePurchaseId preparedLine))
 
+        it "rejects tax basis points above 100 percent before invoice totals are calculated" $
+            case prepareLine
+                CreateInvoiceLineReq
+                    { cilDescription = "Session"
+                    , cilQuantity = 1
+                    , cilUnitCents = 1000
+                    , cilTaxBps = Just 10001
+                    , cilServiceOrderId = Nothing
+                    , cilPackagePurchaseId = Nothing
+                    } of
+                Left errMsg ->
+                    errMsg `shouldBe` "Line item tax basis points must be 10000 or less"
+                Right preparedLine ->
+                    expectationFailure
+                        ("Expected excessive tax basis points to be rejected, got: " <> show (plTaxBps preparedLine))
+
     describe "course registration lookup ids" $ do
         it "rejects non-positive registration ids before course admin handlers can treat malformed lookups as missing rows" $ do
             let assertInvalid result = case result of

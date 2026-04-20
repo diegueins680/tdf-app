@@ -7244,6 +7244,7 @@ prepareLine CreateInvoiceLineReq{..} = do
   when (cilUnitCents < 0) $ Left "Line item unit amount must be zero or greater"
   let taxBpsVal = fromMaybe 0 cilTaxBps
   when (taxBpsVal < 0) $ Left "Line item tax basis points must be zero or greater"
+  when (taxBpsVal > 10000) $ Left "Line item tax basis points must be 10000 or less"
   when (isJust cilServiceOrderId && isJust cilPackagePurchaseId) $
     Left "Line item may reference either serviceOrderId or packagePurchaseId, not both"
   serviceOrderKey <- case cilServiceOrderId of
