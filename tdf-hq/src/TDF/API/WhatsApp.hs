@@ -278,12 +278,15 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
             Nothing ->
               Left err400 { errBody = "hub.challenge is required" }
             Just challenge ->
-              case nonBlank mtoken of
-                Nothing ->
-                  Left err400 { errBody = "hub.verify_token is required" }
-                Just verifyToken
-                  | verifyToken == expected -> Right challenge
-                  | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
+              case validateHookChallenge challenge of
+                Left err -> Left err
+                Right challengeVal ->
+                  case nonBlank mtoken of
+                    Nothing ->
+                      Left err400 { errBody = "hub.verify_token is required" }
+                    Just verifyToken
+                      | verifyToken == expected -> Right challengeVal
+                      | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
         Just _ ->
           Left err400 { errBody = "hub.mode must be subscribe" }
   where
@@ -292,3 +295,12 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
       case fmap T.strip mTxt of
         Just txt | not (T.null txt) -> Just txt
         _ -> Nothing
+
+    validateHookChallenge :: Text -> Either ServerError Text
+    validateHookChallenge challenge
+      | T.length challenge > 512 =
+          Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
+      | T.any isControl challenge =
+          Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | otherwise =
+          Right challenge
