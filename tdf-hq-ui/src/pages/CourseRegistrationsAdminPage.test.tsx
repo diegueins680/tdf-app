@@ -192,7 +192,7 @@ const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
-const optionalDossierContextActionsLabel = 'Notas y seguimiento';
+const optionalDossierContextActionsLabel = 'Agregar contexto';
 const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
@@ -533,6 +533,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain('0 guardados');
       expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Notas y seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
