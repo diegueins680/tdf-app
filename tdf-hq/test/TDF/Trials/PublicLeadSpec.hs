@@ -265,6 +265,8 @@ spec = do
                 BL8.unpack (errBody err) `shouldContain` expectedMessage
               Right _ ->
                 expectationFailure "Expected malformed public signup to be rejected"
+      assertRejected baseSignup { firstName = "   " } "firstName is required"
+      assertRejected baseSignup { lastName = "   " } "lastName is required"
       assertRejected baseSignup { firstName = "Ada\nLovelace" } "firstName must not contain control characters"
       assertRejected baseSignup { lastName = pack (replicate 121 'a') } "lastName must be 120 characters or fewer"
 

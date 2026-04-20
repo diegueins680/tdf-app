@@ -476,7 +476,9 @@ validatePublicSignupNamePart :: Text -> Text -> Either ServerError Text
 validatePublicSignupNamePart fieldName rawName =
   let nameVal = T.strip rawName
       fieldLabel = BL8.pack (T.unpack fieldName)
-  in if T.length nameVal > 120
+  in if T.null nameVal
+       then Left err400 { errBody = fieldLabel <> " is required" }
+       else if T.length nameVal > 120
        then Left err400 { errBody = fieldLabel <> " must be 120 characters or fewer" }
        else
          if T.any isControl nameVal
