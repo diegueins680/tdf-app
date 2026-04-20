@@ -2,6 +2,7 @@
 module TDF.WhatsApp.Client
   ( SendTextResult(..)
   , extractMessageId
+  , normalizeGraphApiVersion
   , sendText
   ) where
 
@@ -27,42 +28,76 @@ data SendTextResult = SendTextResult
 
 sendText :: Manager -> Text -> Text -> Text -> Text -> Text -> IO (Either String SendTextResult)
 sendText mgr apiVersion token phoneId to body = do
-  let version =
-        let trimmed = T.strip apiVersion
-        in if T.null trimmed then "v20.0" else trimmed
-  initReq <- parseRequest $ "https://graph.facebook.com/" <> T.unpack version <> "/" <> T.unpack phoneId <> "/messages"
-  let payload = object
-        [ "messaging_product" .= ("whatsapp" :: Text)
-        , "to"   .= to
-        , "type" .= ("text" :: Text)
-        , "text" .= object [ "body" .= body ]
-        ]
-      req = initReq
-          { method = "POST"
-          , requestHeaders =
-              [ ("Content-Type", "application/json")
-              , (hAuthorization, BS.pack $ "Bearer " <> T.unpack token)
-              ]
-          , requestBody = RequestBodyLBS (encode payload)
-          }
-  res <- try $ httpLbs req mgr :: IO (Either SomeException (Response LBS.ByteString))
-  pure $ case res of
-    Left e   -> Left (show e)
-    Right ok ->
-      let status = statusCode (responseStatus ok)
-          rawBody = responseBody ok
-      in case eitherDecode' rawBody of
-           Left err ->
-             let rendered = TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
-             in Left ("Failed to decode WhatsApp API response (" <> show status <> "): " <> err <> " | " <> T.unpack rendered)
-           Right parsed ->
-             if status >= 200 && status < 300
-               then Right SendTextResult
-                 { sendTextPayload = parsed
-                 , sendTextMessageId = extractMessageId parsed
-                 }
-               else
-                 Left ("HTTP " <> show status <> ": " <> T.unpack (renderValue parsed))
+  case normalizeGraphApiVersion apiVersion of
+    Left err -> pure (Left err)
+    Right version -> do
+      initReq <-
+        parseRequest $
+          "https://graph.facebook.com/"
+            <> T.unpack version
+            <> "/"
+            <> T.unpack phoneId
+            <> "/messages"
+      let payload = object
+            [ "messaging_product" .= ("whatsapp" :: Text)
+            , "to"   .= to
+            , "type" .= ("text" :: Text)
+            , "text" .= object [ "body" .= body ]
+            ]
+          req = initReq
+              { method = "POST"
+              , requestHeaders =
+                  [ ("Content-Type", "application/json")
+                  , (hAuthorization, BS.pack $ "Bearer " <> T.unpack token)
+                  ]
+              , requestBody = RequestBodyLBS (encode payload)
+              }
+      res <- try $ httpLbs req mgr :: IO (Either SomeException (Response LBS.ByteString))
+      pure $ case res of
+        Left e   -> Left (show e)
+        Right ok ->
+          let status = statusCode (responseStatus ok)
+              rawBody = responseBody ok
+          in case eitherDecode' rawBody of
+               Left err ->
+                 let rendered = TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
+                 in Left
+                      ( "Failed to decode WhatsApp API response ("
+                          <> show status
+                          <> "): "
+                          <> err
+                          <> " | "
+                          <> T.unpack rendered
+                      )
+               Right parsed ->
+                 if status >= 200 && status < 300
+                   then Right SendTextResult
+                     { sendTextPayload = parsed
+                     , sendTextMessageId = extractMessageId parsed
+                     }
+                   else
+                     Left ("HTTP " <> show status <> ": " <> T.unpack (renderValue parsed))
+
+normalizeGraphApiVersion :: Text -> Either String Text
+normalizeGraphApiVersion rawVersion
+  | T.null version = Right "v20.0"
+  | isValidVersion version = Right version
+  | otherwise =
+      Left "Invalid WhatsApp Graph API version: expected vMAJOR or vMAJOR.MINOR"
+  where
+    version = T.toLower (T.strip rawVersion)
+
+    isValidVersion value =
+      case T.uncons value of
+        Just ('v', rest) ->
+          case T.splitOn "." rest of
+            [major] -> allAsciiDigits major
+            [major, minor] -> allAsciiDigits major && allAsciiDigits minor
+            _ -> False
+        _ -> False
+
+    allAsciiDigits value =
+      not (T.null value) && T.all (\ch -> ch >= '0' && ch <= '9') value
 
 extractMessageId :: Value -> Maybe Text
 extractMessageId =

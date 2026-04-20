@@ -18,7 +18,7 @@ import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
 import qualified TDF.ModelsExtra as ME
-import TDF.WhatsApp.Client (SendTextResult (..))
+import TDF.WhatsApp.Client (SendTextResult (..), normalizeGraphApiVersion)
 import TDF.WhatsApp.History (OutgoingWhatsAppRecord (..), normalizeWhatsAppPhone, recordOutgoingWhatsAppMessage)
 
 spec :: Spec
@@ -33,6 +33,25 @@ spec = do
       normalizeWhatsAppPhone "12345" `shouldBe` Nothing
       normalizeWhatsAppPhone "+1234567890123456" `shouldBe` Nothing
       normalizeWhatsAppPhone "593+991234567" `shouldBe` Nothing
+
+  describe "TDF.WhatsApp.Client.normalizeGraphApiVersion" $ do
+    it "defaults blank versions and canonicalizes supported Graph API versions" $ do
+      normalizeGraphApiVersion "   " `shouldBe` Right "v20.0"
+      normalizeGraphApiVersion " V20.0 " `shouldBe` Right "v20.0"
+      normalizeGraphApiVersion "v21" `shouldBe` Right "v21"
+
+    it "rejects path, query, or label values before WhatsApp URL construction" $ do
+      let assertInvalid rawVersion =
+            case normalizeGraphApiVersion rawVersion of
+              Left err ->
+                err `shouldContain` "WhatsApp Graph API version"
+              Right version ->
+                expectationFailure
+                  ("Expected invalid Graph API version to be rejected, got " <> T.unpack version)
+      assertInvalid "v20.0/messages"
+      assertInvalid "v20.0?fields=id"
+      assertInvalid "latest"
+      assertInvalid "v20 beta"
 
   describe "recordOutgoingWhatsAppMessage" $ do
     it "falls back to a generated external id when a transport success returns a blank message id" $ do
