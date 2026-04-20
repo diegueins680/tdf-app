@@ -21,7 +21,7 @@ import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
 import qualified TDF.Config as Config
 import TDF.Leads.Model (ensureLead, lookupCourseIdBySlug)
-import TDF.WhatsApp.Client (sendText)
+import TDF.WhatsApp.Client (SendTextResult (..), sendText)
 
 data WhatsAppConfig = WhatsAppConfig
   { waToken       :: Text
@@ -140,11 +140,16 @@ sendViaWA WhatsAppService{waManager, waConfig} to url = do
   result <- sendText waManager version (waToken waConfig) (waPhoneId waConfig) to msg
   either fail pure (requireWhatsAppSendSuccess result)
 
-requireWhatsAppSendSuccess :: Either String a -> Either String Value
+requireWhatsAppSendSuccess :: Either String SendTextResult -> Either String Value
 requireWhatsAppSendSuccess (Left err) =
   Left ("WhatsApp send failed: " <> err)
-requireWhatsAppSendSuccess (Right _) =
-  Right (object ["ok" .= True])
+requireWhatsAppSendSuccess (Right SendTextResult{sendTextMessageId = Nothing}) =
+  Left "WhatsApp send failed: provider response did not include a message id"
+requireWhatsAppSendSuccess (Right SendTextResult{sendTextMessageId = Just rawId})
+  | T.null (T.strip rawId) =
+      Left "WhatsApp send failed: provider response did not include a message id"
+  | otherwise =
+      Right (object ["ok" .= True])
 
 mintLink :: WhatsAppService -> Connection -> Text -> IO (Text, Int)
 mintLink WhatsAppService{waConfig} conn phone = do

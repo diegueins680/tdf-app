@@ -240,6 +240,7 @@ import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
+import qualified TDF.WhatsApp.Client as WhatsAppClient
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 import qualified TDF.WhatsApp.Service as WhatsAppService
 import qualified TDF.WhatsApp.Types as WA
@@ -917,10 +918,44 @@ main = hspec $ do
                 ]
 
         it "surfaces WhatsApp provider send failures before reporting enrollment success" $ do
-            WhatsAppService.requireWhatsAppSendSuccess (Left "HTTP 401: bad token" :: Either String ())
+            let success =
+                    WhatsAppClient.SendTextResult
+                        { WhatsAppClient.sendTextPayload = A.object []
+                        , WhatsAppClient.sendTextMessageId = Just "wamid.ok"
+                        }
+            WhatsAppService.requireWhatsAppSendSuccess
+                (Left "HTTP 401: bad token" :: Either String WhatsAppClient.SendTextResult)
                 `shouldBe` Left "WhatsApp send failed: HTTP 401: bad token"
-            WhatsAppService.requireWhatsAppSendSuccess (Right ())
+            WhatsAppService.requireWhatsAppSendSuccess (Right success)
                 `shouldBe` Right (A.object ["ok" .= True])
+
+        it "requires a usable WhatsApp provider message id before reporting enrollment success" $ do
+            let result mMessageId =
+                    WhatsAppClient.SendTextResult
+                        { WhatsAppClient.sendTextPayload = A.object []
+                        , WhatsAppClient.sendTextMessageId = mMessageId
+                        }
+            WhatsAppService.requireWhatsAppSendSuccess (Right (result Nothing))
+                `shouldBe` Left "WhatsApp send failed: provider response did not include a message id"
+            WhatsAppService.requireWhatsAppSendSuccess (Right (result (Just "   ")))
+                `shouldBe` Left "WhatsApp send failed: provider response did not include a message id"
+
+        it "normalizes WhatsApp provider message ids and ignores malformed candidates" $ do
+            let payload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("   " :: Text)]
+                            , A.object ["id" .= (" wamid.valid " :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId payload `shouldBe` Just "wamid.valid"
+            let controlPayload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("wamid.\ninvalid" :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId controlPayload `shouldBe` Nothing
 
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides

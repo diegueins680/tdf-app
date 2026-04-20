@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.WhatsApp.Client
   ( SendTextResult(..)
+  , extractMessageId
   , sendText
   ) where
 
 import Data.Aeson
 import Data.Aeson.Types (parseMaybe)
+import Data.Char (isControl)
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -71,7 +73,18 @@ extractMessageId =
         msgId : _ -> pure msgId
         [] -> fail "Missing WhatsApp message id"
   where
-    pullId = parseMaybe (withObject "WhatsAppMessageId" (\msg -> msg .: "id"))
+    pullId =
+      parseMaybe $
+        withObject "WhatsAppMessageId" $ \msg -> do
+          rawId <- msg .: "id"
+          maybe (fail "Invalid WhatsApp message id") pure (normalizeMessageId rawId)
+
+normalizeMessageId :: Text -> Maybe Text
+normalizeMessageId rawId =
+  let trimmed = T.strip rawId
+  in if T.null trimmed || T.any isControl trimmed
+       then Nothing
+       else Just trimmed
 
 renderValue :: Value -> Text
 renderValue = TE.decodeUtf8 . LBS.toStrict . encode
