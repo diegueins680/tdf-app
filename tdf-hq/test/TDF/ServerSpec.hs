@@ -90,6 +90,7 @@ import TDF.Server
     , parseCourseRegistrationStatus
     , parseDirectionParam
     , resolveOptionalBookingPartyReference
+    , resolveInstagramBackfillTarget
     , resolveServiceAdEntity
     , resolveServiceAdSlotEntity
     , validateMetaBackfillOptions
@@ -1739,6 +1740,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Unexpected meta backfill field: conversationlimit"
                 (validateMetaBackfillOptions (object ["conversationlimit" .= (200 :: Int)]))
+
+    describe "resolveInstagramBackfillTarget" $ do
+        it "uses /me only when the account id is omitted and trims explicit account targets" $ do
+            resolveInstagramBackfillTarget "   "
+                `shouldBe` Right ("/me/conversations", "")
+            resolveInstagramBackfillTarget "  17841400000000000  "
+                `shouldBe` Right ("/17841400000000000/conversations", "17841400000000000")
+
+        it "rejects malformed Instagram account ids instead of falling back to /me" $
+            case resolveInstagramBackfillTarget "1784\naccess" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Instagram backfill account id must be a Graph node id"
+                Right target ->
+                    expectationFailure
+                        ("Expected malformed Instagram backfill target to be rejected, got: " <> show target)
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do

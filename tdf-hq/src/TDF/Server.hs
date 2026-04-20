@@ -73,6 +73,7 @@ import           TDF.Config ( AppConfig(..)
                             , courseInstructorAvatarFallback
                             , courseMapFallback
                             , courseSlugFallback
+                            , normalizeConfiguredGraphNodeId
                             , normalizeConfiguredBaseUrl
                             , resolveConfiguredAppBase
                             , resolveConfiguredAssetsBase
@@ -1606,18 +1607,14 @@ backfillInstagramAccount
   -> (Text, Text, Maybe Text)
   -> AppM Value
 backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
-  let trimmedIgUserId = T.strip igUserId
-      fetchByMe = fetchGraphConversations manager cfg "/me/conversations" accessToken (Just "instagram") opts
+  (conversationPath, ownerId) <-
+    either throwError pure (resolveInstagramBackfillTarget igUserId)
   conversations <-
-    if T.null trimmedIgUserId
-      then fetchByMe
-      else
-        fetchGraphConversations manager cfg ("/" <> trimmedIgUserId <> "/conversations") accessToken (Just "instagram") opts
-          `catchError` \_ -> fetchByMe
+    fetchGraphConversations manager cfg conversationPath accessToken (Just "instagram") opts
   (incomingScanned, importedCount) <- foldM
     (\(scannedAcc, importedAcc) conversationVal -> do
       let conversationId = fromMaybe "unknown" (jsonTextField "id" conversationVal)
-          incomingMessages = filter (isIncomingMetaMessage igUserId) (selectConversationMessages opts conversationVal)
+          incomingMessages = filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
       stored <- mapM (storeBackfilledMessage MetaInstagram opts conversationId) incomingMessages
       let imported = length (filter (\ok -> ok) stored)
       pure (scannedAcc + length incomingMessages, importedAcc + imported)
@@ -1626,13 +1623,23 @@ backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
     conversations
   pure (object
     [ "platform" .= ("instagram" :: Text)
-    , "igUserId" .= igUserId
+    , "igUserId" .= ownerId
     , "handle" .= mHandle
     , "tokenSuffix" .= tokenSuffix accessToken
     , "conversations" .= length conversations
     , "incomingScanned" .= incomingScanned
     , "imported" .= importedCount
     ])
+
+resolveInstagramBackfillTarget :: Text -> Either ServerError (Text, Text)
+resolveInstagramBackfillTarget rawIgUserId =
+  case normalizeConfiguredGraphNodeId "Instagram backfill account id" (T.unpack rawIgUserId) of
+    Left msg ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
+    Right Nothing ->
+      Right ("/me/conversations", "")
+    Right (Just igUserId) ->
+      Right ("/" <> igUserId <> "/conversations", igUserId)
 
 metaBackfillServer :: AuthedUser -> Value -> AppM Value
 metaBackfillServer user payload = do
