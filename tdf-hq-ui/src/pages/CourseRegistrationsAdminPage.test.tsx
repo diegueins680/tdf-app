@@ -1113,7 +1113,18 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
       expect(container.textContent).not.toContain(`Misma fecha de registro: ${createdAtLabel}.`);
       expect(countOccurrences(container, `Creado: ${createdAtLabel}`)).toBe(0);
+      const activeStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-active-status-summary"]',
+      );
+      expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
+      expect(activeStatusSummary?.textContent).toContain('Pagado');
+      expect(activeStatusSummary?.textContent).toContain(
+        'La vista filtrada ya incluye este estado; usa restablecer filtros si necesitas volver a ampliar la lista.',
+      );
+      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
+      expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(countButtonsByText(container, 'Restablecer filtros')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });
 

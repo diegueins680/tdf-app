@@ -1385,7 +1385,8 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
-  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary;
+  const showActiveStatusFilterSummary = hasStatusFilter && (hasEffectiveSlugFilter || hasCustomLimit);
+  const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
   const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
@@ -1459,6 +1460,7 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummary && !showSingleResultWithOnlyPassiveFilterContext;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInFilterStrip
+    || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
   const dossierScopeHint = [
@@ -1479,7 +1481,10 @@ export default function CourseRegistrationsAdminPage() {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
     const statusAlreadyExplained = Boolean(
-      combinedSingleChoiceSummary || showSingleStatusSummary || statusAlreadyVisibleInFilterStrip,
+      combinedSingleChoiceSummary
+      || showSingleStatusSummary
+      || statusAlreadyVisibleInFilterStrip
+      || showActiveStatusFilterSummary,
     );
     const limitAlreadyExplained = Boolean(combinedSingleChoiceLimitSummary);
     if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
@@ -1492,6 +1497,7 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceLimitSummary,
     limit,
     showSingleStatusSummary,
+    showActiveStatusFilterSummary,
     singleAvailableCohortLabel,
     statusAlreadyVisibleInFilterStrip,
     status,
@@ -2949,6 +2955,30 @@ export default function CourseRegistrationsAdminPage() {
                             {limitToggleLabel}
                           </Button>
                         )}
+                      </Stack>
+                    ) : showActiveStatusFilterSummary ? (
+                      <Stack
+                        data-testid="course-registration-active-status-summary"
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Estado filtrado
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {statusFilterLabels[status]}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          La vista filtrada ya incluye este estado; usa {resetViewLabel.toLowerCase()} si necesitas volver a ampliar la lista.
+                        </Typography>
                       </Stack>
                     ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
                       <Stack
