@@ -5999,6 +5999,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('names the exact contact field in busy-list local search prompts', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crPhoneE164: null,
+      })),
+    );
+
+    const emailOnlyContainer = document.createElement('div');
+    document.body.appendChild(emailOnlyContainer);
+    const emailOnlyPage = await renderPage(emailOnlyContainer);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(emailOnlyContainer, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o correo');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
+    });
+
+    await emailOnlyPage.cleanup();
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crEmail: '   ',
+      })),
+    );
+
+    const phoneOnlyContainer = document.createElement('div');
+    document.body.appendChild(phoneOnlyContainer);
+    const phoneOnlyPage = await renderPage(phoneOnlyContainer);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(phoneOnlyContainer, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o teléfono');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
+    });
+
+    await phoneOnlyPage.cleanup();
+  });
+
   it('keeps busy-list search prompts limited to identity fields that actually exist', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({

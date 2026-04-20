@@ -742,17 +742,21 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
   let hasNameIdentity = false;
-  let hasContactIdentity = false;
+  let hasEmailIdentity = false;
+  let hasPhoneIdentity = false;
   let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
 
   registrations.forEach((reg) => {
     const hasName = Boolean(reg.crFullName?.trim());
-    const hasContact = Boolean(reg.crEmail?.trim()) || Boolean(reg.crPhoneE164?.trim());
+    const hasEmail = Boolean(reg.crEmail?.trim());
+    const hasPhone = Boolean(reg.crPhoneE164?.trim());
+    const hasContact = hasEmail || hasPhone;
 
     if (hasName) hasNameIdentity = true;
-    if (hasContact) hasContactIdentity = true;
+    if (hasEmail) hasEmailIdentity = true;
+    if (hasPhone) hasPhoneIdentity = true;
     if (!hasName && !hasContact) {
       hasGeneratedRegistrationIdentity = true;
     }
@@ -772,7 +776,15 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
 
   const terms: string[] = [];
   if (hasNameIdentity) terms.push('Nombre');
-  if (hasContactIdentity) terms.push(hasNameIdentity ? 'contacto' : 'Contacto');
+  if (hasEmailIdentity || hasPhoneIdentity) {
+    const contactTerm = hasEmailIdentity && hasPhoneIdentity
+      ? 'contacto'
+      : hasEmailIdentity
+        ? 'correo'
+        : 'teléfono';
+    const capitalizedContactTerm = `${contactTerm.charAt(0).toLocaleUpperCase('es')}${contactTerm.slice(1)}`;
+    terms.push(hasNameIdentity ? contactTerm : capitalizedContactTerm);
+  }
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (hasNotes) terms.push('nota');
   if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
