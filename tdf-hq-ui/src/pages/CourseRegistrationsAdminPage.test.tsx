@@ -231,9 +231,10 @@ const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir en cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialCohortResolutionMessage =
-  'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
+  'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage =
-  'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
+  'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
+const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage =
   'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 
@@ -7099,6 +7100,7 @@ describe('CourseRegistrationsAdminPage', () => {
         '[data-testid="course-registration-initial-cohort-loading"]',
       );
       expect(loadingState?.textContent).toContain(initialCohortResolutionMessage);
+      expect(loadingState?.textContent).not.toContain('cohortes');
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
       expect(container.textContent).not.toContain(initialEmptyStateMultiCohortMessage);
@@ -7133,7 +7135,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const errorState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-cohort-error"]');
       expect(errorState?.textContent).toContain(initialCohortErrorMessage);
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(errorState?.textContent).not.toContain('cohortes');
+      expect(errorState?.textContent).not.toContain('filtrar o revisar la lista');
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
@@ -7146,7 +7151,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      clickButton(getButtonByText(container, initialCohortRetryLabel));
       await flushPromises();
       await flushPromises();
     });

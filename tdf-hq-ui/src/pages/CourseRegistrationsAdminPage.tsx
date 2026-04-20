@@ -63,8 +63,9 @@ const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Hay 
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir en cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
-const initialCohortResolutionMessage = 'Revisando cohortes configuradas para mostrar el siguiente paso correcto.';
-const initialCohortErrorMessage = 'No se pudieron cargar las cohortes para elegir qué formulario compartir. Reintenta cohortes antes de filtrar o revisar la lista.';
+const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
+const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
+const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; reintenta cohortes para recuperar el filtro por curso.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.`;
@@ -2658,7 +2659,7 @@ export default function CourseRegistrationsAdminPage() {
               onClick={handleRefresh}
               disabled={cohortsQuery.isFetching}
             >
-              {headerRefreshLabel}
+              {initialCohortRetryLabel}
             </Button>
           )}
         >
