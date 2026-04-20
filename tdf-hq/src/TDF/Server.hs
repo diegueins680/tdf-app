@@ -4008,13 +4008,40 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
     Just urlVal ->
       if "https://" `T.isPrefixOf` T.toLower urlVal
           && TrialsServer.isValidHttpUrl urlVal
-        then Right (Just urlVal)
+        then
+          if fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal)
+            then
+              Left err400
+                { errBody =
+                    "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com"
+                }
+            else Right (Just urlVal)
         else
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+isAllowedWhatsAppCtaUrl :: Text -> Bool
+isAllowedWhatsAppCtaUrl rawUrl =
+  maybe False (`elem` allowedHosts) (extractHttpUrlHost rawUrl)
+  where
+    allowedHosts =
+      [ "wa.me"
+      , "api.whatsapp.com"
+      , "web.whatsapp.com"
+      ]
+
+extractHttpUrlHost :: Text -> Maybe Text
+extractHttpUrlHost rawUrl = do
+  withoutScheme <-
+    T.stripPrefix "https://" lowerUrl <|> T.stripPrefix "http://" lowerUrl
+  let authority = T.takeWhile (`notElem` ("/?#" :: String)) withoutScheme
+      host = T.takeWhile (/= ':') authority
+  if T.null host then Nothing else Just host
+  where
+    lowerUrl = T.toLower (T.strip rawUrl)
 
 sanitizeStoredCoursePublicUrl :: Text -> Maybe Text -> Maybe Text
 sanitizeStoredCoursePublicUrl fieldName =

@@ -134,6 +134,7 @@ import TDF.Server
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
+    , validateCoursePublicUrlField
     , validateMarketplaceBuyerName
     , validateMarketplaceBuyerEmail
     , validateMarketplaceBuyerPhone
@@ -4009,6 +4010,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+
+    describe "validateCoursePublicUrlField" $ do
+        it "keeps custom WhatsApp course CTAs constrained to WhatsApp hosts" $ do
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just " https://wa.me/593991234567 ")
+                `shouldBe` Right (Just "https://wa.me/593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://api.whatsapp.com/send?phone=593991234567")
+                `shouldBe` Right (Just "https://api.whatsapp.com/send?phone=593991234567")
+
+        it "rejects non-WhatsApp CTA hosts instead of publishing misleading course links" $ do
+            let assertInvalid rawUrl =
+                    case validateCoursePublicUrlField "whatsappCtaUrl" (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "whatsappCtaUrl must use wa.me"
+                        Right urlVal ->
+                            expectationFailure
+                                ("Expected invalid WhatsApp CTA URL to be rejected, got: " <> show urlVal)
+            assertInvalid "https://tdf.example.com/contacto"
+            assertInvalid "https://wa.me.evil.example/593991234567"
 
     describe "validatePublicBookingFullName" $ do
         it "trims public-booking names before booking title and party fallback creation" $
