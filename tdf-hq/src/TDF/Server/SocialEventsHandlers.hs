@@ -38,6 +38,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentCaption
   , normalizeMomentCommentBody
   , validateEventCreateUpdateDimensions
+  , validateVenueCreateUpdateFields
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
@@ -759,6 +760,12 @@ socialEventsServer user = eventsServer
     createVenue dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
+      either throwError pure $
+        validateVenueCreateUpdateFields
+          (venueName dto)
+          (venueLat dto)
+          (venueLng dto)
+          (venueCapacity dto)
       let contactMeta = venueContactMetadataFromDTO dto
       key <- liftIO $ runSqlPool (insert Venue
         { venueName = venueName dto
@@ -820,6 +827,12 @@ socialEventsServer user = eventsServer
       mExisting <- liftIO $ runSqlPool (get venueKey) envPool
       existing <- maybe (throwError err404 { errBody = "Venue not found" }) pure mExisting
       let dto = vudVenue
+      either throwError pure $
+        validateVenueCreateUpdateFields
+          (venueName dto)
+          (venueLat dto)
+          (venueLng dto)
+          (venueCapacity dto)
       let existingContactMeta = decodeVenueContactMetadata (SM.venueContact existing)
           mergedContactMeta = applyVenueContactUpdate vudContactUpdate existingContactMeta
       liftIO $ runSqlPool (update venueKey
@@ -2349,6 +2362,36 @@ validateEventCreateUpdateDimensions mPriceCents mCapacity mBudgetCents
       Left err400 { errBody = "event budget must be >= 0" }
   | otherwise =
       Right ()
+
+validateVenueCreateUpdateFields
+  :: T.Text
+  -> Maybe Double
+  -> Maybe Double
+  -> Maybe Int
+  -> Either ServerError ()
+validateVenueCreateUpdateFields rawName mLat mLng mCapacity
+  | T.null (T.strip rawName) =
+      Left err400 { errBody = "venue name is required" }
+  | maybe False (< 0) mCapacity =
+      Left err400 { errBody = "venue capacity must be >= 0" }
+  | otherwise =
+      validateVenueCoordinatePair mLat mLng
+
+validateVenueCoordinatePair :: Maybe Double -> Maybe Double -> Either ServerError ()
+validateVenueCoordinatePair Nothing Nothing = Right ()
+validateVenueCoordinatePair (Just lat) (Just lng)
+  | isNaN lat || isInfinite lat =
+      Left err400 { errBody = "Invalid venue latitude" }
+  | isNaN lng || isInfinite lng =
+      Left err400 { errBody = "Invalid venue longitude" }
+  | lat < (-90) || lat > 90 =
+      Left err400 { errBody = "venue latitude must be between -90 and 90" }
+  | lng < (-180) || lng > 180 =
+      Left err400 { errBody = "venue longitude must be between -180 and 180" }
+  | otherwise =
+      Right ()
+validateVenueCoordinatePair _ _ =
+  Left err400 { errBody = "venue latitude and longitude must be provided together" }
 
 validateEventCurrencyInput :: Maybe T.Text -> Either ServerError T.Text
 validateEventCurrencyInput mCurrency =

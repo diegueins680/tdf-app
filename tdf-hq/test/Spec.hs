@@ -186,6 +186,7 @@ import TDF.Server.SocialEventsHandlers (
     parseFollowerQueryParamEither,
     parseVenueIdEither,
     validateEventCreateUpdateDimensions,
+    validateVenueCreateUpdateFields,
     normalizeTicketOrderStatus,
     normalizeTicketStatus,
     parseNearQueryEither,
@@ -2744,6 +2745,46 @@ main = hspec $ do
                 (validateEventCreateUpdateDimensions Nothing Nothing (Just (-10)))
                 "event budget must be >= 0"
 
+    describe "validateVenueCreateUpdateFields" $ do
+        it "accepts named venues with omitted or bounded coordinate/capacity data" $ do
+            validateVenueCreateUpdateFields "  Teatro TDF  " Nothing Nothing Nothing
+                `shouldBe` Right ()
+            validateVenueCreateUpdateFields "Teatro TDF" (Just (-0.18)) (Just (-78.48)) (Just 0)
+                `shouldBe` Right ()
+            validateVenueCreateUpdateFields "Teatro TDF" (Just 90) (Just 180) (Just 250)
+                `shouldBe` Right ()
+
+        it "rejects ambiguous venue dimensions before persistence" $ do
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure ("Expected invalid venue fields to be rejected, got " <> show value)
+            assertInvalid
+                (validateVenueCreateUpdateFields "   " Nothing Nothing Nothing)
+                "venue name is required"
+            assertInvalid
+                (validateVenueCreateUpdateFields "Teatro TDF" (Just (-0.18)) Nothing Nothing)
+                "venue latitude and longitude must be provided together"
+            assertInvalid
+                (validateVenueCreateUpdateFields "Teatro TDF" (Just 91) (Just (-78.48)) Nothing)
+                "venue latitude must be between -90 and 90"
+            assertInvalid
+                (validateVenueCreateUpdateFields "Teatro TDF" (Just (-0.18)) (Just 181) Nothing)
+                "venue longitude must be between -180 and 180"
+            assertInvalid
+                (validateVenueCreateUpdateFields
+                    "Teatro TDF"
+                    (Just (0 / 0))
+                    (Just (-78.48))
+                    Nothing)
+                "Invalid venue latitude"
+            assertInvalid
+                (validateVenueCreateUpdateFields "Teatro TDF" Nothing Nothing (Just (-1)))
+                "venue capacity must be >= 0"
+
     describe "isImageUpload" $ do
         it "requires matching raster MIME and extension for event image uploads" $ do
             isImageUpload " image/jpeg " "poster.JPG" `shouldBe` True
@@ -3630,7 +3671,7 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid
-                (A.object ["kind" .= T.replicate 65 "a"])
+                (A.object ["kind" .= Data.Text.replicate 65 "a"])
                 "Contract payload kind must be 64 characters or fewer"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
