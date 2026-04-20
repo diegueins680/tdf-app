@@ -40,7 +40,10 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
-import           Data.Time (Day, UTCTime (..), fromGregorian, getCurrentTime, toGregorian, utctDay, addUTCTime, secondsToDiffTime)
+import           Data.Time
+  ( Day, UTCTime (..), addUTCTime, diffTimeToPicoseconds, fromGregorian
+  , getCurrentTime, secondsToDiffTime, toGregorian, utctDay
+  )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
@@ -3999,10 +4002,22 @@ validatePublicBookingStartAt now startsAt
   | startsAt <= now = Left err400 { errBody = "startsAt must be in the future" }
   | startsAt > addUTCTime (fromIntegral publicBookingMaxLeadDays * 86400) now =
       Left err400 { errBody = "startsAt must be within 365 days" }
+  | not (isPublicBookingStartOnGrid startsAt) =
+      Left err400 { errBody = "startsAt must align to a 15-minute slot" }
   | otherwise = Right startsAt
 
 publicBookingMaxLeadDays :: Int
 publicBookingMaxLeadDays = 365
+
+isPublicBookingStartOnGrid :: UTCTime -> Bool
+isPublicBookingStartOnGrid startsAt =
+  let picoseconds = diffTimeToPicoseconds (utctDayTime startsAt)
+      stepPicoseconds =
+        fromIntegral (publicBookingDurationStepMinutes * 60) * picosecondsPerSecond
+  in picoseconds `mod` stepPicoseconds == 0
+
+picosecondsPerSecond :: Integer
+picosecondsPerSecond = 1000000000000
 
 validateBookingTimeRange :: UTCTime -> UTCTime -> Either ServerError ()
 validateBookingTimeRange startsAt endsAt

@@ -4378,6 +4378,19 @@ spec = describe "TDF.Server helpers" $ do
                 startsAt = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 39600)
             validatePublicBookingStartAt now startsAt `shouldBe` Right startsAt
 
+        it "rejects off-grid public booking starts before resource fallback selection" $ do
+            let now = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 36000)
+                offGridStart = UTCTime (fromGregorian 2026 4 10) (secondsToDiffTime 39420)
+            case validatePublicBookingStartAt now offGridStart of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "startsAt must align to a 15-minute slot"
+                Right startsAtValue ->
+                    expectationFailure $
+                        "Expected off-grid public booking start time to be rejected, got: "
+                            <> show startsAtValue
+
         it
             "rejects public booking starts more than a year ahead instead of parking stale holds"
             $ do
