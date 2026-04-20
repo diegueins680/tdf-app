@@ -1430,7 +1430,7 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
     : '';
-  const copyCsvButtonLabel = `Copiar visibles (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
   const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
     && !hasLocalSearch
@@ -2357,7 +2357,7 @@ export default function CourseRegistrationsAdminPage() {
       size="small"
       startIcon={<ContentCopyIcon fontSize="small" />}
       aria-label={copyCsvButtonAccessibleLabel}
-      title="Copia solo las filas visibles en esta vista como CSV."
+      title="Copia solo las filas visibles de esta vista."
       onClick={() => void handleCopyCsv()}
     >
       {copyCsvButtonLabel}
