@@ -194,6 +194,7 @@ import TDF.Server
     , validateCalendarRedirectUri
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
+    , resolveDriveUploadFolderId
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
@@ -2405,6 +2406,35 @@ spec = describe "TDF.Server helpers" $ do
                     []
                     [(mkDriveUploadFile "file.pdf") { fdInputName = "document" }]
                 )
+
+    describe "resolveDriveUploadFolderId" $ do
+        it "prefers valid request folder ids and uses the configured fallback only when omitted" $ do
+            resolveDriveUploadFolderId (Just " folder_123-A ") (Just "env-folder")
+                `shouldBe` Right (Just "folder_123-A")
+            resolveDriveUploadFolderId (Just "   ") (Just " env-folder_1 ")
+                `shouldBe` Right (Just "env-folder_1")
+            resolveDriveUploadFolderId Nothing Nothing
+                `shouldBe` Right Nothing
+
+        it "rejects malformed request folder ids instead of silently falling back" $ do
+            case resolveDriveUploadFolderId (Just "bad folder") (Just "env-folder") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "folderId must be a Google Drive folder id"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid Drive upload folderId to be rejected, got " <> show value)
+
+        it "rejects malformed configured folder fallbacks before upload requests are built" $ do
+            case resolveDriveUploadFolderId Nothing (Just "env/folder") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "DRIVE_UPLOAD_FOLDER_ID must be a Google Drive folder id"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
 
     describe "resolveDrivePublicUrl" $ do
         it "keeps Drive resource-key links well-shaped across fallback URL forms" $ do

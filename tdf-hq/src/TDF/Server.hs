@@ -1760,8 +1760,8 @@ driveUploadServer _ mAccessToken DriveUploadForm{..} = do
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
   accessToken <- resolveDriveAccessToken manager providedToken
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
-  let folder = cleanOptional duFolderId <|> mFolderEnv
-      fallbackName =
+  folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
+  let fallbackName =
         let raw = T.strip (fdFileName duFile)
         in if T.null raw then Nothing else Just raw
       nameOverride = cleanOptional duName <|> fallbackName
@@ -1827,6 +1827,37 @@ resolveProvidedDriveAccessToken mHeaderToken mFormToken = do
     (Just headerToken, Nothing) -> Right (Just headerToken)
     (Nothing, Just formToken) -> Right (Just formToken)
     (Nothing, Nothing) -> Right Nothing
+
+resolveDriveUploadFolderId :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
+resolveDriveUploadFolderId mProvidedFolderId mFallbackFolderId =
+  case cleanOptional mProvidedFolderId of
+    Just provided ->
+      Just <$> validateDriveUploadFolderId err400 "folderId" provided
+    Nothing ->
+      traverse
+        (validateDriveUploadFolderId err500 "DRIVE_UPLOAD_FOLDER_ID")
+        (cleanOptional mFallbackFolderId)
+
+validateDriveUploadFolderId :: ServerError -> Text -> Text -> Either ServerError Text
+validateDriveUploadFolderId baseError fieldName folderId
+  | T.null folderId = invalid
+  | T.length folderId > 256 = invalid
+  | not (T.all isDriveFolderIdChar folderId) = invalid
+  | otherwise = Right folderId
+  where
+    invalid =
+      Left baseError
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (driveUploadFolderIdMessage fieldName))
+        }
+
+driveUploadFolderIdMessage :: Text -> Text
+driveUploadFolderIdMessage fieldName =
+  fieldName <> " must be a Google Drive folder id (1-256 ASCII letters, digits, '-' or '_')"
+
+isDriveFolderIdChar :: Char -> Bool
+isDriveFolderIdChar ch =
+  isAsciiLower ch || isAsciiUpper ch || isDigit ch || ch == '-' || ch == '_'
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken token
