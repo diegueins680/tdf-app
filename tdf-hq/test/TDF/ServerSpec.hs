@@ -97,6 +97,7 @@ import TDF.Server
     , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
+    , validateEngineer
     , validateWhatsAppMessagesLimit
     , validateBookingListFilters
     , validatePublicBookingDurationMinutes
@@ -4459,6 +4460,20 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure ("Expected invalid booking time range to be rejected, got: " <> show result)
             assertInvalid sameEndsAt
             assertInvalid reversedEndsAt
+
+    describe "validateEngineer" $ do
+        it "keeps a named engineer fallback valid for services that require engineering" $
+            validateEngineer (Just " mezcla vocal ") Nothing (Just " Alex ") `shouldBe` Right ()
+
+        it "rejects malformed engineer-name fallbacks before booking persistence" $ do
+            validateEngineer Nothing Nothing (Just "Alex\nOps")
+                `shouldBe` Left "engineerName no debe contener caracteres de control"
+            validateEngineer (Just "mastering") Nothing (Just (T.replicate 161 "A"))
+                `shouldBe` Left "engineerName debe tener 160 caracteres o menos"
+
+        it "still rejects missing engineer fallback details for recording, mixing, and mastering bookings" $
+            validateEngineer (Just "grabacion") Nothing (Just "   ")
+                `shouldBe` Left "Selecciona un ingeniero para grabación/mezcla/mastering"
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do

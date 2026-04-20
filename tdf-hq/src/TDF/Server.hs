@@ -6705,6 +6705,12 @@ requiresEngineer (Just svc) =
 
 validateEngineer :: Maybe Text -> Maybe Int64 -> Maybe Text -> Either Text ()
 validateEngineer svc mEngineerId mEngineerName
+  | Just engineerName <- mEngineerName
+  , T.length (T.strip engineerName) > 160 =
+      Left "engineerName debe tener 160 caracteres o menos"
+  | Just engineerName <- mEngineerName
+  , T.any isControl (T.strip engineerName) =
+      Left "engineerName no debe contener caracteres de control"
   | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
