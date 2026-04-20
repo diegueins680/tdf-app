@@ -1371,6 +1371,15 @@ export default function CourseRegistrationsAdminPage() {
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
+  const allVisibleNamedRegistrationsNeedContact = searchedRegistrations.length > 1
+    && searchedRegistrations.every((reg) => (
+      Boolean(reg.crFullName?.trim())
+      && !reg.crEmail?.trim()
+      && !reg.crPhoneE164?.trim()
+    ));
+  const sharedVisibleMissingContactSummary = allVisibleNamedRegistrationsNeedContact
+    ? 'Contacto pendiente en todas las inscripciones visibles.'
+    : '';
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
     const createdLabels = searchedRegistrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
@@ -1389,6 +1398,7 @@ export default function CourseRegistrationsAdminPage() {
     sharedVisibleStatusSummary,
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
+    sharedVisibleMissingContactSummary,
     sharedVisibleNotesSummary,
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
@@ -3098,12 +3108,28 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
-                {sharedVisibleNotesSummary && (
+                {sharedVisibleMissingContactSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       mt: shouldShowSharedStatusSummary || shouldShowSharedCohortSummary || shouldShowSharedSourceSummary
+                        ? 0.75
+                        : 1.5,
+                    }}
+                  >
+                    {sharedVisibleMissingContactSummary}
+                  </Typography>
+                )}
+                {sharedVisibleNotesSummary && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mt: shouldShowSharedStatusSummary
+                        || shouldShowSharedCohortSummary
+                        || shouldShowSharedSourceSummary
+                        || Boolean(sharedVisibleMissingContactSummary)
                         ? 0.75
                         : 1.5,
                     }}

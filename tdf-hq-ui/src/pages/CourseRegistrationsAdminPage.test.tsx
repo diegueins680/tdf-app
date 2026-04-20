@@ -1257,7 +1257,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps named list rows from repeating the missing-contact fallback', async () => {
+  it('summarizes missing contact once when every named visible registration needs it', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crFullName: 'Ada Lovelace',
@@ -1280,7 +1280,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+      expect(hasExactText(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(true);
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
+      expect(countOccurrences(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
     });
