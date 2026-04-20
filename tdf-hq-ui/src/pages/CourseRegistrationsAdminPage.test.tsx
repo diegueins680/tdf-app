@@ -6075,6 +6075,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('collapses extra spaces in busy-list search so pasted names do not hit empty recovery', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), '  estudiante    9  ');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Estudiante 9');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('No hay coincidencias');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps hidden default and empty sources out of busy-list local search', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
