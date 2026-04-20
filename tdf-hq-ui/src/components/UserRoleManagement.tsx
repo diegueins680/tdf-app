@@ -136,6 +136,34 @@ const hasRoleSelectionChanged = (
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
 };
 
+const formatRoleGroupLabel = (roles: readonly RoleValue[]) => {
+  if (roles.length <= 1) return roles[0] ?? '';
+  if (roles.length === 2) return `${roles[0]} y ${roles[1]}`;
+  return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
+};
+
+const buildPendingRoleChangesSummary = (
+  currentRoles?: readonly RoleValue[] | null,
+  nextRoles?: readonly RoleValue[] | null,
+) => {
+  const normalizedCurrentRoles = normalizeRoleSelection(currentRoles);
+  const normalizedNextRoles = normalizeRoleSelection(nextRoles);
+  const rolesToAdd = normalizedNextRoles.filter((role) => !normalizedCurrentRoles.includes(role));
+  const rolesToRemove = normalizedCurrentRoles.filter((role) => !normalizedNextRoles.includes(role));
+  const actions: string[] = [];
+
+  if (rolesToAdd.length > 0) {
+    actions.push(`agregar ${formatRoleGroupLabel(rolesToAdd)}`);
+  }
+
+  if (rolesToRemove.length > 0) {
+    actions.push(`quitar ${formatRoleGroupLabel(rolesToRemove)}`);
+  }
+
+  if (actions.length === 0) return null;
+  return `${actions.length === 1 ? 'Cambio pendiente' : 'Cambios pendientes'}: ${actions.join(' · ')}.`;
+};
+
 const buildRoleManagementSummary = ({
   showContactColumn,
   showStatusColumn,
@@ -191,6 +219,9 @@ export default function UserRoleManagement() {
   const hasPendingRoleChanges = selectedUser
     ? hasRoleSelectionChanged(selectedUser.roles, selectedRoles)
     : false;
+  const pendingRoleChangesSummary = selectedUser
+    ? buildPendingRoleChangesSummary(selectedUser.roles, selectedRoles)
+    : null;
 
   useEffect(() => {
     void loadUsers();
@@ -463,7 +494,7 @@ export default function UserRoleManagement() {
             </Select>
             <FormHelperText>
               {hasPendingRoleChanges
-                ? 'Listo para guardar esta actualización de permisos.'
+                ? (pendingRoleChangesSummary ?? 'Listo para guardar esta actualización de permisos.')
                 : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
             </FormHelperText>
           </FormControl>

@@ -83,6 +83,18 @@ const getButtonsByText = (root: ParentNode, labelText: string) =>
     (element) => buttonText(element) === labelText || element.getAttribute('aria-label') === labelText,
   );
 
+const getMenuItemByText = (labelText: string) => {
+  const item = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"], [role="option"]')).find(
+    (element) => buttonText(element) === labelText,
+  );
+
+  if (!item) {
+    throw new Error(`Menu item not found: ${labelText}`);
+  }
+
+  return item;
+};
+
 const countExactText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
     (element) => buttonText(element) === labelText,
@@ -435,6 +447,60 @@ describe('UserRoleManagement', () => {
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(true);
         expect(updateUserRolesMock).not.toHaveBeenCalled();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes the exact pending role addition before saving permissions', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 304,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const rolesSelect = document.body.querySelector('[role="combobox"]');
+      if (!(rolesSelect instanceof HTMLElement)) {
+        throw new Error('Roles select not found');
+      }
+
+      await act(async () => {
+        rolesSelect.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await act(async () => {
+        getMenuItemByText('Manager').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Cambio pendiente: agregar Manager.');
+        expect(document.body.textContent).not.toContain('Listo para guardar esta actualización de permisos.');
       });
     } finally {
       await cleanup();
