@@ -203,15 +203,23 @@ validateFallbackConnUrl envName raw
                 , let (key, rest) = T.breakOn "=" pair
                 , T.toLower key == "sslmode"
                 ]
-          in if any T.null targetSessionAttrs
-               then Left (envName <> " target_session_attrs must not be blank")
-               else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
-                 then Left (envName <> " target_session_attrs must be read-write")
-               else if any T.null sslModes
-                 then Left (envName <> " sslmode must not be blank")
-               else if any (not . isValidConnectionSslMode) sslModes
-                 then Left (invalidConnectionSslModeMessage envName)
-               else Right ()
+              rejectDuplicate name values =
+                if length values > 1
+                  then Left (envName <> " " <> name <> " must be provided at most once")
+                  else Right ()
+              validateRecognizedParams =
+                if any T.null targetSessionAttrs
+                  then Left (envName <> " target_session_attrs must not be blank")
+                  else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
+                    then Left (envName <> " target_session_attrs must be read-write")
+                  else if any T.null sslModes
+                    then Left (envName <> " sslmode must not be blank")
+                  else if any (not . isValidConnectionSslMode) sslModes
+                    then Left (invalidConnectionSslModeMessage envName)
+                  else Right ()
+          in rejectDuplicate "target_session_attrs" targetSessionAttrs
+               *> rejectDuplicate "sslmode" sslModes
+               *> validateRecognizedParams
 
 isValidConnectionSslMode :: Text -> Bool
 isValidConnectionSslMode rawMode =
