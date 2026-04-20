@@ -2567,7 +2567,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('matches accented admin names from an unaccented search so admins do not hit an empty state', async () => {
+  it('matches accented admin names from an unaccented, extra-spaced search so admins do not hit an empty state', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -2606,7 +2606,7 @@ describe('AdminUsersPage', () => {
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
 
-      await changeInputValue(searchInput, 'jose alvarez');
+      await changeInputValue(searchInput, '  jose   alvarez  ');
 
       await waitForExpectation(() => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
@@ -2614,7 +2614,7 @@ describe('AdminUsersPage', () => {
           'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
         );
         expect(container.textContent).toContain('José Álvarez');
-        expect(container.textContent).not.toContain('No hay coincidencias para "jose alvarez"');
+        expect(container.textContent).not.toContain('No hay coincidencias');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
       });
     } finally {

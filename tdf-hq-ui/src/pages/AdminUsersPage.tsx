@@ -153,8 +153,10 @@ const normalizeSearchValue = (value: string) =>
   value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const formatSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
@@ -432,7 +434,7 @@ export default function AdminUsersPage() {
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
-  const activeSearchSummary = searchQuery.trim();
+  const activeSearchSummary = formatSearchQuerySummary(searchQuery);
   const hasMultipleUsers = totalUsersCount > 1;
   const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
