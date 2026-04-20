@@ -2764,6 +2764,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('normalizes common payment and cancellation aliases into the standard status controls', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'payment_pending',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'canceled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado').textContent?.trim()).toBe('Cancelado (1)');
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cancelado');
+      expect(container.textContent).not.toContain('Payment Pending');
+      expect(container.textContent).not.toContain('Canceled');
+    });
+
+    await cleanup();
+  });
+
   it('summarizes one shared custom status instead of repeating it across every row action', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

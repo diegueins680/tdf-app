@@ -153,10 +153,15 @@ const emptyFollowUpForm = (): FollowUpFormState => ({
 const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.some((status) => status === value);
 
+const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (normalized === 'payment_pending') return 'pending_payment';
+  if (normalized === 'canceled') return 'cancelled';
+  return isStatusFilter(normalized) ? normalized : null;
+};
+
 const parseStatusFilter = (value: string | null): StatusFilter => {
-  const trimmed = value?.trim() ?? '';
-  const normalized = trimmed.toLowerCase().replace(/[\s-]+/g, '_');
-  return isStatusFilter(normalized) ? normalized : 'all';
+  return normalizeStatusFilterAlias(value ?? '') ?? 'all';
 };
 
 const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): number => {
@@ -286,17 +291,8 @@ const normalizeRegistrationStatusKey = (status: string) =>
   status.trim().toLowerCase().replace(/[\s-]+/g, '_');
 
 const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | null => {
-  const normalizedStatus = normalizeRegistrationStatusKey(status);
-
-  if (
-    normalizedStatus === 'pending_payment'
-    || normalizedStatus === 'paid'
-    || normalizedStatus === 'cancelled'
-  ) {
-    return normalizedStatus;
-  }
-
-  return null;
+  const statusFilter = normalizeStatusFilterAlias(status);
+  return statusFilter && statusFilter !== 'all' ? statusFilter : null;
 };
 
 const customRegistrationStatusLabel = (status: string) => {
