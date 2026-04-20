@@ -77,6 +77,7 @@ import TDF.DTO (AdsAssistRequest (..), CreateInvoiceLineReq (..))
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
+    , DriveApiResp(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
     , SessionInputLookup(..)
@@ -2456,6 +2457,26 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
+
+    describe "DriveApiResp FromJSON" $ do
+        it "normalizes valid Google Drive file ids from upload responses" $ do
+            let rawResponse =
+                    "{\"id\":\" file_123-A \","
+                        <> "\"webContentLink\":\"https://drive.google.com/uc?id=file_123-A\"}"
+            case (eitherDecode rawResponse :: Either String DriveApiResp) of
+                Left err ->
+                    expectationFailure ("Expected Drive upload response to decode, got: " <> err)
+                Right payload -> do
+                    darId payload `shouldBe` "file_123-A"
+                    darWebContentLink payload
+                        `shouldBe` Just "https://drive.google.com/uc?id=file_123-A"
+
+        it "rejects blank or malformed Drive file ids before public fallback URLs are built" $ do
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String DriveApiResp) `shouldSatisfy` isLeft
+            assertRejected "{\"id\":\"   \"}"
+            assertRejected "{\"id\":\"file 123\"}"
+            assertRejected "{\"id\":\"file-123&alt=media\"}"
 
     describe "resolveDrivePublicUrl" $ do
         it "keeps Drive resource-key links well-shaped across fallback URL forms" $ do

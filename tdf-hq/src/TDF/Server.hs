@@ -30,7 +30,7 @@ import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
-import           Data.Aeson.Types (camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -10056,11 +10056,23 @@ data DriveApiResp = DriveApiResp
   } deriving (Show, Generic)
 
 instance FromJSON DriveApiResp where
-  parseJSON = withObject "DriveApiResp" $ \o ->
-    DriveApiResp <$> o .: "id"
-                 <*> o .:? "webViewLink"
-                 <*> o .:? "webContentLink"
-                 <*> o .:? "resourceKey"
+  parseJSON = withObject "DriveApiResp" $ \o -> do
+    darId <- (o .: "id") >>= parseDriveApiFileId
+    darWebViewLink <- o .:? "webViewLink"
+    darWebContentLink <- o .:? "webContentLink"
+    darResourceKey <- o .:? "resourceKey"
+    pure DriveApiResp{..}
+
+parseDriveApiFileId :: Text -> Parser Text
+parseDriveApiFileId rawFileId
+  | T.null fileId =
+      fail "Drive file id is required"
+  | T.length fileId > 256 || not (T.all isDriveFolderIdChar fileId) =
+      fail "Drive file id must be 1-256 ASCII letters, digits, '-' or '_'"
+  | otherwise =
+      pure fileId
+  where
+    fileId = T.strip rawFileId
 
 data DriveMetaResp = DriveMetaResp
   { dmrResourceKey :: Maybe Text
