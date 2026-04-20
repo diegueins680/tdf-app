@@ -271,6 +271,11 @@ const normalizeLocalSearchText = (value: string) =>
     .toLocaleLowerCase('es');
 const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
 const formatLocalSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
+const looksLikeShortPhoneSearch = (value: string, digits: string) => (
+  digits.length > 0
+  && digits.length < MIN_PHONE_SEARCH_DIGITS
+  && /^[\d\s()+.-]+$/.test(value.trim())
+);
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
@@ -1275,6 +1280,9 @@ export default function CourseRegistrationsAdminPage() {
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
+  const shortPhoneSearchHint = looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
+    ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
+    : '';
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations),
@@ -1301,6 +1309,7 @@ export default function CourseRegistrationsAdminPage() {
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
       `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+      shortPhoneSearchHint,
       viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
     ].filter(Boolean).join(' ')
     : '';

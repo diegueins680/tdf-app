@@ -6230,6 +6230,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('explains short phone searches instead of leaving admins with generic empty-search recovery', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => ({
+      crPhoneE164: index === 4 ? '+593 99 900-0111' : `+593 98 000-00${index + 1}`,
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), '999');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "999" en las 9 inscripciones cargadas. Para buscar por teléfono, usa al menos 4 dígitos del número.',
+      );
+      expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps hidden default and empty sources out of busy-list local search', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
