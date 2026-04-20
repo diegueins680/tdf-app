@@ -472,7 +472,7 @@ function hasRoleSelectionChanged(currentRoles?: readonly RoleKey[] | null, nextR
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
 }
 
-function formatRoleGroupLabel(roles: readonly RoleKey[]) {
+function formatRoleGroupLabel(roles: readonly string[]) {
   if (roles.length <= 1) {
     return roles[0] ?? '';
   }
@@ -482,6 +482,18 @@ function formatRoleGroupLabel(roles: readonly RoleKey[]) {
   }
 
   return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
+}
+
+function buildCompactHiddenColumnsDescription(hiddenColumnLabels: readonly string[]) {
+  if (hiddenColumnLabels.length === 0) {
+    return null;
+  }
+
+  const labels = formatRoleGroupLabel(hiddenColumnLabels);
+  const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
+  const contextVerb = hiddenColumnLabels.length === 1 ? 'aporte' : 'aporten';
+
+  return `Vista compacta: ${labels} ${verb} cuando ${contextVerb} contexto.`;
 }
 
 function buildPendingRoleChangesSummary(
@@ -531,25 +543,17 @@ function buildAdminUsersSectionDescription({
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
 }) {
-  const hiddenColumnSummaries: string[] = [];
+  const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
-    hiddenColumnSummaries.push(
-      'la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado',
-    );
+    hiddenColumnLabels.push('último acceso');
   }
 
   if (!showStatusColumn) {
-    hiddenColumnSummaries.push(
-      'la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida',
-    );
+    hiddenColumnLabels.push('estado');
   }
 
-  if (hiddenColumnSummaries.length > 0) {
-    return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
-  }
-
-  return null;
+  return buildCompactHiddenColumnsDescription(hiddenColumnLabels);
 }
 
 function buildAuditSectionDescription({
@@ -559,25 +563,17 @@ function buildAuditSectionDescription({
   showActorColumn: boolean;
   showDetailColumn: boolean;
 }) {
-  const hiddenColumnSummaries: string[] = [];
+  const hiddenColumnLabels: string[] = [];
 
   if (!showActorColumn) {
-    hiddenColumnSummaries.push(
-      'la columna de actor reaparecerá cuando un cambio quede asociado a una cuenta específica',
-    );
+    hiddenColumnLabels.push('actor');
   }
 
   if (!showDetailColumn) {
-    hiddenColumnSummaries.push(
-      'la columna de detalle reaparecerá cuando exista información extra para revisar',
-    );
+    hiddenColumnLabels.push('detalle');
   }
 
-  if (hiddenColumnSummaries.length === 0) {
-    return null;
-  }
-
-  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+  return buildCompactHiddenColumnsDescription(hiddenColumnLabels);
 }
 
 function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {

@@ -2065,7 +2065,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.queryByText(/^Haz clic sobre un rol para editarlo desde esta misma vista\.$/i)).not.toBeInTheDocument();
@@ -2114,7 +2114,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Vista actual: la columna de último acceso reaparecerá cuando exista al menos un ingreso registrado y la columna de estado reaparecerá cuando exista una cuenta invitada o suspendida\./i,
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
     });
@@ -2146,7 +2146,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.queryByText(
-          /Vista actual:/i,
+          /Vista compacta:/i,
         ),
       ).not.toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
@@ -2475,7 +2475,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Vista actual: la columna de actor reaparecerá cuando un cambio quede asociado a una cuenta específica y la columna de detalle reaparecerá cuando exista información extra para revisar\./i,
+          /Vista compacta: actor y detalle aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Fecha$/i })).toBeInTheDocument();
@@ -2518,7 +2518,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByText(/Vista actual:/i),
+        screen.queryByText(/Vista compacta:/i),
       ).not.toBeInTheDocument();
       expect(
         screen.queryByText(
