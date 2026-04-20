@@ -1328,12 +1328,11 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
-  const showLocalSearchExplicitClearAction = hasLocalSearch
+  const showLocalSearchInlineClearAction = hasLocalSearch
     && !showEmptyLocalSearchResults;
   const showLocalSearchUtilityRow = hasLocalSearch && (
     showCopyCsvAction
     || Boolean(copyMessage)
-    || showLocalSearchExplicitClearAction
   );
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
@@ -3153,6 +3152,20 @@ export default function CourseRegistrationsAdminPage() {
                         <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
+                    endAdornment: showLocalSearchInlineClearAction ? (
+                      <InputAdornment position="end">
+                        <Tooltip title="Limpiar búsqueda">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            aria-label="Limpiar búsqueda"
+                            onClick={() => setLocalSearch('')}
+                          >
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ) : undefined,
                   }}
                 />
                 {showLocalSearchUtilityRow && (
@@ -3164,15 +3177,6 @@ export default function CourseRegistrationsAdminPage() {
                     useFlexGap
                     data-testid="course-registration-local-search-utilities"
                   >
-                    {showLocalSearchExplicitClearAction && (
-                      <Button
-                        size="small"
-                        startIcon={<ClearIcon fontSize="small" />}
-                        onClick={() => setLocalSearch('')}
-                      >
-                        Limpiar búsqueda
-                      </Button>
-                    )}
                     {copyCsvActionButton}
                     {copyMessage && (
                       <Typography variant="caption" color="text.secondary">

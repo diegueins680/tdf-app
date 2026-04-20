@@ -5939,16 +5939,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
-      expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
@@ -6576,7 +6576,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps narrowed-search utilities together instead of splitting clear and CSV actions', async () => {
+  it('keeps narrowed-search export utilities separate from the field-owned clear action', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
@@ -6618,8 +6618,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, copyVisibleCsvLabel(2))).toBeTruthy();
-      expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
@@ -6628,7 +6628,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps broad local searches on the same explicit clear action without reopening export chrome', async () => {
+  it('keeps broad local searches field-scoped without reopening export chrome', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
     const container = document.createElement('div');
@@ -6659,9 +6659,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Busca dentro de este lote sin cambiar los filtros de cohorte o estado.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
-      expect(searchUtilities).not.toBeNull();
-      expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(searchUtilities).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -6798,7 +6798,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
