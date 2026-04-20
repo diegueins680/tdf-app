@@ -93,6 +93,7 @@ const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden 
 const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
+const MIN_PHONE_SEARCH_DIGITS = 4;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const missingContactSummary = 'Sin correo ni teléfono';
 
@@ -263,6 +264,7 @@ const normalizeLocalSearchText = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
 const formatLocalSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
@@ -1164,6 +1166,7 @@ export default function CourseRegistrationsAdminPage() {
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
   const localSearchTerm = formatLocalSearchQuerySummary(localSearch);
   const localSearchKey = normalizeLocalSearchText(localSearchTerm);
+  const localSearchDigitsKey = normalizeLocalSearchDigits(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {
     if (!localSearchKey) return registrations;
@@ -1182,9 +1185,16 @@ export default function CourseRegistrationsAdminPage() {
         getSearchableRegistrationSource(reg.crSource),
       ].join(' ');
       const searchableText = normalizeLocalSearchText(haystack);
-      return searchableText.includes(localSearchKey);
+      if (searchableText.includes(localSearchKey)) return true;
+
+      if (localSearchDigitsKey.length >= MIN_PHONE_SEARCH_DIGITS) {
+        const phoneDigits = normalizeLocalSearchDigits(reg.crPhoneE164 ?? '');
+        return phoneDigits.includes(localSearchDigitsKey);
+      }
+
+      return false;
     });
-  }, [cohortLabelsBySlug, localSearchKey, registrations]);
+  }, [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, registrations]);
   const registrationIdsRequiringActionDisambiguator = useMemo(
     () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
     [searchedRegistrations],
