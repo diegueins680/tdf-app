@@ -340,6 +340,9 @@ maxMarketplaceCartItemQuantity = 99
 instance FromJSON MarketplaceCartItemUpdate where
   parseJSON value = do
     payload <- genericParseJSON strictObjectOptions value
+    listingId <-
+      either fail pure $
+        normalizeMarketplaceCartListingId (mciuListingId payload)
     let quantity = mciuQuantity payload
     if quantity < 0
       then fail "mciuQuantity must be non-negative"
@@ -350,8 +353,22 @@ instance FromJSON MarketplaceCartItemUpdate where
               "mciuQuantity must be "
                 <> show maxMarketplaceCartItemQuantity
                 <> " or fewer"
-          else pure payload
+          else pure payload { mciuListingId = listingId }
 instance ToJSON MarketplaceCartItemUpdate
+
+normalizeMarketplaceCartListingId :: Text -> Either String Text
+normalizeMarketplaceCartListingId rawListingId =
+  let listingId = T.strip rawListingId
+  in if isPositiveDecimalId listingId
+       then Right listingId
+       else Left "mciuListingId must be a positive decimal id"
+  where
+    isPositiveDecimalId candidate =
+      not (T.null candidate)
+        && T.all isDigit candidate
+        && case reads (T.unpack candidate) :: [(Integer, String)] of
+             [(n, "")] -> n > 0 && n <= fromIntegral (maxBound :: Int64)
+             _         -> False
 
 data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   { mcrBuyerName  :: Text

@@ -825,7 +825,7 @@ spec = do
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":2}"
+                "{\"mciuListingId\":\" 1 \",\"mciuQuantity\":2}"
              of
                 Left err ->
                     expectationFailure ("Expected marketplace cart item payload to decode, got: " <> err)
@@ -851,6 +851,20 @@ spec = do
         it "rejects unexpected cart item keys so malformed cart writes fail explicitly" $
             decodeMarketplaceCartItemUpdate
                 "{\"mciuListingId\":\"1\",\"mciuQuantity\":2,\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed listing ids before cart handler fallback validation" $ do
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"   \",\"mciuQuantity\":1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"0\",\"mciuQuantity\":1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"+1\",\"mciuQuantity\":1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"9223372036854775808\",\"mciuQuantity\":1}"
                 `shouldSatisfy` isLeft
 
         it "rejects negative or excessive cart item quantities before handler execution" $ do
