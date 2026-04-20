@@ -1955,6 +1955,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
@@ -4418,6 +4419,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
