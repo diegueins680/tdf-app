@@ -1402,6 +1402,37 @@ main = hspec $ do
                 "DATABASE_URL port must be between 1 and 65535"
 
     describe "Instagram messaging context fallback" $ do
+        it "rejects malformed Instagram send payloads before building Graph requests" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "   "
+                        "hola"
+                        `shouldReturn` Left "Instagram recipient id requerido"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient 1"
+                        "hola"
+                        `shouldReturn` Left "Instagram recipient id must not contain whitespace"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        "   "
+                        `shouldReturn` Left "Instagram message body requerido"
+
         it "does not use the configured fallback token when a targeted account has no connected token" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)

@@ -6,6 +6,7 @@ module TDF.Services.InstagramMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
+import           Data.Char (isControl, isSpace)
 import           Data.Maybe (catMaybes, isJust, maybeToList)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -37,17 +38,41 @@ data InstagramAttempt = InstagramAttempt
 
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
-  case buildAttempts cfg mTokenOverride mAccountIdOverride of
-    [] ->
-      pure (Left (missingMessagingContextError cfg mTokenOverride mAccountIdOverride))
-    attempts -> do
-      manager <- newManager tlsManagerSettings
-      runAttempts manager recipientId body attempts []
+  case validateInstagramMessagePayload recipientId body of
+    Left err -> pure (Left err)
+    Right (cleanRecipientId, cleanBody) ->
+      case buildAttempts cfg mTokenOverride mAccountIdOverride of
+        [] ->
+          pure (Left (missingMessagingContextError cfg mTokenOverride mAccountIdOverride))
+        attempts -> do
+          manager <- newManager tlsManagerSettings
+          runAttempts manager cleanRecipientId cleanBody attempts []
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validateInstagramMessagePayload :: Text -> Text -> Either Text (Text, Text)
+validateInstagramMessagePayload rawRecipientId rawBody = do
+  recipientId <- validateInstagramRecipientId rawRecipientId
+  body <- maybe (Left "Instagram message body requerido") Right (nonEmptyText rawBody)
+  pure (recipientId, body)
+
+validateInstagramRecipientId :: Text -> Either Text Text
+validateInstagramRecipientId rawRecipientId =
+  case nonEmptyText rawRecipientId of
+    Nothing ->
+      Left "Instagram recipient id requerido"
+    Just recipientId
+      | T.any isSpace recipientId ->
+          Left "Instagram recipient id must not contain whitespace"
+      | T.any isControl recipientId ->
+          Left "Instagram recipient id must not contain control characters"
+      | T.length recipientId > 256 ->
+          Left "Instagram recipient id must be 256 characters or fewer"
+      | otherwise ->
+          Right recipientId
 
 buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> [InstagramAttempt]
 buildAttempts cfg mTokenOverride mAccountIdOverride =
