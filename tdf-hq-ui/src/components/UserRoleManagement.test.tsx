@@ -550,6 +550,39 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('summarizes all-inactive rosters instead of repeating the same status on every row', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 411,
+        name: 'Ada Lovelace',
+        status: 'Inactive',
+      }),
+      buildUser({
+        id: 412,
+        name: 'Grace Hopper',
+        status: 'Inactive',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
+        expect(container.textContent).toContain(
+          'Vista actual: todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar.',
+        );
+        expect(countExactText(container, 'Roles editables')).toBe(1);
+        expect(countExactText(container, 'Inactivo')).toBe(0);
+        expect(container.textContent).not.toContain('Inactive');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('condenses hidden-column guidance into one summary line so the default admin view stays easier to scan', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({

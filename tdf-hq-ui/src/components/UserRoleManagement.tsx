@@ -165,10 +165,12 @@ const buildPendingRoleChangesSummary = (
 };
 
 const buildRoleManagementSummary = ({
+  showAllInactiveSummary,
   showContactColumn,
   showStatusColumn,
   showMixedStatusSummary,
 }: {
+  showAllInactiveSummary: boolean;
   showContactColumn: boolean;
   showStatusColumn: boolean;
   showMixedStatusSummary: boolean;
@@ -183,7 +185,9 @@ const buildRoleManagementSummary = ({
 
   if (!showStatusColumn) {
     hiddenColumnSummaries.push(
-      'la columna de estado sigue oculta mientras todas las cuentas sigan activas',
+      showAllInactiveSummary
+        ? 'todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar'
+        : 'la columna de estado sigue oculta mientras todas las cuentas sigan activas',
     );
   } else if (showMixedStatusSummary) {
     hiddenColumnSummaries.push(
@@ -204,10 +208,13 @@ export default function UserRoleManagement() {
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
   const showContactColumn = users.some((user) => getContactSummary(user) != null);
-  const showStatusColumn = users.some((user) => user.status === 'Inactive');
   const inactiveUsersCount = users.filter((user) => user.status === 'Inactive').length;
+  const activeUsersCount = users.length - inactiveUsersCount;
+  const showAllInactiveSummary = users.length > 1 && inactiveUsersCount === users.length;
+  const showStatusColumn = inactiveUsersCount > 0 && activeUsersCount > 0;
   const showMixedStatusSummary = showStatusColumn && inactiveUsersCount < users.length;
   const roleManagementSummary = buildRoleManagementSummary({
+    showAllInactiveSummary,
     showContactColumn,
     showStatusColumn,
     showMixedStatusSummary,
