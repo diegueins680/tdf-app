@@ -205,6 +205,8 @@ validateFallbackConnUrl envName raw
                 ]
           in if any T.null targetSessionAttrs
                then Left (envName <> " target_session_attrs must not be blank")
+               else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
+                 then Left (envName <> " target_session_attrs must be read-write")
                else if any T.null sslModes
                  then Left (envName <> " sslmode must not be blank")
                else if any (not . isValidConnectionSslMode) sslModes

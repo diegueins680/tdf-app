@@ -1068,9 +1068,9 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write"
 
-        it "preserves an explicit target_session_attrs setting on DATABASE_URL" $
+        it "preserves an explicit read-write target_session_attrs setting on DATABASE_URL" $
             withEnvOverrides
-                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any")
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write")
                 , ("DATABASE_PRIVATE_URL", Nothing)
                 , ("POSTGRES_URL", Nothing)
                 , ("POSTGRES_PRISMA_URL", Nothing)
@@ -1087,7 +1087,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=any"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write"
 
         it "requires target_session_attrs to be an actual non-blank URL query parameter" $ do
             let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
@@ -1124,6 +1124,34 @@ main = hspec $ do
                 $ loadConfig `shouldThrow` \err ->
                     "DATABASE_URL target_session_attrs must not be blank"
                         `isInfixOf` show (err :: IOException)
+
+        it "rejects explicit non-read-write target_session_attrs before fallback DB use" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    ]
+                expectRejected value =
+                    withEnvOverrides
+                        (withoutKeywordDb (baseUrl <> "?target_session_attrs=" <> value))
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL target_session_attrs must be read-write"
+                                `isInfixOf` show (err :: IOException)
+
+            expectRejected "any"
+            expectRejected "read-only"
 
         it "rejects blank or unsupported DATABASE_URL sslmode values before fallback use" $ do
             let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
