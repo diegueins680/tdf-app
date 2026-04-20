@@ -979,9 +979,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="outlined">
-          {reviewMode ? 'Close' : 'Cerrar'}
-        </Button>
         <Tooltip
           title={
             reviewMode

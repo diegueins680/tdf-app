@@ -609,6 +609,23 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps the review reply dialog footer focused on sending instead of duplicating close actions', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelectorAll('button[aria-label="Close"]')).toHaveLength(1);
+      expect(countButtonsByText(document.body, 'Close')).toBe(0);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('hides reply draft utilities until there is draft text to copy or clear', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
