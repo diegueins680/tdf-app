@@ -268,6 +268,24 @@ spec = do
       assertRejected baseSignup { firstName = "Ada\nLovelace" } "firstName must not contain control characters"
       assertRejected baseSignup { lastName = pack (replicate 121 'a') } "lastName must be 120 characters or fewer"
 
+    it "rejects oversized signup emails before persisting unusable contact data" $ do
+      let oversizedEmail = pack (replicate 245 'a') <> "@example.com"
+      case validatePublicSignupInput
+        ( SignupIn
+            "Ada"
+            "Lovelace"
+            oversizedEmail
+            Nothing
+            Nothing
+            Nothing
+            True
+        ) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "email inválido"
+        Right _ ->
+          expectationFailure "Expected oversized public signup email to be rejected"
+
   describe "validatePublicInterestInput" $ do
     it "rejects typoed or unexpected JSON keys so subject selections do not silently disappear" $ do
       isLeft

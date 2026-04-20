@@ -75,7 +75,8 @@ isValidEmail :: Text -> Bool
 isValidEmail candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      isValidEmailLocalPart localPart
+      T.length candidate <= maxPublicEmailChars
+        && isValidEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && not (T.isPrefixOf "." domain)
@@ -83,6 +84,9 @@ isValidEmail candidate =
         && T.isInfixOf "." domain
         && all isValidEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+maxPublicEmailChars :: Int
+maxPublicEmailChars = 254
 
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
