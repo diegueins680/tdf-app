@@ -3603,6 +3603,9 @@ main = hspec $ do
                 "Contract payload must include a kind field"
             assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
+            assertInvalid
+                (A.object ["kind" .= T.replicate 65 "a"])
+                "Contract payload kind must be 64 characters or fewer"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
 

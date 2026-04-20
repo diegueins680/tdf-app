@@ -261,6 +261,10 @@ normalizeContractKind rawKind
       Left err400
         { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
         }
+  | T.length kindText > maxContractKindLength =
+      Left err400
+        { errBody = "Contract payload kind must be 64 characters or fewer"
+        }
   | T.all validKindChar kindText =
       Right kindText
   | otherwise =
@@ -270,6 +274,9 @@ normalizeContractKind rawKind
   where
     kindText = T.toLower (T.strip rawKind)
     validKindChar c = isAsciiLower c || isDigit c || c == '-' || c == '_'
+
+maxContractKindLength :: Int
+maxContractKindLength = 64
 
 renderContractLatex :: StoredContract -> Text
 renderContractLatex StoredContract{..} =
