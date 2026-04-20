@@ -263,6 +263,7 @@ const normalizeLocalSearchText = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const formatLocalSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
@@ -1161,7 +1162,7 @@ export default function CourseRegistrationsAdminPage() {
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
-  const localSearchTerm = localSearch.trim();
+  const localSearchTerm = formatLocalSearchQuerySummary(localSearch);
   const localSearchKey = normalizeLocalSearchText(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {

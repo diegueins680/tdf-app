@@ -6657,7 +6657,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'sin coincidencias');
+      setInputValue(getInputByLabel(container, localSearchLabel), '  sin   coincidencias  ');
       await flushPromises();
       await flushPromises();
     });
@@ -6665,6 +6665,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('sin   coincidencias');
       expect(container.textContent).not.toContain('Búsqueda local en el lote cargado (9 inscripciones).');
       expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
