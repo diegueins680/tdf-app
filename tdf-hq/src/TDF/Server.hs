@@ -3924,6 +3924,18 @@ validatePublicBookingFullName rawName =
       | otherwise ->
           Right nameVal
 
+validatePublicBookingServiceType :: Text -> Either ServerError Text
+validatePublicBookingServiceType rawServiceType =
+  case cleanOptional (Just rawServiceType) of
+    Nothing -> Left err400 { errBody = "serviceType requerido" }
+    Just serviceTypeVal
+      | T.length serviceTypeVal > 120 ->
+          Left err400 { errBody = "serviceType debe tener 120 caracteres o menos" }
+      | T.any isControl serviceTypeVal ->
+          Left err400 { errBody = "serviceType no debe contener caracteres de control" }
+      | otherwise ->
+          Right serviceTypeVal
+
 validatePublicBookingDurationMinutes :: Maybe Int -> Either ServerError Int
 validatePublicBookingDurationMinutes Nothing = Right 60
 validatePublicBookingDurationMinutes (Just durationMinutes)
@@ -5703,8 +5715,10 @@ createPublicBooking PublicBookingReq{..} = do
   startsAtClean <-
     either throwError pure $
       validatePublicBookingStartAt now pbStartsAt
-  let serviceTypeClean = normalizeOptionalInput (Just pbServiceType)
-  when (isNothing serviceTypeClean) (throwBadRequest "serviceType requerido")
+  serviceTypeValue <-
+    either throwError pure $
+      validatePublicBookingServiceType pbServiceType
+  let serviceTypeClean = Just serviceTypeValue
   engineerIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" pbEngineerPartyId

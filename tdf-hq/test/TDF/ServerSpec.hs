@@ -163,6 +163,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
+    , validatePublicBookingServiceType
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
@@ -4058,6 +4059,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " "nombre requerido"
             assertInvalid "Ana\nPerez" "nombre no debe contener caracteres de control"
             assertInvalid (T.replicate 161 "A") "nombre debe tener 160 caracteres o menos"
+
+    describe "validatePublicBookingServiceType" $ do
+        it "trims required public-booking service types before title and resource fallback handling" $
+            validatePublicBookingServiceType "  mezcla vocal  " `shouldBe` Right "mezcla vocal"
+
+        it "rejects blank, control-character, or oversized service types before persistence" $ do
+            let assertInvalid rawServiceType expected = case validatePublicBookingServiceType rawServiceType of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expected
+                    Right serviceTypeVal ->
+                        expectationFailure
+                            ("Expected invalid public-booking service type to be rejected, got: " <> show serviceTypeVal)
+            assertInvalid "   " "serviceType requerido"
+            assertInvalid "mixing\nmastering" "serviceType no debe contener caracteres de control"
+            assertInvalid (T.replicate 121 "A") "serviceType debe tener 120 caracteres o menos"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $
