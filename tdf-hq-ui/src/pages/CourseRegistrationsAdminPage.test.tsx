@@ -1231,6 +1231,50 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('does not repeat contact values that are already the visible registration identity', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: 'ops@example.com',
+        crEmail: 'ops@example.com',
+        crPhoneE164: '+593999000111',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: '999000222',
+        crEmail: null,
+        crPhoneE164: '+593 999 000 222',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countOccurrences(container, 'ops@example.com')).toBe(1);
+      expect(hasExactText(container, '+593999000111')).toBe(true);
+      expect(hasExactText(container, '999000222')).toBe(true);
+      expect(container.textContent).not.toContain('+593 999 000 222');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de ops@example.com')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de 999000222')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de ops@example.com'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(countOccurrences(dialog, 'ops@example.com')).toBe(1);
+      expect(hasExactText(dialog, '+593999000111')).toBe(true);
+      expect(dialog.textContent).not.toContain('ops@example.com · +593999000111');
+    });
+
+    await cleanup();
+  });
+
   it('uses the best available contact as the visible identity when the registration name is blank', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

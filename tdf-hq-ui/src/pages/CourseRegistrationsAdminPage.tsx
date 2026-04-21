@@ -309,6 +309,38 @@ const looksLikeShortPhoneSearch = (value: string, digits: string) => (
   && digits.length < MIN_PHONE_SEARCH_DIGITS
   && /^[\d\s()+.-]+$/.test(value.trim())
 );
+const normalizeContactComparisonValue = (value: string | null | undefined) =>
+  value?.trim().toLocaleLowerCase('es') ?? '';
+const normalizePhoneComparisonValue = (value: string | null | undefined) => {
+  const trimmedValue = value?.trim() ?? '';
+  if (!/^\+?[\d\s().-]+$/.test(trimmedValue)) return '';
+
+  const digits = normalizeLocalSearchDigits(trimmedValue);
+  return digits.length >= 7 ? digits : '';
+};
+const phoneComparisonValuesMatch = (left: string | null | undefined, right: string | null | undefined) => {
+  const leftDigits = normalizePhoneComparisonValue(left);
+  const rightDigits = normalizePhoneComparisonValue(right);
+
+  return Boolean(
+    leftDigits
+    && rightDigits
+    && (leftDigits === rightDigits || leftDigits.endsWith(rightDigits) || rightDigits.endsWith(leftDigits)),
+  );
+};
+const contactComparisonValuesMatch = (left: string | null | undefined, right: string | null | undefined) => {
+  const normalizedLeft = normalizeContactComparisonValue(left);
+  const normalizedRight = normalizeContactComparisonValue(right);
+
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight)
+    || phoneComparisonValuesMatch(left, right);
+};
+const visibleRegistrationContactParts = (
+  contactParts: readonly string[],
+  visibleIdentityValues: readonly string[] = [],
+) => contactParts.filter((part) => (
+  !visibleIdentityValues.some((identityValue) => contactComparisonValuesMatch(identityValue, part))
+));
 
 const formatDate = (iso: string | null | undefined) => formatTimestampForDisplay(iso, '-');
 const formatOptionalDate = (iso: string | null | undefined) => {
@@ -756,14 +788,14 @@ const registrationIdentityDisplay = (
   if (trimmedName) {
     return {
       primary: trimmedName,
-      secondary: registrationContactSummary(trimmedEmail, trimmedPhone),
+      secondary: registrationContactSummary(trimmedEmail, trimmedPhone, [trimmedName]),
     };
   }
 
   if (trimmedEmail) {
     return {
       primary: trimmedEmail,
-      secondary: trimmedPhone,
+      secondary: visibleRegistrationContactParts([trimmedPhone].filter(Boolean), [trimmedEmail]).join(' · '),
     };
   }
 
@@ -807,12 +839,16 @@ const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrat
   return 'el nombre';
 };
 
-const registrationContactSummary = (email: string | null | undefined, phone: string | null | undefined) => {
+const registrationContactSummary = (
+  email: string | null | undefined,
+  phone: string | null | undefined,
+  visibleIdentityValues: readonly string[] = [],
+) => {
   const trimmedEmail = email?.trim() ?? '';
   const trimmedPhone = phone?.trim() ?? '';
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
   if (parts.length === 0) return missingContactSummary;
-  return parts.join(' · ');
+  return visibleRegistrationContactParts(parts, visibleIdentityValues).join(' · ');
 };
 
 const registrationActionTargetLabel = (
