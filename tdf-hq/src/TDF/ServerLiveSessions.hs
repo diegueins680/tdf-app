@@ -7,6 +7,7 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   , buildLiveSessionUsernameCollisionCandidate
   , sanitizeLiveSessionRiderFileName
+  , validateLiveSessionTermsAcceptance
   ) where
 
 import           Control.Monad              (forM_, void, when)
@@ -54,6 +55,11 @@ liveSessionsServer user = intakeHandler
       let bandName = T.strip (lsiBandName payload)
       when (T.null bandName) $
         throwError err400 { errBody = "bandName is required" }
+      acceptedTermsVersion <-
+        either throwError pure $
+          validateLiveSessionTermsAcceptance
+            (lsiAcceptedTerms payload)
+            (lsiTermsVersion payload)
 
       now <- liftIO getCurrentTime
       riderPath <- liftIO $ traverse storeRiderFile (lsiRider payload)
@@ -79,8 +85,8 @@ liveSessionsServer user = intakeHandler
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
         , ME.liveSessionIntakeAvailability = lsiAvailability payload
-        , ME.liveSessionIntakeAcceptedTerms = lsiAcceptedTerms payload
-        , ME.liveSessionIntakeTermsVersion = lsiTermsVersion payload
+        , ME.liveSessionIntakeAcceptedTerms = True
+        , ME.liveSessionIntakeTermsVersion = Just acceptedTermsVersion
         , ME.liveSessionIntakeRiderPath    = riderPath
         , ME.liveSessionIntakeCreatedBy    = Just (auPartyId user)
         , ME.liveSessionIntakeCreatedAt    = now
@@ -249,6 +255,17 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
           then T.take liveSessionUsernameCollisionBudget trimmedBase
           else T.take baseBudget trimmedBase
   in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
+
+validateLiveSessionTermsAcceptance :: Bool -> Maybe Text -> Either ServerError Text
+validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
+  | not acceptedTerms =
+      Left err400
+        { errBody = "acceptedTerms must be true before submitting live session intake" }
+  | otherwise =
+      case T.strip <$> rawTermsVersion of
+        Just termsVersion | not (T.null termsVersion) -> Right termsVersion
+        _ ->
+          Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
 
 sanitizeLiveSessionRiderFileName :: Text -> Text
 sanitizeLiveSessionRiderFileName rawName =

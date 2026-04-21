@@ -164,7 +164,8 @@ import TDF.Server
       validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
-      sanitizeLiveSessionRiderFileName )
+      sanitizeLiveSessionRiderFileName,
+      validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import TDF.Server.SocialSync
     ( socialSyncServer,
@@ -4747,6 +4748,26 @@ main = hspec $ do
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
+
+    describe "validateLiveSessionTermsAcceptance" $ do
+        it "requires explicit accepted terms before live-session intake persistence" $ do
+            validateLiveSessionTermsAcceptance True (Just " TDF Live Sessions v2 ")
+                `shouldBe` Right "TDF Live Sessions v2"
+
+            let assertInvalid accepted rawVersion expectedMessage =
+                    case validateLiveSessionTermsAcceptance accepted rawVersion of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session terms acceptance, got "
+                                    <> show value
+                                )
+
+            assertInvalid False (Just "TDF Live Sessions v2") "acceptedTerms must be true"
+            assertInvalid True Nothing "termsVersion is required"
+            assertInvalid True (Just "   ") "termsVersion is required"
 
     describe "sanitizeLiveSessionRiderFileName" $ do
         it "reduces rider upload names to a stable safe basename before persistence" $ do
