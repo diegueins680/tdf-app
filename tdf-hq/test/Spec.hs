@@ -109,7 +109,10 @@ import TDF.ServerRadio
       validateRadioTransmissionIngestBase,
       validateRadioTransmissionWhipBase,
       validateRadioTransmissionPublicBase )
-import TDF.RagStore (availabilityOverlaps, validateEmbeddingModelDimensions)
+import TDF.RagStore
+    ( availabilityOverlaps,
+      validateEmbeddingModelDimensions,
+      validateEmbeddingResponseOrder )
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
 import TDF.ServerInternships
@@ -4213,6 +4216,21 @@ main = hspec $ do
 
         it "rejects unknown embedding models" $ do
             validateEmbeddingModelDimensions "mystery-embedder" `shouldSatisfy` isLeft
+
+    describe "validateEmbeddingResponseOrder" $ do
+        it "orders embeddings by their upstream response indexes" $
+            validateEmbeddingResponseOrder
+                3
+                [(2, [2.0]), (0, [0.0]), (1, [1.0])]
+                `shouldBe` Right [[0.0], [1.0], [2.0]]
+
+        it "rejects incomplete, duplicate, or out-of-range response indexes" $ do
+            validateEmbeddingResponseOrder 3 [(0, [0.0]), (2, [2.0])]
+                `shouldSatisfy` isLeft
+            validateEmbeddingResponseOrder 2 [(0, [0.0]), (0, [1.0])]
+                `shouldSatisfy` isLeft
+            validateEmbeddingResponseOrder 2 [(0, [0.0]), (2, [2.0])]
+                `shouldSatisfy` isLeft
 
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do

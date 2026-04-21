@@ -9,6 +9,7 @@ module TDF.RagStore
   , getRagIndexStats
   , availabilityOverlaps
   , validateEmbeddingModelDimensions
+  , validateEmbeddingResponseOrder
   ) where
 
 import           Control.Monad          (forM, forM_)
@@ -612,6 +613,42 @@ validateEmbeddingModelDimensions model =
       Left ("OPENAI_EMBED_MODEL desconocido: " <> model <> ". Configura un modelo con dimensiones conocidas.")
     Just dim -> Right dim
 
+validateEmbeddingResponseOrder :: Int -> [(Int, [Double])] -> Either Text [[Double]]
+validateEmbeddingResponseOrder expectedCount indexedEmbeddings
+  | expectedCount < 0 =
+      Left "Embedding response expected count must not be negative"
+  | length indexedEmbeddings /= expectedCount =
+      Left
+        ( "Embedding response size mismatch: expected "
+          <> T.pack (show expectedCount)
+          <> " but got "
+          <> T.pack (show (length indexedEmbeddings))
+        )
+  | otherwise =
+      case outOfRangeIndexes of
+        idx:_ ->
+          Left ("Embedding response index out of range: " <> T.pack (show idx))
+        [] ->
+          case duplicateIndexes of
+            idx:_ ->
+              Left ("Embedding response duplicate index: " <> T.pack (show idx))
+            [] ->
+              traverse lookupEmbedding [0 .. expectedCount - 1]
+  where
+    grouped =
+      Map.fromListWith
+        (++)
+        [(idx, [embeddingValue]) | (idx, embeddingValue) <- indexedEmbeddings]
+    outOfRangeIndexes =
+      [idx | (idx, _) <- indexedEmbeddings, idx < 0 || idx >= expectedCount]
+    duplicateIndexes =
+      [idx | (idx, values) <- Map.toList grouped, length values > 1]
+    lookupEmbedding idx =
+      case Map.lookup idx grouped of
+        Just [embeddingValue] -> Right embeddingValue
+        _ ->
+          Left ("Embedding response missing index: " <> T.pack (show idx))
+
 validateRagEmbeddingDim :: AppConfig -> ConnectionPool -> IO (Either Text ())
 validateRagEmbeddingDim cfg pool =
   case validateEmbeddingModelDimensions (openAiEmbedModel cfg) of
@@ -750,8 +787,10 @@ callOpenAIEmbeddings cfg inputs =
           case eitherDecode raw of
             Left err -> pure (Left (T.pack err))
             Right (EmbeddingResp embeddings) ->
-              let ordered = map embedding (sortOn index embeddings)
-              in pure (Right ordered)
+              pure
+                (validateEmbeddingResponseOrder
+                  (length inputs)
+                  [(index item, embedding item) | item <- embeddings])
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
