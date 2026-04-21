@@ -169,6 +169,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingSlot
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
+    , validatePublicBookingNotes
     , validatePublicBookingServiceType
     , validateRequiredCmsField
     , validateRequiredCmsLocale
@@ -4267,6 +4268,27 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "not-an-email" Nothing "email inválido"
             assertInvalid "user()@example.com" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
+
+    describe "validatePublicBookingNotes" $ do
+        it "trims optional public-booking notes and keeps multiline intent" $ do
+            validatePublicBookingNotes Nothing `shouldBe` Right Nothing
+            validatePublicBookingNotes (Just "   ") `shouldBe` Right Nothing
+            validatePublicBookingNotes (Just "  Linea uno\nLinea dos  ")
+                `shouldBe` Right (Just "Linea uno\nLinea dos")
+
+        it "rejects oversized or unsafe-control public-booking notes before persistence" $ do
+            let assertInvalid rawNotes expected =
+                    case validatePublicBookingNotes (Just rawNotes) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expected
+                        Right notesVal ->
+                            expectationFailure
+                                ("Expected invalid public-booking notes to be rejected, got: " <> show notesVal)
+            assertInvalid (T.replicate 1001 "x") "notes must be 1000 characters or fewer"
+            assertInvalid
+                ("Needs synth" <> T.singleton '\0')
+                "notes must not contain control characters"
 
     describe "PublicBookingReq FromJSON" $ do
         it "accepts canonical public booking payloads used by the public booking form" $

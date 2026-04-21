@@ -3977,6 +3977,29 @@ validatePublicBookingServiceType rawServiceType =
       | otherwise ->
           Right serviceTypeVal
 
+validatePublicBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validatePublicBookingNotes Nothing = Right Nothing
+validatePublicBookingNotes (Just rawNotes) =
+  case normalizeOptionalInput (Just rawNotes) of
+    Nothing -> Right Nothing
+    Just notesVal
+      | T.length notesVal > publicBookingNotesMaxLength ->
+          Left err400 { errBody = "notes must be 1000 characters or fewer" }
+      | T.any isUnsafeNoteControl notesVal ->
+          Left err400
+            { errBody =
+                "notes must not contain control characters "
+                  <> "other than tabs or line breaks"
+            }
+      | otherwise ->
+          Right (Just notesVal)
+  where
+    isUnsafeNoteControl ch =
+      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+publicBookingNotesMaxLength :: Int
+publicBookingNotesMaxLength = 1000
+
 validatePublicBookingDurationMinutes :: Maybe Int -> Either ServerError Int
 validatePublicBookingDurationMinutes Nothing = Right 60
 validatePublicBookingDurationMinutes (Just durationMinutes)
@@ -5783,7 +5806,9 @@ createPublicBooking PublicBookingReq{..} = do
     liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
       >>= either throwError pure
   let endsAt       = addUTCTime (fromIntegral durationMins * 60) startsAtClean
-      notesClean   = normalizeOptionalInput pbNotes
+  notesClean <-
+    either throwError pure $
+      validatePublicBookingNotes pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just fullNameClean) emailClean phoneClean
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
