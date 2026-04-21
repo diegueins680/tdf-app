@@ -312,6 +312,52 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the example action once the suggested payload is already loaded', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(container.textContent).toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Cargar ejemplo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(getInputByLabel(container, 'Título').value).toBe('Lanzamientos destacados');
+      expect(getInputByLabel(container, 'Payload JSON').value).toBe(
+        JSON.stringify(
+          {
+            heroTitle: 'Lanzamientos destacados',
+            heroSubtitle: 'Explora los releases recientes del sello.',
+            locale: 'es',
+          },
+          null,
+          2,
+        ),
+      );
+      expect(container.textContent).toContain(
+        'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.',
+      );
+      expect(container.textContent).not.toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('hides the generic example action while the live version lookup is unresolved by an error', async () => {
     getPublicMock.mockRejectedValue(new Error('live unavailable'));
 

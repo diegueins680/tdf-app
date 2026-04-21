@@ -529,6 +529,16 @@ export default function CmsAdminPage() {
       : `Base: ID ${editingFromId}`
     : null;
   const samplePayload = samplePayloads[normalizedSlugFilter];
+  const samplePayloadPreview = useMemo(
+    () => (samplePayload ? JSON.stringify(samplePayload, null, 2) : ''),
+    [samplePayload],
+  );
+  const editorMatchesSamplePayload =
+    Boolean(samplePayload)
+    && !payloadError
+    && payload.trim() === samplePayloadPreview.trim()
+    && (!samplePayload?.heroTitle || title.trim() === samplePayload.heroTitle.trim())
+    && (!samplePayload?.locale || localeFilter === samplePayload.locale);
   const liveLookupFailed = liveQuery.isError;
   const liveLookupPending = liveQuery.isLoading || liveQuery.isFetching;
   const liveLookupUnresolved = liveLookupPending || liveLookupFailed;
@@ -538,7 +548,7 @@ export default function CmsAdminPage() {
       ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
   const hasSamplePayload = Boolean(samplePayload);
-  const showExampleAction = hasSamplePayload && !liveContent && !liveLookupUnresolved;
+  const showExampleAction = hasSamplePayload && !editorMatchesSamplePayload && !liveContent && !liveLookupUnresolved;
   const samplePayloadGuidance = liveLookupPending && hasSamplePayload
     ? 'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.'
     : liveLookupFailed && hasSamplePayload
@@ -546,7 +556,9 @@ export default function CmsAdminPage() {
     : liveContent
     ? 'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.'
     : samplePayload
-      ? 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
+      ? editorMatchesSamplePayload
+        ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
+        : 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
       : hasSlugSelection
         ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
         : 'Elige un slug sugerido o escribe uno para empezar a editar.';
