@@ -2881,6 +2881,12 @@ describe('CourseRegistrationsAdminPage', () => {
         crEmail: 'grace@example.com',
         crStatus: 'Needs Review',
       }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'needs.review',
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -2898,8 +2904,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
       expect(countOccurrences(container, 'Needs Review')).toBe(1);
       expect(container.textContent).not.toContain('needs-review');
+      expect(container.textContent).not.toContain('needs.review');
     });
 
     await cleanup();

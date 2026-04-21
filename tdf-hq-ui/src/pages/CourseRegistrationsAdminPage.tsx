@@ -153,8 +153,11 @@ const emptyFollowUpForm = (): FollowUpFormState => ({
 const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.some((status) => status === value);
 
+const normalizeBackendStatusToken = (status: string) =>
+  status.trim().toLowerCase().replace(/[\s._\/-]+/g, '_').replace(/^_+|_+$/g, '');
+
 const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
-  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const normalized = normalizeBackendStatusToken(value);
   if (normalized === 'payment_pending') return 'pending_payment';
   if (normalized === 'canceled') return 'cancelled';
   return isStatusFilter(normalized) ? normalized : null;
@@ -293,7 +296,7 @@ const getSharedOptionalDateLabel = (values: readonly (string | null | undefined)
 type RegistrationStatus = Exclude<StatusFilter, 'all'>;
 
 const normalizeRegistrationStatusKey = (status: string) =>
-  status.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  normalizeBackendStatusToken(status);
 
 const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | null => {
   const statusFilter = normalizeStatusFilterAlias(status);
@@ -301,7 +304,7 @@ const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | 
 };
 
 const customRegistrationStatusLabel = (status: string) => {
-  const normalized = status.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  const normalized = status.trim().toLowerCase().replace(/[\s._\/-]+/g, ' ').trim();
   if (!normalized) return 'Estado desconocido';
   return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
 };
