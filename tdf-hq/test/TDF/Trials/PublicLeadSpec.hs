@@ -25,6 +25,8 @@ import TDF.Trials.DTO
   , StudentCreate (StudentCreate)
   , StudentDTO
   , StudentUpdate (StudentUpdate)
+  , TeacherStudentLinkIn (..)
+  , TeacherSubjectsUpdate (..)
   , TrialRequestIn (TrialRequestIn)
   , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
@@ -898,6 +900,43 @@ spec = do
               , ",\"teacherID\":2}"
               ])
             :: Either String TrialAvailabilityUpsert
+        )
+        `shouldBe` True
+
+  describe "teacher relationship request decoding" $ do
+    it "rejects typoed or unexpected teacher-subject keys before mutating assignments" $ do
+      case (A.eitherDecode "{\"subjectIds\":[3,7]}" :: Either String TeacherSubjectsUpdate) of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical teacher-subject payload to decode, got " <> decodeErr)
+        Right (TeacherSubjectsUpdate subjectIdsValue) ->
+          subjectIdsValue `shouldBe` [3, 7]
+
+      isLeft
+        ( A.eitherDecode "{\"subjectIDs\":[3]}"
+            :: Either String TeacherSubjectsUpdate
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode "{\"subjectIds\":[3],\"teacherId\":2}"
+            :: Either String TeacherSubjectsUpdate
+        )
+        `shouldBe` True
+
+    it "rejects unexpected teacher-student link keys instead of silently ignoring intent" $ do
+      case (A.eitherDecode "{\"studentId\":12}" :: Either String TeacherStudentLinkIn) of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical teacher-student payload to decode, got " <> decodeErr)
+        Right (TeacherStudentLinkIn studentIdValue) ->
+          studentIdValue `shouldBe` 12
+
+      isLeft
+        ( A.eitherDecode "{\"studentID\":12}"
+            :: Either String TeacherStudentLinkIn
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode "{\"studentId\":12,\"teacherId\":2}"
+            :: Either String TeacherStudentLinkIn
         )
         `shouldBe` True
 

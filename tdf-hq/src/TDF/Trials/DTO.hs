@@ -113,7 +113,8 @@ data TeacherSubjectsUpdate = TeacherSubjectsUpdate
   { subjectIds :: [Int]
   } deriving (Show, Generic)
 instance ToJSON TeacherSubjectsUpdate
-instance FromJSON TeacherSubjectsUpdate
+instance FromJSON TeacherSubjectsUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data ClassSessionDTO = ClassSessionDTO
   { classSessionId :: Int
@@ -181,4 +182,5 @@ data TeacherStudentLinkIn = TeacherStudentLinkIn
   { studentId :: Int
   } deriving (Show, Generic)
 instance ToJSON TeacherStudentLinkIn
-instance FromJSON TeacherStudentLinkIn
+instance FromJSON TeacherStudentLinkIn where
+  parseJSON = genericParseJSON strictObjectOptions
