@@ -9,6 +9,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncPlatform
   , validateSocialSyncExternalPostId
   , validateSocialSyncIngestSource
+  , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
   ) where
 
@@ -69,12 +70,12 @@ socialSyncServer user =
         platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
         externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
         ingestSrc <- either throwError pure (validateSocialSyncIngestSource (sspIngestSource payload))
+        mediaText <- either throwError pure (validateSocialSyncMediaUrls (sspMediaUrls payload))
         artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
         artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
         let tagList = classifyTags (sspCaption payload)
             summaryTxt = buildSummary (sspCaption payload)
             tagsText = nonEmptyText (T.intercalate "," tagList)
-            mediaText = nonEmptyText (T.intercalate "\n" (fromMaybe [] (sspMediaUrls payload)))
         existing <- withPool $ getBy (UniqueSocialSyncPost platform externalPostId)
         case existing of
           Just (Entity key _) -> do
@@ -253,6 +254,22 @@ validateSocialSyncIngestSource (Just raw) =
   where
     isSocialSyncIngestSourceChar c =
       isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
+validateSocialSyncMediaUrls Nothing = Right Nothing
+validateSocialSyncMediaUrls (Just rawUrls)
+  | any T.null mediaUrls =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must not be blank")
+        }
+  | any (T.any isSpace) mediaUrls =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must not contain whitespace")
+        }
+  | otherwise =
+      Right (nonEmptyText (T.intercalate "\n" mediaUrls))
+  where
+    mediaUrls = map T.strip rawUrls
 
 validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
 validateSocialSyncPostsLimit Nothing = Right 50

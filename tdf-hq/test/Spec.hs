@@ -177,7 +177,8 @@ import TDF.Server.SocialSync
       validateSocialSyncArtistProfileId,
       validateSocialSyncPlatform,
       validateSocialSyncPostsLimit,
-      validateSocialSyncIngestSource )
+      validateSocialSyncIngestSource,
+      validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
     normalizeEventStatus,
@@ -2611,6 +2612,28 @@ main = hspec $ do
                 (Data.Text.replicate 65 "a")
                 "ingestSource must be 64 characters or fewer"
 
+    describe "social sync media URL validation" $ do
+        it "normalizes valid media URL lists before newline storage" $ do
+            validateSocialSyncMediaUrls Nothing `shouldBe` Right Nothing
+            validateSocialSyncMediaUrls (Just []) `shouldBe` Right Nothing
+            validateSocialSyncMediaUrls
+                (Just [" https://cdn.example.com/post.jpg ", "https://cdn.example.com/clip.mp4"])
+                `shouldBe` Right (Just "https://cdn.example.com/post.jpg\nhttps://cdn.example.com/clip.mp4")
+
+        it "rejects blank or whitespace-containing media URLs instead of silently dropping or splitting entries" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncMediaUrls (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync mediaUrls to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid ["https://cdn.example.com/post.jpg", "   "] "mediaUrls entries must not be blank"
+            assertInvalid ["https://cdn.example.com/post 42.jpg"] "mediaUrls entries must not contain whitespace"
+
     describe "social sync ingest JSON contract" $ do
         it "accepts canonical ingest payloads and rejects unexpected keys at both request levels" $ do
             case (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"caption\":\"New single out now\",\"mediaUrls\":[\"https://cdn.example.com/post.jpg\"],\"likeCount\":12,\"commentCount\":3}]}" :: Either String SocialSyncIngestRequest) of
@@ -2649,7 +2672,7 @@ main = hspec $ do
             assertInvalid "shareCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"shareCount\":-1}]}"
             assertInvalid "viewCount" "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"viewCount\":-1}]}"
 
-    describe "social sync ingest handler" $
+    describe "social sync ingest handler" $ do
         it "records mixed batch audit labels explicitly instead of inheriting the first post" $ do
             let mkIngestPost platform externalPostId ingestSource =
                     SocialSyncPostIn
@@ -2686,6 +2709,34 @@ main = hspec $ do
                     socialSyncRunIngestSource run `shouldBe` "mixed"
                 _ ->
                     expectationFailure ("Expected one social sync run audit row, got: " <> show runs)
+
+        it "rejects ambiguous media URL lists before recording ingest audit rows" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-blank-url"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Just ["https://cdn.example.com/post.jpg", "   "]
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "mediaUrls entries must not be blank"
+                Right response ->
+                    expectationFailure ("Expected invalid social sync ingest to fail, got: " <> show response)
+            length runs `shouldBe` 0
 
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
