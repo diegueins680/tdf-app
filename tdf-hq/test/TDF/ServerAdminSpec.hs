@@ -6,7 +6,7 @@ module TDF.ServerAdminSpec (spec) where
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, runReaderT)
-import Data.Aeson (Value, eitherDecode)
+import Data.Aeson (Value, eitherDecode, encode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import qualified Data.Text as T
@@ -51,6 +51,7 @@ import TDF.ServerAdmin (
     normalizeAdminUsername,
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
+    validateSocialUnholdNote,
     validateAdminWhatsAppSendMode,
     validateAdminEmailSubject,
     validateAdminEmailCtaUrl,
@@ -689,6 +690,27 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "externalId must be 256 characters or fewer"
                 (validateSocialUnholdLookup (Just (T.replicate 257 "x")) Nothing)
 
+    describe "validateSocialUnholdNote" $ do
+        it "treats omitted or blank notes as absent and trims valid notes" $ do
+            validateSocialUnholdNote Nothing `shouldBe` Right Nothing
+            validateSocialUnholdNote (Just "   ") `shouldBe` Right Nothing
+            validateSocialUnholdNote (Just "  retry after email confirmation  ")
+                `shouldBe` Right (Just "retry after email confirmation")
+
+        it "rejects malformed notes before they enter admin audit output" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected malformed social unhold note to fail, got " <> show value)
+            assertInvalid
+                "note must not contain control characters"
+                (validateSocialUnholdNote (Just "retry\nnow"))
+            assertInvalid
+                "note must be 500 characters or fewer"
+                (validateSocialUnholdNote (Just (T.replicate 501 "x")))
+
     describe "social unhold route validation" $ do
         it "rejects blank channels before surfacing lookup-shape errors" $ do
             let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
@@ -726,6 +748,24 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     BL8.unpack (errBody err) `shouldContain` "channel inválido"
                 Right value ->
                     expectationFailure ("Expected unsupported channel social unhold to be rejected, got " <> show value)
+
+        it "rejects malformed notes before querying social inbox rows" $ do
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-incoming-1"
+                        , surSenderId = Nothing
+                        , surNote = Just "retry\nnow"
+                        }
+
+            result <- runAdminTest (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "note must not contain control characters"
+                Right value ->
+                    expectationFailure ("Expected malformed social unhold note to be rejected, got " <> show value)
 
         it "rejects external-id unholds that only match outgoing WhatsApp messages" $ do
             pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
@@ -819,7 +859,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         { surChannel = "whatsapp"
                         , surExternalId = Just "wa-incoming-1"
                         , surSenderId = Nothing
-                        , surNote = Nothing
+                        , surNote = Just "retry after email confirmation"
                         }
                 incomingMsg =
                     (seedWhatsAppAdminMessage now "wa-incoming-1" "incoming")
@@ -837,7 +877,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err ->
                     expectationFailure
                         ("Expected incoming social unhold to succeed, got " <> show err)
-                Right _ -> pure ()
+                Right value ->
+                    BL8.unpack (encode value) `shouldContain` "retry after email confirmation"
 
             mStored <- runSqlPool (get msgKey) pool
             case mStored of

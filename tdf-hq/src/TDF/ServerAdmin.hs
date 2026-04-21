@@ -14,6 +14,7 @@ module TDF.ServerAdmin
   , parseSocialErrorsChannel
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
+  , validateSocialUnholdNote
   , validateSocialErrorsLimit
   , validateAdminLogsLimit
   , validateUserCommunicationHistoryLimit
@@ -249,14 +250,20 @@ adminServer user =
       now <- liftIO getCurrentTime
       channel <- either throwError pure (parseSocialErrorsChannel (Just surChannel))
       lookupMode <- either throwError pure (validateSocialUnholdLookup surExternalId surSenderId)
+      note <- either throwError pure (validateSocialUnholdNote surNote)
       case lookupMode of
         SocialUnholdByExternalId extId -> do
           found <- unholdByExternalId channel extId
           ensureSocialUnholdTargetFound channel found
-          liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId)
-          pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "externalId" .= extId, "ts" .= T.pack (show now)])
+          liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId <> auditNoteSuffix note)
+          pure (object $
+            [ "status" .= ("ok" :: Text)
+            , "channel" .= channel
+            , "externalId" .= extId
+            , "ts" .= T.pack (show now)
+            ] ++ maybe [] (\noteText -> ["note" .= noteText]) note)
         SocialUnholdBySenderId sid -> do
-          res <- unholdLatestBySender channel sid
+          res <- unholdLatestBySender channel sid note
           pure res
 
     socialStatusHandler = do
@@ -399,7 +406,7 @@ adminServer user =
               pure True
         _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
-    unholdLatestBySender channel senderId = do
+    unholdLatestBySender channel senderId note = do
       now <- liftIO getCurrentTime
       mExt <- case channel of
         "instagram" -> withPool $ do
@@ -421,8 +428,14 @@ adminServer user =
             }
         Just extId -> do
           _ <- unholdByExternalId channel extId
-          liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId)
-          pure (object ["status" .= ("ok" :: Text), "channel" .= channel, "senderId" .= senderId, "externalId" .= extId, "ts" .= T.pack (show now)])
+          liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId <> auditNoteSuffix note)
+          pure (object $
+            [ "status" .= ("ok" :: Text)
+            , "channel" .= channel
+            , "senderId" .= senderId
+            , "externalId" .= extId
+            , "ts" .= T.pack (show now)
+            ] ++ maybe [] (\noteText -> ["note" .= noteText]) note)
 
     brainListHandler mIncludeInactive = do
       ensureModule ModuleAdmin user
@@ -1089,6 +1102,18 @@ validateSocialUnholdLookup mExternalId mSenderId =
     (Just _, Just _) ->
       Left err400 { errBody = "Provide only one of externalId or senderId" }
 
+validateSocialUnholdNote :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialUnholdNote Nothing = Right Nothing
+validateSocialUnholdNote (Just rawNote)
+  | T.null note = Right Nothing
+  | T.length note > 500 =
+      Left err400 { errBody = "note must be 500 characters or fewer" }
+  | T.any isControl note =
+      Left err400 { errBody = "note must not contain control characters" }
+  | otherwise = Right (Just note)
+  where
+    note = T.strip rawNote
+
 validateSocialUnholdIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialUnholdIdentifier fieldName value
   | T.length value > 256 =
@@ -1101,6 +1126,10 @@ validateSocialUnholdIdentifier fieldName value
   where
     invalid reason =
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> reason)) }
+
+auditNoteSuffix :: Maybe Text -> Text
+auditNoteSuffix Nothing = ""
+auditNoteSuffix (Just note) = " note=" <> note
 
 validateSocialErrorsLimit :: Maybe Int -> Either ServerError Int
 validateSocialErrorsLimit Nothing = Right 50
