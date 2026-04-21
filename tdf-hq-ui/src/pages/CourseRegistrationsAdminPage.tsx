@@ -59,7 +59,8 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
-const initialEmptyStateMultiCohortMessage = 'Todavía no hay inscripciones. Hay varios formularios configurados; elige cuál compartir primero.';
+const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
+  `Todavía no hay inscripciones. Hay ${count} formularios configurados; elige cuál compartir primero.`;
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir en cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -1664,7 +1665,7 @@ export default function CourseRegistrationsAdminPage() {
   const initialEmptyStateMessage = singleAvailableCohort
     ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
-      ? initialEmptyStateMultiCohortMessage
+      ? buildInitialEmptyStateMultiCohortMessage(configuredCohortOptions.length)
     : initialEmptyStateConfigMessage;
   const initialEmptyStateAction = singleAvailableCohort
     ? {
