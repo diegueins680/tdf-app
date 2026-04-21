@@ -1750,32 +1750,35 @@ validateOptionalPaymentTextField fieldName maxLength rawValue =
           Right (Just value)
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
-validatePaymentMethod rawMethod =
-  case normalized of
-    "cash" -> Right CashM
-    "cashm" -> Right CashM
-    "efectivo" -> Right CashM
-    "bank" -> Right BankTransferM
-    "banktransfer" -> Right BankTransferM
-    "banktransferm" -> Right BankTransferM
-    "transferencia" -> Right BankTransferM
-    "produbanco" -> Right BankTransferM
-    "card" -> Right CardPOSM
-    "cardpos" -> Right CardPOSM
-    "cardposm" -> Right CardPOSM
-    "paypal" -> Right PayPalM
-    "paypalm" -> Right PayPalM
-    "stripe" -> Right StripeM
-    "stripem" -> Right StripeM
-    "wompi" -> Right WompiM
-    "wompim" -> Right WompiM
-    "payphone" -> Right PayPhoneM
-    "payphonem" -> Right PayPhoneM
-    "crypto" -> Right CryptoM
-    "cryptom" -> Right CryptoM
-    "other" -> Right OtherM
-    "otherm" -> Right OtherM
-    _ -> invalidPaymentMethod
+validatePaymentMethod rawMethod
+  | T.any isControl rawMethod =
+      Left err400 { errBody = "paymentMethod must not contain control characters" }
+  | otherwise =
+      case normalized of
+        "cash" -> Right CashM
+        "cashm" -> Right CashM
+        "efectivo" -> Right CashM
+        "bank" -> Right BankTransferM
+        "banktransfer" -> Right BankTransferM
+        "banktransferm" -> Right BankTransferM
+        "transferencia" -> Right BankTransferM
+        "produbanco" -> Right BankTransferM
+        "card" -> Right CardPOSM
+        "cardpos" -> Right CardPOSM
+        "cardposm" -> Right CardPOSM
+        "paypal" -> Right PayPalM
+        "paypalm" -> Right PayPalM
+        "stripe" -> Right StripeM
+        "stripem" -> Right StripeM
+        "wompi" -> Right WompiM
+        "wompim" -> Right WompiM
+        "payphone" -> Right PayPhoneM
+        "payphonem" -> Right PayPhoneM
+        "crypto" -> Right CryptoM
+        "cryptom" -> Right CryptoM
+        "other" -> Right OtherM
+        "otherm" -> Right OtherM
+        _ -> invalidPaymentMethod
   where
     normalized =
       T.toLower (T.filter (`notElem` [' ', '_', '-']) (T.strip rawMethod))
@@ -1788,7 +1791,9 @@ validatePaymentMethod rawMethod =
 validatePaymentCurrency :: Text -> Either ServerError Text
 validatePaymentCurrency rawCurrency =
   let normalized = T.toUpper (T.strip rawCurrency)
-  in if normalized == "USD"
+  in if T.any isControl rawCurrency
+       then Left err400 { errBody = "currency must not contain control characters" }
+     else if normalized == "USD"
        then Right normalized
        else Left err400 { errBody = "Only USD manual payments are currently supported" }
 

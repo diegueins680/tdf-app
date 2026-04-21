@@ -973,30 +973,32 @@ spec = do
       validatePaymentMethod "PayPalM" `shouldBe` Right M.PayPalM
       validatePaymentMethod "other" `shouldBe` Right M.OtherM
 
-    it "rejects blank or unknown manual payment methods instead of silently storing them as bank transfers" $ do
-      let assertInvalid result = case result of
+    it "rejects blank, unknown, or control-bearing manual payment methods instead of silently storing them as bank transfers" $ do
+      let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "paymentMethod must be one of"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid payment method error, got " <> show value)
-      assertInvalid (validatePaymentMethod "   ")
-      assertInvalid (validatePaymentMethod "wire-transfer")
+      assertInvalid "paymentMethod must be one of" (validatePaymentMethod "   ")
+      assertInvalid "paymentMethod must be one of" (validatePaymentMethod "wire-transfer")
+      assertInvalid "paymentMethod must not contain control characters" (validatePaymentMethod "cash\n")
 
   describe "validatePaymentCurrency" $ do
     it "normalizes supported manual payment currencies to USD" $ do
       validatePaymentCurrency "USD" `shouldBe` Right "USD"
       validatePaymentCurrency " usd " `shouldBe` Right "USD"
 
-    it "rejects blank or unsupported payment currencies instead of silently coercing them to USD" $ do
-      let assertInvalid result = case result of
+    it "rejects blank, unsupported, or control-bearing payment currencies instead of silently coercing them to USD" $ do
+      let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "Only USD manual payments are currently supported"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid payment currency error, got " <> show value)
-      assertInvalid (validatePaymentCurrency "   ")
-      assertInvalid (validatePaymentCurrency "EUR")
+      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "   ")
+      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "EUR")
+      assertInvalid "currency must not contain control characters" (validatePaymentCurrency "USD\n")
 
   describe "validatePaymentAmountCents" $ do
     it "accepts positive payment amounts without rewriting them" $ do
