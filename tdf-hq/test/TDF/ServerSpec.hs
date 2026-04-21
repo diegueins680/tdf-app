@@ -231,6 +231,7 @@ import TDF.ServerAuth
     , signupEmailExists
     , validateOptionalSignupClaimArtistId
     , validateOptionalSignupPhone
+    , validateSignupArtistClaimIntent
     , validateSignupInternshipFields
     , validateRequestedSignupRoles
     , validateSignupFanArtistIds
@@ -2896,6 +2897,24 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid claimArtistId to be rejected, got: " <> show value)
             assertInvalid (validateOptionalSignupClaimArtistId (Just 0))
             assertInvalid (validateOptionalSignupClaimArtistId (Just (-7)))
+
+    describe "validateSignupArtistClaimIntent" $ do
+        it "requires artist signup intent before accepting an artist profile claim" $ do
+            validateSignupArtistClaimIntent [Customer, Fan] Nothing
+                `shouldBe` Right ()
+            validateSignupArtistClaimIntent [Customer, Fan, Artist] (Just 42)
+                `shouldBe` Right ()
+            validateSignupArtistClaimIntent [Customer, Fan, Artista] (Just 42)
+                `shouldBe` Right ()
+
+            case validateSignupArtistClaimIntent [Customer, Fan, Student] (Just 42) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "claimArtistId requires requesting the Artist or Artista role"
+                Right value ->
+                    expectationFailure
+                        ("Expected artist claims without artist intent to be rejected, got: " <> show value)
 
     describe "validateSignupFanArtistIds" $ do
         it "preserves omission and accepts positive artist ids before signup follows are created" $ do

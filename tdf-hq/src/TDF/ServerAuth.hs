@@ -23,6 +23,7 @@ module TDF.ServerAuth
   , runPasswordResetConfirm
   , signupEmailExists
   , validateRequestedSignupRoles
+  , validateSignupArtistClaimIntent
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
   , validateSignupInternshipFields
@@ -182,6 +183,17 @@ validateOptionalSignupClaimArtistId (Just rawArtistId)
   | otherwise =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "claimArtistId must be a positive integer")
+        }
+
+validateSignupArtistClaimIntent :: [RoleEnum] -> Maybe Int64 -> Either ServerError ()
+validateSignupArtistClaimIntent _ Nothing = Right ()
+validateSignupArtistClaimIntent rolesVal (Just _)
+  | Artist `elem` rolesVal || Artista `elem` rolesVal = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "claimArtistId requires requesting the Artist or Artista role")
         }
 
 validateSignupFanArtistIds :: Maybe [Int64] -> Either ServerError [Int64]
@@ -425,6 +437,7 @@ signup SignupRequest
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
+  either throwError pure (validateSignupArtistClaimIntent sanitizedRoles claimArtistIdClean)
   sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)
   either throwError pure $
     validateSignupInternshipFields
