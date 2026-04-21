@@ -29,6 +29,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceDirection
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
+  , validateFinanceEntryCurrencyInput
   , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
   , resolveExistingPartyIdText
@@ -1833,7 +1834,8 @@ socialEventsServer user = eventsServer
           conceptVal = T.strip (efeConcept dto)
           amountVal = efeAmountCents dto
           defaultCurrency = eventCurrencyFromEvent eventRec
-          currencyVal = normalizeCurrency (fromMaybe defaultCurrency (cleanMaybeText (Just (efeCurrency dto))))
+      currencyVal <- either throwError pure
+        (validateFinanceEntryCurrencyInput defaultCurrency (efeCurrency dto))
       when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
       when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
       budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
@@ -1877,7 +1879,8 @@ socialEventsServer user = eventsServer
           conceptVal = T.strip (efeConcept dto)
           amountVal = efeAmountCents dto
           defaultCurrency = eventCurrencyFromEvent eventRec
-          currencyVal = normalizeCurrency (fromMaybe defaultCurrency (cleanMaybeText (Just (efeCurrency dto))))
+      currencyVal <- either throwError pure
+        (validateFinanceEntryCurrencyInput defaultCurrency (efeCurrency dto))
       when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
       when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
       budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
@@ -2415,6 +2418,17 @@ normalizeEventCurrencyCode rawCurrency =
 normalizeCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
 normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrency
 
+validateFinanceEntryCurrencyInput :: T.Text -> T.Text -> Either ServerError T.Text
+validateFinanceEntryCurrencyInput defaultCurrency rawCurrency =
+  let fallbackCurrency = fromMaybe "USD" (normalizeEventCurrencyCode defaultCurrency)
+  in case cleanMaybeText (Just rawCurrency) of
+    Nothing -> Right fallbackCurrency
+    Just providedCurrency ->
+      case normalizeEventCurrencyCode providedCurrency of
+        Just currency -> Right currency
+        Nothing ->
+          Left err400 { errBody = "finance entry currency must be a 3-letter ISO code" }
+
 normalizeBudgetLineType :: Maybe T.Text -> T.Text
 normalizeBudgetLineType mType =
   case mType >>= parseBudgetLineType of
@@ -2515,6 +2529,8 @@ validateStoredFinanceEntryDimensions entry = do
     (parseFinanceSource (eventFinanceEntrySource entry))
   statusVal <- maybe (Left "Stored finance entry status is invalid") Right
     (parseFinanceEntryStatus (eventFinanceEntryStatus entry))
+  _currencyVal <- maybe (Left "Stored finance entry currency is invalid") Right
+    (normalizeEventCurrencyCode (eventFinanceEntryCurrency entry))
   pure (directionVal, sourceVal, statusVal)
 
 normalizeFinanceDirectionInput :: T.Text -> AppM T.Text

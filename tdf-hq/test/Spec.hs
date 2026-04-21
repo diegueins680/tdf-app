@@ -178,6 +178,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
     normalizeFinanceSource,
+    validateFinanceEntryCurrencyInput,
     normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizeMomentCaption,
@@ -4107,6 +4108,19 @@ main = hspec $ do
             normalizeFinanceEntryStatus (Just "draft") `shouldBe` "draft"
             normalizeFinanceEntryStatus (Just "bad") `shouldBe` "posted"
 
+        it "rejects invalid explicit finance entry currencies instead of storing opaque codes" $ do
+            validateFinanceEntryCurrencyInput "usd" " eur " `shouldBe` Right "EUR"
+            validateFinanceEntryCurrencyInput "eur" "   " `shouldBe` Right "EUR"
+            validateFinanceEntryCurrencyInput "usdollars" "   " `shouldBe` Right "USD"
+            case validateFinanceEntryCurrencyInput "USD" "usdollars" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "finance entry currency must be a 3-letter ISO code"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid finance entry currency to be rejected, got " <> show value)
+
     describe "stored finance entry invariants" $ do
         let financeTimestamp = UTCTime (fromGregorian 2026 1 1) 0
             validStoredFinanceEntry =
@@ -4139,6 +4153,13 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored finance entry status is invalid"
                 Right value ->
                     expectationFailure ("Expected invalid stored finance status to be rejected, got " <> show value)
+
+        it "rejects invalid persisted finance currencies instead of normalizing arbitrary strings" $
+            case validateStoredFinanceEntryDimensions validStoredFinanceEntry { eventFinanceEntryCurrency = "usdollars" } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry currency is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored finance currency to be rejected, got " <> show value)
 
     describe "event list query validation" $ do
         it "accepts blank filters and canonicalizes supported event type and status values" $ do
