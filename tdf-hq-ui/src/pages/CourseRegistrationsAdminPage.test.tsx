@@ -220,6 +220,8 @@ const contactDossierOnlyScopeHint =
   'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
+const mixedIdentityDossierScopeHint =
+  'Abre el expediente desde la identidad principal; usa Cambiar estado para acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
@@ -1291,6 +1293,49 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(dialog, 'Party #9')).toBe(false);
       expect(dialog.textContent).not.toContain('Sin correo ni teléfono');
       expect(dialog.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
+  it('uses one inclusive first-time hint for mixed identity rows instead of row-level guidance', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: '   ',
+        crEmail: 'contacto@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: null,
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const intro = container.querySelector('[data-testid="course-registration-page-intro"]');
+
+      expect(intro?.textContent?.trim()).toBe(mixedIdentityDossierScopeHint);
+      expect(countOccurrences(container, mixedIdentityDossierScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(contactDossierScopeHint);
+      expect(container.textContent).not.toContain(recordDossierScopeHint);
+      expect(container.textContent).not.toContain('Abre el expediente desde el nombre');
+      expect(container.textContent).not.toContain('Abre el expediente desde el contacto');
+      expect(container.textContent).not.toContain('Abre el expediente desde el registro');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
+      expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
     });
 
     await cleanup();
