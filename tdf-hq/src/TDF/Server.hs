@@ -7723,6 +7723,12 @@ validateAdsAssistChannel (Just rawChannel) =
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
 
+validateCampaignBudgetCents :: Maybe Int -> Either ServerError (Maybe Int)
+validateCampaignBudgetCents Nothing = Right Nothing
+validateCampaignBudgetCents (Just amount)
+  | amount < 0 = Left err400 { errBody = "budgetCents must be non-negative" }
+  | otherwise = Right (Just amount)
+
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
 adsAssistPublic req = do
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
@@ -7820,6 +7826,7 @@ adsGetCampaign user cid = do
 adsUpsertCampaign :: AuthedUser -> CampaignUpsert -> AppM CampaignDTO
 adsUpsertCampaign user CampaignUpsert{..} = do
   requireModule user ModuleAdmin
+  budgetCentsVal <- either throwError pure (validateCampaignBudgetCents cuBudgetCents)
   let nameClean = T.strip cuName
       statusVal =
         case cuStatus of
@@ -7835,7 +7842,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
       , ME.campaignObjective = T.strip <$> cuObjective
       , ME.campaignPlatform = T.strip <$> cuPlatform
       , ME.campaignStatus = statusVal
-      , ME.campaignBudgetCents = cuBudgetCents
+      , ME.campaignBudgetCents = budgetCentsVal
       , ME.campaignStartDate = cuStartDate
       , ME.campaignEndDate = cuEndDate
       , ME.campaignCreatedAt = now
@@ -7850,7 +7857,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
         , ME.CampaignObjective =. (T.strip <$> cuObjective)
         , ME.CampaignPlatform =. (T.strip <$> cuPlatform)
         , ME.CampaignStatus =. statusVal
-        , ME.CampaignBudgetCents =. cuBudgetCents
+        , ME.CampaignBudgetCents =. budgetCentsVal
         , ME.CampaignStartDate =. cuStartDate
         , ME.CampaignEndDate =. cuEndDate
         , ME.CampaignUpdatedAt =. now

@@ -197,6 +197,7 @@ import TDF.Server
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
+    , validateCampaignBudgetCents
     , validateCalendarRedirectUri
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
@@ -2320,6 +2321,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://ads..example.com/landing"
             assertInvalid "https://localhost/landing"
             assertInvalid "https://ads.example.com/landing copy"
+
+    describe "validateCampaignBudgetCents" $ do
+        it "accepts omitted, zero, and positive campaign budgets" $ do
+            validateCampaignBudgetCents Nothing `shouldBe` Right Nothing
+            validateCampaignBudgetCents (Just 0) `shouldBe` Right (Just 0)
+            validateCampaignBudgetCents (Just 12000) `shouldBe` Right (Just 12000)
+
+        it "rejects negative campaign budgets before admin writes persist impossible spend data" $
+            case validateCampaignBudgetCents (Just (-1)) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "budgetCents must be non-negative"
+                Right budgetVal ->
+                    expectationFailure
+                        ("Expected negative campaign budget to be rejected, got: " <> show budgetVal)
 
     describe "shouldRetryWithFallbackModel" $ do
         it "falls back only when the upstream error is explicitly model-related" $ do
