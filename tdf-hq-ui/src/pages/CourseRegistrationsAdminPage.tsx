@@ -2487,6 +2487,7 @@ export default function CourseRegistrationsAdminPage() {
     || canSubmitReceipt
   );
   const isMarkPaidFirstReceiptFlow = selectedDossier?.intent === 'markPaid'
+    && !dossierQuery.isLoading
     && !dossierQuery.isError
     && !hasReceipts
     && receiptForm.editingId == null;
