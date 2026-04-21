@@ -133,9 +133,15 @@ validateOptionalFeedbackContactEmail (Just rawEmail) =
     Nothing -> Right Nothing
     Just emailVal ->
       let normalized = T.toLower emailVal
-      in if isValidFeedbackEmail normalized
-           then Right (Just normalized)
-           else Left err400 { errBody = "contactEmail must be a valid email address" }
+      in if T.length normalized > maxFeedbackContactEmailChars
+           then Left err400 { errBody = "contactEmail must be 254 characters or fewer" }
+           else
+             if isValidFeedbackEmail normalized
+               then Right (Just normalized)
+               else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+maxFeedbackContactEmailChars :: Int
+maxFeedbackContactEmailChars = 254
 
 maxFeedbackTitleChars :: Int
 maxFeedbackTitleChars = 160

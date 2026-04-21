@@ -2000,6 +2000,17 @@ main = hspec $ do
             assertInvalid "user..name@example.com"
             assertInvalid "user()@example.com"
 
+        it "rejects oversized feedback contact emails before storage and notification" $
+            case validateOptionalFeedbackContactEmail
+                    (Just (Data.Text.replicate 245 "a" <> "@example.com")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "contactEmail must be 254 characters or fewer"
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized feedback contact email to be rejected, got " <> show value)
+
     describe "validateCoursePublicUrlField" $ do
         it "accepts omitted or trimmed absolute HTTPS course URLs" $ do
             validateCoursePublicUrlField "landingUrl" Nothing `shouldBe` Right Nothing
