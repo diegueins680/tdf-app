@@ -796,6 +796,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps admin-overview fallback cards out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-admin-overview',
+          title: 'Admin overview',
+          body: ['Review service checks, access changes, and audit follow-up before changing settings.'],
+        },
+        {
+          cardId: 'fallback-resumen-administrativo',
+          title: 'Resumen administrativo',
+          body: ['Consulta salud, accesos y auditoría antes de repetir revisiones.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin overview')).not.toBeInTheDocument();
+    expect(screen.queryByText('Resumen administrativo')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review service checks, access changes, and audit follow-up/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Consulta salud, accesos y auditoría antes de repetir revisiones\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps demo-data fallback cards from duplicating the first-run seed action', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
