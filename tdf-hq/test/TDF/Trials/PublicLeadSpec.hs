@@ -25,6 +25,7 @@ import TDF.Trials.DTO
   , StudentCreate (StudentCreate)
   , StudentDTO
   , StudentUpdate (StudentUpdate)
+  , TrialRequestIn (TrialRequestIn)
   , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
@@ -57,6 +58,7 @@ import TDF.Trials.Server
   , validatePublicSignupInput
   , validatePublicSubjectIdInput
   , validatePublicSubjectSelection
+  , validatePublicTrialRequestInput
   , validatePublicTrialPartyId
   , validateTeacherSubjectIdsInput
   , validateTrialScheduleInput
@@ -192,6 +194,45 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
+
+  describe "validatePublicTrialRequestInput" $ do
+    it "normalizes public trial contact fields before party, credential, and request writes" $ do
+      case validatePublicTrialRequestInput
+        (TrialRequestIn Nothing 7 [validSlot] (Just "  Piano goals  ") (Just "  Ada Lovelace  ") (Just " ADA@Example.com ") (Just " +593 99 123 4567 ")) of
+        Left err ->
+          expectationFailure ("Expected valid public trial request to normalize, got " <> show err)
+        Right (TrialRequestIn partyIdValue subjectIdValue preferredValue notesValue fullNameValue emailValue phoneValue) -> do
+          partyIdValue `shouldBe` Nothing
+          subjectIdValue `shouldBe` 7
+          preferredValue `shouldBe` [validSlot]
+          notesValue `shouldBe` Just "Piano goals"
+          fullNameValue `shouldBe` Just "Ada Lovelace"
+          emailValue `shouldBe` Just "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+
+      case validatePublicTrialRequestInput
+        (TrialRequestIn Nothing 7 [validSlot] (Just "   ") (Just "   ") (Just "ada@example.com") Nothing) of
+        Left err ->
+          expectationFailure ("Expected blank optional public trial fields to be dropped, got " <> show err)
+        Right (TrialRequestIn _ _ _ notesValue fullNameValue _ _) -> do
+          notesValue `shouldBe` Nothing
+          fullNameValue `shouldBe` Nothing
+
+    it "rejects malformed public trial contact fields before persisting the request" $ do
+      let mkTrial fullNameValue notesValue emailValue phoneValue =
+            TrialRequestIn Nothing 7 [validSlot] notesValue fullNameValue emailValue phoneValue
+          assertRejected payload expectedMessage =
+            case validatePublicTrialRequestInput payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected malformed public trial request to be rejected, got " <> show value)
+      assertRejected (mkTrial (Just "Ada\nLovelace") Nothing (Just "ada@example.com") Nothing) "fullName must not contain control characters"
+      assertRejected (mkTrial (Just (pack (replicate 161 'a'))) Nothing (Just "ada@example.com") Nothing) "fullName must be 1-160 characters"
+      assertRejected (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing) "notes must not contain control characters"
+      assertRejected (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing) "notes must be 1-2000 characters"
+      assertRejected (mkTrial (Just "Ada") Nothing Nothing Nothing) "Correo requerido"
 
   describe "validateOptionalTrialRequestStatusFilter" $ do
     it "treats omitted or blank filters as absent and canonicalizes supported values" $ do

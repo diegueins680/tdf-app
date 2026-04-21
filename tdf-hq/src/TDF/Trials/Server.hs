@@ -469,6 +469,29 @@ validatePublicTrialPartyId Nothing = Right ()
 validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
+validatePublicTrialRequestInput :: TrialRequestIn -> Either ServerError TrialRequestIn
+validatePublicTrialRequestInput (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
+  validatePublicTrialPartyId rawPartyId
+  subjectIdVal <- validatePublicSubjectIdInput rawSubjectId
+  fullNameVal <- validateOptionalPublicTextField "fullName" 160 rawFullName
+  notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
+  emailVal <- validateRequiredEmail rawEmail
+  phoneVal <- validateOptionalPhone rawPhone
+  Right (TrialRequestIn Nothing subjectIdVal preferredSlots notesVal fullNameVal (Just emailVal) phoneVal)
+
+validateOptionalPublicTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalPublicTextField fieldName maxChars rawValue =
+  case cleanOptional rawValue of
+    Nothing ->
+      Right Nothing
+    Just value
+      | T.length value > maxChars ->
+          Left (badRequestText (fieldName <> " must be 1-" <> T.pack (show maxChars) <> " characters"))
+      | T.any isControl value ->
+          Left (badRequestText (fieldName <> " must not contain control characters"))
+      | otherwise ->
+          Right (Just value)
+
 validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
 validatePublicSignupInput (SignupIn rawFirstName rawLastName rawEmail rawPhone passwordVal googleIdTokenVal marketingOptInVal) = do
   firstNameVal <- validatePublicSignupNamePart "firstName" rawFirstName
@@ -854,12 +877,12 @@ publicTrialsServer =
       pure (InterestOut (entityKeyInt key))
 
     trialRequestCreateH :: TrialRequestIn -> AppM TrialRequestOut
-    trialRequestCreateH TrialRequestIn{..} = do
+    trialRequestCreateH rawInput = do
       now <- liftIO getCurrentTime
+      TrialRequestIn{..} <- either (liftIO . throwIO) pure (validatePublicTrialRequestInput rawInput)
       let nameClean  = cleanOptional fullName
           emailClean = cleanOptional email
           phoneClean = cleanOptional phone
-      either (liftIO . throwIO) pure (validatePublicTrialPartyId partyId)
       slots <- either (liftIO . throwIO) pure (validatePreferredSlotsAt now preferred)
       subjectKey <- requirePublicActiveSubject subjectId
       resolvedPartyId <- createOrFetchParty nameClean emailClean phoneClean now
