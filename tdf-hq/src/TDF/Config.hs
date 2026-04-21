@@ -247,6 +247,23 @@ validateDbSslMode envName rawMode
   where
     sslMode = T.toLower (T.strip (T.pack rawMode))
 
+validateKeywordDbConnField :: Bool -> String -> String -> IO String
+validateKeywordDbConnField False _ rawValue = pure rawValue
+validateKeywordDbConnField True fieldName rawValue =
+  let value = T.pack rawValue
+  in if T.null value
+       then fail (fieldName <> " must not be empty")
+       else if T.any (\ch -> isSpace ch || isControl ch) value
+         then fail (fieldName <> " must not contain whitespace or control characters")
+         else pure rawValue
+
+validateKeywordDbPort :: Bool -> String -> String -> IO String
+validateKeywordDbPort False _ rawPort = pure rawPort
+validateKeywordDbPort True fieldName rawPort =
+  case readMaybe rawPort :: Maybe Int of
+    Just portNumber | portNumber >= 1 && portNumber <= 65535 -> pure rawPort
+    _ -> fail (fieldName <> " must be a port number between 1 and 65535")
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -304,11 +321,17 @@ loadConfig = do
   fallbackConnUrl <- lookupFirstConnUrlEnv (not keywordDbEnvConfigured)
     ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
   connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
-  h          <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
-  p          <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
-  u          <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
-  w          <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
-  d          <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
+  rawHost    <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
+  rawPort    <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
+  rawUser    <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
+  rawPass    <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
+  rawName    <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
+  let usingKeywordConn = isNothing connUrl
+  h          <- validateKeywordDbConnField usingKeywordConn "DB_HOST/PGHOST" rawHost
+  p          <- validateKeywordDbPort usingKeywordConn "DB_PORT/PGPORT" rawPort
+  u          <- validateKeywordDbConnField usingKeywordConn "DB_USER/PGUSER" rawUser
+  w          <- validateKeywordDbConnField usingKeywordConn "DB_PASS/PGPASSWORD" rawPass
+  d          <- validateKeywordDbConnField usingKeywordConn "DB_NAME/PGDATABASE" rawName
   sslModeEnvRaw <- lookupFirstNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
   sslModeEnv <-
     case sslModeEnvRaw of

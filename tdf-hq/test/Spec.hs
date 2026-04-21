@@ -1077,6 +1077,38 @@ main = hspec $ do
                     "DB_SSLMODE must be a single sslmode value"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects keyword DB fields that could inject libpq connection options" $ do
+            let baseKeywordDb =
+                    [ ("DATABASE_URL", Nothing)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Just "tdf-hq-db.flycast")
+                    , ("DB_PORT", Just "5432")
+                    , ("DB_USER", Just "tdf_hq")
+                    , ("DB_PASS", Just "secret")
+                    , ("DB_NAME", Just "tdf_hq")
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                setOverride key value =
+                    map
+                        (\pair@(envKey, _) ->
+                            if envKey == key then (envKey, Just value) else pair)
+                        baseKeywordDb
+
+            withEnvOverrides
+                (setOverride "DB_HOST" "tdf-hq-db.flycast target_session_attrs=any")
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_HOST/PGHOST must not contain whitespace or control characters"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (setOverride "DB_PORT" "5432 target_session_attrs=any")
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_PORT/PGPORT must be a port number between 1 and 65535"
+                        `isInfixOf` show (err :: IOException)
+
         it "uses DATABASE_URL-style connection strings when keyword-style DB env vars are absent" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
