@@ -1615,8 +1615,10 @@ export default function CourseRegistrationsAdminPage() {
     && !hasCustomFilters
     && !hasVisibleRegistrations;
   const showRegistrationErrorInlineRetry = regsQuery.isError && !hasVisibleRegistrations;
+  const showInlineCohortRetryAction = showCohortFilterUnavailableSummary && !regsQuery.isError;
   const showHeaderRefreshAction = !showInitialCohortErrorState
     && !showRegistrationErrorInlineRetry
+    && !showInlineCohortRetryAction
     && (regsQuery.isError || cohortsQuery.isError);
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
@@ -2911,6 +2913,17 @@ export default function CourseRegistrationsAdminPage() {
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterUnavailableMessage}
                         </Typography>
+                        {showInlineCohortRetryAction && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                            onClick={handleRefresh}
+                            disabled={cohortsQuery.isFetching}
+                          >
+                            {headerRefreshLabel}
+                          </Button>
+                        )}
                       </Stack>
                     ) : singleAvailableCohortLabel ? (
                       <Stack

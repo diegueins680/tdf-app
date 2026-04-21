@@ -7861,7 +7861,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('scopes the header retry to cohort loading failures when registrations already loaded', async () => {
+  it('keeps cohort retry inside the failed cohort filter when registrations already loaded', async () => {
     listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
 
     const container = document.createElement('div');
@@ -7877,6 +7877,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
       expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+      expect(getButtonByText(cohortFallback!, 'Reintentar cohortes')).toBeTruthy();
       expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
