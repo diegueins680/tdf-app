@@ -139,6 +139,7 @@ import TDF.Server
     , validateChatSendMessageBody
     , validateOptionalMarketplaceOrderStatus
     , validateMarketplaceOrderUpdateStatus
+    , validateMarketplaceOrderPaidAtUpdate
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationReceiptDeletion
@@ -3592,6 +3593,29 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   " "status cannot be blank"
             assertInvalid "refunded" "pending, contact, paid, cancelled"
+
+    describe "validateMarketplaceOrderPaidAtUpdate" $ do
+        let now = UTCTime (fromGregorian 2026 4 21) (secondsToDiffTime 43200)
+
+        it "preserves omitted, cleared, and historical marketplace payment timestamps" $ do
+            let paidAt = addUTCTime (-60) now
+            validateMarketplaceOrderPaidAtUpdate now Nothing
+                `shouldBe` Right Nothing
+            validateMarketplaceOrderPaidAtUpdate now (Just Nothing)
+                `shouldBe` Right (Just Nothing)
+            validateMarketplaceOrderPaidAtUpdate now (Just (Just paidAt))
+                `shouldBe` Right (Just (Just paidAt))
+
+        it "rejects future paidAt updates before admin order edits can persist impossible payment state" $
+            case validateMarketplaceOrderPaidAtUpdate now (Just (Just (addUTCTime 60 now))) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "paidAt must not be in the future"
+                Right paidAtUpdate ->
+                    expectationFailure
+                        ( "Expected future marketplace paidAt update to be rejected, got: "
+                            <> show paidAtUpdate
+                        )
 
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do

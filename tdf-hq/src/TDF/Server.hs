@@ -9268,14 +9268,14 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
   nextStatus <- either throwError pure (validateMarketplaceOrderUpdateStatus mouStatus)
   nextProvider <- either throwError pure (validateOptionalMarketplacePaymentProviderUpdate mouPaymentProvider)
   now <- liftIO getCurrentTime
+  paidAtInput <- either throwError pure (validateMarketplaceOrderPaidAtUpdate now mouPaidAt)
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ do
     mOrder <- get orderKey
     case mOrder of
       Nothing -> pure Nothing
       Just order -> do
-        let paidAtInput  = mouPaidAt
-            paidAtBase   = case paidAtInput of
+        let paidAtBase   = case paidAtInput of
               Nothing -> ME.marketplaceOrderPaidAt order
               Just v  -> v
             paidAtFinal  =
@@ -9406,6 +9406,16 @@ validateMarketplaceOnlinePaymentTotal totalCents
   | totalCents > 0 = Right totalCents
   | otherwise =
       Left err400 { errBody = "El carrito debe tener un total mayor a 0 para pagar en linea." }
+
+validateMarketplaceOrderPaidAtUpdate
+  :: UTCTime
+  -> Maybe (Maybe UTCTime)
+  -> Either ServerError (Maybe (Maybe UTCTime))
+validateMarketplaceOrderPaidAtUpdate _ Nothing = Right Nothing
+validateMarketplaceOrderPaidAtUpdate _ (Just Nothing) = Right (Just Nothing)
+validateMarketplaceOrderPaidAtUpdate now (Just (Just paidAt))
+  | paidAt <= now = Right (Just (Just paidAt))
+  | otherwise = Left err400 { errBody = "paidAt must not be in the future" }
 
 loadCartLines
   :: Key ME.MarketplaceCart
