@@ -602,6 +602,42 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not repeat an email-only admin contact when the username already shows it', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyName: '   ',
+        username: 'ops@example.com',
+        primaryEmail: 'ops@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(hasLinkWithTextAndHref(row, 'ops@example.com', '/perfil/9')).toBe(true);
+        expect(row.textContent?.match(/ops@example\.com/g) ?? []).toHaveLength(1);
+        expect(row.textContent).not.toContain('WhatsApp pendiente');
+        expect(row.textContent).not.toContain('Contacto pendiente');
+        expect(container.textContent).not.toContain(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),

@@ -81,6 +81,34 @@ const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'
   return preferredPhone ?? email;
 };
 
+const normalizeContactComparisonValue = (value?: string | null) =>
+  normalizeContactValue(value)?.toLocaleLowerCase('es') ?? null;
+
+const matchesVisibleIdentityValue = (
+  value: string | null,
+  identityValues: readonly (string | null | undefined)[],
+) => {
+  const normalizedValue = normalizeContactComparisonValue(value);
+  if (!normalizedValue) return false;
+
+  return identityValues.some((identityValue) => (
+    normalizeContactComparisonValue(identityValue) === normalizedValue
+  ));
+};
+
+const getVisibleUserContactSummary = (
+  user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail' | 'partyName' | 'username'>,
+) => {
+  const identityValues = [user.partyName, user.username];
+  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const email = normalizeContactValue(user.primaryEmail);
+  const visiblePhone = matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone;
+  const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
+
+  if (visiblePhone && visibleEmail) return `${visiblePhone} · ${visibleEmail}`;
+  return visiblePhone ?? visibleEmail;
+};
+
 const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
 
@@ -870,6 +898,7 @@ function UserRow({
   showIdentityDisambiguator: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
+  const visibleContactSummary = getVisibleUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
   const hasWhatsAppChannel = hasUserWhatsAppChannel(user);
   const accessSummary = buildUserAccessSummary({
@@ -932,9 +961,9 @@ function UserRow({
             Perfil pendiente
           </Typography>
         )}
-        {contactSummary && (
+        {visibleContactSummary && (
           <Typography variant="body2" color="text.secondary">
-            {contactSummary}
+            {visibleContactSummary}
           </Typography>
         )}
       </Box>
