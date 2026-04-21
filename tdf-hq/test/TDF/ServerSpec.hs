@@ -4038,8 +4038,13 @@ spec = describe "TDF.Server helpers" $ do
                 (validateCourseRegistrationUtm (Just (UTMTags Nothing Nothing Nothing (Just "reel\tvariant"))))
 
     describe "sendFacebookText messaging context validation" $
-        it "rejects blank configured tokens or page ids before building Graph requests" $ do
+        it "rejects malformed configured context and payload before building Graph requests" $ do
             let cfg = marketplaceTestConfig False
+                configuredCfg =
+                    cfg
+                        { facebookMessagingToken = Just "configured-token"
+                        , facebookMessagingPageId = Just "page_123"
+                        }
             sendFacebookText
                 (cfg
                     { facebookMessagingToken = Just "   "
@@ -4057,6 +4062,36 @@ spec = describe "TDF.Server helpers" $ do
                 "recipient-1"
                 "hola"
                 `shouldReturn` Left "FACEBOOK_MESSAGING_PAGE_ID no configurado"
+
+            sendFacebookText
+                (configuredCfg { facebookMessagingToken = Just "configured token" })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left "FACEBOOK_MESSAGING_TOKEN must not contain whitespace or control characters"
+
+            sendFacebookText
+                (configuredCfg { facebookMessagingPageId = Just "page_123/messages" })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left "FACEBOOK_MESSAGING_PAGE_ID must be a single Graph path segment"
+
+            sendFacebookText
+                configuredCfg
+                "recipient 1"
+                "hola"
+                `shouldReturn` Left "Facebook recipient id must not contain whitespace or control characters"
+
+            sendFacebookText
+                configuredCfg
+                "recipient-1"
+                "   "
+                `shouldReturn` Left "Facebook message body requerido"
+
+            sendFacebookText
+                configuredCfg
+                "recipient-1"
+                ("hola" <> T.singleton '\NUL')
+                `shouldReturn` Left "Facebook message body must not contain control characters"
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
