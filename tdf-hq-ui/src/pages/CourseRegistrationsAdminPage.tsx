@@ -546,8 +546,8 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
 };
 
 const humanizeDelimitedSourceLabel = (source: string) => {
-  if (!/[_-]/.test(source)) return source;
-  const normalized = source.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!/[_./-]/.test(source)) return source;
+  const normalized = source.replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!normalized) return source;
   return `${normalized.charAt(0).toLocaleUpperCase('es')}${normalized.slice(1)}`;
 };
