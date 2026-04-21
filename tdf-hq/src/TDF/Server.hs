@@ -6213,7 +6213,11 @@ canonicalizeCmsLocale rawLocale =
 validateOptionalCmsLocaleFilter :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCmsLocaleFilter Nothing = Right Nothing
 validateOptionalCmsLocaleFilter (Just rawLocale)
-  | T.null (T.strip rawLocale) = Right Nothing
+  | T.null (T.strip rawLocale) =
+      Left err400
+        { errBody =
+            "locale must be omitted or a BCP-47 language tag such as es, en, or es-EC"
+        }
   | otherwise = Just <$> validateCmsLocaleFilter (Just rawLocale)
 
 validateRequiredCmsLocale :: Text -> Either ServerError Text
@@ -6249,7 +6253,11 @@ validateRequiredCmsSlug rawSlug =
 validateOptionalCmsSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCmsSlugFilter Nothing = Right Nothing
 validateOptionalCmsSlugFilter (Just rawSlug)
-  | T.null (T.strip rawSlug) = Right Nothing
+  | T.null (T.strip rawSlug) =
+      Left err400
+        { errBody =
+            "slug must be omitted or use only ASCII letters, numbers, and hyphens"
+        }
   | otherwise = Just <$> validateRequiredCmsSlug rawSlug
 
 validateOptionalCmsSlugPrefix :: Maybe Text -> Either ServerError (Maybe Text)

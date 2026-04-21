@@ -1802,24 +1802,23 @@ spec = describe "TDF.Server helpers" $ do
     describe "validateOptionalCmsSlugFilter" $ do
         it "drops omitted admin CMS slug filters and canonicalizes valid explicit filters" $ do
             validateOptionalCmsSlugFilter Nothing `shouldBe` Right Nothing
-            validateOptionalCmsSlugFilter (Just "   ") `shouldBe` Right Nothing
             validateOptionalCmsSlugFilter (Just "  Records-Release  ")
                 `shouldBe` Right (Just "records-release")
 
         it "rejects malformed admin CMS slug filters instead of issuing ambiguous queries" $ do
-            let assertInvalid rawSlug =
+            let assertInvalid rawSlug expected =
                     case validateOptionalCmsSlugFilter (Just rawSlug) of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
                             BL8.unpack (errBody serverErr)
-                                `shouldContain`
-                                    "slug must contain only ASCII letters"
+                                `shouldContain` expected
                         Right slugVal ->
                             expectationFailure
                                 ("Expected invalid admin CMS slug filter, got: " <> show slugVal)
-            assertInvalid "records release"
-            assertInvalid "records/release"
-            assertInvalid "records?draft=true"
+            assertInvalid "   " "slug must be omitted"
+            assertInvalid "records release" "slug must contain only ASCII letters"
+            assertInvalid "records/release" "slug must contain only ASCII letters"
+            assertInvalid "records?draft=true" "slug must contain only ASCII letters"
 
     describe "validateOptionalCmsSlugPrefix" $ do
         it "canonicalizes public CMS slug prefixes before list filtering" $ do
@@ -1871,7 +1870,6 @@ spec = describe "TDF.Server helpers" $ do
     describe "validateOptionalCmsLocaleFilter" $ do
         it "drops omitted admin CMS locale filters and canonicalizes valid explicit filters" $ do
             validateOptionalCmsLocaleFilter Nothing `shouldBe` Right Nothing
-            validateOptionalCmsLocaleFilter (Just "   ") `shouldBe` Right Nothing
             validateOptionalCmsLocaleFilter (Just " ES-ec ")
                 `shouldBe` Right (Just "es-EC")
 
@@ -1887,6 +1885,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "../es"
             assertInvalid "es_EC"
             assertInvalid "english locale"
+            assertInvalid "   "
 
     describe "validateRequiredCmsLocale" $ do
         it "requires admin-created CMS locale keys and canonicalizes their case" $ do
