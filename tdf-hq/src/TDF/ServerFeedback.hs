@@ -9,6 +9,7 @@ module TDF.ServerFeedback
   , validateOptionalFeedbackMetadata
   , validateFeedbackDescription
   , validateFeedbackTitle
+  , validateFeedbackConsent
   , validateOptionalFeedbackContactEmail
   , validateFeedbackAttachmentSize
   , sanitizeFeedbackAttachmentFileName
@@ -57,6 +58,7 @@ feedbackServer user = submitFeedback
       body <- either throwError pure (validateFeedbackDescription fpDescription)
       category <- either throwError pure (validateOptionalFeedbackMetadata "category" fpCategory)
       severity <- either throwError pure (validateOptionalFeedbackMetadata "severity" fpSeverity)
+      either throwError pure (validateFeedbackConsent fpConsent)
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
@@ -168,6 +170,11 @@ validateFeedbackDescription rawDescription
     description = T.strip rawDescription
     isDisallowedDescriptionControl ch =
       isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+validateFeedbackConsent :: Bool -> Either ServerError ()
+validateFeedbackConsent True = Right ()
+validateFeedbackConsent False =
+  Left err400 { errBody = "consent must be accepted before submitting feedback" }
 
 maxFeedbackAttachmentBytes :: Integer
 maxFeedbackAttachmentBytes = 10 * 1024 * 1024

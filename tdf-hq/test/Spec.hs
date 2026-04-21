@@ -140,6 +140,7 @@ import TDF.ServerFeedback
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
+      validateFeedbackConsent,
       validateOptionalFeedbackMetadata,
       validateOptionalFeedbackContactEmail )
 import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
@@ -1925,6 +1926,16 @@ main = hspec $ do
             assertInvalid
                 "steps\NULhidden"
                 "description must not contain control characters"
+
+    describe "validateFeedbackConsent" $ do
+        it "requires explicit consent before the backend stores or emails feedback" $ do
+            validateFeedbackConsent True `shouldBe` Right ()
+            case validateFeedbackConsent False of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "consent must be accepted"
+                Right value ->
+                    expectationFailure ("Expected missing feedback consent to be rejected, got " <> show value)
 
     describe "validateOptionalFeedbackContactEmail" $ do
         it "normalizes valid optional feedback contact emails and keeps blanks unset" $ do
