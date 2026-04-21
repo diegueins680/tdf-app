@@ -196,7 +196,7 @@ const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuar
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
-  'Todavía no hay cuentas admin. Cuando exista la primera, verás perfil y contacto; búsqueda y filtros aparecerán cuando la lista crezca.';
+  'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
