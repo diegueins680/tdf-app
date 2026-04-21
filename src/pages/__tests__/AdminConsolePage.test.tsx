@@ -676,6 +676,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps user-permission fallback titles out of first-run optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-user-permissions',
+          title: 'Usuarios y permisos',
+          body: ['Revisa que cada usuario tenga los permisos correctos antes de cambiar accesos.'],
+        },
+        {
+          cardId: 'fallback-user-permissions-en',
+          title: 'User permissions',
+          body: ['Review which users can access admin workflows before making changes.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios y permisos')).not.toBeInTheDocument();
+    expect(screen.queryByText('User permissions')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa que cada usuario tenga los permisos correctos/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review which users can access admin workflows/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps terse fallback titles for built-in admin sections out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
