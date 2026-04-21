@@ -6127,6 +6127,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps single missing-contact search guidance in the helper instead of row fallback copy', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Sin Contacto',
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 201 + index,
+        crPartyId: 20 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina Sin Contacto');
+      expect(container.textContent).toContain(
+        'Mostrando 1 de 9 inscripciones cargadas. Contacto pendiente en esta inscripción.',
+      );
+      expect(countOccurrences(container, 'Contacto pendiente en esta inscripción.')).toBe(1);
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('names the exact contact field in busy-list local search prompts', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({

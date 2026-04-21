@@ -1288,6 +1288,12 @@ export default function CourseRegistrationsAdminPage() {
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
+  const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
+    && searchedRegistrations[0] != null
+    && namedRegistrationNeedsContact(searchedRegistrations[0]);
+  const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
+    ? 'Contacto pendiente en esta inscripción.'
+    : '';
   const shortPhoneSearchHint = looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
     ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
     : '';
@@ -1307,7 +1313,10 @@ export default function CourseRegistrationsAdminPage() {
     ? showEmptyLocalSearchResults
       ? undefined
       : localSearchNarrowsRegistrations
-        ? formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount)
+        ? [
+          formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount),
+          singleVisibleMissingContactSummary,
+        ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
           ? buildFullLocalSearchMatchHint(loadedRegistrationCount)
           : undefined
@@ -1397,14 +1406,8 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const allVisibleNamedRegistrationsNeedContact = searchedRegistrations.length > 1
     && searchedRegistrations.every(namedRegistrationNeedsContact);
-  const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
-    && searchedRegistrations[0] != null
-    && namedRegistrationNeedsContact(searchedRegistrations[0]);
   const sharedVisibleMissingContactSummary = allVisibleNamedRegistrationsNeedContact
     ? 'Contacto pendiente en todas las inscripciones visibles.'
-    : '';
-  const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
-    ? 'Contacto pendiente en esta inscripción.'
     : '';
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
