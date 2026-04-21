@@ -2294,7 +2294,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpOptionalFields = showFollowUpDetails || showFollowUpUrlField || hasFollowUpOptionalDraft;
   const canHideFollowUpOptionalFields = showFollowUpOptionalFields && !hasFollowUpOptionalDraft;
   const hasFollowUpAttachmentUrl = Boolean(trimToNull(followUpForm.attachmentUrl));
-  const canHideFollowUpUrlField = showFollowUpUrlField && !hasFollowUpAttachmentUrl;
+  const canHideFollowUpUrlField = showFollowUpUrlField && !hasFollowUpAttachmentUrl && !canHideFollowUpOptionalFields;
   const showFollowUpExistingLinkAction = !showFollowUpUrlField && !hasFollowUpAttachmentUrl;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;

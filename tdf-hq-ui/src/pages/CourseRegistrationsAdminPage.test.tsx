@@ -4959,6 +4959,58 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses one hide action when the empty follow-up link field is the only optional detail', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+    });
+
+    await openDossierContextAction('Agregar seguimiento');
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+      expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Ocultar enlace existente')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('lets admins hide an empty follow-up URL fallback without collapsing drafted details', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
