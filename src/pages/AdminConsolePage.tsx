@@ -136,6 +136,13 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'en construccion',
   'if you need to prioritize this section',
   'share the requirements with the product team',
+  'no data available',
+  'no records yet',
+  'nothing to show',
+  'sin datos disponibles',
+  'no hay datos disponibles',
+  'aun no hay datos',
+  'todavia no hay datos',
 ] as const;
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'valida el estado del servicio antes de cambiar permisos o repetir una accion',
