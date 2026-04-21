@@ -167,6 +167,8 @@ recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
   mExisting <- getBy (ME.UniqueWhatsAppMessage externalId)
   case mExisting of
     Just (Entity key existing) -> do
+      -- Duplicate webhook deliveries may enrich contact identity, but must not
+      -- rewrite the immutable inbound message payload captured on first insert.
       let updates = catMaybes
             [ if isBlankMaybe (ME.whatsAppMessageSenderName existing)
                 then setOptionalFieldUpdate ME.WhatsAppMessageSenderName senderName
@@ -180,14 +182,6 @@ recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
             , if isNothingMaybe (ME.whatsAppMessagePartyId existing)
                 then setOptionalFieldUpdate ME.WhatsAppMessagePartyId (wcsPartyId snapshot)
                 else Nothing
-            , setOptionalFieldUpdate ME.WhatsAppMessageText bodyVal
-            , setOptionalFieldUpdate ME.WhatsAppMessageAdExternalId (cleanMaybeText iwrAdExternalId)
-            , setOptionalFieldUpdate ME.WhatsAppMessageAdName (cleanMaybeText iwrAdName)
-            , setOptionalFieldUpdate ME.WhatsAppMessageCampaignExternalId (cleanMaybeText iwrCampaignExternalId)
-            , setOptionalFieldUpdate ME.WhatsAppMessageCampaignName (cleanMaybeText iwrCampaignName)
-            , setOptionalFieldUpdate ME.WhatsAppMessageMetadata metadataVal
-            , setOptionalFieldUpdate ME.WhatsAppMessageTransportPayload payloadVal
-            , setOptionalFieldUpdate ME.WhatsAppMessageSource sourceVal
             ]
       if null updates
         then pure ()

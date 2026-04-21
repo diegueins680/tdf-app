@@ -2,8 +2,8 @@
 
 module TDF.WhatsApp.HistorySpec (spec) where
 
-import Control.Monad.Logger (NoLoggingT)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (NoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (object)
@@ -12,14 +12,20 @@ import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (entityVal, get, insert)
+import Database.Persist (entityKey, entityVal, get, insert)
 import Database.Persist.Sql (SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
 import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.Client (SendTextResult (..), normalizeGraphApiVersion)
-import TDF.WhatsApp.History (OutgoingWhatsAppRecord (..), normalizeWhatsAppPhone, recordOutgoingWhatsAppMessage)
+import TDF.WhatsApp.History
+  ( IncomingWhatsAppRecord (..)
+  , OutgoingWhatsAppRecord (..)
+  , normalizeWhatsAppPhone
+  , recordIncomingWhatsAppMessage
+  , recordOutgoingWhatsAppMessage
+  )
 
 spec :: Spec
 spec = do
@@ -52,6 +58,52 @@ spec = do
       assertInvalid "v20.0?fields=id"
       assertInvalid "latest"
       assertInvalid "v20 beta"
+
+  describe "recordIncomingWhatsAppMessage" $ do
+    it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incoming body adName metadata payload = IncomingWhatsAppRecord
+            { iwrExternalId = "wamid.duplicate"
+            , iwrSenderId = "+593991234567"
+            , iwrSenderName = Just "Ada"
+            , iwrText = body
+            , iwrAdExternalId = Just "ad-1"
+            , iwrAdName = Just adName
+            , iwrCampaignExternalId = Nothing
+            , iwrCampaignName = Nothing
+            , iwrMetadata = Just metadata
+            , iwrTransportPayload = Just payload
+            , iwrSource = Just "history_spec"
+            }
+      (firstKey, secondKey, storedText, storedAdName, storedMetadata, storedPayload) <-
+        runWhatsAppHistorySql $ do
+          first <- recordIncomingWhatsAppMessage now
+            (incoming
+              "Original inbound body"
+              "Original ad"
+              "original-metadata"
+              "original-payload")
+          second <- recordIncomingWhatsAppMessage now
+            (incoming
+              "Mutated inbound body"
+              "Mutated ad"
+              "mutated-metadata"
+              "mutated-payload")
+          let stored = entityVal second
+          pure
+            ( entityKey first
+            , entityKey second
+            , ME.whatsAppMessageText stored
+            , ME.whatsAppMessageAdName stored
+            , ME.whatsAppMessageMetadata stored
+            , ME.whatsAppMessageTransportPayload stored
+            )
+
+      secondKey `shouldBe` firstKey
+      storedText `shouldBe` Just "Original inbound body"
+      storedAdName `shouldBe` Just "Original ad"
+      storedMetadata `shouldBe` Just "original-metadata"
+      storedPayload `shouldBe` Just "original-payload"
 
   describe "recordOutgoingWhatsAppMessage" $ do
     it "falls back to a generated external id when a transport success returns a blank message id" $ do
