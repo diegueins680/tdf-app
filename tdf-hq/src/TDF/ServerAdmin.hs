@@ -1079,12 +1079,27 @@ parseSocialErrorsChannel mChannel =
 validateSocialUnholdLookup :: Maybe Text -> Maybe Text -> Either ServerError SocialUnholdLookup
 validateSocialUnholdLookup mExternalId mSenderId =
   case (normaliseText mExternalId, normaliseText mSenderId) of
-    (Just extId, Nothing) -> Right (SocialUnholdByExternalId extId)
-    (Nothing, Just senderId) -> Right (SocialUnholdBySenderId senderId)
+    (Just extId, Nothing) ->
+      SocialUnholdByExternalId <$> validateSocialUnholdIdentifier "externalId" extId
+    (Nothing, Just senderId) ->
+      SocialUnholdBySenderId <$> validateSocialUnholdIdentifier "senderId" senderId
     (Nothing, Nothing) ->
       Left err400 { errBody = "Provide externalId or senderId" }
     (Just _, Just _) ->
       Left err400 { errBody = "Provide only one of externalId or senderId" }
+
+validateSocialUnholdIdentifier :: Text -> Text -> Either ServerError Text
+validateSocialUnholdIdentifier fieldName value
+  | T.length value > 256 =
+      invalid (" must be 256 characters or fewer")
+  | T.any isControl value =
+      invalid (" must not contain control characters")
+  | T.any isSpace value =
+      invalid (" must not contain whitespace")
+  | otherwise = Right value
+  where
+    invalid reason =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> reason)) }
 
 validateSocialErrorsLimit :: Maybe Int -> Either ServerError Int
 validateSocialErrorsLimit Nothing = Right 50

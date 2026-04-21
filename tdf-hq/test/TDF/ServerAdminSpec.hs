@@ -669,6 +669,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Provide only one of externalId or senderId"
                 (validateSocialUnholdLookup (Just "ext-1") (Just "sender-1"))
 
+        it "rejects malformed lookup identifiers before querying social inbox rows" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected malformed social unhold lookup to fail, got " <> show value)
+            assertInvalid
+                "externalId must not contain whitespace"
+                (validateSocialUnholdLookup (Just "ig mid 1") Nothing)
+            assertInvalid
+                "senderId must not contain control characters"
+                (validateSocialUnholdLookup Nothing (Just ("wa:+593" <> T.singleton '\NUL')))
+            assertInvalid
+                "externalId must be 256 characters or fewer"
+                (validateSocialUnholdLookup (Just (T.replicate 257 "x")) Nothing)
+
     describe "social unhold route validation" $ do
         it "rejects blank channels before surfacing lookup-shape errors" $ do
             let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
