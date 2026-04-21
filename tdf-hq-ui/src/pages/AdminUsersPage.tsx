@@ -522,7 +522,8 @@ export default function AdminUsersPage() {
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
     [showInactiveUsersGroup, visibleUsers],
   );
-  const shouldCollapseInactiveUsers = showInactiveUsersGroup && !hasActiveSearch;
+  const shouldCollapseInactiveUsers =
+    showInactiveUsersGroup && !hasActiveSearch && activeVisibleUsers.length > 0;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const userIdsRequiringIdentityDisambiguator = useMemo(
