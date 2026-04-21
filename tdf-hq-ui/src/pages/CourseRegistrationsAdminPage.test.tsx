@@ -3193,6 +3193,65 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('shows the only remaining dossier context action directly beside system-email history', async () => {
+    const registrationWithNotes = buildRegistration({
+      crAdminNotes: 'Confirmó pago por transferencia.',
+    });
+    listRegistrationsMock.mockResolvedValue([registrationWithNotes]);
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registrationWithNotes,
+        crdFollowUps: [],
+      }),
+    );
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+
+      expect(actions).toBeTruthy();
+      expect(countButtonsByText(actions!, showSystemEmailsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
+      expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (item) => (item.textContent ?? '').trim() === 'Agregar seguimiento',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('summarizes shared system-email dates once instead of repeating them per email', async () => {
     const sharedEmailCreatedAt = '2030-03-03T12:00:00.000Z';
     const sharedEmailCreatedLabel = formatTimestampForDisplay(sharedEmailCreatedAt, '-');
