@@ -27,6 +27,7 @@ import TDF.API.Types
     , InternPermissionUpdate (..)
     , InternProjectCreate (..)
     , InternProjectUpdate (..)
+    , InternTaskCreate (..)
     , InternTodoCreate (..)
     , InternTodoUpdate (..)
     , InternTaskUpdate (..)
@@ -989,6 +990,25 @@ spec = do
                 "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternTaskCreate FromJSON" $ do
+        it "accepts canonical task create payloads" $
+            case decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected intern task create payload to decode, got: " <> err)
+                Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal dueAtVal) -> do
+                    projectIdVal `shouldBe` "42"
+                    titleVal `shouldBe` "Inventory cables"
+                    descriptionVal `shouldBe` Just "Label and count"
+                    assignedToVal `shouldBe` Just 7
+                    dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
+
+        it "rejects unexpected task create keys instead of silently ignoring admin intent" $
+            decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"status\":\"done\"}"
+                `shouldSatisfy` isLeft
+
     describe "InternTaskUpdate FromJSON" $ do
         it "distinguishes omitted nullable fields from explicit clears for task admin updates" $ do
             case decodeInternTaskUpdate "{\"ituStatus\":\"doing\",\"ituProgress\":55}" of
@@ -1323,6 +1343,8 @@ spec = do
     decodeClockIn = eitherDecode
     decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest
     decodeClockOut = eitherDecode
+    decodeInternTaskCreate :: BL8.ByteString -> Either String InternTaskCreate
+    decodeInternTaskCreate = eitherDecode
     decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate
     decodeInternTaskUpdate = eitherDecode
     decodeInternProjectCreate :: BL8.ByteString -> Either String InternProjectCreate

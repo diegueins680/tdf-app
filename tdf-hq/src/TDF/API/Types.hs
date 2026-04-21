@@ -1268,7 +1268,8 @@ data InternTaskCreate = InternTaskCreate
   , itcDueAt      :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternTaskCreate
-instance FromJSON InternTaskCreate
+instance FromJSON InternTaskCreate where
+  parseJSON = genericParseJSON strictObjectOptions
 
 data InternTaskUpdate = InternTaskUpdate
   { ituTitle       :: Maybe Text
