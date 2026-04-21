@@ -263,6 +263,7 @@ const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones
   });
 
   return {
+    queryClient: qc,
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -7690,6 +7691,94 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
+  it('clears stale CSV feedback when visible rows update under the same filters', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    const firstNina = buildRegistration({
+      crId: 101,
+      crFullName: 'Nina Simone',
+      crEmail: 'nina1@example.com',
+    });
+    const secondNina = buildRegistration({
+      crId: 102,
+      crFullName: 'Nina Garcia',
+      crEmail: 'nina2@example.com',
+    });
+
+    listRegistrationsMock.mockResolvedValue([
+      firstNina,
+      secondNina,
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 20 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup, queryClient } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, copyVisibleCsvLabel(2)));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(writeTextMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+    });
+
+    await act(async () => {
+      queryClient.setQueryData(
+        ['admin', 'course-registrations', { slug: '', status: 'all', limit: 200 }],
+        [
+          firstNina,
+          ...buildRegistrations(7, (index) => ({
+            crId: 301 + index,
+            crPartyId: 40 + index,
+            crFullName: `Estudiante actualizado ${index + 1}`,
+            crEmail: `updated${index + 1}@example.com`,
+          })),
+        ],
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 

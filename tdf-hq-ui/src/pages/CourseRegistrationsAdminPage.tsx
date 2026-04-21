@@ -1484,6 +1484,12 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
   const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
+  const visibleCsvScopeKey = useMemo(
+    () => searchedRegistrations
+      .map((reg) => `${reg.crCourseSlug}:${reg.crId}:${reg.crStatus}:${reg.crUpdatedAt}`)
+      .join('|'),
+    [searchedRegistrations],
+  );
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
     && !hasLocalSearch
     && loadedRegistrationCount > 1
@@ -1839,7 +1845,7 @@ export default function CourseRegistrationsAdminPage() {
 
   useEffect(() => {
     setCopyMessage(null);
-  }, [localSearchKey, slug, status, limit]);
+  }, [localSearchKey, slug, status, limit, visibleCsvScopeKey]);
 
   useEffect(() => {
     if (!selectedDossier) {
