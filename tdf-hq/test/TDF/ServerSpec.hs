@@ -194,6 +194,7 @@ import TDF.Server
     , validateCourseRegistrationReceiptId
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
+    , validateDriveAccess
     , resolveResourcesForBooking
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
@@ -5308,6 +5309,20 @@ spec = describe "TDF.Server helpers" $ do
         it "tracks the operations-access matrix for paid tooling" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasAiToolingAccess (mkUser [role]) `shouldBe` hasOperationsAccess (mkUser [role])
+
+    describe "validateDriveAccess" $ do
+        it "keeps the Drive proxy unavailable to baseline customer sessions" $
+            case validateDriveAccess (mkUser [Fan, Customer]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Google Drive access requires operations or artist role"
+                Right () ->
+                    expectationFailure "Expected baseline customer Drive access to be rejected"
+
+        it "allows operations users and label artists to use Drive upload/token flows" $ do
+            forM_ [Admin, Manager, StudioManager, Webmaster, Maintenance, Artist, Artista] $ \role ->
+                validateDriveAccess (mkUser [role]) `shouldBe` Right ()
 
     describe "hasStrictAdminAccess" $ do
         it "requires the literal Admin role instead of broad admin-module membership" $ do

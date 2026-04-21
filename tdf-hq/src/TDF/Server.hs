@@ -1763,8 +1763,18 @@ driveServer user =
   :<|> driveTokenExchangeServer user
   :<|> driveTokenRefreshServer user
 
+validateDriveAccess :: AuthedUser -> Either ServerError ()
+validateDriveAccess user
+  | hasOperationsAccess user || any (`elem` auRoles user) [Artist, Artista] =
+      Right ()
+  | otherwise =
+      Left err403
+        { errBody = "Google Drive access requires operations or artist role"
+        }
+
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
-driveUploadServer _ mAccessToken DriveUploadForm{..} = do
+driveUploadServer user mAccessToken DriveUploadForm{..} = do
+  either throwError pure (validateDriveAccess user)
   manager <- liftIO $ newManager tlsManagerSettings
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
@@ -1899,7 +1909,8 @@ validateDriveAccessToken token
   | otherwise = Right token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
-driveTokenExchangeServer _ payload = do
+driveTokenExchangeServer user payload = do
+  either throwError pure (validateDriveAccess user)
   Env{envConfig} <- ask
   manager <- liftIO $ newManager tlsManagerSettings
   (cid, secret) <- loadDriveClientCreds
@@ -1916,7 +1927,8 @@ driveTokenExchangeServer _ payload = do
   pure (driveTokenResponseFrom token Nothing)
 
 driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveTokenResponse
-driveTokenRefreshServer _ payload = do
+driveTokenRefreshServer user payload = do
+  either throwError pure (validateDriveAccess user)
   refreshTokenVal <- either throwError pure (validateDriveTokenRefreshRequest payload)
   manager <- liftIO $ newManager tlsManagerSettings
   (cid, secret) <- loadDriveClientCreds
