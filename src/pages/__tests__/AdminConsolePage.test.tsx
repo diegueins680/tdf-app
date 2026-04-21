@@ -1728,7 +1728,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
-      expect(screen.getByText('roles.updated')).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Primeros pasos')).not.toBeInTheDocument();
@@ -1895,7 +1895,7 @@ describe('AdminConsolePage', () => {
           /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText('roles.updated')).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();
@@ -2351,11 +2351,13 @@ describe('AdminConsolePage', () => {
           /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Acción:\s*roles\.updated/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
       expect(screen.getByText(/Entidad:\s*user · 101/i)).toBeInTheDocument();
       expect(screen.getByText(/Actor:\s*101/i)).toBeInTheDocument();
       expect(screen.getByText(/Detalle:\s*Admin -> Admin, Manager/i)).toBeInTheDocument();
     });
+    expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
+    expect(screen.queryByText(/Acción:\s*roles\.updated/i)).not.toBeInTheDocument();
 
     expect(
       screen.queryByText(/Confirma quién cambió qué y cuándo antes de repetir una acción o ajustar permisos\./i),
@@ -2456,7 +2458,7 @@ describe('AdminConsolePage', () => {
           /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Acción:\s*roles\.updated/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
@@ -2464,7 +2466,8 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
-    expect(screen.getAllByText(/roles\.updated/i)).toHaveLength(1);
+    expect(screen.queryByText(/roles\.updated/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
   });
 
   it('hides empty audit columns until one event adds actor or detail context', async () => {

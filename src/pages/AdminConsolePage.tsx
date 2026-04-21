@@ -146,6 +146,9 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
   'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  'roles.updated': 'Roles actualizados',
+};
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -443,6 +446,18 @@ function hasAuditActor(actorId?: number | null) {
 
 function hasAuditDetail(diff?: string | null) {
   return (diff?.trim().length ?? 0) > 0;
+}
+
+function formatAuditAction(action: string) {
+  const trimmedAction = action.trim();
+
+  return AUDIT_ACTION_LABELS[trimmedAction] ?? trimmedAction;
+}
+
+function getAuditActionTitle(action: string) {
+  const formattedAction = formatAuditAction(action);
+
+  return formattedAction === action ? undefined : action;
 }
 
 function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
@@ -1285,7 +1300,11 @@ export default function AdminConsolePage() {
                   <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
                     <TableCell>{formatDate(entry.createdAt)}</TableCell>
                     <TableCell>{entry.entity} · {entry.entityId}</TableCell>
-                    <TableCell>{entry.action}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
+                        {formatAuditAction(entry.action)}
+                      </Typography>
+                    </TableCell>
                     {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
                     {showAuditDetailColumn && (
                       <TableCell>
@@ -1315,8 +1334,9 @@ export default function AdminConsolePage() {
                   py: 1.25,
                 }}
               >
-                <Typography variant="body2">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box> {singleAuditEntry.action}
+                <Typography variant="body2" title={getAuditActionTitle(singleAuditEntry.action)}>
+                  <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box>{' '}
+                  {formatAuditAction(singleAuditEntry.action)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
