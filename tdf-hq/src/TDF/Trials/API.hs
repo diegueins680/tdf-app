@@ -128,7 +128,9 @@ data ClassSessionOut = ClassSessionOut { classSessionId :: Int, consumedMinutes 
 instance ToJSON ClassSessionOut; instance FromJSON ClassSessionOut
 
 data AttendIn = AttendIn { attended :: Bool, notes :: Maybe Text } deriving (Generic)
-instance ToJSON AttendIn; instance FromJSON AttendIn
+instance ToJSON AttendIn
+instance FromJSON AttendIn where
+  parseJSON = genericParseJSON strictRequestObjectOptions
 
 data CommissionDTO = CommissionDTO { teacherId :: Int, amountCents :: Int, basisCents :: Int, percent :: Double } deriving (Generic)
 instance ToJSON CommissionDTO; instance FromJSON CommissionDTO

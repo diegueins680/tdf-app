@@ -32,7 +32,8 @@ import TDF.Trials.DTO
   , TrialScheduleIn (..)
   )
 import TDF.Trials.API
-  ( ClassSessionIn (..)
+  ( AttendIn (..)
+  , ClassSessionIn (..)
   , ClassSessionOut
   , InterestIn (..)
   , PackageDTO
@@ -763,6 +764,29 @@ spec = do
         , ",\"roomId\":4"
         , ",\"unexpected\":true}"
         ]
+
+  describe "AttendIn FromJSON" $ do
+    it "accepts canonical attendance payloads for private class sessions" $
+      case A.eitherDecode "{\"attended\":true,\"notes\":\"Completed exercises\"}" of
+        Left decodeErr ->
+          expectationFailure ("Expected canonical attendance payload to decode, got: " <> decodeErr)
+        Right (AttendIn attendedValue notesValue) -> do
+          attendedValue `shouldBe` True
+          notesValue `shouldBe` Just "Completed exercises"
+
+    it "rejects typoed attendance keys instead of silently leaving attendance unchanged" $ do
+      isLeft
+        ( A.eitherDecode
+            "{\"attended\":true,\"note\":\"Completed exercises\"}"
+            :: Either String AttendIn
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode
+            "{\"attended\":true,\"consumedMinutes\":60}"
+            :: Either String AttendIn
+        )
+        `shouldBe` True
 
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do
