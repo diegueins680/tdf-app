@@ -955,7 +955,8 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
-  let hasAcquisitionContext = false;
+  let hasHiddenAcquisitionContext = false;
+  const acquisitionContextKeys = new Set<string>();
 
   registrations.forEach((reg) => {
     const hasName = Boolean(reg.crFullName?.trim());
@@ -981,7 +982,12 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     if (cohortKey) cohortKeys.add(cohortKey);
 
     if (reg.crAdminNotes?.trim()) hasNotes = true;
-    if (getSearchableRegistrationAcquisitionContext(reg)) hasAcquisitionContext = true;
+    const acquisitionContext = getSearchableRegistrationAcquisitionContext(reg);
+    if (acquisitionContext) {
+      acquisitionContextKeys.add(normalizeLocalSearchText(acquisitionContext));
+    } else {
+      hasHiddenAcquisitionContext = true;
+    }
   });
 
   const terms: string[] = [];
@@ -997,7 +1003,9 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   }
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (hasNotes) terms.push('nota');
-  if (hasAcquisitionContext) terms.push(terms.length === 0 ? 'Origen' : 'origen');
+  if (acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext)) {
+    terms.push(terms.length === 0 ? 'Origen' : 'origen');
+  }
   if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
   if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
