@@ -80,6 +80,7 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 const EDITABLE_ROLES_LABEL = 'Roles editables';
+const EMPTY_ROLES_LABEL = 'Sin roles';
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
@@ -444,7 +445,7 @@ export default function UserRoleManagement() {
                           {singleUser.roles.map((role) => (
                             <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
                           ))}
-                          {singleUser.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                          {singleUser.roles.length === 0 && <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />}
                         </Box>
                       </ButtonBase>
                     </Stack>
@@ -518,7 +519,7 @@ export default function UserRoleManagement() {
                               {user.roles.map((role) => (
                                 <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
                               ))}
-                              {user.roles.length === 0 && <Chip label="No roles" size="small" variant="outlined" />}
+                              {user.roles.length === 0 && <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />}
                             </Box>
                           </ButtonBase>
                         </TableCell>
@@ -536,18 +537,23 @@ export default function UserRoleManagement() {
         <DialogTitle>Editar roles de {selectedUser?.name}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel id="roles-label">Roles</InputLabel>
+            <InputLabel id="roles-label" shrink>Roles</InputLabel>
             <Select<RoleValue[]>
               labelId="roles-label"
               multiple
               value={selectedRoles}
               onChange={handleRoleChange}
               input={<OutlinedInput label="Roles" />}
+              displayEmpty
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((role) => (
-                    <Chip key={role} label={role} size="small" color={getRoleColor(role)} />
-                  ))}
+                  {selected.length === 0 ? (
+                    <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />
+                  ) : (
+                    selected.map((role) => (
+                      <Chip key={role} label={role} size="small" color={getRoleColor(role)} />
+                    ))
+                  )}
                 </Box>
               )}
             >

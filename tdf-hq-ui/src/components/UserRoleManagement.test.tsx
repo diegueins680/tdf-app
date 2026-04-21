@@ -491,6 +491,56 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('keeps empty role assignments explicit when the admin opens the edit dialog', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 306,
+        name: 'Nina Sin Roles',
+        email: 'nina@example.com',
+        roles: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Nina Sin Roles');
+        expect(container.textContent).toContain('Sin roles');
+        expect(container.textContent).not.toContain('No roles');
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Nina Sin Roles"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        if (!(dialog instanceof HTMLElement)) {
+          throw new Error('Edit roles dialog not found');
+        }
+
+        const rolesSelect = dialog.querySelector('[role="combobox"]');
+        if (!(rolesSelect instanceof HTMLElement)) {
+          throw new Error('Roles select not found');
+        }
+
+        expect(buttonText(rolesSelect)).toBe('Sin roles');
+        expect(dialog.textContent).not.toContain('No roles');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps save disabled until the admin makes a real role change', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
