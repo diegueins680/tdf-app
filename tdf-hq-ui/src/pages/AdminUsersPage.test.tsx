@@ -1244,6 +1244,81 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('waits to show duplicate identity ids until the collapsed inactive duplicate is visible', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              partyName: 'Ana Admin',
+              username: 'ana-admin',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 10,
+              partyName: 'Ana Admin',
+              username: 'ana-admin',
+              active: false,
+              primaryEmail: 'ana.inactive@example.com',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 11,
+              partyName: 'Linus View',
+              username: 'linus-view',
+              primaryEmail: 'linus@example.com',
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              partyName: 'Ana Admin',
+              username: 'ana-admin',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 11,
+              partyName: 'Linus View',
+              username: 'linus-view',
+              primaryEmail: 'linus@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil #9');
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil #9');
+        expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103, 102]);
+        expect(getRowByUserId(container, 101).textContent).toContain('Perfil #9');
+        expect(getRowByUserId(container, 102).textContent).toContain('Perfil #10');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows an all-inactive included roster directly instead of hiding every row behind a toggle', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive

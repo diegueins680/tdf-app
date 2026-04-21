@@ -526,9 +526,13 @@ export default function AdminUsersPage() {
     showInactiveUsersGroup && !hasActiveSearch && activeVisibleUsers.length > 0;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
+  const usersVisibleForIdentityDisambiguation = useMemo(
+    () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
+    [activeVisibleUsers, showInactiveUsersList, visibleUsers],
+  );
   const userIdsRequiringIdentityDisambiguator = useMemo(
-    () => getUserIdsRequiringIdentityDisambiguator(visibleUsers),
-    [visibleUsers],
+    () => getUserIdsRequiringIdentityDisambiguator(usersVisibleForIdentityDisambiguation),
+    [usersVisibleForIdentityDisambiguation],
   );
   useEffect(() => {
     if (!showInactiveUsersGroup || hasActiveSearch) {
