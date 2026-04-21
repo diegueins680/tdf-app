@@ -7139,7 +7139,8 @@ getInvoicesBySession user sessionId = do
 getInvoiceById :: AuthedUser -> Int64 -> AppM Value
 getInvoiceById user invoiceId = do
   requireModule user ModuleInvoicing
-  dto <- loadInvoiceDTOOr404 (toSqlKey invoiceId)
+  invoiceIdValid <- either throwError pure (validatePositiveIdField "invoiceId" invoiceId)
+  dto <- loadInvoiceDTOOr404 (toSqlKey invoiceIdValid)
   pure (toJSON dto)
 
 listInvoices :: AuthedUser -> AppM [InvoiceDTO]
@@ -7282,8 +7283,9 @@ createReceipt user CreateReceiptReq{..} = do
 getReceipt :: AuthedUser -> Int64 -> AppM ReceiptDTO
 getReceipt user ridParam = do
   requireModule user ModuleInvoicing
+  receiptIdValid <- either throwError pure (validatePositiveIdField "receiptId" ridParam)
   Env pool _ <- ask
-  let rid = toSqlKey ridParam :: Key Receipt
+  let rid = toSqlKey receiptIdValid :: Key Receipt
   result <- liftIO $ flip runSqlPool pool $ do
     mReceipt <- getEntity rid
     case mReceipt of

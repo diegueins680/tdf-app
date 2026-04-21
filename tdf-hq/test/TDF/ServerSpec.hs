@@ -193,7 +193,9 @@ import TDF.Server
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , createInvoice
+    , getInvoiceById
     , createReceipt
+    , getReceipt
     , resolvePartyRoleAssignmentTarget
     , fanUnfollowArtist
     , chatListMessages
@@ -693,6 +695,31 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "usdollars"
             assertInvalid "12$"
             assertInvalid "   "
+
+    describe "invoice and receipt lookup ids" $
+        it "rejects non-positive lookup ids before treating them as missing rows" $ do
+            let assertInvalid expectedMessage action = do
+                    result <- runHandler action
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid lookup id to be rejected, got: " <> show value)
+
+            assertInvalid
+                "invoiceId must be a positive integer"
+                ( runReaderT
+                    (getInvoiceById (mkUser [Accounting]) 0)
+                    (error "getInvoiceById should reject invalid invoiceId before reading Env")
+                )
+            assertInvalid
+                "receiptId must be a positive integer"
+                ( runReaderT
+                    (getReceipt (mkUser [Accounting]) (-1))
+                    (error "getReceipt should reject invalid receiptId before reading Env")
+                )
 
     describe "prepareLine" $ do
         it "accepts a single positive provenance reference and preserves it on the prepared invoice line" $
