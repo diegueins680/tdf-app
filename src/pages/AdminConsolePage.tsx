@@ -451,7 +451,27 @@ function hasAuditDetail(diff?: string | null) {
 function formatAuditAction(action: string) {
   const trimmedAction = action.trim();
 
-  return AUDIT_ACTION_LABELS[trimmedAction] ?? trimmedAction;
+  return AUDIT_ACTION_LABELS[trimmedAction] ?? formatFallbackAuditAction(trimmedAction);
+}
+
+function formatFallbackAuditAction(action: string) {
+  const words = action
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .split(/[._\s-]+/)
+    .filter((word) => word.length > 0);
+
+  if (words.length === 0) {
+    return action;
+  }
+
+  return words
+    .map((word, index) => {
+      const normalizedWord = word.toLowerCase();
+      return index === 0
+        ? `${normalizedWord.charAt(0).toUpperCase()}${normalizedWord.slice(1)}`
+        : normalizedWord;
+    })
+    .join(' ');
 }
 
 function getAuditActionTitle(action: string) {

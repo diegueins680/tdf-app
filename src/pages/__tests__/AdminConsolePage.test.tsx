@@ -2417,10 +2417,12 @@ describe('AdminConsolePage', () => {
           /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Acción:\s*package\.created/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Package created/i)).toBeInTheDocument();
       expect(screen.getByText(/Entidad:\s*package · PKG-1/i)).toBeInTheDocument();
     });
 
+    expect(screen.getByText(/Acción:\s*Package created/i)).toHaveAttribute('title', 'package.created');
+    expect(screen.queryByText(/Acción:\s*package\.created/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Actor:\s*Sistema/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Detalle:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
@@ -2505,10 +2507,14 @@ describe('AdminConsolePage', () => {
       expect(screen.getByRole('columnheader', { name: /^Fecha$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
-      expect(screen.getByText('package.created')).toBeInTheDocument();
-      expect(screen.getByText('package.synced')).toBeInTheDocument();
+      expect(screen.getByText('Package created')).toBeInTheDocument();
+      expect(screen.getByText('Package synced')).toBeInTheDocument();
     });
 
+    expect(screen.getByText('Package created')).toHaveAttribute('title', 'package.created');
+    expect(screen.getByText('Package synced')).toHaveAttribute('title', 'package.synced');
+    expect(screen.queryByText('package.created')).not.toBeInTheDocument();
+    expect(screen.queryByText('package.synced')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/^Sistema$/i)).not.toBeInTheDocument();
