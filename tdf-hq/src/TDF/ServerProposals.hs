@@ -12,6 +12,7 @@ module TDF.ServerProposals
   , resolveOptionalProposalPipelineCardReferenceUpdate
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
+  , validateOptionalProposalContactPhone
   , validateOptionalProposalClientPartyId
   , validateProposalContentSource
   , validateProposalStatus
@@ -49,6 +50,7 @@ import           TDF.DB                     (Env(..))
 import           TDF.Models                 (Party)
 import qualified TDF.ModelsExtra            as ME
 import qualified TDF.Handlers.InputList     as InputList
+import           TDF.WhatsApp.History       (normalizeWhatsAppPhone)
 
 data ProposalContentSource
   = ProposalInlineLatex Text
@@ -107,6 +109,7 @@ proposalsServer user =
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
+      contactPhone <- either throwError pure (validateOptionalProposalContactPhone pcContactPhone)
       clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
         >>= either throwError pure
       pipelineCardKey <- withPool (resolveOptionalProposalPipelineCardReference pcPipelineCardId)
@@ -118,7 +121,7 @@ proposalsServer user =
             , ME.proposalClientPartyId  = clientPartyKey
             , ME.proposalContactName    = normalizeOptionalText pcContactName
             , ME.proposalContactEmail   = contactEmail
-            , ME.proposalContactPhone   = normalizeOptionalText pcContactPhone
+            , ME.proposalContactPhone   = contactPhone
             , ME.proposalPipelineCardId = pipelineCardKey
             , ME.proposalStatus         = statusVal
             , ME.proposalNotes          = normalizeOptionalText pcNotes
@@ -149,7 +152,10 @@ proposalsServer user =
           now <- liftIO getCurrentTime
           titleUpdate <- traverse (requireText "title") puTitle
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
-          contactEmailUpdate <- either throwError pure (traverse validateOptionalProposalContactEmail puContactEmail)
+          contactEmailUpdate <- either throwError pure
+            (traverse validateOptionalProposalContactEmail puContactEmail)
+          contactPhoneUpdate <- either throwError pure
+            (traverse validateOptionalProposalContactPhone puContactPhone)
           clientPartyIdUpdate <- case puClientPartyId of
             Nothing -> pure Nothing
             Just rawClientPartyId -> do
@@ -164,7 +170,7 @@ proposalsServer user =
                 , fmap (ME.ProposalClientPartyId =.) clientPartyIdUpdate
                 , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
-                , fmap (ME.ProposalContactPhone =.) (normalizeOptionalUpdate puContactPhone)
+                , fmap (ME.ProposalContactPhone =.) contactPhoneUpdate
                 , fmap (ME.ProposalPipelineCardId =.) pipelineCardUpdate
                 , fmap (ME.ProposalNotes =.) (normalizeOptionalUpdate puNotes)
                 ]
@@ -390,6 +396,17 @@ validateOptionalProposalContactEmail (Just rawEmail) =
       in if isValidProposalEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
+
+validateOptionalProposalContactPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalContactPhone Nothing = Right Nothing
+validateOptionalProposalContactPhone (Just rawPhone) =
+  case normalizeOptionalText (Just rawPhone) of
+    Nothing -> Right Nothing
+    Just _ ->
+      case normalizeWhatsAppPhone rawPhone of
+        Just phoneVal -> Right (Just phoneVal)
+        Nothing ->
+          Left err400 { errBody = "contactPhone must be a valid phone number" }
 
 validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalProposalClientPartyId Nothing = Right Nothing

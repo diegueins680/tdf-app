@@ -133,6 +133,7 @@ import TDF.ServerProposals
     ( ProposalContentSource (..),
       validateOptionalProposalClientPartyId,
       validateOptionalProposalContactEmail,
+      validateOptionalProposalContactPhone,
       validateOptionalProposalStatus,
       validateProposalContentSource,
       validateProposalStatus,
@@ -3778,6 +3779,27 @@ main = hspec $ do
             assertInvalid "sales.@example.com"
             assertInvalid "sales..team@example.com"
             assertInvalid "sales()@example.com"
+
+    describe "validateOptionalProposalContactPhone" $ do
+        it "normalizes valid proposal contact phones and treats blanks as unset" $ do
+            validateOptionalProposalContactPhone Nothing `shouldBe` Right Nothing
+            validateOptionalProposalContactPhone (Just "   ") `shouldBe` Right Nothing
+            validateOptionalProposalContactPhone (Just " +593 99 123 4567 ")
+                `shouldBe` Right (Just "+593991234567")
+
+        it "rejects malformed proposal contact phones before CRM storage" $ do
+            let assertInvalid raw = case validateOptionalProposalContactPhone (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err)
+                            `shouldContain` "contactPhone must be a valid phone number"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid proposal contact phone to be rejected, got " <> show value)
+            assertInvalid "---"
+            assertInvalid "12345"
+            assertInvalid "+1234567890123456"
+            assertInvalid "call me at 099 123 4567"
 
     describe "validateOptionalProposalClientPartyId" $ do
         it "preserves omitted ids and accepts positive client party ids" $ do
