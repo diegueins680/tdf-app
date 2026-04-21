@@ -520,7 +520,14 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
-  return title || slug;
+  if (!title) return slug;
+
+  const slugSuffix = `(${slug})`;
+  if (slug && title.toLocaleLowerCase('es').endsWith(slugSuffix.toLocaleLowerCase('es'))) {
+    return title.slice(0, -slugSuffix.length).trim() || slug;
+  }
+
+  return title;
 };
 
 const humanizeDelimitedSourceLabel = (source: string) => {
