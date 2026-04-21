@@ -7405,6 +7405,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(container.textContent).toContain(
         'Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );

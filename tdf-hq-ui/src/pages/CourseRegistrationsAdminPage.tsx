@@ -281,6 +281,9 @@ const normalizeLocalSearchText = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const normalizeVisibleLocalSearchInput = (value: string) => (
+  value.trim().length === 0 ? '' : value
+);
 const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
 const formatLocalSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const looksLikeShortPhoneSearch = (value: string, digits: string) => (
@@ -3337,7 +3340,7 @@ export default function CourseRegistrationsAdminPage() {
                   value={localSearch}
                   onChange={(e) => {
                     setHasUsedFilterControl(true);
-                    setLocalSearch(e.target.value);
+                    setLocalSearch(normalizeVisibleLocalSearchInput(e.target.value));
                   }}
                   placeholder={localSearchPlaceholder}
                   helperText={localSearchHelperText}
