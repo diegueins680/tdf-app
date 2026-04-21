@@ -161,6 +161,7 @@ import TDF.Server
       validateDatafastCredential,
       validateDatafastBaseUrl,
       validatePayPalPayerEmailField,
+      validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
@@ -2186,6 +2187,26 @@ main = hspec $ do
             assertInvalid
                 (Just "https://www.paypal.com/checkoutnow?token=ORDER-123#fragment")
                 invalidMessage
+
+    describe "validatePayPalCreateOrderIdField" $ do
+        it "rejects malformed upstream PayPal order ids before marketplace storage" $ do
+            validatePayPalCreateOrderIdField " ORDER-123_ABC "
+                `shouldBe` Right "ORDER-123_ABC"
+
+            let assertInvalid rawValue =
+                    case validatePayPalCreateOrderIdField rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "PayPal create response returned an invalid order id"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid PayPal order id, got " <> show value)
+            assertInvalid "   "
+            assertInvalid "ORDER/123"
+            assertInvalid "ORDER?token=123"
+            assertInvalid (Data.Text.replicate 129 "A")
 
     describe "validatePayPalCaptureStatusField" $ do
         it "requires PayPal capture responses to include a non-blank status" $ do

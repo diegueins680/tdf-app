@@ -6632,9 +6632,24 @@ validatePayPalCaptureOrderId rawOrderId =
             { errBody =
                 "paypalOrderId must contain only ASCII letters, digits, hyphen, or underscore"
             }
-  where
-    isPayPalOrderIdChar c =
-      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+validatePayPalCreateOrderIdField :: Text -> Either ServerError Text
+validatePayPalCreateOrderIdField rawOrderId =
+  case normalizeOptionalInput (Just rawOrderId) of
+    Just orderId | isValidPayPalOrderId orderId ->
+      Right orderId
+    _ ->
+      Left err502 { errBody = "PayPal create response returned an invalid order id" }
+
+isValidPayPalOrderId :: Text -> Bool
+isValidPayPalOrderId orderId =
+  not (T.null orderId)
+    && T.length orderId <= 128
+    && T.all isPayPalOrderIdChar orderId
+
+isPayPalOrderIdChar :: Char -> Bool
+isPayPalOrderIdChar c =
+  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
 validatePayPalCaptureOrderReference :: Maybe Text -> Text -> Either ServerError Text
 validatePayPalCaptureOrderReference mStoredOrderId paypalOrderId =
@@ -9765,7 +9780,10 @@ createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName bu
     either throwError pure $
       validatePayPalApprovalUrl
         (fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj)
-  pure (pcrId resObj, Just approval)
+  ppOrderId <-
+    either throwError pure $
+      validatePayPalCreateOrderIdField (pcrId resObj)
+  pure (ppOrderId, Just approval)
 
 validatePayPalApprovalUrl :: Maybe Text -> Either ServerError Text
 validatePayPalApprovalUrl Nothing =
