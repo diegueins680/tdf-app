@@ -1376,8 +1376,12 @@ export default function CourseRegistrationsAdminPage() {
     && !hasStatusFilter;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
-    () => summarizeActiveFilters({ cohortLabel: activeCohortLabel, status, limit }),
-    [activeCohortLabel, status, limit],
+    () => summarizeActiveFilters({
+      cohortLabel: hasEffectiveSlugFilter ? activeCohortLabel : '',
+      status,
+      limit,
+    }),
+    [activeCohortLabel, hasEffectiveSlugFilter, status, limit],
   );
   const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
     ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
