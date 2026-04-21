@@ -30,7 +30,7 @@ import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
-import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseMaybe, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -9816,14 +9816,15 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
     either throwError pure $
       validatePayPalCaptureStatusField
         (join $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed)
-  let payerEmail = parseMaybe (withObject "PayPalCapture" $ \o -> do
-        payerObj <- o .:? "payer"
-        case payerObj of
-          Nothing -> pure Nothing
-          Just po -> po .:? "email_address") parsed
+  payerEmail <-
+    case parseEither parsePayPalPayerEmail parsed of
+      Left _ ->
+        throwError err502 { errBody = "PayPal payer email must be a string when present" }
+      Right rawPayerEmail ->
+        either throwError pure (validatePayPalPayerEmailField rawPayerEmail)
   pure PayPalCaptureOutcome
     { pcoStatus = statusTxt
-    , pcoPayerEmail = join payerEmail
+    , pcoPayerEmail = payerEmail
     }
 
 validatePayPalCaptureStatusField :: Maybe Text -> Either ServerError Text
@@ -9837,6 +9838,26 @@ validatePayPalCaptureStatusField (Just rawStatus)
   where
     statusTxt = T.strip rawStatus
 
+parsePayPalPayerEmail :: Value -> Parser (Maybe Text)
+parsePayPalPayerEmail =
+  withObject "PayPalCapture" $ \o -> do
+    mPayer <- o .:? "payer"
+    case (mPayer :: Maybe Value) of
+      Nothing ->
+        pure Nothing
+      Just payer ->
+        withObject "PayPalPayer" (\po -> po .:? "email_address") payer
+
+validatePayPalPayerEmailField :: Maybe Text -> Either ServerError (Maybe Text)
+validatePayPalPayerEmailField Nothing = Right Nothing
+validatePayPalPayerEmailField (Just rawEmail) =
+  case validateCourseRegistrationEmail (Just rawEmail) of
+    Right (Just emailVal) ->
+      Right (Just emailVal)
+    Right Nothing ->
+      Left err502 { errBody = "PayPal payer email cannot be blank" }
+    Left _ ->
+      Left err502 { errBody = "PayPal returned an invalid payer email" }
 
 assetStatusLabel :: ME.AssetStatus -> Text
 assetStatusLabel st =

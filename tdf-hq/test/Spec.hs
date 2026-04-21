@@ -155,6 +155,7 @@ import TDF.Server
       validateDatafastCheckoutId,
       validateDatafastCredential,
       validateDatafastBaseUrl,
+      validatePayPalPayerEmailField,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
@@ -2165,6 +2166,25 @@ main = hspec $ do
                                 ("Expected invalid PayPal capture status, got " <> show value)
             assertInvalid Nothing "PayPal capture response did not include a status"
             assertInvalid (Just "   ") "PayPal capture response status cannot be blank"
+
+    describe "validatePayPalPayerEmailField" $ do
+        it "normalizes optional PayPal payer emails before storing capture metadata" $ do
+            validatePayPalPayerEmailField Nothing `shouldBe` Right Nothing
+            validatePayPalPayerEmailField (Just "  PAYER@Example.COM  ")
+                `shouldBe` Right (Just "payer@example.com")
+
+        it "rejects malformed PayPal payer emails instead of storing ambiguous capture metadata" $ do
+            let assertInvalid rawValue expectedMessage =
+                    case validatePayPalPayerEmailField rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid PayPal payer email, got " <> show value)
+            assertInvalid (Just "   ") "PayPal payer email cannot be blank"
+            assertInvalid (Just "payer@example..com") "PayPal returned an invalid payer email"
+            assertInvalid (Just "payer\n@example.com") "PayPal returned an invalid payer email"
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
