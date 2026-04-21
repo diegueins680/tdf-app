@@ -9581,24 +9581,27 @@ validateDatafastBaseUrl mRawBase
       T.all (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 rawUrl)
 
     isApprovedDatafastOrigin rawUrl =
-      case datafastOriginHost rawUrl of
-        Just host ->
-          host == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` host
+      case datafastOriginParts rawUrl of
+        Just (host, portSuffix) ->
+          (host == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` host)
+            && (T.null portSuffix || portSuffix == ":443")
         Nothing ->
           False
 
-    datafastOriginHost rawUrl =
+    datafastOriginParts rawUrl =
       let authority = T.drop 8 rawUrl
-          (host, _portSuffix) = T.breakOn ":" authority
+          (host, portSuffix) = T.breakOn ":" authority
           normalizedHost = T.toLower host
-      in if T.null normalizedHost then Nothing else Just normalizedHost
+      in if T.null normalizedHost
+           then Nothing
+           else Just (normalizedHost, portSuffix)
 
 invalidDatafastBaseUrl :: Either ServerError a
 invalidDatafastBaseUrl =
   Left err500
     { errBody =
         "DATAFAST_BASE_URL must be an absolute https origin on oppwa.com "
-          <> "without path, query, or fragment"
+          <> "using the default HTTPS port and without path, query, or fragment"
     }
 
 data PayPalLink = PayPalLink

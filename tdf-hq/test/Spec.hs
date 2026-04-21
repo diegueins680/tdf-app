@@ -2075,6 +2075,7 @@ main = hspec $ do
             assertInvalid "http://localhost:8080"
             assertInvalid "https://payments.example.com"
             assertInvalid "https://oppwa.com.evil.example"
+            assertInvalid "https://test.oppwa.com:8443"
 
     describe "validateDatafastCredential" $ do
         it "trims required Datafast credentials before payment requests are built" $ do
