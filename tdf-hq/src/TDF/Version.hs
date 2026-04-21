@@ -72,11 +72,20 @@ canonRuntimeMetadata txt =
   let trimmed = T.strip txt
       upper   = T.toUpper trimmed
   in if T.null trimmed
-        || upper == "UNKNOWN"
-        || upper == "DEV"
+        || upper `elem` runtimeMetadataSentinels
         || T.any isControl trimmed
        then Nothing
        else Just trimmed
+
+runtimeMetadataSentinels :: [Text]
+runtimeMetadataSentinels =
+  [ "UNKNOWN"
+  , "DEV"
+  , "NULL"
+  , "UNDEFINED"
+  , "NONE"
+  , "N/A"
+  ]
 
 resolveBuildTime :: IO Text
 resolveBuildTime = do

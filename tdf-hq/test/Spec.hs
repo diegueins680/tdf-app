@@ -367,6 +367,20 @@ main = hspec $ do
                     info <- getVersionInfo
                     commit info `shouldBe` "abc123def456"
 
+        it "skips deployment-template sentinel aliases during runtime metadata discovery" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ clearEnv buildTimeEnvKeys
+                    ++ [ ("GIT_SHA", Just " undefined ")
+                       , ("GITHUB_SHA", Just "abc123def456")
+                       , ("BUILD_TIME", Just "null")
+                       , ("SOURCE_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
         it "skips control-bearing runtime metadata instead of exposing ambiguous version fields" $
             withEnvOverrides
                 (clearEnv commitEnvKeys
