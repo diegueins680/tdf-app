@@ -3778,6 +3778,20 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "EXPECTED")
                     (Just "/v1/checkouts/OTHER/payment"))
 
+        it "rejects malformed stored checkout ids as server state errors" $
+            case validateDatafastOrderResourcePath
+                    (Just "checkout id with spaces")
+                    (Just "/v1/checkouts/ABC/payment") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Stored Datafast checkout id is invalid"
+                Right pathVal ->
+                    expectationFailure
+                        ( "Expected malformed stored Datafast checkout id to be rejected, got: "
+                            <> show pathVal
+                        )
+
     describe "validateDatafastEntityId" $ do
         it "trims URL-safe Datafast entity ids before gateway requests" $
             validateDatafastEntityId (Just "  8ac7a4c9_test-01.02  ")

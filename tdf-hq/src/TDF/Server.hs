@@ -9116,7 +9116,7 @@ validateDatafastOrderResourcePath :: Maybe Text -> Maybe Text -> Either ServerEr
 validateDatafastOrderResourcePath mExpectedCheckoutId mRawResourcePath = do
   resourcePath <- validateDatafastResourcePath mRawResourcePath
   expectedCheckoutId <- case mExpectedCheckoutId of
-    Just checkoutId -> Right checkoutId
+    Just checkoutId -> validateStoredDatafastCheckoutId checkoutId
     Nothing ->
       Left err409
         { errBody =
@@ -9131,6 +9131,18 @@ validateDatafastOrderResourcePath mExpectedCheckoutId mRawResourcePath = do
         { errBody =
             "resourcePath does not match this order's Datafast checkout"
         }
+
+validateStoredDatafastCheckoutId :: Text -> Either ServerError Text
+validateStoredDatafastCheckoutId rawCheckoutId
+  | isValidDatafastCheckoutId checkoutId =
+      Right checkoutId
+  | otherwise =
+      Left err500
+        { errBody =
+            "Stored Datafast checkout id is invalid"
+        }
+  where
+    checkoutId = T.strip rawCheckoutId
 
 datafastCheckoutIdFromResourcePath :: Text -> Maybe Text
 datafastCheckoutIdFromResourcePath resourcePath =
