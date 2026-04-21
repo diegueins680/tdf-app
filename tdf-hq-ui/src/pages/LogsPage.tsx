@@ -68,14 +68,22 @@ export default function LogsPage() {
   const hasLogs = logs.length > 0;
   const showLogsTable = logsQuery.isLoading || hasLogs;
   const showLimitControl = logsQuery.isLoading || logsQuery.isError || hasLogs;
-  const showRefreshAction = logsQuery.isError || hasLogs;
+  const showRefreshAction = logsQuery.isError;
+  const showAutoRefreshHint = logsQuery.isLoading || hasLogs;
 
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-        <Typography variant="h5" component="h1">
-          Logs del servidor
-        </Typography>
+        <Stack spacing={0.25}>
+          <Typography variant="h5" component="h1">
+            Logs del servidor
+          </Typography>
+          {showAutoRefreshHint && !logsQuery.isError && (
+            <Typography variant="body2" color="text.secondary">
+              Actualizacion automatica cada 5 segundos.
+            </Typography>
+          )}
+        </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
           {showLimitControl && (
             <TextField

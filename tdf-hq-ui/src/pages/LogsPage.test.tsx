@@ -149,9 +149,10 @@ describe('LogsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Servidor listo');
+        expect(container.textContent).toContain('Actualizacion automatica cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
         expect(container.textContent).toContain('Limite');
-        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
       });
 
@@ -175,6 +176,7 @@ describe('LogsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Failed to load logs: logs unavailable');
+        expect(container.textContent).not.toContain('Actualizacion automatica cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
         expect(container.textContent).toContain('Limite');
         expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
