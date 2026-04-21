@@ -790,8 +790,12 @@ export default function AdminConsolePage() {
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;
+  const hasFirstRunDataError = usersQuery.isError || auditQuery.isError;
   const showFirstRunDemoAction =
-    showGettingStartedGuidance && showCompactHealthyServiceSummary && !seedMutation.isSuccess;
+    showGettingStartedGuidance
+    && showCompactHealthyServiceSummary
+    && !hasFirstRunDataError
+    && !seedMutation.isSuccess;
   const showFirstRunServiceHealthGate =
     showGettingStartedGuidance && !showCompactHealthyServiceSummary;
   const firstRunServiceNeedsRefresh =
@@ -886,11 +890,14 @@ export default function AdminConsolePage() {
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
     ? 'Espera la comprobación de API y base de datos antes de cargar datos de ejemplo.'
     : 'Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas.';
+  const firstRunDataGateCopy = 'Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo.';
   const firstRunDemoStatusCopy = seedMutation.isSuccess
     ? null
-    : showFirstRunDemoAction
-      ? firstRunDemoActionCopy.description
-      : firstRunServiceGateCopy;
+    : hasFirstRunDataError
+      ? firstRunDataGateCopy
+      : showFirstRunDemoAction
+        ? firstRunDemoActionCopy.description
+        : firstRunServiceGateCopy;
   const demoSeedActionCopy = {
     successMessage: 'Datos de demostración preparados correctamente.',
   } as const;

@@ -277,6 +277,27 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('keeps demo seeding hidden until first-run users and audit data are confirmed', async () => {
+    mockListUsers.mockRejectedValue(new Error('Usuarios no disponibles'));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Usuarios no disponibles')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
+  });
+
   it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
