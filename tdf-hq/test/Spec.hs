@@ -246,6 +246,7 @@ import TDF.Config
       resetDb,
       runMigrations,
       seedDatabase,
+      seedTriggerToken,
       sessionCookieDomain,
       sessionCookieName,
       sessionCookiePath,
@@ -476,6 +477,28 @@ main = hspec $ do
                     runMigrations cfg `shouldBe` False
                     resetDb cfg `shouldBe` True
                     seedDatabase cfg `shouldBe` True
+
+        it "rejects malformed seed trigger tokens before enabling seed endpoints" $ do
+            withEnvOverrides
+                [ ("SEED_TRIGGER_TOKEN", Just " seed-token_123 ") ]
+                $ do
+                    cfg <- loadConfig
+                    seedTriggerToken cfg `shouldBe` Just "seed-token_123"
+
+            let assertInvalid rawToken expectedMessage =
+                    withEnvOverrides
+                        [ ("SEED_TRIGGER_TOKEN", Just rawToken) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "seed token"
+                "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+                "seed-token\nInjected: value"
+                "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+                (replicate 513 'a')
+                "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
 
         it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
             withEnvOverrides

@@ -459,6 +459,7 @@ loadConfig = do
   cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
+  seedToken <- validateSeedTriggerToken seedEnv
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -471,7 +472,7 @@ loadConfig = do
     , resetDb = resetDbVal
     , seedDatabase = seedDatabaseVal
     , runMigrations = runMigrationsVal
-    , seedTriggerToken = mkSeedToken seedEnv
+    , seedTriggerToken = seedToken
     , appBaseUrl = normalizedAppBase
     , assetsBaseUrl = assetsBaseUrlVal
     , assetsRootDir = assetsRoot
@@ -558,11 +559,16 @@ loadConfig = do
       case mVal >>= readMaybe of
         Just n | n > 0 -> n
         _ -> def
-    mkSeedToken mVal =
+    validateSeedTriggerToken mVal =
       case fmap (T.strip . T.pack) mVal of
-        Nothing  -> Nothing
-        Just txt | T.null txt -> Nothing
-                 | otherwise -> Just txt
+        Nothing  -> pure Nothing
+        Just txt
+          | T.null txt -> pure Nothing
+          | T.length txt > 512 ->
+              fail "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
+          | T.any (\ch -> isSpace ch || isControl ch) txt ->
+              fail "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+          | otherwise -> pure (Just txt)
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
       let host = normalizeRequiredSmtpValue mHost
           user = normalizeRequiredSmtpValue mUser
