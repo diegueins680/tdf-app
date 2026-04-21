@@ -1403,7 +1403,7 @@ export default function CourseRegistrationsAdminPage() {
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
   const showLocalSearchInlineClearAction = hasLocalSearch
     && !showEmptyLocalSearchResults;
-  const showLocalSearchUtilityRow = hasLocalSearch && (
+  const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
   );

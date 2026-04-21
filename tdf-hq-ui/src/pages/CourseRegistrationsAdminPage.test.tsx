@@ -7304,6 +7304,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps broad filtered searches from moving filtered export into search utilities', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=pending_payment');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByAriaLabel(container, clearPendingStatusFilterLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'Estudiante');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const filterUtilities = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-filter-utilities"]',
+      );
+
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(filterUtilities).not.toBeNull();
+      expect(getButtonByText(filterUtilities!, copyVisibleCsvLabel(9))).toBeTruthy();
+      expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(1);
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the visible CSV export scoped to local search results', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
