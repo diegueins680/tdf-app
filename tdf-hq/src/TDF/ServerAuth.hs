@@ -510,11 +510,33 @@ parsePasswordChangeAuthToken rawHeader =
   case T.words (T.strip rawHeader) of
     [scheme, value]
       | T.toLower scheme == "bearer"
-      , let token = T.strip value
-      , not (T.null token)
-      , not (T.any invalidPasswordChangeAuthTokenChar token) -> Right token
+      , let token = T.strip value ->
+          validatePasswordChangeAuthToken token
     _ ->
-      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>") }
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>")
+        }
+
+validatePasswordChangeAuthToken :: Text -> Either ServerError Text
+validatePasswordChangeAuthToken token
+  | T.null token =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>")
+        }
+  | T.length token > passwordChangeAuthTokenMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Authorization token must be 512 characters or fewer")
+        }
+  | T.any invalidPasswordChangeAuthTokenChar token =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>")
+        }
+  | otherwise = Right token
+
+passwordChangeAuthTokenMaxLength :: Int
+passwordChangeAuthTokenMaxLength = 512
 
 invalidPasswordChangeAuthTokenChar :: Char -> Bool
 invalidPasswordChangeAuthTokenChar ch = isSpace ch || isControl ch

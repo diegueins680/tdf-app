@@ -2915,6 +2915,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Bearer too many parts"
             assertInvalid "Bearer session\NULtoken"
 
+        it "rejects oversized bearer tokens before fallback username lookup" $ do
+            let tooLongToken = T.replicate 513 "a"
+            case parsePasswordChangeAuthToken ("Bearer " <> tooLongToken) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Authorization token must be 512 characters or fewer"
+                Right tokenVal ->
+                    expectationFailure
+                        ("Expected oversized authorization token to be rejected, got: " <> show tokenVal)
+
     describe "signupEmailExists" $ do
         it "treats mixed-case stored usernames or party emails as the same signup identity" $ do
             exists <- runAuthSqlite $ do
