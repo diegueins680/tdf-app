@@ -317,6 +317,8 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
     Just (Object _) -> fail "id must be a string, number, or null"
     Just (Array _)  -> fail "id must be a string, number, or null"
     Just (Bool _)   -> fail "id must be a string, number, or null"
+    Just (Number n)
+      | not (Sci.isInteger n) -> fail "id number must be integral"
     _               -> pure ()
   method <- o .: "method"
   let methodClean = T.strip method
