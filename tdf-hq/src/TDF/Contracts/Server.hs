@@ -238,7 +238,8 @@ isValidContractEmail :: Text -> Bool
 isValidContractEmail candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      isValidContractEmailLocalPart localPart
+      T.length candidate <= 254
+        && isValidContractEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
@@ -248,6 +249,7 @@ isValidContractEmail candidate =
 isValidContractEmailLocalPart :: Text -> Bool
 isValidContractEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= 64
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
@@ -260,6 +262,7 @@ isValidContractEmailLocalChar c =
 isValidContractEmailDomainLabel :: Text -> Bool
 isValidContractEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= 63
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidContractEmailDomainChar label
