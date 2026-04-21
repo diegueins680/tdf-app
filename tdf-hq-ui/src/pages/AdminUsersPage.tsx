@@ -809,7 +809,7 @@ export default function AdminUsersPage() {
                             : `Ver ${inactiveUsersToggleTarget}`}
                         >
                           {showInactiveUsers
-                            ? 'Ocultar lista'
+                            ? `Ocultar ${inactiveUsersToggleTarget}`
                             : `Ver ${inactiveUsersToggleTarget}`}
                         </Button>
                       )}
