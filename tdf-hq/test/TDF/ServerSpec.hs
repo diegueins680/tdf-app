@@ -171,6 +171,7 @@ import TDF.Server
     , resolveSocialTargetPartyId
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
+    , requirePersistedBookingDTO
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validatePublicBookingNotes
@@ -4587,6 +4588,49 @@ spec = describe "TDF.Server helpers" $ do
                 Right resourceKeys ->
                     expectationFailure
                         ("Expected duplicate explicit booking room ids to be rejected, got: " <> show resourceKeys)
+
+    describe "requirePersistedBookingDTO" $ do
+        it "rejects empty post-insert booking projections instead of returning a fabricated fallback DTO" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 57600)
+                projected =
+                    DTO.BookingDTO
+                        42
+                        "Studio booking"
+                        startsAt
+                        endsAt
+                        "Tentative"
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just "mixing")
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        []
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+            case requirePersistedBookingDTO [projected] of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected projected booking DTO to pass, got: " <> show serverErr)
+                Right dto ->
+                    DTO.bookingId dto `shouldBe` 42
+
+            case requirePersistedBookingDTO [] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "Booking DTO projection returned no rows after persistence"
+                Right dto ->
+                    expectationFailure
+                        ("Expected empty booking DTO projection to fail, got: " <> show dto)
 
     describe "CreateBookingReq / UpdateBookingReq FromJSON" $ do
         it "accepts canonical HQ booking create and update payloads" $ do

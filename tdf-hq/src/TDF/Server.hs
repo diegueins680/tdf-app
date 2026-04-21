@@ -5846,7 +5846,7 @@ createPublicBooking PublicBookingReq{..} = do
         , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dtoResult <- liftIO $ flip runSqlPool pool $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -5857,36 +5857,11 @@ createPublicBooking PublicBookingReq{..} = do
         }
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
-    let fallback = BookingDTO
-          { bookingId          = fromSqlKey bookingId
-          , title              = bookingTitle bookingRecord
-          , startsAt           = bookingStartsAt bookingRecord
-          , endsAt             = bookingEndsAt bookingRecord
-          , status             = T.pack (show (bookingStatus bookingRecord))
-          , notes              = bookingNotes bookingRecord
-          , partyId            = Just (fromSqlKey partyId)
-          , engineerPartyId    = fmap fromSqlKey (bookingEngineerPartyId bookingRecord)
-          , engineerName       = bookingEngineerName bookingRecord
-          , serviceType        = bookingServiceType bookingRecord
-          , serviceOrderId     = Nothing
-          , serviceOrderTitle  = Nothing
-          , customerName       = Just fullNameClean
-          , partyDisplayName   = Just fullNameClean
-          , resources          = []
-          , courseSlug         = Nothing
-          , coursePrice        = Nothing
-          , courseCapacity     = Nothing
-          , courseRemaining    = Nothing
-          , courseLocation     = Nothing
-          }
-    pure (headDef fallback dtos)
+    pure (requirePersistedBookingDTO dtos)
+  dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
   where
-    headDef defVal xs =
-      case xs of
-        (y:_) -> y
-        []    -> defVal
     buildTitle (Just svc) nameTxt = svc <> " · " <> nameTxt
     buildTitle Nothing nameTxt    = "Reserva · " <> nameTxt
 
@@ -5940,7 +5915,7 @@ createBooking user req = do
         , bookingCreatedAt      = now
         }
 
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dtoResult <- liftIO $ flip runSqlPool pool $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -5951,36 +5926,10 @@ createBooking user req = do
         }
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
-    let fallback = BookingDTO
-          { bookingId   = fromSqlKey bookingId
-          , title       = bookingTitle bookingRecord
-          , startsAt    = bookingStartsAt bookingRecord
-          , endsAt      = bookingEndsAt bookingRecord
-          , status      = T.pack (show (bookingStatus bookingRecord))
-          , notes       = bookingNotes bookingRecord
-          , partyId     = fmap fromSqlKey partyKey
-          , engineerPartyId = fmap fromSqlKey (bookingEngineerPartyId bookingRecord)
-          , engineerName = bookingEngineerName bookingRecord
-          , serviceType = bookingServiceType bookingRecord
-          , serviceOrderId = Nothing
-          , serviceOrderTitle = Nothing
-          , customerName = Nothing
-          , partyDisplayName = Nothing
-          , resources   = []
-          , courseSlug = Nothing
-          , coursePrice = Nothing
-          , courseCapacity = Nothing
-          , courseRemaining = Nothing
-          , courseLocation = Nothing
-          }
-    pure (headDef fallback dtos)
+    pure (requirePersistedBookingDTO dtos)
+  dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
-  where
-    headDef defVal xs =
-      case xs of
-        (y:_) -> y
-        []    -> defVal
 
 updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
 updateBooking user bookingIdI req = do
@@ -6118,6 +6067,13 @@ buildBookingDTOs bookings = do
         , courseRemaining   = Nothing
         , courseLocation    = Nothing
         }
+
+requirePersistedBookingDTO :: [BookingDTO] -> Either ServerError BookingDTO
+requirePersistedBookingDTO (dto:_) = Right dto
+requirePersistedBookingDTO [] =
+  Left err500
+    { errBody = "Booking DTO projection returned no rows after persistence"
+    }
 
 loadPartyDisplayMap :: [Key Party] -> SqlPersistT IO (Map.Map (Key Party) Text)
 loadPartyDisplayMap [] = pure Map.empty
