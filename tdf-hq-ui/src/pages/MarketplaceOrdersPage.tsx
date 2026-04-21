@@ -109,6 +109,11 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
+const getOrderCurrencyCaption = (order: Pick<MarketplaceOrderDTO, 'moCurrency' | 'moTotalDisplay'>) => {
+  const currency = order.moCurrency.trim().toUpperCase();
+  if (!currency) return '';
+  return order.moTotalDisplay.toUpperCase().includes(currency) ? '' : currency;
+};
 
 export default function MarketplaceOrdersPage() {
   const defaultFilters = createDefaultMarketplaceOrderFilters();
@@ -828,8 +833,11 @@ export default function MarketplaceOrdersPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map((order) => (
-                  <TableRow
+                {filtered.map((order) => {
+                  const orderCurrencyCaption = getOrderCurrencyCaption(order);
+
+                  return (
+                    <TableRow
                       key={order.moOrderId}
                       hover
                       onClick={() => openOrder(order.moOrderId)}
@@ -842,9 +850,11 @@ export default function MarketplaceOrdersPage() {
                               {order.moOrderId.slice(0, 8)}
                             </Typography>
                           </Tooltip>
-                          <Typography variant="caption" color="text.secondary">
-                            {order.moCurrency.toUpperCase()}
-                          </Typography>
+                          {orderCurrencyCaption && (
+                            <Typography variant="caption" color="text.secondary">
+                              {orderCurrencyCaption}
+                            </Typography>
+                          )}
                         </Stack>
                       </TableCell>
                       <TableCell>
@@ -913,7 +923,8 @@ export default function MarketplaceOrdersPage() {
                         </Typography>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  );
+                })}
                 </TableBody>
               </Table>
             </TableContainer>

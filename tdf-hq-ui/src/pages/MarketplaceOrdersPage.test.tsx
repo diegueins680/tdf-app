@@ -866,6 +866,46 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('omits per-row currency captions when the total already carries the currency', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'usd-0001',
+        moCurrency: 'usd',
+        moTotalDisplay: 'USD $100.00',
+      }),
+      buildOrder({
+        moOrderId: 'eur-0002',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: null,
+        moCurrency: 'eur',
+        moTotalDisplay: '€80.00',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const orderCells = Array.from(container.querySelectorAll('tbody tr td:first-child'));
+        const usdOrderCell = orderCells.find((cell) => cell.textContent?.includes('usd-0001'));
+        const eurOrderCell = orderCells.find((cell) => cell.textContent?.includes('eur-0002'));
+
+        expect(usdOrderCell?.textContent).not.toContain('USD');
+        expect(eurOrderCell?.textContent).toContain('EUR');
+        expect(container.textContent).toContain('USD $100.00');
+        expect(container.textContent).toContain('€80.00');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the payment shortcut available for non-paid orders that still need that action', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
