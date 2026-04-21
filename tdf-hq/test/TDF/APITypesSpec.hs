@@ -175,9 +175,27 @@ spec = do
                     promptVal `shouldBe` "play a broken beat"
                     modelVal `shouldBe` Nothing
 
-        it "rejects blank or unexpected fields instead of silently falling back" $ do
+            let fineTunedModel = " ft:gpt-4o-mini:tdf:tidal:abc123 "
+            case decodeTidalAgentRequest (tidalAgentRequestWithModel fineTunedModel) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected fine-tuned tidal-agent model selector to decode, got: "
+                            <> err
+                        )
+                Right (API.TidalAgentRequest _ modelVal) ->
+                    modelVal `shouldBe` Just "ft:gpt-4o-mini:tdf:tidal:abc123"
+
+        it
+            "rejects blank, malformed, or unexpected model selectors before upstream calls"
+            $ do
             decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
-            decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":\"   \"}" `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
+                `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt/4o-mini?preview=1")
+                `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt-4o\\nmini")
+                `shouldSatisfy` isLeft
             decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
     describe "social reply request FromJSON" $ do
@@ -1220,6 +1238,9 @@ spec = do
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
     decodeTidalAgentRequest = eitherDecode
+    tidalAgentRequestWithModel :: BL8.ByteString -> BL8.ByteString
+    tidalAgentRequestWithModel rawModel =
+        "{\"prompt\":\"play a broken beat\",\"model\":\"" <> rawModel <> "\"}"
     decodeInstagramReply :: BL8.ByteString -> Either String Instagram.InstagramReplyReq
     decodeInstagramReply = eitherDecode
     decodeFacebookReply :: BL8.ByteString -> Either String Facebook.FacebookReplyReq

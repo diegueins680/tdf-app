@@ -717,7 +717,28 @@ instance FromJSON TidalAgentRequest where
         let trimmedValue = T.strip rawValue
         in if T.null trimmedValue
              then fail (T.unpack fieldName <> " cannot be blank")
-             else pure trimmedValue
+             else validateModelField fieldName trimmedValue
+
+      validateModelField fieldName modelValue
+        | T.length modelValue > 256 =
+            fail (T.unpack fieldName <> " must be 256 characters or fewer")
+        | T.any isSpace modelValue =
+            fail (T.unpack fieldName <> " must not contain whitespace")
+        | T.any isControl modelValue =
+            fail (T.unpack fieldName <> " must not contain control characters")
+        | T.any (not . isModelIdChar) modelValue =
+            fail
+              ( T.unpack fieldName
+                  <> " must use only ASCII letters, digits, '.', '_', '-' or ':'"
+              )
+        | otherwise =
+            pure modelValue
+
+      isModelIdChar ch =
+        (ch >= 'a' && ch <= 'z')
+          || (ch >= 'A' && ch <= 'Z')
+          || (ch >= '0' && ch <= '9')
+          || ch `elem` ("._-:" :: String)
 
 data TidalAgentResponse = TidalAgentResponse
   { taContent :: Text
