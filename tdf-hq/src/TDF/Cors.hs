@@ -11,6 +11,7 @@ import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
 import Data.Char (isDigit, isSpace, toLower)
 import Data.List (dropWhileEnd, intercalate, nub)
+import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
 
 corsPolicy :: IO Middleware
@@ -176,8 +177,33 @@ parseHttpBaseOrigin raw
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
-  BS.length host <= 253 && all validLabel (BS.split '.' host)
+  BS.length host <= 253
+    && not (isAmbiguousNumericHost host)
+    && all validLabel (BS.split '.' host)
   where
+    isAmbiguousNumericHost candidate =
+      BS.all (\ch -> isDigit ch || ch == '.') candidate
+        && isNothing (parseIpv4Octets candidate)
+
+    parseIpv4Octets candidate =
+      case BS.split '.' candidate of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet octet
+      | BS.null octet || BS.any (not . isDigit) octet = Nothing
+      | BS.length octet > 1 && BS.head octet == '0' = Nothing
+      | otherwise = do
+          value <- readMaybe (BS.unpack octet)
+          if value >= (0 :: Int) && value <= 255
+            then Just value
+            else Nothing
+
     validLabel label =
       not (BS.null label)
         && BS.length label <= 63
