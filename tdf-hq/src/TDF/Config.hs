@@ -264,6 +264,17 @@ validateKeywordDbPort True fieldName rawPort =
     Just portNumber | portNumber >= 1 && portNumber <= 65535 -> pure rawPort
     _ -> fail (fieldName <> " must be a port number between 1 and 65535")
 
+validatePositiveIntEnv :: String -> Int -> Maybe String -> IO Int
+validatePositiveIntEnv _ defaultValue Nothing = pure defaultValue
+validatePositiveIntEnv envName defaultValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case readMaybe (T.unpack normalized) of
+        Just parsed | parsed > 0 -> pure parsed
+        _ -> fail (envName <> " must be a positive integer")
+  where
+    normalized = T.strip (T.pack rawValue)
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -340,7 +351,7 @@ loadConfig = do
         case validateDbSslMode envName rawMode of
           Left msg -> fail msg
           Right mode -> pure (Just mode)
-  ap         <- get "APP_PORT" "8080"
+  appPortVal <- lookupEnv "APP_PORT" >>= validatePositiveIntEnv "APP_PORT" 8080
   rdbEnv     <- lookupEnv "RESET_DB"
   sdbEnv     <- lookupEnv "SEED_DB"
   migEnv     <- lookupEnv "RUN_MIGRATIONS"
@@ -456,7 +467,7 @@ loadConfig = do
     , dbName = d
     , dbConnUrl = connUrl
     , dbSslMode = sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
-    , appPort = parseInt 8080 (Just ap)
+    , appPort = appPortVal
     , resetDb = resetDbVal
     , seedDatabase = seedDatabaseVal
     , runMigrations = runMigrationsVal
@@ -504,7 +515,6 @@ loadConfig = do
     , sessionCookieMaxAgeSeconds = cookieMaxAge
     }
   where
-    get k def = fmap (fromMaybe def) (lookupEnv k)
     getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
     allEnvPresent [] = pure True
     allEnvPresent (keys:rest) = do

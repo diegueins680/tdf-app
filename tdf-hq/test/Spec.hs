@@ -421,10 +421,32 @@ main = hspec $ do
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
     describe "loadConfig" $ do
-        it "falls back to default ports when Fly-style env values are malformed" $
+        it "rejects malformed APP_PORT instead of booting on an unintended port" $ do
+            let assertInvalid rawPort =
+                    withEnvOverrides
+                        [ ("APP_PORT", Just rawPort) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "APP_PORT must be a positive integer"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "not-a-port"
+            assertInvalid "0"
+            assertInvalid "-1"
+
             withEnvOverrides
-                [ ("APP_PORT", Just "not-a-port")
-                , ("SMTP_PORT", Just "smtp")
+                [ ("APP_PORT", Just " 9090 ") ]
+                $ do
+                    cfg <- loadConfig
+                    appPort cfg `shouldBe` 9090
+
+            withEnvOverrides
+                [ ("APP_PORT", Just "   ") ]
+                $ do
+                    cfg <- loadConfig
+                    appPort cfg `shouldBe` 8080
+
+        it "keeps the default SMTP port when SMTP_PORT is malformed" $
+            withEnvOverrides
+                [ ("SMTP_PORT", Just "smtp")
                 , ("SMTP_HOST", Just "smtp.example.com")
                 , ("SMTP_USER", Just "mailer")
                 , ("SMTP_PASS", Just "secret")
@@ -432,7 +454,6 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    appPort cfg `shouldBe` 8080
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
 
         it "rejects malformed startup boolean flags instead of silently changing boot behavior" $ do
