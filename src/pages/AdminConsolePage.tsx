@@ -331,17 +331,36 @@ function sortAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return [...cards].sort(compareAdminConsoleCards);
 }
 
+function preferNonEmptyAdminUserText(primary?: string | null, fallback?: string | null) {
+  return primary?.trim() ? primary : fallback;
+}
+
+function mergeAdminUserRecords(primary: AdminUserDTO, duplicate: AdminUserDTO): AdminUserDTO {
+  return {
+    ...primary,
+    username: preferNonEmptyAdminUserText(primary.username, duplicate.username) ?? primary.username,
+    displayName: preferNonEmptyAdminUserText(primary.displayName, duplicate.displayName),
+    partyId: primary.partyId ?? duplicate.partyId,
+    roles: normalizeRoleList([...primary.roles, ...duplicate.roles]),
+    status: primary.status ?? duplicate.status,
+    lastLoginAt: primary.lastLoginAt ?? duplicate.lastLoginAt,
+    lastSeenAt: primary.lastSeenAt ?? duplicate.lastSeenAt,
+  };
+}
+
 function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
-  const seenUserIds = new Set<number>();
+  const usersById = new Map<number, AdminUserDTO>();
 
-  return users.filter((user) => {
-    if (seenUserIds.has(user.userId)) {
-      return false;
-    }
+  users.forEach((user) => {
+    const existingUser = usersById.get(user.userId);
 
-    seenUserIds.add(user.userId);
-    return true;
+    usersById.set(
+      user.userId,
+      existingUser ? mergeAdminUserRecords(existingUser, user) : user,
+    );
   });
+
+  return [...usersById.values()];
 }
 
 function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {

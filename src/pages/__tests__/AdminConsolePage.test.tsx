@@ -2068,6 +2068,32 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
   });
 
+  it('merges duplicate admin user records so one row keeps the complete role summary', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        roles: ['Admin'],
+      }),
+      buildAdminUser({
+        displayName: '   ',
+        roles: ['Manager'],
+        lastSeenAt: '2026-04-10T12:00:00.000Z',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin, Manager');
+      expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+  });
+
   it('shows the single-user status only when that account needs attention', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser({
