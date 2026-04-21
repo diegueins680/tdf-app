@@ -76,6 +76,8 @@ validateRadioStreamUrl rawUrl
       Left err400 { errBody = "streamUrl must not contain whitespace" }
   | Nothing <- mRemainder =
       Left err400 { errBody = "streamUrl must be http(s)" }
+  | "#" `T.isInfixOf` streamUrl =
+      Left err400 { errBody = "streamUrl must not include a fragment" }
   | T.null authority =
       Left err400 { errBody = "streamUrl must include a host" }
   | Left authorityErr <- validateRadioAuthority authority =

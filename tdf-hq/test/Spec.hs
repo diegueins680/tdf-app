@@ -3182,6 +3182,11 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not contain whitespace"
                 Right _ -> expectationFailure "Expected whitespace-containing streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com/live#main" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must not include a fragment"
+                Right _ -> expectationFailure "Expected fragment-bearing streamUrl to be rejected"
 
         it "rejects hostless or malformed-port URLs before they can be stored" $ do
             case validateRadioStreamUrl "https://:8443/live" of
@@ -3310,7 +3315,7 @@ main = hspec $ do
                 `shouldBe` Right "https://radio.example.com/live"
 
         it "rejects query or fragment bases because generated stream keys would be ambiguous" $ do
-            let assertInvalid rawBase =
+            let assertQueryInvalid rawBase =
                     case validateRadioTransmissionPublicBase rawBase of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
@@ -3320,8 +3325,18 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected invalid public radio base to be rejected, got " <> show value)
-            assertInvalid "https://radio.example.com/live?token=abc"
-            assertInvalid "https://radio.example.com/live#main"
+                assertFragmentInvalid rawBase =
+                    case validateRadioTransmissionPublicBase rawBase of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "RADIO_PUBLIC_BASE must not include a fragment"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid public radio base to be rejected, got " <> show value)
+            assertQueryInvalid "https://radio.example.com/live?token=abc"
+            assertFragmentInvalid "https://radio.example.com/live#main"
 
         it "rejects malformed or private public bases before transmission URLs are persisted" $ do
             let assertInvalid rawBase expected =
