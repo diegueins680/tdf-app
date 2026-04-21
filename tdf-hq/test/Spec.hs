@@ -121,6 +121,8 @@ import TDF.ServerInternships
       validateInternProjectStatusInput,
       validateInternPermissionDateRange,
       validateInternProfileDateUpdate,
+      validateInternProjectTitle,
+      validateInternProjectTitleUpdate,
       validateInternTodoText,
       validateInternTodoTextUpdate,
       validateInternTaskUpdatePermissions,
@@ -4087,6 +4089,24 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship task progress to be rejected, got " <> show value)
             assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
             assertInvalid (validateInternTaskProgressUpdate (Just 101))
+
+    describe "internship project title validation" $ do
+        it "trims project titles while preserving omitted update payloads" $ do
+            validateInternProjectTitle "  Backline inventory audit  "
+                `shouldBe` Right "Backline inventory audit"
+            validateInternProjectTitleUpdate Nothing `shouldBe` Right Nothing
+            validateInternProjectTitleUpdate (Just "  Studio onboarding  ")
+                `shouldBe` Right (Just "Studio onboarding")
+
+        it "rejects blank project titles instead of persisting unnamed projects" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "project title is required"
+                    Right value ->
+                        expectationFailure ("Expected invalid internship project title, got " <> show value)
+            assertInvalid (validateInternProjectTitle "   ")
+            assertInvalid (validateInternProjectTitleUpdate (Just "   "))
 
     describe "internship todo text validation" $ do
         it "trims meaningful todo text while preserving omitted update payloads" $ do

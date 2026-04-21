@@ -123,6 +123,20 @@ validateInternTodoTextUpdate Nothing = Right Nothing
 validateInternTodoTextUpdate (Just rawText) =
   Just <$> validateInternTodoText rawText
 
+validateInternProjectTitle :: Text -> Either ServerError Text
+validateInternProjectTitle rawTitle
+  | T.null normalized =
+      Left err400 { errBody = "project title is required" }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawTitle
+
+validateInternProjectTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateInternProjectTitleUpdate Nothing = Right Nothing
+validateInternProjectTitleUpdate (Just rawTitle) =
+  Just <$> validateInternProjectTitle rawTitle
+
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
   | isAdminUser = Right ()
@@ -305,10 +319,11 @@ internshipsServer user =
     createProjectH InternProjectCreate{..} = do
       ensureAdmin
       now <- liftIO getCurrentTime
+      titleVal <- either throwError pure (validateInternProjectTitle ipcTitle)
       statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
       ent <- withPool $ do
         newId <- insert ME.InternProject
-          { ME.internProjectTitle       = ipcTitle
+          { ME.internProjectTitle       = titleVal
           , ME.internProjectDescription = ipcDescription
           , ME.internProjectStatus      = statusVal
           , ME.internProjectStartAt     = ipcStartAt
@@ -325,9 +340,10 @@ internshipsServer user =
       ensureAdmin
       projectKey <- parseKey @ME.InternProject rawId
       now <- liftIO getCurrentTime
+      titleUpdate <- either throwError pure (validateInternProjectTitleUpdate ipuTitle)
       statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
       let updates = catMaybes
-            [ fmap (ME.InternProjectTitle =.) ipuTitle
+            [ fmap (ME.InternProjectTitle =.) titleUpdate
             , fmap (ME.InternProjectDescription =.) ipuDescription
             , fmap (ME.InternProjectStatus =.) statusUpdate
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
