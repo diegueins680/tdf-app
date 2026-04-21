@@ -10370,26 +10370,26 @@ hasNonRootUrlPath rawUrl =
 
 isGoogleDriveDownloadHost :: Text -> Bool
 isGoogleDriveDownloadHost rawUrl =
-  case httpsUrlHost rawUrl of
-    Just host ->
+  case httpsUrlAuthority rawUrl of
+    Just (host, portSuffix) ->
       host `elem` ["drive.google.com", "drive.usercontent.google.com"]
+        && (T.null portSuffix || portSuffix == ":443")
     Nothing ->
       False
 
-httpsUrlHost :: Text -> Maybe Text
-httpsUrlHost rawUrl
-  | "https://" `T.isPrefixOf` lowerUrl =
+httpsUrlAuthority :: Text -> Maybe (Text, Text)
+httpsUrlAuthority rawUrl
+  | "https://" `T.isPrefixOf` T.toLower rawUrl =
       let remainder = T.drop 8 rawUrl
           authority =
             T.takeWhile
               (\c -> c /= '/' && c /= '?' && c /= '#')
               remainder
-          host = T.toLower (fst (T.breakOn ":" authority))
-      in if T.null host then Nothing else Just host
+          (host, portSuffix) = T.breakOn ":" authority
+          normalizedHost = T.toLower host
+      in if T.null normalizedHost then Nothing else Just (normalizedHost, portSuffix)
   | otherwise =
       Nothing
-  where
-    lowerUrl = T.toLower rawUrl
 
 appendDriveResourceKey :: Maybe Text -> Text -> Text
 appendDriveResourceKey mResourceKey url =
