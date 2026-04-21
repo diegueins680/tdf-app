@@ -628,6 +628,30 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a custom single-result source visible without reopening filter chrome', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crSource: 'instagram_story',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).toContain('Fuente: Instagram story');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single missing-contact registration clear without adding row placeholder copy', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

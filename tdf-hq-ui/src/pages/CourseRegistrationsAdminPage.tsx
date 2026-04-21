@@ -3466,7 +3466,7 @@ export default function CourseRegistrationsAdminPage() {
                   const showRowCohort = selectedSlug
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
-                  const showRowSource = !hasSharedVisibleSource;
+                  const showRowSource = !hasSharedVisibleSource || !showRegistrationFilterPanel;
                   const hasDateOnlyRowContext = !showRowCohort && !showRowSource && !hasRowNotes;
                   const hideDateOnlyRowContext = hasDateOnlyRowContext
                     && (
