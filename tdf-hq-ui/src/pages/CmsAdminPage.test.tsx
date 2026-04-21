@@ -626,6 +626,29 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides empty version history until a first save creates something to compare', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sin contenido publicado');
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
+      );
+      expect(container.textContent).not.toContain('No hay versiones guardadas todavía.');
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the load-version dialog single-column when nothing is published yet', async () => {
     listMock.mockResolvedValue([
       buildContent({ ccdId: 201, ccdVersion: 1, ccdStatus: 'draft', ccdPublishedAt: null }),

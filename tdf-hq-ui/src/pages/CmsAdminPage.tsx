@@ -564,6 +564,18 @@ export default function CmsAdminPage() {
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
+  const showFirstVersionHistoryGuidance =
+    !listQuery.isLoading &&
+    !listQuery.isError &&
+    !listDataInvalid &&
+    versions.length === 0 &&
+    !hasActiveVersionFilters;
+  const showVersionHistorySection =
+    listQuery.isLoading ||
+    listQuery.isError ||
+    listDataInvalid ||
+    versions.length > 0 ||
+    hasActiveVersionFilters;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -961,13 +973,23 @@ export default function CmsAdminPage() {
                   )}
                   {createMutation.isSuccess && <Alert severity="success">Versión creada.</Alert>}
                 </Stack>
+                {showFirstVersionHistoryGuidance && (
+                  <Typography
+                    data-testid="cms-admin-first-version-history-guidance"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.
+                  </Typography>
+                )}
               </Stack>
             </Grid>
           </Grid>
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2.5 }} data-testid="cms-admin-version-history">
+      {showVersionHistorySection && (
+        <Paper variant="outlined" sx={{ p: 2.5 }} data-testid="cms-admin-version-history">
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
             <Stack spacing={0.75}>
@@ -1142,7 +1164,8 @@ export default function CmsAdminPage() {
             )}
           </Stack>
         </Stack>
-      </Paper>
+        </Paper>
+      )}
     </Stack>
     </SessionGate>
   );
