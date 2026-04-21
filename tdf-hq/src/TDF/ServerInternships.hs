@@ -137,6 +137,20 @@ validateInternProjectTitleUpdate Nothing = Right Nothing
 validateInternProjectTitleUpdate (Just rawTitle) =
   Just <$> validateInternProjectTitle rawTitle
 
+validateInternTaskTitle :: Text -> Either ServerError Text
+validateInternTaskTitle rawTitle
+  | T.null normalized =
+      Left err400 { errBody = "task title is required" }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawTitle
+
+validateInternTaskTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateInternTaskTitleUpdate Nothing = Right Nothing
+validateInternTaskTitleUpdate (Just rawTitle) =
+  Just <$> validateInternTaskTitle rawTitle
+
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
   | isAdminUser = Right ()
@@ -376,6 +390,7 @@ internshipsServer user =
       ensureAdmin
       projectKey <- parseKey @ME.InternProject itcProjectId
       now <- liftIO getCurrentTime
+      titleVal <- either throwError pure (validateInternTaskTitle itcTitle)
       assignedTo <- either throwError pure (validateOptionalInternPartyIdInput "assignedTo" itcAssignedTo)
       mProject <- withPool $ getEntity projectKey
       _ <- maybe (throwError err404) pure mProject
@@ -383,7 +398,7 @@ internshipsServer user =
       ent <- withPool $ do
         newId <- insert ME.InternTask
           { ME.internTaskProjectId   = projectKey
-          , ME.internTaskTitle       = itcTitle
+          , ME.internTaskTitle       = titleVal
           , ME.internTaskDescription = itcDescription
           , ME.internTaskStatus      = "todo"
           , ME.internTaskProgress    = 0
@@ -412,6 +427,7 @@ internshipsServer user =
       unless (isAdminUser || isOwner) $
         throwError err403 { errBody = "Only admins or assignees can update tasks" }
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
+      titleUpdate <- either throwError pure (validateInternTaskTitleUpdate ituTitle)
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
       assignedToUpdate <-
@@ -420,7 +436,7 @@ internshipsServer user =
           else pure Nothing
       let
           adminUpdates =
-            [ fmap (ME.InternTaskTitle =.) ituTitle
+            [ fmap (ME.InternTaskTitle =.) titleUpdate
             , fmap (ME.InternTaskDescription =.) ituDescription
             , fmap (ME.InternTaskAssignedTo =.) (fmap (fmap toSqlKey) assignedToUpdate)
             , fmap (ME.InternTaskDueAt =.) ituDueAt
