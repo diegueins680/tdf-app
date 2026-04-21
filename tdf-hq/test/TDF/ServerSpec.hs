@@ -8,6 +8,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -47,6 +48,7 @@ import Servant.Multipart
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.Config (AppConfig(..))
+import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
 import TDF.Handlers.InputList (AssetField (..))
 import TDF.Models
@@ -1796,6 +1798,21 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure ("Expected invalid CMS status to be rejected, got: " <> show statusVal)
             assertInvalid (validateCmsContentStatus (Just "   "))
             assertInvalid (validateCmsContentStatus (Just "scheduled"))
+
+    describe "CMS AesonValue persistence decoding" $ do
+        it "preserves valid stored JSON values without changing their shape" $ do
+            CMS.decodeValue "{\"headline\":\"Create faster\"}"
+                `shouldBe` Right (object ["headline" .= ("Create faster" :: Text)])
+            CMS.decodeValue "\"legacy text\""
+                `shouldBe` Right (A.String "legacy text")
+
+        it "rejects malformed stored JSON instead of stringifying it as payload content" $
+            case CMS.decodeValue "not-json" of
+                Left err ->
+                    T.unpack err `shouldContain` "Invalid stored JSON payload"
+                Right value ->
+                    expectationFailure
+                        ("Expected malformed stored JSON to be rejected, got: " <> show value)
 
     describe "normalizeOptionalCmsFilter" $ do
         it "trims meaningful CMS filter values and drops blank ones" $ do

@@ -94,7 +94,7 @@ These permissions are used only so TDF can identify the connected Instagram busi
   - `/Users/diegosaa/.openclaw/workspace/tdf-label-meta-permissions-handoff.md`
 
 ## Submission Action
-- Current execution line: `Request again -> Request access again? -> Yes, request again = enabled final confirmation control reachable; post-confirmation resubmission shell and packet-attachment path not yet verified.`
-- Use the exact feedback URL above in an authenticated Meta App Review session.
-- Do not mutate the packet or promise same-view upload/paste steps unless the post-confirmation shell visibly exposes an enabled upload, metadata, escalation, or send control.
-- If the post-confirmation shell does expose one of those controls, use the frozen canonical screencast `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4` with the matching permission notes from this packet.
+- Current execution line: `Yes, request again was already exercised once; same feedback URL remained open; Request again = disabled; Ask a question = enabled; no visible submission-shell/upload/continue/submit/file-input control was exposed in the immediate post-confirmation state.`
+- Use the exact feedback URL above in an authenticated Meta App Review session only to discover one downstream shell, draft location, upload/reference field, metadata field, or other exact actionable control.
+- No packet mutation is justified before Release surfaces a real downstream shell, draft location, upload field, attachment/reference field, metadata field, or packet contradiction.
+- If one of those exact downstream controls does appear, use the frozen canonical screencast `/Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4` with the matching permission notes from this packet.

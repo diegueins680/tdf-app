@@ -21,8 +21,7 @@ import Data.Aeson (Value(..), encode, eitherDecodeStrict')
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
-import Data.Text.Encoding (decodeUtf8, decodeUtf8With, encodeUtf8)
-import Data.Text.Encoding.Error (lenientDecode)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Database.Persist
 import Database.Persist.Sql (PersistFieldSql(..))
 import TDF.Models (PartyId)
@@ -38,15 +37,13 @@ instance PersistField AesonValue where
 instance PersistFieldSql AesonValue where
   sqlType _ = SqlString
 
--- | Decode JSON stored as text/bytea, but gracefully fall back to wrapping
--- non-JSON payloads as a JSON string so legacy rows don't crash the API.
+-- | Decode JSON stored as text/bytea. Malformed payloads must fail loudly
+-- instead of changing shape into JSON strings at read time.
 decodeValue :: BS.ByteString -> Either T.Text Value
 decodeValue bs =
   case eitherDecodeStrict' bs of
     Right val -> Right val
-    Left _ ->
-      let fallback = decodeUtf8With lenientDecode bs
-      in Right (String fallback)
+    Left err -> Left ("Invalid stored JSON payload: " <> T.pack err)
 
 share [mkPersist sqlSettings, mkMigrate "migrateCMS"] [persistLowerCase|
 CmsContent
