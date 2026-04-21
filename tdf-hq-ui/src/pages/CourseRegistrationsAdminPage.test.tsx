@@ -192,7 +192,8 @@ const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
-const optionalDossierContextActionsLabel = 'Agregar contexto';
+const optionalDossierContextActionsLabel = 'Agregar nota o seguimiento';
+const optionalDossierFollowUpActionLabel = 'Agregar seguimiento manual';
 const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
@@ -3554,7 +3555,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
-      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierFollowUpActionLabel)).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(document.body.textContent).toContain('Confirmó pago por transferencia.');
@@ -3562,7 +3564,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, optionalDossierContextActionsLabel));
+      clickButton(getButtonByText(document.body, optionalDossierFollowUpActionLabel));
       await flushPromises();
       await flushPromises();
     });

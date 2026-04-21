@@ -80,7 +80,10 @@ const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera so
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
-const optionalDossierContextActionsLabel = 'Agregar contexto';
+const optionalDossierContextActionsFallbackLabel = 'Agregar contexto';
+const optionalDossierNotesAndFollowUpActionsLabel = 'Agregar nota o seguimiento';
+const optionalDossierNotesActionLabel = 'Agregar nota interna';
+const optionalDossierFollowUpActionLabel = 'Agregar seguimiento manual';
 const systemEmailHistoryHelperText = 'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
@@ -99,6 +102,21 @@ const MIN_PHONE_SEARCH_DIGITS = 4;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const missingContactSummary = 'Sin correo ni teléfono';
+
+const formatDossierContextActionsLabel = ({
+  showInlineEmptyFollowUpAction,
+  showInlineEmptyNotesAction,
+}: {
+  showInlineEmptyFollowUpAction: boolean;
+  showInlineEmptyNotesAction: boolean;
+}) => {
+  if (showInlineEmptyNotesAction && showInlineEmptyFollowUpAction) {
+    return optionalDossierNotesAndFollowUpActionsLabel;
+  }
+  if (showInlineEmptyNotesAction) return optionalDossierNotesActionLabel;
+  if (showInlineEmptyFollowUpAction) return optionalDossierFollowUpActionLabel;
+  return optionalDossierContextActionsFallbackLabel;
+};
 
 interface FlashState {
   severity: FlashSeverity;
@@ -2270,6 +2288,10 @@ export default function CourseRegistrationsAdminPage() {
     || showGroupedDossierContextActions
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
+  const groupedDossierContextActionsLabel = formatDossierContextActionsLabel({
+    showInlineEmptyFollowUpAction,
+    showInlineEmptyNotesAction,
+  });
   const hasReceipts = receipts.length > 0;
   const activeRegistrationKnownStatus = activeRegistrationStatus
     ? normalizeKnownRegistrationStatus(activeRegistrationStatus)
@@ -3765,7 +3787,7 @@ export default function CourseRegistrationsAdminPage() {
                           aria-expanded={Boolean(dossierContextMenuAnchor)}
                           onClick={(event) => setDossierContextMenuAnchor(event.currentTarget)}
                         >
-                          {optionalDossierContextActionsLabel}
+                          {groupedDossierContextActionsLabel}
                         </Button>
                       )}
                       {showDirectInlineEmptyNotesAction && (
