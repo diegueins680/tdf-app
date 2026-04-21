@@ -384,6 +384,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
+  const statusSearchValue = normalizeSearchValue(user.active ? 'activo' : 'inactivo');
 
   const searchSpace = [
     user.username,
@@ -393,12 +394,11 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     getUserContactSummary(user) ?? '',
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
-    user.active ? 'activo' : 'inactivo',
   ]
     .map(normalizeSearchValue)
     .filter(Boolean);
 
-  return searchSpace.some((value) => value.includes(query));
+  return searchSpace.some((value) => value.includes(query)) || statusSearchValue === query;
 };
 
 export default function AdminUsersPage() {

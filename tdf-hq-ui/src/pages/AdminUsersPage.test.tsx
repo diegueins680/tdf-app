@@ -2565,6 +2565,98 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps status search exact so active queries do not pull inactive accounts', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+              partyName: 'Ada Active',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 44,
+              username: 'grace-disabled',
+              partyName: 'Grace Disabled',
+              active: false,
+              primaryEmail: 'grace@example.com',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-admin',
+              partyName: 'Linus Active',
+              primaryEmail: 'linus@example.com',
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+              partyName: 'Ada Active',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-admin',
+              partyName: 'Linus Active',
+              primaryEmail: 'linus@example.com',
+            }),
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'bruno-admin',
+              partyName: 'Bruno Active',
+              primaryEmail: 'bruno@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const includeInactiveCheckbox = getCheckboxByLabelText(container, 'Incluir inactivos');
+      await clickButton(includeInactiveCheckbox);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'activo');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe('Mostrando 2 de 3 usuarios.');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
+        expect(container.textContent).not.toContain('Ver 1 usuario inactivo');
+      });
+
+      await changeInputValue(searchInput, 'inactivo');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
+        );
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps precise search guidance inside the field instead of repeating the same hint in the header summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
