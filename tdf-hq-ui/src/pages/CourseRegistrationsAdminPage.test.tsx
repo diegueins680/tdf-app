@@ -6360,6 +6360,74 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps dense busy-list search prompts compact without dropping searchable dimensions', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crPhoneE164: '+593999000111',
+        crCourseSlug: 'beatmaking-101',
+        crSource: 'instagram_story',
+        crStatus: 'waiting_list',
+        crAdminNotes: 'Pidió horario de fin de semana.',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: null,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: null,
+        crCourseSlug: 'live-production',
+        crSource: 'referral',
+        crStatus: 'manual_review',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+        crSource: index % 2 === 0 ? 'landing' : 'referral',
+        crStatus: index % 2 === 0 ? 'paid' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, registro u otros datos');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('estado');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'manual review');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #102')).toBeTruthy();
+      expect(container.textContent).toContain('Registro #102');
+      expect(container.textContent).not.toContain('Ada Lovelace');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('collapses extra spaces in busy-list search so pasted names do not hit empty recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 

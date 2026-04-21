@@ -95,6 +95,7 @@ const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const MIN_PHONE_SEARCH_DIGITS = 4;
+const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const missingContactSummary = 'Sin correo ni teléfono';
 
@@ -260,10 +261,16 @@ const buildFullLocalSearchMatchHint = (loadedCount: number) =>
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
 
+const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
-  if (terms.length <= 1) return terms[0] ?? '';
-  if (terms.length === 2) return `${terms[0]} o ${terms[1]}`;
-  return `${terms.slice(0, -1).join(', ')} o ${terms[terms.length - 1]}`;
+  const visibleTerms = terms.length > MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS
+    ? [...terms.slice(0, MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS - 1), 'otros datos']
+    : terms;
+  if (visibleTerms.length <= 1) return visibleTerms[0] ?? '';
+  const lastTerm = visibleTerms[visibleTerms.length - 1] ?? '';
+  const connector = spanishOrConnector(lastTerm);
+  if (visibleTerms.length === 2) return `${visibleTerms[0]} ${connector} ${lastTerm}`;
+  return `${visibleTerms.slice(0, -1).join(', ')} ${connector} ${lastTerm}`;
 };
 
 const normalizeLocalSearchText = (value: string) =>
