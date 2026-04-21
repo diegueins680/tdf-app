@@ -43,7 +43,8 @@ import TDF.Trials.API
   , TrialQueueItem
   )
 import TDF.Trials.Server
-  ( createOrFetchParty
+  ( buildTrialUsernameCandidate
+  , createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
   , validateEmailUpdate
@@ -173,6 +174,11 @@ spec = do
 
       firstId `shouldBe` secondId
       total `shouldBe` 1
+
+    it "preserves collision suffixes inside the username length limit" $ do
+      let root = pack (replicate 60 'a')
+          candidate = buildTrialUsernameCandidate root 12
+      candidate `shouldBe` pack (replicate 57 'a') <> "-12"
 
   describe "validatePublicTrialPartyId" $ do
     it "accepts requests that omit partyId" $

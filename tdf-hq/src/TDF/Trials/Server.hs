@@ -202,12 +202,17 @@ generateUniqueUsername base partyId = go (0 :: Int)
     fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
     root = if T.null baseClean then fallback else baseClean
     go attempt = do
-      let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
-          candidate = T.take 60 (root <> suffix)
+      let candidate = buildTrialUsernameCandidate root attempt
       conflict <- getBy (Models.UniqueCredentialUsername candidate)
       case conflict of
         Nothing -> pure candidate
         Just _  -> go (attempt + 1)
+
+buildTrialUsernameCandidate :: Text -> Int -> Text
+buildTrialUsernameCandidate root attempt =
+  let suffix = if attempt <= 0 then "" else "-" <> T.pack (show attempt)
+      rootBudget = max 0 (60 - T.length suffix)
+  in T.take 60 (T.take rootBudget root <> suffix)
 
 hashPasswordText :: Text -> IO Text
 hashPasswordText pwd = do
