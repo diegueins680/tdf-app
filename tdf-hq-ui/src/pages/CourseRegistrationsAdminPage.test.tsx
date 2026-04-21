@@ -7141,6 +7141,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps shared internal notes out of the busy-list search placeholder', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crAdminNotes: 'Todos pidieron factura.',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
+      expect(hasExactText(container, 'Notas internas en todas las inscripciones visibles.')).toBe(true);
+      expect(countOccurrences(container, 'Notas internas')).toBe(1);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'todos pidieron factura');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Coinciden con nota interna.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "todos pidieron factura"');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps internal-note search matches explained by the helper instead of row note chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
