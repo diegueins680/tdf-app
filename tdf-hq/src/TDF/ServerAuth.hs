@@ -186,8 +186,16 @@ validateOptionalSignupClaimArtistId (Just rawArtistId)
 
 validateSignupFanArtistIds :: Maybe [Int64] -> Either ServerError [Int64]
 validateSignupFanArtistIds Nothing = Right []
-validateSignupFanArtistIds (Just rawArtistIds) =
-  nub <$> traverse validateArtistId rawArtistIds
+validateSignupFanArtistIds (Just rawArtistIds) = do
+  artistIds <- traverse validateArtistId rawArtistIds
+  if length (nub artistIds) == length artistIds
+    then Right artistIds
+    else
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "fanArtistIds must not contain duplicate artist ids")
+        }
   where
     validateArtistId artistId
       | artistId > 0 = Right artistId

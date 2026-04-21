@@ -2727,9 +2727,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateOptionalSignupClaimArtistId (Just (-7)))
 
     describe "validateSignupFanArtistIds" $ do
-        it "preserves omission and deduplicates positive artist ids before signup follows are created" $ do
+        it "preserves omission and accepts positive artist ids before signup follows are created" $ do
             validateSignupFanArtistIds Nothing `shouldBe` Right []
-            validateSignupFanArtistIds (Just [7, 11, 7, 13]) `shouldBe` Right [7, 11, 13]
+            validateSignupFanArtistIds (Just [7, 11, 13]) `shouldBe` Right [7, 11, 13]
 
         it "rejects zero or negative artist ids instead of silently dropping requested follows" $ do
             let assertInvalid result = case result of
@@ -2741,6 +2741,16 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid fanArtistIds to be rejected, got: " <> show value)
             assertInvalid (validateSignupFanArtistIds (Just [7, 0, 13]))
             assertInvalid (validateSignupFanArtistIds (Just [-5]))
+
+        it "rejects duplicate artist ids instead of silently collapsing signup follow intent" $ do
+            case validateSignupFanArtistIds (Just [7, 11, 7, 13]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "fanArtistIds must not contain duplicate artist ids"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate fanArtistIds to be rejected, got: " <> show value)
 
     describe "validateSignupFanArtistTargets" $ do
         it "accepts fan follows that reference existing artist profiles" $ do
