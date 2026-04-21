@@ -1406,9 +1406,9 @@ export default function CourseRegistrationsAdminPage() {
       : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
-      `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
-      shortPhoneSearchHint,
-      viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
+      shortPhoneSearchHint
+        || `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+      shortPhoneSearchHint ? '' : viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
     ].filter(Boolean).join(' ')
     : '';
   const visibleRegistrationsSummary = hasCustomFilters

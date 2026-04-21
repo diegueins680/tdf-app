@@ -6659,8 +6659,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
-        'No hay coincidencias para "999" en las 9 inscripciones cargadas. Para buscar por teléfono, usa al menos 4 dígitos del número.',
+        'Para buscar por teléfono, usa al menos 4 dígitos del número.',
       );
+      expect(container.textContent).not.toContain('No hay coincidencias para "999"');
       expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
