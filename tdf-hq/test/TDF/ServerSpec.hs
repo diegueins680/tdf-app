@@ -228,6 +228,7 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
 import TDF.ServerFuture (validateFutureAdminAccess)
+import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import Test.Hspec
 import Web.PathPieces (fromPathPiece, toPathPiece)
 
@@ -4911,6 +4912,50 @@ spec = describe "TDF.Server helpers" $ do
                     , CourseSyllabusIn "Mix module" ["EQ"] (Just 2)
                     ]
                 )
+
+    describe "Instagram sync media request URL" $ do
+        it "keeps the Graph account id in the path and encodes access-token query data" $ do
+            case buildUserMediaRequestUrl
+                (marketplaceTestConfig False)
+                " token|with+symbols "
+                " 17841400000000000 " of
+                Left err ->
+                    expectationFailure
+                        ("Expected Instagram media URL to build, got: " <> T.unpack err)
+                Right url -> do
+                    url `shouldContain` "https://graph.instagram.com/17841400000000000/media?"
+                    url `shouldContain`
+                        "fields=id%2Ccaption%2Cmedia_url%2Cpermalink%2Ctimestamp"
+                    url `shouldContain` "access_token=token%7Cwith%2Bsymbols"
+                    url `shouldNotContain` "token|with+symbols"
+
+        it "rejects blank, path-shaped, or query-shaped account ids before request parsing" $ do
+            let assertInvalid rawUserId expectedMessage =
+                    case buildUserMediaRequestUrl
+                        (marketplaceTestConfig False)
+                        "token_123"
+                        rawUserId of
+                        Left err -> T.unpack err `shouldContain` expectedMessage
+                        Right url ->
+                            expectationFailure
+                                ("Expected invalid Instagram media URL input, got: " <> url)
+            assertInvalid "   " "Instagram user id is required"
+            assertInvalid "ig-user/../../me" "Graph node id"
+            assertInvalid "ig-user?fields=id" "Graph node id"
+
+        it "rejects blank or whitespace-bearing access tokens before query construction" $ do
+            let assertInvalid rawToken expectedMessage =
+                    case buildUserMediaRequestUrl
+                        (marketplaceTestConfig False)
+                        rawToken
+                        "17841400000000000" of
+                        Left err -> T.unpack err `shouldContain` expectedMessage
+                        Right url ->
+                            expectationFailure
+                                ("Expected invalid Instagram access token, got: " <> url)
+            assertInvalid "   " "access token is required"
+            assertInvalid "token with spaces" "must not contain whitespace"
+            assertInvalid "token\nInjected: value" "must not contain whitespace"
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
