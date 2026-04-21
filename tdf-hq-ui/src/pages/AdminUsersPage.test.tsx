@@ -1444,6 +1444,60 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('uses the inactive section label for a lone inactive roster instead of repeating row status chrome', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 201,
+              partyId: 21,
+              partyName: 'Ada Inactiva',
+              username: 'ada-inactiva',
+              active: false,
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 10,
+              partyName: 'Linus View',
+              username: 'linus-view',
+              primaryEmail: 'linus@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([201]);
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('1 usuario inactivo');
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(0);
+        expect(container.querySelector('button[aria-label="Ver 1 usuario inactivo"]')).toBeNull();
+        expect(getRowByUserId(container, 201).textContent).not.toContain('Inactivo');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('confirms when the inactive filter finds no inactive users so admins do not repeat the same check', async () => {
     listUsersMock.mockImplementation(() => Promise.resolve([
       buildUser({

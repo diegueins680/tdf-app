@@ -520,7 +520,14 @@ export default function AdminUsersPage() {
     && (hasVisibleLinkedProfile || hasActiveSearch);
   const showSharedContactStateGuidance = visibleUsers.length > 1
     && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
-  const showInactiveUsersGroup = includeInactive && visibleInactiveUsersCount > 0 && visibleUsers.length > 1;
+  const showOnlyInactiveUsers = !hasActiveSearch
+    && includeInactive
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === visibleUsers.length;
+  const showInactiveUsersGroup =
+    includeInactive
+    && visibleInactiveUsersCount > 0
+    && (visibleUsers.length > 1 || showOnlyInactiveUsers);
   const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
     showSingleSearchResultGuidance
