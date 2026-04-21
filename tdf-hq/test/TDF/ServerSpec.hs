@@ -136,6 +136,7 @@ import TDF.Server
     , validateMarketplaceOrderListLimit
     , validateMarketplaceOrderListOffset
     , validateChatMessageListLookup
+    , validateChatSendMessageBody
     , validateOptionalMarketplaceOrderStatus
     , validateMarketplaceOrderUpdateStatus
     , validateOptionalMarketplacePaymentProviderUpdate
@@ -1124,6 +1125,25 @@ spec = describe "TDF.Server helpers" $ do
                 Right payload ->
                     expectationFailure
                         ("Expected unknown chat send field to be rejected, got: " <> show payload)
+
+    describe "validateChatSendMessageBody" $ do
+        it "trims chat text while preserving supported multiline message formatting" $
+            validateChatSendMessageBody "  Hola\nseguimos\tpor aqui  "
+                `shouldBe` Right "Hola\nseguimos\tpor aqui"
+
+        it "rejects empty, oversized, or non-printing chat bodies before persistence" $ do
+            let assertInvalid expected result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expected
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid chat body to be rejected, got: " <> show value)
+            assertInvalid "Mensaje vacío" (validateChatSendMessageBody "   ")
+            assertInvalid "max 5000 caracteres" (validateChatSendMessageBody (T.replicate 5001 "a"))
+            assertInvalid
+                "message must not contain control characters"
+                (validateChatSendMessageBody ("Hola" <> T.singleton '\NUL'))
 
     describe "VCardExchangeRequest" $ do
         it "accepts canonical vCard exchange payloads" $

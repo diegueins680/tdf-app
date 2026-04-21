@@ -4629,11 +4629,7 @@ resolveChatMessageCursorInThread threadKey fieldName (Just rawCursorId) = do
 
 chatSendMessage :: AuthedUser -> Int64 -> ChatSendMessageRequest -> AppM ChatMessageDTO
 chatSendMessage user threadId ChatSendMessageRequest{..} = do
-  let bodyClean = T.strip csmBody
-  when (T.null bodyClean) $
-    throwBadRequest "Mensaje vacío"
-  when (T.length bodyClean > 5000) $
-    throwBadRequest "Mensaje demasiado largo (max 5000 caracteres)"
+  bodyClean <- either throwError pure (validateChatSendMessageBody csmBody)
   threadIdValid <- either throwError pure (validatePositiveIdField "threadId" threadId)
   let tid = toSqlKey threadIdValid :: ChatThreadId
       me  = auPartyId user
@@ -6179,6 +6175,21 @@ validateChatMessageListLookup threadId mBeforeId mAfterId = do
   when (isJust beforeIdValid && isJust afterIdValid) $
     Left err400 { errBody = "Use either beforeId or afterId" }
   pure (threadIdValid, beforeIdValid, afterIdValid)
+
+validateChatSendMessageBody :: Text -> Either ServerError Text
+validateChatSendMessageBody rawBody
+  | T.null body =
+      Left err400 { errBody = "Mensaje vacío" }
+  | T.length body > 5000 =
+      Left err400 { errBody = "Mensaje demasiado largo (max 5000 caracteres)" }
+  | T.any isUnsafeChatMessageControl body =
+      Left err400 { errBody = "message must not contain control characters" }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+    isUnsafeChatMessageControl ch =
+      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
