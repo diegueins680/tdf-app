@@ -5777,6 +5777,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('merges duplicate receipt records before falling back to generic receipt labels', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt({
+            crrFileName: null,
+            crrNotes: null,
+          }),
+          buildReceipt({
+            crrFileName: 'transferencia-produbanco.pdf',
+            crrNotes: 'Transferencia confirmada por coordinación.',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).not.toContain('Comprobante #301');
+      expect(document.body.textContent).toContain('transferencia-produbanco.pdf');
+      expect(document.body.textContent).toContain('Transferencia confirmada por coordinación.');
+      expect(
+        document.body.querySelectorAll(
+          'button[aria-label="Abrir acciones para comprobante transferencia-produbanco.pdf"]',
+        ),
+      ).toHaveLength(1);
+      expect(
+        document.body.querySelector('button[aria-label="Abrir acciones para comprobante Comprobante #301"]'),
+      ).toBeNull();
+      expect(document.body.textContent).not.toContain('2 guardados');
+    });
+
+    await cleanup();
+  });
+
   it('shows when the list is filtered and lets admins reset filters in one step', async () => {
     const cappedRegistrations = buildRegistrations(200);
     listRegistrationsMock.mockImplementation((params) => Promise.resolve(cappedRegistrations.slice(0, params?.limit ?? 200)));

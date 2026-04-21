@@ -1152,16 +1152,29 @@ const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO
 };
 
 const dedupeCourseRegistrationReceipts = (receipts: readonly CourseRegistrationReceiptDTO[]) => {
-  const seenReceiptIds = new Set<number>();
+  const receiptsById = new Map<number, CourseRegistrationReceiptDTO>();
 
-  return receipts.filter((receipt) => {
-    if (seenReceiptIds.has(receipt.crrId)) {
-      return false;
+  receipts.forEach((receipt) => {
+    const existingReceipt = receiptsById.get(receipt.crrId);
+    if (!existingReceipt) {
+      receiptsById.set(receipt.crrId, receipt);
+      return;
     }
 
-    seenReceiptIds.add(receipt.crrId);
-    return true;
+    receiptsById.set(receipt.crrId, {
+      ...existingReceipt,
+      crrPartyId: preferPositiveId(existingReceipt.crrPartyId, receipt.crrPartyId),
+      crrFileUrl: preferNonEmptyText(existingReceipt.crrFileUrl, receipt.crrFileUrl) ?? existingReceipt.crrFileUrl,
+      crrFileName: preferNonEmptyText(existingReceipt.crrFileName, receipt.crrFileName),
+      crrMimeType: preferNonEmptyText(existingReceipt.crrMimeType, receipt.crrMimeType),
+      crrNotes: preferNonEmptyText(existingReceipt.crrNotes, receipt.crrNotes),
+      crrUploadedBy: preferPositiveId(existingReceipt.crrUploadedBy, receipt.crrUploadedBy),
+      crrCreatedAt: preferNonEmptyText(existingReceipt.crrCreatedAt, receipt.crrCreatedAt) ?? existingReceipt.crrCreatedAt,
+      crrUpdatedAt: preferNonEmptyText(existingReceipt.crrUpdatedAt, receipt.crrUpdatedAt) ?? existingReceipt.crrUpdatedAt,
+    });
   });
+
+  return [...receiptsById.values()];
 };
 
 const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
