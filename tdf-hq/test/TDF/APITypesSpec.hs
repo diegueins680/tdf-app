@@ -24,6 +24,7 @@ import TDF.API.Types
     , ClockOutRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
+    , InternProfileUpdate (..)
     , InternPermissionCreate (..)
     , InternPermissionUpdate (..)
     , InternProjectCreate (..)
@@ -991,6 +992,31 @@ spec = do
                 "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
                 `shouldSatisfy` isLeft
 
+    describe "InternProfileUpdate FromJSON" $ do
+        it "distinguishes omitted nullable profile fields from explicit clears" $ do
+            case decodeInternProfileUpdate "{\"ipuSkills\":\"Patch bays\",\"ipuAreas\":\"Live sound\"}" of
+                Left err ->
+                    expectationFailure ("Expected intern profile update payload to decode, got: " <> err)
+                Right (InternProfileUpdate startAtVal endAtVal requiredHoursVal skillsVal areasVal) -> do
+                    startAtVal `shouldBe` Nothing
+                    endAtVal `shouldBe` Nothing
+                    requiredHoursVal `shouldBe` Nothing
+                    skillsVal `shouldBe` Just (Just "Patch bays")
+                    areasVal `shouldBe` Just (Just "Live sound")
+
+            case decodeInternProfileUpdate "{\"ipuEndAt\":null,\"ipuRequiredHours\":null,\"ipuAreas\":null}" of
+                Left err ->
+                    expectationFailure ("Expected intern profile clear payload to decode, got: " <> err)
+                Right (InternProfileUpdate _ endAtVal requiredHoursVal _ areasVal) -> do
+                    endAtVal `shouldBe` Just Nothing
+                    requiredHoursVal `shouldBe` Just Nothing
+                    areasVal `shouldBe` Just Nothing
+
+        it "rejects unexpected profile keys instead of silently ignoring intern profile intent" $
+            decodeInternProfileUpdate
+                "{\"ipuSkills\":\"Patch bays\",\"skills\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
+
     describe "InternTaskCreate FromJSON" $ do
         it "accepts canonical task create payloads" $
             case decodeInternTaskCreate
@@ -1381,6 +1407,8 @@ spec = do
     decodeClockIn = eitherDecode
     decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest
     decodeClockOut = eitherDecode
+    decodeInternProfileUpdate :: BL8.ByteString -> Either String InternProfileUpdate
+    decodeInternProfileUpdate = eitherDecode
     decodeInternTaskCreate :: BL8.ByteString -> Either String InternTaskCreate
     decodeInternTaskCreate = eitherDecode
     decodeInternTaskUpdate :: BL8.ByteString -> Either String InternTaskUpdate

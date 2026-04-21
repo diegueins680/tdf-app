@@ -1179,7 +1179,26 @@ data InternProfileUpdate = InternProfileUpdate
   , ipuAreas   :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 instance ToJSON InternProfileUpdate
-instance FromJSON InternProfileUpdate
+instance FromJSON InternProfileUpdate where
+  parseJSON = withObject "InternProfileUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ipuStartAt"
+          , "ipuEndAt"
+          , "ipuRequiredHours"
+          , "ipuSkills"
+          , "ipuAreas"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternProfileUpdate: " <> T.unpack key)
+      [] ->
+        InternProfileUpdate
+          <$> o .:! "ipuStartAt"
+          <*> o .:! "ipuEndAt"
+          <*> o .:! "ipuRequiredHours"
+          <*> o .:! "ipuSkills"
+          <*> o .:! "ipuAreas"
 
 data InternSummaryDTO = InternSummaryDTO
   { isPartyId :: Int64
