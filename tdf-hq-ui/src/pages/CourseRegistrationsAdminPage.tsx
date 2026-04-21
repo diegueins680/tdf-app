@@ -625,6 +625,124 @@ const getSearchableRegistrationAcquisitionContext = (
     .join(' ')
 );
 
+type HiddenLocalSearchField = 'note' | 'origin';
+
+const hiddenLocalSearchFieldLabels: Record<HiddenLocalSearchField, string> = {
+  note: 'nota interna',
+  origin: 'origen o campaña',
+};
+
+const formatHiddenLocalSearchFieldList = (fields: readonly HiddenLocalSearchField[]) => {
+  const labels = fields.map((field) => hiddenLocalSearchFieldLabels[field]);
+  if (labels.length <= 1) return labels[0] ?? '';
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+};
+
+const localSearchTextMatches = (value: string | null | undefined, localSearchKey: string) =>
+  Boolean(localSearchKey) && normalizeLocalSearchText(value ?? '').includes(localSearchKey);
+
+const registrationVisibleSearchText = (
+  reg: CourseRegistrationDTO,
+  cohortLabelsBySlug: ReadonlyMap<string, string>,
+) => {
+  const courseSlug = reg.crCourseSlug.trim();
+  return [
+    reg.crFullName,
+    reg.crEmail,
+    reg.crPhoneE164,
+    `registro #${reg.crId}`,
+    String(reg.crId),
+    courseSlug,
+    cohortLabelsBySlug.get(courseSlug),
+    registrationStatusLabel(reg.crStatus),
+    getSearchableRegistrationSource(reg.crSource),
+  ].join(' ');
+};
+
+const registrationMatchesVisibleSearchFields = ({
+  cohortLabelsBySlug,
+  localSearchDigitsKey,
+  localSearchKey,
+  reg,
+}: {
+  cohortLabelsBySlug: ReadonlyMap<string, string>;
+  localSearchDigitsKey: string;
+  localSearchKey: string;
+  reg: CourseRegistrationDTO;
+}) => {
+  if (localSearchTextMatches(registrationVisibleSearchText(reg, cohortLabelsBySlug), localSearchKey)) {
+    return true;
+  }
+
+  if (localSearchDigitsKey.length < MIN_PHONE_SEARCH_DIGITS) {
+    return false;
+  }
+
+  return normalizeLocalSearchDigits(reg.crPhoneE164 ?? '').includes(localSearchDigitsKey);
+};
+
+const hiddenLocalSearchFieldsForRegistration = (
+  reg: CourseRegistrationDTO,
+  localSearchKey: string,
+): HiddenLocalSearchField[] => {
+  const fields: HiddenLocalSearchField[] = [];
+
+  if (localSearchTextMatches(reg.crAdminNotes, localSearchKey)) {
+    fields.push('note');
+  }
+
+  if (localSearchTextMatches(getSearchableRegistrationAcquisitionContext(reg), localSearchKey)) {
+    fields.push('origin');
+  }
+
+  return fields;
+};
+
+const buildHiddenLocalSearchMatchSummary = ({
+  cohortLabelsBySlug,
+  localSearchDigitsKey,
+  localSearchKey,
+  registrations,
+}: {
+  cohortLabelsBySlug: ReadonlyMap<string, string>;
+  localSearchDigitsKey: string;
+  localSearchKey: string;
+  registrations: readonly CourseRegistrationDTO[];
+}) => {
+  if (!localSearchKey || registrations.length === 0) return '';
+
+  const hiddenFields = new Set<HiddenLocalSearchField>();
+  let hiddenOnlyMatchCount = 0;
+
+  registrations.forEach((reg) => {
+    if (registrationMatchesVisibleSearchFields({
+      cohortLabelsBySlug,
+      localSearchDigitsKey,
+      localSearchKey,
+      reg,
+    })) {
+      return;
+    }
+
+    const fields = hiddenLocalSearchFieldsForRegistration(reg, localSearchKey);
+    if (fields.length === 0) return;
+
+    hiddenOnlyMatchCount += 1;
+    fields.forEach((field) => hiddenFields.add(field));
+  });
+
+  if (hiddenOnlyMatchCount === 0) return '';
+
+  const fieldList = formatHiddenLocalSearchFieldList([...hiddenFields]);
+  if (!fieldList) return '';
+
+  if (hiddenOnlyMatchCount === registrations.length) {
+    return `${registrations.length === 1 ? 'Coincide' : 'Coinciden'} con ${fieldList}.`;
+  }
+
+  return `Algunas coincidencias vienen de ${fieldList}.`;
+};
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
@@ -1375,6 +1493,15 @@ export default function CourseRegistrationsAdminPage() {
   const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
     ? 'Contacto pendiente en esta inscripción.'
     : '';
+  const hiddenLocalSearchMatchSummary = useMemo(
+    () => buildHiddenLocalSearchMatchSummary({
+      cohortLabelsBySlug,
+      localSearchDigitsKey,
+      localSearchKey,
+      registrations: searchedRegistrations,
+    }),
+    [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, searchedRegistrations],
+  );
   const shortPhoneSearchHint = looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
     ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
     : '';
@@ -1397,6 +1524,7 @@ export default function CourseRegistrationsAdminPage() {
         ? [
           formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount),
           singleVisibleMissingContactSummary,
+          hiddenLocalSearchMatchSummary,
         ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
           ? buildFullLocalSearchMatchHint(loadedRegistrationCount)

@@ -7181,6 +7181,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas. Coincide con nota interna.');
       expect(container.textContent).toContain('Notas internas');
       expect(container.textContent).not.toContain('Necesita beca parcial antes de confirmar.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
@@ -7230,7 +7231,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Camila Vega');
       expect(container.textContent).not.toContain('Estudiante 1');
-      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas. Coincide con origen o campaña.');
       expect(container.textContent).not.toContain('TikTok orgánico');
       expect(container.textContent).not.toContain('curso_abril');
       expect(container.textContent).not.toContain('video_largo');
