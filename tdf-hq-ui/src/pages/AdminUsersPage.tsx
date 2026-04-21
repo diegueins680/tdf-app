@@ -184,6 +184,7 @@ const normalizeSearchValue = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
 const formatSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
@@ -703,7 +704,7 @@ export default function AdminUsersPage() {
                 <TextField
                   label="Buscar usuarios"
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event) => setSearchQuery(normalizeVisibleSearchInput(event.target.value))}
                   size="small"
                   fullWidth
                   placeholder={SEARCH_INPUT_PLACEHOLDER}

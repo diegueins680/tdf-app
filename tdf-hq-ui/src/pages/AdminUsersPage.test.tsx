@@ -2064,6 +2064,60 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('treats whitespace-only search as empty so the admin list does not show a false search state', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, '   ');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(container.textContent).toContain('3 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(container.textContent).not.toContain('Mostrando 0 de 3');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides the generic refresh action while search is active so the field owns the reset flow', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
