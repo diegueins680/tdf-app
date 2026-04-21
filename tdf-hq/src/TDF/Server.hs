@@ -9912,6 +9912,11 @@ validatePayPalCaptureStatusField Nothing =
 validatePayPalCaptureStatusField (Just rawStatus)
   | T.null statusTxt =
       Left err502 { errBody = "PayPal capture response status cannot be blank" }
+  | T.any (\ch -> isControl ch || isSpace ch) statusTxt =
+      Left err502
+        { errBody =
+            "PayPal capture response status must not contain control characters or whitespace"
+        }
   | otherwise =
       Right statusTxt
   where

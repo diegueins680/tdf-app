@@ -2315,6 +2315,12 @@ main = hspec $ do
                                 ("Expected invalid PayPal capture status, got " <> show value)
             assertInvalid Nothing "PayPal capture response did not include a status"
             assertInvalid (Just "   ") "PayPal capture response status cannot be blank"
+            assertInvalid
+                (Just "COM PLETED")
+                "PayPal capture response status must not contain control characters"
+            assertInvalid
+                (Just "COM\nPLETED")
+                "PayPal capture response status must not contain control characters"
 
     describe "validatePayPalPayerEmailField" $ do
         it "normalizes optional PayPal payer emails before storing capture metadata" $ do
