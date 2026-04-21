@@ -490,6 +490,13 @@ describe('AdminUsersPage', () => {
         partyName: '   ',
         username: 'linus-view',
       }),
+      buildUser({
+        userId: 104,
+        partyId: 12,
+        partyName: 'María García',
+        username: 'maria-garcia',
+        primaryEmail: 'maria@example.com',
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -513,9 +520,24 @@ describe('AdminUsersPage', () => {
         expect(usernameOnlyRow.textContent).not.toContain('Usuario: linus-view');
         expect(usernameOnlyRow.textContent).not.toContain('ID 11');
 
+        const sluggedIdentityRow = getRowByUserId(container, 104);
+        expect(hasExactText(sluggedIdentityRow, 'María García')).toBe(true);
+        expect(sluggedIdentityRow.textContent).not.toContain('Usuario: maria-garcia');
+        expect(sluggedIdentityRow.textContent).not.toContain('ID 12');
+
         expect(container.textContent).not.toContain('ID 9');
         expect(container.textContent).not.toContain('ID 10');
         expect(container.textContent).not.toContain('ID 11');
+        expect(container.textContent).not.toContain('ID 12');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'maria-garcia');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([104]);
+        expect(getRowByUserId(container, 104).textContent).toContain('María García');
+        expect(getRowByUserId(container, 104).textContent).not.toContain('Usuario: maria-garcia');
       });
     } finally {
       await cleanup();

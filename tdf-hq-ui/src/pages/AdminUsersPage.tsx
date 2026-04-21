@@ -208,6 +208,12 @@ const normalizeSearchValue = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const normalizeIdentityComparison = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es')
+    .replace(/[^a-z0-9]+/g, '');
 const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
 const formatSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
@@ -334,7 +340,9 @@ const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 
   const displayName = user.partyName.trim();
   const username = user.username.trim();
   const primary = displayName || username || `Cuenta #${user.userId}`;
-  const showUsername = displayName !== '' && username !== '' && displayName.toLowerCase() !== username.toLowerCase();
+  const showUsername = displayName !== ''
+    && username !== ''
+    && normalizeIdentityComparison(displayName) !== normalizeIdentityComparison(username);
   const secondaryParts: string[] = [];
 
   if (showUsername) secondaryParts.push(`Usuario: ${username}`);
