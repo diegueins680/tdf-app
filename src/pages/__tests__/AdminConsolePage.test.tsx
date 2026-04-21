@@ -796,6 +796,48 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps demo-data fallback cards from duplicating the first-run seed action', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'demo-data',
+          title: 'Demo workspace',
+          body: ['Generate sample users, roles, and audit events for review.'],
+        },
+        {
+          cardId: 'fallback-demo-fixtures',
+          title: 'Datos de ejemplo',
+          body: ['Prepara usuarios y auditoría de demostración para validar el panel.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Demo workspace')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Datos de ejemplo$/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Generate sample users, roles, and audit events for review\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Prepara usuarios y auditoría de demostración para validar el panel\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('strips built-in admin copy from custom fallback cards before showing optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
