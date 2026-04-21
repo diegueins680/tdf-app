@@ -189,6 +189,8 @@ validateFeedbackAttachmentSize :: Integer -> Either ServerError ()
 validateFeedbackAttachmentSize size
   | size < 0 =
       Left err400 { errBody = "attachment size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "attachment must not be empty" }
   | size > maxFeedbackAttachmentBytes =
       Left err400 { errBody = "attachment must be 10 MB or smaller" }
   | otherwise =

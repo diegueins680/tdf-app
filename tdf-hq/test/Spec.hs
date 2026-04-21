@@ -2355,8 +2355,8 @@ main = hspec $ do
                 `shouldBe` (Data.Text.replicate 116 "a" <> ".png")
 
     describe "validateFeedbackAttachmentSize" $ do
-        it "accepts empty and boundary-sized feedback attachments" $ do
-            validateFeedbackAttachmentSize 0 `shouldBe` Right ()
+        it "accepts non-empty boundary-sized feedback attachments" $ do
+            validateFeedbackAttachmentSize 1 `shouldBe` Right ()
             validateFeedbackAttachmentSize (10 * 1024 * 1024) `shouldBe` Right ()
 
         it "rejects invalid or oversized feedback attachments before copying uploads" $ do
@@ -2368,6 +2368,7 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid attachment size, got " <> show value)
             assertInvalid (-1) "attachment size is invalid"
+            assertInvalid 0 "attachment must not be empty"
             assertInvalid (10 * 1024 * 1024 + 1) "attachment must be 10 MB or smaller"
 
     describe "feedback multipart parsing" $ do
