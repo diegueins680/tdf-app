@@ -2217,6 +2217,7 @@ export default function CourseRegistrationsAdminPage() {
       fileUrl: file.publicUrl ?? file.webContentLink ?? file.webViewLink ?? '',
       fileName: file.name,
     }));
+    setShowReceiptUrlField(false);
     setDossierFlash(null);
   };
 
@@ -2228,6 +2229,7 @@ export default function CourseRegistrationsAdminPage() {
       attachmentUrl: file.publicUrl ?? file.webContentLink ?? file.webViewLink ?? '',
       attachmentName: file.name,
     }));
+    setShowFollowUpUrlField(false);
     setDossierFlash(null);
   };
 
@@ -2756,7 +2758,7 @@ export default function CourseRegistrationsAdminPage() {
                       Usar enlace existente en lugar de subir archivo
                     </Button>
                   )}
-                  <Collapse in={showReceiptUrlField} unmountOnExit>
+                  {showReceiptUrlField && (
                     <Stack spacing={1} sx={{ pt: 0.5 }}>
                       <TextField
                         label="URL del comprobante"
@@ -2777,7 +2779,7 @@ export default function CourseRegistrationsAdminPage() {
                         </Button>
                       )}
                     </Stack>
-                  </Collapse>
+                  )}
                   {!showReceiptMetadataFields && (
                     <Typography variant="caption" color="text.secondary">
                       Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y

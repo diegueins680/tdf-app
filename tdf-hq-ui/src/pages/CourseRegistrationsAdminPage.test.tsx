@@ -4095,6 +4095,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
     });
 
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+    });
+
     const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-receipt-upload"]');
     if (!uploadButton) throw new Error('Mock receipt upload not found');
 
@@ -5147,6 +5157,16 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
     });
 
     const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-follow-up-upload"]');
