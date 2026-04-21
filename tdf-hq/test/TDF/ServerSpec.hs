@@ -203,6 +203,7 @@ import TDF.Server
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
     , resolveDriveUploadFolderId
+    , resolveDriveUploadName
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
@@ -2493,6 +2494,36 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
+
+    describe "resolveDriveUploadName" $ do
+        it "prefers safe request names and falls back deterministically for blank upload names" $ do
+            resolveDriveUploadName (Just " Contract.pdf ") "browser-name.pdf"
+                `shouldBe` Right "Contract.pdf"
+            resolveDriveUploadName Nothing " browser-name.pdf "
+                `shouldBe` Right "browser-name.pdf"
+            resolveDriveUploadName (Just "   ") "   "
+                `shouldBe` Right "upload"
+
+        it "rejects unsafe Drive upload names before calling Google" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive upload name to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "name must not contain control characters"
+                (resolveDriveUploadName (Just "Bad\nName.pdf") "safe.pdf")
+            assertInvalid
+                "fileName must not contain control characters"
+                (resolveDriveUploadName Nothing "Bad\tName.pdf")
+            assertInvalid
+                "name must be 240 characters or fewer"
+                (resolveDriveUploadName (Just (T.replicate 241 "a")) "safe.pdf")
 
     describe "DriveApiResp FromJSON" $ do
         it "normalizes valid Google Drive file ids from upload responses" $ do

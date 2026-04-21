@@ -1771,13 +1771,10 @@ driveUploadServer _ mAccessToken DriveUploadForm{..} = do
   accessToken <- resolveDriveAccessToken manager providedToken
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
-  let fallbackName =
-        let raw = T.strip (fdFileName duFile)
-        in if T.null raw then Nothing else Just raw
-      nameOverride = cleanOptional duName <|> fallbackName
+  nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile nameOverride folder) ::
+      (try (uploadToDrive manager accessToken duFile (Just nameOverride) folder) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
@@ -1868,6 +1865,30 @@ driveUploadFolderIdMessage fieldName =
 isDriveFolderIdChar :: Char -> Bool
 isDriveFolderIdChar ch =
   isAsciiLower ch || isAsciiUpper ch || isDigit ch || ch == '-' || ch == '_'
+
+resolveDriveUploadName :: Maybe Text -> Text -> Either ServerError Text
+resolveDriveUploadName mProvidedName rawFileName =
+  case cleanOptional mProvidedName of
+    Just provided -> validateDriveUploadName "name" provided
+    Nothing ->
+      maybe
+        (Right "upload")
+        (validateDriveUploadName "fileName")
+        (cleanOptional (Just rawFileName))
+
+validateDriveUploadName :: Text -> Text -> Either ServerError Text
+validateDriveUploadName fieldName uploadName
+  | T.length uploadName > 240 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 240 characters or fewer"))
+        }
+  | T.any isControl uploadName =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+        }
+  | otherwise = Right uploadName
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken token
