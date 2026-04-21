@@ -446,8 +446,11 @@ const getFollowUpTypeOptions = (entryType: string) => {
   return [...manualFollowUpTypeOptions, normalizedEntryType];
 };
 
+const followUpSubjectLabel = (entry: Pick<CourseRegistrationFollowUpDTO, 'crfSubject'>) =>
+  entry.crfSubject?.trim() ?? '';
+
 const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
-  entry.crfSubject ?? `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
+  followUpSubjectLabel(entry) || `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
 
 const normalizeFollowUpActionTargetKey = (entry: CourseRegistrationFollowUpDTO) =>
   followUpActionTargetLabel(entry).toLocaleLowerCase('es');
@@ -2120,7 +2123,7 @@ export default function CourseRegistrationsAdminPage() {
     setFollowUpForm({
       editingId: entry.crfId,
       entryType: entry.crfEntryType,
-      subject: entry.crfSubject ?? '',
+      subject: followUpSubjectLabel(entry),
       notes: entry.crfNotes,
       attachmentUrl: entry.crfAttachmentUrl ?? '',
       attachmentName: entry.crfAttachmentName ?? '',
@@ -3981,6 +3984,7 @@ export default function CourseRegistrationsAdminPage() {
                                 entry,
                                 followUpIdsRequiringActionDisambiguator.has(entry.crfId),
                               );
+                              const followUpSubject = followUpSubjectLabel(entry);
                               const followUpCreatedLabel = sharedFollowUpCreatedLabel
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
@@ -4014,8 +4018,8 @@ export default function CourseRegistrationsAdminPage() {
                                         <MoreVertIcon fontSize="small" />
                                       </IconButton>
                                     </Stack>
-                                    {entry.crfSubject && (
-                                      <Typography variant="subtitle2">{entry.crfSubject}</Typography>
+                                    {followUpSubject && (
+                                      <Typography variant="subtitle2">{followUpSubject}</Typography>
                                     )}
                                     <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                                       {entry.crfNotes}

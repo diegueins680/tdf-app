@@ -5049,6 +5049,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('falls back to follow-up type and date when a saved follow-up subject is blank', async () => {
+    const createdAt = '2030-02-05T10:30:00.000Z';
+    const fallbackActionLabel = `Abrir acciones para seguimiento Llamada del ${formatTimestampForDisplay(createdAt, '-')}`;
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdFollowUps: [
+          buildFollowUp({
+            crfSubject: '   ',
+            crfCreatedAt: createdAt,
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, fallbackActionLabel)).toBeTruthy();
+      expect(
+        document.body.querySelector('button[aria-label="Abrir acciones para seguimiento    "]'),
+      ).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, fallbackActionLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Editar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect((getInputByLabel(document.body, 'Asunto') as HTMLInputElement).value).toBe('');
+    });
+
+    await cleanup();
+  });
+
   it('shows the mark-paid action only when the dossier can actually use it', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const registration = buildRegistration();
