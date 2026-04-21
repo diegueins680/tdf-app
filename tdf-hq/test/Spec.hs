@@ -1530,6 +1530,23 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected invalid SRI script path to fail, got: " <> show value)
 
+        it "returns an explicit error when the configured Node runner cannot be started" $
+            withSystemTempFile "tdf-sri-script.mjs" $ \scriptPath handle -> do
+                hClose handle
+                withEnvOverrides
+                    [ ("SRI_INVOICE_SCRIPT", Just scriptPath)
+                    , ("PATH", Just "/tmp/tdf-hq-node-missing-never-created")
+                    ]
+                    $ do
+                        result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                        case result of
+                            Left err ->
+                                Data.Text.unpack err
+                                    `shouldContain` "SRI invoice script could not be started"
+                            Right value ->
+                                expectationFailure
+                                    ("Expected missing Node runner to fail, got: " <> show value)
+
     describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides

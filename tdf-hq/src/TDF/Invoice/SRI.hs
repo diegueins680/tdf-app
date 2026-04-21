@@ -12,6 +12,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           GHC.Generics (Generic)
+import           Control.Exception (IOException, displayException, try)
 import           System.Directory (doesFileExist, makeAbsolute)
 import           System.Environment (lookupEnv)
 import           System.Exit (ExitCode(..))
@@ -67,15 +68,24 @@ runSriInvoiceScript payload = do
       absolutePath <- makeAbsolute scriptPath
       let processSpec = proc "node" [absolutePath]
           stdinJson = BS8.unpack (BL.toStrict (Aeson.encode payload))
-      (exitCode, stdoutTxt, stderrTxt) <- readCreateProcessWithExitCode processSpec stdinJson
-      case exitCode of
-        ExitSuccess ->
-          case Aeson.eitherDecodeStrict' (BS8.pack stdoutTxt) of
-            Left err -> pure (Left (T.pack ("Invalid SRI script JSON output: " <> err)))
-            Right dto -> pure (Right dto)
-        ExitFailure _ ->
-          let trimmedErr = T.strip (TE.decodeUtf8 (BS8.pack stderrTxt))
-          in pure (Left (if T.null trimmedErr then "SRI invoice script failed" else trimmedErr))
+      processResult <- try (readCreateProcessWithExitCode processSpec stdinJson)
+      case processResult of
+        Left err ->
+          pure $
+            Left $
+              T.pack
+                ( "SRI invoice script could not be started: "
+                    <> displayException (err :: IOException)
+                )
+        Right (exitCode, stdoutTxt, stderrTxt) ->
+          case exitCode of
+            ExitSuccess ->
+              case Aeson.eitherDecodeStrict' (BS8.pack stdoutTxt) of
+                Left err -> pure (Left (T.pack ("Invalid SRI script JSON output: " <> err)))
+                Right dto -> pure (Right dto)
+            ExitFailure _ ->
+              let trimmedErr = T.strip (TE.decodeUtf8 (BS8.pack stderrTxt))
+              in pure (Left (if T.null trimmedErr then "SRI invoice script failed" else trimmedErr))
 
 resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do
