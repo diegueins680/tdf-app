@@ -157,7 +157,7 @@ const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.some((status) => status === value);
 
 const normalizeBackendStatusToken = (status: string) =>
-  status.trim().toLowerCase().replace(/[\s._\/-]+/g, '_').replace(/^_+|_+$/g, '');
+  status.trim().toLowerCase().replace(/[\s._/-]+/g, '_').replace(/^_+|_+$/g, '');
 
 const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
   const normalized = normalizeBackendStatusToken(value);
@@ -313,7 +313,7 @@ const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | 
 };
 
 const customRegistrationStatusLabel = (status: string) => {
-  const normalized = status.trim().toLowerCase().replace(/[\s._\/-]+/g, ' ').trim();
+  const normalized = status.trim().toLowerCase().replace(/[\s._/-]+/g, ' ').trim();
   if (!normalized) return 'Estado desconocido';
   return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
 };
@@ -570,6 +570,29 @@ const getSearchableRegistrationSource = (source: string | null | undefined) => {
   return displayLabel === trimmedSource ? trimmedSource : `${trimmedSource} ${displayLabel}`;
 };
 
+const getSearchableRegistrationAcquisitionContext = (
+  reg: Pick<
+    CourseRegistrationDTO,
+    'crHowHeard' | 'crUtmSource' | 'crUtmMedium' | 'crUtmCampaign' | 'crUtmContent'
+  >,
+) => (
+  [
+    reg.crHowHeard,
+    reg.crUtmSource,
+    reg.crUtmMedium,
+    reg.crUtmCampaign,
+    reg.crUtmContent,
+  ]
+    .map((value) => {
+      const trimmedValue = value?.trim() ?? '';
+      if (!trimmedValue) return '';
+      const displayLabel = humanizeDelimitedSourceLabel(trimmedValue);
+      return displayLabel === trimmedValue ? trimmedValue : `${trimmedValue} ${displayLabel}`;
+    })
+    .filter(Boolean)
+    .join(' ')
+);
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
@@ -782,6 +805,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   let hasGeneratedRegistrationIdentity = false;
   let hasNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
+  let hasAcquisitionContext = false;
 
   registrations.forEach((reg) => {
     const hasName = Boolean(reg.crFullName?.trim());
@@ -807,6 +831,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     if (cohortKey) cohortKeys.add(cohortKey);
 
     if (reg.crAdminNotes?.trim()) hasNotes = true;
+    if (getSearchableRegistrationAcquisitionContext(reg)) hasAcquisitionContext = true;
   });
 
   const terms: string[] = [];
@@ -822,6 +847,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   }
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (hasNotes) terms.push('nota');
+  if (hasAcquisitionContext) terms.push(terms.length === 0 ? 'Origen' : 'origen');
   if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
   if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
@@ -1214,6 +1240,7 @@ export default function CourseRegistrationsAdminPage() {
         cohortLabelsBySlug.get(courseSlug),
         registrationStatusLabel(reg.crStatus),
         getSearchableRegistrationSource(reg.crSource),
+        getSearchableRegistrationAcquisitionContext(reg),
       ].join(' ');
       const searchableText = normalizeLocalSearchText(haystack);
       if (searchableText.includes(localSearchKey)) return true;

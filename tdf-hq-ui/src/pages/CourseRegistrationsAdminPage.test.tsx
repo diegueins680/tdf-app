@@ -7161,6 +7161,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins find campaign-attributed registrations without adding row attribution chrome', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Camila Vega',
+        crEmail: 'camila@example.com',
+        crHowHeard: 'TikTok orgánico',
+        crUtmCampaign: 'curso_abril',
+        crUtmContent: 'video_largo',
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, contacto u origen',
+      );
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'curso abril');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Camila Vega');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('TikTok orgánico');
+      expect(container.textContent).not.toContain('curso_abril');
+      expect(container.textContent).not.toContain('video_largo');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
     const pendingRegistrations = buildRegistrations(9);
     const initialRegistrations = [
