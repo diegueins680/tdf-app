@@ -1293,8 +1293,10 @@ describe('AdminUsersPage', () => {
         expect(getRowByUserId(container, 102).textContent).not.toContain('Inactivo');
         const hideInactiveListButton = getButtonsByText(container, 'Ocultar 1 usuario inactivo')[0]!;
         expect(hideInactiveListButton.getAttribute('aria-expanded')).toBe('true');
-        expect(buttonText(hideInactiveListButton)).toBe('Ocultar 1 usuario inactivo');
-        expect(hasExactText(container, 'Ocultar 1 usuario inactivo')).toBe(true);
+        expect(hideInactiveListButton.getAttribute('aria-label')).toBe('Ocultar 1 usuario inactivo');
+        expect(buttonText(hideInactiveListButton)).toBe('Ocultar');
+        expect(hasExactText(container, 'Ocultar 1 usuario inactivo')).toBe(false);
+        expect(hasExactText(container, 'Ocultar')).toBe(true);
         expect(hasExactText(container, 'Ocultar lista')).toBe(false);
       });
     } finally {
@@ -1993,8 +1995,10 @@ describe('AdminUsersPage', () => {
         expect(getRowByUserId(container, 204).textContent).not.toContain('Inactivo');
         const hideInactiveListButton = getButtonsByText(container, 'Ocultar 2 usuarios inactivos')[0]!;
         expect(hideInactiveListButton.getAttribute('aria-expanded')).toBe('true');
-        expect(buttonText(hideInactiveListButton)).toBe('Ocultar 2 usuarios inactivos');
-        expect(hasExactText(container, 'Ocultar 2 usuarios inactivos')).toBe(true);
+        expect(hideInactiveListButton.getAttribute('aria-label')).toBe('Ocultar 2 usuarios inactivos');
+        expect(buttonText(hideInactiveListButton)).toBe('Ocultar');
+        expect(hasExactText(container, 'Ocultar 2 usuarios inactivos')).toBe(false);
+        expect(hasExactText(container, 'Ocultar')).toBe(true);
         expect(hasExactText(container, 'Ocultar lista')).toBe(false);
       });
     } finally {

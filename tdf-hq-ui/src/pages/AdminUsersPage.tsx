@@ -875,7 +875,7 @@ export default function AdminUsersPage() {
                             : `Ver ${inactiveUsersToggleTarget}`}
                         >
                           {showInactiveUsers
-                            ? `Ocultar ${inactiveUsersToggleTarget}`
+                            ? 'Ocultar'
                             : `Ver ${inactiveUsersToggleTarget}`}
                         </Button>
                       )}
