@@ -577,6 +577,21 @@ export default function AdminUsersPage() {
   const shouldCollapseInactiveUsers =
     showInactiveUsersGroup && !hasActiveSearch && activeVisibleUsers.length > 0;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
+  const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
+    ? activeVisibleUsers
+    : visibleUsers;
+  const currentSummaryMissingWhatsAppCount = usersInCurrentSummary.filter((user) => !hasUserWhatsAppChannel(user)).length;
+  const currentSummaryMissingContactCount = usersInCurrentSummary.filter(
+    (user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user),
+  ).length;
+  const currentSummaryPendingWhatsAppCount = currentSummaryMissingWhatsAppCount - currentSummaryMissingContactCount;
+  const currentSummaryWithWhatsAppCount = usersInCurrentSummary.length - currentSummaryMissingWhatsAppCount;
+  const currentSummaryHasMixedPendingContactStates =
+    currentSummaryPendingWhatsAppCount > 0 && currentSummaryMissingContactCount > 0;
+  const showCurrentSummaryContactState =
+    usersInCurrentSummary.length > 1
+    && (currentSummaryWithWhatsAppCount > 0 || currentSummaryHasMixedPendingContactStates)
+    && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
@@ -612,25 +627,25 @@ export default function AdminUsersPage() {
     )
     : '';
   const visibleUsersSummary = useMemo(() => {
-    if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || visibleUsers.length === 0) return '';
+    if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || usersInCurrentSummary.length === 0) return '';
 
     const parts: string[] = [];
 
     if (isFiltered) {
-      parts.push(`Mostrando ${visibleUsers.length} de ${totalUsersCount} usuarios.`);
+      parts.push(`Mostrando ${usersInCurrentSummary.length} de ${totalUsersCount} usuarios.`);
     } else if (hasMultipleUsers) {
-      parts.push(`${formatUserCountLabel(visibleUsers.length)} en esta vista.`);
+      parts.push(`${formatUserCountLabel(usersInCurrentSummary.length)} en esta vista.`);
     }
 
     if (showSharedPendingProfileGuidance) {
       parts.push(buildPendingProfileSummary(visibleUsersPendingProfileCount));
     }
 
-    if (showMixedContactStateGuidance) {
+    if (showCurrentSummaryContactState) {
       parts.push(`${buildContactStateSummary({
-        readyForWhatsAppCount: visibleUsersWithWhatsAppCount,
-        pendingWhatsAppCount: visibleUsersPendingWhatsAppCount,
-        pendingContactCount: visibleUsersMissingContactCount,
+        readyForWhatsAppCount: currentSummaryWithWhatsAppCount,
+        pendingWhatsAppCount: currentSummaryPendingWhatsAppCount,
+        pendingContactCount: currentSummaryMissingContactCount,
       })}.`);
     }
 
@@ -639,16 +654,16 @@ export default function AdminUsersPage() {
     hasMultipleUsers,
     hasUsers,
     isFiltered,
+    currentSummaryMissingContactCount,
+    currentSummaryPendingWhatsAppCount,
+    currentSummaryWithWhatsAppCount,
+    showCurrentSummaryContactState,
     showSharedPendingProfileGuidance,
-    showMixedContactStateGuidance,
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
     totalUsersCount,
-    visibleUsers.length,
-    visibleUsersMissingContactCount,
+    usersInCurrentSummary.length,
     visibleUsersPendingProfileCount,
-    visibleUsersPendingWhatsAppCount,
-    visibleUsersWithWhatsAppCount,
   ]);
   const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';

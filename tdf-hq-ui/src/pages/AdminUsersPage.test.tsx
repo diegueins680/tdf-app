@@ -1304,6 +1304,75 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps collapsed inactive rows out of the main guidance until the admin expands them', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus View',
+        username: 'linus-view',
+        primaryEmail: 'linus@example.com',
+        primaryPhone: '+593999000333',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 102,
+              partyId: 10,
+              partyName: 'Grace Inactiva',
+              username: 'grace-inactiva',
+              active: false,
+              primaryEmail: null,
+              primaryPhone: null,
+              whatsapp: null,
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. La búsqueda aparecerá desde el tercer usuario. Vista actual: solo usuarios activos.',
+        );
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista.',
+        );
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.textContent).not.toContain('3 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('1 pendiente de contacto');
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 2 listos para WhatsApp y 1 pendiente de contacto.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('waits to show duplicate identity ids until the collapsed inactive duplicate is visible', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
