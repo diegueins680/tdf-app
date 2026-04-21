@@ -112,6 +112,7 @@ import TDF.ServerRadio
 import TDF.RagStore
     ( availabilityOverlaps,
       validateEmbeddingModelDimensions,
+      validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
@@ -4339,6 +4340,17 @@ main = hspec $ do
             validateEmbeddingResponseOrder 2 [(0, [0.0]), (0, [1.0])]
                 `shouldSatisfy` isLeft
             validateEmbeddingResponseOrder 2 [(0, [0.0]), (2, [2.0])]
+                `shouldSatisfy` isLeft
+
+    describe "validateEmbeddingResponseDimensions" $ do
+        it "accepts embeddings with the expected vector length" $
+            validateEmbeddingResponseDimensions 3 [[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]]
+                `shouldBe` Right [[0.0, 1.0, 2.0], [3.0, 4.0, 5.0]]
+
+        it "rejects wrong-sized embeddings before pgvector persistence" $ do
+            validateEmbeddingResponseDimensions 3 [[0.0, 1.0], [2.0, 3.0, 4.0]]
+                `shouldSatisfy` isLeft
+            validateEmbeddingResponseDimensions 0 [[0.0]]
                 `shouldSatisfy` isLeft
 
     describe "parseDirective" $ do

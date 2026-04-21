@@ -10,6 +10,7 @@ module TDF.RagStore
   , availabilityOverlaps
   , validateEmbeddingModelDimensions
   , validateEmbeddingResponseOrder
+  , validateEmbeddingResponseDimensions
   ) where
 
 import           Control.Monad          (forM, forM_)
@@ -649,6 +650,29 @@ validateEmbeddingResponseOrder expectedCount indexedEmbeddings
         _ ->
           Left ("Embedding response missing index: " <> T.pack (show idx))
 
+validateEmbeddingResponseDimensions :: Int -> [[Double]] -> Either Text [[Double]]
+validateEmbeddingResponseDimensions expectedDim embeddings
+  | expectedDim <= 0 =
+      Left "Embedding response expected dimension must be positive"
+  | otherwise =
+      case dimensionMismatches of
+        (idx, actualDim):_ ->
+          Left
+            ( "Embedding response dimension mismatch at index "
+              <> T.pack (show idx)
+              <> ": expected "
+              <> T.pack (show expectedDim)
+              <> " but got "
+              <> T.pack (show actualDim)
+            )
+        [] -> Right embeddings
+  where
+    dimensionMismatches =
+      [ (idx, length embeddingValue)
+      | (idx, embeddingValue) <- zip [0 :: Int ..] embeddings
+      , length embeddingValue /= expectedDim
+      ]
+
 validateRagEmbeddingDim :: AppConfig -> ConnectionPool -> IO (Either Text ())
 validateRagEmbeddingDim cfg pool =
   case validateEmbeddingModelDimensions (openAiEmbedModel cfg) of
@@ -787,10 +811,13 @@ callOpenAIEmbeddings cfg inputs =
           case eitherDecode raw of
             Left err -> pure (Left (T.pack err))
             Right (EmbeddingResp embeddings) ->
-              pure
-                (validateEmbeddingResponseOrder
-                  (length inputs)
-                  [(index item, embedding item) | item <- embeddings])
+              pure $ do
+                expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
+                orderedEmbeddings <-
+                  validateEmbeddingResponseOrder
+                    (length inputs)
+                    [(index item, embedding item) | item <- embeddings]
+                validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
