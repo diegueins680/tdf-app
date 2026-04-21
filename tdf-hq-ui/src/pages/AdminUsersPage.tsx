@@ -84,15 +84,39 @@ const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'
 const normalizeContactComparisonValue = (value?: string | null) =>
   normalizeContactValue(value)?.toLocaleLowerCase('es') ?? null;
 
+const normalizePhoneComparisonValue = (value?: string | null) => {
+  const normalizedValue = normalizeContactValue(value);
+  if (!normalizedValue || !/^\+?[\d\s().-]+$/.test(normalizedValue)) return null;
+
+  const digits = normalizedValue.replace(/\D/g, '');
+  return digits.length >= 7 ? digits : null;
+};
+
+const phoneComparisonValuesMatch = (left?: string | null, right?: string | null) => {
+  const leftDigits = normalizePhoneComparisonValue(left);
+  const rightDigits = normalizePhoneComparisonValue(right);
+
+  if (!leftDigits || !rightDigits) return false;
+
+  return leftDigits === rightDigits || leftDigits.endsWith(rightDigits) || rightDigits.endsWith(leftDigits);
+};
+
+const contactComparisonValuesMatch = (left?: string | null, right?: string | null) => {
+  const normalizedLeft = normalizeContactComparisonValue(left);
+  const normalizedRight = normalizeContactComparisonValue(right);
+
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight)
+    || phoneComparisonValuesMatch(left, right);
+};
+
 const matchesVisibleIdentityValue = (
   value: string | null,
   identityValues: readonly (string | null | undefined)[],
 ) => {
-  const normalizedValue = normalizeContactComparisonValue(value);
-  if (!normalizedValue) return false;
+  if (!normalizeContactValue(value)) return false;
 
   return identityValues.some((identityValue) => (
-    normalizeContactComparisonValue(identityValue) === normalizedValue
+    contactComparisonValuesMatch(identityValue, value)
   ));
 };
 

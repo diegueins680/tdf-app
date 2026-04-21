@@ -639,6 +639,41 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not repeat a phone-like admin identity when the contact only changes formatting', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyName: '   ',
+        username: '999000111',
+        primaryEmail: null,
+        primaryPhone: '+593 999 000 111',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(hasLinkWithTextAndHref(row, '999000111', '/perfil/9')).toBe(true);
+        expect(row.textContent?.match(/999000111/g) ?? []).toHaveLength(1);
+        expect(row.textContent).not.toContain('+593 999 000 111');
+        expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(1);
+        expect(row.textContent).not.toContain('WhatsApp pendiente');
+        expect(row.textContent).not.toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
