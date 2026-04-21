@@ -7113,6 +7113,68 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps empty filtered searches owned by the search clear action instead of repeating filter reset recovery', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crCourseSlug: 'beatmaking-101',
+        crStatus: 'paid',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101&status=paid');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).toContain('Estado filtrado');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin coincidencias');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).toContain('Estado filtrado');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(container, 'Restablecer filtros')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats whitespace-only local search as empty so admins do not see a false no-results recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 

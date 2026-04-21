@@ -1549,12 +1549,16 @@ export default function CourseRegistrationsAdminPage() {
   const showInlineSummaryResetAction = Boolean(
     combinedSingleChoiceSummary
     && hasCustomFilters
-    && hasVisibleRegistrations,
+    && hasVisibleRegistrations
+    && !showEmptyLocalSearchResults,
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummary);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
-  const showFilteredResetAction = !showInlineSummaryResetAction && !cohortFilterCanSelfReset && !statusFilterCanSelfReset;
+  const showFilteredResetAction = !showEmptyLocalSearchResults
+    && !showInlineSummaryResetAction
+    && !cohortFilterCanSelfReset
+    && !statusFilterCanSelfReset;
   const showFilteredEmptyStateResetAction = hasManualFilters;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters;
   const filteredUtilitySummaryMessage = useMemo(
