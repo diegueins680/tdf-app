@@ -133,6 +133,18 @@ const getVisibleUserContactSummary = (
   return visiblePhone ?? visibleEmail;
 };
 
+const getUserContactSearchValues = (
+  user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>,
+) => (
+  [user.whatsapp, user.primaryPhone, user.primaryEmail]
+    .map(normalizeContactValue)
+    .filter((value): value is string => value != null)
+    .flatMap((value) => {
+      const phoneDigits = normalizePhoneComparisonValue(value);
+      return phoneDigits ? [value, phoneDigits] : [value];
+    })
+);
+
 const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
 
@@ -424,7 +436,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     user.partyName,
     String(user.userId),
     ...partyIdSearchSpace,
-    getUserContactSummary(user) ?? '',
+    ...getUserContactSearchValues(user),
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]

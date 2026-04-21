@@ -3009,6 +3009,61 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('matches formatted phone contacts from a digits-only search so admins avoid a false empty state', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593 999 000 222',
+        whatsapp: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, '999000222');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+        expect(getRowByUserId(container, 102).textContent).toContain('+593 999 000 222');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('matches accented admin names from an unaccented, extra-spaced search so admins do not hit an empty state', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
