@@ -7141,7 +7141,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('lets admins find registrations by internal note text without exposing the note in the row', async () => {
+  it('keeps internal-note search matches explained by the helper instead of row note chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
@@ -7182,7 +7182,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas. Coincide con nota interna.');
-      expect(container.textContent).toContain('Notas internas');
+      expect(container.textContent).not.toContain('Notas internas');
       expect(container.textContent).not.toContain('Necesita beca parcial antes de confirmar.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });

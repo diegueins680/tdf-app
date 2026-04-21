@@ -3626,6 +3626,17 @@ export default function CourseRegistrationsAdminPage() {
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
+                  const rowMatchesVisibleSearchFields = hasLocalSearch
+                    ? registrationMatchesVisibleSearchFields({
+                      cohortLabelsBySlug,
+                      localSearchDigitsKey,
+                      localSearchKey,
+                      reg,
+                    })
+                    : false;
+                  const rowMatchedOnlyHiddenNote = hasLocalSearch
+                    && !rowMatchesVisibleSearchFields
+                    && localSearchTextMatches(reg.crAdminNotes, localSearchKey);
                   const showRowCohort = selectedSlug
                     ? rowCohortSlug !== selectedSlug
                     : !(singleVisibleCohortLabel || singleAvailableCohortLabel);
@@ -3639,7 +3650,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
-                    hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes,
+                    hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes && !rowMatchedOnlyHiddenNote,
                     showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
