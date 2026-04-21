@@ -117,6 +117,7 @@ import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
                                         , resolvePartyPhones
                                         )
 import           TDF.WhatsApp.Transport (loadWhatsAppEnv, sendWhatsAppTextIO)
+import qualified TDF.Trials.Server      as TrialsServer (isValidHttpUrl)
 import           Data.Aeson (object, (.=))
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
@@ -1176,6 +1177,8 @@ validateAdminEmailCtaUrl (Just rawUrl)
       Left err400 { errBody = "CTA URL must include a host" }
   | T.any (== '@') authority =
       Left err400 { errBody = "CTA URL must not include user info" }
+  | not (TrialsServer.isValidHttpUrl url) =
+      Left err400 { errBody = "CTA URL must be an absolute public http(s) URL" }
   | otherwise =
       Right (Just url)
   where

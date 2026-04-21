@@ -124,6 +124,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
             assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
+            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
+            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
+            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example.com:70000/course"))
 
     describe "normalizeAdminUsername" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do
