@@ -162,6 +162,8 @@ import TDF.Server
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
     , validateLabelTrackTitle
+    , validateLabelTrackOwnerIdFilter
+    , validateLabelTrackPathId
     , validateOptionalLabelTrackStatus
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
@@ -3804,6 +3806,50 @@ spec = describe "TDF.Server helpers" $ do
                 "DATAFAST_ENTITY_ID must contain only ASCII letters"
 
     describe "label track update validation" $ do
+        it "accepts omitted or positive owner filters before listing label tracks" $ do
+            validateLabelTrackOwnerIdFilter Nothing `shouldBe` Right Nothing
+            validateLabelTrackOwnerIdFilter (Just 42) `shouldBe` Right (Just 42)
+
+        it "rejects non-positive owner filters before list queries fall through empty" $ do
+            let assertInvalid rawOwnerId =
+                    case validateLabelTrackOwnerIdFilter (Just rawOwnerId) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "ownerId must be a positive integer"
+                        Right ownerId ->
+                            expectationFailure
+                                ( "Expected invalid label track owner filter to be rejected, got: "
+                                    <> show ownerId
+                                )
+            assertInvalid 0
+            assertInvalid (-1)
+
+        it "accepts canonical UUID track path ids before DB lookup" $ do
+            let validTrackId = "00000000-0000-0000-0000-000000000042"
+            case validateLabelTrackPathId ("  " <> validTrackId <> "  ") of
+                Left serverErr ->
+                    expectationFailure ("Expected valid label track id, got: " <> show serverErr)
+                Right trackKey ->
+                    toPathPiece trackKey `shouldBe` validTrackId
+
+        it "rejects malformed or non-positive track path ids before lookup fallback" $ do
+            let assertInvalid rawId =
+                    case validateLabelTrackPathId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "Invalid track id"
+                        Right pathId ->
+                            expectationFailure
+                                ( "Expected invalid label track path id to be rejected, got: "
+                                    <> show pathId
+                                )
+            assertInvalid "0"
+            assertInvalid "-1"
+            assertInvalid "+1"
+            assertInvalid "abc"
+            assertInvalid "   "
+
         it "trims required title updates and canonicalizes supported status values" $ do
             validateLabelTrackTitle "  Mezcla final  " `shouldBe` Right "Mezcla final"
             validateOptionalLabelTrackStatus Nothing `shouldBe` Right Nothing

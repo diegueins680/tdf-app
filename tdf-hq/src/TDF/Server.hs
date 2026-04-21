@@ -9941,7 +9941,8 @@ resolveTrackScope user mOwnerId = do
       isArtist = hasRole Artist user || hasRole Artista user
   unless (isAdmin || isArtist) $
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Solo artistas o admins pueden gestionar operaciones.") }
-  let owner = if isAdmin then fmap toSqlKey mOwnerId else Just (auPartyId user)
+  ownerId <- either throwError pure (validateLabelTrackOwnerIdFilter mOwnerId)
+  let owner = if isAdmin then fmap toSqlKey ownerId else Just (auPartyId user)
   pure TrackScope { tsOwner = owner, tsAllowAny = isAdmin }
 
 ownerFilter :: TrackScope -> [Filter ME.LabelTrack]
@@ -9980,6 +9981,21 @@ validateOptionalLabelTrackStatus (Just rawStatus) =
     Just "done" -> Right (Just "done")
     _ -> Left err400 { errBody = "status must be one of: open, done" }
 
+validateLabelTrackOwnerIdFilter :: Maybe Int64 -> Either ServerError (Maybe Int64)
+validateLabelTrackOwnerIdFilter = validateOptionalPositiveIdField "ownerId"
+
+validateLabelTrackPathId :: Text -> Either ServerError (Key ME.LabelTrack)
+validateLabelTrackPathId rawId =
+  let normalized = T.strip rawId
+      invalid = Left err400 { errBody = "Invalid track id" }
+  in if T.null normalized
+       then invalid
+       else maybe invalid Right (fromPathPiece normalized)
+
+parseLabelTrackId :: Text -> AppM (Key ME.LabelTrack)
+parseLabelTrackId =
+  either throwError pure . validateLabelTrackPathId
+
 listLabelTracks :: AuthedUser -> Maybe Int64 -> AppM [LabelTrackDTO]
 listLabelTracks user mOwnerId = do
   scope <- resolveTrackScope user mOwnerId
@@ -10008,9 +10024,7 @@ createLabelTrack user LabelTrackCreate{..} = do
 
 updateLabelTrack :: AuthedUser -> Text -> LabelTrackUpdate -> AppM LabelTrackDTO
 updateLabelTrack user rawId LabelTrackUpdate{..} = do
-  key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
-    Nothing -> throwBadRequest "Invalid track id"
-    Just k  -> pure k
+  key <- parseLabelTrackId rawId
   scope <- resolveTrackScope user Nothing
   titleUpdate <- traverse (either throwError pure . validateLabelTrackTitle) ltuTitle
   statusUpdate <- either throwError pure (validateOptionalLabelTrackStatus ltuStatus)
@@ -10035,9 +10049,7 @@ updateLabelTrack user rawId LabelTrackUpdate{..} = do
 
 deleteLabelTrack :: AuthedUser -> Text -> AppM NoContent
 deleteLabelTrack user rawId = do
-  key <- case (fromPathPiece rawId :: Maybe (Key ME.LabelTrack)) of
-    Nothing -> throwBadRequest "Invalid track id"
-    Just k  -> pure k
+  key <- parseLabelTrackId rawId
   scope <- resolveTrackScope user Nothing
   mTrack <- runDB $ getEntity key
   case mTrack of
