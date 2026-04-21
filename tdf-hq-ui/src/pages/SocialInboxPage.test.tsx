@@ -479,6 +479,42 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('opens the full inbox instead of an empty default status when only non-pending messages exist', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage({
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'msg-2',
+        senderId: 'sender-2',
+        senderName: 'Grace',
+        replyError: 'Delivery failed.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(queryFilterChip(container, 'All')).not.toBeNull();
+      expect(queryFilterChip(container, 'All')?.getAttribute('aria-pressed')).toBe('true');
+      expect(queryFilterChip(container, 'Pending')).toBeNull();
+      expect(queryFilterChip(container, 'Replied')).not.toBeNull();
+      expect(queryFilterChip(container, 'Failed')).not.toBeNull();
+      expect(container.textContent).toContain('Ada');
+      expect(container.textContent).toContain('Grace');
+      expect(container.textContent).not.toContain(
+        'No messages match Pending in this view. Use All or a status with a count to see existing inbound messages.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('shows the limit control only after the inbox actually reaches the current fetch cap', async () => {
     listInstagramMessagesMock.mockResolvedValue(
       Array.from({ length: 100 }, (_, index) =>

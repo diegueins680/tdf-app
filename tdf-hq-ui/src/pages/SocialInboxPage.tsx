@@ -1214,19 +1214,27 @@ export default function SocialInboxPage() {
     }),
     [facebookStats, instagramStats, whatsappStats],
   );
+  const nonEmptyRealFilters = useMemo(
+    () =>
+      FILTERS
+        .map((item) => item.id)
+        .filter((item): item is RealFilterKey => item !== 'all' && filterCounts[item] > 0),
+    [filterCounts],
+  );
+  const activeFilter =
+    filter !== 'all' && filterCounts.all > 0 && filterCounts[filter] === 0 && nonEmptyRealFilters.length > 0
+      ? 'all'
+      : filter;
   const visibleFilters = useMemo(() => {
     if (filterCounts.all === 0) return FILTERS;
-    return FILTERS.filter((item) => item.id === 'all' || item.id === filter || filterCounts[item.id] > 0);
-  }, [filter, filterCounts]);
+    return FILTERS.filter((item) => item.id === 'all' || item.id === activeFilter || filterCounts[item.id] > 0);
+  }, [activeFilter, filterCounts]);
   const hasHiddenFilters = filterCounts.all > 0 && visibleFilters.length < FILTERS.length;
   const singleVisibleFilter = useMemo<RealFilterKey | null>(() => {
     if (filterCounts.all === 0) return null;
-    const realFilters = FILTERS
-      .map((item) => item.id)
-      .filter((item): item is RealFilterKey => item !== 'all' && filterCounts[item] > 0);
-    return realFilters.length === 1 ? (realFilters[0] ?? null) : null;
-  }, [filterCounts]);
-  const displayFilter = singleVisibleFilter ?? filter;
+    return nonEmptyRealFilters.length === 1 ? (nonEmptyRealFilters[0] ?? null) : null;
+  }, [filterCounts.all, nonEmptyRealFilters]);
+  const displayFilter = singleVisibleFilter ?? activeFilter;
   const showSingleFilterSummary = Boolean(singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
   const showChannelStatusChips = displayFilter === 'all' && !showSingleFilterSummary;
@@ -1518,10 +1526,10 @@ export default function SocialInboxPage() {
                           key={item.id}
                           label={`${label}${showCount ? ` (${count})` : ''}`}
                           onClick={() => setFilter(item.id)}
-                          color={filter === item.id ? 'primary' : 'default'}
-                          variant={filter === item.id ? 'filled' : 'outlined'}
+                          color={displayFilter === item.id ? 'primary' : 'default'}
+                          variant={displayFilter === item.id ? 'filled' : 'outlined'}
                           aria-label={reviewMode ? `Filter inbox by ${label}` : `Filtrar inbox por ${label}`}
-                          aria-pressed={filter === item.id}
+                          aria-pressed={displayFilter === item.id}
                         />
                       );
                     })}
