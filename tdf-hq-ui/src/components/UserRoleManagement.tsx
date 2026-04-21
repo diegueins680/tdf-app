@@ -266,6 +266,7 @@ export default function UserRoleManagement() {
   const [selectedUser, setSelectedUser] = useState<NormalizedUser | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<RoleValue[]>([]);
   const [saving, setSaving] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const showContactColumn = users.some((user) => getContactSummary(user) != null);
   const inactiveUsersCount = users.filter((user) => user.status === 'Inactive').length;
   const activeUsersCount = users.length - inactiveUsersCount;
@@ -317,6 +318,7 @@ export default function UserRoleManagement() {
   const handleEditClick = (user: NormalizedUser) => {
     setSelectedUser(user);
     setSelectedRoles(normalizeRoleSelection(user.roles));
+    setDialogError(null);
     setEditDialogOpen(true);
   };
 
@@ -324,12 +326,14 @@ export default function UserRoleManagement() {
     setEditDialogOpen(false);
     setSelectedUser(null);
     setSelectedRoles([]);
+    setDialogError(null);
   };
 
   const normalizeRoles = (value: string | string[]): RoleValue[] =>
     normalizeRolesInput(value, ALL_ROLES);
 
   const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
+    setDialogError(null);
     setSelectedRoles(normalizeRoles(event.target.value));
   };
 
@@ -338,12 +342,13 @@ export default function UserRoleManagement() {
 
     try {
       setSaving(true);
+      setDialogError(null);
       const normalizedRoles = normalizeRoleSelection(selectedRoles);
       await apiClient.updateUserRoles(selectedUser.id, normalizedRoles);
       setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, roles: normalizedRoles } : u)));
       handleCloseDialog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron actualizar los roles');
+      setDialogError(err instanceof Error ? err.message : 'No se pudieron actualizar los roles');
     } finally {
       setSaving(false);
     }
@@ -536,6 +541,11 @@ export default function UserRoleManagement() {
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Editar roles de {selectedUser?.name}</DialogTitle>
         <DialogContent>
+          {dialogError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {dialogError}
+            </Alert>
+          )}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="roles-label" shrink>Roles</InputLabel>
             <Select<RoleValue[]>

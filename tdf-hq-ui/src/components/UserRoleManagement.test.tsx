@@ -639,6 +639,91 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('keeps failed role saves inside the edit dialog so admins can retry without losing the list', async () => {
+    updateUserRolesMock.mockRejectedValue(new Error('No se pudieron guardar permisos'));
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 307,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Admin'],
+      }),
+      buildUser({
+        id: 308,
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        roles: ['Teacher'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const rolesSelect = document.body.querySelector('[role="combobox"]');
+      if (!(rolesSelect instanceof HTMLElement)) {
+        throw new Error('Roles select not found');
+      }
+
+      await act(async () => {
+        rolesSelect.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await act(async () => {
+        getMenuItemByText('Manager').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
+      if (!(saveButton instanceof HTMLButtonElement)) {
+        throw new Error('Save roles button not found');
+      }
+
+      await act(async () => {
+        saveButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(updateUserRolesMock).toHaveBeenCalledWith(307, ['Admin', 'Manager']);
+
+        const dialog = document.body.querySelector('[role="dialog"]');
+        if (!(dialog instanceof HTMLElement)) {
+          throw new Error('Edit roles dialog not found');
+        }
+
+        expect(dialog.textContent).toContain('No se pudieron guardar permisos');
+        expect(dialog.textContent).toContain('Cambio pendiente: agregar Manager.');
+        const retrySaveButton = getButtonsByText(dialog, 'Guardar cambios')[0];
+        expect(retrySaveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((retrySaveButton as HTMLButtonElement).disabled).toBe(false);
+        expect(container.textContent).toContain('Roles y permisos');
+        expect(container.textContent).toContain('Linus QA');
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.querySelector('[role="alert"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the status column as an exception marker when a mixed roster includes inactive accounts', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
