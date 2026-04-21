@@ -234,7 +234,6 @@ const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
-const SEARCH_THRESHOLD_GUIDANCE = 'La búsqueda aparecerá desde el tercer usuario.';
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
@@ -562,10 +561,6 @@ export default function AdminUsersPage() {
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
-  const showSearchThresholdGuidance =
-    !showSearchField
-    && totalUsersCount === MIN_USERS_FOR_SEARCH - 1
-    && !showSharedContactStateGuidance;
   const activeVisibleUsers = useMemo(
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => user.active) : visibleUsers),
     [showInactiveUsersGroup, visibleUsers],
@@ -688,13 +683,12 @@ export default function AdminUsersPage() {
   const viewGuidance = useMemo(
     () => [
       visibleUsersSummary,
-      showSearchThresholdGuidance ? SEARCH_THRESHOLD_GUIDANCE : '',
       activeScopeSummary,
       inactiveScopeSummary,
     ]
       .filter(Boolean)
       .join(' '),
-    [activeScopeSummary, inactiveScopeSummary, showSearchThresholdGuidance, visibleUsersSummary],
+    [activeScopeSummary, inactiveScopeSummary, visibleUsersSummary],
   );
   const generalIntro = hasVisibleWhatsAppAction
     ? hasVisibleLinkedProfile
