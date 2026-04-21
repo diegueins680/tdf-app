@@ -3458,7 +3458,12 @@ export default function CourseRegistrationsAdminPage() {
                   const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
                     && !reg.crEmail?.trim()
                     && !reg.crPhoneE164?.trim();
-                  const rowNeedsActionDisambiguator = registrationIdsRequiringActionDisambiguator.has(reg.crId);
+                  const showRowRegistrationDisambiguator =
+                    registrationIdsRequiringActionRecordDisambiguator.has(reg.crId)
+                    || (
+                      registrationIdsRequiringActionDisambiguator.has(reg.crId)
+                      && !rowSecondaryIdentity
+                    );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
@@ -3519,7 +3524,7 @@ export default function CourseRegistrationsAdminPage() {
                             {rowSecondaryIdentity}
                           </Typography>
                         )}
-                        {rowNeedsActionDisambiguator && (
+                        {showRowRegistrationDisambiguator && (
                           <Typography variant="caption" color="text.secondary">
                             Registro #{reg.crId}
                           </Typography>

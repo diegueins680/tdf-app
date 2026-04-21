@@ -1457,8 +1457,8 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
-      expect(countOccurrences(container, 'Registro #101')).toBe(1);
-      expect(countOccurrences(container, 'Registro #102')).toBe(1);
+      expect(countOccurrences(container, 'Registro #101')).toBe(0);
+      expect(countOccurrences(container, 'Registro #102')).toBe(0);
       expect(countOccurrences(container, 'Registro #103')).toBe(0);
       expect(countButtonsByText(container, 'Expediente')).toBe(0);
     });
