@@ -528,10 +528,27 @@ const receiptDisplayLabelWithContext = (
 const normalizeCohortLabelKey = (value: string) =>
   value.trim().toLocaleLowerCase('es');
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const stripTrailingCohortSlug = (title: string, slug: string) => {
+  const trimmedTitle = title.trim();
+  const trimmedSlug = slug.trim();
+  if (!trimmedTitle || !trimmedSlug) return trimmedTitle;
+
+  const escapedSlug = escapeRegExp(trimmedSlug);
+  const suffixPattern = new RegExp(
+    `\\s*(?:\\(${escapedSlug}\\)|\\[${escapedSlug}\\]|[-:/|]\\s*${escapedSlug})\\s*$`,
+    'i',
+  );
+  const strippedTitle = trimmedTitle.replace(suffixPattern, '').trim();
+  return strippedTitle || trimmedSlug;
+};
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
   if (!title || normalizeCohortLabelKey(title) === normalizeCohortLabelKey(slug)) return slug;
+  if (stripTrailingCohortSlug(title, slug) !== title) return title;
   return `${title} (${slug})`;
 };
 
@@ -539,13 +556,7 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
   if (!title) return slug;
-
-  const slugSuffix = `(${slug})`;
-  if (slug && title.toLocaleLowerCase('es').endsWith(slugSuffix.toLocaleLowerCase('es'))) {
-    return title.slice(0, -slugSuffix.length).trim() || slug;
-  }
-
-  return title;
+  return stripTrailingCohortSlug(title, slug);
 };
 
 const humanizeDelimitedSourceLabel = (source: string) => {
