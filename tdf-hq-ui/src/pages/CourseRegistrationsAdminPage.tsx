@@ -407,8 +407,7 @@ const canTransitionToStatus = (
 };
 
 const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
-  normalizeKnownRegistrationStatus(currentStatus) !== 'cancelled'
-  && canTransitionToStatus(currentStatus, 'paid');
+  normalizeKnownRegistrationStatus(currentStatus) === 'pending_payment';
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';

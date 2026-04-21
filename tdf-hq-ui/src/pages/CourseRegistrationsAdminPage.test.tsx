@@ -2831,6 +2831,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps custom-status row menus focused on normalization instead of payment workflow', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'needs_review',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'waitlist',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).not.toBeNull();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Needs Review');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
+      expect(document.body.textContent).not.toContain('Marcar pagado');
+      expect(getMenuItemByText(document.body, 'Marcar pendiente')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('normalizes known backend status variants before showing filters or row actions', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
