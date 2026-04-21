@@ -9,6 +9,7 @@ module TDF.ServerRadio
   , validateRadioTransmissionPublicBase
   , validateRadioTransmissionIngestBase
   , validateRadioTransmissionWhipBase
+  , validateRadioOptionalMetadataField
   , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
@@ -21,7 +22,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isAlphaNum, isDigit, isHexDigit, isSpace)
+import           Data.Char              (isAlphaNum, isControl, isDigit, isHexDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -108,6 +109,30 @@ validateRadioTransmissionIngestBase =
 validateRadioTransmissionWhipBase :: Text -> Either ServerError Text
 validateRadioTransmissionWhipBase =
   validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "http(s)" ["http", "https"]
+
+validateRadioOptionalMetadataField
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateRadioOptionalMetadataField _ _ Nothing = Right Nothing
+validateRadioOptionalMetadataField fieldName maxLength (Just rawValue) =
+  let value = T.strip rawValue
+  in if T.null value
+       then Right Nothing
+       else if T.length value > maxLength
+         then Left err400
+           { errBody =
+               BL.fromStrict . TE.encodeUtf8 $
+                 fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
+           }
+         else if T.any isControl value
+           then Left err400
+             { errBody =
+                 BL.fromStrict . TE.encodeUtf8 $
+                   fieldName <> " must not contain control characters"
+             }
+           else Right (Just value)
 
 validateRadioTransmissionEndpointBase :: Text -> Text -> [Text] -> Text -> Either ServerError Text
 validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes rawBase
@@ -496,9 +521,20 @@ radioServer user =
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
       streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
+      name <- either throwError pure $
+        validateRadioOptionalMetadataField "rsuName" 160 (rsuName payload)
+      country <- either throwError pure $
+        validateRadioOptionalMetadataField "rsuCountry" 80 (rsuCountry payload)
+      genre <- either throwError pure $
+        validateRadioOptionalMetadataField "rsuGenre" 120 (rsuGenre payload)
       now <- liftIO getCurrentTime
       Env{..} <- ask
-      let normalizedPayload = payload { rsuStreamUrl = streamUrl }
+      let normalizedPayload = payload
+            { rsuStreamUrl = streamUrl
+            , rsuName      = name
+            , rsuCountry   = country
+            , rsuGenre     = genre
+            }
       (entity, _) <- liftIO $ flip runSqlPool envPool (saveStream now normalizedPayload)
       pure (toDTO entity)
 
@@ -922,6 +958,12 @@ radioServer user =
     createTransmission RadioTransmissionRequest{..} = do
       now <- liftIO getCurrentTime
       Env{..} <- ask
+      name <- either throwError pure $
+        validateRadioOptionalMetadataField "rtrName" 160 rtrName
+      country <- either throwError pure $
+        validateRadioOptionalMetadataField "rtrCountry" 80 rtrCountry
+      genre <- either throwError pure $
+        validateRadioOptionalMetadataField "rtrGenre" 120 rtrGenre
       streamKey <- liftIO (toText <$> nextRandom)
       listenBaseRaw <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://tdf-hq.fly.dev/live")
       listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
@@ -936,9 +978,9 @@ radioServer user =
           whipUrl = appendPath whipBase streamKey
           upsertPayload = RadioStreamUpsert
             { rsuStreamUrl = publicUrl
-            , rsuName      = rtrName
-            , rsuCountry   = rtrCountry
-            , rsuGenre     = rtrGenre
+            , rsuName      = name
+            , rsuCountry   = country
+            , rsuGenre     = genre
             }
       entity <- liftIO $ flip runSqlPool envPool $ do
         (ent, _) <- saveStream now upsertPayload

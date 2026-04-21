@@ -104,6 +104,7 @@ import TDF.ServerRadio
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
+      validateRadioOptionalMetadataField,
       validateRadioStreamUrl,
       validateRadioTransmissionIngestBase,
       validateRadioTransmissionWhipBase,
@@ -3344,6 +3345,33 @@ main = hspec $ do
             assertInvalid
                 (validateRadioTransmissionWhipBase "https://127.0.0.1/whip")
                 "RADIO_WHIP_BASE must not target localhost or private network addresses"
+
+    describe "validateRadioOptionalMetadataField" $ do
+        it "trims optional radio metadata and treats blank values as omitted" $ do
+            validateRadioOptionalMetadataField "rtrName" 160 Nothing `shouldBe` Right Nothing
+            validateRadioOptionalMetadataField "rtrName" 160 (Just "  TDF Live  ")
+                `shouldBe` Right (Just "TDF Live")
+            validateRadioOptionalMetadataField "rtrName" 160 (Just "   ")
+                `shouldBe` Right Nothing
+
+        it "rejects malformed transmission metadata before generated streams are persisted" $ do
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid radio metadata to be rejected, got " <> show value)
+            assertInvalid
+                (validateRadioOptionalMetadataField
+                    "rtrName"
+                    160
+                    (Just (Data.Text.replicate 161 "a")))
+                "rtrName must be 160 characters or fewer"
+            assertInvalid
+                (validateRadioOptionalMetadataField "rtrGenre" 120 (Just "ambient\ntechno"))
+                "rtrGenre must not contain control characters"
 
     describe "validateRadioImportSources" $ do
         it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do
