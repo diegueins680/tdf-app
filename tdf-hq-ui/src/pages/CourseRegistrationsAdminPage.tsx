@@ -64,6 +64,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir curso';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
@@ -1634,6 +1635,10 @@ export default function CourseRegistrationsAdminPage() {
     && !showFilteredEmptyState
     && !showSingleResultWithOnlyPassiveFilterContext
     && (!regsQuery.isError || hasCustomFilters);
+  const showRegistrationResultsPanel = !showInitialRegistrationLoading
+    && !showInitialFilterGuidance
+    && !showInitialCohortResolutionState
+    && !showInitialCohortErrorState;
   const limitToggleLabel = showAdvancedFilters
     ? 'Ocultar límite'
     : limit !== DEFAULT_LIMIT
@@ -2762,6 +2767,17 @@ export default function CourseRegistrationsAdminPage() {
         </Alert>
       )}
 
+      {showInitialRegistrationLoading && (
+        <Alert
+          severity="info"
+          variant="outlined"
+          icon={<CircularProgress size={18} />}
+          data-testid="course-registration-initial-registration-loading"
+        >
+          {initialRegistrationLoadingMessage}
+        </Alert>
+      )}
+
       {showRegistrationFilterPanel && showInitialFilterGuidance && (
         <Alert
           severity="info"
@@ -3252,8 +3268,8 @@ export default function CourseRegistrationsAdminPage() {
         </Paper>
       )}
 
-      {!showInitialFilterGuidance && !showInitialCohortResolutionState && !showInitialCohortErrorState && (
-        <Paper sx={{ p: 3, borderRadius: 3 }}>
+      {showRegistrationResultsPanel && (
+        <Paper sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-results-panel">
           {regsQuery.isError && (
             <Alert
               severity="error"
@@ -3266,7 +3282,7 @@ export default function CourseRegistrationsAdminPage() {
               No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
             </Alert>
           )}
-          {regsQuery.isLoading && <Typography>Cargando inscripciones…</Typography>}
+          {regsQuery.isLoading && <Typography>{initialRegistrationLoadingMessage}</Typography>}
           {showLocalSearchControl && (
             <Box sx={{ mb: 2 }}>
               <Stack spacing={1} alignItems="flex-start">

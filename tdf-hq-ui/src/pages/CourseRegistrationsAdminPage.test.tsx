@@ -232,6 +232,7 @@ const singleCohortInitialEmptyStateMessage =
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir curso';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage =
@@ -7667,7 +7668,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Cargando inscripciones…');
+      const loadingState = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-initial-registration-loading"]',
+      );
+
+      expect(loadingState?.textContent).toContain(initialRegistrationLoadingMessage);
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
