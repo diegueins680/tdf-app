@@ -2271,6 +2271,9 @@ main = hspec $ do
                 (Just "https://www.paypal.com/checkoutnow?token=ORDER-123&flow=checkout")
                 invalidMessage
             assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?token=https://evil.example/ORDER-123")
+                invalidMessage
+            assertInvalid
                 (Just "https://www.paypal.com/checkoutnow?token=&token=ORDER-123")
                 invalidMessage
             assertInvalid
