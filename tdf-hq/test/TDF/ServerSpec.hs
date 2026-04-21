@@ -207,6 +207,7 @@ import TDF.Server
     , validateCalendarRedirectUri
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
+    , extractChatKitSession
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
     , resolveDrivePublicUrl
@@ -2459,6 +2460,22 @@ spec = describe "TDF.Server helpers" $ do
                 400
                 "workflowId requerido"
                 (resolveWorkflowId Nothing Nothing)
+
+    describe "extractChatKitSession" $ do
+        it "requires a non-empty client secret before returning a session to the frontend" $ do
+            extractChatKitSession
+                (object
+                    [ "client_secret" .= ("  session-secret  " :: Text)
+                    , "expires_after" .= object ["anchor" .= ("created_at" :: Text)]
+                    ])
+                `shouldBe` Just
+                    ( "session-secret"
+                    , Just (object ["anchor" .= ("created_at" :: Text)])
+                    )
+            extractChatKitSession (object ["client_secret" .= ("   " :: Text)])
+                `shouldBe` Nothing
+            extractChatKitSession (object [])
+                `shouldBe` Nothing
 
     describe "DriveUploadForm FromMultipart" $ do
         it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do

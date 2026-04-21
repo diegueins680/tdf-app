@@ -8393,7 +8393,9 @@ nonEmptyText txt =
 
 extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
 extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
-  secret <- o .: "client_secret"
+  rawSecret <- o .: "client_secret"
+  secret <-
+    maybe (fail "client_secret is required") pure (nonEmptyText rawSecret)
   expiresAfter <- o .:? "expires_after"
   pure (secret, expiresAfter)
 
