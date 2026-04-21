@@ -409,13 +409,37 @@ data TicketPurchaseRequestDTO = TicketPurchaseRequestDTO
   , ticketPurchaseBuyerEmail :: Maybe Text
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketPurchaseRequestDTO
-instance FromJSON TicketPurchaseRequestDTO
+instance FromJSON TicketPurchaseRequestDTO where
+  parseJSON = withObject "TicketPurchaseRequestDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "TicketPurchaseRequestDTO"
+      [ "ticketPurchaseTierId"
+      , "ticketPurchaseQuantity"
+      , "ticketPurchaseBuyerPartyId"
+      , "ticketPurchaseBuyerName"
+      , "ticketPurchaseBuyerEmail"
+      ]
+      o
+    TicketPurchaseRequestDTO
+      <$> o .: "ticketPurchaseTierId"
+      <*> o .: "ticketPurchaseQuantity"
+      <*> o .:? "ticketPurchaseBuyerPartyId"
+      <*> o .:? "ticketPurchaseBuyerName"
+      <*> o .:? "ticketPurchaseBuyerEmail"
 
 data TicketOrderStatusUpdateDTO = TicketOrderStatusUpdateDTO
   { ticketOrderStatus :: Text
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketOrderStatusUpdateDTO
-instance FromJSON TicketOrderStatusUpdateDTO
+instance FromJSON TicketOrderStatusUpdateDTO where
+  parseJSON = withObject "TicketOrderStatusUpdateDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "TicketOrderStatusUpdateDTO"
+      [ "ticketOrderStatus"
+      ]
+      o
+    TicketOrderStatusUpdateDTO
+      <$> o .: "ticketOrderStatus"
 
 data TicketCheckInRequestDTO = TicketCheckInRequestDTO
   { ticketCheckInTicketId   :: Maybe Text

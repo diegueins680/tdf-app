@@ -16,6 +16,7 @@ import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import qualified TDF.DTO as DTO
+import qualified TDF.DTO.SocialEventsDTO as SocialEvents
 import TDF.API.Types
     ( BandCreate (..)
     , BandMemberInput (..)
@@ -1222,6 +1223,43 @@ spec = do
                 "{\"email\":\"ada@example.com\",\"code\":\"REF-42\",\"status\":\"claimed\"}"
                 `shouldSatisfy` isLeft
 
+    describe "social event ticket request FromJSON" $ do
+        it "accepts canonical ticket purchase and status update payloads" $ do
+            case decodeTicketPurchase (BL8.concat
+                [ "{\"ticketPurchaseTierId\":\"42\""
+                , ",\"ticketPurchaseQuantity\":2"
+                , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
+                , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\"}"
+                ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket purchase payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketPurchaseTierId payload `shouldBe` "42"
+                    SocialEvents.ticketPurchaseQuantity payload `shouldBe` 2
+                    SocialEvents.ticketPurchaseBuyerPartyId payload `shouldBe` Nothing
+                    SocialEvents.ticketPurchaseBuyerName payload `shouldBe` Just "Ada Lovelace"
+                    SocialEvents.ticketPurchaseBuyerEmail payload `shouldBe` Just "ada@example.com"
+
+            case decodeTicketOrderStatus "{\"ticketOrderStatus\":\"paid\"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket order status payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.ticketOrderStatus payload `shouldBe` "paid"
+
+        it "rejects unexpected ticket keys instead of silently ignoring over-posted fields" $ do
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"status\":\"paid\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketOrderStatus\":\"paid\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"paid\",\"ticketPurchaseBuyerPartyId\":\"7\"}"
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
@@ -1365,6 +1403,10 @@ spec = do
     decodeProgress = eitherDecode
     decodeReferralClaim :: BL8.ByteString -> Either String Academy.ReferralClaimReq
     decodeReferralClaim = eitherDecode
+    decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
+    decodeTicketPurchase = eitherDecode
+    decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO
+    decodeTicketOrderStatus = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
