@@ -3296,6 +3296,8 @@ main = hspec $ do
             assertInvalid "https://radio-.example.com/live"
             assertInvalid "https://radio..example.com/live"
             assertInvalid "https://radio.example.com./live"
+            assertInvalid "https://rádio.example.com/live"
+            assertInvalid "https://[2001:db8::１]/live"
 
         it "rejects single-label hosts that could resolve through private search domains" $ do
             let assertInvalid rawUrl =

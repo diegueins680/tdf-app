@@ -22,7 +22,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isAlphaNum, isControl, isDigit, isHexDigit, isSpace)
+import           Data.Char              (isAlphaNum, isAscii, isControl, isDigit, isHexDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -289,7 +289,8 @@ validateRadioAuthority rawAuthority
           Left err400 { errBody = "streamUrl must include a valid host" }
       | otherwise = validatePublicRadioHost host
       where
-        isValidBracketedHostChar c = isHexDigit c || c == ':' || c == '.'
+        isValidBracketedHostChar c =
+          isAscii c && (isHexDigit c || c == ':' || c == '.')
 
     validateAuthorityHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
@@ -307,7 +308,7 @@ validateRadioAuthority rawAuthority
             || T.isSuffixOf "-" label
             || T.any (not . isValidHostChar) label
 
-        isValidHostChar c = isAlphaNum c || c == '-'
+        isValidHostChar c = isAscii c && (isAlphaNum c || c == '-')
 
     validatePortSuffix suffix
       | T.null suffix = Right ()
