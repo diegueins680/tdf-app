@@ -34,6 +34,7 @@ import TDF.Auth
     , hasSocialInboxAccess
     , hasSocialSyncAccess
     , hasStrictAdminAccess
+    , loadAuthedUser
     , modulesForRoles
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
@@ -2065,6 +2066,44 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 (Just ("tdf_session=" <> tooLongToken))
                 `shouldBe` Left "Auth token must be 512 characters or fewer"
+
+    describe "loadAuthedUser" $
+        it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
+            (expectedPartyId, sessionResult, resetResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Reset Link User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "user@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "session-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-login:user@example.com"
+                    , apiTokenActive = True
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "reset-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-reset:user@example.com"
+                    , apiTokenActive = True
+                    }
+                sessionUser <- loadAuthedUser "session-token"
+                resetUser <- loadAuthedUser "reset-token"
+                pure (partyId, sessionUser, resetUser)
+
+            case sessionResult of
+                Just user -> auPartyId user `shouldBe` expectedPartyId
+                Nothing -> expectationFailure "Expected session token to authenticate"
+            resetResult `shouldBe` Nothing
 
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do

@@ -129,6 +129,7 @@ loadAuthedUser token = do
     Nothing -> pure Nothing
     Just (Entity _ tok)
       | not (apiTokenActive tok) -> pure Nothing
+      | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
           roles <- selectList [PartyRolePartyId ==. apiTokenPartyId tok, PartyRoleActive ==. True] []
           roleList <- ensureDefaultRoles (apiTokenPartyId tok) (map (partyRoleRole . entityVal) roles)
@@ -138,6 +139,11 @@ loadAuthedUser token = do
             , auRoles   = roleList
             , auModules = modules
             }
+
+isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
+isAuthenticatableApiTokenLabel Nothing = True
+isAuthenticatableApiTokenLabel (Just rawLabel) =
+  not ("password-reset:" `T.isPrefixOf` T.strip rawLabel)
 
 lookupUsernameFromToken :: Text -> SqlPersistT IO (Maybe Text)
 lookupUsernameFromToken token = do
