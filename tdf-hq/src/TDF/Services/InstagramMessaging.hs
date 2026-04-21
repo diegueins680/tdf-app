@@ -7,7 +7,7 @@ module TDF.Services.InstagramMessaging
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
 import           Data.Char (isControl, isSpace)
-import           Data.Maybe (catMaybes, isJust, maybeToList)
+import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -42,9 +42,9 @@ sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId b
     Left err -> pure (Left err)
     Right (cleanRecipientId, cleanBody) ->
       case buildAttempts cfg mTokenOverride mAccountIdOverride of
-        [] ->
-          pure (Left (missingMessagingContextError cfg mTokenOverride mAccountIdOverride))
-        attempts -> do
+        Left err ->
+          pure (Left err)
+        Right attempts -> do
           manager <- newManager tlsManagerSettings
           runAttempts manager cleanRecipientId cleanBody attempts []
 
@@ -74,49 +74,62 @@ validateInstagramRecipientId rawRecipientId =
       | otherwise ->
           Right recipientId
 
-buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> [InstagramAttempt]
+buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> Either Text [InstagramAttempt]
 buildAttempts cfg mTokenOverride mAccountIdOverride =
   let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-      connectedSource =
-        buildSource
+  in do
+    source <-
+      if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+        then buildSource
           "connected asset token"
-          (mTokenOverride >>= nonEmptyText)
-          (mAccountIdOverride >>= nonEmptyText)
-      configuredSource =
-        buildSource
+          "Instagram connected asset token"
+          "Instagram connected asset account id"
+          mTokenOverride
+          mAccountIdOverride
+        else buildSource
           "configured fallback token"
-          (instagramMessagingToken cfg >>= nonEmptyText)
-          (instagramMessagingAccountId cfg >>= nonEmptyText)
-      sources =
-        nubSources $
-          if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
-            then maybeToList connectedSource
-            else catMaybes [connectedSource, configuredSource]
-  in nubAttempts (concatMap (sourceAttempts base) sources)
+          "INSTAGRAM_MESSAGING_TOKEN"
+          "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+          (instagramMessagingToken cfg)
+          (instagramMessagingAccountId cfg)
+    pure (nubAttempts (sourceAttempts base source))
   where
-    buildSource label mToken mAccountId =
-      InstagramAttemptSource label <$> mToken <*> mAccountId
+    buildSource attemptLabel tokenLabel accountIdLabel mToken mAccountId =
+      InstagramAttemptSource attemptLabel
+        <$> validateInstagramBearerToken tokenLabel mToken
+        <*> validateInstagramAccountId accountIdLabel mAccountId
 
-missingMessagingContextError :: AppConfig -> Maybe Text -> Maybe Text -> Text
-missingMessagingContextError cfg mTokenOverride mAccountIdOverride
-  | hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
-      case (mTokenOverride >>= nonEmptyText, mAccountIdOverride >>= nonEmptyText) of
-        (Nothing, _) -> "Instagram connected asset token no configurado"
-        (_, Nothing) -> "Instagram connected asset account id no configurado"
-        (Just _, Just _) -> "Instagram messaging context no configurado"
-  | isJust (instagramMessagingToken cfg >>= nonEmptyText) =
-      "INSTAGRAM_MESSAGING_ACCOUNT_ID no configurado"
-  | otherwise =
-      "INSTAGRAM_MESSAGING_TOKEN no configurado"
+validateInstagramBearerToken :: Text -> Maybe Text -> Either Text Text
+validateInstagramBearerToken label mRawToken =
+  case mRawToken >>= nonEmptyText of
+    Nothing ->
+      Left (label <> " no configurado")
+    Just token
+      | T.any invalidHeaderValueChar token ->
+          Left (label <> " must not contain whitespace or control characters")
+      | otherwise ->
+          Right token
+
+validateInstagramAccountId :: Text -> Maybe Text -> Either Text Text
+validateInstagramAccountId label mRawAccountId =
+  case mRawAccountId >>= nonEmptyText of
+    Nothing ->
+      Left (label <> " no configurado")
+    Just accountId
+      | T.length accountId > maxInstagramAccountIdChars
+          || T.any (not . isGraphNodeIdChar) accountId ->
+          Left
+            ( label
+                <> " must be a Graph node id using only ASCII letters, numbers, "
+                <> "'.', '_' or '-' (128 chars max)"
+            )
+      | otherwise ->
+          Right accountId
 
 hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
 hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
   isJust (mTokenOverride >>= nonEmptyText)
     || isJust (mAccountIdOverride >>= nonEmptyText)
-
-nubSources :: [InstagramAttemptSource] -> [InstagramAttemptSource]
-nubSources =
-  nubByText (\src -> iasLabel src <> "|" <> iasToken src <> "|" <> iasAccountId src)
 
 nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
 nubAttempts =
@@ -139,6 +152,19 @@ sourceAttempts base source =
       (iasToken source)
       (base <> "/" <> iasAccountId source <> "/messages")
   ]
+
+invalidHeaderValueChar :: Char -> Bool
+invalidHeaderValueChar ch = isSpace ch || isControl ch
+
+isGraphNodeIdChar :: Char -> Bool
+isGraphNodeIdChar ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
+    || ch `elem` ("._-" :: String)
+
+maxInstagramAccountIdChars :: Int
+maxInstagramAccountIdChars = 128
 
 runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
 runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")

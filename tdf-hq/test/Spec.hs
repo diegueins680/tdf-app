@@ -1510,6 +1510,34 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "Instagram connected asset token no configurado"
 
+        it "rejects malformed targeted Instagram context instead of falling back to configured credentials" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected token")
+                        (Just "biz-account")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left
+                            "Instagram connected asset token must not contain whitespace or control characters"
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected-token")
+                        (Just "biz/account")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left
+                            ( "Instagram connected asset account id must be a Graph node id using only ASCII "
+                                <> "letters, numbers, '.', '_' or '-' (128 chars max)"
+                            )
+
         it "requires an account id before building Instagram messaging send attempts" $ do
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)
