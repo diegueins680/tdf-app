@@ -14,7 +14,7 @@ import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
+import Servant (NoContent, ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
 import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
@@ -51,6 +51,7 @@ import TDF.Trials.Server
   , createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
+  , validateAvailabilityIdInput
   , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
   , validatePurchaseInput
@@ -981,6 +982,20 @@ spec = do
       assertRejected (-3)
 
   describe "private trial availability upserts" $ do
+    it "rejects non-positive availability ids before querying for deletion targets" $ do
+      let assertRejected rawAvailabilityId = do
+            result <- try $ runTrialsInMemory $
+              privateAvailabilityDeleteHandler rawAvailabilityId
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "availabilityId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid availability ids to be rejected"
+      validateAvailabilityIdInput 7 `shouldBe` Right 7
+      assertRejected 0
+      assertRejected (-3)
+
     it "rejects non-room resources instead of publishing impossible availability slots" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -1870,6 +1885,11 @@ privateAvailabilityUpsertHandler :: TrialAvailabilityUpsert -> SqlPersistT IO Tr
 privateAvailabilityUpsertHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> availabilityUpsertH :<|> _ = privateTrialsServer adminUser
   in availabilityUpsertH
+
+privateAvailabilityDeleteHandler :: Int -> SqlPersistT IO NoContent
+privateAvailabilityDeleteHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> availabilityDeleteH :<|> _ = privateTrialsServer adminUser
+  in availabilityDeleteH
 
 privateTeacherClassesHandler
   :: Int

@@ -628,6 +628,10 @@ validateAvailabilityListFilters rawSubjectId mFrom mTo = do
     _ -> pure ()
   Right (subjectId, mFrom, mTo)
 
+validateAvailabilityIdInput :: Int -> Either ServerError Int
+validateAvailabilityIdInput =
+  validatePositiveIntField "availabilityId"
+
 validateTeacherClassesFilters
   :: Int
   -> Maybe Int
@@ -1278,7 +1282,9 @@ privateTrialsServer user@AuthedUser{..} =
     availabilityDeleteH :: Int -> AppM NoContent
     availabilityDeleteH availabilityIdInt = do
       ensureSchoolAccess
-      let availabilityKey = intKey availabilityIdInt :: Key TeacherAvailability
+      availabilityIdValue <-
+        either (liftIO . throwIO) pure (validateAvailabilityIdInput availabilityIdInt)
+      let availabilityKey = intKey availabilityIdValue :: Key TeacherAvailability
       mEntity <- get availabilityKey
       case mEntity of
         Nothing -> liftIO $ throwIO err404
