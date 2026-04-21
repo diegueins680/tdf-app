@@ -1226,12 +1226,13 @@ export default function SocialInboxPage() {
       .filter((item): item is RealFilterKey => item !== 'all' && filterCounts[item] > 0);
     return realFilters.length === 1 ? (realFilters[0] ?? null) : null;
   }, [filterCounts]);
-  const showSingleFilterSummary = Boolean(singleVisibleFilter) && (filter === 'all' || filter === singleVisibleFilter);
+  const displayFilter = singleVisibleFilter ?? filter;
+  const showSingleFilterSummary = Boolean(singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
-  const showChannelStatusChips = filter === 'all' && !showSingleFilterSummary;
-  const instagramMessages = useMemo(() => selectMessages(instagramStats, filter), [instagramStats, filter]);
-  const facebookMessages = useMemo(() => selectMessages(facebookStats, filter), [facebookStats, filter]);
-  const whatsappMessages = useMemo(() => selectMessages(whatsappStats, filter), [whatsappStats, filter]);
+  const showChannelStatusChips = displayFilter === 'all' && !showSingleFilterSummary;
+  const instagramMessages = useMemo(() => selectMessages(instagramStats, displayFilter), [instagramStats, displayFilter]);
+  const facebookMessages = useMemo(() => selectMessages(facebookStats, displayFilter), [facebookStats, displayFilter]);
+  const whatsappMessages = useMemo(() => selectMessages(whatsappStats, displayFilter), [whatsappStats, displayFilter]);
   const channelPanels = useMemo(
     () => [
       {
@@ -1295,13 +1296,13 @@ export default function SocialInboxPage() {
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
   const showManualRefresh = !reviewMode && !showUnifiedEmptyState;
   const showHeaderControls = showLimitControl || showManualRefresh;
-  const activeFilterLabel = getFilterLabel(filter, reviewMode);
+  const activeFilterLabel = getFilterLabel(displayFilter, reviewMode);
   const showStatusFilterEmptyState =
     allChannelsLoaded
     && !hasChannelLoadErrors
-    && filter !== 'all'
+    && displayFilter !== 'all'
     && filterCounts.all > 0
-    && filterCounts[filter] === 0;
+    && filterCounts[displayFilter] === 0;
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();

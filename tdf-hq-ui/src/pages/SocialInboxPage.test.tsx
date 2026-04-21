@@ -671,7 +671,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('replaces empty channel tables with one empty-filter notice when the default filter has no messages', async () => {
+  it('shows the only available status immediately when the default filter has no messages', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage({
         repliedAt: '2030-01-03T03:04:05.000Z',
@@ -684,18 +684,26 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(queryFilterChip(container, 'All')).not.toBeNull();
-      expect(queryFilterChip(container, 'Pending')).not.toBeNull();
-      expect(queryFilterChip(container, 'Replied')).not.toBeNull();
-      expect(queryFilterChip(container, 'Failed')).toBeNull();
-      expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
+      expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(queryFilterChip(container, 'All')).toBeNull();
+      expect(queryFilterChip(container, 'Pending')).toBeNull();
+      expect(queryFilterChip(container, 'Replied')).toBeNull();
+      expect(container.textContent).toContain('Status available');
+      expect(container.textContent).toContain('Replied');
+      expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
+      expect(container.querySelectorAll('table')).toHaveLength(1);
+      expect(hasTableHeader(container, 'Replied')).toBe(true);
+      expect(hasTableHeader(container, 'Reply / Error')).toBe(true);
+      expect(container.textContent).toContain('Ada');
+      expect(container.textContent).toContain('Done.');
       expect(container.textContent).toContain(
+        'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
+      );
+      expect(container.textContent).not.toContain('No messages for this filter.');
+      expect(container.textContent).not.toContain(
         'No messages match Pending in this view. Use All or a status with a count to see existing inbound messages.',
       );
-      expect(container.querySelectorAll('table')).toHaveLength(0);
-      expect(container.textContent).not.toContain('No messages for this filter.');
-      expect(container.textContent).not.toContain('Showing only channels with messages in this view.');
-      expect(container.textContent).not.toContain('Status available');
+      expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
     });
 
     await cleanup();
