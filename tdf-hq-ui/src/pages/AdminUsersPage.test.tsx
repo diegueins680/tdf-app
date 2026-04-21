@@ -1182,19 +1182,20 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
-        expect(
-          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
-        ).toBe('1 usuario inactivo');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
-        expect(buttonText(showInactiveListButton)).toBe('Ver lista');
-        expect(countExactText(container, 'Ver 1 usuario inactivo')).toBe(0);
+        expect(buttonText(showInactiveListButton)).toBe('Ver 1 usuario inactivo');
+        expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(true);
       });
 
       await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
 
       await waitForExpectation(() => {
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('1 usuario inactivo');
         expect(getRowByUserId(container, 102).textContent).not.toContain('Inactivo');
         const hideInactiveListButton = getButtonsByText(container, 'Ocultar 1 usuario inactivo')[0]!;
         expect(hideInactiveListButton.getAttribute('aria-expanded')).toBe('true');
@@ -1737,21 +1738,22 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
-        expect(
-          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
-        ).toBe('2 usuarios inactivos');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!;
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
-        expect(buttonText(showInactiveListButton)).toBe('Ver lista');
-        expect(countExactText(container, 'Ver 2 usuarios inactivos')).toBe(0);
+        expect(buttonText(showInactiveListButton)).toBe('Ver 2 usuarios inactivos');
+        expect(hasExactText(container, 'Ver 2 usuarios inactivos')).toBe(true);
       });
 
       await clickButton(getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!);
 
       await waitForExpectation(() => {
         expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('2 usuarios inactivos');
         expect(getRowByUserId(container, 203).textContent).not.toContain('Inactivo');
         expect(getRowByUserId(container, 204).textContent).not.toContain('Inactivo');
         const hideInactiveListButton = getButtonsByText(container, 'Ocultar 2 usuarios inactivos')[0]!;

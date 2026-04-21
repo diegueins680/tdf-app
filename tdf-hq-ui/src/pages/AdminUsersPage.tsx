@@ -788,13 +788,15 @@ export default function AdminUsersPage() {
                       justifyContent="space-between"
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
                     >
-                      <Typography
-                        data-testid="admin-users-inactive-group-label"
-                        variant="overline"
-                        color="text.secondary"
-                      >
-                        {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
-                      </Typography>
+                      {showInactiveUsersList && (
+                        <Typography
+                          data-testid="admin-users-inactive-group-label"
+                          variant="overline"
+                          color="text.secondary"
+                        >
+                          {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
+                        </Typography>
+                      )}
                       {shouldCollapseInactiveUsers && (
                         <Button
                           size="small"
@@ -808,7 +810,7 @@ export default function AdminUsersPage() {
                         >
                           {showInactiveUsers
                             ? 'Ocultar lista'
-                            : 'Ver lista'}
+                            : `Ver ${inactiveUsersToggleTarget}`}
                         </Button>
                       )}
                     </Stack>
