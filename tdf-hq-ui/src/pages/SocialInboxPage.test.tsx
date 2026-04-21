@@ -250,6 +250,7 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain(
         'No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.',
       );
+      expect(container.textContent).not.toContain('Proof order: open the inbound thread');
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Select asset in Instagram setup').getAttribute('href')).toBe('/social/instagram?review=1');
       expect(container.textContent).not.toContain('Recording checklist');
@@ -280,6 +281,7 @@ describe('SocialInboxPage', () => {
         'Step 2/3: send a live reply from app UI, then show the same message in native client.',
       );
       expect(container.textContent).toContain('Review run: Facebook Login');
+      expect(container.textContent).toContain('Proof order: open the inbound thread');
       expect(container.textContent).toContain('Recording checklist');
       expect(container.textContent).toContain(
         'Selected professional/business Instagram messaging asset: TDF Review Page (Page ID: page-1',

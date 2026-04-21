@@ -1404,10 +1404,12 @@ export default function SocialInboxPage() {
                   Review run: {reviewProvider === 'instagram' ? 'Instagram Login' : 'Facebook Login'}
                 </Typography>
                 <Typography variant="body2">Requested scopes: {reviewScopes.join(', ')}</Typography>
-                <Typography variant="body2">
-                  Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
-                  Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
-                </Typography>
+                {activeAsset && (
+                  <Typography variant="body2">
+                    Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
+                    Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
+                  </Typography>
+                )}
               </Stack>
             </Alert>
             {activeAsset ? (
