@@ -9580,11 +9580,11 @@ instance FromJSON PayPalCreateResponse where
       <*> o .:? "links" .!= []
 
 data PayPalToken = PayPalToken
-  { payPalAccessToken :: Text
+  { payPalAccessToken :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON PayPalToken where
   parseJSON = withObject "PayPalToken" $ \o ->
-    PayPalToken <$> o .: "access_token"
+    PayPalToken <$> o .:? "access_token"
 
 data PayPalCaptureOutcome = PayPalCaptureOutcome
   { pcoStatus :: Text
@@ -9658,7 +9658,24 @@ paypalAccessToken manager cid sec baseUrl = do
   token <- case eitherDecode (responseBody resp) of
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
     Right tok -> pure tok
-  pure (payPalAccessToken token)
+  either throwError pure $
+    validatePayPalAccessTokenField (payPalAccessToken token)
+
+validatePayPalAccessTokenField :: Maybe Text -> Either ServerError Text
+validatePayPalAccessTokenField Nothing =
+  Left err502 { errBody = "PayPal token response did not include an access token" }
+validatePayPalAccessTokenField (Just rawToken) =
+  case normalizeOptionalInput (Just rawToken) of
+    Nothing ->
+      Left err502 { errBody = "PayPal token response access token cannot be blank" }
+    Just token
+      | T.any (\ch -> isControl ch || isSpace ch) token ->
+          Left err502
+            { errBody =
+                "PayPal token response access token must not contain control characters or whitespace"
+            }
+      | otherwise ->
+          Right token
 
 createPaypalOrderRemote
   :: Manager

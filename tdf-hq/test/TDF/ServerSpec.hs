@@ -151,6 +151,7 @@ import TDF.Server
     , validateDatafastOrderResourcePath
     , resolvePaypalBaseUrl
     , validatePayPalCredential
+    , validatePayPalAccessTokenField
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -3736,6 +3737,31 @@ spec = describe "TDF.Server helpers" $ do
                 "PAYPAL_CLIENT_SECRET"
                 (Just "secret\nwith-break")
                 "PAYPAL_CLIENT_SECRET must not contain control characters"
+
+    describe "validatePayPalAccessTokenField" $ do
+        it "normalizes PayPal access tokens before Bearer auth headers are built" $
+            validatePayPalAccessTokenField (Just " access-token_123 ")
+                `shouldBe` Right "access-token_123"
+
+        it "rejects blank or header-unsafe PayPal access tokens from upstream responses" $ do
+            let assertInvalid rawToken expectedMessage =
+                    case validatePayPalAccessTokenField rawToken of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right accessToken ->
+                            expectationFailure
+                                ( "Expected invalid PayPal access token to be rejected, got: "
+                                    <> show accessToken
+                                )
+            assertInvalid Nothing "PayPal token response did not include an access token"
+            assertInvalid (Just "   ") "PayPal token response access token cannot be blank"
+            assertInvalid
+                (Just "token\nInjected: value")
+                "PayPal token response access token must not contain control characters"
+            assertInvalid
+                (Just "token with spaces")
+                "PayPal token response access token must not contain control characters"
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do
