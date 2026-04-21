@@ -53,6 +53,7 @@ import TDF.ServerAdmin (
     validateSocialUnholdLookup,
     validateAdminWhatsAppSendMode,
     validateAdminEmailSubject,
+    validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
     validateAdminLogsLimit,
     validateUserCommunicationHistoryLimit,
@@ -103,6 +104,26 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Subject must be a single line"
                 (validateAdminEmailSubject "Launch\r\nBcc: ops@example.com")
+
+    describe "validateAdminEmailCtaUrl" $ do
+        it "trims valid http(s) CTA URLs and treats blanks as omitted" $ do
+            validateAdminEmailCtaUrl Nothing `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just "   ") `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just " https://example.com/course?utm=admin ")
+                `shouldBe` Right (Just "https://example.com/course?utm=admin")
+
+        it "rejects unsafe or ambiguous CTA URLs before email rendering" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin CTA URL, got " <> show value)
+            assertInvalid "http(s)" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
+            assertInvalid "include a host" (validateAdminEmailCtaUrl (Just "https:///course"))
+            assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
+            assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
+            assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
 
     describe "normalizeAdminUsername" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do

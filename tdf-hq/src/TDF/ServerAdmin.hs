@@ -19,6 +19,7 @@ module TDF.ServerAdmin
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
   , validateAdminEmailSubject
+  , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   , validateAdminPassword
@@ -207,6 +208,7 @@ adminServer user =
         (normalizeAdminEmailAddress etrEmail)
       subj <- either throwError pure $
         maybe (Right "Correo de prueba TDF") validateAdminEmailSubject etrSubject
+      ctaUrl <- either throwError pure (validateAdminEmailCtaUrl etrCtaUrl)
       let emailSvc = EmailSvc.mkEmailService cfg
           body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
           targetName = fromMaybe "" etrName
@@ -219,7 +221,7 @@ adminServer user =
           targetEmail
           subj
           body
-          etrCtaUrl
+          ctaUrl
       case sendResult of
         Left (err :: SomeException) -> do
           let msg = "[Admin][EmailTest] Failed for " <> targetEmail <> ": " <> T.pack (show err)
@@ -1141,6 +1143,35 @@ validateAdminEmailSubject rawSubject
   where
     subject = T.strip rawSubject
     isEmailHeaderLineBreak c = c == '\r' || c == '\n'
+
+validateAdminEmailCtaUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdminEmailCtaUrl Nothing = Right Nothing
+validateAdminEmailCtaUrl (Just rawUrl)
+  | T.null url =
+      Right Nothing
+  | T.length url > 2048 =
+      Left err400 { errBody = "CTA URL must be 2048 characters or fewer" }
+  | T.any isControl url =
+      Left err400 { errBody = "CTA URL must not contain control characters" }
+  | T.any isSpace url =
+      Left err400 { errBody = "CTA URL must not contain whitespace" }
+  | Nothing <- mRemainder =
+      Left err400 { errBody = "CTA URL must be http(s)" }
+  | T.null authority =
+      Left err400 { errBody = "CTA URL must include a host" }
+  | T.any (== '@') authority =
+      Left err400 { errBody = "CTA URL must not include user info" }
+  | otherwise =
+      Right (Just url)
+  where
+    url = T.strip rawUrl
+    lowerUrl = T.toLower url
+    mRemainder
+      | "https://" `T.isPrefixOf` lowerUrl = Just (T.drop 8 url)
+      | "http://" `T.isPrefixOf` lowerUrl = Just (T.drop 7 url)
+      | otherwise = Nothing
+    authority =
+      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
 
 validateAdminEmailBroadcastLimit :: Maybe Int -> Either ServerError (Maybe Int)
 validateAdminEmailBroadcastLimit Nothing = Right Nothing
