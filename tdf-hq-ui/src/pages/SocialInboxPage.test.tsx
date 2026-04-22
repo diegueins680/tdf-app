@@ -263,7 +263,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('keeps one setup CTA after an asset is already selected', async () => {
+  it('keeps selected-asset empty review runs focused on the next inbound message', async () => {
     getMetaReviewAssetSelectionMock.mockReturnValue({
       pageId: 'page-1',
       pageName: 'TDF Review Page',
@@ -278,11 +278,11 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Step 2/3: send a live reply from app UI, then show the same message in native client.',
+        'Step 1/3 complete: send one inbound test message to the selected professional/business account.',
       );
       expect(container.textContent).toContain('Review run: Facebook Login');
-      expect(container.textContent).toContain('Proof order: open the inbound thread');
-      expect(container.textContent).toContain('Recording checklist');
+      expect(container.textContent).not.toContain('Proof order: open the inbound thread');
+      expect(container.textContent).not.toContain('Recording checklist');
       expect(container.textContent).toContain(
         'Selected professional/business Instagram messaging asset: TDF Review Page (Page ID: page-1',
       );
@@ -292,13 +292,13 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain(
         'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.',
       );
-      expect(container.textContent).toContain(
+      expect(container.textContent).not.toContain(
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       );
       expect(countTextOccurrences(
         container,
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
-      )).toBe(1);
+      )).toBe(0);
       expect(container.textContent).not.toContain(
         'The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
       );

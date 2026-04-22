@@ -1326,11 +1326,12 @@ export default function SocialInboxPage() {
     : [];
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
   const hasChannelLoadErrors = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
+  const hasAnyInboundMessage = filterCounts.all > 0;
   const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const showChannelErrorOnlyState = allChannelsLoaded && hasChannelLoadErrors && filterCounts.all === 0;
   const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
-  const showReviewChecklist = reviewMode && Boolean(activeAsset);
+  const showReviewMessageProofGuidance = reviewMode && Boolean(activeAsset) && hasAnyInboundMessage;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
@@ -1400,7 +1401,9 @@ export default function SocialInboxPage() {
           <Typography variant="body2" color="text.secondary">
             {reviewMode
               ? activeAsset
-                ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+                ? hasAnyInboundMessage
+                  ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+                  : 'Step 1/3 complete: send one inbound test message to the selected professional/business account.'
                 : 'Step 1/3: select the exact Page + professional/business account for this review run.'
               : 'Auto respuestas registradas por el cron diario.'}
           </Typography>
@@ -1445,7 +1448,7 @@ export default function SocialInboxPage() {
                   Review run: {reviewProvider === 'instagram' ? 'Instagram Login' : 'Facebook Login'}
                 </Typography>
                 <Typography variant="body2">Requested scopes: {reviewScopes.join(', ')}</Typography>
-                {activeAsset && (
+                {showReviewMessageProofGuidance && (
                   <Typography variant="body2">
                     Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
                     Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
@@ -1467,7 +1470,7 @@ export default function SocialInboxPage() {
             <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
               {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
             </Button>
-            {showReviewChecklist && (
+            {showReviewMessageProofGuidance && (
               <>
                 <Typography variant="subtitle1" fontWeight={700}>
                   Recording checklist
