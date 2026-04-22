@@ -912,14 +912,17 @@ export default function AdminConsolePage() {
         : null
     );
   const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);
+  const canShowFirstRunAdditionalModules =
+    showGettingStartedGuidance && showCompactHealthyServiceSummary;
   const shouldShowAdditionalModuleCards =
-    consoleCards.length > 0 && (!showGettingStartedGuidance || showFirstRunAdditionalModules);
+    consoleCards.length > 0
+    && (!showGettingStartedGuidance || (canShowFirstRunAdditionalModules && showFirstRunAdditionalModules));
   const showFirstRunAdditionalModulesShowAction =
-    showGettingStartedGuidance
+    canShowFirstRunAdditionalModules
     && consoleCards.length > 0
     && !shouldShowAdditionalModuleCards;
   const showFirstRunAdditionalModulesHideAction =
-    showGettingStartedGuidance
+    canShowFirstRunAdditionalModules
     && shouldShowAdditionalModuleCards;
   const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
   const standaloneAdditionalModulesActionLabel = formatStandaloneAdditionalModulesActionLabel(consoleCards);

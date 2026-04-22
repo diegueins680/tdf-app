@@ -256,6 +256,42 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('keeps optional fallback modules hidden until first-run service health is ready', async () => {
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver Tokens de servicio/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos opcionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+  });
+
   it('keeps the header refresh action available when first-run data is empty because a query failed', async () => {
     mockHealthFetch.mockRejectedValue(new Error('Sin conexión'));
 
