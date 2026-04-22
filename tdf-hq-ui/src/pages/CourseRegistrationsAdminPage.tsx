@@ -1640,7 +1640,10 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceLimitSummary,
     combinedSingleChoiceCountSummary,
   ].filter(Boolean).join(' ');
-  const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary && (singleAvailableCohortLabel || showSingleStatusSummary)
+  const showSingleStatusSummaryBlock = showSingleStatusSummary
+    && !(showCohortFilterUnavailableSummary && loadedRegistrationCount === 1);
+  const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary
+    && (singleAvailableCohortLabel || showSingleStatusSummaryBlock)
     ? summarizedVisibleSourceLabel
     : '';
   const resetViewLabel = getResetViewLabel({
@@ -1753,7 +1756,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasSlugFilter
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
-  const showSingleStatusSummaryInPageChrome = showSingleStatusSummary && !showSingleResultWithOnlyPassiveFilterContext;
+  const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock && !showSingleResultWithOnlyPassiveFilterContext;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInFilterStrip
     || showActiveStatusFilterSummary
@@ -1778,7 +1781,7 @@ export default function CourseRegistrationsAdminPage() {
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
     const statusAlreadyExplained = Boolean(
       combinedSingleChoiceSummary
-      || showSingleStatusSummary
+      || showSingleStatusSummaryBlock
       || statusAlreadyVisibleInFilterStrip
       || showActiveStatusFilterSummary,
     );
@@ -1792,7 +1795,7 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceSummary,
     combinedSingleChoiceLimitSummary,
     limit,
-    showSingleStatusSummary,
+    showSingleStatusSummaryBlock,
     showActiveStatusFilterSummary,
     singleAvailableCohortLabel,
     statusAlreadyVisibleInFilterStrip,
@@ -1825,7 +1828,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showEmptyLocalSearchResults,
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
-    && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummary);
+    && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showEmptyLocalSearchResults
     && !showInlineSummaryResetAction
@@ -1927,7 +1930,7 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
     showAdvancedLimitControl,
-    showSingleStatusSummary,
+    showSingleStatusSummary: showSingleStatusSummaryBlock,
     singleAvailableCohortLabel,
   });
   const statusFilterHelperText = statusFilterCanSelfReset
@@ -3249,7 +3252,7 @@ export default function CourseRegistrationsAdminPage() {
                     )}
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    {showSingleStatusSummary && singleVisibleStatus ? (
+                    {showSingleStatusSummaryBlock && singleVisibleStatus ? (
                       <Stack
                         data-testid="course-registration-single-status-summary"
                         spacing={0.5}

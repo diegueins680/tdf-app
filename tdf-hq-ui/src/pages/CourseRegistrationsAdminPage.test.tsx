@@ -8279,11 +8279,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Estado disponible');
       expect(getButtonByText(cohortFallback!, 'Reintentar cohortes')).toBeTruthy();
       expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
     });
 
     await act(async () => {
