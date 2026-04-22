@@ -479,7 +479,10 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     return resolveSenderName(msg);
   }, [msg]);
 
-  const canGenerate = Boolean(channel && msg && (msg.text ?? '').trim().length > 0 && !aiLoading && !sendLoading);
+  const rawBody = (msg?.text ?? '').trim();
+  const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
+  const showAiDraftControls = showBody;
+  const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
   const hasReplyDraft = replyDraft.trim().length > 0;
 
@@ -506,13 +509,12 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
 
   const handleGenerate = async () => {
     if (!channel || !msg) return;
-    const body = msg.text ?? '';
-    if (!body.trim()) return;
+    if (!showAiDraftControls) return;
     setAiLoading(true);
     setError(null);
     setNotice(null);
     try {
-      const suggestion = await SocialInboxAPI.suggestReply(channel, body, hint);
+      const suggestion = await SocialInboxAPI.suggestReply(channel, rawBody, hint);
       setReplyDraft(suggestion);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar una respuesta.');
@@ -603,8 +605,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const sendErrorSummary = useMemo(() => summarizeReplyError(error, reviewMode), [error, reviewMode]);
   const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
   const messageAsset = useMemo(() => extractMetaMessageAsset(msg?.metadata), [msg?.metadata]);
-  const rawBody = (msg?.text ?? '').trim();
-  const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
   const nativeClientUrl = msg && channel ? resolveNativeClientUrl(channel, msg.senderId) : '';
   const markAttachmentFailed = (url: string) => {
     setFailedAttachmentUrls((prev) => (prev.includes(url) ? prev : [...prev, url]));
@@ -896,7 +896,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
 
                 {reviewMode && (
                   <Alert severity="info" variant="outlined">
-                    Explain each button while recording: AI draft (optional), message textarea, and Send action.
+                    {showAiDraftControls
+                      ? 'Explain each button while recording: AI draft (optional), message textarea, and Send action.'
+                      : 'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.'}
                   </Alert>
                 )}
 
@@ -962,29 +964,35 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   </Alert>
                 )}
 
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField
-                    label={reviewMode ? 'AI instructions (optional)' : 'Instrucciones para IA (opcional)'}
-                    placeholder={
-                      reviewMode
-                        ? 'ex. Keep it concise and offer signup link.'
-                        : 'ej. Responder breve y ofrecer link de inscripción.'
-                    }
-                    value={hint}
-                    onChange={(e) => setHint(e.target.value)}
-                    disabled={aiLoading || sendLoading}
-                    fullWidth
-                  />
-                  <Button
-                    variant="contained"
-                    startIcon={<AutoFixHighIcon />}
-                    onClick={() => void handleGenerate()}
-                    disabled={!canGenerate}
-                    sx={{ alignSelf: { xs: 'stretch', md: 'flex-start' }, minWidth: 200 }}
-                  >
-                    {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
-                  </Button>
-                </Stack>
+                {showAiDraftControls ? (
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                    <TextField
+                      label={reviewMode ? 'AI instructions (optional)' : 'Instrucciones para IA (opcional)'}
+                      placeholder={
+                        reviewMode
+                          ? 'ex. Keep it concise and offer signup link.'
+                          : 'ej. Responder breve y ofrecer link de inscripción.'
+                      }
+                      value={hint}
+                      onChange={(e) => setHint(e.target.value)}
+                      disabled={aiLoading || sendLoading}
+                      fullWidth
+                    />
+                    <Button
+                      variant="contained"
+                      startIcon={<AutoFixHighIcon />}
+                      onClick={() => void handleGenerate()}
+                      disabled={!canGenerate}
+                      sx={{ alignSelf: { xs: 'stretch', md: 'flex-start' }, minWidth: 200 }}
+                    >
+                      {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
+                    </Button>
+                  </Stack>
+                ) : !reviewMode ? (
+                  <Alert severity="info" variant="outlined">
+                    La IA se oculta porque este mensaje no tiene texto. Revisa el adjunto, escribe la respuesta y enviala.
+                  </Alert>
+                ) : null}
 
                 <TextField
                   label={replyInputLabel}

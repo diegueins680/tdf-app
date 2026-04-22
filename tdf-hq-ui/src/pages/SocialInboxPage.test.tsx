@@ -696,6 +696,38 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('hides the AI draft controls for attachment-only review messages', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        text: '[attachment]',
+        metadata: JSON.stringify({
+          attachments: [
+            {
+              type: 'image',
+              payload: { url: 'https://example.com/proof.jpg' },
+            },
+          ],
+        }),
+      }),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Attachments');
+      expect(document.body.textContent).toContain(
+        'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.',
+      );
+      expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
+      expect(hasLabel(document.body, 'Outgoing message')).toBe(true);
+      expect(countButtonsByText(document.body, 'Generate with AI')).toBe(0);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('hides reply draft utilities until there is draft text to copy or clear', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
