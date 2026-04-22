@@ -2081,7 +2081,7 @@ extractMetaInbound payload =
             , fromMaybe "" meta
             ]
           fallbackId = senderId <> "-" <> toHashText fallbackBase
-          externalId = fromMaybe fallbackId (stripNonEmptyText mMid)
+          externalId = fromMaybe fallbackId (normalizeMetaWebhookExternalId mMid)
       pure (MetaInboundMessage IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = senderId
@@ -2096,7 +2096,7 @@ extractMetaInbound payload =
 
     buildDeleted rawSenderId senderName mRecipientId mEntryId mMid mReferral _mTs = do
       senderId <- normalizeMetaWebhookActorId rawSenderId
-      externalId <- stripNonEmptyText mMid
+      externalId <- normalizeMetaWebhookExternalId mMid
       let (_, _, _, _, refMeta) = toReferralMeta mReferral
           cleanRecipientId = mRecipientId >>= normalizeMetaWebhookActorId
           meta = encodeMeta refMeta senderName cleanRecipientId mEntryId ["event" .= ("message_deleted" :: Text)]
@@ -2726,6 +2726,11 @@ normalizeMetaWebhookActorId :: Text -> Maybe Text
 normalizeMetaWebhookActorId rawActorId =
   stripNonEmptyText (Just rawActorId) >>= \actorId ->
     either (const Nothing) Just (validateSocialReplyIdentifier "senderId" actorId)
+
+normalizeMetaWebhookExternalId :: Maybe Text -> Maybe Text
+normalizeMetaWebhookExternalId rawExternalId =
+  stripNonEmptyText rawExternalId >>= \externalId ->
+    either (const Nothing) Just (validateSocialReplyIdentifier "externalId" externalId)
 
 looksLikeOpaqueSenderLabel :: Text -> Bool
 looksLikeOpaqueSenderLabel raw =
