@@ -208,6 +208,8 @@ const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
 const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
+const loadLimitLabel = 'Límite de carga';
+const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
 const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
@@ -505,7 +507,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.textContent).not.toContain(showSystemEmailsLabel);
-      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some((el) => {
@@ -993,7 +995,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
@@ -1052,11 +1054,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(secondContainer, 'Límite')).toBe(true);
+      expect(hasLabel(secondContainer, loadLimitLabel)).toBe(true);
+      expect(hasLabel(secondContainer, 'Límite')).toBe(false);
       expect(getButtonByText(secondContainer, 'Ocultar límite')).toBeTruthy();
-      expect(secondContainer.textContent).toContain(
-        'Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto.',
-      );
+      expect(secondContainer.textContent).toContain(loadLimitHelperText);
+      expect(secondContainer.textContent).not.toContain('Máximo de filas a cargar');
     });
 
     await secondRender.cleanup();
@@ -5966,11 +5968,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Límite')).toBe(true);
+      expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(container.textContent).toContain(loadLimitHelperText);
+      expect(container.textContent).not.toContain('Máximo de filas a cargar');
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Límite'), '50');
+      setInputValue(getInputByLabel(container, loadLimitLabel), '50');
       await flushPromises();
       await flushPromises();
     });
@@ -6136,7 +6141,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
-      expect(hasLabel(container, 'Límite')).toBe(false);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
     });
 
     await cleanup();
@@ -8332,11 +8337,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Límite')).toBe(true);
+      expect(hasLabel(container, loadLimitLabel)).toBe(true);
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, 'Límite'), '50');
+      setInputValue(getInputByLabel(container, loadLimitLabel), '50');
       await flushPromises();
       await flushPromises();
     });

@@ -104,6 +104,8 @@ const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
+const LOAD_LIMIT_LABEL = 'Límite de carga';
+const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
 const missingContactSummary = 'Sin correo ni teléfono';
 
 const formatDossierContextActionsLabel = ({
@@ -3530,7 +3532,7 @@ export default function CourseRegistrationsAdminPage() {
             <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
               <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
                 <TextField
-                  label="Límite"
+                  label={LOAD_LIMIT_LABEL}
                   type="number"
                   inputProps={{ min: 1 }}
                   value={limit}
@@ -3539,7 +3541,7 @@ export default function CourseRegistrationsAdminPage() {
                     setLocalSearch('');
                     setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
                   }}
-                  helperText="Máximo de filas a cargar en esta vista. Déjalo en 200 salvo que necesites revisar un lote distinto."
+                  helperText={LOAD_LIMIT_HELPER_TEXT}
                   fullWidth
                   size="small"
                 />
