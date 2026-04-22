@@ -1944,6 +1944,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No items found/i)).not.toBeInTheDocument();
   });
 
+  it('ignores no-result fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-results-empty',
+          title: 'Integraciones',
+          body: ['No results found.'],
+        },
+        {
+          cardId: 'service-tokens-results-empty',
+          title: 'Tokens de servicio',
+          body: ['Sin resultados.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Integraciones|Tokens de servicio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No results found/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin resultados/i)).not.toBeInTheDocument();
+  });
+
   it('ignores no-information fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
