@@ -4,7 +4,7 @@ module TDF.Config where
 import           Control.Applicative ((<|>))
 import           Control.Monad      ((>=>), filterM, when)
 import           Data.Char          (isControl, isDigit, isSpace, toLower)
-import           Data.List          (isInfixOf, isPrefixOf)
+import           Data.List          (isPrefixOf)
 import           Data.Maybe         (fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
@@ -321,7 +321,8 @@ ensureReadWriteTargetSession rawConn
       case extractConnUrlParam "target_session_attrs" conn of
         Just _ -> True
         Nothing -> False
-    hasTargetSessionAttrsKeyword conn = "target_session_attrs=" `isInfixOf` conn
+    hasTargetSessionAttrsKeyword conn =
+      any ("target_session_attrs=" `isPrefixOf`) (words conn)
     isPostgresUrl conn =
       "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
 

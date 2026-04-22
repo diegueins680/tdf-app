@@ -1062,6 +1062,28 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
 
+        it "requires keyword target_session_attrs to be a standalone connection option" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Nothing)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Just "tdf-hq-db.flycast")
+                , ("DB_PORT", Just "5432")
+                , ("DB_USER", Just "tdf_hq")
+                , ("DB_PASS", Just "secret")
+                , ("DB_NAME", Just "tdf_hq_target_session_attrs=debug")
+                , ("DB_SSLMODE", Nothing)
+                , ("PGSSLMODE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg
+                        `shouldBe`
+                            "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret "
+                                <> "dbname=tdf_hq_target_session_attrs=debug "
+                                <> "target_session_attrs=read-write"
+
         it "keeps fallback connection URL aliases from shaping complete DB_* settings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")
