@@ -266,10 +266,9 @@ leadCompletionConsumedToken leadId =
 
 validateHookVerifyRequest :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Either ServerError Text
 validateHookVerifyRequest mmode mchall mtoken mExpected =
-  case nonBlank mExpected of
-    Nothing ->
-      Left err503 { errBody = "WhatsApp verify token not configured" }
-    Just expected ->
+  case validateConfiguredVerifyToken mExpected of
+    Left err -> Left err
+    Right expected ->
       case fmap T.toLower (nonBlank mmode) of
         Nothing ->
           Left err400 { errBody = "hub.mode is required" }
@@ -285,11 +284,25 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
+                      | T.any isControl verifyToken ->
+                          Left err400
+                            { errBody = "hub.verify_token must not contain control characters" }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
         Just _ ->
           Left err400 { errBody = "hub.mode must be subscribe" }
   where
+    validateConfiguredVerifyToken :: Maybe Text -> Either ServerError Text
+    validateConfiguredVerifyToken mTxt =
+      case nonBlank mTxt of
+        Nothing ->
+          Left err503 { errBody = "WhatsApp verify token not configured" }
+        Just txt
+          | T.any isControl txt ->
+              Left err503 { errBody = "WhatsApp verify token is misconfigured" }
+          | otherwise ->
+              Right txt
+
     nonBlank :: Maybe Text -> Maybe Text
     nonBlank mTxt =
       case fmap T.strip mTxt of
