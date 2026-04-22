@@ -339,11 +339,24 @@ data InvitationUpdateDTO = InvitationUpdateDTO
   } deriving (Show, Eq, Generic)
 
 instance FromJSON InvitationUpdateDTO where
-  parseJSON value@(Object o) =
+  parseJSON value@(Object o) = do
+    rejectUnknownObjectFields "InvitationUpdateDTO" invitationUpdateAllowedKeys o
     InvitationUpdateDTO
       <$> parseJSON value
       <*> (nullableFieldFromParsed <$> (o .:! "invitationMessage"))
   parseJSON _ = fail "InvitationUpdateDTO must be an object"
+
+invitationUpdateAllowedKeys :: [Text]
+invitationUpdateAllowedKeys =
+  [ "invitationId"
+  , "invitationEventId"
+  , "invitationFromPartyId"
+  , "invitationToPartyId"
+  , "invitationStatus"
+  , "invitationMessage"
+  , "invitationCreatedAt"
+  , "invitationUpdatedAt"
+  ]
 
 data EventMomentReactionDTO = EventMomentReactionDTO
   { emrReaction  :: Text

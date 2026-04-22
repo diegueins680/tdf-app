@@ -3214,6 +3214,16 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure ("Expected unexpected venue update keys to be rejected, got " <> show parsed)
 
+        it "rejects unexpected invitation update keys before status defaults can hide typos" $
+            case eitherDecode
+                "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null,\"message\":\"typo\"}"
+                :: Either String InvitationUpdateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure
+                        ("Expected unexpected invitation update keys to be rejected, got " <> show parsed)
+
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
             case fromMultipart
