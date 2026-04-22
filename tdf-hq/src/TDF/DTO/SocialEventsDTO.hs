@@ -195,7 +195,8 @@ data VenueUpdateDTO = VenueUpdateDTO
   } deriving (Show, Eq, Generic)
 
 instance FromJSON VenueUpdateDTO where
-  parseJSON value@(Object o) =
+  parseJSON value@(Object o) = do
+    rejectUnknownObjectFields "VenueUpdateDTO" venueUpdateAllowedKeys o
     VenueUpdateDTO
       <$> parseJSON value
       <*> (VenueContactUpdateDTO
@@ -205,6 +206,26 @@ instance FromJSON VenueUpdateDTO where
             <*> (nullableFieldFromParsed <$> (o .:! "venueZipCode"))
             <*> (nullableFieldFromParsed <$> (o .:! "venueImageUrl")))
   parseJSON _ = fail "VenueUpdateDTO must be an object"
+
+venueUpdateAllowedKeys :: [Text]
+venueUpdateAllowedKeys =
+  [ "venueId"
+  , "venueName"
+  , "venueAddress"
+  , "venueCity"
+  , "venueCountry"
+  , "venueLat"
+  , "venueLng"
+  , "venueCapacity"
+  , "venueContact"
+  , "venuePhone"
+  , "venueWebsite"
+  , "venueState"
+  , "venueZipCode"
+  , "venueImageUrl"
+  , "venueCreatedAt"
+  , "venueUpdatedAt"
+  ]
 
 data EventDTO = EventDTO
   { eventId          :: Maybe Text

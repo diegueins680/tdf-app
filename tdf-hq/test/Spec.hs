@@ -3009,6 +3009,15 @@ main = hspec $ do
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
 
+        it "rejects unexpected venue update keys so contact typos fail instead of no-oping" $
+            case eitherDecode
+                "{\"venueName\":\"Sala Uno\",\"venuePhoneNumber\":\"+593991234567\"}"
+                :: Either String VenueUpdateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected venue update keys to be rejected, got " <> show parsed)
+
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
             case fromMultipart
