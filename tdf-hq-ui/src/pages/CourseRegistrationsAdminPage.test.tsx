@@ -179,9 +179,9 @@ const buildEmailEvent = (
 });
 
 const emptyReceiptAlertMessage =
-  'Agrega el primer comprobante para documentar el pago y habilitar Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+  'El primer comprobante documenta el pago y habilita Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const emptyReceiptEvidenceAlertMessage =
-  'Agrega el primer comprobante solo si necesitas documentar evidencia de pago. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+  'El primer comprobante queda como evidencia de pago solo si hace falta documentarla. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText =
   'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText =
@@ -533,6 +533,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
+      expect(document.body.textContent).not.toContain(
+        'Agrega el primer comprobante para documentar el pago',
+      );
       expect(document.body.textContent).not.toContain(
         'Todavía no hay comprobantes. Agrega el primero para documentar el pago y habilitar Marcar pagado.',
       );
