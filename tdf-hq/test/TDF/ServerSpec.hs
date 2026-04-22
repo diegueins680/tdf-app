@@ -232,6 +232,7 @@ import TDF.Server
     , validateAdCreativeLandingUrl
     , validateCampaignBudgetCents
     , validateCalendarRedirectUri
+    , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
     , extractChatKitSession
@@ -2989,6 +2990,48 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "name must be 240 characters or fewer"
                 (resolveDriveUploadName (Just (T.replicate 241 "a")) "safe.pdf")
+
+    describe "resolveDriveClientCreds" $ do
+        it "prefers a complete Drive credential pair over the generic Google fallback" $
+            resolveDriveClientCreds
+                (Just "  drive-client  ")
+                (Just "  drive-secret  ")
+                (Just "google-client")
+                (Just "google-secret")
+                `shouldBe` Right ("drive-client", "drive-secret")
+
+        it "uses the generic Google fallback only when Drive-specific credentials are absent" $
+            resolveDriveClientCreds
+                Nothing
+                (Just "   ")
+                (Just "  google-client  ")
+                (Just "  google-secret  ")
+                `shouldBe` Right ("google-client", "google-secret")
+
+        it "rejects partial Drive credentials instead of mixing credential families" $ do
+            let assertInvalid result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "set both DRIVE_CLIENT_ID and DRIVE_CLIENT_SECRET"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected partial Drive credentials to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid $
+                resolveDriveClientCreds
+                    (Just "drive-client")
+                    Nothing
+                    (Just "google-client")
+                    (Just "google-secret")
+            assertInvalid $
+                resolveDriveClientCreds
+                    Nothing
+                    (Just "drive-secret")
+                    (Just "google-client")
+                    (Just "google-secret")
 
     describe "DriveApiResp FromJSON" $ do
         it "normalizes valid Google Drive file ids from upload responses" $ do

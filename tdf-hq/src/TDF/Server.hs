@@ -2094,10 +2094,50 @@ loadDriveClientCreds = do
   mSecret <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_SECRET"
   mCidFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
   mSecretFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
-  case (mCid <|> mCidFallback, mSecret <|> mSecretFallback) of
-    (Just cid, Just secret) -> pure (cid, secret)
-    _ ->
-      throwError err503
+  either throwError pure $
+    resolveDriveClientCreds mCid mSecret mCidFallback mSecretFallback
+
+resolveDriveClientCreds
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError (Text, Text)
+resolveDriveClientCreds
+  rawDriveClientId
+  rawDriveClientSecret
+  rawGoogleClientId
+  rawGoogleClientSecret =
+  case (mDriveClientId, mDriveClientSecret) of
+    (Just cid, Just secret) -> Right (cid, secret)
+    (Just _, Nothing) -> Left partialDriveCredsError
+    (Nothing, Just _) -> Left partialDriveCredsError
+    (Nothing, Nothing) ->
+      case (mGoogleClientId, mGoogleClientSecret) of
+        (Just cid, Just secret) -> Right (cid, secret)
+        (Just _, Nothing) -> Left partialGoogleCredsError
+        (Nothing, Just _) -> Left partialGoogleCredsError
+        (Nothing, Nothing) -> Left missingDriveCredsError
+  where
+    mDriveClientId = cleanOptional rawDriveClientId
+    mDriveClientSecret = cleanOptional rawDriveClientSecret
+    mGoogleClientId = cleanOptional rawGoogleClientId
+    mGoogleClientSecret = cleanOptional rawGoogleClientSecret
+
+    partialDriveCredsError =
+      err503
+        { errBody =
+            "Google Drive no configurado: set both DRIVE_CLIENT_ID and DRIVE_CLIENT_SECRET, " <>
+            "or unset both to use GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET fallback."
+        }
+    partialGoogleCredsError =
+      err503
+        { errBody =
+            "Google Drive no configurado: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET " <>
+            "must both be set for fallback credentials."
+        }
+    missingDriveCredsError =
+      err503
         { errBody =
             "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
             "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
