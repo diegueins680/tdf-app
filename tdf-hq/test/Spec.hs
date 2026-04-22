@@ -3771,6 +3771,13 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not include a fragment"
                 Right _ -> expectationFailure "Expected fragment-bearing streamUrl to be rejected"
+            case validateRadioStreamUrl
+                    ("https://radio.example.com/" <> Data.Text.replicate 2049 "a") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl must be 2048 characters or fewer"
+                Right _ -> expectationFailure "Expected overlong streamUrl to be rejected"
 
         it "rejects hostless or malformed-port URLs before they can be stored" $ do
             case validateRadioStreamUrl "https://:8443/live" of

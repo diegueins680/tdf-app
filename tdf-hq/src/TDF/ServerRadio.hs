@@ -73,6 +73,8 @@ validateRadioStreamUrl :: Text -> Either ServerError Text
 validateRadioStreamUrl rawUrl
   | T.null streamUrl =
       Left err400 { errBody = "streamUrl is required" }
+  | T.length streamUrl > maxRadioStreamUrlChars =
+      Left err400 { errBody = "streamUrl must be 2048 characters or fewer" }
   | T.any isSpace streamUrl =
       Left err400 { errBody = "streamUrl must not contain whitespace" }
   | T.any isControl streamUrl =
@@ -96,6 +98,9 @@ validateRadioStreamUrl rawUrl
       | otherwise = Nothing
     authority =
       maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+
+maxRadioStreamUrlChars :: Int
+maxRadioStreamUrlChars = 2048
 
 validateRadioTransmissionPublicBase :: Text -> Either ServerError Text
 validateRadioTransmissionPublicBase rawBase =
