@@ -101,6 +101,7 @@ import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( radioServer,
+      resolveRadioTransmissionEnvBase,
       resolveRadioNowPlayingFetchResult,
       validateRadioImportLimit,
       validateRadioImportSources,
@@ -3952,6 +3953,39 @@ main = hspec $ do
             assertInvalid
                 "http://127.0.0.1/live"
                 "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
+
+    describe "resolveRadioTransmissionEnvBase" $ do
+        it "uses fallback bases only when transmission env vars are absent" $ do
+            resolveRadioTransmissionEnvBase
+                "RADIO_PUBLIC_BASE"
+                "https://tdf-hq.fly.dev/live"
+                Nothing
+                `shouldBe` Right "https://tdf-hq.fly.dev/live"
+            resolveRadioTransmissionEnvBase
+                "RADIO_PUBLIC_BASE"
+                "https://tdf-hq.fly.dev/live"
+                (Just "  https://radio.example.com/live  ")
+                `shouldBe` Right "https://radio.example.com/live"
+
+        it "rejects explicitly blank transmission env vars instead of silently falling back" $ do
+            let assertBlank label rawValue =
+                    case
+                        resolveRadioTransmissionEnvBase
+                            label
+                            "https://fallback.example.com"
+                            (Just rawValue)
+                    of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (label <> " is configured but blank")
+                        Right value ->
+                            expectationFailure
+                                ("Expected blank radio base env to be rejected, got " <> show value)
+            assertBlank "RADIO_PUBLIC_BASE" "   "
+            assertBlank "RADIO_INGEST_BASE" "\t\n"
+            assertBlank "RADIO_WHIP_BASE" ""
 
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do

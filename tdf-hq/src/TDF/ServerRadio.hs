@@ -9,6 +9,7 @@ module TDF.ServerRadio
   , validateRadioTransmissionPublicBase
   , validateRadioTransmissionIngestBase
   , validateRadioTransmissionWhipBase
+  , resolveRadioTransmissionEnvBase
   , validateRadioOptionalMetadataField
   , validateRadioImportSources
   , validateRadioImportLimit
@@ -41,7 +42,7 @@ import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
                                          selectList, selectFirst, update)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, err502, errBody, throwError, (:<|>)(..))
+import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, newManager, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -113,6 +114,20 @@ validateRadioTransmissionIngestBase =
 validateRadioTransmissionWhipBase :: Text -> Either ServerError Text
 validateRadioTransmissionWhipBase =
   validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "http(s)" ["http", "https"]
+
+resolveRadioTransmissionEnvBase :: Text -> Text -> Maybe String -> Either ServerError Text
+resolveRadioTransmissionEnvBase _ defaultBase Nothing = Right defaultBase
+resolveRadioTransmissionEnvBase label _ (Just rawValue)
+  | T.null cleaned =
+      Left err500
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              label <> " is configured but blank"
+        }
+  | otherwise =
+      Right cleaned
+  where
+    cleaned = T.strip (T.pack rawValue)
 
 validateRadioOptionalMetadataField
   :: Text
@@ -1057,12 +1072,27 @@ radioServer user =
       genre <- either throwError pure $
         validateRadioOptionalMetadataField "rtrGenre" 120 rtrGenre
       streamKey <- liftIO (toText <$> nextRandom)
-      listenBaseRaw <- liftIO (readEnv "RADIO_PUBLIC_BASE" "https://tdf-hq.fly.dev/live")
+      mListenBaseRaw <- liftIO (lookupEnv "RADIO_PUBLIC_BASE")
+      listenBaseRaw <- either throwError pure $
+        resolveRadioTransmissionEnvBase
+          "RADIO_PUBLIC_BASE"
+          "https://tdf-hq.fly.dev/live"
+          mListenBaseRaw
       listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
       let fallbackIngest = deriveBase listenBase "rtmp" "/live"
           fallbackWhip   = deriveBase listenBase "https" "/whip"
-      ingestBaseRaw <- liftIO (readEnv "RADIO_INGEST_BASE" fallbackIngest)
-      whipBaseRaw <- liftIO (readEnv "RADIO_WHIP_BASE" fallbackWhip)
+      mIngestBaseRaw <- liftIO (lookupEnv "RADIO_INGEST_BASE")
+      mWhipBaseRaw <- liftIO (lookupEnv "RADIO_WHIP_BASE")
+      ingestBaseRaw <- either throwError pure $
+        resolveRadioTransmissionEnvBase
+          "RADIO_INGEST_BASE"
+          fallbackIngest
+          mIngestBaseRaw
+      whipBaseRaw <- either throwError pure $
+        resolveRadioTransmissionEnvBase
+          "RADIO_WHIP_BASE"
+          fallbackWhip
+          mWhipBaseRaw
       ingestBase <- either throwError pure (validateRadioTransmissionIngestBase ingestBaseRaw)
       whipBase <- either throwError pure (validateRadioTransmissionWhipBase whipBaseRaw)
       let publicUrl = appendPath listenBase streamKey
@@ -1096,11 +1126,3 @@ radioServer user =
           cleanHost = if T.null host then "localhost" else host
           normalizedPath = if T.isPrefixOf "/" newPath then newPath else "/" <> newPath
       in newScheme <> "://" <> cleanHost <> normalizedPath
-
-    readEnv key def = do
-      mVal <- lookupEnv key
-      let cleaned = fmap (T.strip . T.pack) mVal
-      pure $ case cleaned of
-        Nothing   -> def
-        Just txt | T.null txt -> def
-                 | otherwise -> txt
