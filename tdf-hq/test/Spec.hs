@@ -823,6 +823,7 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page/123"
             assertInvalid "FACEBOOK_PAGE_ID" "page?debug=1"
+            assertInvalid "FACEBOOK_PAGE_ID" "---"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $

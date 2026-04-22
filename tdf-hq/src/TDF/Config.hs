@@ -878,6 +878,7 @@ normalizeConfiguredGraphNodeId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredGraphNodeId envName rawNodeId
   | T.null nodeId = Right Nothing
   | T.length nodeId > 128 = invalid
+  | not (T.any isGraphNodeIdAtom nodeId) = invalid
   | T.any (not . isGraphNodeIdChar) nodeId = invalid
   | otherwise = Right (Just nodeId)
   where
@@ -886,13 +887,14 @@ normalizeConfiguredGraphNodeId envName rawNodeId
       Left
         ( envName
             <> " must be a Graph node id using only ASCII letters, numbers, "
-            <> "'.', '_' or '-' (128 chars max)"
+            <> "'.', '_' or '-' with at least one letter or number (128 chars max)"
         )
-    isGraphNodeIdChar ch =
+    isGraphNodeIdAtom ch =
       (ch >= 'a' && ch <= 'z')
         || (ch >= 'A' && ch <= 'Z')
         || (ch >= '0' && ch <= '9')
-        || ch `elem` ("._-" :: String)
+    isGraphNodeIdChar ch =
+      isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl
