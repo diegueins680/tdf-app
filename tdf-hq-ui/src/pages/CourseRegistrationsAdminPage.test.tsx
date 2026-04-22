@@ -2868,7 +2868,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses busy-list search for custom statuses instead of adding status filter chrome', async () => {
+  it('uses busy-list search for custom statuses without adding the status fallback panel', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crStatus: 'needs_review',
@@ -2898,11 +2898,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
 
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o estado');
-      expect(customStatusSummary?.textContent).toContain('Sin filtros de estado');
-      expect(customStatusSummary?.textContent).toContain(
-        'Busca por estado en las inscripciones cargadas o usa Cambiar estado para normalizarlos.',
-      );
-      expect(customStatusSummary?.textContent).not.toContain(customStatusFilterUnavailableMessage);
+      expect(customStatusSummary).toBeNull();
+      expect(container.textContent).not.toContain('Sin filtros de estado');
+      expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(9);
@@ -2921,6 +2919,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 

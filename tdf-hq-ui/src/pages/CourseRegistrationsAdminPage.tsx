@@ -2028,12 +2028,17 @@ export default function CourseRegistrationsAdminPage() {
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
+  const hideCustomStatusFilterSummaryForSearch = showLocalSearchControl
+    && hasCustomStatusSearch
+    && actionableStatusFilters.length === 0
+    && !showSingleStatusSummary;
   const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
     && !showSingleStatusSummary
-    && actionableStatusFilters.length === 0;
-  const customStatusFilterGuidance = showLocalSearchControl && hasCustomStatusSearch
-    ? 'Busca por estado en las inscripciones cargadas o usa Cambiar estado para normalizarlos.'
-    : customStatusFilterUnavailableMessage;
+    && actionableStatusFilters.length === 0
+    && !hideCustomStatusFilterSummaryForSearch;
+  const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch;
+  const filterGridColumns = showStatusFilterColumn ? 6 : 12;
+  const customStatusFilterGuidance = customStatusFilterUnavailableMessage;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'Vista única por ahora: una cohorte y un estado.';
@@ -3246,7 +3251,7 @@ export default function CourseRegistrationsAdminPage() {
                 </Grid>
               ) : (
                 <>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={filterGridColumns}>
                     {showCohortFilterUnavailableSummary ? (
                       <Stack
                         data-testid="course-registration-cohort-filter-unavailable"
@@ -3393,160 +3398,162 @@ export default function CourseRegistrationsAdminPage() {
                       </TextField>
                     )}
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    {showSingleStatusSummaryBlock && singleVisibleStatus ? (
-                      <Stack
-                        data-testid="course-registration-single-status-summary"
-                        spacing={0.5}
-                        sx={{
-                          minHeight: 40,
-                          justifyContent: 'center',
-                          px: 1.5,
-                          py: 1.25,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          Estado disponible
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {statusFilterLabels[singleVisibleStatus]}
-                        </Typography>
-                        {standaloneSingleChoiceSourceSummary && (
-                          <Typography variant="caption" color="text.secondary">
-                            {standaloneSingleChoiceSourceSummary}
-                          </Typography>
-                        )}
-                        {showFirstRunFilterHelper && (
-                          <Typography variant="caption" color="text.secondary">
-                            {singleVisibleStatusHelperText}
-                          </Typography>
-                        )}
-                        {showInlineSingleChoiceLimitToggle && (
-                          <Button
-                            size="small"
-                            variant="text"
-                            sx={{ alignSelf: 'flex-start', mt: 0.5 }}
-                            onClick={handleToggleAdvancedFilters}
-                            aria-expanded={showAdvancedFilters}
-                          >
-                            {limitToggleLabel}
-                          </Button>
-                        )}
-                      </Stack>
-                    ) : showActiveStatusFilterSummary ? (
-                      <Stack
-                        data-testid="course-registration-active-status-summary"
-                        spacing={0.5}
-                        sx={{
-                          minHeight: 40,
-                          justifyContent: 'center',
-                          px: 1.5,
-                          py: 1.25,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          Estado filtrado
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {statusFilterLabels[status]}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          La vista filtrada ya incluye este estado; usa {resetViewLabel.toLowerCase()} si necesitas volver a ampliar la lista.
-                        </Typography>
-                      </Stack>
-                    ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
-                      <Stack
-                        data-testid="course-registration-single-custom-status-summary"
-                        spacing={0.5}
-                        sx={{
-                          minHeight: 40,
-                          justifyContent: 'center',
-                          px: 1.5,
-                          py: 1.25,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          Estado no estándar
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {customRegistrationStatusLabel(singleVisibleCustomStatus)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {customStatusFilterGuidance}
-                        </Typography>
-                      </Stack>
-                    ) : showCustomStatusFilterUnavailableSummary ? (
-                      <Stack
-                        data-testid="course-registration-status-filter-unavailable"
-                        spacing={0.5}
-                        sx={{
-                          minHeight: 40,
-                          justifyContent: 'center',
-                          px: 1.5,
-                          py: 1.25,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          Sin filtros de estado
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {customStatusFilterGuidance}
-                        </Typography>
-                      </Stack>
-                    ) : (
-                      <Stack spacing={1}>
-                        {showStatusFilterCaption && (
-                          <Typography variant="caption" color="text.secondary">
-                            Filtrar por estado
-                          </Typography>
-                        )}
+                  {showStatusFilterColumn && (
+                    <Grid item xs={12} md={6}>
+                      {showSingleStatusSummaryBlock && singleVisibleStatus ? (
                         <Stack
-                          direction="row"
-                          spacing={1}
-                          flexWrap="wrap"
-                          useFlexGap
-                          role="group"
-                          aria-label={statusFilterGroupLabel}
+                          data-testid="course-registration-single-status-summary"
+                          spacing={0.5}
+                          sx={{
+                            minHeight: 40,
+                            justifyContent: 'center',
+                            px: 1.5,
+                            py: 1.25,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                          }}
                         >
-                          {actionableStatusFilters.map((value) => (
-                            <Chip
-                              key={value}
-                              clickable
-                              component="button"
-                              type="button"
-                              color={registrationStatusChipColor(value)}
-                              label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
-                              variant={status === value ? 'filled' : 'outlined'}
-                              aria-label={statusFilterChipAriaLabel(value, status === value)}
-                              aria-pressed={status === value}
-                              onClick={() => {
-                                setHasUsedFilterControl(true);
-                                setLocalSearch('');
-                                setStatus((current) => (current === value ? 'all' : value));
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                        {statusFilterHelperText && (
                           <Typography variant="caption" color="text.secondary">
-                            {statusFilterHelperText}
+                            Estado disponible
                           </Typography>
-                        )}
-                      </Stack>
-                    )}
-                  </Grid>
+                          <Typography variant="body2" fontWeight={600}>
+                            {statusFilterLabels[singleVisibleStatus]}
+                          </Typography>
+                          {standaloneSingleChoiceSourceSummary && (
+                            <Typography variant="caption" color="text.secondary">
+                              {standaloneSingleChoiceSourceSummary}
+                            </Typography>
+                          )}
+                          {showFirstRunFilterHelper && (
+                            <Typography variant="caption" color="text.secondary">
+                              {singleVisibleStatusHelperText}
+                            </Typography>
+                          )}
+                          {showInlineSingleChoiceLimitToggle && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                              onClick={handleToggleAdvancedFilters}
+                              aria-expanded={showAdvancedFilters}
+                            >
+                              {limitToggleLabel}
+                            </Button>
+                          )}
+                        </Stack>
+                      ) : showActiveStatusFilterSummary ? (
+                        <Stack
+                          data-testid="course-registration-active-status-summary"
+                          spacing={0.5}
+                          sx={{
+                            minHeight: 40,
+                            justifyContent: 'center',
+                            px: 1.5,
+                            py: 1.25,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Estado filtrado
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {statusFilterLabels[status]}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            La vista filtrada ya incluye este estado; usa {resetViewLabel.toLowerCase()} si necesitas volver a ampliar la lista.
+                          </Typography>
+                        </Stack>
+                      ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
+                        <Stack
+                          data-testid="course-registration-single-custom-status-summary"
+                          spacing={0.5}
+                          sx={{
+                            minHeight: 40,
+                            justifyContent: 'center',
+                            px: 1.5,
+                            py: 1.25,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Estado no estándar
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {customRegistrationStatusLabel(singleVisibleCustomStatus)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {customStatusFilterGuidance}
+                          </Typography>
+                        </Stack>
+                      ) : showCustomStatusFilterUnavailableSummary ? (
+                        <Stack
+                          data-testid="course-registration-status-filter-unavailable"
+                          spacing={0.5}
+                          sx={{
+                            minHeight: 40,
+                            justifyContent: 'center',
+                            px: 1.5,
+                            py: 1.25,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Sin filtros de estado
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {customStatusFilterGuidance}
+                          </Typography>
+                        </Stack>
+                      ) : (
+                        <Stack spacing={1}>
+                          {showStatusFilterCaption && (
+                            <Typography variant="caption" color="text.secondary">
+                              Filtrar por estado
+                            </Typography>
+                          )}
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            useFlexGap
+                            role="group"
+                            aria-label={statusFilterGroupLabel}
+                          >
+                            {actionableStatusFilters.map((value) => (
+                              <Chip
+                                key={value}
+                                clickable
+                                component="button"
+                                type="button"
+                                color={registrationStatusChipColor(value)}
+                                label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
+                                variant={status === value ? 'filled' : 'outlined'}
+                                aria-label={statusFilterChipAriaLabel(value, status === value)}
+                                aria-pressed={status === value}
+                                onClick={() => {
+                                  setHasUsedFilterControl(true);
+                                  setLocalSearch('');
+                                  setStatus((current) => (current === value ? 'all' : value));
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          {statusFilterHelperText && (
+                            <Typography variant="caption" color="text.secondary">
+                              {statusFilterHelperText}
+                            </Typography>
+                          )}
+                        </Stack>
+                      )}
+                    </Grid>
+                  )}
                 </>
               )}
             </Grid>
