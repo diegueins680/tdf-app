@@ -1181,6 +1181,8 @@ validateAdminEmailSubject rawSubject
       Left err400 { errBody = "Subject must not be empty" }
   | T.any isEmailHeaderLineBreak subject =
       Left err400 { errBody = "Subject must be a single line" }
+  | T.any isControl subject =
+      Left err400 { errBody = "Subject must not contain control characters" }
   | otherwise = Right subject
   where
     subject = T.strip rawSubject

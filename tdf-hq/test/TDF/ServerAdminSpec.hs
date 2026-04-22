@@ -106,6 +106,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Subject must be a single line"
                 (validateAdminEmailSubject "Launch\r\nBcc: ops@example.com")
+            assertInvalid
+                "Subject must not contain control characters"
+                (validateAdminEmailSubject "Launch\NULHidden")
 
     describe "validateAdminEmailCtaUrl" $ do
         it "trims valid http(s) CTA URLs and treats blanks as omitted" $ do
