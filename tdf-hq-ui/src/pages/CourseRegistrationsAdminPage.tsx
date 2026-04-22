@@ -58,7 +58,7 @@ const emptyReceiptEvidenceAlertMessage = 'El primer comprobante queda como evide
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
   `Todavía no hay inscripciones. Hay ${count} formularios públicos listos; revisa cursos para compartir uno.`;
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';

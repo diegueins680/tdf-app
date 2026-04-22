@@ -229,7 +229,7 @@ const mixedIdentityDossierScopeHint =
   'Abre el expediente desde el dato principal de cada fila; usa Cambiar estado para acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const initialEmptyStateMultiCohortMessage =
   'Todavía no hay inscripciones. Hay 2 formularios públicos listos; revisa cursos para compartir uno.';
 const singleCohortInitialEmptyStateMessage =
@@ -8863,10 +8863,14 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
+      expect(emptyState?.textContent).not.toContain('curso inicial');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateConfigActionLabel);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
     await cleanup();
