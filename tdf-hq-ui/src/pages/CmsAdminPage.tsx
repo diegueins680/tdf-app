@@ -588,6 +588,11 @@ export default function CmsAdminPage() {
     listDataInvalid ||
     versions.length > 0 ||
     hasActiveVersionFilters;
+  const showVersionHistoryEmptyState =
+    Boolean(versionListUiState.emptyMessage) &&
+    !listQuery.isLoading &&
+    !listQuery.isError &&
+    !listDataInvalid;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -1158,7 +1163,7 @@ export default function CmsAdminPage() {
                 La única versión guardada ya está resumida arriba; el historial aparecerá cuando guardes otra versión.
               </Typography>
             )}
-            {versionListUiState.emptyMessage && !listQuery.isLoading && (
+            {showVersionHistoryEmptyState && (
               versionListUiState.showEmptyReset ? (
                 <Alert
                   severity="info"

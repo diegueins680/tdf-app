@@ -21,7 +21,12 @@ jest.unstable_mockModule('../api/cms', () => ({
 }));
 
 jest.unstable_mockModule('../components/ApiErrorNotice', () => ({
-  default: () => null,
+  default: ({ error, title }: { error: unknown; title?: string }) => (
+    <div>
+      {title}
+      {error instanceof Error ? `: ${error.message}` : ''}
+    </div>
+  ),
 }));
 
 jest.unstable_mockModule('../components/SessionGate', () => ({
@@ -692,6 +697,26 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).not.toContain('No hay versiones guardadas todavía.');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps version-history load failures separate from the first-version empty state', async () => {
+    listMock.mockRejectedValue(new Error('versions unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain('No pudimos cargar la lista de versiones: versions unavailable');
+      expect(history?.textContent).not.toContain('No hay versiones guardadas todavía.');
+      expect(history?.textContent).not.toContain(
+        'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
+      );
     });
 
     await cleanup();
