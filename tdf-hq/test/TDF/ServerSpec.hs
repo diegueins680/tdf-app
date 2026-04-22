@@ -2714,6 +2714,10 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"access_token\":\"access-token\","
                     <> "\"token_type\":\"Bearer\\nInjected\","
                     <> "\"expires_in\":3600}"
+            assertRejected $
+                "{\"access_token\":\"access-token\","
+                    <> "\"token_type\":\"Basic\","
+                    <> "\"expires_in\":3600}"
 
     describe "resolveDrivePublicUrl" $ do
         it "keeps Drive resource-key links well-shaped across fallback URL forms" $ do

@@ -194,7 +194,7 @@ instance FromJSON GoogleToken where
     for_ expiresIn $ \seconds ->
       when (seconds <= (0 :: Int)) $
         fail "expires_in must be positive"
-    tokenType <- o .:? "token_type" >>= traverse (parseGoogleTokenField "token_type")
+    tokenType <- o .:? "token_type" >>= traverse parseGoogleTokenType
     pure GoogleToken
       { access_token = accessToken
       , refresh_token = refreshToken
@@ -210,6 +210,13 @@ parseGoogleTokenField fieldName raw =
        else if T.any (\ch -> isSpace ch || isControl ch) clean
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
          else pure clean
+
+parseGoogleTokenType :: Text -> Parser Text
+parseGoogleTokenType raw = do
+  tokenTypeVal <- parseGoogleTokenField "token_type" raw
+  if T.toLower tokenTypeVal == "bearer"
+    then pure "Bearer"
+    else fail "token_type must be Bearer"
 
 data GoogleEventsPage = GoogleEventsPage
   { items         :: [Value]
