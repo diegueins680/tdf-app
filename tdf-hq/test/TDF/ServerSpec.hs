@@ -1918,6 +1918,41 @@ spec = describe "TDF.Server helpers" $ do
                     , "593991234567-0"
                     ]
 
+        it "uses the fallback id when Meta sends malformed WhatsApp message ids" $ do
+            let message rawId rawTimestamp =
+                    WA.WAMessage
+                        rawId
+                        "text"
+                        "593991234567"
+                        (Just (WA.WAText "Inscribirme"))
+                        Nothing
+                        Nothing
+                        rawTimestamp
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue
+                                    (Just
+                                        [ message (Just "wamid with spaces") (Just "1713715203")
+                                        , message (Just "wamid\nwith-control") (Just "1713715204")
+                                        , message (Just (T.replicate 257 "a")) (Just "1713715205")
+                                        , message (Just "wamid.valid") (Just "1713715206")
+                                        ])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+
+            map waInboundExternalId (extractWhatsAppInbound payload)
+                `shouldBe`
+                    [ "593991234567-1713715203"
+                    , "593991234567-1713715204"
+                    , "593991234567-1713715205"
+                    , "wamid.valid"
+                    ]
+
         it "skips blank sender or body rows and trims stored inbound webhook values" $ do
             let message rawSender rawBody =
                     WA.WAMessage

@@ -3826,7 +3826,15 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
     resolvedExternalId senderId msg =
       fromMaybe
         (senderId <> "-" <> fromMaybe "0" (cleanOptional (waTimestamp msg)))
-        (cleanOptional (waId msg))
+        (cleanWhatsAppWebhookExternalId (waId msg))
+
+    cleanWhatsAppWebhookExternalId rawExternalId =
+      cleanOptional rawExternalId >>= \externalId ->
+        if T.length externalId <= 256
+            && not (T.any isSpace externalId)
+            && not (T.any isControl externalId)
+          then Just externalId
+          else Nothing
 
     waReferralMeta Nothing = (Nothing, Nothing, Nothing)
     waReferralMeta (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =
