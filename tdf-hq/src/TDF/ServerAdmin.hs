@@ -1179,6 +1179,8 @@ validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject
   | T.null subject =
       Left err400 { errBody = "Subject must not be empty" }
+  | T.length subject > adminEmailSubjectMaxLength =
+      Left err400 { errBody = "Subject must be 160 characters or fewer" }
   | T.any isEmailHeaderLineBreak subject =
       Left err400 { errBody = "Subject must be a single line" }
   | T.any isControl subject =
@@ -1187,6 +1189,9 @@ validateAdminEmailSubject rawSubject
   where
     subject = T.strip rawSubject
     isEmailHeaderLineBreak c = c == '\r' || c == '\n'
+
+adminEmailSubjectMaxLength :: Int
+adminEmailSubjectMaxLength = 160
 
 validateAdminEmailCtaUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdminEmailCtaUrl Nothing = Right Nothing

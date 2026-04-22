@@ -101,6 +101,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         expectationFailure ("Expected invalid admin email subject, got " <> show value)
             assertInvalid "Subject must not be empty" (validateAdminEmailSubject "   ")
             assertInvalid
+                "Subject must be 160 characters or fewer"
+                (validateAdminEmailSubject (T.replicate 161 "A"))
+            assertInvalid
                 "Subject must be a single line"
                 (validateAdminEmailSubject "Launch\nBcc: ops@example.com")
             assertInvalid
