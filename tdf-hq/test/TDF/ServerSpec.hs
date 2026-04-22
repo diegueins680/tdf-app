@@ -104,6 +104,7 @@ import TDF.Server
     , resolveInstagramBackfillTarget
     , resolveServiceAdEntity
     , resolveServiceAdSlotEntity
+    , resolveServiceMarketplaceBookingEntity
     , validateMetaBackfillOptions
     , parsePaymentMethodText
     , validateBookingTimeRange
@@ -1135,6 +1136,56 @@ spec = describe "TDF.Server helpers" $ do
                 Entity resolvedKey resolvedSlot -> do
                     resolvedKey `shouldBe` expectedSlotId
                     serviceAdSlotStatus resolvedSlot `shouldBe` "open"
+
+    describe "resolveServiceMarketplaceBookingEntity" $ do
+        it "rejects non-positive booking ids before escrow handlers hit persistence fallback paths" $ do
+            let assertInvalid rawBookingId = do
+                    result <- try $ runResourceSqlite $
+                        resolveServiceMarketplaceBookingEntity rawBookingId
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` "bookingId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid service marketplace booking id to be rejected, got: " <> show value)
+            assertInvalid 0
+            assertInvalid (-11)
+
+        it "returns 404 for unknown bookings instead of leaking a generic entity lookup exception" $ do
+            result <- try $ runResourceSqlite $
+                resolveServiceMarketplaceBookingEntity 999999
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr) `shouldContain` "Service marketplace booking not found"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown service marketplace booking lookup to be rejected, got: " <> show value)
+
+        it "resolves existing bookings before escrow state transitions run" $ do
+            (expectedBookingId, result) <- runResourceSqlite $ do
+                now <- liftIO getCurrentTime
+                bookingId <- insert Booking
+                    { bookingTitle = "Mastering booking"
+                    , bookingServiceOrderId = Nothing
+                    , bookingPartyId = Nothing
+                    , bookingServiceType = Just "mastering"
+                    , bookingEngineerPartyId = Nothing
+                    , bookingEngineerName = Nothing
+                    , bookingStartsAt = now
+                    , bookingEndsAt = addUTCTime 3600 now
+                    , bookingStatus = Confirmed
+                    , bookingCreatedBy = Nothing
+                    , bookingNotes = Nothing
+                    , bookingCreatedAt = now
+                    }
+                resolved <- resolveServiceMarketplaceBookingEntity (fromSqlKey bookingId)
+                pure (bookingId, resolved)
+            case result of
+                Entity resolvedKey resolvedBooking -> do
+                    resolvedKey `shouldBe` expectedBookingId
+                    bookingTitle resolvedBooking `shouldBe` "Mastering booking"
 
     describe "ChatSendMessageRequest" $ do
         it "accepts canonical chat body payloads" $

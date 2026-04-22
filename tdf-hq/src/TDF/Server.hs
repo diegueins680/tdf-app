@@ -5485,6 +5485,18 @@ resolveServiceAdSlotEntity rawSlotId = do
     pure
     mSlot
 
+resolveServiceMarketplaceBookingEntity :: Int64 -> SqlPersistT IO (Entity Booking)
+resolveServiceMarketplaceBookingEntity rawBookingId = do
+  bookingId <- case validatePositiveIdField "bookingId" rawBookingId of
+    Left serverErr -> liftIO $ throwIO serverErr
+    Right validBookingId -> pure validBookingId
+  let bookingKey = toSqlKey bookingId :: Key Booking
+  mBooking <- getEntity bookingKey
+  maybe
+    (liftIO $ throwIO err404 { errBody = "Service marketplace booking not found" })
+    pure
+    mBooking
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
@@ -5642,8 +5654,7 @@ completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMark
 completeServiceMarketplaceBooking user rawBookingId = do
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
-    let bookingKey = toSqlKey rawBookingId :: Key Booking
-    _ <- getJustEntity bookingKey
+    Entity bookingKey _ <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
     let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
@@ -5657,8 +5668,7 @@ releaseServiceMarketplaceEscrow user rawBookingId = do
   pool <- asks envPool
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
-    let bookingKey = toSqlKey rawBookingId :: Key Booking
-    booking <- getJustEntity bookingKey
+    booking@(Entity bookingKey _) <- resolveServiceMarketplaceBookingEntity rawBookingId
     Entity escrowKey escrow <- maybe (liftIO $ throwIO err404) pure =<< getBy (UniqueServiceEscrowBooking bookingKey)
     let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
     when (not canRelease) $ liftIO $ throwIO err403
