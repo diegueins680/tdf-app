@@ -10530,7 +10530,16 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
   where
     fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
     baseUrl = fromMaybe fallbackPublicUrl (sanitizeDriveWebContentLink mWebContentLink)
-    resolvedResourceKey = cleanOptional mUploadResourceKey <|> cleanOptional mMetaResourceKey
+    resolvedResourceKey =
+      sanitizeDriveResourceKey mUploadResourceKey
+        <|> sanitizeDriveResourceKey mMetaResourceKey
+
+sanitizeDriveResourceKey :: Maybe Text -> Maybe Text
+sanitizeDriveResourceKey mResourceKey = do
+  resourceKey <- cleanOptional mResourceKey
+  if T.length resourceKey <= 256 && T.all isDriveFolderIdChar resourceKey
+    then Just resourceKey
+    else Nothing
 
 sanitizeDriveWebContentLink :: Maybe Text -> Maybe Text
 sanitizeDriveWebContentLink mWebContentLink = do

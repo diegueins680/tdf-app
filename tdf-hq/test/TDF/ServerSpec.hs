@@ -3147,9 +3147,9 @@ spec = describe "TDF.Server helpers" $ do
                 "file-123"
                 (Just "https://drive.google.com/download/file-123")
                 Nothing
-                (Just "rk 123")
+                (Just "rk_123")
                 `shouldBe`
-                    "https://drive.google.com/download/file-123?resourcekey=rk%20123"
+                    "https://drive.google.com/download/file-123?resourcekey=rk_123"
 
             resolveDrivePublicUrl
                 "file-123"
@@ -3175,6 +3175,23 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123"
+
+        it "ignores malformed upload resource keys before trying metadata fallbacks" $ do
+            resolveDrivePublicUrl
+                "file-123"
+                Nothing
+                (Just "rk upload")
+                (Just "rk_meta-123")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk_meta-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                Nothing
+                (Just (T.replicate 257 "a"))
+                (Just "rk\nmeta")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123"
 
         it "encodes fallback file ids before adding resource-key query params" $
             resolveDrivePublicUrl "file 123&alt=media" Nothing (Just "rk-123") Nothing
