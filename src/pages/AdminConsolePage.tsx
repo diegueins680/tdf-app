@@ -176,6 +176,7 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
   'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
+const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
 };
@@ -443,6 +444,19 @@ function formatEditableRoleList(roles?: readonly RoleKey[] | null) {
   const formattedRoles = formatRoleList(roles);
 
   return formattedRoles === '—' ? 'Sin roles' : formattedRoles;
+}
+
+function formatInlineEditableRoleList(roles?: readonly RoleKey[] | null) {
+  const normalizedRoles = normalizeRoleSelection(roles);
+
+  if (normalizedRoles.length <= INLINE_ROLE_SUMMARY_LIMIT) {
+    return formatEditableRoleList(normalizedRoles);
+  }
+
+  const visibleRoles = normalizedRoles.slice(0, INLINE_ROLE_SUMMARY_LIMIT).join(', ');
+  const hiddenRoleCount = normalizedRoles.length - INLINE_ROLE_SUMMARY_LIMIT;
+
+  return `${visibleRoles} +${hiddenRoleCount} ${hiddenRoleCount === 1 ? 'rol' : 'roles'}`;
 }
 
 function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
@@ -1259,7 +1273,7 @@ export default function AdminConsolePage() {
                             textTransform: 'none',
                           }}
                         >
-                          {formatEditableRoleList(user.roles)}
+                          {formatInlineEditableRoleList(user.roles)}
                         </Button>
                       </TableCell>
                       {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
@@ -1313,7 +1327,7 @@ export default function AdminConsolePage() {
                     textTransform: 'none',
                   }}
                 >
-                  {formatEditableRoleList(singleAdminUser.roles)}
+                  {formatInlineEditableRoleList(singleAdminUser.roles)}
                 </Button>
                 {singleAdminUserLastAccess && (
                   <Typography variant="body2" color="text.secondary">
