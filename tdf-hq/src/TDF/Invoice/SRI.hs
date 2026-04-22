@@ -23,7 +23,7 @@ import           System.Process (proc, readCreateProcessWithExitCode)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 
-import           TDF.DTO (SriIssueResultDTO)
+import           TDF.DTO (SriIssueResultDTO(..))
 
 data SriScriptCustomer = SriScriptCustomer
   { ruc       :: Text
@@ -89,7 +89,18 @@ decodeSriScriptOutput :: String -> Either Text SriIssueResultDTO
 decodeSriScriptOutput stdoutTxt =
   case Aeson.eitherDecodeStrict' (TE.encodeUtf8 (T.pack stdoutTxt)) of
     Left err -> Left (T.pack ("Invalid SRI script JSON output: " <> err))
-    Right dto -> Right dto
+    Right dto -> validateSriScriptResult dto
+
+validateSriScriptResult :: SriIssueResultDTO -> Either Text SriIssueResultDTO
+validateSriScriptResult dto =
+  let statusValue = T.strip (sirStatus dto)
+  in if T.null statusValue
+       then Left "SRI script JSON output status is required"
+       else if T.any isInvalidStatusChar statusValue
+         then Left "SRI script JSON output status must not contain control characters"
+         else Right dto { sirStatus = statusValue }
+  where
+    isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
 
 resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do

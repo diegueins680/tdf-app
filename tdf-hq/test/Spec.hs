@@ -1848,6 +1848,21 @@ main = hspec $ do
                 Right result ->
                     DTO.sirStatus result `shouldBe` "autorización emitida"
 
+        it "rejects blank or control-character SRI statuses before invoice results are trusted" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed SRI script output to fail, got: " <> show value)
+            assertInvalid
+                "status is required"
+                "{\"ok\":true,\"status\":\"   \"}"
+            assertInvalid
+                "status must not contain control characters"
+                "{\"ok\":true,\"status\":\"autorizado\\nextra\"}"
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
