@@ -53,7 +53,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum, isAscii, isAsciiUpper)
+import           Data.Char (isAlphaNum, isAscii, isAsciiUpper, isHexDigit)
 import           Data.Int (Int64)
 import           Data.List (foldl', sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
@@ -2261,11 +2261,25 @@ validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
         Just normalizedTicketId -> Right (TicketCheckInLookupById normalizedTicketId)
         Nothing ->
           Left err400 { errBody = "ticketCheckInTicketId must be a positive integer" }
-    (Nothing, Just rawCode) -> Right (TicketCheckInLookupByCode (T.toUpper (T.strip rawCode)))
+    (Nothing, Just rawCode) ->
+      case normalizeTicketCheckInCode rawCode of
+        Just codeVal -> Right (TicketCheckInLookupByCode codeVal)
+        Nothing ->
+          Left err400 { errBody = "ticketCheckInTicketCode must be a generated ticket code" }
     (Just _, Just _) ->
       Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Nothing, Nothing) ->
       Left err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
+
+normalizeTicketCheckInCode :: T.Text -> Maybe T.Text
+normalizeTicketCheckInCode rawCode = do
+  suffix <- T.stripPrefix "TDF-" normalized
+  if T.length suffix == 12 && T.all isAsciiHexDigit suffix
+     then Just normalized
+     else Nothing
+  where
+    normalized = T.toUpper (T.strip rawCode)
+    isAsciiHexDigit ch = isAscii ch && isHexDigit ch
 
 normalizeEventType :: Maybe T.Text -> Maybe T.Text
 normalizeEventType mType =

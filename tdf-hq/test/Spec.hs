@@ -3661,9 +3661,9 @@ main = hspec $ do
             validateTicketCheckInLookup
                 TicketCheckInRequestDTO
                     { ticketCheckInTicketId = Nothing
-                    , ticketCheckInTicketCode = Just " ab-123 "
+                    , ticketCheckInTicketCode = Just " tdf-ab12cd34ef56 "
                     }
-                `shouldBe` Right (TicketCheckInLookupByCode "AB-123")
+                `shouldBe` Right (TicketCheckInLookupByCode "TDF-AB12CD34EF56")
 
         it "rejects ambiguous check-in payloads that provide both id and code" $ do
             case validateTicketCheckInLookup
@@ -3692,6 +3692,23 @@ main = hspec $ do
             assertInvalid "0"
             assertInvalid "-7"
             assertInvalid "ticket-42"
+
+        it "rejects malformed ticket codes before database lookup fallback" $ do
+            let assertInvalid rawCode =
+                    case validateTicketCheckInLookup
+                        TicketCheckInRequestDTO
+                            { ticketCheckInTicketId = Nothing
+                            , ticketCheckInTicketCode = Just rawCode
+                            } of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "ticketCheckInTicketCode must be a generated ticket code"
+                        Right value ->
+                            expectationFailure ("Expected invalid ticket code to be rejected, got " <> show value)
+            assertInvalid "AB-123"
+            assertInvalid "TDF-123"
+            assertInvalid "TDF-ABCDEFGHIJKL"
+            assertInvalid "TDF-AB12 CD34EF"
 
     describe "validateTicketCheckInOrderStatus" $ do
         it "accepts canonical paid and refunded order states for ticket check-in decisions" $ do
