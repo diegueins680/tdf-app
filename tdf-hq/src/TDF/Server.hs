@@ -1933,6 +1933,8 @@ validateDriveUploadName fieldName uploadName
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken token
+  | T.length token > 4096 =
+      Left err400 { errBody = "Google Drive access token must be 4096 characters or fewer" }
   | T.any isSpace token =
       Left err400 { errBody = "Google Drive access token must not contain whitespace" }
   | T.any isControl token =

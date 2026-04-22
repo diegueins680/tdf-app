@@ -2666,6 +2666,10 @@ main = hspec $ do
                 Nothing
                 (Just "ya29.valid\NULtoken")
                 "Google Drive access token must not contain control characters"
+            assertInvalid
+                (Just (Data.Text.replicate 4097 "a"))
+                Nothing
+                "Google Drive access token must be 4096 characters or fewer"
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
