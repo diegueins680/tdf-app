@@ -1911,6 +1911,46 @@ spec = describe "TDF.Server helpers" $ do
                     , "593991234567-0"
                     ]
 
+        it "skips blank sender or body rows and trims stored inbound webhook values" $ do
+            let message rawSender rawBody =
+                    WA.WAMessage
+                        (Just "   ")
+                        "text"
+                        rawSender
+                        (Just (WA.WAText rawBody))
+                        Nothing
+                        Nothing
+                        (Just " 1713715202 ")
+                contact =
+                    WA.WAContact
+                        (Just (WA.WAProfile (Just "  Ada  ")))
+                        (Just " 593991234567 ")
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue
+                                    (Just
+                                        [ message "   " "Inscribirme"
+                                        , message "593991234567" "   "
+                                        , message " 593991234567 " "  Inscribirme  "
+                                        ])
+                                    (Just [contact])
+                                    Nothing
+                                )
+                            ]
+                        ]
+
+            case extractWhatsAppInbound payload of
+                [row] -> do
+                    waInboundExternalId row `shouldBe` "593991234567-1713715202"
+                    waInboundSenderId row `shouldBe` "593991234567"
+                    waInboundSenderName row `shouldBe` Just "Ada"
+                    waInboundText row `shouldBe` "Inscribirme"
+                rows ->
+                    expectationFailure
+                        ("Expected one normalized inbound row, got: " <> show rows)
+
     describe "validateWhatsAppMessagesLimit" $ do
         it "defaults omitted limits and preserves explicit values inside the supported page window" $ do
             validateWhatsAppMessagesLimit Nothing `shouldBe` Right 100

@@ -3802,9 +3802,9 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
             ]
       in
         [ WAInbound
-            { waInboundExternalId = resolvedExternalId msg
-            , waInboundSenderId = WA.from msg
-            , waInboundSenderName = join (Map.lookup (WA.from msg) contactMap)
+            { waInboundExternalId = resolvedExternalId senderId msg
+            , waInboundSenderId = senderId
+            , waInboundSenderName = join (Map.lookup senderId contactMap)
             , waInboundText = body
             , waInboundAdExternalId = adExt
             , waInboundAdName = adName
@@ -3814,15 +3814,16 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
             }
         | msg@WAMessage{waType, text=Just txtBody} <- msgs
         , waType == "text"
-        , let body = WA.body txtBody
-              referral = waReferral msg <|> (waContext msg >>= waContextReferral)
+        , Just senderId <- [cleanOptional (Just (WA.from msg))]
+        , Just body <- [cleanOptional (Just (WA.body txtBody))]
+        , let referral = waReferral msg <|> (waContext msg >>= waContextReferral)
               (adExt, adName, metaTxt) = waReferralMeta referral
         ]
     extractChange _ = []
 
-    resolvedExternalId msg =
+    resolvedExternalId senderId msg =
       fromMaybe
-        (WA.from msg <> "-" <> fromMaybe "0" (cleanOptional (waTimestamp msg)))
+        (senderId <> "-" <> fromMaybe "0" (cleanOptional (waTimestamp msg)))
         (cleanOptional (waId msg))
 
     waReferralMeta Nothing = (Nothing, Nothing, Nothing)
