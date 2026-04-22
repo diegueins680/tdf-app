@@ -2250,6 +2250,70 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps all-match search guidance in the header instead of adding another utility row', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getPageGuidance(container)).toContain('3 usuarios en esta vista.');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'example.com');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'La búsqueda coincide con los 3 usuarios de esta vista.',
+        );
+        expect(container.textContent).not.toContain('3 usuarios en esta vista.');
+        expect(container.textContent).not.toContain('Vista actual: solo usuarios activos.');
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+
+      await changeInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
+        );
+        expect(container.textContent).not.toContain('La búsqueda coincide con los 3 usuarios de esta vista.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('treats whitespace-only search as empty so the admin list does not show a false search state', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

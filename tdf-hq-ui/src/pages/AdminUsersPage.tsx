@@ -628,6 +628,8 @@ export default function AdminUsersPage() {
 
     if (isFiltered) {
       parts.push(`Mostrando ${usersInCurrentSummary.length} de ${totalUsersCount} usuarios.`);
+    } else if (hasActiveSearch && hasMultipleUsers) {
+      parts.push(`La búsqueda coincide con los ${formatUserCountLabel(usersInCurrentSummary.length)} de esta vista.`);
     } else if (hasMultipleUsers) {
       parts.push(`${formatUserCountLabel(usersInCurrentSummary.length)} en esta vista.`);
     }
@@ -646,6 +648,7 @@ export default function AdminUsersPage() {
 
     return parts.join(' ');
   }, [
+    hasActiveSearch,
     hasMultipleUsers,
     hasUsers,
     isFiltered,
