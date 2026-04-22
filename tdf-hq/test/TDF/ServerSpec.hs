@@ -6015,6 +6015,21 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)
 
+        it "marks fallback discovery stubs as non-implemented placeholders" $
+            case firstFutureStub (mkUser [Admin]) of
+                Right stubResponse -> do
+                    stubImplemented stubResponse `shouldBe` False
+                    A.toJSON stubResponse
+                        `shouldBe` A.object
+                            [ "stubArea" .= ("access" :: Text)
+                            , "stubEndpoint" .= ("login-options" :: Text)
+                            , "stubStatus" .= ("planned" :: Text)
+                            , "stubImplemented" .= False
+                            ]
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected Admin fallback discovery access, got: " <> show serverErr)
+
     describe "hasSocialInboxAccess" $ do
         it "denies baseline and read-only CRM sessions" $ do
             hasSocialInboxAccess (mkUser [Fan, Customer]) `shouldBe` False

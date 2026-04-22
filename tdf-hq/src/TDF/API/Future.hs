@@ -13,9 +13,10 @@ import           Servant
 
 -- | Generic stub payload used while endpoints are being planned.
 data StubResponse = StubResponse
-  { stubArea     :: Text
-  , stubEndpoint :: Text
-  , stubStatus   :: Text
+  { stubArea        :: Text
+  , stubEndpoint    :: Text
+  , stubStatus      :: Text
+  , stubImplemented :: Bool
   } deriving stock (Show, Generic)
 
 instance ToJSON StubResponse

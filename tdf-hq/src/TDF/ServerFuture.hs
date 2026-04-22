@@ -13,9 +13,10 @@ import           TDF.Auth             (AuthedUser, hasStrictAdminAccess)
 -- | Shared helper to quickly craft stub responses.
 stub :: Applicative m => Text -> Text -> m StubResponse
 stub area endpoint = pure StubResponse
-  { stubArea     = area
-  , stubEndpoint = endpoint
-  , stubStatus   = "planned"
+  { stubArea        = area
+  , stubEndpoint    = endpoint
+  , stubStatus      = "planned"
+  , stubImplemented = False
   }
 
 futureServer
