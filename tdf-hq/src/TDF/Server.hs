@@ -8233,8 +8233,10 @@ shouldRetryWithFallbackModel status rawMessage =
     hasNonFallbackMarker = any (`T.isInfixOf` msg) nonFallbackMarkers
     markers =
       [ "does not have access to model"
+      , "doesn't have access to model"
       , "do not have access to model"
-      , "access to model"
+      , "don't have access to model"
+      , "no access to model"
       , "model not found"
       , "unknown model"
       , "invalid model"

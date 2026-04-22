@@ -2462,8 +2462,12 @@ spec = describe "TDF.Server helpers" $ do
         it "falls back only when the upstream error is explicitly model-related" $ do
             shouldRetryWithFallbackModel 403 "Project does not have access to model gpt-x"
                 `shouldBe` True
+            shouldRetryWithFallbackModel 403 "Project doesn't have access to model gpt-x"
+                `shouldBe` True
             shouldRetryWithFallbackModel 404 "model_not_found"
                 `shouldBe` True
+            shouldRetryWithFallbackModel 403 "API key needs write access to model configuration"
+                `shouldBe` False
             shouldRetryWithFallbackModel 401 "Error al generar respuesta (HTTP 401)"
                 `shouldBe` False
             shouldRetryWithFallbackModel 403 "Error al generar respuesta (HTTP 403)"
