@@ -123,6 +123,16 @@ const countLabelsByText = (root: ParentNode, labelText: string) =>
 const getTableHeaders = (root: ParentNode) =>
   Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
 
+const getColumnTextsByHeader = (root: ParentNode, headerText: string) => {
+  const headers = getTableHeaders(root);
+  const columnIndex = headers.indexOf(headerText);
+  if (columnIndex < 0) return [];
+
+  return Array.from(root.querySelectorAll('tbody tr')).map((row) => (
+    row.querySelectorAll('td')[columnIndex]?.textContent ?? ''
+  ).replace(/\s+/g, ' ').trim());
+};
+
 const queryActionByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).find(
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
@@ -534,9 +544,44 @@ describe('MarketplaceOrdersPage', () => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
         expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
         expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(getTableHeaders(container)).not.toContain('Pago');
+        expect(getColumnTextsByHeader(container, 'Pago')).toEqual([]);
         expect(container.textContent).toContain(
           'Todos los pedidos visibles usan PayPal. El filtro de método aparecerá cuando esta vista mezcle más de un canal de pago.',
         );
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the payment column when visible rows need per-order payment context', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moPaymentProvider: 'paypal',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'datafast',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getTableHeaders(container)).toContain('Pago');
+        expect(getColumnTextsByHeader(container, 'Pago')).toEqual(['Tarjeta (Datafast)', 'PayPal']);
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {

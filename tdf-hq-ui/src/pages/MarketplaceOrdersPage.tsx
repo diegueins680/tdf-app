@@ -109,6 +109,9 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
+const formatPaymentProvider = (value?: string | null) => (
+  normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
+);
 const normalizeOrderCurrency = (value: string) => value.trim().toUpperCase();
 const getOrderCurrencyCaption = (order: Pick<MarketplaceOrderDTO, 'moCurrency' | 'moTotalDisplay'>) => {
   const currency = normalizeOrderCurrency(order.moCurrency);
@@ -274,6 +277,20 @@ export default function MarketplaceOrdersPage() {
     if (!firstCaption) return '';
     return captions.every((caption) => caption === firstCaption) ? firstCaption : '';
   }, [filtered]);
+  const visiblePaymentProviderValues = useMemo(
+    () => filtered.map((order) => normalizeProviderFilterValue(order.moPaymentProvider)),
+    [filtered],
+  );
+  const visiblePaymentProviderSet = useMemo(
+    () => new Set(visiblePaymentProviderValues.filter(Boolean)),
+    [visiblePaymentProviderValues],
+  );
+  const hasVisibleOrdersWithoutPaymentProvider = visiblePaymentProviderValues.some((provider) => !provider);
+  const hasVisiblePayerEmail = filtered.some((order) => Boolean(order.moPaypalPayerEmail?.trim()));
+  const showPaymentProviderColumn =
+    hasVisiblePayerEmail
+    || visiblePaymentProviderSet.size > 1
+    || (visiblePaymentProviderSet.size === 1 && (filtered.length === 1 || hasVisibleOrdersWithoutPaymentProvider));
   const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
 
@@ -846,14 +863,14 @@ export default function MarketplaceOrdersPage() {
                     <TableCell>Cliente</TableCell>
                     {showBuyerPhoneColumn && <TableCell>Contacto</TableCell>}
                     <TableCell>Estado</TableCell>
-                  <TableCell align="right">Total</TableCell>
-                  <TableCell>Pago</TableCell>
-                  <TableCell>Creado</TableCell>
-                  {showPaidAtColumn && <TableCell>Pagado</TableCell>}
-                  <TableCell>Items</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+                    <TableCell align="right">Total</TableCell>
+                    {showPaymentProviderColumn && <TableCell>Pago</TableCell>}
+                    <TableCell>Creado</TableCell>
+                    {showPaidAtColumn && <TableCell>Pagado</TableCell>}
+                    <TableCell>Items</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                 {filtered.map((order) => {
                   const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
 
@@ -919,22 +936,26 @@ export default function MarketplaceOrdersPage() {
                         <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
                       </TableCell>
                       <TableCell align="right">{order.moTotalDisplay}</TableCell>
-                      <TableCell>
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2">{order.moPaymentProvider ?? '—'}</Typography>
-                          {order.moPaypalPayerEmail && (
-                            <Link
-                              href={`mailto:${order.moPaypalPayerEmail}`}
-                              underline="hover"
-                              variant="caption"
-                              color="text.secondary"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {order.moPaypalPayerEmail}
-                            </Link>
-                          )}
-                        </Stack>
-                      </TableCell>
+                      {showPaymentProviderColumn && (
+                        <TableCell>
+                          <Stack spacing={0.5}>
+                            <Typography variant="body2">
+                              {formatPaymentProvider(order.moPaymentProvider)}
+                            </Typography>
+                            {order.moPaypalPayerEmail && (
+                              <Link
+                                href={`mailto:${order.moPaypalPayerEmail}`}
+                                underline="hover"
+                                variant="caption"
+                                color="text.secondary"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {order.moPaypalPayerEmail}
+                              </Link>
+                            )}
+                          </Stack>
+                        </TableCell>
+                      )}
                       <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
                       {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
                       <TableCell>
