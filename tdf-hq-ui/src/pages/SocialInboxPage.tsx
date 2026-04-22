@@ -460,7 +460,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   useEffect(() => {
     if (!open || !msg) return;
     setHint('');
-    setReplyDraft((msg.replyText ?? '').trim());
+    setReplyDraft(msg.repliedAt ? '' : (msg.replyText ?? '').trim());
     setAiLoading(false);
     setSendLoading(false);
     setError(null);
@@ -523,20 +523,23 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
 
   const handleSend = async () => {
     if (!channel || !msg) return;
+    const outgoingMessage = replyDraft.trim();
+    if (!outgoingMessage) return;
     setSendLoading(true);
     setError(null);
     setNotice(null);
     try {
       const response = await SocialInboxAPI.sendReply(channel, {
         senderId: msg.senderId,
-        message: replyDraft,
+        message: outgoingMessage,
         externalId: msg.externalId,
       });
       const outboundId = extractProviderMessageId(response?.response);
       setProviderMessageId(outboundId);
       setOptimisticRepliedAt(new Date().toISOString());
-      setOptimisticReplyText(replyDraft.trim());
+      setOptimisticReplyText(outgoingMessage);
       setOptimisticReplyError(null);
+      setReplyDraft('');
       setNotice(reviewMode ? 'Message sent from app UI.' : 'Respuesta enviada.');
       onRefresh();
     } catch (err) {
@@ -573,6 +576,26 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
   const replyTextValue = optimisticReplyText ?? msg?.replyText;
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
+  const hasDeliveredReply = Boolean(repliedAtValue);
+  const replyInputLabel = hasDeliveredReply
+    ? reviewMode
+      ? 'Follow-up message'
+      : 'Seguimiento'
+    : reviewMode
+      ? 'Outgoing message'
+      : 'Respuesta';
+  const replyInputPlaceholder = hasDeliveredReply
+    ? reviewMode
+      ? 'Type a follow-up only if another app message is needed...'
+      : 'Escribe un seguimiento solo si hace falta otro mensaje...'
+    : reviewMode
+      ? 'Type the message to send...'
+      : 'Escribe la respuesta...';
+  const replyInputHelper = hasDeliveredReply
+    ? reviewMode
+      ? 'Already replied. Send a follow-up only if the review run needs a second app message.'
+      : 'Ya respondido. Envia un seguimiento solo si hace falta otro mensaje.'
+    : undefined;
   const replyErrorSummary = useMemo(
     () => summarizeReplyError(replyErrorValue, reviewMode),
     [replyErrorValue, reviewMode],
@@ -964,8 +987,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                 </Stack>
 
                 <TextField
-                  label={reviewMode ? 'Outgoing message' : 'Respuesta'}
-                  placeholder={reviewMode ? 'Type the message to send...' : 'Escribe la respuesta...'}
+                  label={replyInputLabel}
+                  placeholder={replyInputPlaceholder}
+                  helperText={replyInputHelper}
                   value={replyDraft}
                   onChange={(e) => setReplyDraft(e.target.value)}
                   disabled={sendLoading}

@@ -647,6 +647,38 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('treats an already delivered reply as proof instead of preloading it as a duplicate send draft', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    });
+
+    await waitForExpectation(() => {
+      const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
+      const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
+      );
+      expect(followUpInput.value).toBe('');
+      expect(sendButton).toBeInstanceOf(HTMLButtonElement);
+      expect((sendButton as HTMLButtonElement).disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Copy')).toBe(0);
+      expect(countButtonsByText(document.body, 'Clear')).toBe(0);
+      expect(document.body.textContent).toContain(
+        'Already replied. Send a follow-up only if the review run needs a second app message.',
+      );
+      expect(document.body.textContent).toContain(
+        'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('keeps the review reply dialog footer focused on sending instead of duplicating close actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
