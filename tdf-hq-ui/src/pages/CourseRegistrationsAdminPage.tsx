@@ -640,6 +640,9 @@ const defaultPublicFormSourceKeys = new Set([
   defaultPublicFormSource,
   'public form',
   'formulario publico',
+  'registration form',
+  'formulario de inscripcion',
+  'formulario de registro',
 ].map(normalizeSourceAliasKey));
 
 const registrationSourceLabel = (source: string | null | undefined) => {

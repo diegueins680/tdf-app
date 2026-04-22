@@ -7029,12 +7029,14 @@ describe('CourseRegistrationsAdminPage', () => {
   it('keeps hidden default and empty sources out of busy-list local search', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
-        crSource: index % 4 === 0
+        crSource: index % 5 === 0
           ? 'landing'
-          : index % 4 === 1
+          : index % 5 === 1
             ? 'public_form'
-            : index % 4 === 2
+            : index % 5 === 2
               ? 'formulario-publico'
+              : index % 5 === 3
+                ? 'registration_form'
               : null,
       })),
     );
@@ -7051,24 +7053,26 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain('Fuente: Public form');
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
+      expect(container.textContent).not.toContain('Fuente: Registration form');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente visible: Public form.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
+      expect(container.textContent).not.toContain('Fuente visible: Registration form.');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'public form');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'registration form');
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain('No hay coincidencias para "public form" en las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('No hay coincidencias para "registration form" en las 9 inscripciones cargadas.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
