@@ -1854,6 +1854,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No items found/i)).not.toBeInTheDocument();
   });
 
+  it('ignores no-information fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-information-empty',
+          title: 'Integraciones',
+          body: ['Sin información disponible.'],
+        },
+        {
+          cardId: 'service-tokens-elements-empty',
+          title: 'Service tokens',
+          body: ['No elements available yet.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Integraciones|Service tokens/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin información disponible/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No elements available/i)).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
