@@ -1423,6 +1423,82 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps collapsed inactive profile links out of the visible-row guidance', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        partyName: 'Ada Pendiente',
+        username: 'ada-pendiente',
+        primaryEmail: 'ada@example.com',
+        primaryPhone: '+593999000111',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: null,
+        partyName: 'Grace Pendiente',
+        username: 'grace-pendiente',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 103,
+              partyId: 13,
+              partyName: 'Linus Inactivo',
+              username: 'linus-inactivo',
+              active: false,
+              primaryEmail: 'linus@example.com',
+              primaryPhone: '+593999000333',
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado. 2 usuarios en esta vista. Vista actual: solo usuarios activos.',
+        );
+        expect(getRowByUserId(container, 101).querySelectorAll('a')).toHaveLength(0);
+        expect(getRowByUserId(container, 102).querySelectorAll('a')).toHaveLength(0);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado. 2 usuarios en esta vista.',
+        );
+        expect(container.querySelector('[data-testid="admin-user-row-103"]')).toBeNull();
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.textContent).not.toContain(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
+        );
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 2 usuarios todavía sin perfil vinculado; sus nombres no abren un perfil.',
+        );
+        expect(hasLinkWithTextAndHref(getRowByUserId(container, 103), 'Linus Inactivo', '/perfil/13')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps shared access scoped to shown rows while inactive users stay collapsed', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
       buildUser({

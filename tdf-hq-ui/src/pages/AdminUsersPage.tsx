@@ -562,25 +562,10 @@ export default function AdminUsersPage() {
       .sort(compareAdminUsers),
     [deferredSearchQuery, users],
   );
-  const visibleUsersMissingWhatsAppCount = useMemo(
-    () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user)).length,
-    [visibleUsers],
-  );
-  const visibleUsersMissingContactCount = useMemo(
-    () => visibleUsers.filter((user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user)).length,
-    [visibleUsers],
-  );
   const visibleInactiveUsersCount = useMemo(
     () => visibleUsers.filter((user) => !user.active).length,
     [visibleUsers],
   );
-  const visibleUsersPendingProfileCount = useMemo(
-    () => visibleUsers.filter((user) => !hasLinkedAdminUserProfile(user)).length,
-    [visibleUsers],
-  );
-  const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
-  const hasVisibleLinkedProfile = visibleUsers.some((user) => hasLinkedAdminUserProfile(user));
-  const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
@@ -590,25 +575,11 @@ export default function AdminUsersPage() {
   const showSingleUserGuidance = totalUsersCount === 1 && !hasActiveSearch;
   const singleVisibleUser = showSingleUserGuidance ? (visibleUsers[0] ?? null) : null;
   const singleVisibleUserReadiness = singleVisibleUser ? getUserContactReadiness(singleVisibleUser) : null;
-  const visibleUsersAllNeedContact = visibleUsers.length > 0 && visibleUsersMissingContactCount === visibleUsers.length;
-  const visibleUsersAllNeedWhatsApp =
-    visibleUsers.length > 1
-    && visibleUsersPendingWhatsAppCount === visibleUsers.length;
-  const hasVisibleWhatsAppAction = visibleUsersWithWhatsAppCount > 0;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
   const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
-  const hasMixedPendingContactStates = visibleUsersPendingWhatsAppCount > 0 && visibleUsersMissingContactCount > 0;
-  const showMixedContactStateGuidance =
-    (hasVisibleWhatsAppAction || hasMixedPendingContactStates)
-    && (visibleUsersPendingWhatsAppCount > 0 || visibleUsersMissingContactCount > 0);
-  const showSharedPendingProfileGuidance = visibleUsers.length > 1
-    && visibleUsersPendingProfileCount > 1
-    && (hasVisibleLinkedProfile || hasActiveSearch);
-  const showSharedContactStateGuidance = visibleUsers.length > 1
-    && (showMixedContactStateGuidance || visibleUsersAllNeedContact || visibleUsersAllNeedWhatsApp);
   const showOnlyInactiveUsers = !hasActiveSearch
     && includeInactive
     && visibleUsers.length > 0
@@ -617,28 +588,6 @@ export default function AdminUsersPage() {
     includeInactive
     && visibleInactiveUsersCount > 0
     && (visibleUsers.length > 1 || showOnlyInactiveUsers);
-  const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
-  const hideSingleRowPendingState =
-    showSingleSearchResultGuidance
-    || showSingleUserGuidance
-    || hideRepeatedPendingStateChips;
-  const hideRepeatedPendingProfileLabel =
-    showSharedPendingProfileGuidance
-    || (showGeneralIntro && !hasVisibleLinkedProfile)
-    || Boolean(singleVisibleUser && showSingleUserGuidance && !hasLinkedAdminUserProfile(singleVisibleUser))
-    || Boolean(
-      singleSearchResult
-      && showSingleSearchResultGuidance
-      && !hasLinkedAdminUserProfile(singleSearchResult),
-    );
-  const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
-  const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
-  const showInactiveFilterAction = hasMultipleUsers || includeInactive;
-  const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
-  const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
-    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
-  const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const activeVisibleUsers = useMemo(
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => user.active) : visibleUsers),
     [showInactiveUsersGroup, visibleUsers],
@@ -653,6 +602,10 @@ export default function AdminUsersPage() {
   const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
     ? activeVisibleUsers
     : visibleUsers;
+  const currentSummaryPendingProfileCount = usersInCurrentSummary.filter(
+    (user) => !hasLinkedAdminUserProfile(user),
+  ).length;
+  const hasCurrentSummaryLinkedProfile = usersInCurrentSummary.some((user) => hasLinkedAdminUserProfile(user));
   const sharedRolesSummary = useMemo(
     () => getSharedAccessSummary(usersInCurrentSummary.map((user) => getUserAccessSummary(user.roles))),
     [usersInCurrentSummary],
@@ -669,10 +622,45 @@ export default function AdminUsersPage() {
   const currentSummaryWithWhatsAppCount = usersInCurrentSummary.length - currentSummaryMissingWhatsAppCount;
   const currentSummaryHasMixedPendingContactStates =
     currentSummaryPendingWhatsAppCount > 0 && currentSummaryMissingContactCount > 0;
+  const currentSummaryAllNeedContact =
+    usersInCurrentSummary.length > 0 && currentSummaryMissingContactCount === usersInCurrentSummary.length;
+  const currentSummaryAllNeedWhatsApp =
+    usersInCurrentSummary.length > 1 && currentSummaryPendingWhatsAppCount === usersInCurrentSummary.length;
+  const hasCurrentSummaryWhatsAppAction = currentSummaryWithWhatsAppCount > 0;
+  const showMixedContactStateGuidance =
+    (hasCurrentSummaryWhatsAppAction || currentSummaryHasMixedPendingContactStates)
+    && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
+  const showSharedPendingProfileGuidance = usersInCurrentSummary.length > 1
+    && currentSummaryPendingProfileCount > 1
+    && (hasCurrentSummaryLinkedProfile || hasActiveSearch);
+  const showSharedContactStateGuidance = usersInCurrentSummary.length > 1
+    && (showMixedContactStateGuidance || currentSummaryAllNeedContact || currentSummaryAllNeedWhatsApp);
   const showCurrentSummaryContactState =
     usersInCurrentSummary.length > 1
     && (currentSummaryWithWhatsAppCount > 0 || currentSummaryHasMixedPendingContactStates)
     && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
+  const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
+  const hideSingleRowPendingState =
+    showSingleSearchResultGuidance
+    || showSingleUserGuidance
+    || hideRepeatedPendingStateChips;
+  const hideRepeatedPendingProfileLabel =
+    showSharedPendingProfileGuidance
+    || (showGeneralIntro && !hasCurrentSummaryLinkedProfile)
+    || Boolean(singleVisibleUser && showSingleUserGuidance && !hasLinkedAdminUserProfile(singleVisibleUser))
+    || Boolean(
+      singleSearchResult
+      && showSingleSearchResultGuidance
+      && !hasLinkedAdminUserProfile(singleSearchResult),
+    );
+  const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
+  const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
+  const showInactiveFilterAction = hasMultipleUsers || includeInactive;
+  const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
+  const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
+    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
+  const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
@@ -721,7 +709,7 @@ export default function AdminUsersPage() {
     }
 
     if (showSharedPendingProfileGuidance) {
-      parts.push(buildPendingProfileSummary(visibleUsersPendingProfileCount));
+      parts.push(buildPendingProfileSummary(currentSummaryPendingProfileCount));
     }
 
     if (showCurrentSummaryContactState) {
@@ -746,8 +734,8 @@ export default function AdminUsersPage() {
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
     totalUsersCount,
+    currentSummaryPendingProfileCount,
     usersInCurrentSummary.length,
-    visibleUsersPendingProfileCount,
   ]);
   const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
@@ -780,15 +768,15 @@ export default function AdminUsersPage() {
       .join(' '),
     [activeScopeSummary, inactiveScopeSummary, visibleUsersSummary],
   );
-  const generalIntro = hasVisibleWhatsAppAction
-    ? hasVisibleLinkedProfile
+  const generalIntro = hasCurrentSummaryWhatsAppAction
+    ? hasCurrentSummaryLinkedProfile
       ? ADMIN_USERS_PAGE_INTRO
       : ADMIN_USERS_PAGE_PROFILE_PENDING_INTRO
-    : visibleUsersAllNeedContact
-      ? hasVisibleLinkedProfile
+    : currentSummaryAllNeedContact
+      ? hasCurrentSummaryLinkedProfile
         ? ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO
         : ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO
-      : hasVisibleLinkedProfile
+      : hasCurrentSummaryLinkedProfile
         ? ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO
         : ADMIN_USERS_PAGE_PROFILE_PENDING_NUMBER_SETUP_INTRO;
   const singleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
