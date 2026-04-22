@@ -25,7 +25,11 @@ import TDF.API
     , WhatsAppConsentStatus (..)
     )
 import TDF.API.Drive (DriveUploadForm (..))
-import TDF.API.Types (DriveTokenExchangeRequest (..), DriveTokenRefreshRequest (..))
+import TDF.API.Types
+    ( DriveTokenExchangeRequest (..)
+    , DriveTokenRefreshRequest (..)
+    , maxMarketplaceCartItemQuantity
+    )
 import TDF.Auth
     ( AuthedUser (..)
     , extractTokenFromHeaders
@@ -152,6 +156,7 @@ import TDF.Server
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , requireMarketplaceCartTotals
+    , validateMarketplaceCartLineQuantity
     , validateDatafastEntityId
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
@@ -3816,6 +3821,10 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (MarketplaceCartMissing :: MarketplaceCartTotalsState Int) 404 ""
             assertInvalid MarketplaceCartEmpty 400 "El carrito esta vacio."
             assertInvalid
+                (MarketplaceCartInvalidQuantity 0)
+                409
+                "El carrito contiene una cantidad invalida"
+            assertInvalid
                 (MarketplaceCartMixedCurrencies ["USD", "EUR"])
                 400
                 "El carrito no puede mezclar monedas: USD, EUR"
@@ -3823,6 +3832,25 @@ spec = describe "TDF.Server helpers" $ do
         it "passes through loaded cart totals for downstream checkout logic" $
             requireMarketplaceCartTotals (MarketplaceCartTotalsReady (1200 :: Int))
                 `shouldBe` Right 1200
+
+        it "rejects impossible stored line quantities before checkout can create order items" $ do
+            validateMarketplaceCartLineQuantity 1 `shouldBe` Right 1
+            validateMarketplaceCartLineQuantity maxMarketplaceCartItemQuantity
+                `shouldBe` Right maxMarketplaceCartItemQuantity
+            let assertInvalid rawQuantity =
+                    case validateMarketplaceCartLineQuantity rawQuantity of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 409
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "cantidades entre 1 y 99"
+                        Right quantity ->
+                            expectationFailure
+                                ( "Expected invalid marketplace cart quantity to be rejected, got: "
+                                    <> show quantity
+                                )
+            assertInvalid 0
+            assertInvalid (-2)
+            assertInvalid (maxMarketplaceCartItemQuantity + 1)
 
     describe "validateMarketplaceOnlinePaymentTotal" $ do
         it "accepts positive totals so payable carts can proceed to online gateways" $ do

@@ -9372,6 +9372,7 @@ requireMarketplaceAccess user =
 data MarketplaceCartTotalsState a
   = MarketplaceCartMissing
   | MarketplaceCartEmpty
+  | MarketplaceCartInvalidQuantity Int
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
@@ -9397,22 +9398,30 @@ loadCartTotals cartId = do
       if null items
         then pure MarketplaceCartEmpty
         else do
-          let totalCents = sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
-                               | (_, listing, _, qty) <- items
-                               ]
-              currencies =
-                nub [ ME.marketplaceListingCurrency (entityVal listing)
-                    | (_, listing, _, _) <- items
-                    ]
-          case currencies of
-            [currency] -> pure (MarketplaceCartTotalsReady (items, totalCents, currency))
-            mixed -> pure (MarketplaceCartMixedCurrencies mixed)
+          let quantities = [ qty | (_, _, _, qty) <- items ]
+          case find isInvalidMarketplaceCartLineQuantity quantities of
+            Just invalidQuantity ->
+              pure (MarketplaceCartInvalidQuantity invalidQuantity)
+            Nothing -> do
+              let totalCents =
+                    sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
+                        | (_, listing, _, qty) <- items
+                        ]
+                  currencies =
+                    nub [ ME.marketplaceListingCurrency (entityVal listing)
+                        | (_, listing, _, _) <- items
+                        ]
+              case currencies of
+                [currency] -> pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+                mixed -> pure (MarketplaceCartMixedCurrencies mixed)
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
   Left err404
 requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
+requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
+  Left (marketplaceCartInvalidQuantityError rawQuantity)
 requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
   Left err400
     { errBody =
@@ -9421,6 +9430,27 @@ requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
     }
 requireMarketplaceCartTotals (MarketplaceCartTotalsReady totals) =
   Right totals
+
+validateMarketplaceCartLineQuantity :: Int -> Either ServerError Int
+validateMarketplaceCartLineQuantity rawQuantity
+  | isInvalidMarketplaceCartLineQuantity rawQuantity =
+      Left (marketplaceCartInvalidQuantityError rawQuantity)
+  | otherwise =
+      Right rawQuantity
+
+isInvalidMarketplaceCartLineQuantity :: Int -> Bool
+isInvalidMarketplaceCartLineQuantity rawQuantity =
+  rawQuantity < 1 || rawQuantity > maxMarketplaceCartItemQuantity
+
+marketplaceCartInvalidQuantityError :: Int -> ServerError
+marketplaceCartInvalidQuantityError _ =
+  err409
+    { errBody =
+        BL.fromStrict . TE.encodeUtf8 $
+          "El carrito contiene una cantidad invalida; actualiza las cantidades entre 1 y "
+            <> T.pack (show maxMarketplaceCartItemQuantity)
+            <> "."
+    }
 
 validateMarketplaceOnlinePaymentTotal :: Int -> Either ServerError Int
 validateMarketplaceOnlinePaymentTotal totalCents
