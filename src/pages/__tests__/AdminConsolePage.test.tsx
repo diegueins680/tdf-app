@@ -875,6 +875,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps generic settings fallback cards from duplicating the configuration shell', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-settings',
+          title: 'Settings',
+          body: ['Review workspace settings before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-preferences',
+          title: 'Preferencias',
+          body: ['Ajusta preferencias del sistema desde Configuración.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Preferencias')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review workspace settings before changing permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Ajusta preferencias del sistema desde Configuración\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps demo-data fallback cards from duplicating the first-run seed action', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
