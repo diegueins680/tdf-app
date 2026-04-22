@@ -2791,6 +2791,9 @@ main = hspec $ do
                                 )
             assertInvalid ["https://cdn.example.com/post.jpg", "   "] "mediaUrls entries must not be blank"
             assertInvalid ["https://cdn.example.com/post 42.jpg"] "mediaUrls entries must not contain whitespace"
+            assertInvalid
+                [" https://cdn.example.com/post.jpg ", "https://cdn.example.com/post.jpg"]
+                "mediaUrls entries must be unique"
 
         it "rejects unsafe or non-public media URLs before social sync rows are stored" $ do
             let assertInvalid raw =

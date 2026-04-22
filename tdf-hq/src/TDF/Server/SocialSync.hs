@@ -292,6 +292,10 @@ validateSocialSyncMediaUrls (Just rawUrls)
             BL.fromStrict
               (TE.encodeUtf8 "mediaUrls entries must be absolute public http(s) URLs")
         }
+  | length mediaUrls /= length (nub mediaUrls) =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must be unique")
+        }
   | otherwise =
       Right (nonEmptyText (T.intercalate "\n" mediaUrls))
   where
