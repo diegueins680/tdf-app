@@ -696,6 +696,55 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps duplicate identity contacts out of the admin search placeholder', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyName: '   ',
+        username: 'ops@example.com',
+        primaryEmail: 'ops@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: '   ',
+        username: 'booking@example.com',
+        primaryEmail: 'booking@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: '   ',
+        username: '999000333',
+        primaryEmail: null,
+        primaryPhone: '+593 999 000 333',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Usuario');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+        expect(getRowByUserId(container, 101).textContent?.match(/ops@example\.com/g) ?? []).toHaveLength(1);
+        expect(getRowByUserId(container, 102).textContent?.match(/booking@example\.com/g) ?? []).toHaveLength(1);
+        expect(getRowByUserId(container, 103).textContent?.match(/999000333/g) ?? []).toHaveLength(1);
+        expect(getRowByUserId(container, 103).textContent).not.toContain('+593 999 000 333');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('moves profile access into the linked identity so each row keeps only one explicit CTA', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),

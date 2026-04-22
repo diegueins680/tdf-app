@@ -393,7 +393,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
     if (username && normalizeIdentityComparison(username) !== normalizeIdentityComparison(partyName)) {
       hasDistinctUsername = true;
     }
-    if (getUserContactSearchValues(user).length > 0) hasContact = true;
+    if (getVisibleUserContactSummary(user)) hasContact = true;
     if (rolesSummary && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY)) {
       hasNonDefaultRoles = true;
     }
