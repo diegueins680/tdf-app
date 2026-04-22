@@ -81,6 +81,7 @@ const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera so
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
+const retrySystemEmailsLabel = 'Reintentar correos';
 const optionalDossierContextActionsFallbackLabel = 'Agregar contexto';
 const optionalDossierNotesAndFollowUpActionsLabel = 'Agregar nota o seguimiento';
 const optionalDossierNotesActionLabel = 'Agregar nota interna';
@@ -1982,6 +1983,9 @@ export default function CourseRegistrationsAdminPage() {
   const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
+  const showSystemEmailHistoryRetryAction = showSystemEmailHistoryAction
+    && showEmailHistory
+    && emailEventsQuery.isError;
   const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
   const initialEmptyStateMessage = firstRunCohort
@@ -2177,6 +2181,11 @@ export default function CourseRegistrationsAdminPage() {
       requests.push(emailEventsQuery.refetch());
     }
     void Promise.all(requests);
+  };
+
+  const handleRefreshSystemEmails = () => {
+    if (selectedDossierId == null) return;
+    void emailEventsQuery.refetch();
   };
 
   const handleCopyCsv = async () => {
@@ -2668,6 +2677,7 @@ export default function CourseRegistrationsAdminPage() {
     && !dossierQuery.isLoading
     && !dossierQuery.isError
     && !isMarkPaidIntent
+    && !showSystemEmailHistoryRetryAction
     && hasDossierRefreshContext;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory
     ? 'Refrescar expediente y correos'
@@ -4114,7 +4124,19 @@ export default function CourseRegistrationsAdminPage() {
                       )}
 
                       {emailEventsQuery.isError && (
-                        <Alert severity="error">
+                        <Alert
+                          severity="error"
+                          action={(
+                            <Button
+                              color="inherit"
+                              size="small"
+                              onClick={handleRefreshSystemEmails}
+                              disabled={emailEventsQuery.isFetching}
+                            >
+                              {retrySystemEmailsLabel}
+                            </Button>
+                          )}
+                        >
                           No se pudo cargar el historial: {emailEventsQuery.error instanceof Error ? emailEventsQuery.error.message : 'Error'}
                         </Alert>
                       )}

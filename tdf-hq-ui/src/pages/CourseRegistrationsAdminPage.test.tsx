@@ -188,6 +188,7 @@ const editingReceiptComposerHelpText =
   'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
 const hideSystemEmailsLabel = 'Ocultar correos del sistema';
+const retrySystemEmailsLabel = 'Reintentar correos';
 const systemEmailHistoryHelperText =
   'Historial persistente de correos del sistema para esta inscripción. Usa el refresco del expediente para volver a consultarlo.';
 const emptySystemEmailHistoryMessage =
@@ -3309,6 +3310,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getRegistrationDossierMock).toHaveBeenCalledWith('beatmaking-101', 101);
       expect(listRegistrationEmailsMock).toHaveBeenCalledWith(101, 200);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps failed system-email retry inside the email panel instead of the dossier title icon', async () => {
+    listRegistrationEmailsMock
+      .mockRejectedValueOnce(new Error('Email service unavailable'))
+      .mockResolvedValueOnce([
+        buildEmailEvent({
+          ceMessage: 'Recordatorio reenviado.',
+        }),
+      ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('No se pudo cargar el historial: Email service unavailable');
+      expect(getButtonByText(document.body, retrySystemEmailsLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, retrySystemEmailsLabel)).toBe(1);
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, retrySystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationEmailsMock).toHaveBeenCalledTimes(2);
+      expect(document.body.textContent).toContain('Recordatorio reenviado.');
+      expect(document.body.textContent).not.toContain('No se pudo cargar el historial');
+      expect(countButtonsByText(document.body, retrySystemEmailsLabel)).toBe(0);
     });
 
     await cleanup();
