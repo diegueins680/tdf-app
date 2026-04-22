@@ -1461,6 +1461,48 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes partial missing contact once without adding row placeholders', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: 'Ada Lovelace',
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crPhoneE164: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Katherine Johnson')).toBeTruthy();
+      expect(hasExactText(container, '1 inscripción visible con contacto pendiente.')).toBe(true);
+      expect(countOccurrences(container, '1 inscripción visible con contacto pendiente.')).toBe(1);
+      expect(container.textContent).not.toContain('Contacto pendiente en todas las inscripciones visibles.');
+      expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
+    });
+
+    await cleanup();
+  });
+
   it('disambiguates duplicate named registrations in row actions without adding generic row controls', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

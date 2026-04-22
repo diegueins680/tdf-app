@@ -848,6 +848,17 @@ const namedRegistrationNeedsContact = (
   && !reg.crPhoneE164?.trim()
 );
 
+const formatVisibleMissingContactSummary = (missingContactCount: number, visibleCount: number) => {
+  if (visibleCount <= 1 || missingContactCount === 0) return '';
+
+  if (missingContactCount === visibleCount) {
+    return 'Contacto pendiente en todas las inscripciones visibles.';
+  }
+
+  const countLabel = missingContactCount === 1 ? 'inscripción visible' : 'inscripciones visibles';
+  return `${missingContactCount} ${countLabel} con contacto pendiente.`;
+};
+
 const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
   const identityKinds = new Set(registrations.map(registrationIdentityKind));
   if (identityKinds.size === 1) {
@@ -1715,11 +1726,12 @@ export default function CourseRegistrationsAdminPage() {
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
-  const allVisibleNamedRegistrationsNeedContact = searchedRegistrations.length > 1
-    && searchedRegistrations.every(namedRegistrationNeedsContact);
-  const sharedVisibleMissingContactSummary = allVisibleNamedRegistrationsNeedContact
-    ? 'Contacto pendiente en todas las inscripciones visibles.'
-    : '';
+  const visibleNamedRegistrationsMissingContactCount =
+    searchedRegistrations.filter(namedRegistrationNeedsContact).length;
+  const sharedVisibleMissingContactSummary = formatVisibleMissingContactSummary(
+    visibleNamedRegistrationsMissingContactCount,
+    searchedRegistrations.length,
+  );
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
     const createdLabels = searchedRegistrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
