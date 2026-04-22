@@ -491,6 +491,62 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('keeps long role lists compact until the admin opens the editor', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 309,
+        name: 'Maya Admin',
+        email: 'maya@example.com',
+        roles: ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        const editButton = container.querySelector('button[aria-label="Editar roles de Maya Admin"]');
+        if (!(editButton instanceof HTMLButtonElement)) {
+          throw new Error('Edit roles button not found');
+        }
+
+        const chipLabels = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-label')).map(buttonText);
+        expect(chipLabels).toEqual(['Admin', 'Engineer', 'Manager', '+2 roles']);
+        expect(buttonText(editButton)).not.toContain('Reception');
+        expect(buttonText(editButton)).not.toContain('Teacher');
+
+        const hiddenCountChip = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-root')).find(
+          (chip) => buttonText(chip) === '+2 roles',
+        );
+        expect(hiddenCountChip?.getAttribute('title')).toBe('Roles ocultos: Reception, Teacher');
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Maya Admin"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        if (!(dialog instanceof HTMLElement)) {
+          throw new Error('Edit roles dialog not found');
+        }
+
+        expect(dialog.textContent).toContain('Reception');
+        expect(dialog.textContent).toContain('Teacher');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps empty role assignments explicit when the admin opens the edit dialog', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({

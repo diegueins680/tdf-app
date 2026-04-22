@@ -81,6 +81,7 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 const EDITABLE_ROLES_LABEL = 'Roles editables';
 const EMPTY_ROLES_LABEL = 'Sin roles';
+const INLINE_ROLE_CHIP_LIMIT = 3;
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
@@ -221,6 +222,33 @@ const buildPendingRoleChangesSummary = (
 
   if (actions.length === 0) return null;
   return `${actions.length === 1 ? 'Cambio pendiente' : 'Cambios pendientes'}: ${actions.join(' · ')}.`;
+};
+
+const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
+  const normalizedRoles = normalizeRoleSelection(roles);
+
+  if (normalizedRoles.length === 0) {
+    return <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />;
+  }
+
+  const visibleRoles = normalizedRoles.slice(0, INLINE_ROLE_CHIP_LIMIT);
+  const hiddenRoles = normalizedRoles.slice(INLINE_ROLE_CHIP_LIMIT);
+
+  return (
+    <>
+      {visibleRoles.map((role) => (
+        <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
+      ))}
+      {hiddenRoles.length > 0 && (
+        <Chip
+          label={`+${hiddenRoles.length} ${hiddenRoles.length === 1 ? 'rol' : 'roles'}`}
+          size="small"
+          variant="outlined"
+          title={`Roles ocultos: ${hiddenRoles.join(', ')}`}
+        />
+      )}
+    </>
+  );
 };
 
 const buildRoleManagementSummary = ({
@@ -447,10 +475,7 @@ export default function UserRoleManagement() {
                         }}
                       >
                         <Box display="flex" gap={0.5} flexWrap="wrap">
-                          {singleUser.roles.map((role) => (
-                            <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                          ))}
-                          {singleUser.roles.length === 0 && <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />}
+                          {renderInlineRoleChips(singleUser.roles)}
                         </Box>
                       </ButtonBase>
                     </Stack>
@@ -521,10 +546,7 @@ export default function UserRoleManagement() {
                             }}
                           >
                             <Box display="flex" gap={0.5} flexWrap="wrap">
-                              {user.roles.map((role) => (
-                                <Chip key={role} label={role} color={getRoleColor(role)} size="small" />
-                              ))}
-                              {user.roles.length === 0 && <Chip label={EMPTY_ROLES_LABEL} size="small" variant="outlined" />}
+                              {renderInlineRoleChips(user.roles)}
                             </Box>
                           </ButtonBase>
                         </TableCell>
