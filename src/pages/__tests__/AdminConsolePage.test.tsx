@@ -845,6 +845,47 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps implementation-prefixed built-in fallback titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'preview-user-management',
+          title: 'Fallback: User management',
+          body: ['Review admin users before changing access.'],
+        },
+        {
+          cardId: 'planned-service-health',
+          title: 'Preview - Service health',
+          body: ['Monitor API and database readiness before changing permissions.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Fallback: User management')).not.toBeInTheDocument();
+    expect(screen.queryByText('Preview - Service health')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Review admin users before changing access\./i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Monitor API and database readiness before changing permissions\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps terse fallback titles for built-in admin sections out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

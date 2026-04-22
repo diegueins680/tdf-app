@@ -248,7 +248,7 @@ function normalizeAdminConsoleSectionKey(value: string) {
 
 function normalizeBuiltInAdminConsoleSectionKey(value: string) {
   return normalizeAdminConsoleSectionKey(value)
-    .replace(/\b(?:and|y)\b/g, ' ')
+    .replace(/\b(?:and|y|draft|fallback|planned|placeholder|preview|stub)\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
