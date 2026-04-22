@@ -39,6 +39,12 @@ import           TDF.DTO.SocialSyncDTO
 import           TDF.Models
 import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
 
+maxSocialSyncMediaUrls :: Int
+maxSocialSyncMediaUrls = 20
+
+maxSocialSyncUrlChars :: Int
+maxSocialSyncUrlChars = 2048
+
 socialSyncServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -268,6 +274,12 @@ validateSocialSyncPermalink (Just rawUrl) =
           Left err400
             { errBody = BL.fromStrict (TE.encodeUtf8 "permalink must not contain whitespace")
             }
+      | T.length url > maxSocialSyncUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "permalink must be 2048 characters or fewer")
+            }
       | not (TrialsServer.isValidHttpUrl url) ->
           Left err400
             { errBody =
@@ -278,6 +290,10 @@ validateSocialSyncPermalink (Just rawUrl) =
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing
 validateSocialSyncMediaUrls (Just rawUrls)
+  | length mediaUrls > maxSocialSyncMediaUrls =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls must contain at most 20 entries")
+        }
   | any T.null mediaUrls =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must not be blank")
@@ -285,6 +301,12 @@ validateSocialSyncMediaUrls (Just rawUrls)
   | any (T.any isSpace) mediaUrls =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must not contain whitespace")
+        }
+  | any ((> maxSocialSyncUrlChars) . T.length) mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries must be 2048 characters or fewer")
         }
   | any (not . TrialsServer.isValidHttpUrl) mediaUrls =
       Left err400

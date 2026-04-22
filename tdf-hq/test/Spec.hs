@@ -2942,6 +2942,9 @@ main = hspec $ do
             assertInvalid "javascript:alert(1)" "permalink must be an absolute public http(s) URL"
             assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public http(s) URL"
             assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public http(s) URL"
+            assertInvalid
+                ("https://instagram.com/p/" <> Data.Text.replicate 2049 "a")
+                "permalink must be 2048 characters or fewer"
 
     describe "social sync media URL validation" $ do
         it "normalizes valid media URL lists before newline storage" $ do
@@ -2967,6 +2970,28 @@ main = hspec $ do
             assertInvalid
                 [" https://cdn.example.com/post.jpg ", "https://cdn.example.com/post.jpg"]
                 "mediaUrls entries must be unique"
+
+        it "rejects oversized media URL payloads before newline storage" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncMediaUrls (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected oversized social sync mediaUrls to be rejected, got "
+                                    <> show value
+                                )
+                numberedUrl n =
+                    "https://cdn.example.com/post-"
+                        <> Data.Text.pack (show (n :: Int))
+                        <> ".jpg"
+            assertInvalid
+                (map numberedUrl [1..21])
+                "mediaUrls must contain at most 20 entries"
+            assertInvalid
+                ["https://cdn.example.com/" <> Data.Text.replicate 2049 "a"]
+                "mediaUrls entries must be 2048 characters or fewer"
 
         it "rejects unsafe or non-public media URLs before social sync rows are stored" $ do
             let assertInvalid raw =
