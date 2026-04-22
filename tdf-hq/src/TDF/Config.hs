@@ -191,6 +191,11 @@ validateFallbackConnUrl envName raw
         "" -> Right ()
         queryWithMarker ->
           let query = T.drop 1 queryWithMarker
+              queryParamNames =
+                [ T.strip key
+                | pair <- T.splitOn "&" query
+                , let (key, _) = T.breakOn "=" pair
+                ]
               targetSessionAttrs =
                 [ T.strip (T.drop 1 rest)
                 | pair <- T.splitOn "&" query
@@ -208,8 +213,10 @@ validateFallbackConnUrl envName raw
                   then Left (envName <> " " <> name <> " must be provided at most once")
                   else Right ()
               validateRecognizedParams =
-                if any T.null targetSessionAttrs
-                  then Left (envName <> " target_session_attrs must not be blank")
+                if T.null query || any T.null queryParamNames
+                  then Left (envName <> " query parameters must include names")
+                  else if any T.null targetSessionAttrs
+                    then Left (envName <> " target_session_attrs must not be blank")
                   else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
                     then Left (envName <> " target_session_attrs must be read-write")
                   else if any T.null sslModes

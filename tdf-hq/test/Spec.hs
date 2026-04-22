@@ -1373,6 +1373,36 @@ main = hspec $ do
                 (baseUrl <> "?target_session_attrs=read-write&target_session_attrs=read-write")
                 "DATABASE_URL target_session_attrs must be provided at most once"
 
+        it "rejects blank DATABASE_URL query parameter names before fallback use" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                expectInvalid databaseUrl =
+                    withEnvOverrides (withoutKeywordDb databaseUrl)
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL query parameters must include names"
+                                `isInfixOf` show (err :: IOException)
+
+            expectInvalid (baseUrl <> "?")
+            expectInvalid (baseUrl <> "?sslmode=require&")
+            expectInvalid (baseUrl <> "?=value")
+
         it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")
