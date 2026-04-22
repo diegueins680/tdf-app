@@ -130,11 +130,13 @@ validateInstagramAccountId label mRawAccountId =
       Left (label <> " no configurado")
     Just accountId
       | T.length accountId > maxInstagramAccountIdChars
+          || not (T.any isGraphNodeIdAtom accountId)
           || T.any (not . isGraphNodeIdChar) accountId ->
           Left
             ( label
                 <> " must be a Graph node id using only ASCII letters, numbers, "
-                <> "'.', '_' or '-' (128 chars max)"
+                <> "'.', '_' or '-' with at least one letter or number "
+                <> "(128 chars max)"
             )
       | otherwise ->
           Right accountId
@@ -175,10 +177,13 @@ invalidMessageBodyControlChar ch =
 
 isGraphNodeIdChar :: Char -> Bool
 isGraphNodeIdChar ch =
+  isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+isGraphNodeIdAtom :: Char -> Bool
+isGraphNodeIdAtom ch =
   (ch >= 'a' && ch <= 'z')
     || (ch >= 'A' && ch <= 'Z')
     || (ch >= '0' && ch <= '9')
-    || ch `elem` ("._-" :: String)
 
 maxInstagramAccountIdChars :: Int
 maxInstagramAccountIdChars = 128

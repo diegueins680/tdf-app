@@ -878,6 +878,7 @@ main = hspec $ do
             assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page/123"
             assertInvalid "FACEBOOK_PAGE_ID" "page?debug=1"
             assertInvalid "FACEBOOK_PAGE_ID" "---"
+            assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "..."
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $
@@ -1701,6 +1702,12 @@ main = hspec $ do
                 "DATABASE_URL port must be between 1 and 65535"
 
     describe "Instagram messaging context fallback" $ do
+        let accountIdError label =
+                label
+                    <> " must be a Graph node id using only ASCII letters, numbers, "
+                    <> "'.', '_' or '-' with at least one letter or number "
+                    <> "(128 chars max)"
+
         it "rejects malformed Instagram send payloads before building Graph requests" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)
@@ -1787,9 +1794,15 @@ main = hspec $ do
                         "recipient-1"
                         "hola"
                         `shouldReturn` Left
-                            ( "Instagram connected asset account id must be a Graph node id using only ASCII "
-                                <> "letters, numbers, '.', '_' or '-' (128 chars max)"
-                            )
+                            (accountIdError "Instagram connected asset account id")
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected-token")
+                        (Just "---")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left
+                            (accountIdError "Instagram connected asset account id")
 
         it "requires an account id before building Instagram messaging send attempts" $ do
             withEnvOverrides
