@@ -105,6 +105,7 @@ extractFirstWebhookMessage payload =
     , msgs <- maybeToList (messages (value chg))
     , msg <- msgs
     , waType msg == "text"
+    , not (T.null (T.strip (from msg)))
     , Just txt <- [text msg]
     , not (T.null (T.strip (body txt)))
     ]

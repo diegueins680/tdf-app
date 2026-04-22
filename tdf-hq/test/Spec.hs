@@ -4919,6 +4919,48 @@ main = hspec $ do
                 Nothing ->
                     expectationFailure "Expected actionable webhook text to be selected"
 
+        it "skips blank-sender text rows before selecting a later batched webhook message" $ do
+            let blankSenderMessage =
+                    WA.WAMessage
+                        (Just "wamid.blank-sender")
+                        "text"
+                        "   "
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                enrollmentMessage =
+                    WA.WAMessage
+                        (Just "wamid.valid-sender")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [blankSenderMessage, enrollmentMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            case extractFirstWebhookMessage payload of
+                Just (WA.WAMessage msgId _ senderId msgText _ _ _) -> do
+                    msgId `shouldBe` Just "wamid.valid-sender"
+                    senderId `shouldBe` "+593991234567"
+                    case msgText of
+                        Just (WA.WAText messageBody) ->
+                            messageBody `shouldBe` "INSCRIBIRME"
+                        Nothing ->
+                            expectationFailure "Expected later text body to be selected"
+                Nothing ->
+                    expectationFailure "Expected later valid webhook text to be selected"
+
     describe "PreviewReq" $ do
         it "accepts only the canonical preview-link request body" $ do
             case eitherDecode "{\"phone\":\"+593991234567\"}" of
