@@ -24,6 +24,7 @@ module TDF.ServerAdmin
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   , validateAdminPassword
+  , normalizeBrainEntryTags
   ) where
 
 import           Control.Exception      (SomeException, try)
@@ -452,8 +453,8 @@ adminServer user =
       let title = T.strip becTitle
           body = T.strip becBody
           category = cleanMaybe becCategory
-          tags = cleanTags becTags
           active = fromMaybe True becActive
+      tags <- either throwError pure (normalizeBrainEntryTags becTags)
       when (T.null title) $ throwError err400 { errBody = "Título requerido" }
       when (T.null body) $ throwError err400 { errBody = "Contenido requerido" }
       now <- liftIO getCurrentTime
@@ -478,12 +479,13 @@ adminServer user =
         throwError err400 { errBody = "Título requerido" }
       for_ bodyUpdate $ \t -> when (T.null t) $
         throwError err400 { errBody = "Contenido requerido" }
+      tagsUpdate <- case beuTags of
+        Nothing -> pure Nothing
+        Just rawTags ->
+          fmap (Just . (ME.StudioBrainEntryTags =.)) $
+            either throwError pure (normalizeBrainEntryTags (Just rawTags))
       now <- liftIO getCurrentTime
-      let tagsUpdate =
-            case beuTags of
-              Nothing -> Nothing
-              Just tags -> Just (ME.StudioBrainEntryTags =. cleanTags (Just tags))
-          updates = catMaybes
+      let updates = catMaybes
             [ (ME.StudioBrainEntryTitle =.) <$> titleUpdate
             , (ME.StudioBrainEntryBody =.) <$> bodyUpdate
             , (ME.StudioBrainEntryCategory =.) <$> fmap cleanMaybe beuCategory
@@ -550,11 +552,6 @@ adminServer user =
     cleanMaybe (Just txt) =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
-
-    cleanTags Nothing = Nothing
-    cleanTags (Just tags) =
-      let cleaned = filter (not . T.null) (map T.strip tags)
-      in if null cleaned then Nothing else Just cleaned
 
     roleDetail role = RoleDetailDTO
       { role    = role
@@ -1226,6 +1223,35 @@ validateAdminEmailBroadcastLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 5000 =
       Left err400 { errBody = "limit must be between 1 and 5000" }
   | otherwise = Right (Just rawLimit)
+
+maxBrainEntryTags :: Int
+maxBrainEntryTags = 20
+
+maxBrainEntryTagChars :: Int
+maxBrainEntryTagChars = 40
+
+normalizeBrainEntryTags :: Maybe [Text] -> Either ServerError (Maybe [Text])
+normalizeBrainEntryTags Nothing = Right Nothing
+normalizeBrainEntryTags (Just rawTags) =
+  let cleanedTags =
+        filter (not . T.null) (map T.strip rawTags)
+      normalizedTags = nub cleanedTags
+  in
+    if length cleanedTags > maxBrainEntryTags
+      then Left err400 { errBody = "brain entry tags must include at most 20 values" }
+      else
+        case traverse validateTag normalizedTags of
+          Left err -> Left err
+          Right [] -> Right Nothing
+          Right tags -> Right (Just tags)
+  where
+    validateTag tag
+      | T.length tag > maxBrainEntryTagChars =
+          Left err400 { errBody = "brain entry tags must be 40 characters or fewer" }
+      | T.any isControl tag =
+          Left err400 { errBody = "brain entry tags must not contain control characters" }
+      | otherwise =
+          Right tag
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do

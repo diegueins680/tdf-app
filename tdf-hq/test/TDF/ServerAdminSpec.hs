@@ -60,6 +60,7 @@ import TDF.ServerAdmin (
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
     validateAdminPassword,
+    normalizeBrainEntryTags,
   )
 
 spec :: Spec
@@ -359,6 +360,32 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeBrainEntryUpdate
                 "{\"beuTitle\":\"Updated runbook\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+    describe "normalizeBrainEntryTags" $ do
+        it "trims, drops blanks, and deduplicates tags before brain entry persistence" $ do
+            normalizeBrainEntryTags Nothing `shouldBe` Right Nothing
+            normalizeBrainEntryTags (Just ["  ops  ", "docs", "ops", "   "])
+                `shouldBe` Right (Just ["ops", "docs"])
+            normalizeBrainEntryTags (Just ["   ", "\t"])
+                `shouldBe` Right Nothing
+
+        it "rejects malformed brain entry tags before they reach the RAG index" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid brain entry tags, got " <> show value)
+            assertInvalid
+                "at most 20 values"
+                (normalizeBrainEntryTags
+                    (Just (map (("tag" <>) . T.pack . show) ([1 .. 21] :: [Int]))))
+            assertInvalid
+                "40 characters or fewer"
+                (normalizeBrainEntryTags (Just [T.replicate 41 "x"]))
+            assertInvalid
+                "must not contain control characters"
+                (normalizeBrainEntryTags (Just ["ops\ninternal"]))
 
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
