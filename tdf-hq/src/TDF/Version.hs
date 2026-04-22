@@ -8,7 +8,7 @@ module TDF.Version
   ) where
 
 import           Data.Aeson                   (ToJSON(..), object, (.=))
-import           Data.Char                    (isControl)
+import           Data.Char                    (isControl, isSpace)
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Version                 (showVersion)
@@ -62,7 +62,11 @@ resolveCommit = do
     lookupCommitEnv key = fmap (>>= canonCommit . T.pack) (lookupEnv key)
 
 canonCommit :: Text -> Maybe Text
-canonCommit = canonRuntimeMetadata
+canonCommit txt = do
+  value <- canonRuntimeMetadata txt
+  if T.any isSpace value
+    then Nothing
+    else Just value
 
 canonBuildTime :: Text -> Maybe Text
 canonBuildTime = canonRuntimeMetadata

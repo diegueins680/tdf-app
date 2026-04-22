@@ -415,6 +415,16 @@ main = hspec $ do
                     commit info `shouldBe` "abc123def456"
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
+        it "skips whitespace-bearing commit aliases instead of exposing ambiguous version metadata" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ [ ("GIT_SHA", Just "abc123 def456")
+                       , ("GITHUB_SHA", Just "abc123def456")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+
         it "skips blank build-time aliases instead of returning empty version metadata" $
             withEnvOverrides
                 (clearEnv buildTimeEnvKeys
