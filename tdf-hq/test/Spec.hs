@@ -3709,6 +3709,20 @@ main = hspec $ do
             assertInvalid "https://rádio.example.com/live"
             assertInvalid "https://[2001:db8::１]/live"
 
+        it "rejects malformed bracketed IPv6 hosts before metadata fetches can use them" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl must include a valid host"
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed bracketed IPv6 host to be rejected, got " <> show value)
+            assertInvalid "https://[2001:4860:4860::88888]/live"
+            assertInvalid "https://[2001:4860::4860::8888]/live"
+            assertInvalid "https://[2001:4860:4860:4860:4860:4860:4860]/live"
+            assertInvalid "https://[2001:4860:4860::0:0:0:0:8888]/live"
+
         it "rejects single-label hosts that could resolve through private search domains" $ do
             let assertInvalid rawUrl =
                     case validateRadioStreamUrl rawUrl of

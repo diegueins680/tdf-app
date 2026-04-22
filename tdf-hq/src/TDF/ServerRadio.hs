@@ -287,14 +287,9 @@ validateRadioAuthority rawAuthority
 
     validateBracketedHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
-      | not (T.any (== ':') host) = Left err400 { errBody = "streamUrl must include a valid host" }
-      | T.isInfixOf ":::" host = Left err400 { errBody = "streamUrl must include a valid host" }
-      | T.any (not . isValidBracketedHostChar) host =
+      | not (isValidBracketedIpv6Host host) =
           Left err400 { errBody = "streamUrl must include a valid host" }
       | otherwise = validatePublicRadioHost host
-      where
-        isValidBracketedHostChar c =
-          isAscii c && (isHexDigit c || c == ':' || c == '.')
 
     validateAuthorityHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
@@ -327,6 +322,50 @@ validateRadioAuthority rawAuthority
                    Left err400 { errBody = "streamUrl port must be between 1 and 65535" }
       | otherwise =
           Left err400 { errBody = "streamUrl must include a valid host" }
+
+isValidBracketedIpv6Host :: Text -> Bool
+isValidBracketedIpv6Host host =
+  T.any (== ':') host
+    && T.all isValidBracketedHostChar host
+    && case T.splitOn "::" host of
+      [single] ->
+        ipv6SegmentCount (T.splitOn ":" single) == Just 8
+      [leftSide, rightSide] ->
+        let mSegmentCount =
+              (+) <$> ipv6SegmentCount (compressedSideSegments leftSide)
+                  <*> ipv6SegmentCount (compressedSideSegments rightSide)
+        in isValidCompressedSide leftSide
+            && isValidCompressedSide rightSide
+            && maybe False (< 8) mSegmentCount
+      _ -> False
+  where
+    isValidBracketedHostChar c =
+      isAscii c && (isHexDigit c || c == ':' || c == '.')
+
+    compressedSideSegments txt =
+      if T.null txt then [] else T.splitOn ":" txt
+
+    isValidCompressedSide txt =
+      T.null txt || all (not . T.null) (T.splitOn ":" txt)
+
+ipv6SegmentCount :: [Text] -> Maybe Int
+ipv6SegmentCount segments =
+  case break (T.any (== '.')) segments of
+    (hextets, []) ->
+      if all isValidIpv6Hextet hextets
+        then Just (length hextets)
+        else Nothing
+    (hextets, [ipv4])
+      | all isValidIpv6Hextet hextets ->
+          case parseIpv4Octets ipv4 of
+            Just _  -> Just (length hextets + 2)
+            Nothing -> Nothing
+    _ -> Nothing
+  where
+    isValidIpv6Hextet segment =
+      not (T.null segment)
+        && T.length segment <= 4
+        && T.all isHexDigit segment
 
 validatePublicRadioHost :: Text -> Either ServerError ()
 validatePublicRadioHost rawHost
