@@ -665,13 +665,31 @@ validateEmbeddingResponseDimensions expectedDim embeddings
               <> " but got "
               <> T.pack (show actualDim)
             )
-        [] -> Right embeddings
+        [] ->
+          case nonFiniteValues of
+            (idx, valueIdx):_ ->
+              Left
+                ( "Embedding response non-finite value at index "
+                  <> T.pack (show idx)
+                  <> " position "
+                  <> T.pack (show valueIdx)
+                )
+            [] -> Right embeddings
   where
     dimensionMismatches =
       [ (idx, length embeddingValue)
       | (idx, embeddingValue) <- zip [0 :: Int ..] embeddings
       , length embeddingValue /= expectedDim
       ]
+    nonFiniteValues =
+      [ (idx, valueIdx)
+      | (idx, embeddingValue) <- zip [0 :: Int ..] embeddings
+      , (valueIdx, value) <- zip [0 :: Int ..] embeddingValue
+      , not (isFiniteDouble value)
+      ]
+
+isFiniteDouble :: Double -> Bool
+isFiniteDouble value = not (isNaN value || isInfinite value)
 
 validateRagEmbeddingDim :: AppConfig -> ConnectionPool -> IO (Either Text ())
 validateRagEmbeddingDim cfg pool =

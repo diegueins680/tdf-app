@@ -4826,6 +4826,14 @@ main = hspec $ do
             validateEmbeddingResponseDimensions 0 [[0.0]]
                 `shouldSatisfy` isLeft
 
+        it "rejects non-finite embedding values before pgvector persistence" $ do
+            let nanValue = 0 / 0 :: Double
+                infinityValue = 1 / 0 :: Double
+            validateEmbeddingResponseDimensions 1 [[nanValue]]
+                `shouldSatisfy` isLeft
+            validateEmbeddingResponseDimensions 1 [[infinityValue]]
+                `shouldSatisfy` isLeft
+
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do
             parseDirective "send: Hola!" `shouldBe` Right (Send "Hola!")
