@@ -866,7 +866,7 @@ const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrat
     if (kind === 'contact') return 'el contacto';
     if (kind === 'record') return 'el registro';
   }
-  if (identityKinds.size > 1) return 'la identidad principal';
+  if (identityKinds.size > 1) return 'el dato principal de cada fila';
   return 'el nombre';
 };
 

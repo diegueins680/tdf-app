@@ -224,7 +224,7 @@ const contactDossierOnlyScopeHint =
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
 const mixedIdentityDossierScopeHint =
-  'Abre el expediente desde la identidad principal; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el dato principal de cada fila; usa Cambiar estado para acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
