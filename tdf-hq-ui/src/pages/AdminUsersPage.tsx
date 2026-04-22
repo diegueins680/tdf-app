@@ -302,6 +302,7 @@ const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -716,6 +717,8 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showInactiveFilterAction = hasMultipleUsers || includeInactive;
+  const showReviewInactiveEmptyAction =
+    !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
   const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
   const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
@@ -977,9 +980,16 @@ export default function AdminUsersPage() {
               </Stack>
             )}
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
-              <Typography color="text.secondary">
-                {ADMIN_USERS_EMPTY_STATE}
-              </Typography>
+              <Stack spacing={1} alignItems="flex-start">
+                <Typography color="text.secondary">
+                  {ADMIN_USERS_EMPTY_STATE}
+                </Typography>
+                {showReviewInactiveEmptyAction && (
+                  <Button size="small" variant="outlined" onClick={() => setIncludeInactive(true)}>
+                    {ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION}
+                  </Button>
+                )}
+              </Stack>
             )}
             {showSearchEmptyState ? (
               <Stack spacing={1} alignItems="flex-start">

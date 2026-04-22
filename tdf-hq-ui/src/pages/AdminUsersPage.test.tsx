@@ -236,6 +236,51 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('offers one inactive-user check when the active admin list is empty', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 201,
+              partyId: 21,
+              partyName: 'Ada Inactiva',
+              username: 'ada-inactiva',
+              active: false,
+            }),
+          ]
+        : [],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(container.textContent).toContain('Incluir inactivos');
+        expect(
+          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
+        ).toBe('1 usuario inactivo');
+        expect(getRenderedRowUserIds(container)).toEqual([201]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the initial loading state focused on first-user setup instead of a refresh action', async () => {
     listUsersMock.mockImplementation(() => new Promise(() => {}));
 
