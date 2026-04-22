@@ -186,7 +186,30 @@ data GoogleToken = GoogleToken
   , expires_in    :: Maybe Int
   , token_type    :: Maybe Text
   } deriving (Generic, Show)
-instance FromJSON GoogleToken
+instance FromJSON GoogleToken where
+  parseJSON = withObject "GoogleToken" $ \o -> do
+    accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
+    refreshToken <- o .:? "refresh_token" >>= traverse (parseGoogleTokenField "refresh_token")
+    expiresIn <- o .:? "expires_in"
+    for_ expiresIn $ \seconds ->
+      when (seconds <= (0 :: Int)) $
+        fail "expires_in must be positive"
+    tokenType <- o .:? "token_type" >>= traverse (parseGoogleTokenField "token_type")
+    pure GoogleToken
+      { access_token = accessToken
+      , refresh_token = refreshToken
+      , expires_in = expiresIn
+      , token_type = tokenType
+      }
+
+parseGoogleTokenField :: Text -> Text -> Parser Text
+parseGoogleTokenField fieldName raw =
+  let clean = T.strip raw
+  in if T.null clean
+       then fail (T.unpack fieldName <> " must not be blank")
+       else if T.any (\ch -> isSpace ch || isControl ch) clean
+         then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
+         else pure clean
 
 data GoogleEventsPage = GoogleEventsPage
   { items         :: [Value]

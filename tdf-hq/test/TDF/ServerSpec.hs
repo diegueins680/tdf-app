@@ -81,6 +81,7 @@ import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
+    , GoogleToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
     , SessionInputLookup(..)
@@ -2677,6 +2678,38 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected "{\"id\":\"   \"}"
             assertRejected "{\"id\":\"file 123\"}"
             assertRejected "{\"id\":\"file-123&alt=media\"}"
+
+    describe "GoogleToken FromJSON" $ do
+        it "normalizes valid Google OAuth token responses before proxying them" $ do
+            let rawResponse =
+                    "{\"access_token\":\" access-token-123 \","
+                        <> "\"refresh_token\":\" 1//refresh-token \","
+                        <> "\"expires_in\":3600,"
+                        <> "\"token_type\":\" Bearer \"}"
+            case (eitherDecode rawResponse :: Either String GoogleToken) of
+                Left err ->
+                    expectationFailure ("Expected Google token response to decode, got: " <> err)
+                Right token -> do
+                    access_token token `shouldBe` "access-token-123"
+                    refresh_token token `shouldBe` Just "1//refresh-token"
+                    expires_in token `shouldBe` Just 3600
+                    token_type token `shouldBe` Just "Bearer"
+
+        it "rejects malformed Google OAuth token responses before refresh-token fallback handling" $ do
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleToken) `shouldSatisfy` isLeft
+            assertRejected "{\"access_token\":\"   \",\"expires_in\":3600}"
+            assertRejected "{\"access_token\":\"access-token\\nInjected\",\"expires_in\":3600}"
+            assertRejected $
+                "{\"access_token\":\"access-token\","
+                    <> "\"refresh_token\":\"refresh token\","
+                    <> "\"expires_in\":3600}"
+            assertRejected "{\"access_token\":\"access-token\",\"expires_in\":0}"
+            assertRejected "{\"access_token\":\"access-token\",\"expires_in\":-1}"
+            assertRejected $
+                "{\"access_token\":\"access-token\","
+                    <> "\"token_type\":\"Bearer\\nInjected\","
+                    <> "\"expires_in\":3600}"
 
     describe "resolveDrivePublicUrl" $ do
         it "keeps Drive resource-key links well-shaped across fallback URL forms" $ do
