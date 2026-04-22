@@ -190,15 +190,14 @@ instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
     refreshToken <- o .:? "refresh_token" >>= traverse (parseGoogleTokenField "refresh_token")
-    expiresIn <- o .:? "expires_in"
-    for_ expiresIn $ \seconds ->
-      when (seconds <= (0 :: Int)) $
-        fail "expires_in must be positive"
+    expiresIn <- o .: "expires_in"
+    when (expiresIn <= (0 :: Int)) $
+      fail "expires_in must be positive"
     tokenType <- o .:? "token_type" >>= traverse parseGoogleTokenType
     pure GoogleToken
       { access_token = accessToken
       , refresh_token = refreshToken
-      , expires_in = expiresIn
+      , expires_in = Just expiresIn
       , token_type = tokenType
       }
 
