@@ -156,12 +156,20 @@ validateFallbackConnUrl envName raw
               suffix = T.drop (T.length host + 1) hostPort
           in if T.null host || not ("]" `T.isPrefixOf` suffix)
                then Left (envName <> " must include a PostgreSQL host")
+               else if not (isValidBracketedConnectionHost host)
+                 then Left (envName <> " must include a valid PostgreSQL host")
                else validateConnectionPortSuffix (T.drop 1 suffix)
       | otherwise =
           let (host, suffix) = T.breakOn ":" hostPort
           in if T.null host
                then Left (envName <> " must include a PostgreSQL host")
                else validateConnectionPortSuffix suffix
+
+    isValidBracketedConnectionHost :: Text -> Bool
+    isValidBracketedConnectionHost host =
+      T.any (== ':') host
+        && not (":::" `T.isInfixOf` host)
+        && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
 
     validateConnectionPortSuffix :: Text -> Either String ()
     validateConnectionPortSuffix suffix
