@@ -4405,6 +4405,9 @@ main = hspec $ do
             assertInvalid "sales.@example.com"
             assertInvalid "sales..team@example.com"
             assertInvalid "sales()@example.com"
+            assertInvalid (Data.Text.replicate 65 "a" <> "@example.com")
+            assertInvalid ("sales@" <> Data.Text.replicate 64 "a" <> ".com")
+            assertInvalid (Data.Text.replicate 245 "a" <> "@example.com")
 
     describe "validateOptionalProposalContactPhone" $ do
         it "normalizes valid proposal contact phones and treats blanks as unset" $ do

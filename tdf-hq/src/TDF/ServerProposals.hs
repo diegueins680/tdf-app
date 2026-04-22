@@ -474,20 +474,28 @@ isValidProposalEmail :: Text -> Bool
 isValidProposalEmail candidate =
   case T.split (== '@') candidate of
     [localPart, domain] ->
-      isValidProposalEmailLocalPart localPart
+      T.length candidate <= maxProposalContactEmailLength
+        && isValidProposalEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidProposalDomainLabel (T.splitOn "." domain)
     _ -> False
 
+maxProposalContactEmailLength :: Int
+maxProposalContactEmailLength = 254
+
 isValidProposalEmailLocalPart :: Text -> Bool
 isValidProposalEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxProposalEmailLocalPartLength
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
     && T.all isValidProposalEmailLocalChar localPart
+
+maxProposalEmailLocalPartLength :: Int
+maxProposalEmailLocalPartLength = 64
 
 isValidProposalEmailLocalChar :: Char -> Bool
 isValidProposalEmailLocalChar c =
@@ -496,9 +504,13 @@ isValidProposalEmailLocalChar c =
 isValidProposalDomainLabel :: Text -> Bool
 isValidProposalDomainLabel label =
   not (T.null label)
+    && T.length label <= maxProposalEmailDomainLabelLength
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidProposalDomainChar label
+
+maxProposalEmailDomainLabelLength :: Int
+maxProposalEmailDomainLabelLength = 63
 
 isValidProposalDomainChar :: Char -> Bool
 isValidProposalDomainChar c = isAsciiLower c || isDigit c || c == '-'
