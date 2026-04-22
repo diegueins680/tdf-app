@@ -965,6 +965,50 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps getting-started fallback cards from duplicating the first-run checklist', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-getting-started',
+          title: 'Getting started',
+          body: ['Review service health, users, roles, and audit activity before changing settings.'],
+        },
+        {
+          cardId: 'fallback-inicio-rapido',
+          title: 'Inicio rápido',
+          body: ['Revisa salud, usuarios y auditoría antes de cambiar permisos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Getting started')).not.toBeInTheDocument();
+    expect(screen.queryByText('Inicio rápido')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review service health, users, roles, and audit activity/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa salud, usuarios y auditoría antes de cambiar permisos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps generic settings fallback cards from duplicating the configuration shell', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
