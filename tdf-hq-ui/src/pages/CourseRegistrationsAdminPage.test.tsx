@@ -7840,6 +7840,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps long empty-search queries compact while preserving the full input', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    const searchInput = getInputByLabel(container, localSearchLabel);
+    const longQuery = 'permisos administrativos pendientes para revisar inscripciones sin coincidencias exactas externas';
+
+    await act(async () => {
+      setInputValue(searchInput, longQuery);
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(searchInput.value).toBe(longQuery);
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "permisos administrativos pendientes para revisar inscripciones..." en las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps empty filtered searches owned by the search clear action instead of repeating filter reset recovery', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

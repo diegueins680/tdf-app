@@ -103,6 +103,7 @@ const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
+const MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH = 64;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
@@ -308,12 +309,29 @@ const normalizeVisibleLocalSearchInput = (value: string) => (
   value.trim().length === 0 ? '' : value
 );
 const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
-const formatLocalSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const looksLikeShortPhoneSearch = (value: string, digits: string) => (
   digits.length > 0
   && digits.length < MIN_PHONE_SEARCH_DIGITS
   && /^[\d\s()+.-]+$/.test(value.trim())
 );
+const normalizeLocalSearchQuery = (value: string) => value.trim().replace(/\s+/g, ' ');
+const formatLocalSearchQuerySummary = (value: string) => {
+  const normalizedValue = normalizeLocalSearchQuery(value);
+
+  if (normalizedValue.length <= MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH) {
+    return normalizedValue;
+  }
+
+  const summaryPrefix = normalizedValue.slice(0, MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH + 1);
+  const lastWordBoundary = summaryPrefix.lastIndexOf(' ');
+  const compactPrefix = (
+    lastWordBoundary > 0
+      ? summaryPrefix.slice(0, lastWordBoundary)
+      : normalizedValue.slice(0, MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH)
+  ).trimEnd();
+
+  return `${compactPrefix}...`;
+};
 const normalizeContactComparisonValue = (value: string | null | undefined) =>
   value?.trim().toLocaleLowerCase('es') ?? '';
 const normalizePhoneComparisonValue = (value: string | null | undefined) => {
@@ -1487,7 +1505,8 @@ export default function CourseRegistrationsAdminPage() {
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
   const showFilterOnboardingCopy = !hasUsedRowAction && !hasUsedFilterControl;
   const dossierIdentityTargetLabel = registrationIdentityTargetLabel(registrations);
-  const localSearchTerm = formatLocalSearchQuerySummary(localSearch);
+  const localSearchTerm = normalizeLocalSearchQuery(localSearch);
+  const localSearchSummary = formatLocalSearchQuerySummary(localSearch);
   const localSearchKey = normalizeLocalSearchText(localSearchTerm);
   const localSearchDigitsKey = normalizeLocalSearchDigits(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
@@ -1651,7 +1670,7 @@ export default function CourseRegistrationsAdminPage() {
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
       shortPhoneSearchHint
-        || `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+        || `No hay coincidencias para "${localSearchSummary}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
       shortPhoneSearchHint ? '' : viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
     ].filter(Boolean).join(' ')
     : '';
