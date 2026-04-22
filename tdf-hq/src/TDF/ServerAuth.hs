@@ -22,6 +22,7 @@ module TDF.ServerAuth
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
   , signupEmailExists
+  , validateAuthPassword
   , validateRequestedSignupRoles
   , validateSignupArtistClaimIntent
   , validateOptionalSignupClaimArtistId
@@ -291,6 +292,25 @@ validateSignupInternshipRequiredHours (Just hours)
               (TE.encodeUtf8 "internshipRequiredHours must be a positive integer")
         }
 
+validateAuthPassword :: Text -> Text -> Either ServerError Text
+validateAuthPassword fieldLabel rawPassword
+  | T.null passwordClean =
+      Left (passwordError (fieldLabel <> " is required"))
+  | T.length passwordClean < 8 =
+      Left (passwordError (fieldLabel <> " must be at least 8 characters"))
+  | BS8.length (TE.encodeUtf8 passwordClean) > maxBcryptPasswordBytes =
+      Left (passwordError (fieldLabel <> " must be 72 bytes or fewer"))
+  | T.any isControl passwordClean =
+      Left (passwordError (fieldLabel <> " must not contain control characters"))
+  | otherwise =
+      Right passwordClean
+  where
+    passwordClean = T.strip rawPassword
+    passwordError msg = err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+maxBcryptPasswordBytes :: Int
+maxBcryptPasswordBytes = 72
+
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
 validateOptionalSignupPhone (Just rawPhone) =
@@ -420,7 +440,6 @@ signup SignupRequest
   , internshipAreas = rawInternshipAreas
   } = do
   let emailInput = T.strip rawEmail
-      passwordClean = T.strip rawPassword
       firstClean = T.strip rawFirst
       lastClean = T.strip rawLast
       internshipSkillsClean = cleanOptional rawInternshipSkills
@@ -431,8 +450,7 @@ signup SignupRequest
         case filter (not . T.null) [firstClean, lastClean] of
           [] -> emailClean
           xs -> T.unwords xs
-  when (T.null passwordClean) $ throwBadRequest "Password is required"
-  when (T.length passwordClean < 8) $ throwBadRequest "Password must be at least 8 characters"
+  passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
   when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
@@ -492,12 +510,9 @@ signup SignupRequest
 changePassword :: Maybe Text -> ChangePasswordRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 changePassword mAuthHeader ChangePasswordRequest{..} = do
   let currentPasswordClean = T.strip currentPassword
-      newPasswordClean = T.strip newPassword
       maybeUsernameClean = T.strip <$> username
   when (T.null currentPasswordClean) $ throwBadRequest "Current password is required"
-  when (T.null newPasswordClean) $ throwBadRequest "New password is required"
-  when (T.length newPasswordClean < 8) $
-    throwBadRequest "New password must be at least 8 characters"
+  newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
   Env pool _ <- ask
   usernameClean <- resolveUsername pool maybeUsernameClean mAuthHeader
   when (T.null usernameClean) $ throwBadRequest "Username is required"
@@ -597,11 +612,8 @@ passwordReset PasswordResetRequest{..} = do
 passwordResetConfirm :: PasswordResetConfirmRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 passwordResetConfirm PasswordResetConfirmRequest{..} = do
   let tokenClean = T.strip token
-      newPasswordClean = T.strip newPassword
   when (T.null tokenClean) $ throwBadRequest "Token is required"
-  when (T.null newPasswordClean) $ throwBadRequest "New password is required"
-  when (T.length newPasswordClean < 8) $
-    throwBadRequest "New password must be at least 8 characters"
+  newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
   Env pool _ <- ask
   result <- liftIO $ flip runSqlPool pool (runPasswordResetConfirm tokenClean newPasswordClean)
   case result of

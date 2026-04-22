@@ -241,6 +241,7 @@ import TDF.ServerAuth
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
     , signupEmailExists
+    , validateAuthPassword
     , validateOptionalSignupClaimArtistId
     , validateOptionalSignupPhone
     , validateSignupArtistClaimIntent
@@ -2305,6 +2306,30 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "call me at 099 123 4567"
             assertInvalid "12345"
             assertInvalid "+1234567890123456"
+
+    describe "validateAuthPassword" $ do
+        it "trims valid passwords before auth flows hash them" $
+            validateAuthPassword "Password" "  supersecret  " `shouldBe` Right "supersecret"
+
+        it "rejects passwords that bcrypt would truncate or that contain unsafe bytes" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid auth password to be rejected, got: " <> show value)
+            assertInvalid "Password is required" $
+                validateAuthPassword "Password" "   "
+            assertInvalid "Password must be at least 8 characters" $
+                validateAuthPassword "Password" "short"
+            assertInvalid "Password must be 72 bytes or fewer" $
+                validateAuthPassword "Password" (T.replicate 73 "a")
+            assertInvalid "Password must not contain control characters" $
+                validateAuthPassword "Password" "Long\nPass123"
+            assertInvalid "New password must be 72 bytes or fewer" $
+                validateAuthPassword "New password" (T.replicate 73 "a")
 
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $
