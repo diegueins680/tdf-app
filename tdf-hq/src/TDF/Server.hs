@@ -8244,9 +8244,11 @@ shouldRetryWithFallbackModel status rawMessage =
       , "do not have access to model"
       , "don't have access to model"
       , "no access to model"
+      , "does not exist or you do not have access"
       , "model not found"
       , "unknown model"
-      , "invalid model"
+      , "invalid model id"
+      , "invalid model name"
       , "not a valid model"
       , "model_not_found"
       ]

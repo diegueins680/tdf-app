@@ -2466,6 +2466,9 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` True
             shouldRetryWithFallbackModel 404 "model_not_found"
                 `shouldBe` True
+            shouldRetryWithFallbackModel 404
+                "The model `gpt-x` does not exist or you do not have access to it"
+                `shouldBe` True
             shouldRetryWithFallbackModel 403 "API key needs write access to model configuration"
                 `shouldBe` False
             shouldRetryWithFallbackModel 401 "Error al generar respuesta (HTTP 401)"
@@ -2477,6 +2480,8 @@ spec = describe "TDF.Server helpers" $ do
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "Rate limit exceeded for model gpt-4.1"
+                `shouldBe` False
+            shouldRetryWithFallbackModel 400 "Invalid model response format"
                 `shouldBe` False
             shouldRetryWithFallbackModel 500 "invalid model response format"
                 `shouldBe` False
