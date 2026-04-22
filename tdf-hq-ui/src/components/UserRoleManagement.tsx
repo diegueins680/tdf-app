@@ -407,8 +407,8 @@ export default function UserRoleManagement() {
               Roles y permisos
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Todavía no hay usuarios administrables. Cuando exista el primero, aquí aparecerán contacto, estado y
-              roles para editar permisos desde una sola tabla.
+              Todavía no hay usuarios administrables. Cuando exista el primero, verás sus datos clave y roles
+              editables aquí.
             </Typography>
           </Stack>
         </Paper>

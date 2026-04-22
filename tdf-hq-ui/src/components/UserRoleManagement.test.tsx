@@ -153,8 +153,9 @@ describe('UserRoleManagement', () => {
         expect(getUsersMock).toHaveBeenCalledTimes(1);
         expect(container.textContent).toContain('Roles y permisos');
         expect(container.textContent).toContain(
-          'Todavía no hay usuarios administrables. Cuando exista el primero, aquí aparecerán contacto, estado y roles para editar permisos desde una sola tabla.',
+          'Todavía no hay usuarios administrables. Cuando exista el primero, verás sus datos clave y roles editables aquí.',
         );
+        expect(container.textContent).not.toContain('aquí aparecerán contacto, estado y roles');
         expect(container.querySelector('table')).toBeNull();
         expect(container.querySelectorAll('thead th')).toHaveLength(0);
         expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
