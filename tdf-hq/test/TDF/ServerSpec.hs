@@ -258,6 +258,7 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
 import TDF.ServerFuture (validateFutureAdminAccess)
+import TDF.ServerExtra (validateSocialReplyBody)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import Test.Hspec
 import Web.PathPieces (fromPathPiece, toPathPiece)
@@ -4578,6 +4579,34 @@ spec = describe "TDF.Server helpers" $ do
                 "recipient-1"
                 ("hola" <> T.singleton '\NUL')
                 `shouldReturn` Left "Facebook message body must not contain control characters"
+
+    describe "validateSocialReplyBody" $ do
+        it "trims manual Instagram/Facebook reply text while preserving multiline formatting" $ do
+            validateSocialReplyBody "  Hola, seguimos por aqui.  "
+                `shouldBe` Right "Hola, seguimos por aqui."
+            validateSocialReplyBody "  Linea uno\nLinea dos  "
+                `shouldBe` Right "Linea uno\nLinea dos"
+            case validateSocialReplyBody (T.replicate 4096 "a") of
+                Right bodyVal -> T.length bodyVal `shouldBe` 4096
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected boundary-sized social reply body, got: " <> show serverErr)
+
+        it "rejects blank, oversized, or non-printing replies before dispatch or persistence" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right bodyVal ->
+                        expectationFailure
+                            ("Expected invalid social reply body to be rejected, got: " <> show bodyVal)
+            assertInvalid "message is required" (validateSocialReplyBody "   ")
+            assertInvalid
+                "message must be 4096 characters or fewer"
+                (validateSocialReplyBody (T.replicate 4097 "a"))
+            assertInvalid
+                "message must not contain unsupported control characters"
+                (validateSocialReplyBody ("hola" <> T.singleton '\NUL'))
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $

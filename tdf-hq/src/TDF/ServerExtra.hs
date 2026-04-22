@@ -2481,9 +2481,7 @@ instagramServer user =
       Env{..} <- ask
       recipient <- either throwError pure (validateSocialReplySenderId (IG.irSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (IG.irExternalId req))
-      let body = T.strip (IG.irMessage req)
-      when (T.null body) $
-        throwError err400 { errBody = "Empty message" }
+      body <- either throwError pure (validateSocialReplyBody (IG.irMessage req))
       (mTargetAccountId, mTargetAccessToken) <-
         liftIO $
           flip runSqlPool envPool $
@@ -2604,9 +2602,7 @@ facebookServer user =
       Env{..} <- ask
       recipient <- either throwError pure (validateSocialReplySenderId (FB.frSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (FB.frExternalId req))
-      let body = T.strip (FB.frMessage req)
-      when (T.null body) $
-        throwError err400 { errBody = "Empty message" }
+      body <- either throwError pure (validateSocialReplyBody (FB.frMessage req))
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
       let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
@@ -2925,6 +2921,26 @@ validateSocialReplyExternalId (Just rawExternalId) =
   case normalizeOptionalTextField (Just rawExternalId) of
     Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
     Just externalId -> Just <$> validateSocialReplyIdentifier "externalId" externalId
+
+validateSocialReplyBody :: Text -> Either ServerError Text
+validateSocialReplyBody rawBody
+  | T.null body =
+      Left err400 { errBody = "message is required" }
+  | T.length body > maxSocialReplyBodyChars =
+      Left err400 { errBody = "message must be 4096 characters or fewer" }
+  | T.any isUnsupportedMessageControl body =
+      Left err400 { errBody = "message must not contain unsupported control characters" }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+maxSocialReplyBodyChars :: Int
+maxSocialReplyBodyChars = 4096
+
+isUnsupportedMessageControl :: Char -> Bool
+isUnsupportedMessageControl ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
 
 validateSocialReplyIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialReplyIdentifier fieldName value
