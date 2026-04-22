@@ -596,7 +596,7 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
-    .replace(/^formulario\s+p[uú]blico\s*[-:/|]\s*/i, '')
+    .replace(/^formulario\s+p[uú]blico(?:\s+(?:de|para))?\s*(?:[-:/|]\s*)?/i, '')
     .trim();
 
   return strippedTitle || trimmedTitle;
