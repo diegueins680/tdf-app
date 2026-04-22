@@ -245,6 +245,8 @@ const cohortFilterUnavailableMessage =
   'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage =
   'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
+const emptyCohortFilterMessage =
+  'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -8488,6 +8490,42 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).not.toContain('Cargando cohortes…');
       expect(container.querySelector('[data-testid="course-registration-initial-cohort-loading"]')).toBeNull();
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
+  it('replaces an empty cohort selector with passive setup guidance when registrations are loaded', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCourseSlug: 'archived-course',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-empty-cohort-filter"]',
+      );
+
+      expect(cohortSummary).not.toBeNull();
+      expect(cohortSummary?.textContent).toContain('Cohortes no configuradas');
+      expect(cohortSummary?.textContent).toContain(emptyCohortFilterMessage);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-cohort-filter-loading"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
