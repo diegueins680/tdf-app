@@ -2286,6 +2286,42 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected invalid ads inquiry phone to be rejected, got: " <> show normalized)
 
+        it "bounds public ads inquiry messages before lead storage and follow-up handling" $ do
+            let baseInquiry =
+                    AdsInquiry
+                        { aiName = Just "Ada Lovelace"
+                        , aiEmail = Just "ada@example.com"
+                        , aiPhone = Nothing
+                        , aiCourse = Just "Ableton"
+                        , aiMessage = Nothing
+                        , aiChannel = Just "instagram"
+                        }
+                assertInvalid rawMessage expected =
+                    case validateAdsInquiry baseInquiry { aiMessage = Just rawMessage } of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expected
+                        Right normalized ->
+                            expectationFailure
+                                ( "Expected invalid ads inquiry message to be rejected, got: "
+                                    <> show normalized
+                                )
+            case validateAdsInquiry
+                    baseInquiry { aiMessage = Just "  Linea uno\nLinea dos\tOK  " } of
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected multiline ads inquiry message to normalize, got: "
+                            <> show serverErr
+                        )
+                Right normalized ->
+                    aiMessage normalized `shouldBe` Just "Linea uno\nLinea dos\tOK"
+            assertInvalid
+                (T.replicate 2001 "x")
+                "message must be 2000 characters or fewer"
+            assertInvalid
+                ("Quiero info" <> T.singleton '\0')
+                "message must not contain control characters"
+
         it "rejects malformed channels before storing them as lead sources" $ do
             let baseInquiry =
                     AdsInquiry

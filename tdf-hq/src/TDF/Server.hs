@@ -3992,6 +3992,29 @@ validateAdsInquiryChannel (Just rawChannel) =
     isChannelChar ch = isAsciiLower ch || isDigit ch || ch == '_' || ch == '-'
     isChannelAtom ch = isAsciiLower ch || isDigit ch
 
+validateAdsInquiryMessage :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdsInquiryMessage Nothing = Right Nothing
+validateAdsInquiryMessage (Just rawMessage) =
+  case normalizeOptionalInput (Just rawMessage) of
+    Nothing -> Right Nothing
+    Just message
+      | T.length message > adsInquiryMessageMaxLength ->
+          Left err400 { errBody = "message must be 2000 characters or fewer" }
+      | T.any isUnsafeAdsInquiryMessageControl message ->
+          Left err400
+            { errBody =
+                "message must not contain control characters "
+                  <> "other than tabs or line breaks"
+            }
+      | otherwise ->
+          Right (Just message)
+  where
+    isUnsafeAdsInquiryMessageControl ch =
+      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+adsInquiryMessageMaxLength :: Int
+adsInquiryMessageMaxLength = 2000
+
 validateWhatsAppPhoneInput :: Text -> Either ServerError Text
 validateWhatsAppPhoneInput rawPhone =
   case cleanOptional (Just rawPhone) of
@@ -7722,12 +7745,13 @@ validateAdsInquiry AdsInquiry{..} = do
   phoneClean <- validateAdsInquiryPhone aiPhone
   validateAdsInquiryContactChannels emailClean phoneClean
   channelClean <- validateAdsInquiryChannel aiChannel
+  messageClean <- validateAdsInquiryMessage aiMessage
   pure AdsInquiry
     { aiName = normalizeOptionalInput aiName
     , aiEmail = emailClean
     , aiPhone = phoneClean
     , aiCourse = normalizeOptionalInput aiCourse
-    , aiMessage = normalizeOptionalInput aiMessage
+    , aiMessage = messageClean
     , aiChannel = channelClean
     }
 
