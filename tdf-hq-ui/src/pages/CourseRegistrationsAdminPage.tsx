@@ -593,6 +593,15 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
   return strippedTitle || trimmedSlug;
 };
 
+const stripFirstRunCohortDescriptorPrefix = (title: string) => {
+  const trimmedTitle = title.trim();
+  const strippedTitle = trimmedTitle
+    .replace(/^formulario\s+p[uú]blico\s*[-:/|]\s*/i, '')
+    .trim();
+
+  return strippedTitle || trimmedTitle;
+};
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
@@ -605,7 +614,7 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
   if (!title) return slug;
-  return stripTrailingCohortSlug(title, slug);
+  return stripTrailingCohortSlug(stripFirstRunCohortDescriptorPrefix(title), slug);
 };
 
 const humanizeDelimitedSourceLabel = (source: string) => {
