@@ -5887,7 +5887,7 @@ createPublicBooking PublicBookingReq{..} = do
     Left msg -> throwBadRequest msg
     Right () -> pure ()
   mEngineerParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
+    liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
       >>= either throwError pure
   let endsAt       = addUTCTime (fromIntegral durationMins * 60) startsAtClean
   notesClean <-
@@ -5951,7 +5951,7 @@ createBooking user req = do
     liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "partyId" partyIdClean))
       >>= either throwError pure
   mEngineerParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "engineerPartyId" engineerIdClean))
+    liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
       >>= either throwError pure
   let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
@@ -6011,7 +6011,7 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
-        requestedEngineerRef <- resolveOptionalBookingPartyReference "engineerPartyId" requestedEngineerId
+        requestedEngineerRef <- resolveOptionalBookingEngineerReference requestedEngineerId
         case requestedEngineerRef of
           Left refErr -> pure (Left refErr)
           Right requestedEngineerParty ->
@@ -6065,6 +6065,30 @@ resolveOptionalBookingPartyReference fieldName (Just rawId) = do
               BL.fromStrict (TE.encodeUtf8 (fieldName <> " references an unknown party"))
           }
       Just partyEnt -> Right (Just partyEnt)
+
+
+resolveOptionalBookingEngineerReference
+  :: Maybe Int64
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
+resolveOptionalBookingEngineerReference Nothing = pure (Right Nothing)
+resolveOptionalBookingEngineerReference engineerId = do
+  resolved <- resolveOptionalBookingPartyReference "engineerPartyId" engineerId
+  case resolved of
+    Left serverErr -> pure (Left serverErr)
+    Right Nothing -> pure (Right Nothing)
+    Right (Just partyEnt) -> do
+      activeEngineer <- selectFirst
+        [ PartyRolePartyId ==. entityKey partyEnt
+        , PartyRoleRole ==. Engineer
+        , PartyRoleActive ==. True
+        ]
+        []
+      pure $ case activeEngineer of
+        Nothing ->
+          Left err422
+            { errBody = "engineerPartyId must reference an active engineer" }
+        Just _ ->
+          Right (Just partyEnt)
 
 
 loadBookingResourceMap :: [Key Booking] -> SqlPersistT IO (Map.Map (Key Booking) [BookingResourceDTO])

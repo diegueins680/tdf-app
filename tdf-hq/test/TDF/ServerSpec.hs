@@ -66,6 +66,7 @@ import TDF.Models
     , ChatThread (..)
     , PackageProduct (..)
     , Party (..)
+    , PartyRole (..)
     , PaymentMethod (..)
     , PricingModel (..)
     , Resource (..)
@@ -98,6 +99,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parseDirectionParam
+    , resolveOptionalBookingEngineerReference
     , resolveOptionalBookingPartyReference
     , resolveInstagramBackfillTarget
     , resolveServiceAdEntity
@@ -1354,6 +1356,73 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unknown booking party id to be rejected, got: " <> show value)
+
+    describe "resolveOptionalBookingEngineerReference" $ do
+        it "requires explicit booking engineer ids to have an active Engineer role" $ do
+            (engineerId, omittedResult, engineerResult, customerResult, inactiveResult) <-
+                runAuthSqlite $ do
+                    now <- liftIO getCurrentTime
+                    let insertTestParty displayName email =
+                            insert Party
+                                { partyLegalName = Nothing
+                                , partyDisplayName = displayName
+                                , partyIsOrg = False
+                                , partyTaxId = Nothing
+                                , partyPrimaryEmail = Just email
+                                , partyPrimaryPhone = Nothing
+                                , partyWhatsapp = Nothing
+                                , partyInstagram = Nothing
+                                , partyEmergencyContact = Nothing
+                                , partyNotes = Nothing
+                                , partyCreatedAt = now
+                                }
+                    customerId <- insertTestParty "Studio Customer" "customer@example.com"
+                    inactiveEngineerId <-
+                        insertTestParty "Inactive Engineer" "inactive-engineer@example.com"
+                    activeEngineerId <- insertTestParty "Active Engineer" "engineer@example.com"
+                    _ <- insert (PartyRole customerId Customer True)
+                    _ <- insert (PartyRole inactiveEngineerId Engineer False)
+                    _ <- insert (PartyRole activeEngineerId Engineer True)
+                    omitted <- resolveOptionalBookingEngineerReference Nothing
+                    active <-
+                        resolveOptionalBookingEngineerReference
+                            (Just (fromSqlKey activeEngineerId))
+                    customer <-
+                        resolveOptionalBookingEngineerReference
+                            (Just (fromSqlKey customerId))
+                    inactive <-
+                        resolveOptionalBookingEngineerReference
+                            (Just (fromSqlKey inactiveEngineerId))
+                    pure (fromSqlKey activeEngineerId, omitted, active, customer, inactive)
+
+            case omittedResult of
+                Right Nothing -> pure ()
+                Right other ->
+                    expectationFailure
+                        ("Expected omitted engineer reference to stay empty, got: " <> show other)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected omitted engineer reference to succeed, got: " <> show serverErr)
+            case engineerResult of
+                Right (Just (Entity resolvedKey resolvedParty)) -> do
+                    fromSqlKey resolvedKey `shouldBe` engineerId
+                    partyDisplayName resolvedParty `shouldBe` "Active Engineer"
+                Right other ->
+                    expectationFailure ("Expected engineer reference to resolve, got: " <> show other)
+                Left serverErr ->
+                    expectationFailure ("Expected engineer reference to resolve, got: " <> show serverErr)
+
+            let assertInvalid result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 422
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "engineerPartyId must reference an active engineer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected non-engineer reference to be rejected, got: " <> show value)
+            assertInvalid customerResult
+            assertInvalid inactiveResult
 
     describe "resolveOptionalProposalClientPartyReference" $ do
         it "preserves omitted refs and resolves existing proposal client parties" $ do
