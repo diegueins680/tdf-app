@@ -629,7 +629,8 @@ const humanizeDelimitedSourceLabel = (source: string) => {
   if (!/[_./-]/.test(source)) return source;
   const normalized = source.replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ').trim();
   if (!normalized) return source;
-  return `${normalized.charAt(0).toLocaleUpperCase('es')}${normalized.slice(1)}`;
+  const sentenceCaseSource = normalized.toLocaleLowerCase('es');
+  return `${sentenceCaseSource.charAt(0).toLocaleUpperCase('es')}${sentenceCaseSource.slice(1)}`;
 };
 
 const normalizeSourceAliasKey = (source: string) =>

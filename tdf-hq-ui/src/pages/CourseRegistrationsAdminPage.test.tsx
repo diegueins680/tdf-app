@@ -7121,6 +7121,51 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('normalizes uppercase technical source slugs before showing them to first-time admins', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'INSTAGRAM_STORY' }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 102 + index,
+        crPartyId: 10 + index,
+        crFullName: `Estudiante ${index + 2}`,
+        crEmail: `student${index + 2}@example.com`,
+        crSource: index % 2 === 0 ? 'landing' : null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, contacto o fuente',
+      );
+      expect(container.textContent).toContain('Fuente: Instagram story');
+      expect(container.textContent).not.toContain('Fuente: INSTAGRAM STORY');
+      expect(container.textContent).not.toContain('Fuente: INSTAGRAM_STORY');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'instagram story');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).not.toContain('INSTAGRAM_STORY');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a shared humanized source out of the busy-list search placeholder', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
