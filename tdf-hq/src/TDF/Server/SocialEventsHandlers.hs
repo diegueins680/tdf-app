@@ -2420,9 +2420,15 @@ normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrenc
 
 validateFinanceEntryCurrencyInput :: T.Text -> T.Text -> Either ServerError T.Text
 validateFinanceEntryCurrencyInput defaultCurrency rawCurrency =
-  let fallbackCurrency = fromMaybe "USD" (normalizeEventCurrencyCode defaultCurrency)
-  in case cleanMaybeText (Just rawCurrency) of
-    Nothing -> Right fallbackCurrency
+  case cleanMaybeText (Just rawCurrency) of
+    Nothing ->
+      case normalizeEventCurrencyCode defaultCurrency of
+        Just fallbackCurrency -> Right fallbackCurrency
+        Nothing ->
+          Left err409
+            { errBody =
+                "event default currency must be a 3-letter ISO code before finance entries can inherit it"
+            }
     Just providedCurrency ->
       case normalizeEventCurrencyCode providedCurrency of
         Just currency -> Right currency

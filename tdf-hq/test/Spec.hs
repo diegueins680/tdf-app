@@ -4437,7 +4437,6 @@ main = hspec $ do
         it "rejects invalid explicit finance entry currencies instead of storing opaque codes" $ do
             validateFinanceEntryCurrencyInput "usd" " eur " `shouldBe` Right "EUR"
             validateFinanceEntryCurrencyInput "eur" "   " `shouldBe` Right "EUR"
-            validateFinanceEntryCurrencyInput "usdollars" "   " `shouldBe` Right "USD"
             case validateFinanceEntryCurrencyInput "USD" "usdollars" of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -4446,6 +4445,14 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid finance entry currency to be rejected, got " <> show value)
+            case validateFinanceEntryCurrencyInput "usdollars" "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err)
+                        `shouldContain` "event default currency must be a 3-letter ISO code"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid inherited event currency to be rejected, got " <> show value)
 
     describe "stored finance entry invariants" $ do
         let financeTimestamp = UTCTime (fromGregorian 2026 1 1) 0
