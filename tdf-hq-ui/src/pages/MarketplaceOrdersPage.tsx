@@ -520,6 +520,13 @@ export default function MarketplaceOrdersPage() {
         || paidAtInput !== selectedPaidAtInput
       ),
   );
+  const showPaymentTimestampInput = Boolean(
+    selectedOrder && (
+      isPaidOrderStatus(effectiveStatus)
+      || Boolean(selectedPaidAtInput)
+      || Boolean(paidAtInput)
+    ),
+  );
   const statusHint = (() => {
     if (!effectiveStatus) return null;
     if (effectiveStatus === 'datafast_pending') {
@@ -1080,14 +1087,16 @@ export default function MarketplaceOrdersPage() {
                           onChange={(e) => setPaymentProviderInput(e.target.value)}
                           placeholder="paypal, transferencia, cash..."
                         />
-                        <TextField
-                          label="Fecha de pago"
-                          type="datetime-local"
-                          fullWidth
-                          value={paidAtInput}
-                          onChange={(e) => setPaidAtInput(e.target.value)}
-                          InputLabelProps={{ shrink: true }}
-                        />
+                        {showPaymentTimestampInput && (
+                          <TextField
+                            label="Fecha de pago"
+                            type="datetime-local"
+                            fullWidth
+                            value={paidAtInput}
+                            onChange={(e) => setPaidAtInput(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        )}
                         {warnMissingProvider && (
                           <Alert severity="warning" variant="outlined">
                             No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.

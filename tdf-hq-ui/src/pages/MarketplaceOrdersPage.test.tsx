@@ -1131,6 +1131,13 @@ describe('MarketplaceOrdersPage', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
         expect(queryActionByText(document.body, 'Marcar pagado ahora')).not.toBeNull();
+        expect(countLabelsByText(document.body, 'Fecha de pago')).toBe(0);
+      });
+
+      await clickActionByText(document.body, 'Marcar pagado ahora');
+
+      await waitForExpectation(() => {
+        expect(countLabelsByText(document.body, 'Fecha de pago')).toBe(1);
       });
     } finally {
       await cleanup();
