@@ -105,7 +105,10 @@ const formatInputDate = (iso?: string | null) => {
 };
 
 const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
-  items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ');
+  items.length > 0 ? items.map((it) => `${it.moiQuantity} × ${it.moiTitle}`).join(' · ') : 'Sin items';
+
+const formatItemCountLabel = (items: MarketplaceOrderDTO['moItems']) =>
+  items.length > 1 ? `${items.length} items` : '';
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
@@ -873,6 +876,8 @@ export default function MarketplaceOrdersPage() {
                 <TableBody>
                 {filtered.map((order) => {
                   const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
+                  const itemCountLabel = formatItemCountLabel(order.moItems);
+                  const itemSummary = summarizeItems(order.moItems);
 
                   return (
                     <TableRow
@@ -959,9 +964,14 @@ export default function MarketplaceOrdersPage() {
                       <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
                       {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
                       <TableCell>
-                        <Typography variant="body2">{order.moItems.length}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {summarizeItems(order.moItems)}
+                        {itemCountLabel && (
+                          <Typography variant="body2">{itemCountLabel}</Typography>
+                        )}
+                        <Typography
+                          variant={itemCountLabel ? 'caption' : 'body2'}
+                          color={itemCountLabel ? 'text.secondary' : 'text.primary'}
+                        >
+                          {itemSummary}
                         </Typography>
                       </TableCell>
                     </TableRow>

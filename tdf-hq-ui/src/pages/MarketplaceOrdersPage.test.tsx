@@ -48,6 +48,19 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   throw lastError;
 };
 
+const buildOrderItem = (
+  overrides: Partial<MarketplaceOrderDTO['moItems'][number]> = {},
+): MarketplaceOrderDTO['moItems'][number] => ({
+  moiListingId: 'listing-1',
+  moiTitle: 'Vintage Mic',
+  moiQuantity: 1,
+  moiUnitPriceUsdCents: 10000,
+  moiSubtotalCents: 10000,
+  moiUnitPriceDisplay: 'USD $100.00',
+  moiSubtotalDisplay: 'USD $100.00',
+  ...overrides,
+});
+
 const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOrderDTO => ({
   moOrderId: 'order-1',
   moCartId: 'cart-1',
@@ -65,17 +78,7 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
   moPaidAt: null,
   moCreatedAt: '2030-01-01T12:00:00.000Z',
   moUpdatedAt: '2030-01-01T12:00:00.000Z',
-  moItems: [
-    {
-      moiListingId: 'listing-1',
-      moiTitle: 'Vintage Mic',
-      moiQuantity: 1,
-      moiUnitPriceUsdCents: 10000,
-      moiSubtotalCents: 10000,
-      moiUnitPriceDisplay: 'USD $100.00',
-      moiSubtotalDisplay: 'USD $100.00',
-    },
-  ],
+  moItems: [buildOrderItem()],
   ...overrides,
 });
 
@@ -751,6 +754,74 @@ describe('MarketplaceOrdersPage', () => {
       await waitForExpectation(() => {
         expect(nextContainer.querySelectorAll('tbody tr')).toHaveLength(2);
         expect(getTableHeaders(nextContainer)).toContain('Pagado');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('keeps item summaries readable by omitting duplicate single-item counts', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+        moItems: [buildOrderItem({ moiListingId: 'listing-2', moiTitle: 'Patch Cable' })],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const firstRender = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getColumnTextsByHeader(container, 'Items')).toEqual([
+          '1 × Patch Cable',
+          '1 × Vintage Mic',
+        ]);
+        expect(getColumnTextsByHeader(container, 'Items').join(' ')).not.toContain('1 1 ×');
+      });
+    } finally {
+      await firstRender.cleanup();
+    }
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+        moItems: [
+          buildOrderItem({ moiListingId: 'listing-2', moiTitle: 'Patch Cable' }),
+          buildOrderItem({ moiListingId: 'listing-3', moiTitle: 'Mic Stand' }),
+        ],
+      }),
+    ]);
+
+    const nextContainer = document.createElement('div');
+    document.body.appendChild(nextContainer);
+    const secondRender = await renderPage(nextContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const itemTexts = getColumnTextsByHeader(nextContainer, 'Items');
+        expect(itemTexts[0]).toContain('2 items');
+        expect(itemTexts[0]).toContain('1 × Patch Cable · 1 × Mic Stand');
+        expect(itemTexts[1]).toBe('1 × Vintage Mic');
       });
     } finally {
       await secondRender.cleanup();
