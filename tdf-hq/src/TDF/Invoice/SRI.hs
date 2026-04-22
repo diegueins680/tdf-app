@@ -5,6 +5,7 @@ module TDF.Invoice.SRI
   ( SriScriptCustomer(..)
   , SriScriptLine(..)
   , SriScriptRequest(..)
+  , decodeSriScriptOutput
   , runSriInvoiceScript
   ) where
 
@@ -20,7 +21,6 @@ import           System.FilePath (takeExtension)
 import           System.Process (proc, readCreateProcessWithExitCode)
 
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
 
 import           TDF.DTO (SriIssueResultDTO)
@@ -67,7 +67,7 @@ runSriInvoiceScript payload = do
     Right scriptPath -> do
       absolutePath <- makeAbsolute scriptPath
       let processSpec = proc "node" [absolutePath]
-          stdinJson = BS8.unpack (BL.toStrict (Aeson.encode payload))
+          stdinJson = T.unpack (TE.decodeUtf8 (BL.toStrict (Aeson.encode payload)))
       processResult <- try (readCreateProcessWithExitCode processSpec stdinJson)
       case processResult of
         Left err ->
@@ -80,12 +80,16 @@ runSriInvoiceScript payload = do
         Right (exitCode, stdoutTxt, stderrTxt) ->
           case exitCode of
             ExitSuccess ->
-              case Aeson.eitherDecodeStrict' (BS8.pack stdoutTxt) of
-                Left err -> pure (Left (T.pack ("Invalid SRI script JSON output: " <> err)))
-                Right dto -> pure (Right dto)
+              pure (decodeSriScriptOutput stdoutTxt)
             ExitFailure _ ->
-              let trimmedErr = T.strip (TE.decodeUtf8 (BS8.pack stderrTxt))
+              let trimmedErr = T.strip (T.pack stderrTxt)
               in pure (Left (if T.null trimmedErr then "SRI invoice script failed" else trimmedErr))
+
+decodeSriScriptOutput :: String -> Either Text SriIssueResultDTO
+decodeSriScriptOutput stdoutTxt =
+  case Aeson.eitherDecodeStrict' (TE.encodeUtf8 (T.pack stdoutTxt)) of
+    Left err -> Left (T.pack ("Invalid SRI script JSON output: " <> err))
+    Right dto -> Right dto
 
 resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do

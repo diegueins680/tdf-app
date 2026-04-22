@@ -1838,6 +1838,16 @@ main = hspec $ do
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
 
     describe "SRI invoice script discovery" $ do
+        it "decodes UTF-8 SRI script JSON output without corrupting localized statuses" $
+            case Sri.decodeSriScriptOutput "{\"ok\":true,\"status\":\"autorización emitida\"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected UTF-8 SRI script output to decode, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    DTO.sirStatus result `shouldBe` "autorización emitida"
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
