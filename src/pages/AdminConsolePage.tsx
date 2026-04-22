@@ -967,11 +967,14 @@ export default function AdminConsolePage() {
     && shouldShowAdditionalModuleCards;
   const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
   const standaloneAdditionalModulesActionLabel = formatStandaloneAdditionalModulesActionLabel(consoleCards);
+  const firstRunAdditionalModuleSignature = JSON.stringify(
+    consoleCards.map((card) => [card.cardId, card.title, card.body]),
+  );
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
     }
-  }, [showGettingStartedGuidance]);
+  }, [firstRunAdditionalModuleSignature, showGettingStartedGuidance]);
   useEffect(() => {
     if (consoleCards.length === 0) {
       setShowFirstRunAdditionalModules(false);

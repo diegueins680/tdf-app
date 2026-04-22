@@ -1236,6 +1236,62 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('collapses expanded first-run modules when fallback discovery changes the module set', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    const { queryClient } = renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^Opcional: ver Tokens de servicio$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(['admin', 'console'], {
+        status: 'preview',
+        cards: [
+          {
+            cardId: 'integrations',
+            title: 'Integraciones',
+            body: [
+              'Revisa conectores pendientes sin salir de la consola.',
+            ],
+          },
+        ],
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Módulos opcionales')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Opcional: ver Integraciones$/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/Revisa conectores pendientes sin salir de la consola\./i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+  });
+
   it('deduplicates repeated preview cards so the console only shows each extra workflow once', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
