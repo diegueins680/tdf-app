@@ -1749,6 +1749,11 @@ export default function CourseRegistrationsAdminPage() {
     const [firstLabel] = createdLabels;
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [searchedRegistrations]);
+  const sharedVisibleCreatedAtSummary = sharedVisibleCreatedAtLabel
+    && hasCustomFilters
+    && localSearchNarrowsRegistrations
+    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
+    : '';
   const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel)
     && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
@@ -1760,6 +1765,7 @@ export default function CourseRegistrationsAdminPage() {
     sharedVisibleStatusSummary,
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
+    sharedVisibleCreatedAtSummary,
     sharedVisibleMissingContactSummary,
     sharedVisibleNotesSummary,
   ].filter(Boolean);
@@ -3605,12 +3611,27 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleSourceSummary}
                   </Typography>
                 )}
+                {sharedVisibleCreatedAtSummary && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    data-testid="course-registration-shared-created-at-summary"
+                    sx={{
+                      mt: shouldShowSharedStatusSummary || shouldShowSharedCohortSummary || shouldShowSharedSourceSummary
+                        ? 0.75
+                        : 1.5,
+                    }}
+                  >
+                    {sharedVisibleCreatedAtSummary}
+                  </Typography>
+                )}
                 {sharedVisibleMissingContactSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{
                       mt: shouldShowSharedStatusSummary || shouldShowSharedCohortSummary || shouldShowSharedSourceSummary
+                        || Boolean(sharedVisibleCreatedAtSummary)
                         ? 0.75
                         : 1.5,
                     }}
@@ -3626,6 +3647,7 @@ export default function CourseRegistrationsAdminPage() {
                       mt: shouldShowSharedStatusSummary
                         || shouldShowSharedCohortSummary
                         || shouldShowSharedSourceSummary
+                        || Boolean(sharedVisibleCreatedAtSummary)
                         || Boolean(sharedVisibleMissingContactSummary)
                         ? 0.75
                         : 1.5,

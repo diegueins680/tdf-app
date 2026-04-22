@@ -7261,7 +7261,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps repeated created dates out of locally narrowed filtered lists', async () => {
+  it('summarizes repeated created dates once in locally narrowed filtered lists', async () => {
     const sharedCreatedAt = '2030-02-03T03:04:05.000Z';
     const sharedCreatedAtLabel = formatTimestampForDisplay(sharedCreatedAt, '-');
 
@@ -7311,8 +7311,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).toContain('Nina Garcia');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
-      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
-      expect(container.textContent).not.toContain(`Misma fecha de registro: ${sharedCreatedAtLabel}.`);
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')?.textContent?.trim()).toBe(
+        `Misma fecha de registro: ${sharedCreatedAtLabel}.`,
+      );
       expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
     });
 
