@@ -84,8 +84,14 @@ validateFacebookPageId rawPageId =
     Nothing ->
       Left "FACEBOOK_MESSAGING_PAGE_ID no configurado"
     Just pageId
-      | T.any invalidGraphPathSegmentChar pageId ->
-          Left "FACEBOOK_MESSAGING_PAGE_ID must be a single Graph path segment"
+      | T.length pageId > maxFacebookPageIdChars
+          || not (T.any isGraphNodeIdAtom pageId)
+          || T.any (not . isGraphNodeIdChar) pageId ->
+          Left
+            ( "FACEBOOK_MESSAGING_PAGE_ID must be a Graph node id using only "
+                <> "ASCII letters, numbers, '.', '_' or '-' with at least one "
+                <> "letter or number (128 chars max)"
+            )
       | otherwise ->
           Right pageId
 
@@ -124,10 +130,6 @@ validateFacebookMessageBody rawBody =
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
 
-invalidGraphPathSegmentChar :: Char -> Bool
-invalidGraphPathSegmentChar ch =
-  isSpace ch || isControl ch || ch == '/' || ch == '?' || ch == '#'
-
 invalidFacebookRecipientIdChar :: Char -> Bool
 invalidFacebookRecipientIdChar ch = isSpace ch || isControl ch
 
@@ -135,8 +137,21 @@ invalidMessageBodyControlChar :: Char -> Bool
 invalidMessageBodyControlChar ch =
   isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
 
+isGraphNodeIdAtom :: Char -> Bool
+isGraphNodeIdAtom ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
+
+isGraphNodeIdChar :: Char -> Bool
+isGraphNodeIdChar ch =
+  isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
 maxFacebookRecipientIdChars :: Int
 maxFacebookRecipientIdChars = 256
 
 maxFacebookMessageBodyChars :: Int
 maxFacebookMessageBodyChars = 5000
+
+maxFacebookPageIdChars :: Int
+maxFacebookPageIdChars = 128

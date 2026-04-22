@@ -4603,6 +4603,10 @@ spec = describe "TDF.Server helpers" $ do
                         { facebookMessagingToken = Just "configured-token"
                         , facebookMessagingPageId = Just "page_123"
                         }
+                expectedFacebookPageIdMessage =
+                    "FACEBOOK_MESSAGING_PAGE_ID must be a Graph node id using only "
+                        <> "ASCII letters, numbers, '.', '_' or '-' with at least "
+                        <> "one letter or number (128 chars max)"
             sendFacebookText
                 (cfg
                     { facebookMessagingToken = Just "   "
@@ -4631,7 +4635,13 @@ spec = describe "TDF.Server helpers" $ do
                 (configuredCfg { facebookMessagingPageId = Just "page_123/messages" })
                 "recipient-1"
                 "hola"
-                `shouldReturn` Left "FACEBOOK_MESSAGING_PAGE_ID must be a single Graph path segment"
+                `shouldReturn` Left expectedFacebookPageIdMessage
+
+            sendFacebookText
+                (configuredCfg { facebookMessagingPageId = Just "---" })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left expectedFacebookPageIdMessage
 
             sendFacebookText
                 configuredCfg
