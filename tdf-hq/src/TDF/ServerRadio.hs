@@ -22,7 +22,7 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (isAlphaNum, isAscii, isControl, isDigit, isHexDigit, isSpace)
+import           Data.Char              (digitToInt, isAlphaNum, isAscii, isControl, isDigit, isHexDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -461,6 +461,7 @@ isNonPublicIpv6 host =
     || isMulticast firstSegment
     || isUniqueLocal firstSegment
     || isLinkLocal firstSegment
+    || maybe False isNonPublicIpv4 (embeddedIpv4Octets host)
   where
     segments = T.splitOn ":" host
     firstSegment = headOrEmpty segments
@@ -483,6 +484,51 @@ isNonPublicIpv6 host =
 
     isLinkLocal segment =
       any (`T.isPrefixOf` segment) ["fe8", "fe9", "fea", "feb"]
+
+embeddedIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+embeddedIpv4Octets host =
+  case parseIpv6Hextets host of
+    Just [0, 0, 0, 0, 0, marker, hi, lo]
+      | marker == 0 || marker == 0xffff ->
+          Just (hi `div` 256, hi `mod` 256, lo `div` 256, lo `mod` 256)
+    _ -> Nothing
+
+parseIpv6Hextets :: Text -> Maybe [Int]
+parseIpv6Hextets host =
+  case T.splitOn "::" host of
+    [single] -> do
+      hextets <- parseIpv6Side (T.splitOn ":" single)
+      if length hextets == 8 then Just hextets else Nothing
+    [leftSide, rightSide] -> do
+      leftHextets <- parseIpv6Side (sideSegments leftSide)
+      rightHextets <- parseIpv6Side (sideSegments rightSide)
+      let zeroCount = 8 - length leftHextets - length rightHextets
+      if zeroCount <= 0
+        then Nothing
+        else Just (leftHextets <> replicate zeroCount 0 <> rightHextets)
+    _ -> Nothing
+  where
+    sideSegments txt =
+      if T.null txt then [] else T.splitOn ":" txt
+
+parseIpv6Side :: [Text] -> Maybe [Int]
+parseIpv6Side segments =
+  case break (T.any (== '.')) segments of
+    (hextets, []) ->
+      traverse parseIpv6Hextet hextets
+    (hextets, [ipv4]) -> do
+      parsedHextets <- traverse parseIpv6Hextet hextets
+      (a, b, c, d) <- parseIpv4Octets ipv4
+      pure (parsedHextets <> [a * 256 + b, c * 256 + d])
+    _ -> Nothing
+
+parseIpv6Hextet :: Text -> Maybe Int
+parseIpv6Hextet segment
+  | T.null segment = Nothing
+  | T.length segment > 4 = Nothing
+  | T.any (not . isHexDigit) segment = Nothing
+  | otherwise =
+      Just (T.foldl' (\acc ch -> acc * 16 + digitToInt ch) 0 segment)
 
 validateRadioImportLimit :: Maybe Int -> Either ServerError Int
 validateRadioImportLimit = validateRadioBatchLimit 800
