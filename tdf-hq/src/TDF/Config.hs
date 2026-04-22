@@ -591,10 +591,12 @@ loadConfig = do
         Nothing  -> pure Nothing
         Just txt
           | T.null txt -> pure Nothing
-          | T.length txt > 512 ->
-              fail "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
           | T.any (\ch -> isSpace ch || isControl ch) txt ->
               fail "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+          | T.length txt < 16 ->
+              fail "SEED_TRIGGER_TOKEN must be at least 16 characters"
+          | T.length txt > 512 ->
+              fail "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
           | otherwise -> pure (Just txt)
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
       let host = normalizeRequiredSmtpValue mHost

@@ -499,16 +499,19 @@ main = hspec $ do
 
         it "rejects malformed seed trigger tokens before enabling seed endpoints" $ do
             withEnvOverrides
-                [ ("SEED_TRIGGER_TOKEN", Just " seed-token_123 ") ]
+                [ ("SEED_TRIGGER_TOKEN", Just " seed-token_123456 ") ]
                 $ do
                     cfg <- loadConfig
-                    seedTriggerToken cfg `shouldBe` Just "seed-token_123"
+                    seedTriggerToken cfg `shouldBe` Just "seed-token_123456"
 
             let assertInvalid rawToken expectedMessage =
                     withEnvOverrides
                         [ ("SEED_TRIGGER_TOKEN", Just rawToken) ]
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "short-token"
+                "SEED_TRIGGER_TOKEN must be at least 16 characters"
             assertInvalid
                 "seed token"
                 "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
