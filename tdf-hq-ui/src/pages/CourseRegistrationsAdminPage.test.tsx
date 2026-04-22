@@ -8171,11 +8171,14 @@ describe('CourseRegistrationsAdminPage', () => {
         crId: 101,
         crFullName: 'Nina Simone',
         crEmail: 'nina1@example.com',
+        crPhoneE164: '+593999000101',
       }),
       buildRegistration({
         crId: 102,
         crFullName: 'Nina Garcia',
         crEmail: 'nina2@example.com',
+        crPhoneE164: '+593999000102',
+        crStatus: 'paid',
       }),
       ...buildRegistrations(7, (index) => ({
         crId: 201 + index,
@@ -8222,8 +8225,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(writeTextMock).toHaveBeenCalledTimes(1);
       const csv = writeTextMock.mock.calls[0]?.[0] ?? '';
       expect(csv.split('\n')).toHaveLength(3);
+      expect(csv.split('\n')[0]).toBe('"id","slug","nombre","email","telefono","estado","creado"');
       expect(csv).toContain('"Nina Simone"');
       expect(csv).toContain('"Nina Garcia"');
+      expect(csv).toContain('"+593999000101"');
+      expect(csv).toContain('"+593999000102"');
+      expect(csv).toContain('"Pendiente de pago"');
+      expect(csv).toContain('"Pagado"');
+      expect(csv).not.toContain('"pending_payment"');
       expect(csv).not.toContain('"Estudiante 1"');
       expect(container.textContent).toContain('Copiado CSV (2 filas)');
       expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);

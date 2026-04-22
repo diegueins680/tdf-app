@@ -2252,13 +2252,14 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCopyCsv = async () => {
     if (searchedRegistrations.length < 2) return;
-    const header = ['id', 'slug', 'nombre', 'email', 'estado', 'creado'];
+    const header = ['id', 'slug', 'nombre', 'email', 'telefono', 'estado', 'creado'];
     const rows = searchedRegistrations.map((reg) => [
       reg.crId,
       reg.crCourseSlug,
       reg.crFullName ?? '',
       reg.crEmail ?? '',
-      reg.crStatus,
+      reg.crPhoneE164 ?? '',
+      registrationStatusLabel(reg.crStatus),
       reg.crCreatedAt,
     ]);
     const csv = [header, ...rows]
