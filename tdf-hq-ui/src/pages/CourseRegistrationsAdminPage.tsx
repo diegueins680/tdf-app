@@ -60,9 +60,9 @@ const receiptComposerHelpText = 'Este formulario ya está abierto para guardar o
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el curso inicial; cuando llegue la primera inscripción podrás revisar pago, seguimiento y correos aquí.';
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
-  `Todavía no hay inscripciones. Hay ${count} cursos con formulario público; elige cuál compartir primero.`;
+  `Todavía no hay inscripciones. Hay ${count} formularios públicos listos; revisa cursos para compartir uno.`;
 const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir curso';
+const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
