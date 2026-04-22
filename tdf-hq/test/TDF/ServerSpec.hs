@@ -2351,6 +2351,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Mensaje demasiado largo"
                 baseRequest { aarMessage = T.replicate 2001 "x" }
+            assertInvalid
+                "Mensaje no debe contener caracteres de control"
+                baseRequest { aarMessage = "Necesito responder" <> T.singleton '\0' }
 
         it "rejects non-positive ad and campaign ids before scoped example lookup silently misses" $ do
             let baseRequest =
