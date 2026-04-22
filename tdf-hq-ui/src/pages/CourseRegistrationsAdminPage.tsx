@@ -600,7 +600,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(
-      /^(?:formulario\s+(?:p[uú]blico|de\s+inscripci[oó]n)|public\s+form|registration\s+form)(?:\s+(?:de|para|for))?\s*(?:[-:/|]\s*)?/i,
+      /^(?:formulario\s+(?:p[uú]blico|de\s+inscripci[oó]n|de\s+registro)|public\s+form|registration\s+form)(?:\s+(?:de|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
     )
     .trim();
