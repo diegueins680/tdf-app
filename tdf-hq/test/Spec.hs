@@ -245,6 +245,13 @@ import TDF.Config
       instagramMessagingAccountId,
       loadConfig,
       openAiEmbedModel,
+      ragAvailabilityDays,
+      ragAvailabilityPerResource,
+      ragChunkOverlap,
+      ragChunkWords,
+      ragEmbedBatchSize,
+      ragRefreshHours,
+      ragTopK,
       resolveConfiguredAppBase,
       resolveConfiguredAssetsBase,
       resetDb,
@@ -287,6 +294,19 @@ withEnvOverrides overrides action =
         case value of
             Just raw -> setEnv key raw
             Nothing -> unsetEnv key
+
+clearRagEnv :: [(String, Maybe String)]
+clearRagEnv =
+    map
+        (\key -> (key, Nothing))
+        [ "RAG_TOP_K"
+        , "RAG_CHUNK_WORDS"
+        , "RAG_CHUNK_OVERLAP"
+        , "RAG_AVAILABILITY_DAYS"
+        , "RAG_AVAILABILITY_PER_RESOURCE"
+        , "RAG_REFRESH_HOURS"
+        , "RAG_EMBED_BATCH_SIZE"
+        ]
 
 sampleSriScriptRequest :: Sri.SriScriptRequest
 sampleSriScriptRequest =
@@ -868,6 +888,58 @@ main = hspec $ do
                 [ ("OPENAI_EMBED_MODEL", Just "text-embedding-unknown") ]
                 $ loadConfig `shouldThrow` \err ->
                     "OPENAI_EMBED_MODEL must be one of"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes configured RAG tuning integers before building retrieval plans" $ do
+            withEnvOverrides
+                (clearRagEnv
+                    ++ [ ("RAG_TOP_K", Just " 5 ")
+                       , ("RAG_CHUNK_WORDS", Just "180")
+                       , ("RAG_CHUNK_OVERLAP", Just "0")
+                       , ("RAG_AVAILABILITY_DAYS", Just "21")
+                       , ("RAG_AVAILABILITY_PER_RESOURCE", Just "4")
+                       , ("RAG_REFRESH_HOURS", Just "12")
+                       , ("RAG_EMBED_BATCH_SIZE", Just "32")
+                       ])
+                $ do
+                    cfg <- loadConfig
+                    ragTopK cfg `shouldBe` 5
+                    ragChunkWords cfg `shouldBe` 180
+                    ragChunkOverlap cfg `shouldBe` 0
+                    ragAvailabilityDays cfg `shouldBe` 21
+                    ragAvailabilityPerResource cfg `shouldBe` 4
+                    ragRefreshHours cfg `shouldBe` 12
+                    ragEmbedBatchSize cfg `shouldBe` 32
+
+            withEnvOverrides
+                (clearRagEnv ++ [("RAG_CHUNK_WORDS", Just "20")])
+                $ do
+                    cfg <- loadConfig
+                    ragChunkWords cfg `shouldBe` 20
+                    ragChunkOverlap cfg `shouldBe` 19
+
+        it "rejects malformed RAG tuning integers instead of silently using defaults" $ do
+            let assertInvalid envName rawValue expectedMessage =
+                    withEnvOverrides
+                        (clearRagEnv ++ [(envName, Just rawValue)])
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "RAG_TOP_K"
+                "many"
+                "RAG_TOP_K must be a positive integer"
+            assertInvalid
+                "RAG_CHUNK_OVERLAP"
+                "-1"
+                "RAG_CHUNK_OVERLAP must be a non-negative integer"
+
+            withEnvOverrides
+                (clearRagEnv
+                    ++ [ ("RAG_CHUNK_WORDS", Just "40")
+                       , ("RAG_CHUNK_OVERLAP", Just "40")
+                       ])
+                $ loadConfig `shouldThrow` \err ->
+                    "RAG_CHUNK_OVERLAP must be less than RAG_CHUNK_WORDS"
                         `isInfixOf` show (err :: IOException)
 
         it "normalizes configured ChatKit workflow fallbacks before creating sessions" $ do

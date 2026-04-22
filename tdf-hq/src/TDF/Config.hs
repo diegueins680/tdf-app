@@ -301,6 +301,17 @@ validatePositiveIntEnv envName defaultValue (Just rawValue)
   where
     normalized = T.strip (T.pack rawValue)
 
+validateNonNegativeIntEnv :: String -> Int -> Maybe String -> IO Int
+validateNonNegativeIntEnv _ defaultValue Nothing = pure defaultValue
+validateNonNegativeIntEnv envName defaultValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case readMaybe (T.unpack normalized) of
+        Just parsed | parsed >= 0 -> pure parsed
+        _ -> fail (envName <> " must be a non-negative integer")
+  where
+    normalized = T.strip (T.pack rawValue)
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -444,6 +455,22 @@ loadConfig = do
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
   openAiEmbedModelVal <-
     validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
+  ragTopKVal <- validatePositiveIntEnv "RAG_TOP_K" 8 ragTopKEnv
+  ragChunkWordsVal <- validatePositiveIntEnv "RAG_CHUNK_WORDS" 220 ragChunkWordsEnv
+  let ragChunkOverlapDefault = min 40 (ragChunkWordsVal - 1)
+  ragChunkOverlapVal <-
+    validateNonNegativeIntEnv
+      "RAG_CHUNK_OVERLAP"
+      ragChunkOverlapDefault
+      ragChunkOverlapEnv
+  when (ragChunkOverlapVal >= ragChunkWordsVal) $
+    fail "RAG_CHUNK_OVERLAP must be less than RAG_CHUNK_WORDS"
+  ragAvailabilityDaysVal <-
+    validatePositiveIntEnv "RAG_AVAILABILITY_DAYS" 14 ragAvailabilityDaysEnv
+  ragAvailabilityPerResourceVal <-
+    validatePositiveIntEnv "RAG_AVAILABILITY_PER_RESOURCE" 6 ragAvailabilityPerResourceEnv
+  ragRefreshHoursVal <- validatePositiveIntEnv "RAG_REFRESH_HOURS" 24 ragRefreshHoursEnv
+  ragEmbedBatchSizeVal <- validatePositiveIntEnv "RAG_EMBED_BATCH_SIZE" 64 ragEmbedBatchSizeEnv
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
@@ -511,13 +538,13 @@ loadConfig = do
     , openAiEmbedModel = openAiEmbedModelVal
     , chatKitWorkflowId = chatKitWorkflowIdVal
     , chatKitApiBase = chatKitApiBaseVal
-    , ragTopK = parseInt 8 ragTopKEnv
-    , ragChunkWords = parseInt 220 ragChunkWordsEnv
-    , ragChunkOverlap = parseInt 40 ragChunkOverlapEnv
-    , ragAvailabilityDays = parseInt 14 ragAvailabilityDaysEnv
-    , ragAvailabilityPerResource = parseInt 6 ragAvailabilityPerResourceEnv
-    , ragRefreshHours = parseInt 24 ragRefreshHoursEnv
-    , ragEmbedBatchSize = parseInt 64 ragEmbedBatchSizeEnv
+    , ragTopK = ragTopKVal
+    , ragChunkWords = ragChunkWordsVal
+    , ragChunkOverlap = ragChunkOverlapVal
+    , ragAvailabilityDays = ragAvailabilityDaysVal
+    , ragAvailabilityPerResource = ragAvailabilityPerResourceVal
+    , ragRefreshHours = ragRefreshHoursVal
+    , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
     , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
     , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
@@ -582,10 +609,6 @@ loadConfig = do
       "yes"   -> True
       "on"    -> True
       _       -> False
-    parseInt def mVal =
-      case mVal >>= readMaybe of
-        Just n | n > 0 -> n
-        _ -> def
     validateSeedTriggerToken mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> pure Nothing
