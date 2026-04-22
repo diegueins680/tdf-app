@@ -414,6 +414,51 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('keeps resolved permission rows read-only so admins only see pending decisions', async () => {
+    listPermissionsMock.mockResolvedValue([
+      buildPermission({
+        iprId: 'permission-pending',
+        iprCategory: 'Salida médica',
+        iprStatus: 'pending',
+      }),
+      buildPermission({
+        iprId: 'permission-approved',
+        iprCategory: 'Permiso aprobado',
+        iprStatus: 'approved',
+      }),
+      buildPermission({
+        iprId: 'permission-rejected',
+        iprCategory: 'Permiso rechazado',
+        iprStatus: 'rejected',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Salida médica');
+        expect(container.textContent).toContain('Permiso aprobado');
+        expect(container.textContent).toContain('Permiso rechazado');
+        expect(container.textContent).toContain('Pendiente');
+        expect(container.textContent).toContain('Aprobado');
+        expect(container.textContent).toContain('Rechazado');
+        expect(getButtonsByText(container, 'Aprobar')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Rechazar')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Aprobar')[0]!);
+
+      await waitForExpectation(() => {
+        expect(updatePermissionMock).toHaveBeenCalledWith('permission-pending', { ipuStatus: 'approved' });
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces first-run hour-log chrome with one admin setup prompt', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

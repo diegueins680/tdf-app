@@ -1536,7 +1536,7 @@ export default function InternshipsPage() {
                         variant="outlined"
                       />
                     </Stack>
-                    {isAdmin && (
+                    {isAdmin && perm.iprStatus === 'pending' && (
                       <Stack direction="row" spacing={1}>
                         <Button
                           size="small"
