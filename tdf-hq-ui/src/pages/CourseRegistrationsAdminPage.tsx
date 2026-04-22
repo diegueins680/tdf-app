@@ -1718,7 +1718,9 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
     : '';
-  const copyCsvButtonLabel = `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonLabel = showLocalSearchUtilityRow
+    ? 'Copiar visibles como CSV'
+    : `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
   const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const visibleCsvScopeKey = useMemo(
     () => searchedRegistrations
