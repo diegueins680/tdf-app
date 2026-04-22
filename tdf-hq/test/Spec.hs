@@ -4090,6 +4090,7 @@ main = hspec $ do
             assertInvalid "   " "templateKey required"
             assertInvalid "---" "include at least one letter or number"
             assertInvalid "../proposal" "ASCII letters, numbers, hyphens, or underscores"
+            assertInvalid (Data.Text.replicate 97 "a") "96 characters or fewer"
 
     describe "validateProposalContentSource" $ do
         it "accepts exactly one normalized proposal content source" $ do

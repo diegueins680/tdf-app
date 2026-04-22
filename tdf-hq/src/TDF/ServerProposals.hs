@@ -575,7 +575,9 @@ validateTemplateKey raw =
   in if T.null canonical
       then Left err400 { errBody = "templateKey required" }
       else
-        if isSafeTemplateKey canonical
+        if T.length canonical > maxTemplateKeyLength
+          then Left err400 { errBody = "templateKey must be 96 characters or fewer" }
+          else if isSafeTemplateKey canonical
           then Right canonical
           else Left err400
             { errBody = "templateKey must contain only ASCII letters, numbers, hyphens, or underscores, and include at least one letter or number"
@@ -602,6 +604,9 @@ isSafeTemplateKey key =
   where
     isAllowed c = isAscii c && (isAlphaNum c || c == '-' || c == '_')
     isAsciiAlphaNum c = isAscii c && isAlphaNum c
+
+maxTemplateKeyLength :: Int
+maxTemplateKeyLength = 96
 
 canonicalTemplateKey :: Text -> Text
 canonicalTemplateKey = T.toLower . T.strip
