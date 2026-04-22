@@ -226,6 +226,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const recentPathSet = useMemo(() => new Set(recentPaths), [recentPaths]);
   const shortcutItems = useMemo<NavShortcutItem[]>(() => {
     const itemByPath = new Map(flatAllowedItems.map((item) => [item.path, item]));
+    const currentPath = location.pathname;
     const moduleShortcutCandidates = [
       '/inicio',
       '/crm/contactos',
@@ -239,9 +240,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       '/practicas',
     ].filter((path) => canUsePath(path));
     const preferredPaths = [
-      location.pathname,
-      ...recentPaths,
-      ...moduleShortcutCandidates,
+      ...recentPaths.filter((path) => path !== currentPath),
+      ...moduleShortcutCandidates.filter((path) => path !== currentPath),
     ];
     const seen = new Set<string>();
     return preferredPaths
