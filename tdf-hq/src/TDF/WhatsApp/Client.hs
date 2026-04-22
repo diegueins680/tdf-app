@@ -3,12 +3,14 @@ module TDF.WhatsApp.Client
   ( SendTextResult(..)
   , extractMessageId
   , normalizeGraphApiVersion
+  , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppPhoneNumberId
   , sendText
   ) where
 
 import Data.Aeson
 import Data.Aeson.Types (parseMaybe)
-import Data.Char (isControl)
+import Data.Char (isControl, isSpace)
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -31,52 +33,58 @@ sendText mgr apiVersion token phoneId to body = do
   case normalizeGraphApiVersion apiVersion of
     Left err -> pure (Left err)
     Right version -> do
-      initReq <-
-        parseRequest $
-          "https://graph.facebook.com/"
-            <> T.unpack version
-            <> "/"
-            <> T.unpack phoneId
-            <> "/messages"
-      let payload = object
-            [ "messaging_product" .= ("whatsapp" :: Text)
-            , "to"   .= to
-            , "type" .= ("text" :: Text)
-            , "text" .= object [ "body" .= body ]
-            ]
-          req = initReq
-              { method = "POST"
-              , requestHeaders =
-                  [ ("Content-Type", "application/json")
-                  , (hAuthorization, BS.pack $ "Bearer " <> T.unpack token)
-                  ]
-              , requestBody = RequestBodyLBS (encode payload)
-              }
-      res <- try $ httpLbs req mgr :: IO (Either SomeException (Response LBS.ByteString))
-      pure $ case res of
-        Left e   -> Left (show e)
-        Right ok ->
-          let status = statusCode (responseStatus ok)
-              rawBody = responseBody ok
-          in case eitherDecode' rawBody of
-               Left err ->
-                 let rendered = TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
-                 in Left
-                      ( "Failed to decode WhatsApp API response ("
-                          <> show status
-                          <> "): "
-                          <> err
-                          <> " | "
-                          <> T.unpack rendered
-                      )
-               Right parsed ->
-                 if status >= 200 && status < 300
-                   then Right SendTextResult
-                     { sendTextPayload = parsed
-                     , sendTextMessageId = extractMessageId parsed
-                     }
-                   else
-                     Left ("HTTP " <> show status <> ": " <> T.unpack (renderValue parsed))
+      case normalizeWhatsAppAccessToken token of
+        Left err -> pure (Left err)
+        Right accessToken ->
+          case normalizeWhatsAppPhoneNumberId phoneId of
+            Left err -> pure (Left err)
+            Right normalizedPhoneId -> do
+              initReq <-
+                parseRequest $
+                  "https://graph.facebook.com/"
+                    <> T.unpack version
+                    <> "/"
+                    <> T.unpack normalizedPhoneId
+                    <> "/messages"
+              let payload = object
+                    [ "messaging_product" .= ("whatsapp" :: Text)
+                    , "to"   .= to
+                    , "type" .= ("text" :: Text)
+                    , "text" .= object [ "body" .= body ]
+                    ]
+                  req = initReq
+                      { method = "POST"
+                      , requestHeaders =
+                          [ ("Content-Type", "application/json")
+                          , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
+                          ]
+                      , requestBody = RequestBodyLBS (encode payload)
+                      }
+              res <- try $ httpLbs req mgr :: IO (Either SomeException (Response LBS.ByteString))
+              pure $ case res of
+                Left e   -> Left (show e)
+                Right ok ->
+                  let status = statusCode (responseStatus ok)
+                      rawBody = responseBody ok
+                  in case eitherDecode' rawBody of
+                       Left err ->
+                         let rendered = TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
+                         in Left
+                              ( "Failed to decode WhatsApp API response ("
+                                  <> show status
+                                  <> "): "
+                                  <> err
+                                  <> " | "
+                                  <> T.unpack rendered
+                              )
+                       Right parsed ->
+                         if status >= 200 && status < 300
+                           then Right SendTextResult
+                             { sendTextPayload = parsed
+                             , sendTextMessageId = extractMessageId parsed
+                             }
+                           else
+                             Left ("HTTP " <> show status <> ": " <> T.unpack (renderValue parsed))
 
 normalizeGraphApiVersion :: Text -> Either String Text
 normalizeGraphApiVersion rawVersion
@@ -98,6 +106,33 @@ normalizeGraphApiVersion rawVersion
 
     allAsciiDigits value =
       not (T.null value) && T.all (\ch -> ch >= '0' && ch <= '9') value
+
+normalizeWhatsAppAccessToken :: Text -> Either String Text
+normalizeWhatsAppAccessToken rawToken
+  | T.null token =
+      Left "Invalid WhatsApp access token: token is required"
+  | T.any isUnsafeHeaderChar token =
+      Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+  | otherwise =
+      Right token
+  where
+    token = T.strip rawToken
+
+normalizeWhatsAppPhoneNumberId :: Text -> Either String Text
+normalizeWhatsAppPhoneNumberId rawPhoneId
+  | T.null phoneId =
+      Left "Invalid WhatsApp phone number id: id is required"
+  | T.all isAsciiDigit phoneId =
+      Right phoneId
+  | otherwise =
+      Left "Invalid WhatsApp phone number id: expected digits only"
+  where
+    phoneId = T.strip rawPhoneId
+    isAsciiDigit ch = ch >= '0' && ch <= '9'
+
+isUnsafeHeaderChar :: Char -> Bool
+isUnsafeHeaderChar ch =
+  isControl ch || isSpace ch
 
 extractMessageId :: Value -> Maybe Text
 extractMessageId =

@@ -18,7 +18,12 @@ import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
 import qualified TDF.ModelsExtra as ME
-import TDF.WhatsApp.Client (SendTextResult (..), normalizeGraphApiVersion)
+import TDF.WhatsApp.Client
+  ( SendTextResult (..)
+  , normalizeGraphApiVersion
+  , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppPhoneNumberId
+  )
 import TDF.WhatsApp.History
   ( IncomingWhatsAppRecord (..)
   , OutgoingWhatsAppRecord (..)
@@ -58,6 +63,25 @@ spec = do
       assertInvalid "v20.0?fields=id"
       assertInvalid "latest"
       assertInvalid "v20 beta"
+
+  describe "TDF.WhatsApp.Client provider credential normalization" $ do
+    it "trims send credentials before request construction" $ do
+      normalizeWhatsAppAccessToken " token_123 " `shouldBe` Right "token_123"
+      normalizeWhatsAppPhoneNumberId " 1234567890 " `shouldBe` Right "1234567890"
+
+    it "rejects blank, header-shaped, or path-shaped send credentials" $ do
+      normalizeWhatsAppAccessToken "   "
+        `shouldBe` Left "Invalid WhatsApp access token: token is required"
+      normalizeWhatsAppAccessToken "token value"
+        `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+      normalizeWhatsAppAccessToken "token\nX-Extra: value"
+        `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+      normalizeWhatsAppPhoneNumberId "   "
+        `shouldBe` Left "Invalid WhatsApp phone number id: id is required"
+      normalizeWhatsAppPhoneNumberId "123/messages"
+        `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
+      normalizeWhatsAppPhoneNumberId "123?fields=id"
+        `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
 
   describe "recordIncomingWhatsAppMessage" $ do
     it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do
