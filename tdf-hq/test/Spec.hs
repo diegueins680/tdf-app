@@ -1539,6 +1539,20 @@ main = hspec $ do
                         "recipient-1"
                         "   "
                         `shouldReturn` Left "Instagram message body requerido"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        (Data.Text.replicate 5001 "a")
+                        `shouldReturn` Left "Instagram message body must be 5000 characters or fewer"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        "hola\NULops"
+                        `shouldReturn` Left "Instagram message body must not contain control characters"
 
         it "does not use the configured fallback token when a targeted account has no connected token" $
             withEnvOverrides

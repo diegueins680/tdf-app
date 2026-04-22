@@ -56,7 +56,7 @@ nonEmptyText raw =
 validateInstagramMessagePayload :: Text -> Text -> Either Text (Text, Text)
 validateInstagramMessagePayload rawRecipientId rawBody = do
   recipientId <- validateInstagramRecipientId rawRecipientId
-  body <- maybe (Left "Instagram message body requerido") Right (nonEmptyText rawBody)
+  body <- validateInstagramMessageBody rawBody
   pure (recipientId, body)
 
 validateInstagramRecipientId :: Text -> Either Text Text
@@ -73,6 +73,19 @@ validateInstagramRecipientId rawRecipientId =
           Left "Instagram recipient id must be 256 characters or fewer"
       | otherwise ->
           Right recipientId
+
+validateInstagramMessageBody :: Text -> Either Text Text
+validateInstagramMessageBody rawBody =
+  case nonEmptyText rawBody of
+    Nothing ->
+      Left "Instagram message body requerido"
+    Just messageBody
+      | T.length messageBody > maxInstagramMessageBodyChars ->
+          Left "Instagram message body must be 5000 characters or fewer"
+      | T.any invalidMessageBodyControlChar messageBody ->
+          Left "Instagram message body must not contain control characters"
+      | otherwise ->
+          Right messageBody
 
 buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> Either Text [InstagramAttempt]
 buildAttempts cfg mTokenOverride mAccountIdOverride =
@@ -156,6 +169,10 @@ sourceAttempts base source =
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
 
+invalidMessageBodyControlChar :: Char -> Bool
+invalidMessageBodyControlChar ch =
+  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
 isGraphNodeIdChar :: Char -> Bool
 isGraphNodeIdChar ch =
   (ch >= 'a' && ch <= 'z')
@@ -165,6 +182,9 @@ isGraphNodeIdChar ch =
 
 maxInstagramAccountIdChars :: Int
 maxInstagramAccountIdChars = 128
+
+maxInstagramMessageBodyChars :: Int
+maxInstagramMessageBodyChars = 5000
 
 runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
 runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")
