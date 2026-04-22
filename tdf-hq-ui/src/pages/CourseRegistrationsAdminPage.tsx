@@ -620,12 +620,17 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(
-      /^(?:formulario\s+(?:p[uú]blico|de\s+inscripci[oó]n|de\s+registro)|public\s+form|registration\s+form)(?:\s+(?:de|para|for))?\s*(?:[-:/|]\s*)?/i,
+      /^(?:formulario\s+(?:p[uú]blico|de\s+inscripci[oó]n|de\s+registro)|public\s+form|registration\s+form)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
     )
     .trim();
+  const strippedCourseNoun = strippedTitle === trimmedTitle
+    ? strippedTitle
+    : strippedTitle
+      .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
+      .trim();
 
-  return strippedTitle || trimmedTitle;
+  return strippedCourseNoun || strippedTitle || trimmedTitle;
 };
 
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
