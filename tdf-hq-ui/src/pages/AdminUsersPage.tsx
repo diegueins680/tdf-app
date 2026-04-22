@@ -213,6 +213,23 @@ const getSharedAccessSummary = (values: string[]) => {
 const isSameAccessSummary = (left: string, right: string) =>
   normalizeAccessKey(left) === normalizeAccessKey(right);
 
+const formatAccessSummaryParts = ({
+  modulesSummary,
+  rolesSummary,
+}: {
+  modulesSummary: string;
+  rolesSummary: string;
+}) => {
+  if (rolesSummary && modulesSummary && isSameAccessSummary(rolesSummary, modulesSummary)) {
+    return `Roles y módulos: ${rolesSummary}`;
+  }
+
+  return [
+    rolesSummary ? `Roles: ${rolesSummary}` : '',
+    modulesSummary ? `Módulos: ${modulesSummary}` : '',
+  ].filter(Boolean).join(' · ');
+};
+
 const normalizeSearchValue = (value: string) =>
   value
     .normalize('NFD')
@@ -314,10 +331,10 @@ const buildUserAccessSummary = ({
   const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
   const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
 
-  return [
-    showRolesSummary ? `Roles: ${rolesSummary}` : '',
-    showModulesSummary ? `Módulos: ${modulesSummary}` : '',
-  ].filter(Boolean).join(' · ');
+  return formatAccessSummaryParts({
+    rolesSummary: showRolesSummary ? rolesSummary : '',
+    modulesSummary: showModulesSummary ? modulesSummary : '',
+  });
 };
 
 const isDefaultAdminAccessSummary = ({
@@ -672,15 +689,16 @@ export default function AdminUsersPage() {
     });
     if (isDefaultSharedAdminAccess) return '';
 
-    const sharedAccessSummaryParts: string[] = [];
-    if (sharedRolesSummary && sharedRolesSummary !== DEFAULT_SHARED_ADMIN_ROLES_SUMMARY) {
-      sharedAccessSummaryParts.push(`Roles: ${sharedRolesSummary}`);
-    }
-    if (sharedModulesSummary && sharedModulesSummary !== DEFAULT_SHARED_ADMIN_MODULES_SUMMARY) {
-      sharedAccessSummaryParts.push(`Módulos: ${sharedModulesSummary}`);
-    }
-    return sharedAccessSummaryParts.length
-      ? `Acceso compartido en esta vista: ${sharedAccessSummaryParts.join(' · ')}.`
+    const sharedAccessSummary = formatAccessSummaryParts({
+      rolesSummary: sharedRolesSummary && sharedRolesSummary !== DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
+        ? sharedRolesSummary
+        : '',
+      modulesSummary: sharedModulesSummary && sharedModulesSummary !== DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
+        ? sharedModulesSummary
+        : '',
+    });
+    return sharedAccessSummary
+      ? `Acceso compartido en esta vista: ${sharedAccessSummary}.`
       : '';
   }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
   const viewGuidance = useMemo(

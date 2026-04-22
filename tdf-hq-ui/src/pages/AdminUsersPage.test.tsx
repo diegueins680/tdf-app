@@ -2036,6 +2036,44 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('collapses matching role and module summaries into one row access line', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        roles: ['Teacher'],
+        modules: ['teacher'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-manager',
+        partyName: 'Grace Manager',
+        primaryEmail: 'grace@example.com',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const teacherRow = getRowByUserId(container, 101);
+        expect(hasExactText(teacherRow, 'Roles y módulos: Teacher')).toBe(true);
+        expect(teacherRow.textContent).not.toContain('Roles: Teacher · Módulos: teacher');
+        expect(hasExactText(teacherRow, 'Roles: Teacher')).toBe(false);
+        expect(hasExactText(teacherRow, 'Módulos: teacher')).toBe(false);
+
+        const managerRow = getRowByUserId(container, 102);
+        expect(hasExactText(managerRow, 'Roles: Manager · Módulos: crm')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps active users first and groups repeated inactive rows under one section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
@@ -2169,6 +2207,43 @@ describe('AdminUsersPage', () => {
         expect(firstRow.textContent).not.toContain('Módulos:');
         expect(secondRow.textContent).not.toContain('Roles:');
         expect(secondRow.textContent).not.toContain('Módulos:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses matching shared role and module scope once in the page guidance', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-teacher',
+        roles: ['Teacher'],
+        modules: ['teacher'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-teacher',
+        partyName: 'Grace Teacher',
+        primaryEmail: 'grace@example.com',
+        roles: ['Teacher'],
+        modules: ['teacher'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Acceso compartido en esta vista: Roles y módulos: Teacher.',
+        );
+        expect(container.textContent).not.toContain('Roles: Teacher · Módulos: teacher');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Roles:');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Módulos:');
       });
     } finally {
       await cleanup();
