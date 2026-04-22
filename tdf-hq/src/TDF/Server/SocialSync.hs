@@ -36,6 +36,7 @@ import           TDF.Auth                   (AuthedUser, hasSocialSyncAccess)
 import           TDF.DB                     (Env(..))
 import           TDF.DTO.SocialSyncDTO
 import           TDF.Models
+import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
 
 socialSyncServer
   :: ( MonadReader Env m
@@ -265,6 +266,12 @@ validateSocialSyncMediaUrls (Just rawUrls)
   | any (T.any isSpace) mediaUrls =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "mediaUrls entries must not contain whitespace")
+        }
+  | any (not . TrialsServer.isValidHttpUrl) mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries must be absolute public http(s) URLs")
         }
   | otherwise =
       Right (nonEmptyText (T.intercalate "\n" mediaUrls))

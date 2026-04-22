@@ -2721,6 +2721,22 @@ main = hspec $ do
             assertInvalid ["https://cdn.example.com/post.jpg", "   "] "mediaUrls entries must not be blank"
             assertInvalid ["https://cdn.example.com/post 42.jpg"] "mediaUrls entries must not contain whitespace"
 
+        it "rejects unsafe or non-public media URLs before social sync rows are stored" $ do
+            let assertInvalid raw =
+                    case validateSocialSyncMediaUrls (Just [raw]) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "absolute public http(s) URLs"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync mediaUrl to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid "/uploads/post.jpg"
+            assertInvalid "javascript:alert(1)"
+            assertInvalid "https://localhost/post.jpg"
+            assertInvalid "https://user@example.com/post.jpg"
+
     describe "social sync ingest JSON contract" $ do
         it "accepts canonical ingest payloads and rejects unexpected keys at both request levels" $ do
             case (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-media-42\",\"caption\":\"New single out now\",\"mediaUrls\":[\"https://cdn.example.com/post.jpg\"],\"likeCount\":12,\"commentCount\":3}]}" :: Either String SocialSyncIngestRequest) of
