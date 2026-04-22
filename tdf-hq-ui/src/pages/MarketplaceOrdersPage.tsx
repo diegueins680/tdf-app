@@ -479,7 +479,7 @@ export default function MarketplaceOrdersPage() {
 
   const effectiveStatus = (statusInput ?? selectedOrder?.moStatus ?? '').trim();
   const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
-  const warnMissingProvider = Boolean(selectedOrder && !effectiveProvider);
+  const warnMissingProvider = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
   const blockSave =
     isPaidOrderStatus(effectiveStatus) && (warnMissingProvider || warnMissingPaidAt);
@@ -1037,7 +1037,7 @@ export default function MarketplaceOrdersPage() {
                           InputLabelProps={{ shrink: true }}
                         />
                         {warnMissingProvider && (
-                          <Alert severity={isPaidOrderStatus(effectiveStatus) ? 'warning' : 'info'} variant="outlined">
+                          <Alert severity="warning" variant="outlined">
                             No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
                           </Alert>
                         )}

@@ -935,6 +935,55 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps missing-provider guidance hidden until a paid state needs it', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: null,
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
+      });
+
+      await clickActionByText(document.body, 'Marcar pagado ahora');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('No hay método de pago registrado.');
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+      });
+
+      const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
+      await setInputValue(providerInput, 'manual');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps save disabled until the order editor has a real change', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
