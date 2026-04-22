@@ -449,9 +449,24 @@ main = hspec $ do
                     cfg <- loadConfig
                     appPort cfg `shouldBe` 8080
 
-        it "keeps the default SMTP port when SMTP_PORT is malformed" $
+        it "rejects malformed SMTP_PORT when SMTP is configured" $ do
+            let assertInvalid rawPort =
+                    withEnvOverrides
+                        [ ("SMTP_PORT", Just rawPort)
+                        , ("SMTP_HOST", Just "smtp.example.com")
+                        , ("SMTP_USER", Just "mailer")
+                        , ("SMTP_PASS", Just "secret")
+                        , ("SMTP_FROM", Just "tdf@example.com")
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "SMTP_PORT must be a port number between 1 and 65535"
+                                `isInfixOf` show (err :: IOException)
+            assertInvalid "smtp"
+            assertInvalid "0"
+            assertInvalid "70000"
+
             withEnvOverrides
-                [ ("SMTP_PORT", Just "smtp")
+                [ ("SMTP_PORT", Just " 2525 ")
                 , ("SMTP_HOST", Just "smtp.example.com")
                 , ("SMTP_USER", Just "mailer")
                 , ("SMTP_PASS", Just "secret")
@@ -459,7 +474,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    fmap smtpPort (emailConfig cfg) `shouldBe` Just 587
+                    fmap smtpPort (emailConfig cfg) `shouldBe` Just 2525
 
         it "rejects malformed startup boolean flags instead of silently changing boot behavior" $ do
             withEnvOverrides

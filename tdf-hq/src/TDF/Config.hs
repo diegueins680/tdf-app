@@ -279,6 +279,17 @@ validateKeywordDbPort True fieldName rawPort =
     Just portNumber | portNumber >= 1 && portNumber <= 65535 -> pure rawPort
     _ -> fail (fieldName <> " must be a port number between 1 and 65535")
 
+validatePortEnv :: String -> Int -> Maybe String -> IO Int
+validatePortEnv _ defaultValue Nothing = pure defaultValue
+validatePortEnv envName defaultValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case readMaybe (T.unpack normalized) of
+        Just parsed | parsed >= 1 && parsed <= 65535 -> pure parsed
+        _ -> fail (envName <> " must be a port number between 1 and 65535")
+  where
+    normalized = T.strip (T.pack rawValue)
+
 validatePositiveIntEnv :: String -> Int -> Maybe String -> IO Int
 validatePositiveIntEnv _ defaultValue Nothing = pure defaultValue
 validatePositiveIntEnv envName defaultValue (Just rawValue)
@@ -609,8 +620,8 @@ loadConfig = do
               Just email -> pure email
               Nothing -> fail "SMTP_FROM must be a valid email address"
             let name = maybe "TDF Records" (T.strip . T.pack) mFromName
-                portVal = parseInt 587 mPort
                 useTls = maybe True asBool mTls
+            portVal <- validatePortEnv "SMTP_PORT" 587 mPort
             pure $
               Just EmailConfig
                 { emailFromName = if T.null name then "TDF Records" else name
