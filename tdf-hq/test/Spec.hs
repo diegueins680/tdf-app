@@ -3569,6 +3569,11 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not contain whitespace"
                 Right _ -> expectationFailure "Expected whitespace-containing streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com/live\DEL" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "streamUrl must not contain control characters"
+                Right _ -> expectationFailure "Expected control-character streamUrl to be rejected"
             case validateRadioStreamUrl "https://radio.example.com/live#main" of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -3765,6 +3770,9 @@ main = hspec $ do
             assertInvalid
                 (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live?token=abc")
                 "RADIO_INGEST_BASE must not include query or fragment"
+            assertInvalid
+                (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live\DEL")
+                "RADIO_INGEST_BASE must not contain control characters"
             assertInvalid
                 (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
                 "RADIO_WHIP_BASE must be http(s)"

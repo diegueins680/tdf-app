@@ -74,6 +74,8 @@ validateRadioStreamUrl rawUrl
       Left err400 { errBody = "streamUrl is required" }
   | T.any isSpace streamUrl =
       Left err400 { errBody = "streamUrl must not contain whitespace" }
+  | T.any isControl streamUrl =
+      Left err400 { errBody = "streamUrl must not contain control characters" }
   | Nothing <- mRemainder =
       Left err400 { errBody = "streamUrl must be http(s)" }
   | "#" `T.isInfixOf` streamUrl =
@@ -142,6 +144,8 @@ validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes ra
       Left err400 { errBody = fieldBody " is required" }
   | T.any isSpace endpointBase =
       Left err400 { errBody = fieldBody " must not contain whitespace" }
+  | T.any isControl endpointBase =
+      Left err400 { errBody = fieldBody " must not contain control characters" }
   | Nothing <- mRemainder =
       Left err400 { errBody = fieldBody (" must be " <> allowedSchemesText) }
   | T.null authority =
