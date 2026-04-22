@@ -6542,6 +6542,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();

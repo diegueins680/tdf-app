@@ -1939,6 +1939,7 @@ export default function CourseRegistrationsAdminPage() {
       ? 'Solo aparecen estados con inscripciones en esta vista.'
       : '';
   const showStatusFilterCaption = !showBusyListSearchOnboarding
+    && !hasLocalSearch
     && !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
