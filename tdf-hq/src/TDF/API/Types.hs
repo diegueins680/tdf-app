@@ -933,10 +933,10 @@ instance FromJSON RolePayload where
       _        -> fail "Expected role string or object with exactly one of 'role' or 'value'"
 
 instance MimeUnrender PlainText RolePayload where
-  mimeUnrender _ = Right . RolePayload . TE.decodeUtf8 . BL.toStrict
+  mimeUnrender _ = decodeUtf8RolePayload
 
 instance MimeUnrender OctetStream RolePayload where
-  mimeUnrender _ = Right . RolePayload . TE.decodeUtf8 . BL.toStrict
+  mimeUnrender _ = decodeUtf8RolePayload
 
 data LooseJSON
 
@@ -948,13 +948,24 @@ instance MimeUnrender LooseJSON RolePayload where
     case eitherDecode bs of
       Right rp -> Right rp
       Left decodeErr ->
-        let rawText = TE.decodeUtf8 (BL.toStrict bs)
-            trimmed = T.strip rawText
-        in if T.null trimmed
-             then Left "Expected non-empty role payload"
-             else if looksLikeStructuredJson trimmed
-               then Left decodeErr
-               else Right (RolePayload rawText)
+        case decodeUtf8RolePayloadText bs of
+          Left utf8Err -> Left utf8Err
+          Right rawText ->
+            let trimmed = T.strip rawText
+            in if T.null trimmed
+                 then Left "Expected non-empty role payload"
+                 else if looksLikeStructuredJson trimmed
+                   then Left decodeErr
+                   else Right (RolePayload rawText)
+
+decodeUtf8RolePayload :: BL.ByteString -> Either String RolePayload
+decodeUtf8RolePayload = fmap RolePayload . decodeUtf8RolePayloadText
+
+decodeUtf8RolePayloadText :: BL.ByteString -> Either String Text
+decodeUtf8RolePayloadText raw =
+  case TE.decodeUtf8' (BL.toStrict raw) of
+    Left _ -> Left "Role payload must be valid UTF-8"
+    Right txt -> Right txt
 
 looksLikeStructuredJson :: Text -> Bool
 looksLikeStructuredJson raw =

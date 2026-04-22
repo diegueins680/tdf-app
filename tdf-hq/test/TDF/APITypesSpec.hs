@@ -3,10 +3,11 @@
 module TDF.APITypesSpec (spec) where
 
 import Data.Aeson (eitherDecode, object, (.=))
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy (..))
 import Data.Time (fromGregorian)
-import Servant.API (MimeUnrender (mimeUnrender))
+import Servant.API (MimeUnrender (mimeUnrender), OctetStream, PlainText)
 import Test.Hspec
 
 import qualified TDF.API as API
@@ -84,6 +85,18 @@ spec = do
             decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
             decodeLooseRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
             decodeLooseRole "{}" `shouldSatisfy` isLeft
+
+        it "rejects invalid UTF-8 bytes instead of throwing while applying raw-role fallback parsing" $
+            decodeLooseRole invalidUtf8 `shouldSatisfy` isLeft
+
+    describe "RolePayload text MimeUnrender" $ do
+        it "accepts valid plain-text role bodies across supported content types" $ do
+            decodePlainRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
+            decodeOctetRole "Engineer" `shouldBe` Right (RolePayload "Engineer")
+
+        it "rejects invalid UTF-8 bytes before role assignment validation" $ do
+            decodePlainRole invalidUtf8 `shouldSatisfy` isLeft
+            decodeOctetRole invalidUtf8 `shouldSatisfy` isLeft
 
     describe "UserRoleUpdatePayload FromJSON" $ do
         it "accepts canonical admin role update payloads" $
@@ -1327,6 +1340,9 @@ spec = do
   where
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
+    decodePlainRole = mimeUnrender (Proxy :: Proxy PlainText)
+    decodeOctetRole = mimeUnrender (Proxy :: Proxy OctetStream)
+    invalidUtf8 = BL.pack [0xff]
     decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
     decodeUserRoleUpdate = eitherDecode
     decodeDropdownOptionCreate :: BL8.ByteString -> Either String DropdownOptionCreate
