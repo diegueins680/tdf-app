@@ -786,6 +786,10 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL"
                 "https://cdn.example.com/assets#logo"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL without query or fragment"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com/app\SOHadmin"
+                "HQ_APP_URL must not contain control characters"
 
         it "normalizes configured outbound API base URLs before building requests" $
             withEnvOverrides
@@ -1063,6 +1067,14 @@ main = hspec $ do
                 ]
                 $ loadConfig `shouldThrow` \err ->
                     "COURSE_DEFAULT_MAP_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://maps.example.com/studio\SOHdebug")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must not contain control characters"
                         `isInfixOf` show (err :: IOException)
 
         it "normalizes WhatsApp enrollment fallback config before minting public links" $

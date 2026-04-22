@@ -990,6 +990,8 @@ defaultCourseSlug = "produccion-musical-abr-2026"
 normalizeConfiguredBaseUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredBaseUrl envName rawUrl
   | T.null trimmed = Right Nothing
+  | T.any isControl trimmed =
+      Left (envName <> " must not contain control characters")
   | T.any isSpace trimmed =
       invalid
   | T.any (`elem` ("?#" :: String)) trimmed =
@@ -1095,6 +1097,8 @@ normalizeConfiguredBaseUrl envName rawUrl
 normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredHttpsUrl envName rawUrl
   | T.null trimmed = Right Nothing
+  | T.any isControl trimmed =
+      Left (envName <> " must not contain control characters")
   | T.any isSpace trimmed =
       invalid
   | not ("https://" `T.isPrefixOf` lowerUrl) =
