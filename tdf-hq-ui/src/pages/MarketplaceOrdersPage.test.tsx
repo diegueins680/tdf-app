@@ -820,6 +820,52 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('treats whitespace-only search as empty instead of showing search recovery chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      await setInputValue(searchInput, '   ');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.textContent).not.toContain('La búsqueda activa se maneja desde el campo superior.');
+        expect(container.textContent).toContain(
+          'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
+        );
+        expect(listOrdersMock).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses row click as the primary table action and removes the duplicate action column', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

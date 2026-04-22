@@ -279,7 +279,7 @@ export default function MarketplaceOrdersPage() {
 
   const filtersDirty =
     statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
-  const hasSearchInput = search !== '';
+  const hasSearchInput = search.trim() !== '';
   const hasNonSearchFiltersActive =
     statusFilter !== 'all' || providerFilter !== 'all' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
   const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
@@ -548,7 +548,10 @@ export default function MarketplaceOrdersPage() {
                 fullWidth
                 label="Buscar por comprador, email o ID"
                 value={search}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  const nextSearch = e.target.value;
+                  setSearch(nextSearch.trim() === '' ? '' : nextSearch);
+                }}
                 InputProps={{
                   endAdornment: hasSearchInput ? (
                     <InputAdornment position="end">
