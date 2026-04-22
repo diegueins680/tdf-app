@@ -1250,6 +1250,21 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "social event ticket request FromJSON" $ do
+        it "rejects unexpected artist follow keys before handler fallback validation" $ do
+            case decodeArtistFollowRequest "{\"followerPartyId\":\"42\"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical artist follow payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.afrFollowerPartyId payload `shouldBe` "42"
+
+            decodeArtistFollowRequest
+                "{\"followerPartyId\":\"42\",\"artistId\":\"99\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistFollowRequest
+                "{\"followerPartyID\":\"42\"}"
+                `shouldSatisfy` isLeft
+
         it "accepts canonical ticket purchase and status update payloads" $ do
             case decodeTicketPurchase (BL8.concat
                 [ "{\"ticketPurchaseTierId\":\"42\""
@@ -1431,6 +1446,8 @@ spec = do
     decodeProgress = eitherDecode
     decodeReferralClaim :: BL8.ByteString -> Either String Academy.ReferralClaimReq
     decodeReferralClaim = eitherDecode
+    decodeArtistFollowRequest :: BL8.ByteString -> Either String SocialEvents.ArtistFollowRequest
+    decodeArtistFollowRequest = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO

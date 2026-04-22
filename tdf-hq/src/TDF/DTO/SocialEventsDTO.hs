@@ -156,7 +156,12 @@ instance ToJSON ArtistFollowRequest where
     ]
 
 instance FromJSON ArtistFollowRequest where
-  parseJSON = withObject "ArtistFollowRequest" $ \o ->
+  parseJSON = withObject "ArtistFollowRequest" $ \o -> do
+    rejectUnknownObjectFields
+      "ArtistFollowRequest"
+      [ "followerPartyId"
+      ]
+      o
     ArtistFollowRequest
       <$> o .: "followerPartyId"
 
