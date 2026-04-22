@@ -3425,6 +3425,61 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps long empty-search queries compact while preserving the full input', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      const longQuery = 'permisos administrativos pendientes para revisar cuentas sin coincidencias exactas externas';
+
+      await changeInputValue(searchInput, longQuery);
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe(longQuery);
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "permisos administrativos pendientes para revisar cuentas sin..." entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.',
+        );
+        expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the search-owned clear action available when a query hides every admin user', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

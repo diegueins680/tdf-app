@@ -244,7 +244,24 @@ const normalizeIdentityComparison = (value: string) =>
     .toLocaleLowerCase('es')
     .replace(/[^a-z0-9]+/g, '');
 const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
-const formatSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
+const MAX_SEARCH_QUERY_SUMMARY_LENGTH = 64;
+const formatSearchQuerySummary = (value: string) => {
+  const normalizedValue = value.trim().replace(/\s+/g, ' ');
+
+  if (normalizedValue.length <= MAX_SEARCH_QUERY_SUMMARY_LENGTH) {
+    return normalizedValue;
+  }
+
+  const summaryPrefix = normalizedValue.slice(0, MAX_SEARCH_QUERY_SUMMARY_LENGTH + 1);
+  const lastWordBoundary = summaryPrefix.lastIndexOf(' ');
+  const compactPrefix = (
+    lastWordBoundary > 0
+      ? summaryPrefix.slice(0, lastWordBoundary)
+      : normalizedValue.slice(0, MAX_SEARCH_QUERY_SUMMARY_LENGTH)
+  ).trimEnd();
+
+  return `${compactPrefix}...`;
+};
 const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
