@@ -69,6 +69,7 @@ const initialCohortResolutionMessage = 'Revisando formularios de curso para most
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
+const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
@@ -1669,6 +1670,10 @@ export default function CourseRegistrationsAdminPage() {
     hasStatusFilter,
   });
   const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
+  const showCohortFilterLoadingSummary = showCohortSelect
+    && cohortsQuery.isLoading
+    && hasVisibleRegistrations
+    && !hasSlugFilter;
   const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
   const filteredEmptyStateRecoveryHint = hasManualFilters
     ? 'Revisa los filtros o restablece la vista si esperabas resultados.'
@@ -3200,6 +3205,27 @@ export default function CourseRegistrationsAdminPage() {
                             {headerRefreshLabel}
                           </Button>
                         )}
+                      </Stack>
+                    ) : showCohortFilterLoadingSummary ? (
+                      <Stack
+                        data-testid="course-registration-cohort-filter-loading"
+                        spacing={0.5}
+                        sx={{
+                          minHeight: 40,
+                          justifyContent: 'center',
+                          px: 1.5,
+                          py: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Cohortes cargando
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {cohortFilterLoadingMessage}
+                        </Typography>
                       </Stack>
                     ) : singleAvailableCohortLabel ? (
                       <Stack

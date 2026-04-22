@@ -242,6 +242,8 @@ const initialCohortErrorMessage =
 const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage =
   'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
+const cohortFilterLoadingMessage =
+  'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -8350,6 +8352,42 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-unavailable"]')).toBeNull();
       expect(container.textContent).not.toContain(cohortFilterUnavailableMessage);
       expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps loaded registrations usable while cohort filters are still loading', async () => {
+    listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortLoading = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-cohort-filter-loading"]',
+      );
+
+      expect(cohortLoading).not.toBeNull();
+      expect(cohortLoading?.textContent).toContain('Cohortes cargando');
+      expect(cohortLoading?.textContent).toContain(cohortFilterLoadingMessage);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.textContent).not.toContain('Cargando cohortes…');
+      expect(container.querySelector('[data-testid="course-registration-initial-cohort-loading"]')).toBeNull();
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
     });
 
     await cleanup();
