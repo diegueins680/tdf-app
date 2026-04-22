@@ -194,7 +194,6 @@ const systemEmailHistoryHelperText =
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const optionalDossierContextActionsLabel = 'Agregar nota o seguimiento';
-const optionalDossierFollowUpActionLabel = 'Agregar seguimiento manual';
 const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
@@ -3728,7 +3727,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('groups a single optional dossier context action when payment is the primary action', async () => {
+  it('keeps a single optional dossier action direct when payment is the primary action', async () => {
     const registration = buildRegistration({
       crAdminNotes: 'Confirmó pago por transferencia.',
     });
@@ -3756,27 +3755,28 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
-      expect(countButtonsByText(actions!, optionalDossierFollowUpActionLabel)).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(1);
       expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
-      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
       expect(document.body.textContent).toContain('Confirmó pago por transferencia.');
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (item) => (item.textContent ?? '').trim() === 'Agregar seguimiento',
+        ),
+      ).toBe(false);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, optionalDossierFollowUpActionLabel));
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Agregar seguimiento')).toBeTruthy();
-      expect(
-        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
-          (item) => (item.textContent ?? '').trim() === 'Agregar nota',
-        ),
-      ).toBe(false);
+      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
     });
 
     await cleanup();
