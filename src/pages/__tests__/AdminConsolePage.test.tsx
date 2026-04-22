@@ -802,6 +802,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps user-administration fallback titles from duplicating the built-in users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-user-administration',
+          title: 'User administration',
+          body: ['Review admin users before changing access.'],
+        },
+        {
+          cardId: 'fallback-administracion-usuarios',
+          title: 'Administración de usuarios',
+          body: ['Revisa usuarios administrables antes de cambiar accesos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('User administration')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administración de usuarios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review admin users before changing access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa usuarios administrables antes de cambiar accesos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps terse fallback titles for built-in admin sections out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
