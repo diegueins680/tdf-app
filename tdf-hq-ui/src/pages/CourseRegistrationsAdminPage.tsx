@@ -615,6 +615,15 @@ const humanizeDelimitedSourceLabel = (source: string) => {
   return `${normalized.charAt(0).toLocaleUpperCase('es')}${normalized.slice(1)}`;
 };
 
+const normalizeSourceAliasKey = (source: string) =>
+  normalizeLocalSearchText(humanizeDelimitedSourceLabel(source));
+
+const defaultPublicFormSourceKeys = new Set([
+  defaultPublicFormSource,
+  'public form',
+  'formulario publico',
+].map(normalizeSourceAliasKey));
+
 const registrationSourceLabel = (source: string | null | undefined) => {
   const trimmed = source?.trim() ?? '';
   return trimmed === '' ? 'Sin fuente' : humanizeDelimitedSourceLabel(trimmed);
@@ -624,7 +633,7 @@ const normalizeRegistrationSourceKey = (sourceLabel: string) =>
   registrationSourceLabel(sourceLabel).toLocaleLowerCase('es');
 
 const isDefaultPublicFormSource = (sourceLabel: string) =>
-  sourceLabel.trim().toLowerCase() === defaultPublicFormSource;
+  defaultPublicFormSourceKeys.has(normalizeSourceAliasKey(sourceLabel));
 
 const getSearchableRegistrationSource = (source: string | null | undefined) => {
   const trimmedSource = source?.trim() ?? '';
