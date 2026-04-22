@@ -264,6 +264,15 @@ const normalizeIdentityComparison = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase('es')
     .replace(/[^a-z0-9]+/g, '');
+const getSearchValueVariants = (value?: string | null) => {
+  const rawValue = value ?? '';
+  const variants = [
+    normalizeSearchValue(rawValue),
+    normalizeIdentityComparison(rawValue),
+  ];
+
+  return variants.filter((variant, index) => variant !== '' && variants.indexOf(variant) === index);
+};
 const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
 const MAX_SEARCH_QUERY_SUMMARY_LENGTH = 64;
 const formatSearchQuerySummary = (value: string) => {
@@ -554,8 +563,8 @@ const dedupeAdminUsers = (users: readonly AdminUser[]) => {
 };
 
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
-  const query = normalizeSearchValue(rawQuery);
-  if (!query) return true;
+  const queryVariants = getSearchValueVariants(rawQuery);
+  if (queryVariants.length === 0) return true;
   const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
@@ -570,10 +579,12 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]
-    .map(normalizeSearchValue)
+    .flatMap(getSearchValueVariants)
     .filter(Boolean);
 
-  return searchSpace.some((value) => value.includes(query)) || statusSearchValue === query;
+  return queryVariants.some((query) => (
+    searchSpace.some((value) => value.includes(query)) || statusSearchValue === query
+  ));
 };
 
 export default function AdminUsersPage() {
