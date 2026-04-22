@@ -110,6 +110,7 @@ import TDF.ServerExtra (
     normalizeServiceCatalogNameUpdate,
     persistMetaInbound,
     validatePaymentMethod,
+    parseUTCTimeText,
     validateDistinctSessionRooms,
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
@@ -1041,6 +1042,24 @@ spec = do
               expectationFailure ("Expected invalid payment amount error, got " <> show value)
       assertInvalid (validatePaymentAmountCents 0)
       assertInvalid (validatePaymentAmountCents (-500))
+
+  describe "parseUTCTimeText" $ do
+    it "accepts canonical manual-payment dates after trimming transport whitespace" $ do
+      result <- runExceptT (parseUTCTimeText " 2026-04-13 ")
+      result `shouldBe` Right (UTCTime (fromGregorian 2026 4 13) 0)
+
+    it "rejects loosely shaped manual-payment dates before persistence" $ do
+      let assertInvalid rawDate = do
+            result <- runExceptT (parseUTCTimeText rawDate)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "Invalid date format, expected YYYY-MM-DD"
+              Right value ->
+                expectationFailure ("Expected invalid payment date error, got " <> show value)
+      assertInvalid "2026-4-13"
+      assertInvalid "2026-04-1"
+      assertInvalid "2026/04/13"
 
   describe "validatePaymentPaidAt" $ do
     let now = UTCTime (fromGregorian 2026 4 13) 0

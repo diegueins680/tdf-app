@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isSpace, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isDigit, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -76,16 +76,35 @@ import qualified TDF.Handlers.InputList     as InputList
 
 -- Helpers for simple date parsing (YYYY-MM-DD)
 parseDayText :: MonadError ServerError m => Text -> m Day
-parseDayText t =
-  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+parseDayText rawText =
+  let t = T.strip rawText
+  in unlessIsoDateShape t $
+  case parseTimeM False defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
     Just d  -> pure d
     Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
 
 parseUTCTimeText :: MonadError ServerError m => Text -> m UTCTime
-parseUTCTimeText t =
-  case parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
+parseUTCTimeText rawText =
+  let t = T.strip rawText
+  in unlessIsoDateShape t $
+  case parseTimeM False defaultTimeLocale "%Y-%m-%d" (T.unpack t) of
     Just d  -> pure (UTCTime d 0)
     Nothing -> throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+unlessIsoDateShape :: MonadError ServerError m => Text -> m a -> m a
+unlessIsoDateShape t action
+  | hasIsoDateShape t = action
+  | otherwise = throwError err400 { errBody = "Invalid date format, expected YYYY-MM-DD" }
+
+hasIsoDateShape :: Text -> Bool
+hasIsoDateShape t =
+  case T.splitOn "-" t of
+    [yearPart, monthPart, dayPart] ->
+      T.length yearPart == 4
+        && T.length monthPart == 2
+        && T.length dayPart == 2
+        && T.all isDigit (yearPart <> monthPart <> dayPart)
+    _ -> False
 
 parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
 parseCheckoutTargetKind Nothing =
