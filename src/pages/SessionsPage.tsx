@@ -1073,6 +1073,13 @@ export default function SessionsPage() {
   const singleSessionRoomNames = singleSession?.sRoomIds && singleSession.sRoomIds.length > 0
     ? singleSession.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
     : '—';
+  const showBookingColumn = rows.some((session) => hasPresentValue(session.sBookingRef));
+  const showEngineerColumn = rows.some((session) => hasPresentValue(session.sEngineerRef));
+  const showRoomsColumn = rows.some((session) => (session.sRoomIds?.length ?? 0) > 0);
+  const visibleSessionColumnCount = 4
+    + (showBookingColumn ? 1 : 0)
+    + (showEngineerColumn ? 1 : 0)
+    + (showRoomsColumn ? 1 : 0);
 
   return (
     <Stack spacing={2}>
@@ -1157,9 +1164,9 @@ export default function SessionsPage() {
                   <TableRow>
                     <TableCell>Horario</TableCell>
                     <TableCell>Servicio</TableCell>
-                    <TableCell>Booking</TableCell>
-                    <TableCell>Ingeniero</TableCell>
-                    <TableCell>Salas</TableCell>
+                    {showBookingColumn && <TableCell>Booking</TableCell>}
+                    {showEngineerColumn && <TableCell>Ingeniero</TableCell>}
+                    {showRoomsColumn && <TableCell>Salas</TableCell>}
                     <TableCell>Estado</TableCell>
                     <TableCell width={160}>Acciones</TableCell>
                   </TableRow>
@@ -1169,13 +1176,15 @@ export default function SessionsPage() {
                     <TableRow key={session.sessionId} hover>
                       <TableCell>{formatDateRange(session.sStartAt, session.sEndAt)}</TableCell>
                       <TableCell>{session.sService ?? '—'}</TableCell>
-                      <TableCell>{session.sBookingRef ?? '—'}</TableCell>
-                      <TableCell>{session.sEngineerRef ?? '—'}</TableCell>
-                      <TableCell>
-                        {session.sRoomIds && session.sRoomIds.length > 0
-                          ? session.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
-                          : '—'}
-                      </TableCell>
+                      {showBookingColumn && <TableCell>{session.sBookingRef?.trim() || '—'}</TableCell>}
+                      {showEngineerColumn && <TableCell>{session.sEngineerRef?.trim() || '—'}</TableCell>}
+                      {showRoomsColumn && (
+                        <TableCell>
+                          {session.sRoomIds && session.sRoomIds.length > 0
+                            ? session.sRoomIds.map((id) => roomNamesById.get(id) ?? id).join(', ')
+                            : '—'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <StatusChip value={session.sStatus} />
                       </TableCell>
@@ -1188,7 +1197,7 @@ export default function SessionsPage() {
                   ))}
                   {rows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7}>
+                      <TableCell colSpan={visibleSessionColumnCount}>
                         <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
                           {sessionsQuery.isLoading ? 'Cargando sesiones…' : 'No hay sesiones registradas todavía.'}
                         </Typography>

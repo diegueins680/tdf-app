@@ -220,4 +220,71 @@ describe('SessionsPage', () => {
     expect(screen.queryByText(/Salas:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
   });
+
+  it('hides empty optional schedule columns once multiple sessions exist', async () => {
+    mockSessionsList.mockResolvedValue({
+      items: [
+        {
+          sessionId: 'session-1',
+          sBookingRef: null,
+          sBandId: null,
+          sClientPartyRef: null,
+          sService: 'Producción',
+          sStartAt: '2026-04-15T15:00:00.000Z',
+          sEndAt: '2026-04-15T17:00:00.000Z',
+          sEngineerRef: '   ',
+          sAssistantRef: null,
+          sRoomIds: [],
+          sSampleRate: null,
+          sBitDepth: null,
+          sDaw: null,
+          sSessionFolderDriveId: null,
+          sNotes: null,
+          sInputListRows: [],
+          sStatus: 'InPrep',
+        },
+        {
+          sessionId: 'session-2',
+          sBookingRef: '',
+          sBandId: null,
+          sClientPartyRef: null,
+          sService: 'Ensayo',
+          sStartAt: '2026-04-16T15:00:00.000Z',
+          sEndAt: '2026-04-16T17:00:00.000Z',
+          sEngineerRef: null,
+          sAssistantRef: null,
+          sRoomIds: [],
+          sSampleRate: null,
+          sBitDepth: null,
+          sDaw: null,
+          sSessionFolderDriveId: null,
+          sNotes: null,
+          sInputListRows: [],
+          sStatus: 'InSession',
+        },
+      ],
+      page: 1,
+      pageSize: 10,
+      total: 2,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Horario$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Servicio$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Acciones$/i })).toBeInTheDocument();
+      expect(screen.getByText('Producción')).toBeInTheDocument();
+      expect(screen.getByText('Ensayo')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Booking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Ingeniero$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Salas$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
 });
