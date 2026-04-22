@@ -31,34 +31,33 @@ futureServer user = accessStubs
           :<|> adminStubs
           :<|> crossCuttingStubs
   where
-    accessStubs =    stub "access" "login-options"
-                :<|> stub "access" "module-behaviour"
-                :<|> stub "access" "session-policy"
+    adminStub area endpoint =
+      requireFutureAdminAccess user *> stub area endpoint
 
-    crmStubs =       stub "crm" "parties/list-columns"
-                :<|> stub "crm" "parties/filters"
-                :<|> stub "crm" "parties/detail-tabs"
+    accessStubs =    adminStub "access" "login-options"
+                :<|> adminStub "access" "module-behaviour"
+                :<|> adminStub "access" "session-policy"
 
-    schedulingStubs =    stub "scheduling" "bookings/views"
-                    :<|> stub "scheduling" "sessions/creation"
-                    :<|> stub "scheduling" "rooms/features"
+    crmStubs =       adminStub "crm" "parties/list-columns"
+                :<|> adminStub "crm" "parties/filters"
+                :<|> adminStub "crm" "parties/detail-tabs"
 
-    packagesStubs =  stub "packages" "catalog"
-                :<|> stub "packages" "purchase-flow"
+    schedulingStubs =    adminStub "scheduling" "bookings/views"
+                    :<|> adminStub "scheduling" "sessions/creation"
+                    :<|> adminStub "scheduling" "rooms/features"
 
-    invoicingStubs = stub "invoicing" "composer"
-                :<|> stub "invoicing" "status-flow"
+    packagesStubs =  adminStub "packages" "catalog"
+                :<|> adminStub "packages" "purchase-flow"
 
-    inventoryStubs = stub "inventory" "assets/metadata"
-                :<|> stub "inventory" "assets/workflow"
-                :<|> stub "inventory" "stock"
+    invoicingStubs = adminStub "invoicing" "composer"
+                :<|> adminStub "invoicing" "status-flow"
 
-    adminStubs =     adminSeed
+    inventoryStubs = adminStub "inventory" "assets/metadata"
+                :<|> adminStub "inventory" "assets/workflow"
+                :<|> adminStub "inventory" "stock"
+
+    adminStubs =     adminStub "admin" "seed"
                 :<|> adminConsole
-
-    adminSeed = do
-      requireFutureAdminAccess user
-      stub "admin" "seed"
 
     adminConsole = do
       requireFutureAdminAccess user
@@ -77,11 +76,11 @@ futureServer user = accessStubs
               ]
           }
 
-    crossCuttingStubs = stub "experience" "navigation"
-                    :<|> stub "experience" "feedback"
-                    :<|> stub "experience" "offline"
-                    :<|> stub "experience" "design"
-                    :<|> stub "experience" "auditing"
+    crossCuttingStubs = adminStub "experience" "navigation"
+                    :<|> adminStub "experience" "feedback"
+                    :<|> adminStub "experience" "offline"
+                    :<|> adminStub "experience" "design"
+                    :<|> adminStub "experience" "auditing"
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
 validateFutureAdminAccess user

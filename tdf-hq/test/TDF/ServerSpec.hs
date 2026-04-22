@@ -24,6 +24,7 @@ import TDF.API
     , UpdateBookingReq (..)
     , WhatsAppConsentStatus (..)
     )
+import TDF.API.Future (StubResponse (..))
 import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types
     ( DriveTokenExchangeRequest (..)
@@ -268,7 +269,7 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReference
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
-import TDF.ServerFuture (validateFutureAdminAccess)
+import TDF.ServerFuture (futureServer, validateFutureAdminAccess)
 import TDF.ServerExtra (validateSocialReplyBody)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import Test.Hspec
@@ -281,6 +282,12 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         }
+
+firstFutureStub :: AuthedUser -> Either ServerError StubResponse
+firstFutureStub user =
+    let accessStubs :<|> _ = futureServer user
+        loginOptions :<|> _ = accessStubs
+    in loginOptions
 
 inputListSessionKey :: ME.SessionId
 inputListSessionKey =
@@ -5936,6 +5943,25 @@ spec = describe "TDF.Server helpers" $ do
                     Right value ->
                         expectationFailure
                             ("Expected admin discovery access to be rejected, got: " <> show value)
+
+    describe "futureServer" $ do
+        it "requires literal Admin before serving fallback discovery stubs" $ do
+            case firstFutureStub (mkUser [StudioManager]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                Right value ->
+                    expectationFailure
+                        ("Expected fallback discovery access to be rejected, got: " <> show value)
+
+            case firstFutureStub (mkUser [Admin]) of
+                Right stubResponse -> do
+                    stubArea stubResponse `shouldBe` "access"
+                    stubEndpoint stubResponse `shouldBe` "login-options"
+                    stubStatus stubResponse `shouldBe` "planned"
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected Admin fallback discovery access, got: " <> show serverErr)
 
     describe "hasSocialInboxAccess" $ do
         it "denies baseline and read-only CRM sessions" $ do
