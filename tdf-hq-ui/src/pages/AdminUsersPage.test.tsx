@@ -1423,6 +1423,87 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps shared access scoped to shown rows while inactive users stay collapsed', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 21,
+        partyName: 'Ada Teacher',
+        username: 'ada-teacher',
+        roles: ['Teacher'],
+        modules: ['teacher'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 23,
+        partyName: 'Linus Teacher',
+        username: 'linus-teacher',
+        primaryEmail: 'linus@example.com',
+        roles: ['Teacher'],
+        modules: ['teacher'],
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 102,
+              partyId: 22,
+              partyName: 'Grace Manager',
+              username: 'grace-manager',
+              active: false,
+              primaryEmail: 'grace@example.com',
+              roles: ['Manager'],
+              modules: ['crm'],
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getPageGuidance(container)).toContain(
+          'Acceso compartido en esta vista: Roles y módulos: Teacher.',
+        );
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Roles y módulos: Teacher');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Roles y módulos: Teacher');
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Acceso compartido en esta vista: Roles y módulos: Teacher.',
+        );
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Roles y módulos: Teacher');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Roles y módulos: Teacher');
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista.',
+        );
+        expect(getRowByUserId(container, 101).textContent).toContain('Roles y módulos: Teacher');
+        expect(getRowByUserId(container, 102).textContent).toContain('Roles: Manager · Módulos: crm');
+        expect(container.textContent).not.toContain(
+          'Acceso compartido en esta vista: Roles y módulos: Teacher.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('waits to show duplicate identity ids until the collapsed inactive duplicate is visible', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive

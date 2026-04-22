@@ -580,14 +580,6 @@ export default function AdminUsersPage() {
   );
   const visibleUsersPendingWhatsAppCount = visibleUsersMissingWhatsAppCount - visibleUsersMissingContactCount;
   const hasVisibleLinkedProfile = visibleUsers.some((user) => hasLinkedAdminUserProfile(user));
-  const sharedRolesSummary = useMemo(
-    () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.roles))),
-    [visibleUsers],
-  );
-  const sharedModulesSummary = useMemo(
-    () => getSharedAccessSummary(visibleUsers.map((user) => getUserAccessSummary(user.modules))),
-    [visibleUsers],
-  );
   const visibleUsersWithWhatsAppCount = visibleUsers.length - visibleUsersMissingWhatsAppCount;
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
@@ -661,6 +653,14 @@ export default function AdminUsersPage() {
   const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
     ? activeVisibleUsers
     : visibleUsers;
+  const sharedRolesSummary = useMemo(
+    () => getSharedAccessSummary(usersInCurrentSummary.map((user) => getUserAccessSummary(user.roles))),
+    [usersInCurrentSummary],
+  );
+  const sharedModulesSummary = useMemo(
+    () => getSharedAccessSummary(usersInCurrentSummary.map((user) => getUserAccessSummary(user.modules))),
+    [usersInCurrentSummary],
+  );
   const currentSummaryMissingWhatsAppCount = usersInCurrentSummary.filter((user) => !hasUserWhatsAppChannel(user)).length;
   const currentSummaryMissingContactCount = usersInCurrentSummary.filter(
     (user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user),
