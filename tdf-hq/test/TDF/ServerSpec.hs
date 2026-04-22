@@ -232,6 +232,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
     , validateCampaignBudgetCents
+    , validateCalendarEventListQuery
     , validateCalendarRedirectUri
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
@@ -3371,6 +3372,48 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?code=abc"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#code"
             assertInvalid "https://user:secret@tdf-app.pages.dev/configuracion/integraciones/calendario"
+
+    describe "validateCalendarEventListQuery" $ do
+        it "normalizes explicit Calendar event filters before database lookup" $ do
+            let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)
+                toTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 39600)
+            validateCalendarEventListQuery
+                (Just " primary ")
+                (Just fromTs)
+                (Just toTs)
+                (Just " CONFIRMED ")
+                `shouldBe` Right (Just "primary", Just fromTs, Just toTs, Just "confirmed")
+            validateCalendarEventListQuery Nothing Nothing Nothing Nothing
+                `shouldBe` Right (Nothing, Nothing, Nothing, Nothing)
+
+        it "rejects ambiguous Calendar event filters explicitly" $ do
+            let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 39600)
+                toTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)
+                assertInvalid expected result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Calendar event query, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "calendarId must not be blank"
+                (validateCalendarEventListQuery (Just "   ") Nothing Nothing Nothing)
+            assertInvalid
+                "calendarId must not contain control characters"
+                (validateCalendarEventListQuery (Just "pri\nmary") Nothing Nothing Nothing)
+            assertInvalid
+                "status must not be blank"
+                (validateCalendarEventListQuery Nothing Nothing Nothing (Just "   "))
+            assertInvalid
+                "status must be one of: confirmed, tentative, cancelled"
+                (validateCalendarEventListQuery Nothing Nothing Nothing (Just "archived"))
+            assertInvalid
+                "from must be on or before to"
+                (validateCalendarEventListQuery Nothing (Just fromTs) (Just toTs) Nothing)
 
     describe "validateDriveTokenRefreshRequest" $ do
         it "normalizes valid Drive refresh tokens before contacting Google" $

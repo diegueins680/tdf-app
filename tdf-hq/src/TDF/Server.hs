@@ -2236,6 +2236,51 @@ validateConfiguredCalendarRedirectUri rawRedirect =
             "GOOGLE_REDIRECT_URI must be an absolute http(s) URL without query or fragment"
         }
 
+validateOptionalCalendarIdQuery :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCalendarIdQuery Nothing = Right Nothing
+validateOptionalCalendarIdQuery (Just rawCalendarId) =
+  Just <$> validateCalendarQueryText "calendarId" rawCalendarId
+
+validateCalendarEventListQuery
+  :: Maybe Text
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> Either ServerError (Maybe Text, Maybe UTCTime, Maybe UTCTime, Maybe Text)
+validateCalendarEventListQuery mCalendarId mFrom mTo mStatus = do
+  calendarIdVal <- validateOptionalCalendarIdQuery mCalendarId
+  statusVal <- validateCalendarEventStatusQuery mStatus
+  case (mFrom, mTo) of
+    (Just fromVal, Just toVal) | toVal < fromVal ->
+      Left err400 { errBody = "from must be on or before to" }
+    _ -> Right (calendarIdVal, mFrom, mTo, statusVal)
+
+validateCalendarEventStatusQuery :: Maybe Text -> Either ServerError (Maybe Text)
+validateCalendarEventStatusQuery Nothing = Right Nothing
+validateCalendarEventStatusQuery (Just rawStatus) = do
+  statusVal <- T.toLower <$> validateCalendarQueryText "status" rawStatus
+  if statusVal `elem` calendarEventStatuses
+    then Right (Just statusVal)
+    else
+      Left err400
+        { errBody = "status must be one of: confirmed, tentative, cancelled" }
+
+validateCalendarQueryText :: Text -> Text -> Either ServerError Text
+validateCalendarQueryText fieldName rawValue =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed
+       then Left (calendarQueryError (fieldName <> " must not be blank"))
+       else if T.any isControl trimmed
+         then Left (calendarQueryError (fieldName <> " must not contain control characters"))
+         else Right trimmed
+
+calendarQueryError :: Text -> ServerError
+calendarQueryError message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+calendarEventStatuses :: [Text]
+calendarEventStatuses = ["confirmed", "tentative", "cancelled"]
+
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =
        calendarAuthUrlH
@@ -2332,9 +2377,9 @@ calendarServer user =
     calendarConfigH :: Maybe Text -> AppM (Maybe CalAPI.CalendarConfigDTO)
     calendarConfigH mCalendarId = do
       requireAdmin
-      let mTrimmed = fmap T.strip mCalendarId
-      mCfg <- case mTrimmed of
-        Just cid | not (T.null cid) -> runDB $ getBy (Cal.UniqueCalendar cid)
+      calendarIdFilter <- either throwError pure (validateOptionalCalendarIdQuery mCalendarId)
+      mCfg <- case calendarIdFilter of
+        Just cid -> runDB $ getBy (Cal.UniqueCalendar cid)
         _ -> listToMaybe <$> runDB (selectList [] [Desc Cal.GoogleCalendarConfigUpdatedAt, LimitTo 1])
       pure (toCfgDTO <$> mCfg)
 
@@ -2364,11 +2409,14 @@ calendarServer user =
     calendarEventsH :: Maybe Text -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [CalAPI.CalendarEventDTO]
     calendarEventsH mCal fromTs toTs mStatus = do
       requireAdmin
-      let baseFilters = maybe [] (\cid -> [Cal.GoogleCalendarEventCalendarId ==. cid]) mCal
+      (calendarIdFilter, fromFilter, toFilter, statusFilter) <-
+        either throwError pure (validateCalendarEventListQuery mCal fromTs toTs mStatus)
+      let baseFilters =
+            maybe [] (\cid -> [Cal.GoogleCalendarEventCalendarId ==. cid]) calendarIdFilter
           dateFilters =
-            maybe [] (\fromVal -> [Cal.GoogleCalendarEventStartAt >=. Just fromVal]) fromTs
-            ++ maybe [] (\toVal -> [Cal.GoogleCalendarEventStartAt <=. Just toVal]) toTs
-          statusFilters = maybe [] (\st -> [Cal.GoogleCalendarEventStatus ==. st]) mStatus
+            maybe [] (\fromVal -> [Cal.GoogleCalendarEventStartAt >=. Just fromVal]) fromFilter
+            ++ maybe [] (\toVal -> [Cal.GoogleCalendarEventStartAt <=. Just toVal]) toFilter
+          statusFilters = maybe [] (\st -> [Cal.GoogleCalendarEventStatus ==. st]) statusFilter
           filters = baseFilters ++ dateFilters ++ statusFilters
       rows <- runDB $ selectList filters [Desc Cal.GoogleCalendarEventStartAt, Desc Cal.GoogleCalendarEventUpdatedLocal]
       pure (map toEventDTO rows)
