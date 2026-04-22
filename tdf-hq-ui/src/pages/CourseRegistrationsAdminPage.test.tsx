@@ -3007,10 +3007,17 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      const singleCohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-cohort-summary"]',
+      );
       const customStatusSummary = container.querySelector<HTMLElement>(
         '[data-testid="course-registration-single-custom-status-summary"]',
       );
 
+      expect(singleCohortSummary?.textContent).toContain('Cohorte disponible');
+      expect(singleCohortSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101)');
+      expect(singleCohortSummary?.textContent).toContain('Cohorte única por ahora.');
+      expect(singleCohortSummary?.textContent).not.toContain('Usa Estado');
       expect(customStatusSummary?.textContent).toContain('Estado no estándar');
       expect(customStatusSummary?.textContent).toContain('Needs Review');
       expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
@@ -3019,6 +3026,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
       expect(countOccurrences(container, 'Needs Review')).toBe(1);
+      expect(countOccurrences(container, 'Usa Estado')).toBe(0);
+      expect(countOccurrences(container, customStatusFilterUnavailableMessage)).toBe(1);
       expect(container.textContent).not.toContain('needs_review');
     });
 
