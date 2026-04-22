@@ -280,6 +280,33 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects non-image asset uploads before inventory storage can persist them" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected invalid asset upload multipart, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload must be a raster image"
+        (mkAssetUploadMultipart
+          []
+          [(mkAssetUploadFile "manual.pdf") { fdFileCType = "application/pdf" }]
+        )
+      assertInvalid
+        "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "manual.pdf"])
+      assertInvalid
+        "Asset upload image extension must match its MIME type"
+        (mkAssetUploadMultipart
+          [("name", "front-room.png")]
+          [mkAssetUploadFile "front-room.jpg"]
+        )
+
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

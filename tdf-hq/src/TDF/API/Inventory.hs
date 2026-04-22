@@ -16,8 +16,10 @@ import           Servant.Multipart ( FileData
                                     , Tmp
                                     , fdInputName
                                     , fdFileName
+                                    , fdFileCType
                                     )
 import qualified Data.Text         as T
+import           System.FilePath   (takeExtension)
 
 import           TDF.API.Types
 
@@ -32,6 +34,7 @@ instance FromMultipart Tmp AssetUploadForm where
     file <- lookupSingleFile "file" multipart
     nameTxt <- optionalText "name" multipart
     rejectAmbiguousFileName nameTxt file
+    validateImageUpload nameTxt file
     pure AssetUploadForm
       { aufFile = file
       , aufName = nameTxt
@@ -61,6 +64,37 @@ instance FromMultipart Tmp AssetUploadForm where
           (Nothing, fileName) | T.null fileName ->
             Left "Either field name or uploaded file name must be provided"
           _ -> Right ()
+
+      validateImageUpload nameTxt file = do
+        allowedExts <- allowedImageExtensions (fdFileCType file)
+        ext <- resolveImageExtension nameTxt file
+        if ext `elem` allowedExts
+          then Right ()
+          else if ext `elem` allImageExtensions
+            then Left "Asset upload image extension must match its MIME type"
+            else Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
+
+      allowedImageExtensions rawContentType =
+        case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
+          "image/jpeg" -> Right [".jpg", ".jpeg"]
+          "image/png"  -> Right [".png"]
+          "image/webp" -> Right [".webp"]
+          "image/gif"  -> Right [".gif"]
+          _ ->
+            Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
+
+      resolveImageExtension nameTxt file =
+        let requestedExt = maybe "" imageExtension nameTxt
+            fallbackExt = imageExtension (fdFileName file)
+            ext = if T.null requestedExt then fallbackExt else requestedExt
+        in if T.null ext
+             then Left "Asset upload file name must include a supported image extension"
+             else Right ext
+
+      imageExtension =
+        T.toLower . T.pack . takeExtension . T.unpack . T.strip
+
+      allImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
 
       rejectUnexpectedParts mp =
         case (unexpectedInputs, unexpectedFiles) of
