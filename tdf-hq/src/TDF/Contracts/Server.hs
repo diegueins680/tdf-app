@@ -280,6 +280,10 @@ normalizeContractKind rawKind
       Left err400
         { errBody = "Contract payload kind must be 64 characters or fewer"
         }
+  | not (T.any isKindMeaningfulChar kindText) =
+      Left err400
+        { errBody = "Contract payload kind must include at least one ASCII letter or number"
+        }
   | T.all validKindChar kindText =
       Right kindText
   | otherwise =
@@ -288,6 +292,7 @@ normalizeContractKind rawKind
         }
   where
     kindText = T.toLower (T.strip rawKind)
+    isKindMeaningfulChar c = isAsciiLower c || isDigit c
     validKindChar c = isAsciiLower c || isDigit c || c == '-' || c == '_'
 
 maxContractKindLength :: Int

@@ -4417,6 +4417,12 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= ("" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= ("event vendor" :: Text)]) "Contract payload kind must be a non-empty slug"
             assertInvalid
+                (A.object ["kind" .= ("---" :: Text)])
+                "Contract payload kind must include at least one ASCII letter or number"
+            assertInvalid
+                (A.object ["kind" .= ("___" :: Text)])
+                "Contract payload kind must include at least one ASCII letter or number"
+            assertInvalid
                 (A.object ["kind" .= Data.Text.replicate 65 "a"])
                 "Contract payload kind must be 64 characters or fewer"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
@@ -4484,6 +4490,21 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored contract kind does not match payload kind"
                 Right _ ->
                     expectationFailure "Expected mismatched stored contract kinds to be rejected"
+
+        it "rejects stored contracts with separator-only payload kinds before PDF rendering" $ do
+            let storedPayload =
+                    BL.concat
+                        [ "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\""
+                        , ",\"kind\":\"generic\""
+                        , ",\"payload\":{\"kind\":\"---\"}"
+                        , ",\"created_at\":\"2026-01-01T00:00:00Z\"}"
+                        ]
+            case decodeStoredContract storedPayload of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "Contract payload kind must include at least one ASCII letter or number"
+                Right _ ->
+                    expectationFailure "Expected separator-only stored contract payload kind to be rejected"
 
     describe "internship status validation" $ do
         it "defaults omitted project statuses and normalizes supported explicit values" $ do
