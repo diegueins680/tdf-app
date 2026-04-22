@@ -1319,6 +1319,10 @@ export default function CourseRegistrationsAdminPage() {
     if (!onlyConfiguredCohort) return null;
     return !selectedSlug || selectedSlug === onlyConfiguredCohort.value ? onlyConfiguredCohort : null;
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
+  const selectedConfiguredCohort = useMemo(() => {
+    if (cohortsQuery.isError || !selectedSlug) return null;
+    return configuredCohortOptions.find((option) => option.value === selectedSlug) ?? null;
+  }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
 
   const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
 
@@ -1439,6 +1443,10 @@ export default function CourseRegistrationsAdminPage() {
     && Boolean(singleAvailableCohort)
     && hasRedundantSingleCohortFilter
     && hasCustomLimit
+    && !hasStatusFilter;
+  const showSelectedCohortFirstRunEmptyState = !hasVisibleRegistrations
+    && Boolean(selectedConfiguredCohort)
+    && hasSlugFilter
     && !hasStatusFilter;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
@@ -1864,6 +1872,7 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isError
     && hasCustomFilters
     && !showPassiveSingleCohortLimitEmptyState
+    && !showSelectedCohortFirstRunEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1906,7 +1915,7 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && !cohortsQuery.isError
     && !cohortsQuery.isLoading
-    && (!hasCustomFilters || showPassiveSingleCohortLimitEmptyState)
+    && (!hasCustomFilters || showPassiveSingleCohortLimitEmptyState || showSelectedCohortFirstRunEmptyState)
     && !hasVisibleRegistrations;
   const showInitialCohortResolutionState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -1969,15 +1978,16 @@ export default function CourseRegistrationsAdminPage() {
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
   const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
-  const initialEmptyStateMessage = singleAvailableCohort
-    ? buildSingleCohortInitialEmptyStateMessage(singleAvailableCohort.firstRunLabel)
+  const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
+  const initialEmptyStateMessage = firstRunCohort
+    ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
       ? buildInitialEmptyStateMultiCohortMessage(configuredCohortOptions.length)
     : initialEmptyStateConfigMessage;
-  const initialEmptyStateAction = singleAvailableCohort
+  const initialEmptyStateAction = firstRunCohort
     ? {
       label: initialEmptyStateFormActionLabel,
-      to: `/inscripcion/${encodeURIComponent(singleAvailableCohort.value)}`,
+      to: `/inscripcion/${encodeURIComponent(firstRunCohort.value)}`,
     }
     : {
       label: hasMultipleAvailableCohorts

@@ -6035,6 +6035,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats an empty URL-scoped configured cohort as first-run form guidance', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: undefined,
+        limit: 200,
+      });
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain(initialEmptyStateMultiCohortMessage);
+      expect(emptyState?.textContent).not.toContain('No hay inscripciones con los filtros actuales');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateFormActionLabel);
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a URL-only cohort slug as a filter instead of treating it as a configured form', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([]);
