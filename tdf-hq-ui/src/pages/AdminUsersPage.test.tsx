@@ -3161,6 +3161,54 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('omits unavailable contact and access dimensions from the first-time search placeholder', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre o usuario');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps internal-id search available without foregrounding IDs in the first-time search hint', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

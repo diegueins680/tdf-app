@@ -282,6 +282,18 @@ const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 
+const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
+
+const formatSearchPlaceholderTerms = (terms: readonly string[]) => {
+  if (terms.length <= 1) return terms[0] ?? SEARCH_INPUT_PLACEHOLDER;
+
+  const lastTerm = terms[terms.length - 1] ?? '';
+  const connector = spanishOrConnector(lastTerm);
+
+  if (terms.length === 2) return `${terms[0]} ${connector} ${lastTerm}`;
+  return `${terms.slice(0, -1).join(', ')} ${connector} ${lastTerm}`;
+};
+
 type UserContactReadiness = ReturnType<typeof getUserContactReadiness>;
 const CONTACT_READINESS_SORT_ORDER: Record<UserContactReadiness, number> = {
   'whatsapp-ready': 0,
@@ -362,6 +374,42 @@ const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'rol
     roles: user.roles,
     modules: user.modules,
   });
+};
+
+const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
+  let hasNameIdentity = false;
+  let hasDistinctUsername = false;
+  let hasContact = false;
+  let hasNonDefaultRoles = false;
+  let hasNonDefaultModules = false;
+
+  users.forEach((user) => {
+    const partyName = user.partyName.trim();
+    const username = user.username.trim();
+    const rolesSummary = getUserAccessSummary(user.roles);
+    const modulesSummary = getUserAccessSummary(user.modules);
+
+    if (partyName) hasNameIdentity = true;
+    if (username && normalizeIdentityComparison(username) !== normalizeIdentityComparison(partyName)) {
+      hasDistinctUsername = true;
+    }
+    if (getUserContactSearchValues(user).length > 0) hasContact = true;
+    if (rolesSummary && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY)) {
+      hasNonDefaultRoles = true;
+    }
+    if (modulesSummary && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY)) {
+      hasNonDefaultModules = true;
+    }
+  });
+
+  const terms: string[] = [];
+  if (hasNameIdentity) terms.push('Nombre');
+  if (hasDistinctUsername) terms.push(hasNameIdentity ? 'usuario' : 'Usuario');
+  if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
+  if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
+  if (hasNonDefaultModules) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+
+  return formatSearchPlaceholderTerms(terms);
 };
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
@@ -477,6 +525,10 @@ export default function AdminUsersPage() {
   const users = useMemo(
     () => dedupeAdminUsers(usersQuery.data ?? []),
     [usersQuery.data],
+  );
+  const searchInputPlaceholder = useMemo(
+    () => buildAdminUsersSearchPlaceholder(users),
+    [users],
   );
 
   const handleRefresh = () => {
@@ -788,7 +840,7 @@ export default function AdminUsersPage() {
                   onChange={(event) => setSearchQuery(normalizeVisibleSearchInput(event.target.value))}
                   size="small"
                   fullWidth
-                  placeholder={SEARCH_INPUT_PLACEHOLDER}
+                  placeholder={searchInputPlaceholder}
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
