@@ -9,6 +9,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncPlatform
   , validateSocialSyncExternalPostId
   , validateSocialSyncIngestSource
+  , validateSocialSyncPermalink
   , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
   ) where
@@ -71,6 +72,7 @@ socialSyncServer user =
         platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
         externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
         ingestSrc <- either throwError pure (validateSocialSyncIngestSource (sspIngestSource payload))
+        permalink <- either throwError pure (validateSocialSyncPermalink (sspPermalink payload))
         mediaText <- either throwError pure (validateSocialSyncMediaUrls (sspMediaUrls payload))
         artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
         artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
@@ -82,7 +84,7 @@ socialSyncServer user =
           Just (Entity key _) -> do
             let updates = concat
                   [ setMaybe SocialSyncPostCaption (sspCaption payload)
-                  , setMaybe SocialSyncPostPermalink (sspPermalink payload)
+                  , setMaybe SocialSyncPostPermalink permalink
                   , setMaybe SocialSyncPostMediaUrls mediaText
                   , setMaybe SocialSyncPostPostedAt (sspPostedAt payload)
                   , setMaybe SocialSyncPostTags tagsText
@@ -108,7 +110,7 @@ socialSyncServer user =
                   , socialSyncPostArtistPartyId = artistPartyKey
                   , socialSyncPostArtistProfileId = artistProfileKey
                   , socialSyncPostCaption = sspCaption payload
-                  , socialSyncPostPermalink = sspPermalink payload
+                  , socialSyncPostPermalink = permalink
                   , socialSyncPostMediaUrls = mediaText
                   , socialSyncPostPostedAt = sspPostedAt payload
                   , socialSyncPostFetchedAt = now
@@ -255,6 +257,23 @@ validateSocialSyncIngestSource (Just raw) =
   where
     isSocialSyncIngestSourceChar c =
       isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+validateSocialSyncPermalink :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncPermalink Nothing = Right Nothing
+validateSocialSyncPermalink (Just rawUrl) =
+  case nonEmptyText rawUrl of
+    Nothing -> Right Nothing
+    Just url
+      | T.any isSpace url ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 "permalink must not contain whitespace")
+            }
+      | not (TrialsServer.isValidHttpUrl url) ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public http(s) URL")
+            }
+      | otherwise -> Right (Just url)
 
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing

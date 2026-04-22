@@ -183,6 +183,7 @@ import TDF.Server.SocialSync
       validateSocialSyncPlatform,
       validateSocialSyncPostsLimit,
       validateSocialSyncIngestSource,
+      validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
     normalizeBudgetLineType,
@@ -2713,6 +2714,30 @@ main = hspec $ do
             assertInvalid
                 (Data.Text.replicate 65 "a")
                 "ingestSource must be 64 characters or fewer"
+
+    describe "social sync permalink validation" $ do
+        it "normalizes omitted, blank, and valid public permalink URLs before storage" $ do
+            validateSocialSyncPermalink Nothing `shouldBe` Right Nothing
+            validateSocialSyncPermalink (Just "   ") `shouldBe` Right Nothing
+            validateSocialSyncPermalink (Just "  https://instagram.com/p/post-42  ")
+                `shouldBe` Right (Just "https://instagram.com/p/post-42")
+
+        it "rejects unsafe or ambiguous permalink URLs instead of persisting user-facing bad links" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncPermalink (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync permalink to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid "https://instagram.com/p/post 42" "permalink must not contain whitespace"
+            assertInvalid "/p/post-42" "permalink must be an absolute public http(s) URL"
+            assertInvalid "javascript:alert(1)" "permalink must be an absolute public http(s) URL"
+            assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public http(s) URL"
+            assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public http(s) URL"
 
     describe "social sync media URL validation" $ do
         it "normalizes valid media URL lists before newline storage" $ do
