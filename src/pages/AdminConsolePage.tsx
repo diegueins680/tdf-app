@@ -144,6 +144,7 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'working on this view',
   'full functionality will be available here soon',
   'coming soon',
+  'proximamente',
   'not implemented yet',
   'not implemented',
   'under construction',

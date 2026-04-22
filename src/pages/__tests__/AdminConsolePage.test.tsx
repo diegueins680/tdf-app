@@ -1834,6 +1834,43 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores terse Spanish coming-soon preview cards so fallback discovery does not add dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-placeholder',
+          title: 'Tokens de servicio',
+          body: ['Próximamente.'],
+        },
+        {
+          cardId: 'api-access-placeholder',
+          title: 'Acceso API',
+          body: ['Próximamente podrás revisar credenciales técnicas aquí.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Tokens de servicio|Acceso API/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Próximamente/i)).not.toBeInTheDocument();
+  });
+
   it('ignores terse implementation-placeholder cards so first-run keeps only actionable modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
