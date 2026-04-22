@@ -3759,7 +3759,7 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
             ]
       in
         [ WAInbound
-            { waInboundExternalId = fromMaybe (WA.from msg <> "-" <> fromMaybe "0" (waTimestamp msg)) (waId msg)
+            { waInboundExternalId = resolvedExternalId msg
             , waInboundSenderId = WA.from msg
             , waInboundSenderName = join (Map.lookup (WA.from msg) contactMap)
             , waInboundText = body
@@ -3776,6 +3776,11 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
               (adExt, adName, metaTxt) = waReferralMeta referral
         ]
     extractChange _ = []
+
+    resolvedExternalId msg =
+      fromMaybe
+        (WA.from msg <> "-" <> fromMaybe "0" (cleanOptional (waTimestamp msg)))
+        (cleanOptional (waId msg))
 
     waReferralMeta Nothing = (Nothing, Nothing, Nothing)
     waReferralMeta (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =

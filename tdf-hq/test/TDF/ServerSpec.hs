@@ -90,6 +90,8 @@ import TDF.Server
     , MetaBackfillOptions(..)
     , PreparedLine(..)
     , SessionInputLookup(..)
+    , WAInbound(..)
+    , extractWhatsAppInbound
     , normalizeOptionalInput
     , parseMcpRequest
     , parseToolCallParams
@@ -231,6 +233,7 @@ import TDF.Server
     , listMarketplace
     , resolveMarketplacePhotoUrl
     )
+import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
     ( findReusableActiveToken
     , normalizeAuthEmailAddress
@@ -1859,6 +1862,40 @@ spec = describe "TDF.Server helpers" $ do
                         Right challenge ->
                             expectationFailure
                                 ("Expected missing hub.mode to be rejected, got: " <> T.unpack challenge)
+
+    describe "extractWhatsAppInbound" $ do
+        it "uses the sender/timestamp fallback when Meta sends a blank message id" $ do
+            let message rawId rawTimestamp =
+                    WA.WAMessage
+                        rawId
+                        "text"
+                        "593991234567"
+                        (Just (WA.WAText "Inscribirme"))
+                        Nothing
+                        Nothing
+                        rawTimestamp
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue
+                                    (Just
+                                        [ message (Just "  wamid.real-id  ") (Just "1713715200")
+                                        , message (Just "   ") (Just " 1713715201 ")
+                                        , message Nothing Nothing
+                                        ])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+
+            map waInboundExternalId (extractWhatsAppInbound payload)
+                `shouldBe`
+                    [ "wamid.real-id"
+                    , "593991234567-1713715201"
+                    , "593991234567-0"
+                    ]
 
     describe "validateWhatsAppMessagesLimit" $ do
         it "defaults omitted limits and preserves explicit values inside the supported page window" $ do
