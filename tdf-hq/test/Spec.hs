@@ -90,7 +90,8 @@ import TDF.DTO.SocialSyncDTO
     ( SocialSyncIngestRequest (..),
       SocialSyncIngestResponse (..),
       SocialSyncPostDTO (..),
-      SocialSyncPostIn (..) )
+      SocialSyncPostIn (..),
+      maxSocialSyncIngestPosts )
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
@@ -2755,6 +2756,25 @@ main = hspec $ do
                     err `shouldContain` "posts must contain at least one post"
                 Right value ->
                     expectationFailure ("Expected empty social sync ingest batch to be rejected, got: " <> show value)
+
+        it "rejects oversized ingest batches before unbounded social-sync writes can start" $ do
+            let mkPost n =
+                    A.object
+                        [ "platform" .= ("instagram" :: Text)
+                        , "externalPostId" .= ("ig-media-" <> Data.Text.pack (show n))
+                        ]
+                payload =
+                    A.encode $
+                        A.object
+                            [ "posts" .= map mkPost [1 .. maxSocialSyncIngestPosts + 1]
+                            ]
+            case (eitherDecode payload :: Either String SocialSyncIngestRequest) of
+                Left err ->
+                    err `shouldContain`
+                        ("posts must contain at most " <> show maxSocialSyncIngestPosts <> " posts")
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized social sync ingest batch to be rejected, got: " <> show value)
 
         it "rejects duplicate normalized post identities instead of making batch counts order-dependent" $ do
             case (eitherDecode "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\" ig-media-42 \"},{\"platform\":\" Instagram \",\"externalPostId\":\"ig-media-42\"}]}" :: Either String SocialSyncIngestRequest) of

@@ -50,6 +50,9 @@ data SocialSyncIngestRequest = SocialSyncIngestRequest
   { ssirPosts :: [SocialSyncPostIn]
   } deriving (Show, Generic)
 
+maxSocialSyncIngestPosts :: Int
+maxSocialSyncIngestPosts = 500
+
 instance FromJSON SocialSyncIngestRequest where
   parseJSON value = do
     request <- genericParseJSON defaultOptions
@@ -58,6 +61,8 @@ instance FromJSON SocialSyncIngestRequest where
       } value
     when (null (ssirPosts request)) $
       fail "posts must contain at least one post"
+    when (length (ssirPosts request) > maxSocialSyncIngestPosts) $
+      fail ("posts must contain at most " <> show maxSocialSyncIngestPosts <> " posts")
     validateUniquePostIdentities (ssirPosts request)
     pure request
 
