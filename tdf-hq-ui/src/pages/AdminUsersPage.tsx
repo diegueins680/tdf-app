@@ -230,6 +230,27 @@ const formatAccessSummaryParts = ({
   ].filter(Boolean).join(' · ');
 };
 
+const INLINE_ACCESS_VALUE_LIMIT = 3;
+
+const formatCompactAccessValues = (
+  values: readonly string[],
+  hiddenSingularLabel: string,
+  hiddenPluralLabel: string,
+) => {
+  const normalizedValues = normalizeAccessValues(values);
+
+  if (normalizedValues.length <= INLINE_ACCESS_VALUE_LIMIT) {
+    return normalizedValues.join(', ');
+  }
+
+  const visibleValues = normalizedValues.slice(0, INLINE_ACCESS_VALUE_LIMIT);
+  const hiddenCount = normalizedValues.length - INLINE_ACCESS_VALUE_LIMIT;
+
+  return `${visibleValues.join(', ')} +${hiddenCount} ${
+    hiddenCount === 1 ? hiddenSingularLabel : hiddenPluralLabel
+  }`;
+};
+
 const normalizeSearchValue = (value: string) =>
   value
     .normalize('NFD')
@@ -363,6 +384,34 @@ const buildUserAccessSummary = ({
   return formatAccessSummaryParts({
     rolesSummary: showRolesSummary ? rolesSummary : '',
     modulesSummary: showModulesSummary ? modulesSummary : '',
+  });
+};
+
+const buildUserRowAccessSummary = ({
+  modules,
+  roles,
+  sharedModulesSummary = '',
+  sharedRolesSummary = '',
+}: {
+  modules: string[];
+  roles: string[];
+  sharedModulesSummary?: string;
+  sharedRolesSummary?: string;
+}) => {
+  const rolesSummary = getUserAccessSummary(roles);
+  const modulesSummary = getUserAccessSummary(modules);
+  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
+  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
+  const compactRolesSummary = formatCompactAccessValues(roles, 'rol', 'roles');
+  const compactModulesSummary = formatCompactAccessValues(modules, 'módulo', 'módulos');
+
+  if (showRolesSummary && showModulesSummary && isSameAccessSummary(rolesSummary, modulesSummary)) {
+    return `Roles y módulos: ${compactRolesSummary}`;
+  }
+
+  return formatAccessSummaryParts({
+    rolesSummary: showRolesSummary ? compactRolesSummary : '',
+    modulesSummary: showModulesSummary ? compactModulesSummary : '',
   });
 };
 
@@ -1045,7 +1094,13 @@ function UserRow({
   const visibleContactSummary = getVisibleUserContactSummary(user);
   const hasContactInfo = Boolean(contactSummary);
   const hasWhatsAppChannel = hasUserWhatsAppChannel(user);
-  const accessSummary = buildUserAccessSummary({
+  const fullAccessSummary = buildUserAccessSummary({
+    roles: user.roles,
+    modules: user.modules,
+    sharedRolesSummary,
+    sharedModulesSummary,
+  });
+  const accessSummary = buildUserRowAccessSummary({
     roles: user.roles,
     modules: user.modules,
     sharedRolesSummary,
@@ -1116,7 +1171,11 @@ function UserRow({
       )}
       {!hideAccessSummary && accessSummary && (
         <Box sx={{ minWidth: 220, flex: '1 1 240px' }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            title={accessSummary === fullAccessSummary ? undefined : fullAccessSummary}
+          >
             {accessSummary}
           </Typography>
         </Box>

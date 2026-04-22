@@ -2242,6 +2242,48 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps long row access summaries compact while exposing the full scope in the title', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 103,
+        roles: ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'],
+        modules: ['admin', 'crm', 'inventory', 'reports'],
+      }),
+      buildUser({
+        userId: 104,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        roles: ['Manager'],
+        modules: ['events'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const row = getRowByUserId(container, 103);
+        const compactSummary = 'Roles: Admin, Engineer, Manager +2 roles · Módulos: admin, crm, inventory +1 módulo';
+        const fullSummary = 'Roles: Admin, Engineer, Manager, Reception, Teacher · Módulos: admin, crm, inventory, reports';
+        const accessSummary = Array.from(row.querySelectorAll<HTMLElement>('p')).find(
+          (element) => buttonText(element) === compactSummary,
+        );
+
+        expect(accessSummary).toBeInstanceOf(HTMLElement);
+        expect(accessSummary?.getAttribute('title')).toBe(fullSummary);
+        expect(hasExactText(row, compactSummary)).toBe(true);
+        expect(row.textContent).not.toContain('Reception, Teacher');
+        expect(row.textContent).not.toContain('reports');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses matching role and module summaries into one row access line', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
