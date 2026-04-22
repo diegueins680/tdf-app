@@ -14,6 +14,7 @@ import BrandLogo from './BrandLogo';
 import SearchIcon from '@mui/icons-material/Search';
 import { NAV_GROUPS } from './SidebarNav';
 import { canAccessPath } from '../utils/accessControl';
+import { formatFriendlyPath } from '../utils/navigationLabels';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
@@ -25,84 +26,6 @@ const CART_EVENT = 'tdf-cart-updated';
 const QUICK_FAVORITES_KEY = 'tdf-quick-nav-favorites';
 const QUICK_RECENTS_KEY = 'tdf-quick-nav-recents';
 const MAX_QUICK_RECENTS = 10;
-
-const FRIENDLY_SEGMENTS: Record<string, string> = {
-  inicio: 'Inicio',
-  marketplace: 'Tienda',
-  fans: 'Comunidad',
-  records: 'Lanzamientos',
-  'mi-profesor': 'Portal del profesor',
-  crm: 'CRM',
-  contactos: 'Contactos',
-  empresas: 'Empresas',
-  leads: 'Leads',
-  estudio: 'Estudio',
-  salas: 'Salas',
-  ordenes: 'Órdenes',
-  servicios: 'Servicios',
-  pipelines: 'Pipelines',
-  'live-sessions': 'Sesiones en vivo',
-  reportes: 'Reportes',
-  escuela: 'Escuela',
-  profesores: 'Profesores',
-  clases: 'Clases',
-  'trial-lessons': 'Clases de prueba',
-  'trial-queue': 'Solicitudes de prueba',
-  label: 'Sello',
-  artistas: 'Artistas',
-  proyectos: 'Proyectos',
-  releases: 'Lanzamientos',
-  tracks: 'Pistas',
-  assets: 'Activos',
-  operacion: 'Operación',
-  inventario: 'Inventario',
-  'ordenes-marketplace': 'Órdenes tienda',
-  'calendario-domo': 'Calendario domo',
-  'reservas-equipo': 'Reservas equipo',
-  mantenimiento: 'Mantenimiento',
-  paquetes: 'Paquetes',
-  configuracion: 'Configuración',
-  'inscripciones-curso': 'Inscripciones curso',
-  cursos: 'Cursos',
-  logs: 'Logs',
-  estado: 'Estado sistema',
-  'usuarios-admin': 'Usuarios admin',
-  'roles-permisos': 'Roles y permisos',
-  diagnosticos: 'Diagnósticos',
-  'impuestos-series': 'Impuestos y series',
-  'unidades-negocio': 'Unidades de negocio',
-  sedes: 'Sedes',
-  marcas: 'Marcas',
-  integraciones: 'Integraciones',
-  calendario: 'Calendario Google',
-  cms: 'CMS',
-  preferencias: 'Preferencias',
-  finanzas: 'Finanzas',
-  cotizaciones: 'Cotizaciones',
-  facturas: 'Facturas',
-  cobros: 'Cobros',
-  pagos: 'Pagos',
-  recibos: 'Recibos',
-  regalias: 'Regalías',
-  docs: 'Documentación',
-  acerca: 'Acerca de',
-  manual: 'Manual',
-  seguridad: 'Seguridad',
-  feedback: 'Sugerencias',
-  herramientas: 'Herramientas',
-  'tidal-agent': 'Agente Tidal',
-  'creador-musical': 'Creador musical',
-  'token-admin': 'Token API',
-};
-
-const formatFriendlyPath = (path: string) => {
-  const parts = path.split('/').filter(Boolean);
-  if (parts.length === 0) return 'Inicio';
-  return parts
-    .map((part) => FRIENDLY_SEGMENTS[part] ?? part.replace(/-/g, ' '))
-    .map((part) => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : part))
-    .join(' / ');
-};
 
 interface CartPreviewItem {
   title: string;

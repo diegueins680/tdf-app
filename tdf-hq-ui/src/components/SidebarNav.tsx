@@ -13,6 +13,7 @@ import {
   canAccessPath,
   pathRequiresModule,
 } from '../utils/accessControl';
+import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 
 export interface NavItem {
   label: string;
@@ -102,7 +103,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'CONFIGURACIÓN',
     items: [
-      { label: 'Inscripciones curso', path: '/configuracion/inscripciones-curso' },
+      { label: COURSE_REGISTRATIONS_NAV_LABEL, path: '/configuracion/inscripciones-curso' },
       { label: 'Cursos', path: '/configuracion/cursos' },
       { label: 'Logs', path: '/configuracion/logs' },
       { label: 'Estado sistema', path: '/configuracion/estado' },
