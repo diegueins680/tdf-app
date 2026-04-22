@@ -172,6 +172,8 @@ import TDF.Server
       validatePayPalApprovalUrl )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
+      LiveSessionMusicianLookup (..),
+      resolveLiveSessionMusicianLookup,
       sanitizeLiveSessionRiderFileName,
       validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
@@ -5155,6 +5157,13 @@ main = hspec $ do
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
+
+    describe "resolveLiveSessionMusicianLookup" $ do
+        it "only matches existing live-session musicians by normalized email" $ do
+            resolveLiveSessionMusicianLookup (Just " Player@Example.com ")
+                `shouldBe` LookupLiveSessionMusicianByEmail "player@example.com"
+            resolveLiveSessionMusicianLookup Nothing `shouldBe` CreateLiveSessionMusician
+            resolveLiveSessionMusicianLookup (Just "   ") `shouldBe` CreateLiveSessionMusician
 
     describe "validateLiveSessionTermsAcceptance" $ do
         it "requires explicit accepted terms before live-session intake persistence" $ do

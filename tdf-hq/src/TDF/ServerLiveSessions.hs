@@ -5,7 +5,9 @@
 
 module TDF.ServerLiveSessions
   ( liveSessionsServer
+  , LiveSessionMusicianLookup(..)
   , buildLiveSessionUsernameCollisionCandidate
+  , resolveLiveSessionMusicianLookup
   , sanitizeLiveSessionRiderFileName
   , validateLiveSessionTermsAcceptance
   ) where
@@ -40,6 +42,11 @@ import qualified TDF.ModelsExtra           as ME
 
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
+
+data LiveSessionMusicianLookup
+  = LookupLiveSessionMusicianByEmail Text
+  | CreateLiveSessionMusician
+  deriving (Eq, Show)
 
 liveSessionsServer
   :: forall m.
@@ -138,16 +145,11 @@ liveSessionsServer user = intakeHandler
             Nothing -> throwError err400 { errBody = "Referenced party not found" }
             Just _  -> pure key
         Nothing -> do
-          foundByEmail <- case mEmail of
-            Nothing -> pure Nothing
-            Just e | T.null e -> pure Nothing
-                   | otherwise -> withPool $ selectFirst [M.PartyPrimaryEmail ==. Just e] []
-          found <- case foundByEmail of
-            Just ent -> pure (Just ent)
-            Nothing ->
-              if T.null trimmedName
-                then pure Nothing
-                else withPool $ selectFirst [M.PartyDisplayName ==. trimmedName] []
+          found <- case resolveLiveSessionMusicianLookup mEmail of
+            LookupLiveSessionMusicianByEmail email ->
+              withPool $ selectFirst [M.PartyPrimaryEmail ==. Just email] []
+            CreateLiveSessionMusician ->
+              pure Nothing
           case found of
             Just ent -> pure (entityKey ent)
             Nothing -> withPool $
@@ -255,6 +257,12 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
           then T.take liveSessionUsernameCollisionBudget trimmedBase
           else T.take baseBudget trimmedBase
   in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
+
+resolveLiveSessionMusicianLookup :: Maybe Text -> LiveSessionMusicianLookup
+resolveLiveSessionMusicianLookup rawEmail =
+  case T.toLower . T.strip <$> rawEmail of
+    Just email | not (T.null email) -> LookupLiveSessionMusicianByEmail email
+    _ -> CreateLiveSessionMusician
 
 validateLiveSessionTermsAcceptance :: Bool -> Maybe Text -> Either ServerError Text
 validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
