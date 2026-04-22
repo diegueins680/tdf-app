@@ -860,7 +860,7 @@ export default function CmsAdminPage() {
                           />
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          La página pública se abre con el botón principal de arriba. Para editar lo publicado, usa el botón del editor para traer la versión en vivo.
+                          La página pública se abre con el botón principal de arriba.
                         </Typography>
                       </Stack>
                     )}

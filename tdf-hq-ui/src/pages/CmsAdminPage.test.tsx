@@ -286,8 +286,10 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).not.toContain('Cargar última publicada');
       expect(container.textContent).not.toContain('Revertir a en vivo');
       expect(container.textContent).toContain(
-        'Para editar lo publicado, usa el botón del editor para traer la versión en vivo.',
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
+      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
+      expect(container.textContent).not.toContain('Para editar lo publicado');
     });
 
     await cleanup();
