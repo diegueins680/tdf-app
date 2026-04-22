@@ -509,6 +509,53 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps access-management fallback cards out of first-run optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-access-management',
+          title: 'Access management',
+          body: [
+            'Review team access before changing administrative permissions.',
+          ],
+        },
+        {
+          cardId: 'fallback-gestion-accesos',
+          title: 'Gestión de accesos',
+          body: [
+            'Revisa accesos del equipo antes de cambiar permisos administrativos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access management')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gestión de accesos')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review team access before changing administrative permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa accesos del equipo antes de cambiar permisos administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run checklist focused when a built-in access-control duplicate arrives under a custom preview id', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
