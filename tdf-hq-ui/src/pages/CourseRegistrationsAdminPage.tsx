@@ -2173,6 +2173,10 @@ export default function CourseRegistrationsAdminPage() {
   }, [localSearchKey, slug, status, limit, visibleCsvScopeKey]);
 
   useEffect(() => {
+    setPageFlash(null);
+  }, [localSearchKey, slug, status, limit]);
+
+  useEffect(() => {
     if (!selectedDossier) {
       setDossierFlash(null);
       setMarkedPaidRegistrationId(null);
