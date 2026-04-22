@@ -7959,7 +7959,8 @@ adsListCampaigns user = do
 adsGetCampaign :: AuthedUser -> Int64 -> AppM CampaignDTO
 adsGetCampaign user cid = do
   requireModule user ModuleAdmin
-  let key = toSqlKey cid :: ME.CampaignId
+  campaignId <- either throwError pure (validatePositiveIdField "campaignId" cid)
+  let key = toSqlKey campaignId :: ME.CampaignId
   mRow <- runDB $ get key
   case mRow of
     Nothing -> throwError err404
@@ -7969,6 +7970,7 @@ adsUpsertCampaign :: AuthedUser -> CampaignUpsert -> AppM CampaignDTO
 adsUpsertCampaign user CampaignUpsert{..} = do
   requireModule user ModuleAdmin
   budgetCentsVal <- either throwError pure (validateCampaignBudgetCents cuBudgetCents)
+  campaignIdUpdate <- either throwError pure (validateOptionalPositiveIdField "campaignId" cuId)
   let nameClean = T.strip cuName
       statusVal =
         case cuStatus of
@@ -7978,7 +7980,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
             in if T.null trimmed then "active" else trimmed
   when (T.null nameClean) $ throwBadRequest "Nombre requerido"
   now <- liftIO getCurrentTime
-  cid <- case cuId of
+  cid <- case campaignIdUpdate of
     Nothing -> runDB $ insert ME.Campaign
       { ME.campaignName = nameClean
       , ME.campaignObjective = T.strip <$> cuObjective
@@ -7990,8 +7992,8 @@ adsUpsertCampaign user CampaignUpsert{..} = do
       , ME.campaignCreatedAt = now
       , ME.campaignUpdatedAt = now
       }
-    Just rawId -> do
-      let key = toSqlKey rawId :: ME.CampaignId
+    Just campaignId -> do
+      let key = toSqlKey campaignId :: ME.CampaignId
       mCampaign <- runDB $ get key
       when (isNothing mCampaign) $ throwError err404
       runDB $ update key
@@ -8012,8 +8014,10 @@ adsUpsertAd :: AuthedUser -> AdCreativeUpsert -> AppM AdCreativeDTO
 adsUpsertAd user AdCreativeUpsert{..} = do
   requireModule user ModuleAdmin
   landingUrlVal <- either throwError pure (validateAdCreativeLandingUrl acuLandingUrl)
+  adIdUpdate <- either throwError pure (validateOptionalPositiveIdField "adId" acuId)
+  campaignIdRef <- either throwError pure (validateOptionalPositiveIdField "campaignId" acuCampaignId)
   let nameClean = T.strip acuName
-      mCampaign = fmap toSqlKey acuCampaignId :: Maybe ME.CampaignId
+      mCampaign = fmap toSqlKey campaignIdRef :: Maybe ME.CampaignId
       statusVal =
         case acuStatus of
           Nothing -> "active"
@@ -8027,7 +8031,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       mExisting <- runDB $ get key
       when (isNothing mExisting) $ throwError err404 { errBody = "Campaign not found" }
   now <- liftIO getCurrentTime
-  adId <- case acuId of
+  adId <- case adIdUpdate of
     Nothing -> runDB $ insert ME.AdCreative
       { ME.adCreativeCampaignId = mCampaign
       , ME.adCreativeExternalId = fmap T.strip acuExternalId
@@ -8041,8 +8045,8 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       , ME.adCreativeCreatedAt = now
       , ME.adCreativeUpdatedAt = now
       }
-    Just rawId -> do
-      let key = toSqlKey rawId :: ME.AdCreativeId
+    Just adIdRaw -> do
+      let key = toSqlKey adIdRaw :: ME.AdCreativeId
       mAd <- runDB $ get key
       when (isNothing mAd) $ throwError err404
       runDB $ update key
@@ -8064,23 +8068,26 @@ adsUpsertAd user AdCreativeUpsert{..} = do
 adsListAdsForCampaign :: AuthedUser -> Int64 -> AppM [AdCreativeDTO]
 adsListAdsForCampaign user cid = do
   requireModule user ModuleAdmin
-  let key = toSqlKey cid :: ME.CampaignId
+  campaignId <- either throwError pure (validatePositiveIdField "campaignId" cid)
+  let key = toSqlKey campaignId :: ME.CampaignId
   rows <- runDB $ selectList [ME.AdCreativeCampaignId ==. Just key] [Desc ME.AdCreativeUpdatedAt, LimitTo 200]
   pure (map adToDTO rows)
 
 adsListExamples :: AuthedUser -> Int64 -> AppM [AdConversationExampleDTO]
 adsListExamples user adId = do
   requireModule user ModuleAdmin
-  let key = toSqlKey adId :: ME.AdCreativeId
+  adIdValid <- either throwError pure (validatePositiveIdField "adId" adId)
+  let key = toSqlKey adIdValid :: ME.AdCreativeId
   rows <- runDB $ selectList [ME.AdConversationExampleAdId ==. key] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 200]
   pure (map adExampleToDTO rows)
 
 adsCreateExample :: AuthedUser -> Int64 -> AdConversationExampleCreate -> AppM AdConversationExampleDTO
 adsCreateExample user adId AdConversationExampleCreate{..} = do
   requireModule user ModuleAdmin
+  adIdValid <- either throwError pure (validatePositiveIdField "adId" adId)
   let userMsg = T.strip aecUserMessage
       assistantMsg = T.strip aecAssistantMessage
-      key = toSqlKey adId :: ME.AdCreativeId
+      key = toSqlKey adIdValid :: ME.AdCreativeId
   when (T.null userMsg) $ throwBadRequest "Ejemplo sin pregunta"
   when (T.null assistantMsg) $ throwBadRequest "Ejemplo sin respuesta"
   mAd <- runDB $ get key

@@ -81,7 +81,12 @@ import TDF.Models
     , UserCredential (..)
     )
 import qualified TDF.ModelsExtra as ME
-import TDF.DTO (AdsAssistRequest (..), CreateInvoiceLineReq (..))
+import TDF.DTO
+    ( AdCreativeUpsert (..)
+    , AdsAssistRequest (..)
+    , CampaignUpsert (..)
+    , CreateInvoiceLineReq (..)
+    )
 import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
@@ -217,6 +222,11 @@ import TDF.Server
     , resolvePartyRoleAssignmentTarget
     , fanUnfollowArtist
     , chatListMessages
+    , adsGetCampaign
+    , adsUpsertCampaign
+    , adsUpsertAd
+    , adsListAdsForCampaign
+    , adsListExamples
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
@@ -2708,6 +2718,67 @@ spec = describe "TDF.Server helpers" $ do
                 Right budgetVal ->
                     expectationFailure
                         ("Expected negative campaign budget to be rejected, got: " <> show budgetVal)
+
+    describe "ads admin id validation" $ do
+        it "rejects non-positive campaign and ad ids before database lookup" $ do
+            let unusedEnv =
+                    Env
+                        { envPool = error "envPool should be unused by ads admin id validation"
+                        , envConfig = error "envConfig should be unused by ads admin id validation"
+                        }
+                adminUser = mkUser [Admin]
+                campaignPayload =
+                    CampaignUpsert
+                        { cuId = Nothing
+                        , cuName = "Curso Abril"
+                        , cuObjective = Nothing
+                        , cuPlatform = Nothing
+                        , cuStatus = Nothing
+                        , cuBudgetCents = Nothing
+                        , cuStartDate = Nothing
+                        , cuEndDate = Nothing
+                        }
+                creativePayload =
+                    AdCreativeUpsert
+                        { acuId = Nothing
+                        , acuCampaignId = Nothing
+                        , acuExternalId = Nothing
+                        , acuName = "Meta lead ad"
+                        , acuChannel = Nothing
+                        , acuAudience = Nothing
+                        , acuLandingUrl = Nothing
+                        , acuCta = Nothing
+                        , acuStatus = Nothing
+                        , acuNotes = Nothing
+                        }
+                assertInvalid expectedMessage action = do
+                    result <- runHandler (runReaderT action unusedEnv)
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right _ ->
+                            expectationFailure
+                                "Expected invalid ads admin id to be rejected"
+
+            assertInvalid
+                "campaignId must be a positive integer"
+                (adsGetCampaign adminUser 0)
+            assertInvalid
+                "campaignId must be a positive integer"
+                (adsListAdsForCampaign adminUser (-1))
+            assertInvalid
+                "adId must be a positive integer"
+                (adsListExamples adminUser 0)
+            assertInvalid
+                "campaignId must be a positive integer"
+                (adsUpsertCampaign adminUser campaignPayload { cuId = Just 0 })
+            assertInvalid
+                "adId must be a positive integer"
+                (adsUpsertAd adminUser creativePayload { acuId = Just (-1) })
+            assertInvalid
+                "campaignId must be a positive integer"
+                (adsUpsertAd adminUser creativePayload { acuCampaignId = Just 0 })
 
     describe "shouldRetryWithFallbackModel" $ do
         it "falls back only when the upstream error is explicitly model-related" $ do
