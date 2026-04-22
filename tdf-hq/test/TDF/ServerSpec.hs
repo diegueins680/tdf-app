@@ -242,6 +242,7 @@ import TDF.ServerAuth
     , runPasswordResetConfirm
     , signupEmailExists
     , validateAuthPassword
+    , validateSignupDisplayName
     , validateOptionalSignupClaimArtistId
     , validateOptionalSignupPhone
     , validateSignupArtistClaimIntent
@@ -2330,6 +2331,29 @@ spec = describe "TDF.Server helpers" $ do
                 validateAuthPassword "Password" "Long\nPass123"
             assertInvalid "New password must be 72 bytes or fewer" $
                 validateAuthPassword "New password" (T.replicate 73 "a")
+
+    describe "validateSignupDisplayName" $ do
+        it "trims and combines signup names before creating the party profile" $ do
+            validateSignupDisplayName "  Ada  " "  Lovelace  "
+                `shouldBe` Right "Ada Lovelace"
+            validateSignupDisplayName "  Ada  " "   "
+                `shouldBe` Right "Ada"
+
+        it "rejects ambiguous or unsafe signup names before profile creation" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid signup display name, got: " <> show value)
+            assertInvalid "First or last name is required" $
+                validateSignupDisplayName "   " "   "
+            assertInvalid "firstName must not contain control characters" $
+                validateSignupDisplayName "Ada\nBcc: ops@example.com" "Lovelace"
+            assertInvalid "lastName must be 80 characters or fewer" $
+                validateSignupDisplayName "Ada" (T.replicate 81 "x")
 
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $

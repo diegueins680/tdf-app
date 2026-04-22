@@ -23,6 +23,7 @@ module TDF.ServerAuth
   , runPasswordResetConfirm
   , signupEmailExists
   , validateAuthPassword
+  , validateSignupDisplayName
   , validateRequestedSignupRoles
   , validateSignupArtistClaimIntent
   , validateOptionalSignupClaimArtistId
@@ -311,6 +312,34 @@ validateAuthPassword fieldLabel rawPassword
 maxBcryptPasswordBytes :: Int
 maxBcryptPasswordBytes = 72
 
+validateSignupDisplayName :: Text -> Text -> Either ServerError Text
+validateSignupDisplayName rawFirst rawLast
+  | T.null firstClean && T.null lastClean =
+      Left (signupNameError "First or last name is required")
+  | T.any isControl firstClean =
+      Left (signupNameError "firstName must not contain control characters")
+  | T.any isControl lastClean =
+      Left (signupNameError "lastName must not contain control characters")
+  | T.length firstClean > maxSignupNamePartChars =
+      Left (signupNameError "firstName must be 80 characters or fewer")
+  | T.length lastClean > maxSignupNamePartChars =
+      Left (signupNameError "lastName must be 80 characters or fewer")
+  | T.length displayNameText > maxSignupDisplayNameChars =
+      Left (signupNameError "displayName must be 160 characters or fewer")
+  | otherwise =
+      Right displayNameText
+  where
+    firstClean = T.strip rawFirst
+    lastClean = T.strip rawLast
+    displayNameText = T.unwords (filter (not . T.null) [firstClean, lastClean])
+    signupNameError msg = err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+maxSignupNamePartChars :: Int
+maxSignupNamePartChars = 80
+
+maxSignupDisplayNameChars :: Int
+maxSignupDisplayNameChars = 160
+
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
 validateOptionalSignupPhone (Just rawPhone) =
@@ -440,18 +469,12 @@ signup SignupRequest
   , internshipAreas = rawInternshipAreas
   } = do
   let emailInput = T.strip rawEmail
-      firstClean = T.strip rawFirst
-      lastClean = T.strip rawLast
       internshipSkillsClean = cleanOptional rawInternshipSkills
       internshipAreasClean = cleanOptional rawInternshipAreas
   when (T.null emailInput) $ throwBadRequest "Email is required"
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
-  let displayNameText =
-        case filter (not . T.null) [firstClean, lastClean] of
-          [] -> emailClean
-          xs -> T.unwords xs
   passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
-  when (T.null firstClean && T.null lastClean) $ throwBadRequest "First or last name is required"
+  displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   sanitizedRoles <- either throwError pure (validateRequestedSignupRoles requestedRoles)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
