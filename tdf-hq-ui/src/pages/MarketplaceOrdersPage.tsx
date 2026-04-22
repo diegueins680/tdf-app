@@ -109,8 +109,9 @@ const summarizeItems = (items: MarketplaceOrderDTO['moItems']) =>
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
+const normalizeOrderCurrency = (value: string) => value.trim().toUpperCase();
 const getOrderCurrencyCaption = (order: Pick<MarketplaceOrderDTO, 'moCurrency' | 'moTotalDisplay'>) => {
-  const currency = order.moCurrency.trim().toUpperCase();
+  const currency = normalizeOrderCurrency(order.moCurrency);
   if (!currency) return '';
   return order.moTotalDisplay.toUpperCase().includes(currency) ? '' : currency;
 };
@@ -266,6 +267,13 @@ export default function MarketplaceOrdersPage() {
       return true;
     });
   }, [baseContextOrders, normalizedProviderFilter, statusFilter]);
+  const sharedVisibleCurrencyCaption = useMemo(() => {
+    if (filtered.length < 2) return '';
+    const captions = filtered.map(getOrderCurrencyCaption);
+    const [firstCaption] = captions;
+    if (!firstCaption) return '';
+    return captions.every((caption) => caption === firstCaption) ? firstCaption : '';
+  }, [filtered]);
   const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
 
@@ -816,6 +824,16 @@ export default function MarketplaceOrdersPage() {
               {emptyOrdersMessage}
             </Alert>
           )}
+          {sharedVisibleCurrencyCaption && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 1.5 }}
+              data-testid="marketplace-orders-shared-currency"
+            >
+              Moneda visible: {sharedVisibleCurrencyCaption}.
+            </Typography>
+          )}
           {filtered.length > 0 && (
             <TableContainer component={Paper}>
               <Table size="small">
@@ -834,7 +852,7 @@ export default function MarketplaceOrdersPage() {
               </TableHead>
               <TableBody>
                 {filtered.map((order) => {
-                  const orderCurrencyCaption = getOrderCurrencyCaption(order);
+                  const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
 
                   return (
                     <TableRow

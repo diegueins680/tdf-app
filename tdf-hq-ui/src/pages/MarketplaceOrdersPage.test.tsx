@@ -906,6 +906,46 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('summarizes a shared missing currency once instead of repeating row captions', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'usd-0001',
+        moCurrency: 'usd',
+        moTotalDisplay: '$100.00',
+      }),
+      buildOrder({
+        moOrderId: 'usd-0002',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: null,
+        moCurrency: 'USD',
+        moTotalDisplay: '$80.00',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const orderCells = Array.from(container.querySelectorAll('tbody tr td:first-child'));
+        const sharedCurrency = container.querySelector('[data-testid="marketplace-orders-shared-currency"]');
+
+        expect(sharedCurrency?.textContent?.trim()).toBe('Moneda visible: USD.');
+        expect((container.textContent?.match(/Moneda visible: USD\./g) ?? [])).toHaveLength(1);
+        expect(orderCells.map((cell) => cell.textContent ?? '').join(' ')).not.toContain('USD');
+        expect(container.textContent).toContain('$100.00');
+        expect(container.textContent).toContain('$80.00');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the payment shortcut available for non-paid orders that still need that action', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
