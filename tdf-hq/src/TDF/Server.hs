@@ -1991,7 +1991,9 @@ validateDriveRefreshToken rawToken =
   in if T.null tokenVal
        then Left err400 { errBody = "refreshToken is required" }
        else
-         if T.any isSpace tokenVal
+         if T.any isControl tokenVal
+           then Left err400 { errBody = "refreshToken must not contain control characters" }
+           else if T.any isSpace tokenVal
            then Left err400 { errBody = "refreshToken must not contain whitespace" }
            else Right tokenVal
 
@@ -2001,7 +2003,9 @@ validateDriveAuthorizationCode rawCode =
   in if T.null codeVal
        then Left err400 { errBody = "code is required" }
        else
-         if T.any isSpace codeVal
+         if T.any isControl codeVal
+           then Left err400 { errBody = "code must not contain control characters" }
+           else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
            else Right codeVal
 

@@ -3213,6 +3213,7 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "code is required" (DriveTokenExchangeRequest "   " validVerifier Nothing)
             assertInvalid "code must not contain whitespace" baseRequest { code = "oauth code" }
+            assertInvalid "code must not contain control characters" baseRequest { code = "oauth\NUL\&code" }
             assertInvalid
                 "codeVerifier must be a PKCE verifier"
                 baseRequest { codeVerifier = "short" }
@@ -3294,6 +3295,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "refreshToken must not contain whitespace"
                 (DriveTokenRefreshRequest "1//refresh token")
+            assertInvalid
+                "refreshToken must not contain control characters"
+                (DriveTokenRefreshRequest "1//refresh\NUL\&token")
 
         it "rejects unexpected Drive refresh keys so typoed token writes fail explicitly" $
             ( eitherDecode
