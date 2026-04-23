@@ -223,6 +223,7 @@ import TDF.Server.SocialEventsHandlers (
     validateTicketCheckInLookup,
     validateTicketCheckInOrderStatus,
     validateTicketPurchaseBuyerEmail,
+    validateTicketTierCurrencyInput,
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
@@ -4910,6 +4911,26 @@ main = hspec $ do
                     expectationFailure
                         ("Expected invalid finance entry currency to be rejected, got " <> show value)
             case validateFinanceEntryCurrencyInput "usdollars" "   " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err)
+                        `shouldContain` "event default currency must be a 3-letter ISO code"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid inherited event currency to be rejected, got " <> show value)
+
+        it "validates ticket tier currencies before ticket tiers can persist opaque codes" $ do
+            validateTicketTierCurrencyInput "eur" " usd " `shouldBe` Right "USD"
+            validateTicketTierCurrencyInput "eur" "   " `shouldBe` Right "EUR"
+            case validateTicketTierCurrencyInput "USD" "usdollars" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "ticket tier currency must be a 3-letter ISO code"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid ticket tier currency to be rejected, got " <> show value)
+            case validateTicketTierCurrencyInput "usdollars" "   " of
                 Left err -> do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err)

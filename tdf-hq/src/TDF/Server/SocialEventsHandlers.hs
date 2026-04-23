@@ -45,6 +45,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
   , validateTicketPurchaseBuyerEmail
+  , validateTicketTierCurrencyInput
   , isImageUpload
   ) where
 
@@ -1355,9 +1356,10 @@ socialEventsServer user = eventsServer
       when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
       when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
       when (ticketTierQuantityTotal dto <= 0) $ throwError err400 { errBody = "ticket tier quantity must be > 0" }
+      currencyVal <- either throwError pure $
+        validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
       let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
           tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
-          currencyVal = normalizeCurrency (ticketTierCurrency dto)
           salesStartVal = ticketTierSalesStart dto
           salesEndVal = ticketTierSalesEnd dto
       when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
@@ -1399,9 +1401,10 @@ socialEventsServer user = eventsServer
       when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
       when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
       when (ticketTierQuantityTotal dto < eventTicketTierQuantitySold tier) $ throwError err400 { errBody = "ticket tier quantity cannot be below sold quantity" }
+      currencyVal <- either throwError pure $
+        validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
       let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
           tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
-          currencyVal = normalizeCurrency (ticketTierCurrency dto)
           salesStartVal = ticketTierSalesStart dto
           salesEndVal = ticketTierSalesEnd dto
       when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
@@ -2504,6 +2507,23 @@ validateFinanceEntryCurrencyInput defaultCurrency rawCurrency =
         Just currency -> Right currency
         Nothing ->
           Left err400 { errBody = "finance entry currency must be a 3-letter ISO code" }
+
+validateTicketTierCurrencyInput :: T.Text -> T.Text -> Either ServerError T.Text
+validateTicketTierCurrencyInput defaultCurrency rawCurrency =
+  case cleanMaybeText (Just rawCurrency) of
+    Nothing ->
+      case normalizeEventCurrencyCode defaultCurrency of
+        Just fallbackCurrency -> Right fallbackCurrency
+        Nothing ->
+          Left err409
+            { errBody =
+                "event default currency must be a 3-letter ISO code before ticket tiers can inherit it"
+            }
+    Just providedCurrency ->
+      case normalizeEventCurrencyCode providedCurrency of
+        Just currency -> Right currency
+        Nothing ->
+          Left err400 { errBody = "ticket tier currency must be a 3-letter ISO code" }
 
 normalizeBudgetLineType :: Maybe T.Text -> T.Text
 normalizeBudgetLineType mType =
