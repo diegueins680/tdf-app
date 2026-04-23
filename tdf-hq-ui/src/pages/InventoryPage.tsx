@@ -303,6 +303,7 @@ export default function InventoryPage() {
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
+  const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
   const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
   const showMovementGuidance = grouped.length > 1;
@@ -408,19 +409,7 @@ export default function InventoryPage() {
                 )}
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<QrCodeIcon />}
-                  onClick={() => void openQr(singleAsset)}
-                  aria-label={`Abrir QR de ${singleAsset.name}`}
-                >
-                  Ver QR
-                </Button>
-                <Button size="small" variant="outlined" onClick={() => void copyShareUrl(singleAsset)}>
-                  Copiar enlace
-                </Button>
-                {getInventoryMovementState(singleAsset.status).canCheckout && (
+                {singleAssetMovementState?.canCheckout && (
                   <Button
                     size="small"
                     variant="contained"
@@ -431,7 +420,7 @@ export default function InventoryPage() {
                     Registrar check-out
                   </Button>
                 )}
-                {getInventoryMovementState(singleAsset.status).canCheckin && (
+                {singleAssetMovementState?.canCheckin && (
                   <Button
                     size="small"
                     variant="contained"
@@ -442,8 +431,15 @@ export default function InventoryPage() {
                     Registrar check-in
                   </Button>
                 )}
-                <Button size="small" variant="text" onClick={() => openHistory(singleAsset)}>
-                  Historial
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<QrCodeIcon />}
+                  onClick={(event) => openActionsMenu(event, singleAsset)}
+                  aria-label={`Abrir QR, enlace e historial de ${singleAsset.name}`}
+                  sx={{ textTransform: 'none' }}
+                >
+                  QR, enlace e historial
                 </Button>
               </Stack>
             </Stack>

@@ -122,6 +122,29 @@ const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): A
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
 
+const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabel: string) => {
+  await act(async () => {
+    const actionsButton = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Abrir QR, enlace e historial de Neumann U87"]',
+    );
+    actionsButton?.click();
+    await flushPromises();
+  });
+
+  await waitForExpectation(() => {
+    expect(document.body.textContent).toContain(actionLabel);
+  });
+
+  await act(async () => {
+    const menuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+      (item) => (item.textContent ?? '').trim() === actionLabel,
+    );
+    menuItem?.click();
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 describe('InventoryPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -200,7 +223,7 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(
           Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'Ver QR',
+            (button) => (button.textContent ?? '').trim() === 'QR, enlace e historial',
           ),
         ).toBe(true);
         expect(
@@ -210,9 +233,51 @@ describe('InventoryPage', () => {
         ).toBe(true);
         expect(
           Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Ver QR',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Copiar enlace',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Historial',
           ),
-        ).toBe(true);
+        ).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses the single-asset QR, link, and history actions into one secondary menu so the movement stays primary', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Abrir check-out de Neumann U87"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir QR, enlace e historial de Neumann U87"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
+        expect(container.textContent).not.toContain('Copiar enlace');
+        expect(container.textContent).not.toContain('Historial');
+      });
+
+      await act(async () => {
+        const actionsButton = container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Abrir QR, enlace e historial de Neumann U87"]',
+        );
+        actionsButton?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Ver QR');
+        expect(document.body.textContent).toContain('Copiar enlace');
+        expect(document.body.textContent).toContain('Historial');
       });
     } finally {
       await cleanup();
@@ -460,14 +525,7 @@ describe('InventoryPage', () => {
         expect(container.querySelector('button[aria-label="Abrir check-out de Neumann U87"]')).not.toBeNull();
       });
 
-      await act(async () => {
-        const historyButton = Array.from(container.querySelectorAll('button')).find(
-          (button) => (button.textContent ?? '').trim() === 'Historial',
-        );
-        historyButton?.click();
-        await flushPromises();
-        await flushPromises();
-      });
+      await openSingleAssetSecondaryAction(container, 'Historial');
 
       await waitForExpectation(() => {
         expect(historyMock).toHaveBeenCalledWith('asset-1');
@@ -524,14 +582,7 @@ describe('InventoryPage', () => {
         expect(container.textContent).not.toContain('Uso en grabación.');
       });
 
-      await act(async () => {
-        const historyButton = Array.from(container.querySelectorAll('button')).find(
-          (button) => (button.textContent ?? '').trim() === 'Historial',
-        );
-        historyButton?.click();
-        await flushPromises();
-        await flushPromises();
-      });
+      await openSingleAssetSecondaryAction(container, 'Historial');
 
       await waitForExpectation(() => {
         expect(historyMock).toHaveBeenCalledTimes(2);
