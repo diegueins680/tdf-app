@@ -5442,6 +5442,64 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected unavailable explicit booking room ids to be rejected, got: " <> show resourceKeys)
 
+        it "rejects unavailable default room fallbacks instead of double-booking active rooms" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            result <- try $
+                runResourceSqlite $ do
+                    controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
+                    insertBookingResourceHoldFixture
+                        "Existing mixing booking"
+                        controlRoomId
+                        startsAt
+                        endsAt
+                    resolveResourcesForBooking
+                        (Just "mixing")
+                        []
+                        startsAt
+                        endsAt
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "default resources for service mixing are unavailable: Control Room"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected unavailable default booking rooms to be rejected, got: " <> show resourceKeys)
+
+        it "rejects DJ default fallbacks when every matching booth is unavailable" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            result <- try $
+                runResourceSqlite $ do
+                    boothOneId <- insertBookingResourceFixture "DJ Booth 1" "dj-booth-1"
+                    boothTwoId <- insertBookingResourceFixture "DJ Booth 2" "dj-booth-2"
+                    insertBookingResourceHoldFixture
+                        "Existing DJ booking 1"
+                        boothOneId
+                        startsAt
+                        endsAt
+                    insertBookingResourceHoldFixture
+                        "Existing DJ booking 2"
+                        boothTwoId
+                        startsAt
+                        endsAt
+                    resolveResourcesForBooking
+                        (Just "dj practice")
+                        []
+                        startsAt
+                        endsAt
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "default resources for service dj practice are unavailable: DJ Booth 1, DJ Booth 2"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected unavailable DJ fallback rooms to be rejected, got: " <> show resourceKeys)
+
         it "rejects duplicate explicit room ids instead of silently deduplicating booking intent" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -6559,6 +6617,30 @@ insertBookingResourceFixture name slug =
         , resourceCapacity = Nothing
         , resourceActive = True
         }
+
+insertBookingResourceHoldFixture
+    :: T.Text -> Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO ()
+insertBookingResourceHoldFixture bookingTitleVal resourceId startsAt endsAt = do
+    bookingId <- insert Booking
+        { bookingTitle = bookingTitleVal
+        , bookingServiceOrderId = Nothing
+        , bookingPartyId = Nothing
+        , bookingServiceType = Nothing
+        , bookingEngineerPartyId = Nothing
+        , bookingEngineerName = Nothing
+        , bookingStartsAt = startsAt
+        , bookingEndsAt = endsAt
+        , bookingStatus = Confirmed
+        , bookingCreatedBy = Nothing
+        , bookingNotes = Nothing
+        , bookingCreatedAt = startsAt
+        }
+    _ <- insert BookingResource
+        { bookingResourceBookingId = bookingId
+        , bookingResourceResourceId = resourceId
+        , bookingResourceRole = "primary"
+        }
+    pure ()
 
 fixtureWhatsAppMessage
     :: Int -> UTCTime -> T.Text -> T.Text -> T.Text -> Entity ME.WhatsAppMessage

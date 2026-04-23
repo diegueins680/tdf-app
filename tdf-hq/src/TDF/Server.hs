@@ -7121,30 +7121,82 @@ defaultResourcesForService (Just service) start end = do
         in dedupeEntities (nameMatches ++ boothMatches)
   case () of
     _ | normalized `elem` ["grabacion audiovisual live", "grabación audiovisual live"] ->
-      pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
+      requireAvailableDefaultResources normalized
+        (catMaybes (map findByName ["Live Room", "Control Room"]))
+        start
+        end
     _ | normalized `elem` ["band recording", "grabacion banda", "grabación banda"] ->
-      pure $ map entityKey $ catMaybes (map findByName ["Live Room", "Control Room"])
+      requireAvailableDefaultResources normalized
+        (catMaybes (map findByName ["Live Room", "Control Room"]))
+        start
+        end
     _ | normalized `elem` ["vocal recording", "grabacion vocal", "grabación vocal"] ->
-      pure $ map entityKey $ catMaybes [vocalBooth, controlRoom]
+      requireAvailableDefaultResources normalized (catMaybes [vocalBooth, controlRoom]) start end
     _ | "mix" `T.isInfixOf` normalized || "mezcla" `T.isInfixOf` normalized ->
-      pure $ maybe [] (pure . entityKey) controlRoom
+      requireAvailableDefaultResources normalized (maybe [] pure controlRoom) start end
     _ | "master" `T.isInfixOf` normalized ->
-      pure $ maybe [] (pure . entityKey) controlRoom
+      requireAvailableDefaultResources normalized (maybe [] pure controlRoom) start end
     _ | normalized `elem` ["band rehearsal", "ensayo banda"] ->
-      pure $ maybe [] (pure . entityKey) (findByName "Live Room")
+      requireAvailableDefaultResources normalized (maybe [] pure (findByName "Live Room")) start end
     _ | normalized `elem` ["dj booth rental", "practica de dj", "práctica de dj", "dj practice"] ||
         "dj" `T.isInfixOf` normalized -> do
-      pickBooth djBooths
+      pickAvailableDefaultResource normalized djBooths start end
     _ -> pure []
-  where
-    pickBooth [] = pure []
-    pickBooth (Entity key _ : rest) = do
-      available <- isResourceAvailableDB key start end
-      if available
-        then pure [key]
-        else do
-          remaining <- pickBooth rest
-          pure (if null remaining then [key] else remaining)
+
+requireAvailableDefaultResources
+  :: Text
+  -> [Entity Resource]
+  -> UTCTime
+  -> UTCTime
+  -> SqlPersistT IO [Key Resource]
+requireAvailableDefaultResources _ [] _ _ = pure []
+requireAvailableDefaultResources serviceLabel candidates start end = do
+  availability <- defaultResourceAvailability candidates start end
+  let unavailableNames =
+        [ resourceName room
+        | (Entity _ room, False) <- availability
+        ]
+  case unavailableNames of
+    [] -> pure (map entityKey candidates)
+    names -> liftIO . throwIO $ unavailableDefaultResourcesError serviceLabel names
+
+pickAvailableDefaultResource
+  :: Text
+  -> [Entity Resource]
+  -> UTCTime
+  -> UTCTime
+  -> SqlPersistT IO [Key Resource]
+pickAvailableDefaultResource _ [] _ _ = pure []
+pickAvailableDefaultResource serviceLabel candidates start end = do
+  availability <- defaultResourceAvailability candidates start end
+  case [ key | (Entity key _, True) <- availability ] of
+    key:_ -> pure [key]
+    [] ->
+      liftIO . throwIO $
+        unavailableDefaultResourcesError
+          serviceLabel
+          [ resourceName room | (Entity _ room, False) <- availability ]
+
+defaultResourceAvailability
+  :: [Entity Resource]
+  -> UTCTime
+  -> UTCTime
+  -> SqlPersistT IO [(Entity Resource, Bool)]
+defaultResourceAvailability candidates start end =
+  forM candidates $ \candidate@(Entity key _) -> do
+    available <- isResourceAvailableDB key start end
+    pure (candidate, available)
+
+unavailableDefaultResourcesError :: Text -> [Text] -> ServerError
+unavailableDefaultResourcesError serviceLabel names =
+  err409
+    { errBody =
+        BL.fromStrict . TE.encodeUtf8 $
+          "default resources for service "
+            <> serviceLabel
+            <> " are unavailable: "
+            <> T.intercalate ", " names
+    }
 
 dedupeEntities :: [Entity Resource] -> [Entity Resource]
 dedupeEntities = go Set.empty []
