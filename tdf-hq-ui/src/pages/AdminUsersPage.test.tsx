@@ -23,6 +23,8 @@ const { default: AdminUsersPage } = await import('./AdminUsersPage');
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
+  'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -275,6 +277,36 @@ describe('AdminUsersPage', () => {
           buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
         ).toBe('1 usuario inactivo');
         expect(getRenderedRowUserIds(container)).toEqual([201]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('confirms when the empty first-user check finds no inactive admin accounts', async () => {
+    listUsersMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+      });
+
+      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(container.textContent).toContain(ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE);
+        expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
       await cleanup();

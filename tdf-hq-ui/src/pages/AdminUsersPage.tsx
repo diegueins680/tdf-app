@@ -302,6 +302,8 @@ const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
+  'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
@@ -716,7 +718,7 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
-  const showInactiveFilterAction = hasMultipleUsers || includeInactive;
+  const showInactiveFilterAction = hasMultipleUsers || (includeInactive && hasUsers);
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
   const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
@@ -982,7 +984,7 @@ export default function AdminUsersPage() {
             {!usersQuery.isLoading && !usersQuery.error && users.length === 0 && (
               <Stack spacing={1} alignItems="flex-start">
                 <Typography color="text.secondary">
-                  {ADMIN_USERS_EMPTY_STATE}
+                  {includeInactive ? ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE : ADMIN_USERS_EMPTY_STATE}
                 </Typography>
                 {showReviewInactiveEmptyAction && (
                   <Button size="small" variant="outlined" onClick={() => setIncludeInactive(true)}>
