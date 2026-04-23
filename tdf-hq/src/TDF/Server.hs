@@ -1166,6 +1166,8 @@ validateWhatsAppReplyBody rawBody
       Left err400 { errBody = "Mensaje vacío" }
   | T.length body > maxWhatsAppReplyBodyChars =
       Left err400 { errBody = "Mensaje demasiado largo (max 4096 caracteres)" }
+  | T.any isUnsupportedWhatsAppMessageControl body =
+      Left err400 { errBody = "Mensaje contiene caracteres de control no soportados" }
   | otherwise =
       Right body
   where
@@ -1173,6 +1175,10 @@ validateWhatsAppReplyBody rawBody
 
 maxWhatsAppReplyBodyChars :: Int
 maxWhatsAppReplyBodyChars = 4096
+
+isUnsupportedWhatsAppMessageControl :: Char -> Bool
+isUnsupportedWhatsAppMessageControl ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
 
 validateWhatsAppReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
 validateWhatsAppReplyExternalId = ServerExtra.validateSocialReplyExternalId

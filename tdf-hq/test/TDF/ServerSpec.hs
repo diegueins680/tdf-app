@@ -5076,16 +5076,18 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "+1234567890123456"
 
     describe "validateWhatsAppReplyBody" $ do
-        it "trims manual reply text and accepts the WhatsApp text-size boundary" $ do
+        it "trims manual reply text, preserves multiline formatting, and accepts the WhatsApp text-size boundary" $ do
             validateWhatsAppReplyBody "  Hola, seguimos por aqui.  "
                 `shouldBe` Right "Hola, seguimos por aqui."
+            validateWhatsAppReplyBody "  Linea uno\nLinea dos  "
+                `shouldBe` Right "Linea uno\nLinea dos"
             case validateWhatsAppReplyBody (T.replicate 4096 "a") of
                 Right bodyVal -> T.length bodyVal `shouldBe` 4096
                 Left serverErr ->
                     expectationFailure
                         ("Expected boundary-sized WhatsApp reply body, got: " <> show serverErr)
 
-        it "rejects blank or oversized manual replies before transport setup" $ do
+        it "rejects blank, oversized, or non-printing manual replies before transport setup" $ do
             let assertInvalid expectedMessage result = case result of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 400
@@ -5097,6 +5099,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Mensaje demasiado largo"
                 (validateWhatsAppReplyBody (T.replicate 4097 "a"))
+            assertInvalid
+                "caracteres de control no soportados"
+                (validateWhatsAppReplyBody ("hola" <> T.singleton '\NUL'))
 
     describe "validateWhatsAppReplyExternalId" $ do
         it "requires provided reply targets to be explicit non-blank identifiers" $ do
