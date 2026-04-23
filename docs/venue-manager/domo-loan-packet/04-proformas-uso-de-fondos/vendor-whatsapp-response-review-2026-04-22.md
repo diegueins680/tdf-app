@@ -2,26 +2,28 @@
 
 Fecha de revision: 2026-04-22 19:42:40 -0500  
 Canal revisado: browser adjunto de OpenClaw, WhatsApp Business Web.  
-Regla operativa: no enviar seguimientos fuera de horario de oficina. Los mensajes quedaron programados para el 2026-04-23 09:00 America/Guayaquil.
+Regla operativa: no enviar seguimientos fuera de horario de oficina. Los mensajes quedaron programados para el 2026-04-23 09:00 America/Guayaquil y finalmente se ejecutaron manualmente dentro de horario el 2026-04-23.
 
-Job programado: `at` job 3, `Thu Apr 23 09:00:00 2026`.
+Job programado originalmente: `at` job 3, `Thu Apr 23 09:00:00 2026`.
 Script programado: `/tmp/domo-vendor-whatsapp-followup-2026-04-23.sh`.  
 Log esperado: `vendor-whatsapp-followup-log-2026-04-23.md`.
 
 Nota 2026-04-22 20:24: el job 2 fue reemplazado por el job 3 para incluir a Eventos VVS como proveedor sustituto de Crystal Eventos en mobiliario/menaje.
 
+Actualizacion 2026-04-23 10:55: el `at` job 3 quedo atascado en cola y no corrio a las 09:00. A las 10:38 se ejecuto manualmente el script; el CLI `openclaw message send` fallo para los 8 intentos (timeouts de gateway y errores de validacion de target WhatsApp). Luego se recupero manualmente por el browser adjunto de WhatsApp Web. Quedaron enviados por browser: Vivero (10:52), Conjardin (10:53), Palcar (10:54), Adoquines Quito (10:54), Crystal Eventos (10:54), Kukayo (10:54) y PEBEL (10:54). Eventos VVS quedo sin resultado visible en WhatsApp Web.
+
 ## Resultado por proveedor
 
 | Proveedor | Estado observado | Evidencia en browser | Accion |
 | --- | --- | --- | --- |
-| Vivero Camila | Respondio | 2026-04-20 09:22: "Buenos dias", "Envio correo solicitado", "decoraciondejardines_camila@hotmail.com" | Programar seguimiento para confirmar proforma formal en USD, PDF y firmada o validada por correo. |
-| Conjardin / Instituto Ecuatoriano de Jardineria y Paisajismo | Respondio, pero falta canal claro | 2026-04-20 09:10: "Perdon enviarme tambien" | Programar seguimiento para confirmar si `conjardines2022@gmail.com` es el correo correcto y pedir proforma formal. |
-| Palcar Constructora | Sin respuesta visible | Solo aparece el mensaje saliente del 2026-04-20 09:03 | Programar recordatorio por WhatsApp para visita/proforma de camino, drenaje, acceso y parqueo. |
-| Adoquines Quito | Sin respuesta visible | Solo aparece el mensaje saliente del 2026-04-20 09:04 | Programar recordatorio por WhatsApp para adoquines, bordillos, canaletas, cunetas y topes. |
-| Crystal Eventos | Respondio negativo | Auto-respuesta y luego "Mil didculpas al momento no estamos realizando alquileres" | Cerrar para esta ola y reemplazar con otro proveedor de mobiliario/menaje. Programar acuse breve. |
-| Eventos VVS | Sustituto programado | No contactado aun; fuente publica indica alquiler para eventos en Quito, Latacunga y Ecuador | Enviar solicitud inicial por WhatsApp para proforma de mobiliario, menaje, carpas/coberturas y tarima. |
-| Kukayo Catering & Eventos | Sin respuesta visible | Solo aparece el mensaje saliente del 2026-04-20 09:06 | Programar recordatorio por WhatsApp para kit inicial de catering/barra y menaje. |
-| PEBEL Consultores | Respondio | Mensaje con correo `alvaroperalt@gmail.com` | Programar seguimiento para alcance de permisos, seguridad y gestion legal con proforma formal. |
+| Vivero Camila | Seguimiento enviado | Browser 2026-04-23 10:52 confirma el nuevo mensaje saliente; antes ya habia respondido con `decoraciondejardines_camila@hotmail.com` | Esperar respuesta/proforma. |
+| Conjardin / Instituto Ecuatoriano de Jardineria y Paisajismo | Seguimiento enviado | Browser 2026-04-23 10:53 confirma el nuevo mensaje saliente | Esperar respuesta y confirmar correo. |
+| Palcar Constructora | Seguimiento enviado | Browser 2026-04-23 10:54 confirma el nuevo mensaje saliente | Esperar respuesta/visita/proforma. |
+| Adoquines Quito | Seguimiento enviado | Browser 2026-04-23 10:54 confirma el nuevo mensaje saliente | Esperar respuesta/correo/proforma. |
+| Crystal Eventos | Cierre enviado | Browser 2026-04-23 10:54 confirma el acuse; previamente habian indicado que no estan realizando alquileres | Cerrar esta via y usar sustituto. |
+| Eventos VVS | Sin resultado en WhatsApp Web | El fallback manual no encontro chat ni resultado visible para `593991231388` | Llamar o buscar canal alterno; si no responde, pasar al siguiente sustituto. |
+| Kukayo Catering & Eventos | Seguimiento enviado | Browser 2026-04-23 10:54 confirma el nuevo mensaje saliente | Esperar respuesta/correo/proforma. |
+| PEBEL Consultores | Seguimiento enviado | Browser 2026-04-23 10:54 confirma el nuevo mensaje saliente | Esperar respuesta/proforma. |
 
 ## Mensajes preparados para 2026-04-23 09:00
 
@@ -59,6 +61,6 @@ Buenos dias, gracias por el correo alvaroperalt@gmail.com. Para el expediente de
 
 ## Pendiente operacional
 
-- Verificar el resultado del `at` job 3 despues de las 09:00.
-- Registrar IDs de mensaje y cualquier respuesta nueva en este mismo directorio.
-- Si Eventos VVS no responde, usar Amazonas/otro proveedor local de mobiliario y menaje como siguiente sustituto.
+- Registrar nuevas respuestas en este mismo directorio y actualizar el tracker en cuanto lleguen.
+- Llamar a Eventos VVS o pedir un canal alterno hoy; si no responde, usar el siguiente sustituto de mobiliario/menaje.
+- Revisar por separado la falla de `openclaw message send` con WhatsApp, porque hoy el fallback CLI fallo y hubo que recuperar por browser.
