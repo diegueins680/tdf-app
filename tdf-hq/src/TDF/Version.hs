@@ -8,7 +8,7 @@ module TDF.Version
   ) where
 
 import           Data.Aeson                   (ToJSON(..), object, (.=))
-import           Data.Char                    (isControl, isSpace)
+import           Data.Char                    (isControl, isHexDigit, isSpace)
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Version                 (showVersion)
@@ -65,6 +65,9 @@ canonCommit :: Text -> Maybe Text
 canonCommit txt = do
   value <- canonRuntimeMetadata txt
   if T.any isSpace value
+      || T.length value < 7
+      || T.length value > 64
+      || T.any (not . isHexDigit) value
     then Nothing
     else Just value
 

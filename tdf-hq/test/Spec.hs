@@ -449,6 +449,16 @@ main = hspec $ do
                     info <- getVersionInfo
                     commit info `shouldBe` "abc123def456"
 
+        it "skips non-SHA commit aliases instead of exposing branch labels as deploy metadata" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ [ ("GIT_SHA", Just "release/main")
+                       , ("GITHUB_SHA", Just "abc123def456")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+
         it "skips blank build-time aliases instead of returning empty version metadata" $
             withEnvOverrides
                 (clearEnv buildTimeEnvKeys
