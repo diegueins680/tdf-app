@@ -98,9 +98,17 @@ validateSriScriptResult dto =
        then Left "SRI script JSON output status is required"
        else if T.any isInvalidStatusChar statusValue
          then Left "SRI script JSON output status must not contain control characters"
-         else validateIssuedResult dto { sirStatus = statusValue }
+         else validateScriptTotal dto { sirStatus = statusValue } >>= validateIssuedResult
   where
     isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
+
+    validateScriptTotal result =
+      case sirTotal result of
+        Nothing -> Right result
+        Just total
+          | isNaN total || isInfinite total || total < 0 ->
+              Left "SRI script JSON output total must be a finite non-negative number"
+          | otherwise -> Right result
 
     validateIssuedResult result
       | sirStatus result /= "issued" = Right result

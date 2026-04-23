@@ -1905,6 +1905,22 @@ main = hspec $ do
                     DTO.sirAuthorizationNumber result `shouldBe` Just "123"
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
 
+        it "rejects negative SRI totals before invoice results are trusted" $
+            case Sri.decodeSriScriptOutput
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"total\":-1,"
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\"}"
+                ) of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "total must be a finite non-negative number"
+                Right value ->
+                    expectationFailure
+                        ( "Expected negative SRI script total to fail, got: "
+                            <> show value
+                        )
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
