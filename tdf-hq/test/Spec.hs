@@ -222,6 +222,7 @@ import TDF.Server.SocialEventsHandlers (
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateTicketCheckInOrderStatus,
+    validateTicketPurchaseBuyerEmail,
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
@@ -3649,6 +3650,37 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "validateTicketPurchaseBuyerEmail" $ do
+        it "normalizes valid optional buyer emails before ticket order storage" $ do
+            validateTicketPurchaseBuyerEmail Nothing `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerEmail (Just "   ") `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerEmail (Just " Buyer+Ticket@Example.COM ")
+                `shouldBe` Right (Just "buyer+ticket@example.com")
+
+        it "rejects malformed buyer emails instead of storing unusable ticket contacts" $ do
+            let assertInvalid raw expected =
+                    case validateTicketPurchaseBuyerEmail (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid ticket buyer email to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                "not-an-email"
+                "ticketPurchaseBuyerEmail must be a valid email address"
+            assertInvalid
+                "buyer @example.com"
+                "ticketPurchaseBuyerEmail must be a valid email address"
+            assertInvalid
+                "buyer@example..com"
+                "ticketPurchaseBuyerEmail must be a valid email address"
+            assertInvalid
+                (Data.Text.replicate 245 "a" <> "@example.com")
+                "ticketPurchaseBuyerEmail must be 254 characters or fewer"
 
     describe "validateTicketCheckInLookup" $ do
         it "rejects unknown check-in request fields before lookup fallback handling" $ do

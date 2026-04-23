@@ -44,6 +44,7 @@ module TDF.Server.SocialEventsHandlers
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
+  , validateTicketPurchaseBuyerEmail
   , isImageUpload
   ) where
 
@@ -1490,7 +1491,8 @@ socialEventsServer user = eventsServer
 
       let orderAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
           buyerName = cleanMaybeText ticketPurchaseBuyerName
-          buyerEmail = cleanMaybeText ticketPurchaseBuyerEmail
+      buyerEmail <-
+        either throwError pure (validateTicketPurchaseBuyerEmail ticketPurchaseBuyerEmail)
       when (orderAmountCents < 0) $ throwError err400 { errBody = "Invalid amount" }
 
       orderDto <- liftIO $ runSqlPool (do
@@ -2270,6 +2272,60 @@ validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
       Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Nothing, Nothing) ->
       Left err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
+
+validateTicketPurchaseBuyerEmail :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateTicketPurchaseBuyerEmail rawEmail =
+  case cleanMaybeText rawEmail of
+    Nothing -> Right Nothing
+    Just email
+      | T.length normalized > 254 ->
+          Left err400
+            { errBody = "ticketPurchaseBuyerEmail must be 254 characters or fewer" }
+      | isValidSocialEventEmail normalized ->
+          Right (Just normalized)
+      | otherwise ->
+          Left err400
+            { errBody = "ticketPurchaseBuyerEmail must be a valid email address" }
+      where
+        normalized = T.toLower email
+
+isValidSocialEventEmail :: T.Text -> Bool
+isValidSocialEventEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      T.length candidate <= 254
+        && isValidSocialEventEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any (`elem` (" \t\n\r" :: String)) candidate)
+        && T.isInfixOf "." domain
+        && all isValidSocialEventEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+isValidSocialEventEmailLocalPart :: T.Text -> Bool
+isValidSocialEventEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= 64
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidSocialEventEmailLocalChar localPart
+
+isValidSocialEventEmailLocalChar :: Char -> Bool
+isValidSocialEventEmailLocalChar c =
+  isAscii c
+    && (isAlphaNum c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String))
+
+isValidSocialEventEmailDomainLabel :: T.Text -> Bool
+isValidSocialEventEmailDomainLabel label =
+  not (T.null label)
+    && T.length label <= 63
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidSocialEventEmailDomainChar label
+
+isValidSocialEventEmailDomainChar :: Char -> Bool
+isValidSocialEventEmailDomainChar c =
+  isAscii c && (isAlphaNum c || c == '-')
 
 normalizeTicketCheckInCode :: T.Text -> Maybe T.Text
 normalizeTicketCheckInCode rawCode = do
