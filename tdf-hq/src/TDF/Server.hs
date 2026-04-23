@@ -3294,6 +3294,7 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
   fileUrlVal <- do
     normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just fileUrl))
     maybe (throwBadRequest "fileUrl requerido") pure normalized
+  mimeTypeVal <- either throwError pure (validateCourseRegistrationReceiptMimeType mimeType)
   now <- liftIO getCurrentTime
   let regKey = entityKey ent
       reg = entityVal ent
@@ -3302,7 +3303,7 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
         , ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId reg
         , ME.courseRegistrationReceiptFileUrl = fileUrlVal
         , ME.courseRegistrationReceiptFileName = cleanOptional fileName
-        , ME.courseRegistrationReceiptMimeType = cleanOptional mimeType
+        , ME.courseRegistrationReceiptMimeType = mimeTypeVal
         , ME.courseRegistrationReceiptNotes = cleanOptional notes
         , ME.courseRegistrationReceiptUploadedBy = Just (auPartyId user)
         , ME.courseRegistrationReceiptCreatedAt = now
@@ -3354,14 +3355,17 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
     Just rawUrl -> do
       normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just rawUrl))
       maybe (throwBadRequest "fileUrl requerido") pure normalized
+  mimeTypeVal <- case mimeType of
+    Nothing -> pure (ME.courseRegistrationReceiptMimeType receipt)
+    Just rawMimeType ->
+      either throwError pure (validateCourseRegistrationReceiptMimeType (Just rawMimeType))
   let updated =
         receipt
           { ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId (entityVal ent)
           , ME.courseRegistrationReceiptFileUrl = fileUrlVal
           , ME.courseRegistrationReceiptFileName =
               maybe (ME.courseRegistrationReceiptFileName receipt) (cleanOptional . Just) fileName
-          , ME.courseRegistrationReceiptMimeType =
-              maybe (ME.courseRegistrationReceiptMimeType receipt) (cleanOptional . Just) mimeType
+          , ME.courseRegistrationReceiptMimeType = mimeTypeVal
           , ME.courseRegistrationReceiptNotes =
               maybe (ME.courseRegistrationReceiptNotes receipt) (cleanOptional . Just) notes
           , ME.courseRegistrationReceiptUpdatedAt = now
@@ -4305,6 +4309,37 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+validateCourseRegistrationReceiptMimeType :: Maybe Text -> Either ServerError (Maybe Text)
+validateCourseRegistrationReceiptMimeType Nothing = Right Nothing
+validateCourseRegistrationReceiptMimeType (Just rawMimeType) =
+  case cleanOptional (Just rawMimeType) of
+    Nothing -> Right Nothing
+    Just mimeTypeVal ->
+      let normalized = T.toLower mimeTypeVal
+      in if T.length normalized > 100
+        then Left err400 { errBody = "mimeType must be 100 characters or fewer" }
+        else
+          if isValidCourseRegistrationReceiptMimeType normalized
+            then Right (Just normalized)
+            else
+              Left err400
+                { errBody = "mimeType must be a media type like application/pdf" }
+
+isValidCourseRegistrationReceiptMimeType :: Text -> Bool
+isValidCourseRegistrationReceiptMimeType mimeTypeVal =
+  case T.splitOn "/" mimeTypeVal of
+    [typePart, subTypePart] ->
+      isValidReceiptMimeToken typePart && isValidReceiptMimeToken subTypePart
+    _ -> False
+
+isValidReceiptMimeToken :: Text -> Bool
+isValidReceiptMimeToken token =
+  not (T.null token) && T.all isReceiptMimeTokenChar token
+
+isReceiptMimeTokenChar :: Char -> Bool
+isReceiptMimeTokenChar ch =
+  isAsciiLower ch || isDigit ch || ch `elem` ("!#$%&'*+-.^_`|~" :: String)
 
 validateCoursePublicUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCoursePublicUrlField _ Nothing = Right Nothing

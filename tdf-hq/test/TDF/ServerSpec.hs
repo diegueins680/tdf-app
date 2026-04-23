@@ -141,6 +141,7 @@ import TDF.Server
     , validateCourseRegistrationListLimit
     , validateCourseRegistrationSeatAvailability
     , validateCourseRegistrationSource
+    , validateCourseRegistrationReceiptMimeType
     , validateOptionalCourseRegistrationTextField
     , validateCourseRegistrationUtm
     , validateOptionalCourseRegistrationStatusFilter
@@ -5267,6 +5268,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+
+    describe "validateCourseRegistrationReceiptMimeType" $ do
+        it "normalizes optional receipt MIME types before payment proof persistence" $ do
+            validateCourseRegistrationReceiptMimeType Nothing `shouldBe` Right Nothing
+            validateCourseRegistrationReceiptMimeType (Just "   ") `shouldBe` Right Nothing
+            validateCourseRegistrationReceiptMimeType (Just " Application/PDF ")
+                `shouldBe` Right (Just "application/pdf")
+            validateCourseRegistrationReceiptMimeType (Just "image/jpeg")
+                `shouldBe` Right (Just "image/jpeg")
+
+        it "rejects malformed receipt MIME types instead of storing ambiguous metadata" $ do
+            let assertInvalid rawMime expectedMessage =
+                    case validateCourseRegistrationReceiptMimeType (Just rawMime) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right mimeTypeVal ->
+                            expectationFailure
+                                ("Expected invalid receipt MIME type, got: " <> show mimeTypeVal)
+            assertInvalid "application" "media type like application/pdf"
+            assertInvalid "application/pdf; charset=utf-8" "media type like application/pdf"
+            assertInvalid "text/html\nX-Injected: yes" "media type like application/pdf"
+            assertInvalid (T.replicate 101 "a" <> "/pdf") "100 characters or fewer"
 
     describe "validateCoursePublicUrlField" $ do
         it "keeps custom WhatsApp course CTAs constrained to WhatsApp hosts" $ do
