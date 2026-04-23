@@ -3364,6 +3364,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates repeated system-email events before rendering history cards', async () => {
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent({
+        ceStatus: '   ',
+        ceEventType: '   ',
+        ceMessage: '   ',
+        ceCreatedAt: '   ',
+      }),
+      buildEmailEvent({
+        ceStatus: 'sent',
+        ceEventType: 'payment_reminder',
+        ceMessage: 'Recordatorio consolidado.',
+        ceCreatedAt: '2030-03-03T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Recordatorio consolidado.');
+      expect(document.body.textContent).toContain('Recordatorio de pago');
+      expect(document.body.textContent).toContain('Enviado');
+      expect(countOccurrences(document.body, 'Recordatorio consolidado.')).toBe(1);
+      expect(countOccurrences(document.body, 'Recordatorio de pago')).toBe(1);
+      expect(countOccurrences(document.body, 'Enviado')).toBe(1);
+      expect(document.body.textContent).not.toContain('Estado desconocido');
+    });
+
+    await cleanup();
+  });
+
   it('keeps failed system-email retry inside the email panel instead of the dossier title icon', async () => {
     listRegistrationEmailsMock
       .mockRejectedValueOnce(new Error('Email service unavailable'))

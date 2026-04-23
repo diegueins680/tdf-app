@@ -1261,6 +1261,37 @@ const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistratio
   });
 };
 
+const mergeCourseEmailEventRecords = (
+  primary: CourseEmailEventDTO,
+  fallback: CourseEmailEventDTO,
+): CourseEmailEventDTO => ({
+  ...primary,
+  ceCourseSlug: preferNonEmptyText(primary.ceCourseSlug, fallback.ceCourseSlug) ?? primary.ceCourseSlug,
+  ceRegistrationId: preferPositiveId(primary.ceRegistrationId, fallback.ceRegistrationId),
+  ceRecipientEmail: preferNonEmptyText(primary.ceRecipientEmail, fallback.ceRecipientEmail) ?? primary.ceRecipientEmail,
+  ceRecipientName: preferNonEmptyText(primary.ceRecipientName, fallback.ceRecipientName),
+  ceEventType: preferNonEmptyText(primary.ceEventType, fallback.ceEventType) ?? primary.ceEventType,
+  ceStatus: preferNonEmptyText(primary.ceStatus, fallback.ceStatus) ?? primary.ceStatus,
+  ceMessage: preferNonEmptyText(primary.ceMessage, fallback.ceMessage),
+  ceCreatedAt: preferNonEmptyText(primary.ceCreatedAt, fallback.ceCreatedAt) ?? primary.ceCreatedAt,
+});
+
+const dedupeCourseEmailEvents = (events: readonly CourseEmailEventDTO[]) => {
+  const eventsById = new Map<number, CourseEmailEventDTO>();
+
+  events.forEach((event) => {
+    const existingEvent = eventsById.get(event.ceId);
+    if (!existingEvent) {
+      eventsById.set(event.ceId, event);
+      return;
+    }
+
+    eventsById.set(event.ceId, mergeCourseEmailEventRecords(existingEvent, event));
+  });
+
+  return [...eventsById.values()];
+};
+
 export default function CourseRegistrationsAdminPage() {
   const qc = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -2055,8 +2086,9 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'Vista única por ahora: una cohorte y un estado.';
+  const emailEvents = dedupeCourseEmailEvents(emailEventsQuery.data ?? []);
   const canReviewSystemEmails = selectedDossier?.intent !== 'markPaid';
-  const hasSystemEmailHistory = canReviewSystemEmails && (emailEventsQuery.data?.length ?? 0) > 0;
+  const hasSystemEmailHistory = canReviewSystemEmails && emailEvents.length > 0;
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
   const showSystemEmailHistoryRetryAction = showSystemEmailHistoryAction
@@ -2593,7 +2625,7 @@ export default function CourseRegistrationsAdminPage() {
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
-  const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel((emailEventsQuery.data ?? []).map((entry) => entry.ceCreatedAt));
+  const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -4267,13 +4299,13 @@ export default function CourseRegistrationsAdminPage() {
                         </Alert>
                       )}
 
-                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) === 0 && (
+                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && emailEvents.length === 0 && (
                         <Alert severity="info">{emptySystemEmailHistoryMessage}</Alert>
                       )}
 
-                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && (emailEventsQuery.data?.length ?? 0) > 0 && (
+                      {!emailEventsQuery.isLoading && !emailEventsQuery.isError && emailEvents.length > 0 && (
                         <Stack spacing={1}>
-                          {(emailEventsQuery.data ?? []).map((entry) => {
+                          {emailEvents.map((entry) => {
                             const emailEventCreatedLabel = sharedEmailEventCreatedLabel ? '' : formatDate(entry.ceCreatedAt);
 
                             return (
