@@ -668,7 +668,10 @@ describe('SocialInboxPage', () => {
       expect((sendButton as HTMLButtonElement).disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Copy')).toBe(0);
       expect(countButtonsByText(document.body, 'Clear')).toBe(0);
+      expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
+      expect(countButtonsByText(document.body, 'Generate with AI')).toBe(0);
       expect(document.body.textContent).not.toContain('Step 2 of 3: keep this dialog visible, click Send');
+      expect(document.body.textContent).not.toContain('Explain each button while recording');
       expect(countTextOccurrences(document.body, 'Step 3 of 3:')).toBe(1);
       expect(document.body.textContent).toContain(
         'Already replied. Send a follow-up only if the review run needs a second app message.',

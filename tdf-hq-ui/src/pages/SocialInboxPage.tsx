@@ -481,7 +481,11 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
 
   const rawBody = (msg?.text ?? '').trim();
   const showBody = rawBody.length > 0 && rawBody.toLowerCase() !== '[attachment]';
-  const showAiDraftControls = showBody;
+  const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
+  const replyTextValue = optimisticReplyText ?? msg?.replyText;
+  const replyErrorValue = optimisticReplyError ?? msg?.replyError;
+  const hasDeliveredReply = Boolean(repliedAtValue);
+  const showAiDraftControls = showBody && !hasDeliveredReply;
   const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
   const hasReplyDraft = replyDraft.trim().length > 0;
@@ -575,10 +579,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     if (ok) setNotice(reviewMode ? 'Reply copied.' : 'Respuesta copiada.');
   };
 
-  const repliedAtValue = optimisticRepliedAt ?? msg?.repliedAt;
-  const replyTextValue = optimisticReplyText ?? msg?.replyText;
-  const replyErrorValue = optimisticReplyError ?? msg?.replyError;
-  const hasDeliveredReply = Boolean(repliedAtValue);
   const replyInputLabel = hasDeliveredReply
     ? reviewMode
       ? 'Follow-up message'
@@ -894,7 +894,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   )}
                 </Stack>
 
-                {reviewMode && (
+                {reviewMode && !hasDeliveredReply && (
                   <Alert severity="info" variant="outlined">
                     {showAiDraftControls
                       ? 'Explain each button while recording: AI draft (optional), message textarea, and Send action.'
@@ -988,7 +988,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
                     </Button>
                   </Stack>
-                ) : !reviewMode ? (
+                ) : !reviewMode && !hasDeliveredReply ? (
                   <Alert severity="info" variant="outlined">
                     La IA se oculta porque este mensaje no tiene texto. Revisa el adjunto, escribe la respuesta y enviala.
                   </Alert>
