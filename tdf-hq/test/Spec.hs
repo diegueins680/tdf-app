@@ -4135,7 +4135,10 @@ main = hspec $ do
                 "RADIO_INGEST_BASE must not contain control characters"
             assertInvalid
                 (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
-                "RADIO_WHIP_BASE must be http(s)"
+                "RADIO_WHIP_BASE must be https"
+            assertInvalid
+                (validateRadioTransmissionWhipBase "http://stream.example.com/whip")
+                "RADIO_WHIP_BASE must be https"
             assertInvalid
                 (validateRadioTransmissionWhipBase "https://127.0.0.1/whip")
                 "RADIO_WHIP_BASE must not target localhost or private network addresses"

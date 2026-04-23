@@ -118,7 +118,7 @@ validateRadioTransmissionIngestBase =
 
 validateRadioTransmissionWhipBase :: Text -> Either ServerError Text
 validateRadioTransmissionWhipBase =
-  validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "http(s)" ["http", "https"]
+  validateRadioTransmissionEndpointBase "RADIO_WHIP_BASE" "https" ["https"]
 
 resolveRadioTransmissionEnvBase :: Text -> Text -> Maybe String -> Either ServerError Text
 resolveRadioTransmissionEnvBase _ defaultBase Nothing = Right defaultBase
