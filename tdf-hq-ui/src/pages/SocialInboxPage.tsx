@@ -646,7 +646,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
           <Typography color="text.secondary">{reviewMode ? 'Select a message.' : 'Selecciona un mensaje.'}</Typography>
         ) : (
           <Stack spacing={2.5}>
-            {reviewMode && (
+            {reviewMode && !hasDeliveredReply && (
               <Alert severity="info" variant="outlined">
                 Step 2 of 3: keep this dialog visible, click <strong>Send</strong>, then show the same delivered text in the native client.
               </Alert>

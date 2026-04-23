@@ -668,6 +668,8 @@ describe('SocialInboxPage', () => {
       expect((sendButton as HTMLButtonElement).disabled).toBe(true);
       expect(countButtonsByText(document.body, 'Copy')).toBe(0);
       expect(countButtonsByText(document.body, 'Clear')).toBe(0);
+      expect(document.body.textContent).not.toContain('Step 2 of 3: keep this dialog visible, click Send');
+      expect(countTextOccurrences(document.body, 'Step 3 of 3:')).toBe(1);
       expect(document.body.textContent).toContain(
         'Already replied. Send a follow-up only if the review run needs a second app message.',
       );
