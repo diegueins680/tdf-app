@@ -1102,7 +1102,7 @@ export default function CmsAdminPage() {
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
                         {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
                         {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
-                        {!sharedVersionStatus && (
+                        {!sharedVersionStatus && !isCurrentLiveVersion && (
                           <Chip
                             label={formatCmsStatusLabel(v.ccdStatus)}
                             size="small"
