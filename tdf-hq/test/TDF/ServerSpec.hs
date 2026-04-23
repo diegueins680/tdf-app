@@ -6174,6 +6174,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "/parties/list-columns"
             assertInvalid "crm" "parties//list-columns"
             assertInvalid "crm" "parties/list columns"
+            assertInvalid "crm" "parties/export"
+            assertInvalid "ops" "parties/list-columns"
 
     describe "futureServer" $ do
         it "requires literal Admin before serving fallback discovery stubs" $ do

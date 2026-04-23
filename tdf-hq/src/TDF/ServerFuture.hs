@@ -105,7 +105,35 @@ validateFutureStubMetadata :: Text -> Text -> Either ServerError (Text, Text)
 validateFutureStubMetadata rawArea rawEndpoint = do
   area <- validateFutureStubArea rawArea
   endpoint <- validateFutureStubEndpoint rawEndpoint
-  pure (area, endpoint)
+  if (area, endpoint) `elem` allowedFutureStubMetadata
+    then pure (area, endpoint)
+    else invalidFutureStubMetadata
+
+allowedFutureStubMetadata :: [(Text, Text)]
+allowedFutureStubMetadata =
+  [ ("access", "login-options")
+  , ("access", "module-behaviour")
+  , ("access", "session-policy")
+  , ("crm", "parties/list-columns")
+  , ("crm", "parties/filters")
+  , ("crm", "parties/detail-tabs")
+  , ("scheduling", "bookings/views")
+  , ("scheduling", "sessions/creation")
+  , ("scheduling", "rooms/features")
+  , ("packages", "catalog")
+  , ("packages", "purchase-flow")
+  , ("invoicing", "composer")
+  , ("invoicing", "status-flow")
+  , ("inventory", "assets/metadata")
+  , ("inventory", "assets/workflow")
+  , ("inventory", "stock")
+  , ("admin", "seed")
+  , ("experience", "navigation")
+  , ("experience", "feedback")
+  , ("experience", "offline")
+  , ("experience", "design")
+  , ("experience", "auditing")
+  ]
 
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
