@@ -3416,7 +3416,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps failed system-email retry inside the email panel instead of the dossier title icon', async () => {
+  it('surfaces a failed system-email preload as one explicit retry action', async () => {
     listRegistrationEmailsMock
       .mockRejectedValueOnce(new Error('Email service unavailable'))
       .mockResolvedValueOnce([
@@ -3440,21 +3440,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
-      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('No se pudo cargar el historial: Email service unavailable');
       expect(getButtonByText(document.body, retrySystemEmailsLabel)).toBeTruthy();
       expect(countButtonsByText(document.body, retrySystemEmailsLabel)).toBe(1);
+      expect(countButtonsByText(document.body, showSystemEmailsLabel)).toBe(0);
+      expect(document.body.textContent).not.toContain('No se pudo cargar el historial');
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+      expect(listRegistrationEmailsMock).toHaveBeenCalledTimes(1);
     });
 
     await act(async () => {
@@ -3465,6 +3456,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(listRegistrationEmailsMock).toHaveBeenCalledTimes(2);
+      expect(getButtonByText(document.body, hideSystemEmailsLabel)).toBeTruthy();
       expect(document.body.textContent).toContain('Recordatorio reenviado.');
       expect(document.body.textContent).not.toContain('No se pudo cargar el historial');
       expect(countButtonsByText(document.body, retrySystemEmailsLabel)).toBe(0);

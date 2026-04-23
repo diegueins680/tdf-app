@@ -2104,8 +2104,13 @@ export default function CourseRegistrationsAdminPage() {
   const showSystemEmailHistoryAction = canReviewSystemEmails
     && (showEmailHistory || hasSystemEmailHistory || emailEventsQuery.isError);
   const showSystemEmailHistoryRetryAction = showSystemEmailHistoryAction
-    && showEmailHistory
     && emailEventsQuery.isError;
+  const showCollapsedSystemEmailRetryAction = showSystemEmailHistoryRetryAction && !showEmailHistory;
+  const systemEmailHistoryActionLabel = showEmailHistory
+    ? hideSystemEmailsLabel
+    : showCollapsedSystemEmailRetryAction
+      ? retrySystemEmailsLabel
+      : showSystemEmailsLabel;
   const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
   const initialEmptyStateMessage = firstRunCohort
@@ -2312,6 +2317,18 @@ export default function CourseRegistrationsAdminPage() {
   const handleRefreshSystemEmails = () => {
     if (selectedDossierId == null) return;
     void emailEventsQuery.refetch();
+  };
+
+  const handleSystemEmailHistoryAction = () => {
+    if (showEmailHistory) {
+      setShowEmailHistory(false);
+      return;
+    }
+
+    setShowEmailHistory(true);
+    if (emailEventsQuery.isError) {
+      handleRefreshSystemEmails();
+    }
   };
 
   const handleCopyCsv = async () => {
@@ -4227,10 +4244,11 @@ export default function CourseRegistrationsAdminPage() {
                       {showSystemEmailHistoryAction && (
                         <Button
                           variant="outlined"
-                          onClick={() => setShowEmailHistory((current) => !current)}
+                          onClick={handleSystemEmailHistoryAction}
                           aria-expanded={showEmailHistory}
+                          disabled={showCollapsedSystemEmailRetryAction && emailEventsQuery.isFetching}
                         >
-                          {showEmailHistory ? hideSystemEmailsLabel : showSystemEmailsLabel}
+                          {systemEmailHistoryActionLabel}
                         </Button>
                       )}
                       {showGroupedDossierContextActions && (
