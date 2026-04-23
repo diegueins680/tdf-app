@@ -39,6 +39,7 @@ import TDF.API.Types
   , AssetCreate (..)
   , AssetCheckoutDTO
   , AssetCheckoutRequest (..)
+  , AssetQrDTO
   , AssetUpdate (..)
   , PipelineCardCreate (..)
   , PipelineCardDTO (..)
@@ -885,6 +886,18 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "No active checkout"
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+
+  describe "refreshQrH" $ do
+    let missingAssetId = "00000000-0000-0000-0000-000000000903"
+
+    it "rejects unknown asset ids instead of minting orphan QR tokens" $ do
+      result <- runInventoryRefreshQrHandler (pure ()) missingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Asset not found"
+        Right value ->
+          expectationFailure ("Expected missing asset QR refresh to fail, got " <> show value)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
@@ -1919,6 +1932,22 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runInventoryRefreshQrHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetQrDTO)
+runInventoryRefreshQrHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in missing inventory QR tests"
+            }
+    liftIO $ runExceptT (runReaderT (refreshQrHandlerFor inventoryUser rawId) env)
+
 runRoomCreateHandler
   :: SqlPersistT IO ()
   -> RoomCreate
@@ -2010,6 +2039,22 @@ checkinHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           checkinAsset
+
+refreshQrHandlerFor :: AuthedUser -> Text -> InventoryTestM AssetQrDTO
+refreshQrHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> refreshQr
+      :<|> _resolveByQr ->
+          refreshQr
 
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =

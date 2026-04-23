@@ -312,6 +312,7 @@ inventoryServer user =
     refreshQrH rawId = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
+      _ <- loadAssetEntityByKey assetKey
       token <- liftIO (fmap (T.pack . show) nextRandom)
       Env{envConfig} <- ask
       let qrBase = resolveConfiguredAppBase envConfig <> "/inventario/scan/"
