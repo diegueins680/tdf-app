@@ -1844,14 +1844,14 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
                       "Google Drive no configurado (faltan DRIVE_REFRESH_TOKEN o " <>
                       "DRIVE_ACCESS_TOKEN)."
                   })
-                pure
+                (either throwError pure . validateConfiguredDriveAccessToken)
                 mAccessTokenEnv
 
     handleRefreshError :: ServerError -> Maybe Text -> AppM Text
     handleRefreshError err mAccessTokenEnv
       | isInvalidGrant err =
           case mAccessTokenEnv of
-            Just tok -> pure tok
+            Just tok -> either throwError pure (validateConfiguredDriveAccessToken tok)
             Nothing ->
               throwError err401
                 { errBody = "Refresh token expirado o revocado. Reautoriza Google Drive." }
@@ -1944,13 +1944,23 @@ validateDriveUploadName fieldName uploadName
   | otherwise = Right uploadName
 
 validateDriveAccessToken :: Text -> Either ServerError Text
-validateDriveAccessToken token
+validateDriveAccessToken = validateDriveAccessTokenWith err400
+
+validateConfiguredDriveAccessToken :: Text -> Either ServerError Text
+validateConfiguredDriveAccessToken rawToken =
+  let token = T.strip rawToken
+  in if T.null token
+       then Left err503 { errBody = "DRIVE_ACCESS_TOKEN must not be blank" }
+       else validateDriveAccessTokenWith err503 token
+
+validateDriveAccessTokenWith :: ServerError -> Text -> Either ServerError Text
+validateDriveAccessTokenWith baseError token
   | T.length token > 4096 =
-      Left err400 { errBody = "Google Drive access token must be 4096 characters or fewer" }
+      Left baseError { errBody = "Google Drive access token must be 4096 characters or fewer" }
   | T.any isSpace token =
-      Left err400 { errBody = "Google Drive access token must not contain whitespace" }
+      Left baseError { errBody = "Google Drive access token must not contain whitespace" }
   | T.any isControl token =
-      Left err400 { errBody = "Google Drive access token must not contain control characters" }
+      Left baseError { errBody = "Google Drive access token must not contain control characters" }
   | otherwise = Right token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse

@@ -238,6 +238,7 @@ import TDF.Server
     , validateCampaignBudgetCents
     , validateCalendarEventListQuery
     , validateCalendarRedirectUri
+    , validateConfiguredDriveAccessToken
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
@@ -3185,6 +3186,28 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "name must be 240 characters or fewer"
                 (resolveDriveUploadName (Just (T.replicate 241 "a")) "safe.pdf")
+
+    describe "validateConfiguredDriveAccessToken" $ do
+        it "rejects malformed DRIVE_ACCESS_TOKEN fallbacks before upload requests reuse them" $ do
+            validateConfiguredDriveAccessToken "  fallback-token_123  "
+                `shouldBe` Right "fallback-token_123"
+
+            let assertInvalid expectedMessage rawToken =
+                    case validateConfiguredDriveAccessToken rawToken of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid DRIVE_ACCESS_TOKEN to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "DRIVE_ACCESS_TOKEN must not be blank" "   "
+            assertInvalid "must not contain whitespace" "fallback token"
+            assertInvalid "must not contain control characters" "fallback-token\NULInjected"
+            assertInvalid
+                "must be 4096 characters or fewer"
+                (T.replicate 4097 "a")
 
     describe "resolveDriveClientCreds" $ do
         it "prefers a complete Drive credential pair over the generic Google fallback" $
