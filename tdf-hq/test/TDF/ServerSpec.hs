@@ -14,7 +14,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, count, get, insert, (==.))
+import Database.Persist (Entity(..), Key, count, get, insert, insertKey, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
@@ -219,6 +219,7 @@ import TDF.Server
     , resolveInvoiceCustomerId
     , createInvoice
     , getInvoiceById
+    , getInvoicesBySession
     , createReceipt
     , getReceipt
     , resolvePartyRoleAssignmentTarget
@@ -775,6 +776,67 @@ spec = describe "TDF.Server helpers" $ do
                     (getReceipt (mkUser [Accounting]) (-1))
                     (error "getReceipt should reject invalid receiptId before reading Env")
                 )
+
+    describe "getInvoicesBySession" $
+        it "distinguishes unknown sessions from known sessions with no invoices" $ do
+            let missingSessionId = "00000000-0000-0000-0000-000000000901"
+                existingSessionId = "00000000-0000-0000-0000-000000000902"
+                existingSessionKey =
+                    case fromPathPiece existingSessionId of
+                        Just keyVal -> keyVal
+                        Nothing -> error "Expected fixture session id to parse"
+                now = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 0)
+                envFor pool =
+                    Env
+                        { envPool = pool
+                        , envConfig = error "envConfig should be unused by invoice session lookup tests"
+                        }
+                runLookup pool sessionId =
+                    runHandler $
+                        runReaderT
+                            (getInvoicesBySession (mkUser [Accounting]) sessionId)
+                            (envFor pool)
+
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeSessionInvoiceLookupSchema pool
+
+            missingResult <- runLookup pool missingSessionId
+            case missingResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr) `shouldContain` "Session not found"
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown session invoice lookup to fail, got: " <> show value)
+
+            runSqlPool
+                ( insertKey existingSessionKey
+                    ME.Session
+                        { ME.sessionBookingRef = Nothing
+                        , ME.sessionBandId = Nothing
+                        , ME.sessionClientPartyRef = Nothing
+                        , ME.sessionService = "Tracking"
+                        , ME.sessionStartAt = now
+                        , ME.sessionEndAt = addUTCTime 3600 now
+                        , ME.sessionEngineerRef = "Engineer"
+                        , ME.sessionAssistantRef = Nothing
+                        , ME.sessionStatus = ME.InPrep
+                        , ME.sessionSampleRate = Nothing
+                        , ME.sessionBitDepth = Nothing
+                        , ME.sessionDaw = Nothing
+                        , ME.sessionSessionFolderDriveId = Nothing
+                        , ME.sessionNotes = Nothing
+                        }
+                )
+                pool
+
+            existingResult <- runLookup pool existingSessionId
+            case existingResult of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected known empty session invoice lookup to succeed, got: " <> show serverErr)
+                Right value ->
+                    BL8.unpack (A.encode value) `shouldBe` "[]"
 
     describe "prepareLine" $ do
         it "accepts a single positive provenance reference and preserves it on the prepared invoice line" $
@@ -6243,6 +6305,38 @@ initializeMarketplaceListingSchema = do
         \\"active\" BOOLEAN NOT NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+
+initializeSessionInvoiceLookupSchema :: SqlPersistT IO ()
+initializeSessionInvoiceLookupSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"session\" (\
+        \\"id\" uuid PRIMARY KEY,\
+        \\"booking_ref\" VARCHAR NULL,\
+        \\"band_id\" uuid NULL,\
+        \\"client_party_ref\" VARCHAR NULL,\
+        \\"service\" VARCHAR NOT NULL,\
+        \\"start_at\" TIMESTAMP NOT NULL,\
+        \\"end_at\" TIMESTAMP NOT NULL,\
+        \\"engineer_ref\" VARCHAR NOT NULL,\
+        \\"assistant_ref\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"sample_rate\" INTEGER NULL,\
+        \\"bit_depth\" INTEGER NULL,\
+        \\"daw\" VARCHAR NULL,\
+        \\"session_folder_drive_id\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"session_invoice\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"session_id\" uuid NOT NULL,\
+        \\"invoice_id\" INTEGER NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_session_invoice\" UNIQUE (\"session_id\", \"invoice_id\")\
         \)"
         []
 

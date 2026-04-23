@@ -7321,10 +7321,15 @@ getInvoicesBySession user sessionId = do
   requireModule user ModuleInvoicing
   sessionKey <- parseSessionKey sessionId
   Env pool _ <- ask
-  invoices <- liftIO $ flip runSqlPool pool $ do
-    links <- selectList [ME.SessionInvoiceSessionId ==. sessionKey] [Desc ME.SessionInvoiceCreatedAt]
-    let invoiceIds = map (ME.sessionInvoiceInvoiceId . entityVal) links
-    loadInvoiceDTOs invoiceIds
+  mInvoices <- liftIO $ flip runSqlPool pool $ do
+    mSession <- get sessionKey
+    case mSession of
+      Nothing -> pure Nothing
+      Just _ -> do
+        links <- selectList [ME.SessionInvoiceSessionId ==. sessionKey] [Desc ME.SessionInvoiceCreatedAt]
+        let invoiceIds = map (ME.sessionInvoiceInvoiceId . entityVal) links
+        Just <$> loadInvoiceDTOs invoiceIds
+  invoices <- maybe (throwError err404 { errBody = "Session not found" }) pure mInvoices
   pure (toJSON invoices)
 
 getInvoiceById :: AuthedUser -> Int64 -> AppM Value
