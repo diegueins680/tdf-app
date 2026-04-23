@@ -194,6 +194,8 @@ const systemEmailHistoryHelperText =
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const optionalDossierContextActionsLabel = 'Agregar nota o seguimiento';
+const optionalDossierNotesActionLabel = 'Agregar nota interna';
+const optionalDossierFollowUpActionLabel = 'Agregar seguimiento manual';
 const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
@@ -3453,26 +3455,79 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, showSystemEmailsLabel)).toBe(1);
-      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierFollowUpActionLabel)).toBe(1);
       expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      clickButton(getButtonByText(document.body, optionalDossierFollowUpActionLabel));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(countButtonsByText(document.body, optionalDossierFollowUpActionLabel)).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
           (item) => (item.textContent ?? '').trim() === 'Agregar seguimiento',
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('names the lone internal-note action explicitly when follow-up history already exists', async () => {
+    const registrationWithoutNotes = buildRegistration({ crAdminNotes: null });
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registrationWithoutNotes,
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const actions = document.body.querySelector<HTMLElement>('[data-testid="course-registration-dossier-actions"]');
+
+      expect(actions).toBeTruthy();
+      expect(countButtonsByText(actions!, optionalDossierNotesActionLabel)).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
+      expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(
+        'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, optionalDossierNotesActionLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Notas internas')).toBe(true);
+      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, optionalDossierNotesActionLabel)).toBe(0);
     });
 
     await cleanup();
@@ -3754,9 +3809,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
-      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierFollowUpActionLabel)).toBe(1);
       expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(1);
+      expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, optionalDossierFollowUpActionLabel)).toBe(1);
       expect(document.body.textContent).toContain('Confirmó pago por transferencia.');
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(
@@ -3767,14 +3823,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      clickButton(getButtonByText(document.body, optionalDossierFollowUpActionLabel));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
-      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, optionalDossierFollowUpActionLabel)).toBe(0);
       expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
     });
 

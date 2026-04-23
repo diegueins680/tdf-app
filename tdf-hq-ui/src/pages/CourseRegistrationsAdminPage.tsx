@@ -4195,7 +4195,7 @@ export default function CourseRegistrationsAdminPage() {
                           variant="outlined"
                           onClick={handleOpenNotesComposer}
                         >
-                          Agregar nota
+                          {optionalDossierNotesActionLabel}
                         </Button>
                       )}
                       {showDirectInlineEmptyFollowUpAction && (
@@ -4203,7 +4203,7 @@ export default function CourseRegistrationsAdminPage() {
                           variant="outlined"
                           onClick={() => setShowFollowUpComposer(true)}
                         >
-                          Agregar seguimiento
+                          {optionalDossierFollowUpActionLabel}
                         </Button>
                       )}
                     </Stack>
