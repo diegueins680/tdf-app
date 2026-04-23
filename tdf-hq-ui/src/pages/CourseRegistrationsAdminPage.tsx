@@ -4502,6 +4502,8 @@ export default function CourseRegistrationsAdminPage() {
                               const followUpCreatedLabel = sharedFollowUpCreatedLabel
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
+                              const followUpAttachmentLabel =
+                                entry.crfAttachmentName?.trim() || `Adjunto de ${followUpActionLabel}`;
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
@@ -4542,7 +4544,7 @@ export default function CourseRegistrationsAdminPage() {
                                       <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
                                         <Stack direction="row" spacing={0.75} alignItems="center">
                                           <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                          <span>{entry.crfAttachmentName ?? 'Abrir adjunto'}</span>
+                                          <span>{followUpAttachmentLabel}</span>
                                         </Stack>
                                       </Link>
                                     )}

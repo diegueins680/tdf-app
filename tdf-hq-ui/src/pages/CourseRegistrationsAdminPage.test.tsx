@@ -5856,6 +5856,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the follow-up label for unnamed attachments instead of repeating a generic link', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [
+          buildFollowUp({
+            crfAttachmentUrl: 'https://example.com/follow-up-401.png',
+            crfAttachmentName: '   ',
+          }),
+          buildFollowUp({
+            crfId: 402,
+            crfSubject: 'Confirmó transferencia',
+            crfNotes: 'Pidió que confirmemos recepción.',
+            crfAttachmentUrl: 'https://example.com/follow-up-402.png',
+            crfAttachmentName: null,
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Adjunto de Confirmó transferencia · #401');
+      expect(document.body.textContent).toContain('Adjunto de Confirmó transferencia · #402');
+      expect(document.body.textContent).not.toContain('Abrir adjunto');
+    });
+
+    await cleanup();
+  });
+
   it('deduplicates repeated dossier artifacts before showing saved-item counts or actions', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
