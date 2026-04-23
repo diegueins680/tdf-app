@@ -1871,6 +1871,70 @@ describe('AdminConsolePage', () => {
     expectToAppearBefore(screen.getByText('Integraciones'), screen.getByText('Tokens de servicio'));
   });
 
+  it('shows one shared refresh notice while standalone additional modules refetch in place', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview
+      .mockResolvedValueOnce({
+        status: 'preview',
+        cards: [
+          {
+            cardId: 'service-tokens',
+            title: 'Tokens de servicio',
+            body: [
+              'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+            ],
+          },
+          {
+            cardId: 'integrations',
+            title: 'Integraciones',
+            body: [
+              'Revisa conectores pendientes sin salir de la consola.',
+            ],
+          },
+        ],
+      })
+      .mockImplementationOnce(() => new Promise(() => undefined));
+
+    const { queryClient } = renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Ver 2 módulos adicionales$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Ver 2 módulos adicionales$/i },
+      ),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+      expect(screen.getByText('Integraciones')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Actualizando módulos…/i)).not.toBeInTheDocument();
+
+    act(() => {
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'console'] });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Actualizando módulos…/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText(/Actualizando módulos…/i)).toHaveLength(1);
+    expect(screen.queryByText(/^Actualizando…$/i)).not.toBeInTheDocument();
+  });
+
   it('ignores empty preview cards so placeholder admin modules do not hide the first-run checklist', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

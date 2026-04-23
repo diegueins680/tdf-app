@@ -786,32 +786,38 @@ function renderAdditionalModuleCardsGrid({
   sx?: SxProps<Theme>;
 }) {
   return (
-    <Grid container spacing={2} sx={sx} id={id}>
-      {cards.map((card) => (
-        <Grid item xs={12} md={4} key={card.cardId}>
-          <Card variant="outlined">
-            <CardHeader title={card.title} />
-            <CardContent>
-              {card.body.map((paragraph, idx) => (
-                <Typography
-                  key={`${card.cardId}-line-${idx}`}
-                  variant="body2"
-                  color="text.secondary"
-                  paragraph={idx < card.body.length - 1}
-                >
-                  {paragraph}
-                </Typography>
-              ))}
-              {isFetching && !isPending && (
-                <Typography variant="caption" color="text.secondary">
-                  Actualizando…
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
+    <Box id={id} sx={sx}>
+      {isFetching && !isPending && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: 'block', mb: 1.5 }}
+        >
+          Actualizando módulos…
+        </Typography>
+      )}
+      <Grid container spacing={2}>
+        {cards.map((card) => (
+          <Grid item xs={12} md={4} key={card.cardId}>
+            <Card variant="outlined">
+              <CardHeader title={card.title} />
+              <CardContent>
+                {card.body.map((paragraph, idx) => (
+                  <Typography
+                    key={`${card.cardId}-line-${idx}`}
+                    variant="body2"
+                    color="text.secondary"
+                    paragraph={idx < card.body.length - 1}
+                  >
+                    {paragraph}
+                  </Typography>
+                ))}
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 }
 
