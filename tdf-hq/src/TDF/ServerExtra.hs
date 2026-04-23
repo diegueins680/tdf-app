@@ -419,6 +419,7 @@ performCheckout
 performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
   now <- liftIO getCurrentTime
   normalized <- either throwError pure (normalizeCheckoutRequest req)
+  dueAtValue <- either throwError pure (validateCheckoutDueAt now (ncrDueAt normalized))
   active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
   when (isJust active) $
     throwError err409 { errBody = "Asset already checked out" }
@@ -436,7 +437,7 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
       , assetCheckoutHolderPhone      = ncrHolderPhone normalized
       , assetCheckoutCheckedOutByRef  = checkedOutBy
       , assetCheckoutCheckedOutAt     = now
-      , assetCheckoutDueAt            = ncrDueAt normalized
+      , assetCheckoutDueAt            = dueAtValue
       , assetCheckoutConditionOut     = ncrConditionOut normalized
       , assetCheckoutPhotoOutUrl      = ncrPhotoOutUrl normalized
       , assetCheckoutPhotoDriveFileId = Nothing
@@ -526,6 +527,14 @@ validateCheckoutContactField fieldName maxLen rawValue =
           Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
       | otherwise ->
           Right (Just cleanValue)
+
+validateCheckoutDueAt :: UTCTime -> Maybe UTCTime -> Either ServerError (Maybe UTCTime)
+validateCheckoutDueAt _ Nothing = Right Nothing
+validateCheckoutDueAt now (Just dueAt)
+  | dueAt < now =
+      Left err400 { errBody = "dueAt must not be in the past" }
+  | otherwise =
+      Right (Just dueAt)
 
 assetStatusForCheckoutDisposition :: CheckoutDisposition -> AssetStatus
 assetStatusForCheckoutDisposition Sale = Retired

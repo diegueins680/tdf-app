@@ -120,6 +120,7 @@ import TDF.ServerExtra (
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
     validateCheckoutTargets,
+    validateCheckoutDueAt,
     validateCheckoutTargetReferences,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
@@ -846,6 +847,24 @@ spec = do
         liftIO $ do
           assertInvalid "targetRoom references an unknown room" missingRoomResult
           assertInvalid "targetSession references an unknown session" missingSessionResult
+
+  describe "validateCheckoutDueAt" $ do
+    let now = UTCTime (fromGregorian 2026 4 23) 43200
+
+    it "accepts omitted or non-past due timestamps for new inventory checkouts" $ do
+      let future = addUTCTime 3600 now
+      validateCheckoutDueAt now Nothing `shouldBe` Right Nothing
+      validateCheckoutDueAt now (Just now) `shouldBe` Right (Just now)
+      validateCheckoutDueAt now (Just future) `shouldBe` Right (Just future)
+
+    it "rejects already-expired due timestamps instead of creating overdue checkouts at insert time" $ do
+      let past = addUTCTime (-60) now
+      case validateCheckoutDueAt now (Just past) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "dueAt must not be in the past"
+        Right value ->
+          expectationFailure ("Expected past checkout dueAt to be rejected, got " <> show value)
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
