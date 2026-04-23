@@ -570,7 +570,8 @@ export default function CmsAdminPage() {
       : hasSlugSelection
         ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
         : 'Elige un slug sugerido o escribe uno para empezar a editar.';
-  const showSamplePayloadGuidance = !liveContent || liveEditorActionState.showUseLiveAction;
+  const showSamplePayloadGuidance =
+    !liveLookupFailed && (!liveContent || liveEditorActionState.showUseLiveAction);
   const compareHint = livePayloadPretty
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
