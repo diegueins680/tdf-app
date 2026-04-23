@@ -2241,6 +2241,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No elements available/i)).not.toBeInTheDocument();
   });
 
+  it('ignores permission and unavailable fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-denied',
+          title: 'Tokens de servicio',
+          body: ['No tienes permisos suficientes para abrir esta sección.'],
+        },
+        {
+          cardId: 'integrations-unavailable',
+          title: 'Integraciones',
+          body: ['Temporarily unavailable. Permission required.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Tokens de servicio|Integraciones/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No tienes permisos suficientes/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Temporarily unavailable/i)).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
