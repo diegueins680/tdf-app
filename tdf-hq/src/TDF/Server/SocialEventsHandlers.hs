@@ -44,6 +44,7 @@ module TDF.Server.SocialEventsHandlers
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
+  , validateTicketCheckInTicketStatus
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCurrencyInput
   , isImageUpload
@@ -1680,7 +1681,9 @@ socialEventsServer user = eventsServer
       orderStatus <- either throwError pure
         (validateTicketCheckInOrderStatus (eventTicketOrderStatus <$> orderRef))
       when (orderStatus /= "paid") $ throwError err400 { errBody = "Only paid tickets can be checked in" }
-      case normalizeTicketStatus (Just (eventTicketStatus ticketVal)) of
+      ticketStatus <- either throwError pure
+        (validateTicketCheckInTicketStatus (eventTicketStatus ticketVal))
+      case ticketStatus of
         "cancelled" -> throwError err400 { errBody = "Cancelled tickets cannot be checked in" }
         "refunded" -> throwError err400 { errBody = "Refunded tickets cannot be checked in" }
         "checked_in" -> pure (ticketEntityToDTO ticketEntity)
@@ -2257,6 +2260,12 @@ validateTicketCheckInOrderStatus (Just rawStatus) =
   case parseTicketOrderStatus rawStatus of
     Just statusVal -> Right statusVal
     Nothing -> Left err500 { errBody = "Stored ticket order status is invalid" }
+
+validateTicketCheckInTicketStatus :: T.Text -> Either ServerError T.Text
+validateTicketCheckInTicketStatus rawStatus =
+  case parseTicketStatus rawStatus of
+    Just statusVal -> Right statusVal
+    Nothing -> Left err500 { errBody = "Stored ticket status is invalid" }
 
 validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
 validateTicketCheckInLookup TicketCheckInRequestDTO{..} =

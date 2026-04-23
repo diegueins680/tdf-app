@@ -222,6 +222,7 @@ import TDF.Server.SocialEventsHandlers (
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateTicketCheckInOrderStatus,
+    validateTicketCheckInTicketStatus,
     validateTicketPurchaseBuyerEmail,
     validateTicketTierCurrencyInput,
     validateEventCurrencyInput,
@@ -3808,6 +3809,24 @@ main = hspec $ do
                 (validateTicketCheckInOrderStatus (Just ""))
             assertInvariant "Stored ticket order status is invalid"
                 (validateTicketCheckInOrderStatus (Just "unknown"))
+
+    describe "validateTicketCheckInTicketStatus" $ do
+        it "accepts canonical ticket states for ticket check-in decisions" $ do
+            validateTicketCheckInTicketStatus " ISSUED " `shouldBe` Right "issued"
+            validateTicketCheckInTicketStatus "checkedin" `shouldBe` Right "checked_in"
+            validateTicketCheckInTicketStatus "CANCELED" `shouldBe` Right "cancelled"
+
+        it "rejects invalid stored ticket states instead of treating them as issued" $ do
+            let assertInvariant rawStatus =
+                    case validateTicketCheckInTicketStatus rawStatus of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err) `shouldContain` "Stored ticket status is invalid"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid ticket check-in state to be rejected, got " <> show value)
+            assertInvariant ""
+            assertInvariant "unknown"
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
