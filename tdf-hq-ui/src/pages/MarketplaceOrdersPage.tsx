@@ -112,8 +112,10 @@ const formatItemCountLabel = (items: MarketplaceOrderDTO['moItems']) =>
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
+const normalizeBuyerPhoneDigits = (value?: string | null) => normalizeBuyerPhoneValue(value).replace(/\D/g, '');
 const normalizeEmailValue = (value?: string | null) => value?.trim() ?? '';
 const normalizeEmailComparisonValue = (value?: string | null) => normalizeEmailValue(value).toLowerCase();
+const MIN_PHONE_SEARCH_DIGITS = 4;
 const formatPaymentProvider = (value?: string | null) => (
   normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
 );
@@ -189,6 +191,8 @@ export default function MarketplaceOrdersPage() {
 
   const baseContextOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
+    const termDigits = normalizeBuyerPhoneDigits(search);
+    const isPhoneLikeSearch = /^[\d\s()+.-]+$/.test(search.trim());
     const fromDt = fromDate ? DateTime.fromISO(fromDate) : null;
     const toDt = toDate ? DateTime.fromISO(toDate).endOf('day') : null;
     return sortedOrders.filter((order) => {
@@ -201,12 +205,16 @@ export default function MarketplaceOrdersPage() {
         order.moOrderId,
         order.moBuyerName,
         order.moBuyerEmail,
+        normalizeBuyerPhoneValue(order.moBuyerPhone),
         order.moStatus,
         order.moPaymentProvider ?? '',
       ]
         .join(' ')
         .toLowerCase();
-      return haystack.includes(term);
+      if (haystack.includes(term)) return true;
+      return isPhoneLikeSearch
+        && termDigits.length >= MIN_PHONE_SEARCH_DIGITS
+        && normalizeBuyerPhoneDigits(order.moBuyerPhone).includes(termDigits);
     });
   }, [sortedOrders, search, fromDate, toDate, paidOnly]);
 
@@ -584,7 +592,7 @@ export default function MarketplaceOrdersPage() {
             <Grid item xs={12} md={5} lg={4}>
               <TextField
                 fullWidth
-                label="Buscar por comprador, email o ID"
+                label="Buscar por comprador, contacto o ID"
                 value={search}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                   const nextSearch = e.target.value;

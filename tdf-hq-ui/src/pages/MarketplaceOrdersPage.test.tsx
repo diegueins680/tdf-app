@@ -82,6 +82,8 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
   ...overrides,
 });
 
+const orderSearchLabel = 'Buscar por comprador, contacto o ID';
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -241,7 +243,7 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
-        expect(countLabelsByText(container, 'Buscar por comprador, email o ID')).toBe(0);
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
         expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
         expect(countLabelsByText(container, 'Método de pago')).toBe(0);
         expect(countLabelsByText(container, 'Desde')).toBe(0);
@@ -296,7 +298,7 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
-        expect(countLabelsByText(container, 'Buscar por comprador, email o ID')).toBe(0);
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
         expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
         expect(countLabelsByText(container, 'Método de pago')).toBe(0);
         expect(countLabelsByText(container, 'Desde')).toBe(0);
@@ -937,7 +939,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
       });
 
-      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      const searchInput = getInputByLabel(container, orderSearchLabel);
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
@@ -977,7 +979,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
       });
 
-      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      const searchInput = getInputByLabel(container, orderSearchLabel);
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
@@ -1012,6 +1014,53 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps phone lookup inside the existing contact search instead of adding phone filter chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moBuyerPhone: '+593 999 000 111',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: '+593 988 777 666',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(1);
+        expect(countLabelsByText(container, 'Buscar por comprador, email o ID')).toBe(0);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Filtrar por teléfono');
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, '999000111');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).not.toContain('Grace Hopper');
+        expect(container.textContent).not.toContain('No hay órdenes para la búsqueda actual.');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(listOrdersMock).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('treats whitespace-only search as empty instead of showing search recovery chrome', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
@@ -1038,7 +1087,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
 
-      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      const searchInput = getInputByLabel(container, orderSearchLabel);
       await setInputValue(searchInput, '   ');
 
       await waitForExpectation(() => {
@@ -1371,7 +1420,7 @@ describe('MarketplaceOrdersPage', () => {
         );
       });
 
-      const searchInput = getInputByLabel(container, 'Buscar por comprador, email o ID');
+      const searchInput = getInputByLabel(container, orderSearchLabel);
       await setInputValue(searchInput, 'sin coincidencias');
 
       await waitForExpectation(() => {
