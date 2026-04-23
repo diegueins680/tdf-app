@@ -224,6 +224,24 @@ const buildPendingRoleChangesSummary = (
   return `${actions.length === 1 ? 'Cambio pendiente' : 'Cambios pendientes'}: ${actions.join(' · ')}.`;
 };
 
+const buildCompactRoleButtonTitle = ({
+  roles,
+  user,
+  showIdentityDisambiguator,
+}: {
+  roles: readonly RoleValue[];
+  user: Pick<NormalizedUser, 'id' | 'name'>;
+  showIdentityDisambiguator: boolean;
+}) => {
+  const normalizedRoles = normalizeRoleSelection(roles);
+
+  if (normalizedRoles.length <= INLINE_ROLE_CHIP_LIMIT) {
+    return undefined;
+  }
+
+  return `${buildEditRolesLabel(user, showIdentityDisambiguator)}. Roles actuales: ${normalizedRoles.join(', ')}.`;
+};
+
 const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
   const normalizedRoles = normalizeRoleSelection(roles);
 
@@ -244,7 +262,6 @@ const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
           label={`+${hiddenRoles.length} ${hiddenRoles.length === 1 ? 'rol' : 'roles'}`}
           size="small"
           variant="outlined"
-          title={`Roles ocultos: ${hiddenRoles.join(', ')}`}
         />
       )}
     </>
@@ -466,6 +483,11 @@ export default function UserRoleManagement() {
                           singleUser,
                           userIdsRequiringIdentityDisambiguator.has(singleUser.id),
                         )}
+                        title={buildCompactRoleButtonTitle({
+                          roles: singleUser.roles,
+                          user: singleUser,
+                          showIdentityDisambiguator: userIdsRequiringIdentityDisambiguator.has(singleUser.id),
+                        })}
                         sx={{
                           borderRadius: 1,
                           display: 'inline-flex',
@@ -537,6 +559,11 @@ export default function UserRoleManagement() {
                           <ButtonBase
                             onClick={() => handleEditClick(user)}
                             aria-label={buildEditRolesLabel(user, showIdentityDisambiguator)}
+                            title={buildCompactRoleButtonTitle({
+                              roles: user.roles,
+                              user,
+                              showIdentityDisambiguator,
+                            })}
                             sx={{
                               borderRadius: 1,
                               display: 'inline-flex',

@@ -492,7 +492,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps long role lists compact until the admin opens the editor', async () => {
+  it('keeps long role lists compact while exposing the full list from the same edit button', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 309,
@@ -517,11 +517,14 @@ describe('UserRoleManagement', () => {
         expect(chipLabels).toEqual(['Admin', 'Engineer', 'Manager', '+2 roles']);
         expect(buttonText(editButton)).not.toContain('Reception');
         expect(buttonText(editButton)).not.toContain('Teacher');
+        expect(editButton.getAttribute('title')).toBe(
+          'Editar roles de Maya Admin. Roles actuales: Admin, Engineer, Manager, Reception, Teacher.',
+        );
 
         const hiddenCountChip = Array.from(editButton.querySelectorAll<HTMLElement>('.MuiChip-root')).find(
           (chip) => buttonText(chip) === '+2 roles',
         );
-        expect(hiddenCountChip?.getAttribute('title')).toBe('Roles ocultos: Reception, Teacher');
+        expect(hiddenCountChip?.getAttribute('title')).toBeNull();
       });
 
       const editButton = container.querySelector('button[aria-label="Editar roles de Maya Admin"]');
