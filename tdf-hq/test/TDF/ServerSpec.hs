@@ -199,6 +199,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
+    , validateCmsContentPathId
     , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
     , validateServiceMarketplaceCatalog
@@ -2283,6 +2284,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "records?draft=true" "slug must contain only ASCII letters"
             assertInvalid "---" "include at least one letter or number"
             assertInvalid (T.replicate 97 "a") "96 characters or fewer"
+
+    describe "validateCmsContentPathId" $ do
+        it "accepts positive CMS content ids before admin publish or delete lookups" $
+            fmap fromSqlKey (validateCmsContentPathId 42) `shouldBe` Right 42
+
+        it "rejects non-positive CMS content ids before treating malformed paths as missing rows" $ do
+            let assertInvalid rawId =
+                    case validateCmsContentPathId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "contentId must be a positive integer"
+                        Right contentKey ->
+                            expectationFailure
+                                ("Expected invalid CMS content id, got: " <> show (fromSqlKey contentKey))
+            assertInvalid 0
+            assertInvalid (-7)
 
     describe "normalizeAuthEmailAddress" $ do
         it "trims and lowercases valid auth emails before signup or reset flows use them" $ do

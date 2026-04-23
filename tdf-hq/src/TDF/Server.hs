@@ -6471,6 +6471,10 @@ validateRequiredCmsSlug rawSlug =
               <> "include at least one letter or number, and be 96 characters or fewer"
         }
 
+validateCmsContentPathId :: Int -> Either ServerError (Key CMS.CmsContent)
+validateCmsContentPathId rawId =
+  toSqlKey <$> validatePositiveIdField "contentId" (fromIntegral rawId)
+
 validateOptionalCmsSlugFilter :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCmsSlugFilter Nothing = Right Nothing
 validateOptionalCmsSlugFilter (Just rawSlug)
@@ -10396,7 +10400,7 @@ cmsAdminServer user =
 
     cmsPublishH cid = do
       requireWebmaster
-      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      contentKey <- either throwError pure (validateCmsContentPathId cid)
       now <- liftIO getCurrentTime
       mEnt <- runDB $ get contentKey
       case mEnt of
@@ -10418,7 +10422,7 @@ cmsAdminServer user =
 
     cmsDeleteH cid = do
       requireWebmaster
-      let contentKey = toSqlKey (fromIntegral cid) :: Key CMS.CmsContent
+      contentKey <- either throwError pure (validateCmsContentPathId cid)
       runDB $ delete contentKey
       pure NoContent
 
