@@ -571,8 +571,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await openDossierContextAction('Agregar seguimiento');
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
       expect(
@@ -4024,7 +4023,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
-      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -4160,7 +4159,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(firstReceiptComposerHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
-      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -4528,7 +4527,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',

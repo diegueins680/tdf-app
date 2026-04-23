@@ -2673,6 +2673,7 @@ export default function CourseRegistrationsAdminPage() {
     : emptyNotesHelperText;
   const showReceiptCountChip = receipts.length > 1;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
+  const showReceiptSaveAction = canSubmitReceipt || receiptForm.editingId != null;
   const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
   const receiptSectionHelpText = (
     selectedDossier?.intent === 'markPaid'
@@ -3025,13 +3026,15 @@ export default function CourseRegistrationsAdminPage() {
                     </Stack>
                   </Collapse>
                   <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="contained"
-                      onClick={handleSubmitReceipt}
-                      disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
-                    >
-                      {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
-                    </Button>
+                    {showReceiptSaveAction && (
+                      <Button
+                        variant="contained"
+                        onClick={handleSubmitReceipt}
+                        disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
+                      >
+                        {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
+                      </Button>
+                    )}
                     <Button variant="text" onClick={handleCancelReceiptComposer}>
                       {receiptCancelLabel}
                     </Button>
