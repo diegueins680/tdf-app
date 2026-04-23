@@ -41,6 +41,7 @@ import TDF.Auth
     , hasSocialSyncAccess
     , hasStrictAdminAccess
     , loadAuthedUser
+    , lookupUsernameFromToken
     , modulesForRoles
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
@@ -2432,7 +2433,7 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
-            (expectedPartyId, sessionResult, resetResult) <- runAuthSqlite $ do
+            authResults <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 partyId <- insert Party
                     { partyLegalName = Nothing
@@ -2461,12 +2462,18 @@ spec = describe "TDF.Server helpers" $ do
                     }
                 sessionUser <- loadAuthedUser "session-token"
                 resetUser <- loadAuthedUser "reset-token"
-                pure (partyId, sessionUser, resetUser)
+                sessionUsername <- lookupUsernameFromToken "session-token"
+                resetUsername <- lookupUsernameFromToken "reset-token"
+                pure (partyId, sessionUser, resetUser, sessionUsername, resetUsername)
+            let (expectedPartyId, sessionResult, resetResult, sessionUsername, resetUsername) =
+                    authResults
 
             case sessionResult of
                 Just user -> auPartyId user `shouldBe` expectedPartyId
                 Nothing -> expectationFailure "Expected session token to authenticate"
             resetResult `shouldBe` Nothing
+            sessionUsername `shouldBe` Just "user@example.com"
+            resetUsername `shouldBe` Nothing
 
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do

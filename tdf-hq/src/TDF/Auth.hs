@@ -150,13 +150,19 @@ lookupUsernameFromToken token = do
   mToken <- getBy (UniqueApiToken token)
   case mToken of
     Just (Entity _ tok)
-      | apiTokenActive tok -> do
+      | not (apiTokenActive tok) -> pure Nothing
+      | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
+      | otherwise -> do
           case apiTokenLabel tok >>= resolveUsernameFromLabel of
             Just username -> pure (Just username)
             Nothing -> do
-              creds <- selectList [UserCredentialPartyId ==. apiTokenPartyId tok, UserCredentialActive ==. True] []
+              creds <-
+                selectList
+                  [ UserCredentialPartyId ==. apiTokenPartyId tok
+                  , UserCredentialActive ==. True
+                  ]
+                  []
               pure (userCredentialUsername . entityVal <$> listToMaybe creds)
-      | otherwise -> pure Nothing
     Nothing -> pure Nothing
 
 resolveUsernameFromLabel :: Text -> Maybe Text
