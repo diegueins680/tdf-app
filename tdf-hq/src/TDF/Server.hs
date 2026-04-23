@@ -3452,6 +3452,9 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
     throwBadRequest "notes requerido"
   entryTypeVal <- either throwError pure (parseCourseFollowUpType entryType)
   attachmentUrlVal <- either throwError pure (validateCourseRegistrationUrlField "attachmentUrl" attachmentUrl)
+  attachmentNameVal <-
+    either throwError pure
+      (resolveCourseRegistrationAttachmentName attachmentUrlVal Nothing attachmentName)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
   followUp <- runDB $ insertCourseRegistrationFollowUp
@@ -3462,7 +3465,7 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
     subject
     notesVal
     attachmentUrlVal
-    attachmentName
+    attachmentNameVal
     mNextFollowUpAt
     now
   pure (toCourseRegistrationFollowUpDTO followUp)
@@ -3489,6 +3492,12 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
   attachmentUrlVal <- case attachmentUrl of
     Nothing -> pure (ME.courseRegistrationFollowUpAttachmentUrl followUp)
     Just rawUrl -> either throwError pure (validateCourseRegistrationUrlField "attachmentUrl" (Just rawUrl))
+  attachmentNameVal <-
+    either throwError pure $
+      resolveCourseRegistrationAttachmentName
+        attachmentUrlVal
+        (ME.courseRegistrationFollowUpAttachmentName followUp)
+        attachmentName
   mNextFollowUpAt <- case nextFollowUpAt of
     Nothing -> pure (ME.courseRegistrationFollowUpNextFollowUpAt followUp)
     Just raw -> parseOptionalUtcText "nextFollowUpAt" raw
@@ -3501,8 +3510,7 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
               maybe (ME.courseRegistrationFollowUpSubject followUp) (cleanOptional . Just) subject
           , ME.courseRegistrationFollowUpNotes = notesVal
           , ME.courseRegistrationFollowUpAttachmentUrl = attachmentUrlVal
-          , ME.courseRegistrationFollowUpAttachmentName =
-              maybe (ME.courseRegistrationFollowUpAttachmentName followUp) (cleanOptional . Just) attachmentName
+          , ME.courseRegistrationFollowUpAttachmentName = attachmentNameVal
           , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
           , ME.courseRegistrationFollowUpUpdatedAt = now
           }
@@ -4337,6 +4345,25 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+resolveCourseRegistrationAttachmentName
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+resolveCourseRegistrationAttachmentName mAttachmentUrl mExistingName mProvidedName =
+  case mAttachmentUrl of
+    Nothing ->
+      case cleanOptional mProvidedName of
+        Just _ ->
+          Left err400 { errBody = "attachmentName requires attachmentUrl" }
+        Nothing ->
+          Right Nothing
+    Just _ ->
+      Right $
+        case mProvidedName of
+          Nothing -> mExistingName
+          Just _ -> cleanOptional mProvidedName
 
 validateCourseRegistrationReceiptMimeType :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationReceiptMimeType Nothing = Right Nothing

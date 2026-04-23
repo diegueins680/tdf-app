@@ -162,6 +162,7 @@ import TDF.Server
     , validateMarketplaceOrderPaidAtUpdate
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateCourseRegistrationPhoneE164
+    , resolveCourseRegistrationAttachmentName
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
     , validateCoursePublicUrlField
@@ -5325,6 +5326,38 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+
+    describe "resolveCourseRegistrationAttachmentName" $ do
+        it "keeps or clears attachment names in step with the resolved attachment URL" $ do
+            resolveCourseRegistrationAttachmentName
+                (Just "https://files.example.com/proof.pdf")
+                (Just "stored.pdf")
+                Nothing
+                `shouldBe` Right (Just "stored.pdf")
+            resolveCourseRegistrationAttachmentName
+                (Just "https://files.example.com/proof.pdf")
+                (Just "stored.pdf")
+                (Just "  renamed.pdf  ")
+                `shouldBe` Right (Just "renamed.pdf")
+            resolveCourseRegistrationAttachmentName
+                (Just "https://files.example.com/proof.pdf")
+                (Just "stored.pdf")
+                (Just "   ")
+                `shouldBe` Right Nothing
+            resolveCourseRegistrationAttachmentName Nothing (Just "stored.pdf") Nothing
+                `shouldBe` Right Nothing
+
+        it "rejects orphan attachment names instead of storing follow-up attachment metadata without a URL" $
+            case resolveCourseRegistrationAttachmentName Nothing Nothing (Just " receipt.pdf ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "attachmentName requires attachmentUrl"
+                Right value ->
+                    expectationFailure
+                        ( "Expected orphan follow-up attachment name to be rejected, got: "
+                            <> show value
+                        )
 
     describe "validateCourseRegistrationReceiptMimeType" $ do
         it "normalizes optional receipt MIME types before payment proof persistence" $ do
