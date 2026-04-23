@@ -308,6 +308,21 @@ spec = do
           [mkAssetUploadFile "front-room.jpg"]
         )
 
+    it "rejects conflicting upload name and browser filename extensions" $
+      case fromMultipart
+        (mkAssetUploadMultipart
+          [("name", "front-room.png")]
+          [(mkAssetUploadFile "front-room.jpg") { fdFileCType = "image/png" }]
+        )
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Asset upload image extension must match its MIME type"
+        Right payload ->
+          expectationFailure
+            ( "Expected conflicting asset upload metadata to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

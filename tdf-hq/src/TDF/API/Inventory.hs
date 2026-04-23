@@ -68,11 +68,18 @@ instance FromMultipart Tmp AssetUploadForm where
       validateImageUpload nameTxt file = do
         allowedExts <- allowedImageExtensions (fdFileCType file)
         ext <- resolveImageExtension nameTxt file
-        if ext `elem` allowedExts
-          then Right ()
-          else if ext `elem` allImageExtensions
-            then Left "Asset upload image extension must match its MIME type"
-            else Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
+        let providedExts =
+              filter (not . T.null)
+                [ maybe "" imageExtension nameTxt
+                , imageExtension (fdFileName file)
+                ]
+        case filter (`notElem` allowedExts) (ext : providedExts) of
+          [] -> Right ()
+          badExt : _
+            | badExt `elem` allImageExtensions ->
+                Left "Asset upload image extension must match its MIME type"
+            | otherwise ->
+                Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
 
       allowedImageExtensions rawContentType =
         case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
