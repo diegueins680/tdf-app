@@ -8,6 +8,7 @@ module TDF.API.Calendar where
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
 import           Data.Aeson.Types (Parser)
+import           Data.Char (isControl)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -21,7 +22,9 @@ requiredNonBlank fieldName raw =
   let trimmed = T.strip raw
   in if T.null trimmed
        then fail (fieldName <> " must not be blank")
-       else pure trimmed
+       else if T.any isControl trimmed
+         then fail (fieldName <> " must not contain control characters")
+         else pure trimmed
 
 optionalNonBlank :: Maybe Text -> Maybe Text
 optionalNonBlank raw =

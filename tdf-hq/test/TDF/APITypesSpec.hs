@@ -702,10 +702,19 @@ spec = do
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"   \"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-\\u0000\",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"calendarId\":\"pri\\nmary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"primary\",\"syncCursor\":\"stale\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                "{\"calendarId\":\"pri\\nmary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"from\":\"2026-05-02T16:00:00Z\",\"to\":\"2026-05-02T15:00:00Z\"}"
