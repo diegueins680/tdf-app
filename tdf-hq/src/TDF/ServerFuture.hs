@@ -4,6 +4,7 @@
 module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
+import           Data.Char            (isControl)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Servant
@@ -71,19 +72,12 @@ futureServer user = accessStubs
 
     adminConsole = do
       requireFutureAdminAccess user
+      consoleCards <- either throwError pure $
+        traverse validateFutureAdminConsoleCard adminConsoleCards
       pure $
         AdminConsoleView
           { status = "preview"
-          , cards =
-              [ AdminConsoleCard
-                  { cardId = "user-management"
-                  , title  = "Gestión de usuarios"
-                  , body   =
-                      [ "La asignación de roles se administra desde la pantalla de Parties."
-                      , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
-                      ]
-                  }
-              ]
+          , cards = consoleCards
           }
 
     crossCuttingStubs = adminStub "experience" "navigation"
@@ -91,6 +85,18 @@ futureServer user = accessStubs
                     :<|> adminStub "experience" "offline"
                     :<|> adminStub "experience" "design"
                     :<|> adminStub "experience" "auditing"
+
+adminConsoleCards :: [AdminConsoleCard]
+adminConsoleCards =
+  [ AdminConsoleCard
+      { cardId = "user-management"
+      , title  = "Gestión de usuarios"
+      , body   =
+          [ "La asignación de roles se administra desde la pantalla de Parties."
+          , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+          ]
+      }
+  ]
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
 validateFutureAdminAccess user
@@ -108,6 +114,23 @@ validateFutureStubMetadata rawArea rawEndpoint = do
   if (area, endpoint) `elem` allowedFutureStubMetadata
     then pure (area, endpoint)
     else invalidFutureStubMetadata
+
+validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
+validateFutureAdminConsoleCard card
+  | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
+  | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
+  | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
+  | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
+  | otherwise = Right card
+
+invalidCardText :: Int -> Text -> Bool
+invalidCardText maxLength value =
+  T.null stripped
+    || value /= stripped
+    || T.length value > maxLength
+    || T.any isControl value
+  where
+    stripped = T.strip value
 
 allowedFutureStubMetadata :: [(Text, Text)]
 allowedFutureStubMetadata =
@@ -172,3 +195,7 @@ validFutureStubSlugChar ch =
 invalidFutureStubMetadata :: Either ServerError a
 invalidFutureStubMetadata =
   Left err500 { errBody = "Invalid future stub metadata" }
+
+invalidFutureAdminConsoleMetadata :: Either ServerError a
+invalidFutureAdminConsoleMetadata =
+  Left err500 { errBody = "Invalid future admin console metadata" }

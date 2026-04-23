@@ -25,6 +25,7 @@ import TDF.API
     , WhatsAppConsentStatus (..)
     )
 import TDF.API.Future (StubResponse (..))
+import qualified TDF.API.Future as Future
 import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types
     ( DriveTokenExchangeRequest (..)
@@ -275,6 +276,7 @@ import TDF.ServerProposals
 import TDF.ServerFuture
     ( futureServer
     , validateFutureAdminAccess
+    , validateFutureAdminConsoleCard
     , validateFutureStubMetadata
     )
 import TDF.ServerExtra (validateSocialReplyBody)
@@ -295,6 +297,19 @@ firstFutureStub user =
     let accessStubs :<|> _ = futureServer user
         loginOptions :<|> _ = accessStubs
     in loginOptions
+
+firstFutureAdminConsole :: AuthedUser -> Either ServerError Future.AdminConsoleView
+firstFutureAdminConsole user =
+    let _access
+            :<|> _crm
+            :<|> _scheduling
+            :<|> _packages
+            :<|> _invoicing
+            :<|> _inventory
+            :<|> adminStubs
+            :<|> _experience = futureServer user
+        _seed :<|> adminConsole = adminStubs
+    in adminConsole
 
 inputListSessionKey :: ME.SessionId
 inputListSessionKey =
@@ -6235,6 +6250,38 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
 
+    describe "validateFutureAdminConsoleCard" $ do
+        it "rejects malformed admin console cards before serving fallback discovery metadata" $ do
+            let mkCard cardIdValue titleValue bodyValue =
+                    Future.AdminConsoleCard
+                        { Future.cardId = cardIdValue
+                        , Future.title = titleValue
+                        , Future.body = bodyValue
+                        }
+                validCard = mkCard "user-management" "Gestión de usuarios" ["Roles y permisos"]
+                assertInvalid card =
+                    case validateFutureAdminConsoleCard card of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid admin console card, got: " <> show value)
+
+            case validateFutureAdminConsoleCard validCard of
+                Right card ->
+                    Future.cardId card `shouldBe` "user-management"
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid admin console card, got: " <> show serverErr)
+
+            assertInvalid (mkCard "User Management" "Gestión de usuarios" ["Roles"])
+            assertInvalid (mkCard "user-management" " Gestión de usuarios" ["Roles"])
+            assertInvalid (mkCard "user-management" "Gestión\nusuarios" ["Roles"])
+            assertInvalid (mkCard "user-management" "Gestión de usuarios" [])
+            assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", " "])
+
     describe "futureServer" $ do
         it "requires literal Admin before serving fallback discovery stubs" $ do
             case firstFutureStub (mkUser [StudioManager]) of
@@ -6253,6 +6300,16 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)
+
+        it "serves admin console preview cards only after metadata validation" $
+            case firstFutureAdminConsole (mkUser [Admin]) of
+                Right consoleView -> do
+                    Future.status consoleView `shouldBe` "preview"
+                    map Future.cardId (Future.cards consoleView) `shouldBe` ["user-management"]
+                    Future.cards consoleView `shouldSatisfy` (not . null)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected Admin fallback console access, got: " <> show serverErr)
 
         it "marks fallback discovery stubs as non-implemented placeholders" $
             case firstFutureStub (mkUser [Admin]) of
