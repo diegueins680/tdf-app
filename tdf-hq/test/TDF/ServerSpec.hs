@@ -3189,6 +3189,14 @@ spec = describe "TDF.Server helpers" $ do
 
             resolveDrivePublicUrl
                 "file-123"
+                (Just "https://drive.google.com/uc?export=download&id=file-123")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
                 (Just "https://drive.google.com/download/file-123?alt=media#viewer")
                 (Just "rk-123")
                 Nothing
@@ -3270,6 +3278,14 @@ spec = describe "TDF.Server helpers" $ do
             resolveDrivePublicUrl
                 "file-123"
                 (Just "https://drive.google.com/")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/uc?export=download")
                 (Just "rk-123")
                 Nothing
                 `shouldBe`

@@ -10603,14 +10603,16 @@ sanitizeDriveWebContentLink mWebContentLink = do
   if "https://" `T.isPrefixOf` T.toLower url
       && TrialsServer.isValidHttpUrl url
       && isGoogleDriveDownloadHost url
-      && hasNonRootUrlPath url
+      && hasDriveContentLocator url
     then Just url
     else Nothing
 
-hasNonRootUrlPath :: Text -> Bool
-hasNonRootUrlPath rawUrl =
-  not (T.null (T.dropWhile (== '/') path))
+hasDriveContentLocator :: Text -> Bool
+hasDriveContentLocator rawUrl =
+  hasNonBlankQueryParam "id" rawUrl || length pathSegments >= 2
   where
+    pathSegments =
+      filter (not . T.null) (T.splitOn "/" path)
     remainder = T.drop 8 rawUrl
     afterAuthority =
       T.dropWhile
