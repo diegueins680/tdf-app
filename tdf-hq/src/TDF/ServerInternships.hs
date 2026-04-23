@@ -98,6 +98,30 @@ validateInternProfileDateUpdate currentStart currentEnd updateStart updateEnd
     effectiveStart = fromMaybe currentStart updateStart
     effectiveEnd = fromMaybe currentEnd updateEnd
 
+validateInternProjectDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
+validateInternProjectDateRange Nothing _ = Right ()
+validateInternProjectDateRange (Just startAt) dueAt =
+  case dueAt of
+    Just rawDueAt
+      | rawDueAt < startAt ->
+          Left err400 { errBody = "dueAt must be on or after startAt" }
+    _ -> Right ()
+
+validateInternProjectDateUpdate
+  :: Maybe Day
+  -> Maybe Day
+  -> Maybe (Maybe Day)
+  -> Maybe (Maybe Day)
+  -> Either ServerError ()
+validateInternProjectDateUpdate currentStart currentDue updateStart updateDue
+  | updateStart == Nothing && updateDue == Nothing =
+      Right ()
+  | otherwise =
+      validateInternProjectDateRange effectiveStart effectiveDue
+  where
+    effectiveStart = fromMaybe currentStart updateStart
+    effectiveDue = fromMaybe currentDue updateDue
+
 validateOptionalInternPartyIdInput :: Text -> Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalInternPartyIdInput _ Nothing = Right Nothing
 validateOptionalInternPartyIdInput fieldName (Just rawPartyId) =
@@ -335,6 +359,7 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternProjectTitle ipcTitle)
       statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
+      either throwError pure (validateInternProjectDateRange ipcStartAt ipcDueAt)
       ent <- withPool $ do
         newId <- insert ME.InternProject
           { ME.internProjectTitle       = titleVal
@@ -356,6 +381,15 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleUpdate <- either throwError pure (validateInternProjectTitleUpdate ipuTitle)
       statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
+      mEntity <- withPool $ getEntity projectKey
+      ent <- maybe (throwError err404) pure mEntity
+      let project = entityVal ent
+      either throwError pure $
+        validateInternProjectDateUpdate
+          (ME.internProjectStartAt project)
+          (ME.internProjectDueAt project)
+          ipuStartAt
+          ipuDueAt
       let updates = catMaybes
             [ fmap (ME.InternProjectTitle =.) titleUpdate
             , fmap (ME.InternProjectDescription =.) ipuDescription
@@ -363,14 +397,10 @@ internshipsServer user =
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
             , fmap (ME.InternProjectDueAt =.) ipuDueAt
             ]
-      result <- withPool $ do
-        mEntity <- getEntity projectKey
-        case mEntity of
-          Nothing -> pure Nothing
-          Just _  -> do
-            unless (null updates) (update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now]))
-            getEntity projectKey
-      maybe (throwError err404) (pure . toProjectDTO) result
+      unless (null updates) $
+        withPool $ update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
+      updated <- withPool $ getJustEntity projectKey
+      pure (toProjectDTO updated)
 
     listTasksH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTaskDTO]
     listTasksH = do

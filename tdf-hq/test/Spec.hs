@@ -120,6 +120,8 @@ import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
 import TDF.ServerInternships
     ( parseKey,
+      validateInternProjectDateRange,
+      validateInternProjectDateUpdate,
       validateInternProjectStatusInput,
       validateInternPermissionDateRange,
       validateInternProfileDateUpdate,
@@ -4924,6 +4926,84 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "endAt must be on or after startAt"
                 Right value ->
                     expectationFailure ("Expected invalid internship permission date range to be rejected, got " <> show value)
+
+    describe "internship project date validation" $ do
+        it "accepts open-ended and forward project schedules" $ do
+            validateInternProjectDateRange
+                Nothing
+                (Just (fromGregorian 2026 4 14))
+                `shouldBe` Right ()
+            validateInternProjectDateRange
+                (Just (fromGregorian 2026 4 11))
+                Nothing
+                `shouldBe` Right ()
+            validateInternProjectDateRange
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 14))
+                `shouldBe` Right ()
+
+        it "rejects project due dates that precede their start date" $ do
+            case validateInternProjectDateRange
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 10)) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "dueAt must be on or after startAt"
+                Right value ->
+                    expectationFailure ("Expected invalid internship project date range to be rejected, got " <> show value)
+
+    describe "internship project date update validation" $ do
+        it "accepts no-op updates, valid new ranges, and clearing one side of the schedule" $ do
+            validateInternProjectDateUpdate
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 14))
+                Nothing
+                Nothing
+                `shouldBe` Right ()
+            validateInternProjectDateUpdate
+                Nothing
+                Nothing
+                (Just (Just (fromGregorian 2026 4 11)))
+                (Just (Just (fromGregorian 2026 4 14)))
+                `shouldBe` Right ()
+            validateInternProjectDateUpdate
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 14))
+                Nothing
+                (Just Nothing)
+                `shouldBe` Right ()
+            validateInternProjectDateUpdate
+                (Just (fromGregorian 2026 4 11))
+                (Just (fromGregorian 2026 4 14))
+                (Just Nothing)
+                Nothing
+                `shouldBe` Right ()
+
+        it "rejects updates that would leave the effective project due date before start date" $ do
+            let assertInvalid result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "dueAt must be on or after startAt"
+                    Right value ->
+                        expectationFailure ("Expected invalid internship project date update to be rejected, got " <> show value)
+            assertInvalid
+                (validateInternProjectDateUpdate
+                    Nothing
+                    Nothing
+                    (Just (Just (fromGregorian 2026 4 11)))
+                    (Just (Just (fromGregorian 2026 4 10))))
+            assertInvalid
+                (validateInternProjectDateUpdate
+                    (Just (fromGregorian 2026 4 11))
+                    (Just (fromGregorian 2026 4 14))
+                    Nothing
+                    (Just (Just (fromGregorian 2026 4 10))))
+            assertInvalid
+                (validateInternProjectDateUpdate
+                    (Just (fromGregorian 2026 4 11))
+                    (Just (fromGregorian 2026 4 14))
+                    (Just (Just (fromGregorian 2026 4 15)))
+                    Nothing)
 
     describe "internship profile date validation" $ do
         it "accepts no-op updates, forward ranges, and clearing an existing start date" $ do
