@@ -9201,6 +9201,29 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips course-registration descriptor prefixes from first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Course registration - Beatmaking 101' }]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Course registration - Beatmaking 101');
+      expect(countOccurrences(emptyState!, 'Course registration')).toBe(0);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateFormActionLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips landing-page descriptor prefixes from first-run cohort copy', async () => {
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Landing de curso - Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([]);
