@@ -459,6 +459,45 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps one reset path after a custom new-page payload has started', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(container.textContent).toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await act(async () => {
+      setInputValue(
+        getInputByLabel(container, 'Payload JSON'),
+        JSON.stringify({ heroTitle: 'Landing propia' }, null, 2),
+      );
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(countActionsByText(container, 'Limpiar')).toBe(1);
+      expect(container.textContent).toContain(
+        'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
+      );
+      expect(container.textContent).not.toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('hides the generic clear action when a live version is available to restore instead', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

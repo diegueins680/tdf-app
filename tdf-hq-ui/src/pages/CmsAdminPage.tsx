@@ -548,7 +548,13 @@ export default function CmsAdminPage() {
       ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
   const hasSamplePayload = Boolean(samplePayload);
-  const showExampleAction = hasSamplePayload && !editorMatchesSamplePayload && !liveContent && !liveLookupUnresolved;
+  const hasCustomNewPayloadDraft = !liveContent && payload.trim() !== '{}';
+  const showExampleAction =
+    hasSamplePayload
+    && !editorMatchesSamplePayload
+    && !hasCustomNewPayloadDraft
+    && !liveContent
+    && !liveLookupUnresolved;
   const samplePayloadGuidance = liveLookupPending && hasSamplePayload
     ? 'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.'
     : liveLookupFailed && hasSamplePayload
@@ -558,6 +564,8 @@ export default function CmsAdminPage() {
     : samplePayload
       ? editorMatchesSamplePayload
         ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
+        : hasCustomNewPayloadDraft
+        ? 'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.'
         : 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
       : hasSlugSelection
         ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
