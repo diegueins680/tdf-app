@@ -1363,6 +1363,33 @@ spec = do
         "Meta verify token not configured"
         (validate (Just "subscribe") (Just "challenge-123") (Just "secret") [Just "   "])
 
+    it "rejects unsafe Meta webhook verification values before echoing or falling back" $ do
+      let assertInvalid expectedCode expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` expectedCode
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right challenge ->
+                expectationFailure
+                  ("Expected unsafe Meta webhook verification to fail, got " <> T.unpack challenge)
+          validate = validateMetaWebhookVerifyRequest "instagram" (Just "subscribe")
+      assertInvalid
+        400
+        "hub.challenge must be 512 characters or fewer"
+        (validate (Just (T.replicate 513 "x")) (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.challenge must not contain control characters"
+        (validate (Just "challenge\nInjected: value") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token must not contain control characters"
+        (validate (Just "challenge-123") (Just "secret\nInjected") [Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token is misconfigured"
+        (validate (Just "challenge-123") (Just "secret") [Just "bad\nsecret", Just "secret"])
+
   describe "validateMetaWebhookChannel" $ do
     it "accepts only route-matching Meta webhook object values" $ do
       let instagramPayload = A.object ["object" .= (" InStAgRaM " :: Text)]

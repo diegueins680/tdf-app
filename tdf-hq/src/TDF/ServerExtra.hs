@@ -2396,10 +2396,10 @@ validateMetaWebhookVerifyRequest
   -> [Maybe Text]
   -> Either ServerError Text
 validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedCandidates =
-  case firstNonBlankText expectedCandidates of
-    Nothing ->
-      Left err403 { errBody = "Meta verify token not configured" }
-    Just expected ->
+  case validateConfiguredMetaVerifyToken expectedCandidates of
+    Left err ->
+      Left err
+    Right expected ->
       case fmap T.toLower (nonBlankText mMode) of
         Nothing ->
           Left err400 { errBody = "hub.mode is required" }
@@ -2408,28 +2408,52 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
             Nothing ->
               Left err400 { errBody = "hub.challenge is required" }
             Just challenge ->
-              case nonBlankText mToken of
-                Nothing ->
-                  Left err400 { errBody = "hub.verify_token is required" }
-                Just provided
-                  | provided == expected -> Right challenge
-                  | otherwise ->
-                      Left err403
-                        { errBody =
-                            BL8.pack
-                              ("Meta verify token mismatch for " <> T.unpack platformLabel)
-                        }
+              case validateMetaHookChallenge challenge of
+                Left err ->
+                  Left err
+                Right challengeVal ->
+                  case nonBlankText mToken of
+                    Nothing ->
+                      Left err400 { errBody = "hub.verify_token is required" }
+                    Just provided
+                      | T.any isControl provided ->
+                          Left err400
+                            { errBody = "hub.verify_token must not contain control characters" }
+                      | provided == expected -> Right challengeVal
+                      | otherwise ->
+                          Left err403
+                            { errBody =
+                                BL8.pack
+                                  ("Meta verify token mismatch for " <> T.unpack platformLabel)
+                            }
         Just _ ->
           Left err400 { errBody = "hub.mode must be subscribe" }
   where
-    firstNonBlankText :: [Maybe Text] -> Maybe Text
-    firstNonBlankText = listToMaybe . mapMaybe nonBlankText
+    validateConfiguredMetaVerifyToken :: [Maybe Text] -> Either ServerError Text
+    validateConfiguredMetaVerifyToken candidates =
+      case listToMaybe (mapMaybe nonBlankText candidates) of
+        Nothing ->
+          Left err403 { errBody = "Meta verify token not configured" }
+        Just expected
+          | T.any isControl expected ->
+              Left err403 { errBody = "Meta verify token is misconfigured" }
+          | otherwise ->
+              Right expected
 
     nonBlankText :: Maybe Text -> Maybe Text
     nonBlankText mTxt =
       case fmap T.strip mTxt of
         Just txt | not (T.null txt) -> Just txt
         _ -> Nothing
+
+    validateMetaHookChallenge :: Text -> Either ServerError Text
+    validateMetaHookChallenge challenge
+      | T.length challenge > 512 =
+          Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
+      | T.any isControl challenge =
+          Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | otherwise =
+          Right challenge
 
 instagramWebhookServer
   :: ( MonadIO m
