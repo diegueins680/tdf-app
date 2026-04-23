@@ -118,10 +118,18 @@ validateFutureStubMetadata rawArea rawEndpoint = do
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard card
   | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
+  | cardId card `notElem` allowedFutureAdminConsoleCardIds =
+      invalidFutureAdminConsoleMetadata
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
   | otherwise = Right card
+
+allowedFutureAdminConsoleCardIds :: [Text]
+allowedFutureAdminConsoleCardIds =
+  [ "user-management"
+  , "api-tokens"
+  ]
 
 validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminConsoleView
 validateFutureAdminConsoleView view

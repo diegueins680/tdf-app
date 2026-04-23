@@ -6332,6 +6332,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected valid admin console card, got: " <> show serverErr)
 
             assertInvalid (mkCard "User Management" "Gestión de usuarios" ["Roles"])
+            assertInvalid (mkCard "unknown-card" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" " Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión\nusuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" [])
