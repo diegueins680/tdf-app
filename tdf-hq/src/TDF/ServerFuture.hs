@@ -22,13 +22,14 @@ stub
 stub rawArea rawEndpoint = do
   (area, endpoint) <-
     either throwError pure (validateFutureStubMetadata rawArea rawEndpoint)
-  pure $
-    StubResponse
-      { stubArea        = area
-      , stubEndpoint    = endpoint
-      , stubStatus      = "planned"
-      , stubImplemented = False
-      }
+  either throwError pure $
+    validateFutureStubResponse $
+      StubResponse
+        { stubArea        = area
+        , stubEndpoint    = endpoint
+        , stubStatus      = "planned"
+        , stubImplemented = False
+        }
 
 futureServer
   :: MonadError ServerError m
@@ -114,6 +115,19 @@ validateFutureStubMetadata rawArea rawEndpoint = do
   if (area, endpoint) `elem` allowedFutureStubMetadata
     then pure (area, endpoint)
     else invalidFutureStubMetadata
+
+validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
+validateFutureStubResponse response =
+  case validateFutureStubMetadata (stubArea response) (stubEndpoint response) of
+    Left _ -> invalidFutureStubResponse
+    Right (area, endpoint)
+      | stubStatus response /= "planned" -> invalidFutureStubResponse
+      | stubImplemented response -> invalidFutureStubResponse
+      | otherwise ->
+          Right response
+            { stubArea = area
+            , stubEndpoint = endpoint
+            }
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard card
@@ -222,3 +236,7 @@ invalidFutureStubMetadata =
 invalidFutureAdminConsoleMetadata :: Either ServerError a
 invalidFutureAdminConsoleMetadata =
   Left err500 { errBody = "Invalid future admin console metadata" }
+
+invalidFutureStubResponse :: Either ServerError a
+invalidFutureStubResponse =
+  Left err500 { errBody = "Invalid future stub response" }

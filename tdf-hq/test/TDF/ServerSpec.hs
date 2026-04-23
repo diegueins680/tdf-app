@@ -283,6 +283,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleView
     , validateFutureStubMetadata
+    , validateFutureStubResponse
     )
 import TDF.ServerExtra (validateSocialReplyBody)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
@@ -6325,6 +6326,40 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
+
+    describe "validateFutureStubResponse" $ do
+        it "rejects malformed fallback discovery response envelopes before serving them" $ do
+            let mkResponse area endpoint status implemented =
+                    StubResponse
+                        { stubArea = area
+                        , stubEndpoint = endpoint
+                        , stubStatus = status
+                        , stubImplemented = implemented
+                        }
+                validResponse = mkResponse "crm" "parties/list-columns" "planned" False
+                assertInvalid response =
+                    case validateFutureStubResponse response of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid future stub response, got: " <> show value)
+
+            case validateFutureStubResponse validResponse of
+                Right response -> do
+                    stubArea response `shouldBe` "crm"
+                    stubEndpoint response `shouldBe` "parties/list-columns"
+                    stubStatus response `shouldBe` "planned"
+                    stubImplemented response `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid future stub response, got: " <> show serverErr)
+
+            assertInvalid (mkResponse "crm" "parties/list-columns" "ready" False)
+            assertInvalid (mkResponse "crm" "parties/list-columns" "planned" True)
+            assertInvalid (mkResponse "crm" "parties/export" "planned" False)
 
     describe "validateFutureAdminConsoleCard" $ do
         it "rejects malformed admin console cards before serving fallback discovery metadata" $ do
