@@ -1410,8 +1410,10 @@ describe('AdminUsersPage', () => {
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
-        expect(buttonText(showInactiveListButton)).toBe('Ver 1 usuario inactivo');
-        expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(true);
+        expect(showInactiveListButton.getAttribute('aria-label')).toBe('Ver 1 usuario inactivo');
+        expect(buttonText(showInactiveListButton)).toBe('Ver Grace Hopper');
+        expect(hasExactText(container, 'Ver Grace Hopper')).toBe(true);
+        expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(false);
       });
 
       await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);

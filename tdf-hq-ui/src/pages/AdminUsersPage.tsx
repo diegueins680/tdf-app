@@ -197,6 +197,14 @@ const buildPendingProfileSummary = (count: number) => (
     : `${count} usuarios todavía sin perfil vinculado; sus nombres no abren un perfil.`
 );
 
+const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
+  if (users.length !== 1) {
+    return `Ver ${formatInactiveUserCountLabel(users.length)}`;
+  }
+
+  return `Ver ${summarizeUserIdentity(users[0]!).primary}`;
+};
+
 const getUserAccessSummary = (values: string[]) =>
   normalizeAccessValues(values)
     .join(', ');
@@ -729,6 +737,10 @@ export default function AdminUsersPage() {
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
+  const collapsedInactiveUsersToggleLabel = useMemo(
+    () => buildCollapsedInactiveUsersToggleLabel(inactiveVisibleUsers),
+    [inactiveVisibleUsers],
+  );
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
@@ -1056,7 +1068,7 @@ export default function AdminUsersPage() {
                         >
                           {showInactiveUsers
                             ? 'Ocultar'
-                            : `Ver ${inactiveUsersToggleTarget}`}
+                            : collapsedInactiveUsersToggleLabel}
                         </Button>
                       )}
                     </Stack>
