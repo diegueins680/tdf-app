@@ -8819,6 +8819,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps single-status guidance passive when the cohort filter is unavailable', async () => {
+    listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crStatus: 'paid' }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortFallback = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-cohort-filter-unavailable"]',
+      );
+      const statusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-status-summary"]',
+      );
+
+      expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
+      expect(statusSummary).not.toBeNull();
+      expect(statusSummary?.textContent).toContain('Estado disponible');
+      expect(statusSummary?.textContent).toContain('Pagado');
+      expect(statusSummary?.textContent).not.toContain('Usa cohorte');
+      expect(statusSummary?.textContent).not.toContain('Ajustar límite');
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+    });
+
+    await cleanup();
+  });
+
   it('keeps loaded registrations usable while cohort filters are still loading', async () => {
     listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
     listRegistrationsMock.mockResolvedValue([

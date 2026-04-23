@@ -2013,9 +2013,11 @@ export default function CourseRegistrationsAdminPage() {
     : showAdvancedLimitControl
       ? 'Cohorte única por ahora. Usa Estado o Ajustar límite para cambiar la vista.'
       : 'Cohorte única por ahora. Usa Estado para cambiar la vista.';
-  const singleVisibleStatusHelperText = showAdvancedLimitControl
-    ? 'Estado único en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
-    : 'Estado único en esta vista. Usa cohorte para cambiar la vista.';
+  const singleVisibleStatusHelperText = showCohortFilterUnavailableSummary
+    ? ''
+    : showAdvancedLimitControl
+      ? 'Estado único en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
+      : 'Estado único en esta vista. Usa cohorte para cambiar la vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
@@ -3437,7 +3439,7 @@ export default function CourseRegistrationsAdminPage() {
                               {standaloneSingleChoiceSourceSummary}
                             </Typography>
                           )}
-                          {showFirstRunFilterHelper && (
+                          {showFirstRunFilterHelper && singleVisibleStatusHelperText && (
                             <Typography variant="caption" color="text.secondary">
                               {singleVisibleStatusHelperText}
                             </Typography>
