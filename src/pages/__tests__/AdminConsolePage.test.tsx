@@ -3045,7 +3045,7 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
       expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
       expect(screen.getByText(/Entidad:\s*user · 101/i)).toBeInTheDocument();
-      expect(screen.getByText(/Actor:\s*101/i)).toBeInTheDocument();
+      expect(screen.getByText(/Actor:\s*Usuario #101/i)).toBeInTheDocument();
       expect(screen.getByText(/Detalle:\s*Admin -> Admin, Manager/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
@@ -3061,7 +3061,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
   });
 
-  it('shows the known admin identity in audit attribution before falling back to raw ids', async () => {
+  it('shows the known admin identity in audit attribution before using a labeled id fallback', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([
       {
@@ -3249,9 +3249,11 @@ describe('AdminConsolePage', () => {
       ).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
-      expect(screen.getByText('777')).toBeInTheDocument();
+      expect(screen.getByText('Usuario #777')).toBeInTheDocument();
       expect(screen.getByText('Admin -> Admin, Manager')).toBeInTheDocument();
     });
+
+    expect(screen.queryByText(/^777$/i)).not.toBeInTheDocument();
   });
 
   it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {

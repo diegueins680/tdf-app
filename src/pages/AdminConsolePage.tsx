@@ -539,7 +539,7 @@ function formatAuditActor(
 
   const actor = usersById.get(actorId);
   if (!actor) {
-    return actorId;
+    return `Usuario #${actorId}`;
   }
 
   const identity = summarizeAdminUserIdentity(actor);
