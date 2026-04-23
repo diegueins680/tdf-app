@@ -237,6 +237,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
     , validateCampaignBudgetCents
+    , validateCalendarAuthorizationCode
     , validateCalendarEventListQuery
     , validateCalendarRedirectUri
     , validateConfiguredDriveAccessToken
@@ -3506,6 +3507,26 @@ spec = describe "TDF.Server helpers" $ do
                 :: Either String DriveTokenExchangeRequest
             )
                 `shouldSatisfy` isLeft
+
+    describe "validateCalendarAuthorizationCode" $ do
+        it "normalizes valid Google Calendar OAuth codes before token exchange" $
+            validateCalendarAuthorizationCode "  4/0AVMBsJoauth-code_123  "
+                `shouldBe` Right "4/0AVMBsJoauth-code_123"
+
+        it "rejects malformed Google Calendar OAuth codes before Google token calls" $ do
+            let assertInvalid expectedMessage rawCode =
+                    case validateCalendarAuthorizationCode rawCode of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Calendar authorization code, got: "
+                                    <> show value
+                                )
+            assertInvalid "code is required" "   "
+            assertInvalid "code must not contain whitespace" "oauth code"
+            assertInvalid "code must not contain control characters" "oauth\NUL\&code"
 
     describe "validateCalendarRedirectUri" $ do
         it "normalizes absolute Calendar OAuth callbacks and rejects ambiguous redirect shapes" $ do

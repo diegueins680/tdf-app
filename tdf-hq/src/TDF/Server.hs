@@ -2248,6 +2248,17 @@ validateCalendarRedirectUri rawRedirect =
             "redirectUri must be an absolute http(s) Google Calendar OAuth callback URL without query or fragment"
         }
 
+validateCalendarAuthorizationCode :: Text -> Either ServerError Text
+validateCalendarAuthorizationCode rawCode =
+  let codeVal = T.strip rawCode
+  in if T.null codeVal
+       then Left err400 { errBody = "code is required" }
+       else if T.any isControl codeVal
+         then Left err400 { errBody = "code must not contain control characters" }
+         else if T.any isSpace codeVal
+           then Left err400 { errBody = "code must not contain whitespace" }
+           else Right codeVal
+
 validateConfiguredCalendarRedirectUri :: Text -> Either ServerError Text
 validateConfiguredCalendarRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "GOOGLE_REDIRECT_URI" (T.unpack rawRedirect) of
@@ -2349,10 +2360,11 @@ calendarServer user =
     calendarTokenExchangeH :: CalAPI.TokenExchangeIn -> AppM CalAPI.CalendarConfigDTO
     calendarTokenExchangeH CalAPI.TokenExchangeIn{..} = do
       requireAdmin
+      codeVal <- either throwError pure (validateCalendarAuthorizationCode code)
       (cid, sec, redirect) <- loadGoogleEnv redirectUri
       manager <- liftIO $ newManager tlsManagerSettings
       token <- requestGoogleToken manager
-        [ ("code", TE.encodeUtf8 code)
+        [ ("code", TE.encodeUtf8 codeVal)
         , ("client_id", TE.encodeUtf8 cid)
         , ("client_secret", TE.encodeUtf8 sec)
         , ("redirect_uri", TE.encodeUtf8 redirect)
