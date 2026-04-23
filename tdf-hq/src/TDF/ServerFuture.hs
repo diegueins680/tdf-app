@@ -5,7 +5,6 @@ module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
 import           Data.Char            (GeneralCategory(Format), generalCategory, isControl)
-import           Data.List            (nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Servant
@@ -97,6 +96,14 @@ adminConsoleCards =
           , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
           ]
       }
+  , AdminConsoleCard
+      { cardId = "api-tokens"
+      , title  = "Tokens API"
+      , body   =
+          [ "Los tokens de servicio deben administrarse desde un flujo dedicado."
+          , "El acceso quedará separado de usuarios humanos para integraciones internas."
+          ]
+      }
   ]
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
@@ -150,15 +157,9 @@ validateFutureAdminConsoleView view
   | status view /= "preview" = invalidFutureAdminConsoleMetadata
   | otherwise = do
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
-      if null validatedCards
-          || length validatedCards > 12
-          || hasDuplicateCardIds validatedCards
+      if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
         then invalidFutureAdminConsoleMetadata
         else Right view { cards = validatedCards }
-  where
-    hasDuplicateCardIds consoleCards =
-      let cardIds = map cardId consoleCards
-      in length cardIds /= length (nub cardIds)
 
 invalidCardText :: Int -> Text -> Bool
 invalidCardText maxLength value =

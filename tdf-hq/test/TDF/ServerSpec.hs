@@ -6431,8 +6431,11 @@ spec = describe "TDF.Server helpers" $ do
 
             assertInvalid (mkView "planned" [mkCard "user-management"])
             assertInvalid (mkView "preview" [])
+            assertInvalid (mkView "preview" [mkCard "user-management"])
             assertInvalid
                 (mkView "preview" [mkCard "user-management", mkCard "user-management"])
+            assertInvalid
+                (mkView "preview" [mkCard "api-tokens", mkCard "user-management"])
             assertInvalid (mkView "preview" [mkCard "User Management"])
 
     describe "futureServer" $ do
@@ -6458,7 +6461,8 @@ spec = describe "TDF.Server helpers" $ do
             case firstFutureAdminConsole (mkUser [Admin]) of
                 Right consoleView -> do
                     Future.status consoleView `shouldBe` "preview"
-                    map Future.cardId (Future.cards consoleView) `shouldBe` ["user-management"]
+                    map Future.cardId (Future.cards consoleView)
+                        `shouldBe` ["user-management", "api-tokens"]
                     Future.cards consoleView `shouldSatisfy` (not . null)
                 Left serverErr ->
                     expectationFailure
