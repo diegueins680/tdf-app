@@ -2679,10 +2679,12 @@ export default function CourseRegistrationsAdminPage() {
     || showGroupedDossierContextActions
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
-  const groupedDossierContextActionsLabel = formatDossierContextActionsLabel({
-    showInlineEmptyFollowUpAction,
-    showInlineEmptyNotesAction,
-  });
+  const groupedDossierContextActionsLabel = hasPrimaryDossierAction
+    ? optionalDossierContextActionsFallbackLabel
+    : formatDossierContextActionsLabel({
+      showInlineEmptyFollowUpAction,
+      showInlineEmptyNotesAction,
+    });
   const hasReceipts = receipts.length > 0;
   const activeRegistrationKnownStatus = activeRegistrationStatus
     ? normalizeKnownRegistrationStatus(activeRegistrationStatus)

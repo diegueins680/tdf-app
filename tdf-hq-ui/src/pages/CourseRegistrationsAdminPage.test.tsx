@@ -194,6 +194,7 @@ const systemEmailHistoryHelperText =
 const emptySystemEmailHistoryMessage =
   'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const optionalDossierContextActionsLabel = 'Agregar nota o seguimiento';
+const compactOptionalDossierContextActionsLabel = 'Agregar contexto';
 const optionalDossierNotesActionLabel = 'Agregar nota interna';
 const optionalDossierFollowUpActionLabel = 'Agregar seguimiento manual';
 const markPaidEmptyNotesHelperText =
@@ -3316,7 +3317,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(actions).toBeTruthy();
       expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
       expect(countButtonsByText(actions!, showSystemEmailsLabel)).toBe(1);
-      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, compactOptionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
@@ -3796,7 +3798,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
-      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, compactOptionalDossierContextActionsLabel)).toBe(1);
+      expect(countButtonsByText(actions!, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
@@ -3812,7 +3815,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, optionalDossierContextActionsLabel));
+      clickButton(getButtonByText(document.body, compactOptionalDossierContextActionsLabel));
       await flushPromises();
       await flushPromises();
     });
