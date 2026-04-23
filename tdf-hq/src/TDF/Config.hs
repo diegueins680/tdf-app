@@ -453,6 +453,8 @@ loadConfig = do
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
+  openAiModelVal <-
+    validateConfiguredOpenAiModel openAiModelEnv
   openAiEmbedModelVal <-
     validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
   ragTopKVal <- validatePositiveIntEnv "RAG_TOP_K" 8 ragTopKEnv
@@ -534,7 +536,7 @@ loadConfig = do
     , courseDefaultMapUrl = courseMapUrl
     , courseDefaultInstructorAvatar = courseInstructorAvatar
     , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
-    , openAiModel = fromMaybe "gpt-5-chat-latest" (openAiModelEnv >>= nonEmpty . T.pack)
+    , openAiModel = openAiModelVal
     , openAiEmbedModel = openAiEmbedModelVal
     , chatKitWorkflowId = chatKitWorkflowIdVal
     , chatKitApiBase = chatKitApiBaseVal
@@ -888,6 +890,14 @@ validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
     Left msg -> fail msg
     Right nodeId -> pure nodeId
 
+validateConfiguredOpenAiModel :: Maybe String -> IO Text
+validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
+validateConfiguredOpenAiModel (Just rawModel) =
+  case normalizeConfiguredOpenAiModel "OPENAI_MODEL" rawModel of
+    Left msg -> fail msg
+    Right Nothing -> pure defaultOpenAiModel
+    Right (Just model) -> pure model
+
 validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
 validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
 validateConfiguredOpenAiEmbedModel (Just rawModel)
@@ -905,6 +915,33 @@ validateConfiguredOpenAiEmbedModel (Just rawModel)
 
 defaultOpenAiEmbedModel :: Text
 defaultOpenAiEmbedModel = "text-embedding-3-small"
+
+defaultOpenAiModel :: Text
+defaultOpenAiModel = "gpt-5-chat-latest"
+
+normalizeConfiguredOpenAiModel :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredOpenAiModel envName rawModel
+  | T.null model = Right Nothing
+  | T.length model > 256 =
+      Left (envName <> " must be 256 characters or fewer")
+  | T.any isSpace model =
+      Left (envName <> " must not contain whitespace")
+  | T.any isControl model =
+      Left (envName <> " must not contain control characters")
+  | T.any (not . isOpenAiModelIdChar) model =
+      Left
+        ( envName
+            <> " must use only ASCII letters, digits, '.', '_', '-' or ':'"
+        )
+  | otherwise =
+      Right (Just model)
+  where
+    model = T.strip (T.pack rawModel)
+    isOpenAiModelIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-:" :: String)
 
 normalizeConfiguredChatKitWorkflowId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredChatKitWorkflowId envName rawWorkflowId

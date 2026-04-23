@@ -249,6 +249,7 @@ import TDF.Config
       instagramMessagingAccountId,
       loadConfig,
       openAiEmbedModel,
+      openAiModel,
       ragAvailabilityDays,
       ragAvailabilityPerResource,
       ragChunkOverlap,
@@ -908,6 +909,32 @@ main = hspec $ do
                 $ loadConfig `shouldThrow` \err ->
                     "OPENAI_EMBED_MODEL must be one of"
                         `isInfixOf` show (err :: IOException)
+
+        it "normalizes configured OpenAI chat models before fallback requests are built" $
+            withEnvOverrides
+                [ ("OPENAI_MODEL", Just " gpt-4.1-mini ") ]
+                $ do
+                    cfg <- loadConfig
+                    openAiModel cfg `shouldBe` "gpt-4.1-mini"
+
+        it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
+            let assertInvalid rawModel expectedMessage =
+                    withEnvOverrides
+                        [ ("OPENAI_MODEL", Just rawModel) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "gpt 4.1"
+                "OPENAI_MODEL must not contain whitespace"
+            assertInvalid
+                "gpt-4.1\nsource"
+                "OPENAI_MODEL must not contain whitespace"
+            assertInvalid
+                "gpt/4?debug=1"
+                "OPENAI_MODEL must use only ASCII letters"
+            assertInvalid
+                (Data.Text.unpack (Data.Text.replicate 257 "a"))
+                "OPENAI_MODEL must be 256 characters or fewer"
 
         it "normalizes configured RAG tuning integers before building retrieval plans" $ do
             withEnvOverrides
