@@ -112,6 +112,8 @@ const formatItemCountLabel = (items: MarketplaceOrderDTO['moItems']) =>
 
 const normalizeProviderFilterValue = (value?: string | null) => value?.trim().toLowerCase() ?? '';
 const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
+const normalizeEmailValue = (value?: string | null) => value?.trim() ?? '';
+const normalizeEmailComparisonValue = (value?: string | null) => normalizeEmailValue(value).toLowerCase();
 const formatPaymentProvider = (value?: string | null) => (
   normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
 );
@@ -120,6 +122,15 @@ const getOrderCurrencyCaption = (order: Pick<MarketplaceOrderDTO, 'moCurrency' |
   const currency = normalizeOrderCurrency(order.moCurrency);
   if (!currency) return '';
   return order.moTotalDisplay.toUpperCase().includes(currency) ? '' : currency;
+};
+const getDistinctPaypalPayerEmail = (
+  order: Pick<MarketplaceOrderDTO, 'moBuyerEmail' | 'moPaypalPayerEmail'>,
+) => {
+  const payerEmail = normalizeEmailValue(order.moPaypalPayerEmail);
+  if (!payerEmail) return '';
+  return normalizeEmailComparisonValue(payerEmail) === normalizeEmailComparisonValue(order.moBuyerEmail)
+    ? ''
+    : payerEmail;
 };
 
 export default function MarketplaceOrdersPage() {
@@ -289,7 +300,7 @@ export default function MarketplaceOrdersPage() {
     [visiblePaymentProviderValues],
   );
   const hasVisibleOrdersWithoutPaymentProvider = visiblePaymentProviderValues.some((provider) => !provider);
-  const hasVisiblePayerEmail = filtered.some((order) => Boolean(order.moPaypalPayerEmail?.trim()));
+  const hasVisiblePayerEmail = filtered.some((order) => getDistinctPaypalPayerEmail(order) !== '');
   const showPaymentProviderColumn =
     hasVisiblePayerEmail
     || visiblePaymentProviderSet.size > 1
@@ -885,6 +896,7 @@ export default function MarketplaceOrdersPage() {
                   const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
                   const itemCountLabel = formatItemCountLabel(order.moItems);
                   const itemSummary = summarizeItems(order.moItems);
+                  const paypalPayerEmail = getDistinctPaypalPayerEmail(order);
 
                   return (
                     <TableRow
@@ -954,15 +966,15 @@ export default function MarketplaceOrdersPage() {
                             <Typography variant="body2">
                               {formatPaymentProvider(order.moPaymentProvider)}
                             </Typography>
-                            {order.moPaypalPayerEmail && (
+                            {paypalPayerEmail && (
                               <Link
-                                href={`mailto:${order.moPaypalPayerEmail}`}
+                                href={`mailto:${paypalPayerEmail}`}
                                 underline="hover"
                                 variant="caption"
                                 color="text.secondary"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {order.moPaypalPayerEmail}
+                                {paypalPayerEmail}
                               </Link>
                             )}
                           </Stack>

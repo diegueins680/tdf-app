@@ -559,6 +559,82 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('hides PayPal payer emails already shown as buyer emails and keeps distinct payer accounts', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerEmail: 'ada@example.com',
+        moPaymentProvider: 'paypal',
+        moPaypalPayerEmail: 'ada@example.com',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moPaypalPayerEmail: '  GRACE@example.com  ',
+        moStatus: 'pending',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const firstRender = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getTableHeaders(container)).not.toContain('Pago');
+        expect(container.textContent).toContain(
+          'Todos los pedidos visibles comparten el estado Pendiente y usan PayPal.',
+        );
+        expect((container.textContent?.match(/ada@example\.com/g) ?? [])).toHaveLength(1);
+        expect((container.textContent?.match(/grace@example\.com/g) ?? [])).toHaveLength(1);
+        expect(container.textContent).not.toContain('GRACE@example.com');
+      });
+    } finally {
+      await firstRender.cleanup();
+    }
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerEmail: 'ada@example.com',
+        moPaymentProvider: 'paypal',
+        moPaypalPayerEmail: 'payer@example.com',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moPaypalPayerEmail: null,
+        moStatus: 'pending',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const nextContainer = document.createElement('div');
+    document.body.appendChild(nextContainer);
+    const secondRender = await renderPage(nextContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getTableHeaders(nextContainer)).toContain('Pago');
+        expect(nextContainer.textContent).toContain('payer@example.com');
+        expect((nextContainer.textContent?.match(/ada@example\.com/g) ?? [])).toHaveLength(1);
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('keeps the payment column when visible rows need per-order payment context', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
