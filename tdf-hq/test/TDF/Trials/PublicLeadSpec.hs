@@ -339,6 +339,39 @@ spec = do
         Right _ ->
           expectationFailure "Expected oversized public signup email to be rejected"
 
+    it "rejects unsupported signup credential fields instead of silently discarding them" $ do
+      let baseSignup =
+            SignupIn
+              "Ada"
+              "Lovelace"
+              "ada@example.com"
+              Nothing
+              Nothing
+              Nothing
+              True
+          assertRejected payload expectedMessage =
+            case validatePublicSignupInput payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected unsupported public signup credential to be rejected"
+      assertRejected
+        baseSignup { password = Just "secret123" }
+        "password is not supported on public signup"
+      assertRejected
+        baseSignup { googleIdToken = Just "token123" }
+        "googleIdToken is not supported on public signup"
+
+      case validatePublicSignupInput
+        baseSignup { password = Just "   ", googleIdToken = Just "   " } of
+        Left err ->
+          expectationFailure
+            ("Expected blank credential placeholders to be ignored, got " <> show err)
+        Right (SignupIn _ _ _ _ passwordValue googleIdTokenValue _) -> do
+          passwordValue `shouldBe` Nothing
+          googleIdTokenValue `shouldBe` Nothing
+
   describe "validatePublicInterestInput" $ do
     it "rejects typoed or unexpected JSON keys so subject selections do not silently disappear" $ do
       isLeft

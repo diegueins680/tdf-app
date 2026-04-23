@@ -493,12 +493,35 @@ validateOptionalPublicTextField fieldName maxChars rawValue =
           Right (Just value)
 
 validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
-validatePublicSignupInput (SignupIn rawFirstName rawLastName rawEmail rawPhone passwordVal googleIdTokenVal marketingOptInVal) = do
+validatePublicSignupInput
+  (SignupIn
+    rawFirstName
+    rawLastName
+    rawEmail
+    rawPhone
+    passwordVal
+    googleIdTokenVal
+    marketingOptInVal) = do
   firstNameVal <- validatePublicSignupNamePart "firstName" rawFirstName
   lastNameVal <- validatePublicSignupNamePart "lastName" rawLastName
   emailVal <- validateRequiredEmail (Just rawEmail)
   phoneVal <- validateOptionalPhone rawPhone
-  Right (SignupIn firstNameVal lastNameVal emailVal phoneVal passwordVal googleIdTokenVal marketingOptInVal)
+  validateUnsupportedPublicSignupCredential "password" passwordVal
+  validateUnsupportedPublicSignupCredential "googleIdToken" googleIdTokenVal
+  Right
+    (SignupIn firstNameVal lastNameVal emailVal phoneVal Nothing Nothing marketingOptInVal)
+
+validateUnsupportedPublicSignupCredential :: Text -> Maybe Text -> Either ServerError ()
+validateUnsupportedPublicSignupCredential _ Nothing =
+  Right ()
+validateUnsupportedPublicSignupCredential fieldName (Just rawValue)
+  | T.null (T.strip rawValue) =
+      Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL8.pack (T.unpack (fieldName <> " is not supported on public signup"))
+        }
 
 validatePublicSignupNamePart :: Text -> Text -> Either ServerError Text
 validatePublicSignupNamePart fieldName rawName =
