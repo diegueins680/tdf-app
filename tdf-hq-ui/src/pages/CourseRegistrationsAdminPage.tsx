@@ -2060,12 +2060,14 @@ export default function CourseRegistrationsAdminPage() {
     ? {
       label: initialEmptyStateFormActionLabel,
       to: `/inscripcion/${encodeURIComponent(firstRunCohort.value)}`,
+      ariaLabel: `Abrir formulario público de ${firstRunCohort.firstRunLabel}`,
     }
     : {
       label: hasMultipleAvailableCohorts
         ? initialEmptyStateMultiCohortActionLabel
         : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
+      ariaLabel: undefined,
     };
 
   const resetReceiptComposer = (open = false) => {
@@ -3179,6 +3181,8 @@ export default function CourseRegistrationsAdminPage() {
               size="small"
               component={RouterLink}
               to={initialEmptyStateAction.to}
+              aria-label={initialEmptyStateAction.ariaLabel}
+              title={initialEmptyStateAction.ariaLabel}
             >
               {initialEmptyStateAction.label}
             </Button>

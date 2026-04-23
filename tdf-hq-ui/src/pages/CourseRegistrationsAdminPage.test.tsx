@@ -8793,9 +8793,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Comparte el formulario público');
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
+      const formAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
       expect(
-        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+        formAction?.textContent?.trim(),
       ).toBe(initialEmptyStateFormActionLabel);
+      expect(formAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
       expect(countOccurrences(container, singleCohortInitialEmptyStateMessage)).toBe(1);
