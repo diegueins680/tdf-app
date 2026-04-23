@@ -7944,6 +7944,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
     });
@@ -7962,6 +7963,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('sin   coincidencias');
       expect(container.textContent).not.toContain('Búsqueda local en el lote cargado (9 inscripciones).');
       expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).not.toContain('Vista única por ahora');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
@@ -7976,6 +7980,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).not.toBeNull();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });

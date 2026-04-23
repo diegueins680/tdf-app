@@ -1626,6 +1626,9 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
+  const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
+    && !hasCustomFilters
+    && !viewHitsCurrentLimit;
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
   const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
     && searchedRegistrations[0] != null
@@ -1991,6 +1994,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showInitialCohortResolutionState
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
+    && !showDefaultEmptyLocalSearchFocus
     && !showSingleResultWithOnlyPassiveFilterContext
     && (!regsQuery.isError || hasCustomFilters);
   const showRegistrationResultsPanel = !showInitialRegistrationLoading
