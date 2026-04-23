@@ -569,19 +569,19 @@ describe('CourseRegistrationsAdminPage', () => {
       await flushPromises();
       await flushPromises();
     });
-    await openDossierContextAction('Agregar seguimiento');
 
     await waitForExpectation(() => {
       expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+      expect(countButtonsByText(document.body, optionalDossierContextActionsLabel)).toBe(0);
+      expect(countButtonsByText(document.body, compactOptionalDossierContextActionsLabel)).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
         ),
       ).toBe(false);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cancelar seguimiento')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Cancelar',
@@ -589,7 +589,7 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toBe(false);
       expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
-      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(document.body.textContent).not.toContain(firstFollowUpComposerHelpText);
       expect(document.body.textContent).toContain(
         'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.',
       );
@@ -599,11 +599,64 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
       expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
-      expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
+      expect(document.body.textContent).not.toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
     await act(async () => {
       clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'URL del comprobante'), 'https://example.com/new-receipt.pdf');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
+      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
+    });
+
+    await openDossierContextAction('Agregar seguimiento');
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+      expect(hasExactText(document.body, 'Registrar seguimiento')).toBe(false);
+      expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
+      expect(document.body.textContent).toContain(firstFollowUpComposerHelpText);
+      expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(hasLabel(document.body, 'Asunto')).toBe(false);
+      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
+    });
+
+    await act(async () => {
       clickButton(getButtonByText(document.body, 'Agregar detalles opcionales'));
       await flushPromises();
       await flushPromises();
@@ -622,20 +675,10 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
-      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
-      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
+      expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
-    });
-
-    await act(async () => {
-      setInputValue(getInputByLabel(document.body, 'URL del comprobante'), 'https://example.com/new-receipt.pdf');
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
     });
 
     await cleanup();

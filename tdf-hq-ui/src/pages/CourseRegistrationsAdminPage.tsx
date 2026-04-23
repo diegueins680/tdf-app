@@ -2666,8 +2666,16 @@ export default function CourseRegistrationsAdminPage() {
     ? 'paid'
     : activeRegistration?.crStatus ?? '';
   const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
-  const showInlineEmptyNotesAction = !isMarkPaidIntent && !showNotesComposer && !showFollowUpComposer && !hasSavedNotes;
-  const showInlineEmptyFollowUpAction = !isMarkPaidIntent && !showFollowUpComposer && !showNotesComposer && followUps.length === 0;
+  const showInlineEmptyNotesAction = !isMarkPaidIntent
+    && !showReceiptComposer
+    && !showNotesComposer
+    && !showFollowUpComposer
+    && !hasSavedNotes;
+  const showInlineEmptyFollowUpAction = !isMarkPaidIntent
+    && !showReceiptComposer
+    && !showFollowUpComposer
+    && !showNotesComposer
+    && followUps.length === 0;
   const hasPrimaryDossierAction = showMarkPaidAction || showSystemEmailHistoryAction;
   const hasAnyInlineDossierContextAction = showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
   const hasMultipleInlineDossierContextActions = showInlineEmptyNotesAction && showInlineEmptyFollowUpAction;
