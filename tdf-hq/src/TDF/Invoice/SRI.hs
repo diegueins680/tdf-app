@@ -98,9 +98,39 @@ validateSriScriptResult dto =
        then Left "SRI script JSON output status is required"
        else if T.any isInvalidStatusChar statusValue
          then Left "SRI script JSON output status must not contain control characters"
-         else Right dto { sirStatus = statusValue }
+         else validateIssuedResult dto { sirStatus = statusValue }
   where
     isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
+
+    validateIssuedResult result
+      | sirStatus result /= "issued" = Right result
+      | not (sirOk result) =
+          Left "SRI script JSON output ok must be true when status is issued"
+      | otherwise = do
+          authorizationNumber <-
+            validateRequiredIssuedField "authorizationNumber" (sirAuthorizationNumber result)
+          invoiceNumber <-
+            validateRequiredIssuedField "invoiceNumber" (sirInvoiceNumber result)
+          Right result
+            { sirAuthorizationNumber = Just authorizationNumber
+            , sirInvoiceNumber = Just invoiceNumber
+            }
+
+    validateRequiredIssuedField fieldName mValue =
+      case T.strip <$> mValue of
+        Nothing ->
+          Left ("SRI script JSON output " <> fieldName <> " is required when status is issued")
+        Just value
+          | T.null value ->
+              Left ("SRI script JSON output " <> fieldName <> " is required when status is issued")
+          | T.any isInvalidStatusChar value ->
+              Left
+                ( "SRI script JSON output "
+                    <> fieldName
+                    <> " must not contain control characters"
+                )
+          | otherwise ->
+              Right value
 
 resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do

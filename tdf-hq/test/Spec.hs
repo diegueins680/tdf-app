@@ -1866,6 +1866,44 @@ main = hspec $ do
                 "status must not contain control characters"
                 "{\"ok\":true,\"status\":\"autorizado\\nextra\"}"
 
+        it "requires issued SRI results to carry confirmed document identifiers" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected inconsistent SRI script output to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "ok must be true when status is issued"
+                ( "{\"ok\":false,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\"}"
+                )
+            assertInvalid
+                "authorizationNumber is required when status is issued"
+                "{\"ok\":true,\"status\":\"issued\",\"invoiceNumber\":\"001-100-000000001\"}"
+            assertInvalid
+                "invoiceNumber is required when status is issued"
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\",\"invoiceNumber\":\"  \"}"
+                )
+            let completeIssued =
+                    "{\"ok\":true,\"status\":\"issued\","
+                        <> "\"authorizationNumber\":\" 123 \","
+                        <> "\"invoiceNumber\":\" 001-100-000000001 \"}"
+            case Sri.decodeSriScriptOutput completeIssued of
+                Left err ->
+                    expectationFailure
+                        ( "Expected complete issued SRI script output to decode, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result -> do
+                    DTO.sirAuthorizationNumber result `shouldBe` Just "123"
+                    DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
