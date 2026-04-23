@@ -661,6 +661,11 @@ const normalizeSourceAliasKey = (source: string) =>
 
 const defaultPublicFormSourceKeys = new Set([
   defaultPublicFormSource,
+  'landing page',
+  'course landing',
+  'course landing page',
+  'public landing',
+  'public landing page',
   'public form',
   'formulario publico',
   'registration form',

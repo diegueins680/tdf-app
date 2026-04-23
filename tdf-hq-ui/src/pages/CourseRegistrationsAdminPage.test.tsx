@@ -7229,17 +7229,18 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('keeps hidden default and empty sources out of busy-list local search', async () => {
+    const defaultSources = [
+      'landing',
+      'landing_page',
+      'course_landing_page',
+      'public_form',
+      'formulario-publico',
+      'registration_form',
+      null,
+    ] as const;
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
-        crSource: index % 5 === 0
-          ? 'landing'
-          : index % 5 === 1
-            ? 'public_form'
-            : index % 5 === 2
-              ? 'formulario-publico'
-              : index % 5 === 3
-                ? 'registration_form'
-              : null,
+        crSource: defaultSources[index % defaultSources.length],
       })),
     );
 
@@ -7253,11 +7254,15 @@ describe('CourseRegistrationsAdminPage', () => {
         'Nombre o contacto',
       );
       expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.textContent).not.toContain('Fuente: Landing page');
+      expect(container.textContent).not.toContain('Fuente: Course landing page');
       expect(container.textContent).not.toContain('Fuente: Public form');
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
       expect(container.textContent).not.toContain('Fuente: Registration form');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
+      expect(container.textContent).not.toContain('Fuente visible: Landing page.');
+      expect(container.textContent).not.toContain('Fuente visible: Course landing page.');
       expect(container.textContent).not.toContain('Fuente visible: Public form.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
       expect(container.textContent).not.toContain('Fuente visible: Registration form.');
@@ -7267,14 +7272,14 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'registration form');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'course landing page');
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain('No hay coincidencias para "registration form" en las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('No hay coincidencias para "course landing page" en las 9 inscripciones cargadas.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
