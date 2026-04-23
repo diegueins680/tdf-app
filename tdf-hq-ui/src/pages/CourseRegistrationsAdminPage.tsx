@@ -1063,10 +1063,12 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     const hasEmail = Boolean(reg.crEmail?.trim());
     const hasPhone = Boolean(reg.crPhoneE164?.trim());
     const hasContact = hasEmail || hasPhone;
+    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crEmail));
+    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crPhoneE164));
 
     if (hasName) hasNameIdentity = true;
-    if (hasEmail) hasEmailIdentity = true;
-    if (hasPhone) hasPhoneIdentity = true;
+    if (hasDistinctEmail) hasEmailIdentity = true;
+    if (hasDistinctPhone) hasPhoneIdentity = true;
     if (!hasName && !hasContact) {
       hasGeneratedRegistrationIdentity = true;
     }

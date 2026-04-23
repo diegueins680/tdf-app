@@ -6909,6 +6909,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await phoneOnlyPage.cleanup();
   });
 
+  it('keeps duplicate identity contacts out of the busy-list search placeholder', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => {
+        if (index === 8) {
+          return {
+            crFullName: '999000111',
+            crEmail: null,
+            crPhoneE164: '+593 999 000 111',
+          };
+        }
+
+        return {
+          crFullName: `student${index + 1}@example.com`,
+          crEmail: `student${index + 1}@example.com`,
+          crPhoneE164: null,
+        };
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('correo');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('teléfono');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+      expect(countOccurrences(container, 'student1@example.com')).toBe(1);
+      expect(countOccurrences(container, '999000111')).toBe(1);
+      expect(container.textContent).not.toContain('+593 999 000 111');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'student3@example.com');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('student3@example.com');
+      expect(container.textContent).not.toContain('student1@example.com');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps busy-list search prompts limited to identity fields that actually exist', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
