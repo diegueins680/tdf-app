@@ -1864,8 +1864,8 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
 
 resolveProvidedDriveAccessToken :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
 resolveProvidedDriveAccessToken mHeaderToken mFormToken = do
-  mHeaderTokenClean <- traverse validateDriveAccessToken (cleanOptional mHeaderToken)
-  mFormTokenClean <- traverse validateDriveAccessToken (cleanOptional mFormToken)
+  mHeaderTokenClean <- validateProvidedDriveAccessToken "X-Goog-Access-Token" mHeaderToken
+  mFormTokenClean <- validateProvidedDriveAccessToken "accessToken" mFormToken
   case (mHeaderTokenClean, mFormTokenClean) of
     (Just headerToken, Just formToken)
       | headerToken == formToken -> Right (Just headerToken)
@@ -1875,6 +1875,18 @@ resolveProvidedDriveAccessToken mHeaderToken mFormToken = do
     (Just headerToken, Nothing) -> Right (Just headerToken)
     (Nothing, Just formToken) -> Right (Just formToken)
     (Nothing, Nothing) -> Right Nothing
+
+validateProvidedDriveAccessToken :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateProvidedDriveAccessToken _ Nothing = Right Nothing
+validateProvidedDriveAccessToken fieldName (Just rawToken) =
+  let token = T.strip rawToken
+  in if T.null token
+      then
+        Left err400
+          { errBody =
+              BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not be blank"))
+          }
+      else Just <$> validateDriveAccessToken token
 
 resolveDriveUploadFolderId :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
 resolveDriveUploadFolderId mProvidedFolderId mFallbackFolderId =

@@ -2968,7 +2968,7 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Nothing
 
     describe "DriveUploadForm FromMultipart" $ do
-        it "normalizes optional upload fields so blank values do not suppress fallbacks" $ do
+        it "normalizes optional upload fields so blank names and folders do not suppress fallbacks" $ do
             case fromMultipart
                 (mkDriveMultipart
                     [ ("folderId", "  folder-123  ")
@@ -2989,7 +2989,6 @@ spec = describe "TDF.Server helpers" $ do
                 (mkDriveMultipart
                     [ ("folderId", "   ")
                     , ("name", "   ")
-                    , ("accessToken", "   ")
                     ]
                     [mkDriveUploadFile "fallback.pdf"]
                 ) :: Either String DriveUploadForm of
@@ -3000,6 +2999,18 @@ spec = describe "TDF.Server helpers" $ do
                     duFolderId payload `shouldBe` Nothing
                     duName payload `shouldBe` Nothing
                     duAccessToken payload `shouldBe` Nothing
+
+        it "rejects blank access tokens instead of silently using configured Drive credentials" $
+            case fromMultipart
+                (mkDriveMultipart
+                    [("accessToken", "   ")]
+                    [mkDriveUploadFile "fallback.pdf"]
+                ) :: Either String DriveUploadForm of
+                Left err ->
+                    err `shouldContain` "accessToken must not be blank"
+                Right payload ->
+                    expectationFailure
+                        ("Expected blank Drive access token to be rejected, got: " <> show (duAccessToken payload))
 
         it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation

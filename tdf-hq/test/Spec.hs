@@ -2635,8 +2635,6 @@ main = hspec $ do
                 `shouldBe` Right (Just "form-token")
             resolveProvidedDriveAccessToken (Just " same-token ") (Just "same-token")
                 `shouldBe` Right (Just "same-token")
-            resolveProvidedDriveAccessToken (Just "   ") (Just " form-token ")
-                `shouldBe` Right (Just "form-token")
             case resolveProvidedDriveAccessToken (Just "header-token") (Just "form-token") of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -2663,6 +2661,14 @@ main = hspec $ do
                 (Just "ya29.valid token")
                 Nothing
                 "Google Drive access token must not contain whitespace"
+            assertInvalid
+                (Just "   ")
+                (Just "form-token")
+                "X-Goog-Access-Token must not be blank"
+            assertInvalid
+                Nothing
+                (Just "   ")
+                "accessToken must not be blank"
             assertInvalid
                 Nothing
                 (Just "ya29.valid\NULtoken")
