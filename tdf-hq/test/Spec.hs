@@ -1202,6 +1202,23 @@ main = hspec $ do
                             ]
                         ]
             WhatsAppClient.extractMessageId controlPayload `shouldBe` Nothing
+            let whitespacePayload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("wamid.invalid id" :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId whitespacePayload `shouldBe` Nothing
+
+        it "rejects multiple WhatsApp provider message ids instead of choosing an ambiguous acknowledgement" $ do
+            let payload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("wamid.first" :: Text)]
+                            , A.object ["id" .= ("wamid.second" :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId payload `shouldBe` Nothing
 
         it "keeps DB_* connection settings authoritative when they are already configured" $
             withEnvOverrides

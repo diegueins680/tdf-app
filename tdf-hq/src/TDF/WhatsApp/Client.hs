@@ -140,8 +140,9 @@ extractMessageId =
     withObject "SendTextResult" $ \o -> do
       msgs <- o .:? "messages" .!= ([] :: [Value])
       case mapMaybe pullId msgs of
-        msgId : _ -> pure msgId
+        [msgId] -> pure msgId
         [] -> fail "Missing WhatsApp message id"
+        _ -> fail "Multiple WhatsApp message ids"
   where
     pullId =
       parseMaybe $
@@ -152,7 +153,7 @@ extractMessageId =
 normalizeMessageId :: Text -> Maybe Text
 normalizeMessageId rawId =
   let trimmed = T.strip rawId
-  in if T.null trimmed || T.any isControl trimmed
+  in if T.null trimmed || T.any isUnsafeHeaderChar trimmed
        then Nothing
        else Just trimmed
 
