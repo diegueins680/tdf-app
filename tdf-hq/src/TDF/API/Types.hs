@@ -277,6 +277,14 @@ data AssetDTO = AssetDTO
   , location :: Maybe Text
   , qrToken  :: Maybe Text
   , photoUrl :: Maybe Text
+  , currentCheckoutKind :: Maybe Text
+  , currentCheckoutTarget :: Maybe Text
+  , currentCheckoutDisposition :: Maybe Text
+  , currentCheckoutHolderEmail :: Maybe Text
+  , currentCheckoutHolderPhone :: Maybe Text
+  , currentCheckoutAt :: Maybe UTCTime
+  , currentCheckoutDueAt :: Maybe UTCTime
+  , currentCheckoutPhotoUrl :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON AssetDTO
@@ -539,11 +547,16 @@ data AssetCheckoutDTO = AssetCheckoutDTO
   , targetSessionId:: Maybe Text
   , targetPartyRef :: Maybe Text
   , targetRoomId   :: Maybe Text
+  , disposition    :: Text
+  , holderEmail    :: Maybe Text
+  , holderPhone    :: Maybe Text
   , checkedOutBy   :: Text
   , checkedOutAt   :: UTCTime
   , dueAt          :: Maybe UTCTime
   , conditionOut   :: Maybe Text
+  , photoOutUrl    :: Maybe Text
   , conditionIn    :: Maybe Text
+  , photoInUrl     :: Maybe Text
   , returnedAt     :: Maybe UTCTime
   , notes          :: Maybe Text
   } deriving (Show, Generic)
@@ -597,6 +610,10 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coTargetSession :: Maybe Text
   , coTargetParty   :: Maybe Text
   , coTargetRoom    :: Maybe Text
+  , coDisposition   :: Maybe Text
+  , coHolderEmail   :: Maybe Text
+  , coHolderPhone   :: Maybe Text
+  , coPhotoUrl      :: Maybe Text
   , coDueAt         :: Maybe UTCTime
   , coConditionOut  :: Maybe Text
   , coNotes         :: Maybe Text
@@ -608,6 +625,7 @@ instance ToJSON AssetCheckoutRequest
 data AssetCheckinRequest = AssetCheckinRequest
   { ciConditionIn :: Maybe Text
   , ciNotes       :: Maybe Text
+  , ciPhotoUrl    :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AssetCheckinRequest where
   parseJSON = genericParseJSON strictObjectOptions

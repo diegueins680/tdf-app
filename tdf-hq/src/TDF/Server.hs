@@ -93,7 +93,7 @@ import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceLi
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers (socialEventsServer)
-import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
+import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryPublicServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import qualified TDF.ServerExtra as ServerExtra
 import qualified TDF.ServerAuth as AuthServer
 import           TDF.ServerInstagramOAuth (instagramOAuthServer)
@@ -293,6 +293,7 @@ server env =
   :<|> adsPublicServer
   :<|> cmsPublicServer
   :<|> whatsappConsentPublicServer
+  :<|> inventoryPublicServer
   :<|> marketplacePublicServer
   :<|> contractsServer
   :<|> radioPresencePublicServer

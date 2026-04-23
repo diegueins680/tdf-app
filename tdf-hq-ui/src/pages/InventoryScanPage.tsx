@@ -1,12 +1,36 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, Chip, Container, Stack, TextField, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO } from '../api/types';
-import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest } from '../api/inventory';
+import {
+  InventoryPublic,
+  type AssetCheckinRequest,
+  type AssetCheckoutRequest,
+} from '../api/inventory';
+import { CHECKOUT_DISPOSITION_OPTIONS, getCheckoutDispositionLabel } from '../utils/inventoryCheckout';
 
 const REFRESH_STATE_HELP_TEXT =
-  'Si otro operador ya movio este equipo desde otra pantalla, usa Refrescar estado para confirmar que accion sigue aqui.';
+  'Si otro operador ya movió este equipo desde otra pantalla, usa Refrescar estado para confirmar qué acción sigue aquí.';
+
+function formatDate(value?: string | null) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
 
 export default function InventoryScanPage() {
   const { token } = useParams();
@@ -16,17 +40,32 @@ export default function InventoryScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({ coTargetKind: 'party' });
-  const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({});
   const [nextToken, setNextToken] = useState('');
+  const [checkoutForm, setCheckoutForm] = useState<AssetCheckoutRequest>({
+    coTargetKind: 'party',
+    coTargetParty: '',
+    coDisposition: 'loan',
+    coHolderEmail: '',
+    coHolderPhone: '',
+    coConditionOut: '',
+    coPhotoUrl: '',
+    coNotes: '',
+  });
+  const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({
+    ciConditionIn: '',
+    ciNotes: '',
+    ciPhotoUrl: '',
+  });
+  const [photoUploadPending, setPhotoUploadPending] = useState<'checkout' | 'checkin' | null>(null);
 
   const loadAsset = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await Inventory.byQrToken(token);
+      const data = await InventoryPublic.byQrToken(token);
       setAsset(data);
       setError(null);
     } catch (err) {
+      setAsset(null);
       setError(err instanceof Error ? err.message : 'No pudimos cargar el equipo.');
     }
   }, [token]);
@@ -37,32 +76,65 @@ export default function InventoryScanPage() {
 
   const checkoutMutation = useMutation({
     mutationFn: () =>
-      asset ? Inventory.checkout(asset.assetId, checkoutForm) : Promise.reject(new Error('No asset')),
+      token ? InventoryPublic.checkout(token, checkoutForm) : Promise.reject(new Error('Missing token')),
     onSuccess: async () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
       await loadAsset();
-      setFeedback('Equipo marcado como check-out.');
+      setFeedback('Salida registrada correctamente.');
       setFormError(null);
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-out.'),
+    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar la salida.'),
   });
 
   const checkinMutation = useMutation({
     mutationFn: () =>
-      asset ? Inventory.checkin(asset.assetId, checkinForm) : Promise.reject(new Error('No asset')),
+      token ? InventoryPublic.checkin(token, checkinForm) : Promise.reject(new Error('Missing token')),
     onSuccess: async () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
       await loadAsset();
-      setFeedback('Equipo marcado como devuelto.');
+      setFeedback('Retorno registrado correctamente.');
       setFormError(null);
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el check-in.'),
+    onError: (err) => setError(err instanceof Error ? err.message : 'No pudimos registrar el retorno.'),
   });
 
+  const uploadPhoto = async (mode: 'checkout' | 'checkin', file: File) => {
+    if (!token) return;
+    setPhotoUploadPending(mode);
+    try {
+      const uploaded = await InventoryPublic.uploadPhoto(token, file, { name: file.name });
+      if (mode === 'checkout') {
+        setCheckoutForm((prev) => ({ ...prev, coPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+      } else {
+        setCheckinForm((prev) => ({ ...prev, ciPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo subir la foto.');
+    } finally {
+      setPhotoUploadPending(null);
+    }
+  };
+
+  const normalizedStatus = asset?.status?.trim().toLowerCase() ?? '';
+  const isCheckedOut = normalizedStatus === 'booked';
+  const isRetired = normalizedStatus === 'retired';
+  const isUnavailable = normalizedStatus.includes('maintenance');
+  const isMovementPending = checkoutMutation.isPending || checkinMutation.isPending;
+  const isSale = asset?.currentCheckoutDisposition?.trim().toLowerCase() === 'sale';
+
+  const currentHolderSummary = useMemo(() => {
+    if (!asset?.currentCheckoutTarget) return null;
+    return asset.currentCheckoutTarget;
+  }, [asset?.currentCheckoutTarget]);
+
   const handleCheckoutSubmit = () => {
-    const target = checkoutForm.coTargetParty?.trim() ?? '';
-    if (!target) {
-      setFormError('Agrega un destino para el check-out (persona, sala o referencia).');
+    const holderName = checkoutForm.coTargetParty?.trim() ?? '';
+    if (!holderName) {
+      setFormError('Escribe el nombre de la persona o proyecto que se lleva el equipo.');
+      return;
+    }
+    if (!(checkoutForm.coPhotoUrl?.trim())) {
+      setFormError('Sube una foto del estado del equipo al salir.');
       return;
     }
     setFormError(null);
@@ -72,17 +144,12 @@ export default function InventoryScanPage() {
   const handleCheckinSubmit = () => {
     const condition = checkinForm.ciConditionIn?.trim() ?? '';
     if (!condition) {
-      setFormError('Describe la condición al recibir el equipo.');
+      setFormError('Describe la condición al recibir o devolver el equipo.');
       return;
     }
     setFormError(null);
     checkinMutation.mutate();
   };
-
-  const normalizedStatus = asset?.status?.toLowerCase() ?? '';
-  const isCheckedOut = normalizedStatus.includes('book') || normalizedStatus.includes('out');
-  const isUnavailable = normalizedStatus.includes('maintenance') || normalizedStatus.includes('retired');
-  const isMovementPending = checkoutMutation.isPending || checkinMutation.isPending;
 
   if (!token) {
     return (
@@ -114,7 +181,7 @@ export default function InventoryScanPage() {
                   </Button>
                 </Stack>
                 <Typography variant="body2" color="text.secondary">
-                  Escanea el QR físico para abrir el token o pide el enlace compartible.
+                  Escanea el QR físico o pega el enlace que te compartió el equipo de TDF.
                 </Typography>
               </Stack>
             </CardContent>
@@ -128,7 +195,9 @@ export default function InventoryScanPage() {
     <Box sx={{ minHeight: '100vh', background: '#0b1224', color: '#e2e8f0', py: 4 }}>
       <Container maxWidth="sm">
         <Stack spacing={2}>
-          <Typography variant="h5" fontWeight={800}>Escaneo de equipo</Typography>
+          <Typography variant="h5" fontWeight={800}>
+            Salida y retorno de equipo
+          </Typography>
           {feedback && (
             <Alert severity="success" onClose={() => setFeedback(null)}>
               {feedback}
@@ -143,19 +212,43 @@ export default function InventoryScanPage() {
           {asset ? (
             <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <CardContent>
-                <Stack spacing={1}>
-                  <Typography variant="h6">{asset.name}</Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip label={asset.category} size="small" />
-                    <Chip label={`Estado: ${asset.status}`} size="small" />
+                <Stack spacing={1.5}>
+                  <Stack spacing={0.75}>
+                    <Typography variant="h6">{asset.name}</Typography>
+                    <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                      <Chip label={asset.category} size="small" />
+                      <Chip label={`Estado: ${asset.status}`} size="small" />
+                      {asset.currentCheckoutDisposition && (
+                        <Chip label={getCheckoutDispositionLabel(asset.currentCheckoutDisposition)} size="small" variant="outlined" />
+                      )}
+                    </Stack>
+                    <Typography variant="body2">Condición actual: {asset.condition ?? '—'}</Typography>
+                    <Typography variant="body2">Ubicación base: {asset.location ?? '—'}</Typography>
                   </Stack>
-                  <Typography variant="body2">Condición: {asset.condition ?? '—'}</Typography>
-                  <Typography variant="body2">Ubicación: {asset.location ?? '—'}</Typography>
+
+                  {asset.photoUrl && (
+                    <img
+                      src={asset.photoUrl}
+                      alt={`Foto de ${asset.name}`}
+                      style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }}
+                    />
+                  )}
+
+                  {asset.currentCheckoutPhotoUrl && (
+                    <Stack spacing={0.5}>
+                      <Typography variant="subtitle2">Último estado registrado al salir</Typography>
+                      <img
+                        src={asset.currentCheckoutPhotoUrl}
+                        alt={`Último estado registrado de ${asset.name}`}
+                        style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }}
+                      />
+                    </Stack>
+                  )}
+
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     spacing={1}
                     alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    sx={{ mt: 1 }}
                   >
                     <Button variant="text" onClick={() => void loadAsset()} disabled={isMovementPending}>
                       Refrescar estado
@@ -164,101 +257,182 @@ export default function InventoryScanPage() {
                       {REFRESH_STATE_HELP_TEXT}
                     </Typography>
                   </Stack>
+
+                  {currentHolderSummary && (
+                    <Alert severity="info">
+                      Actualmente lo tiene: <strong>{currentHolderSummary}</strong>.{' '}
+                      {asset.currentCheckoutAt ? `Salió: ${formatDate(asset.currentCheckoutAt)}.` : ''}
+                      {' '}
+                      {asset.currentCheckoutDueAt ? `Devuelve: ${formatDate(asset.currentCheckoutDueAt)}.` : 'Sin fecha de devolución.'}
+                    </Alert>
+                  )}
+
                   {isUnavailable ? (
-                    <Stack spacing={1.5} sx={{ mt: 2 }}>
-                      <Alert severity="warning">
-                        Este equipo está marcado como {asset.status}. No se permite check-in/out mientras esté fuera de servicio.
-                      </Alert>
-                    </Stack>
+                    <Alert severity="warning">
+                      Este equipo está marcado como {asset.status}. No se permiten movimientos mientras esté fuera de servicio.
+                    </Alert>
+                  ) : isRetired && isSale ? (
+                    <Alert severity="info">
+                      Este equipo se registró como vendido. El enlace queda solo como consulta histórica.
+                    </Alert>
+                  ) : isRetired ? (
+                    <Alert severity="info">
+                      Este equipo está retirado del inventario operativo. El enlace queda solo como consulta histórica.
+                    </Alert>
                   ) : isCheckedOut ? (
-                    <>
-                      <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-in</Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {['Sin novedades', 'Limpio', 'Con desgaste menor'].map((preset) => (
-                          <Button
-                            key={preset}
-                            size="small"
-                            variant="outlined"
-                            onClick={() =>
-                              setCheckinForm((prev) => ({ ...prev, ciConditionIn: preset }))
-                            }
-                          >
-                            {preset}
-                          </Button>
-                        ))}
-                      </Stack>
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle1" sx={{ mt: 1 }}>
+                        Registrar retorno
+                      </Typography>
                       <TextField
-                        label="Condición al entrar"
+                        label="Condición al regresar"
                         value={checkinForm.ciConditionIn ?? ''}
-                        onChange={(e) => setCheckinForm({ ...checkinForm, ciConditionIn: e.target.value })}
+                        onChange={(e) => setCheckinForm((prev) => ({ ...prev, ciConditionIn: e.target.value }))}
                         fullWidth
                         multiline
                         minRows={2}
-                        sx={{ mt: 1 }}
                       />
                       <TextField
                         label="Notas"
                         value={checkinForm.ciNotes ?? ''}
-                        onChange={(e) => setCheckinForm({ ...checkinForm, ciNotes: e.target.value })}
+                        onChange={(e) => setCheckinForm((prev) => ({ ...prev, ciNotes: e.target.value }))}
                         fullWidth
                         multiline
                         minRows={2}
-                        sx={{ mt: 1 }}
                       />
+                      <Button component="label" variant="outlined" disabled={photoUploadPending === 'checkin'}>
+                        {photoUploadPending === 'checkin'
+                          ? 'Subiendo foto…'
+                          : checkinForm.ciPhotoUrl
+                            ? 'Reemplazar foto de retorno'
+                            : 'Subir foto de retorno'}
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadPhoto('checkin', file);
+                            event.currentTarget.value = '';
+                          }}
+                        />
+                      </Button>
+                      {checkinForm.ciPhotoUrl && (
+                        <img
+                          src={checkinForm.ciPhotoUrl}
+                          alt="Estado al regresar"
+                          style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }}
+                        />
+                      )}
                       <Button
                         variant="contained"
-                        sx={{ mt: 2 }}
                         onClick={handleCheckinSubmit}
                         disabled={checkinMutation.isPending}
                       >
-                        {checkinMutation.isPending ? 'Registrando…' : 'Check-in'}
+                        {checkinMutation.isPending ? 'Registrando…' : 'Registrar retorno'}
                       </Button>
-                    </>
+                    </Stack>
                   ) : (
-                    <>
-                      <Typography variant="subtitle1" sx={{ mt: 2 }}>Registrar check-out</Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {['Cliente', 'Sala', 'Mantenimiento'].map((preset) => (
-                          <Button
-                            key={preset}
-                            size="small"
-                            variant="outlined"
-                            onClick={() =>
-                              setCheckoutForm((prev) => ({ ...prev, coTargetParty: preset }))
-                            }
-                          >
-                            {preset}
-                          </Button>
-                        ))}
-                      </Stack>
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle1" sx={{ mt: 1 }}>
+                        Registrar salida
+                      </Typography>
                       <TextField
-                        label="Destino (party/ref)"
+                        label="Nombre de quien se lleva el equipo"
                         value={checkoutForm.coTargetParty ?? ''}
-                        onChange={(e) => setCheckoutForm({ ...checkoutForm, coTargetParty: e.target.value })}
+                        onChange={(e) =>
+                          setCheckoutForm((prev) => ({ ...prev, coTargetParty: e.target.value, coTargetKind: 'party' }))
+                        }
                         fullWidth
-                        sx={{ mt: 1 }}
+                      />
+                      <TextField
+                        label="Tipo de movimiento"
+                        select
+                        value={checkoutForm.coDisposition ?? 'loan'}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coDisposition: e.target.value }))}
+                        fullWidth
+                      >
+                        {CHECKOUT_DISPOSITION_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <TextField
+                        label="Correo"
+                        type="email"
+                        value={checkoutForm.coHolderEmail ?? ''}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coHolderEmail: e.target.value }))}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Teléfono"
+                        value={checkoutForm.coHolderPhone ?? ''}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coHolderPhone: e.target.value }))}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Fecha estimada de retorno"
+                        type="datetime-local"
+                        value={checkoutForm.coDueAt ?? ''}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coDueAt: e.target.value }))}
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      <TextField
+                        label="Condición al salir"
+                        value={checkoutForm.coConditionOut ?? ''}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coConditionOut: e.target.value }))}
+                        fullWidth
+                        multiline
+                        minRows={2}
                       />
                       <TextField
                         label="Notas"
                         value={checkoutForm.coNotes ?? ''}
-                        onChange={(e) => setCheckoutForm({ ...checkoutForm, coNotes: e.target.value })}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coNotes: e.target.value }))}
                         fullWidth
                         multiline
                         minRows={2}
-                        sx={{ mt: 1 }}
                       />
+                      <Button component="label" variant="outlined" disabled={photoUploadPending === 'checkout'}>
+                        {photoUploadPending === 'checkout'
+                          ? 'Subiendo foto…'
+                          : checkoutForm.coPhotoUrl
+                            ? 'Reemplazar foto del estado al salir'
+                            : 'Subir foto del estado al salir'}
+                        <input
+                          hidden
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadPhoto('checkout', file);
+                            event.currentTarget.value = '';
+                          }}
+                        />
+                      </Button>
+                      {checkoutForm.coPhotoUrl && (
+                        <img
+                          src={checkoutForm.coPhotoUrl}
+                          alt="Estado al salir"
+                          style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }}
+                        />
+                      )}
                       <Button
                         variant="contained"
-                        sx={{ mt: 2 }}
                         onClick={handleCheckoutSubmit}
                         disabled={checkoutMutation.isPending}
                       >
-                        {checkoutMutation.isPending ? 'Registrando…' : 'Check-out'}
+                        {checkoutMutation.isPending ? 'Registrando…' : 'Registrar salida'}
                       </Button>
-                    </>
+                    </Stack>
                   )}
-                  <Stack spacing={1.5} sx={{ mt: 2 }}>
-                    <Typography variant="subtitle1">¿Escanear otro equipo?</Typography>
+
+                  <Stack spacing={1.5} sx={{ mt: 1 }}>
+                    <Typography variant="subtitle1">¿Abrir otro equipo?</Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <TextField
                         label="Código QR"

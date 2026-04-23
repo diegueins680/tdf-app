@@ -8502,6 +8502,75 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps filtered reset actions hidden while local search already owns the narrowed registration view', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crCourseSlug: 'beatmaking-101',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crCourseSlug: 'beatmaking-101',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 20 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crCourseSlug: 'beatmaking-101',
+        crStatus: 'paid',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101&status=paid');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByText(container, 'Restablecer filtros')).toBeTruthy();
+      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const filterUtilities = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-filter-utilities"]',
+      );
+      const searchUtilities = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-local-search-utilities"]',
+      );
+
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(filterUtilities).not.toBeNull();
+      expect(filterUtilities?.textContent).toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(countButtonsByText(container, 'Restablecer filtros')).toBe(0);
+      expect(searchUtilities).not.toBeNull();
+      expect(getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel)).toBeTruthy();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the visible CSV export scoped to local search results', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {

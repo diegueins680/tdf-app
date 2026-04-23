@@ -138,3 +138,9 @@ type InventoryAPI =
   :<|> "assets" :> Capture "id" Text :> "history"  :> Get '[JSON] [AssetCheckoutDTO]
   :<|> "assets" :> Capture "id" Text :> "qr"       :> Post '[JSON] AssetQrDTO
   :<|> "assets" :> "qr" :> Capture "token" Text    :> Get '[JSON] AssetDTO
+
+type InventoryPublicAPI =
+       "public" :> "assets" :> "qr" :> Capture "token" Text :> Get '[JSON] AssetDTO
+  :<|> "public" :> "assets" :> "qr" :> Capture "token" Text :> "checkout" :> ReqBody '[JSON] AssetCheckoutRequest :> Post '[JSON] AssetCheckoutDTO
+  :<|> "public" :> "assets" :> "qr" :> Capture "token" Text :> "checkin"  :> ReqBody '[JSON] AssetCheckinRequest  :> Post '[JSON] AssetCheckoutDTO
+  :<|> "public" :> "assets" :> "qr" :> Capture "token" Text :> "upload"   :> MultipartForm Tmp AssetUploadForm :> Post '[JSON] AssetUploadDTO

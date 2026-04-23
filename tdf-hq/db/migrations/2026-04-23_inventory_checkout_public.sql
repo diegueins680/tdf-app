@@ -1,0 +1,6 @@
+ALTER TABLE asset_checkout
+  ADD COLUMN IF NOT EXISTS disposition TEXT NOT NULL DEFAULT 'Loan',
+  ADD COLUMN IF NOT EXISTS holder_email TEXT,
+  ADD COLUMN IF NOT EXISTS holder_phone TEXT,
+  ADD COLUMN IF NOT EXISTS photo_out_url TEXT,
+  ADD COLUMN IF NOT EXISTS photo_in_url TEXT;

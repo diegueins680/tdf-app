@@ -539,13 +539,18 @@ CREATE TABLE IF NOT EXISTS asset_checkout (
     target_session_id   UUID,
     target_party_ref    TEXT,
     target_room_id      UUID REFERENCES room(id) ON DELETE SET NULL,
+    disposition         TEXT NOT NULL DEFAULT 'Loan',
+    holder_email        TEXT,
+    holder_phone        TEXT,
     checked_out_by_ref  TEXT NOT NULL,
     checked_out_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     due_at              TIMESTAMPTZ,
     condition_out       TEXT,
+    photo_out_url       TEXT,
     photo_drive_file_id TEXT,
     returned_at         TIMESTAMPTZ,
     condition_in        TEXT,
+    photo_in_url        TEXT,
     notes               TEXT
 );
 

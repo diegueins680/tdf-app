@@ -104,12 +104,17 @@ const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): A
   targetPartyRef: 'Ada Lovelace',
   targetRoomId: null,
   targetSessionId: null,
+  disposition: 'loan',
+  holderEmail: 'ada@example.com',
+  holderPhone: '0999999999',
   checkedOutBy: 'admin',
   dueAt: '2030-01-04T03:04:05.000Z',
   checkedOutAt: '2030-01-02T03:04:05.000Z',
   returnedAt: null,
   conditionOut: 'Excelente',
+  photoOutUrl: null,
   conditionIn: null,
+  photoInUrl: null,
   notes: 'Uso en grabación.',
   ...overrides,
 });
@@ -264,12 +269,12 @@ describe('InventoryPage', () => {
           'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
         expect(container.textContent).not.toContain('Abre Acciones para ver QR o historial.');
-        expect(container.querySelectorAll('button[aria-label^="Abrir QR e historial de "]')).toHaveLength(2);
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones de "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).toBeNull();
         expect(
           Array.from(container.querySelectorAll('button')).filter(
-            (button) => (button.textContent ?? '').trim() === 'QR e historial',
+            (button) => (button.textContent ?? '').trim() === 'Acciones',
           ),
         ).toHaveLength(2);
         expect(
@@ -277,15 +282,10 @@ describe('InventoryPage', () => {
             (button) => (button.textContent ?? '').trim() === 'Historial',
           ),
         ).toBe(false);
-        expect(
-          Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'Acciones',
-          ),
-        ).toBe(false);
       });
 
       await act(async () => {
-        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir QR e historial de Neumann U87"]');
+        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir acciones de Neumann U87"]');
         actionsButton?.click();
         await flushPromises();
       });
@@ -359,8 +359,8 @@ describe('InventoryPage', () => {
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(5);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
       });
     } finally {
       await cleanup();
@@ -441,7 +441,7 @@ describe('InventoryPage', () => {
         expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir check-out de Retirado Dos"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Dos"]')).toBeNull();
-        expect(container.querySelectorAll('button[aria-label^="Abrir QR e historial de "]')).toHaveLength(2);
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones de "]')).toHaveLength(2);
       });
     } finally {
       await cleanup();

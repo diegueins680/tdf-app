@@ -308,6 +308,10 @@ export default function LabelAssetsPage() {
       coTargetParty: '',
       coTargetRoom: '',
       coTargetSession: '',
+      coDisposition: 'loan',
+      coHolderEmail: '',
+      coHolderPhone: '',
+      coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',
     });
@@ -319,6 +323,7 @@ export default function LabelAssetsPage() {
     setCheckinForm({
       ciConditionIn: '',
       ciNotes: '',
+      ciPhotoUrl: '',
     });
     setDialogOpen('checkin');
   };

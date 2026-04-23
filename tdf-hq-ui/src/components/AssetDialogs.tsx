@@ -13,12 +13,12 @@ import {
 } from '@mui/material';
 import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types';
 import type { AssetCheckinRequest, AssetCheckoutRequest } from '../api/inventory';
-
-export const CHECKOUT_TARGET_OPTIONS = [
-  { value: 'party', label: 'Staff / externo' },
-  { value: 'room', label: 'Sala / cuarto' },
-  { value: 'session', label: 'Sesión' },
-];
+import {
+  CHECKOUT_DISPOSITION_OPTIONS,
+  CHECKOUT_TARGET_OPTIONS,
+  formatCheckoutTargetDisplay,
+  getCheckoutDispositionLabel,
+} from '../utils/inventoryCheckout';
 
 export function CheckoutDialog({
   open,
@@ -34,6 +34,8 @@ export function CheckoutDialog({
   loadingParties,
   currentCheckout,
   recentHistory,
+  onCheckoutPhotoSelect,
+  checkoutPhotoUploading,
 }: {
   open: boolean;
   onClose: () => void;
@@ -48,6 +50,8 @@ export function CheckoutDialog({
   loadingParties?: boolean;
   currentCheckout?: AssetCheckoutDTO | null;
   recentHistory?: AssetCheckoutDTO[];
+  onCheckoutPhotoSelect?: (file: File) => void;
+  checkoutPhotoUploading?: boolean;
 }) {
   if (!asset) return null;
   const targetKind = form.coTargetKind ?? 'party';
@@ -62,6 +66,7 @@ export function CheckoutDialog({
   const copySummary = async () => {
     const lines = [
       `Equipo: ${asset.name}`,
+      `Movimiento: ${getCheckoutDispositionLabel(form.coDisposition)}`,
       `Destino: ${form.coTargetKind ?? 'party'} ${form.coTargetParty ?? form.coTargetRoom ?? ''}`.trim(),
       form.coDueAt ? `Vence: ${formatDue(form.coDueAt) ?? form.coDueAt}` : null,
       form.coNotes ? `Notas: ${form.coNotes}` : null,
@@ -81,7 +86,12 @@ export function CheckoutDialog({
         </Typography>
         {activeCheckout && (
           <Alert severity="warning" sx={{ mb: 1 }}>
-            Actualmente en uso por {activeCheckout?.targetPartyRef ?? activeCheckout?.targetRoomId ?? activeCheckout?.targetKind}.{' '}
+            Actualmente en uso por {formatCheckoutTargetDisplay(
+              activeCheckout?.targetKind,
+              activeCheckout?.targetPartyRef ?? activeCheckout?.targetRoomId ?? activeCheckout?.targetSessionId,
+              roomOptions ? new Map(roomOptions.map((room) => [room.roomId, room])) : undefined,
+            )}.{' '}
+            Tipo: {getCheckoutDispositionLabel(activeCheckout?.disposition)}.{' '}
             {activeCheckout?.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
             {' '}Registra el check-in antes de asignarlo de nuevo.
           </Alert>
@@ -99,6 +109,18 @@ export function CheckoutDialog({
           </Alert>
         )}
         <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            select
+            label="Tipo de movimiento"
+            value={form.coDisposition ?? 'loan'}
+            onChange={(e) => onFormChange({ ...form, coDisposition: e.target.value })}
+          >
+            {CHECKOUT_DISPOSITION_OPTIONS.map((opt) => (
+              <MenuItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
             select
             label="Destino"
@@ -169,6 +191,17 @@ export function CheckoutDialog({
             />
           )}
           <TextField
+            label="Correo del responsable"
+            value={form.coHolderEmail ?? ''}
+            onChange={(e) => onFormChange({ ...form, coHolderEmail: e.target.value })}
+            type="email"
+          />
+          <TextField
+            label="Teléfono del responsable"
+            value={form.coHolderPhone ?? ''}
+            onChange={(e) => onFormChange({ ...form, coHolderPhone: e.target.value })}
+          />
+          <TextField
             label="Fecha estimada de retorno"
             type="datetime-local"
             value={form.coDueAt ?? ''}
@@ -205,6 +238,38 @@ export function CheckoutDialog({
             onChange={(e) => onFormChange({ ...form, coConditionOut: e.target.value })}
             multiline
           />
+          {(onCheckoutPhotoSelect || form.coPhotoUrl) && (
+            <Stack spacing={1}>
+              {onCheckoutPhotoSelect && (
+                <Button component="label" variant="outlined" disabled={checkoutPhotoUploading}>
+                  {checkoutPhotoUploading ? 'Subiendo foto…' : form.coPhotoUrl ? 'Reemplazar foto de salida' : 'Subir foto de salida'}
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) onCheckoutPhotoSelect(file);
+                      event.currentTarget.value = '';
+                    }}
+                  />
+                </Button>
+              )}
+              {form.coPhotoUrl && (
+                <Stack spacing={0.75}>
+                  <img
+                    src={form.coPhotoUrl}
+                    alt="Estado del equipo al salir"
+                    style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 12 }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    La foto queda asociada al movimiento de salida.
+                  </Typography>
+                </Stack>
+              )}
+            </Stack>
+          )}
           <TextField
             label="Notas"
             value={form.coNotes ?? ''}
@@ -232,6 +297,8 @@ export function CheckinDialog({
   onFormChange,
   onSubmit,
   loading,
+  onCheckinPhotoSelect,
+  checkinPhotoUploading,
 }: {
   open: boolean;
   onClose: () => void;
@@ -240,6 +307,8 @@ export function CheckinDialog({
   onFormChange: (form: AssetCheckinRequest) => void;
   onSubmit: () => void;
   loading: boolean;
+  onCheckinPhotoSelect?: (file: File) => void;
+  checkinPhotoUploading?: boolean;
 }) {
   if (!asset) return null;
   return (
@@ -259,6 +328,33 @@ export function CheckinDialog({
             onChange={(e) => onFormChange({ ...form, ciNotes: e.target.value })}
             multiline
           />
+          {(onCheckinPhotoSelect || form.ciPhotoUrl) && (
+            <Stack spacing={1}>
+              {onCheckinPhotoSelect && (
+                <Button component="label" variant="outlined" disabled={checkinPhotoUploading}>
+                  {checkinPhotoUploading ? 'Subiendo foto…' : form.ciPhotoUrl ? 'Reemplazar foto de retorno' : 'Subir foto de retorno'}
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) onCheckinPhotoSelect(file);
+                      event.currentTarget.value = '';
+                    }}
+                  />
+                </Button>
+              )}
+              {form.ciPhotoUrl && (
+                <img
+                  src={form.ciPhotoUrl}
+                  alt="Estado del equipo al regresar"
+                  style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 12 }}
+                />
+              )}
+            </Stack>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>

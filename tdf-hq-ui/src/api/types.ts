@@ -133,6 +133,14 @@ export interface AssetDTO {
   location?: string | null;
   qrToken?: string | null;
   photoUrl?: string | null;
+  currentCheckoutKind?: string | null;
+  currentCheckoutTarget?: string | null;
+  currentCheckoutDisposition?: string | null;
+  currentCheckoutHolderEmail?: string | null;
+  currentCheckoutHolderPhone?: string | null;
+  currentCheckoutAt?: string | null;
+  currentCheckoutDueAt?: string | null;
+  currentCheckoutPhotoUrl?: string | null;
 }
 
 export interface PageResponse<T> {
@@ -281,11 +289,16 @@ export interface AssetCheckoutDTO {
   targetSessionId?: string | null;
   targetPartyRef?: string | null;
   targetRoomId?: string | null;
+  disposition: string;
+  holderEmail?: string | null;
+  holderPhone?: string | null;
   checkedOutBy: string;
   checkedOutAt: string;
   dueAt?: string | null;
   conditionOut?: string | null;
+  photoOutUrl?: string | null;
   conditionIn?: string | null;
+  photoInUrl?: string | null;
   returnedAt?: string | null;
   notes?: string | null;
 }

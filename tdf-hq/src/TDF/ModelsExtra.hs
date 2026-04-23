@@ -44,6 +44,10 @@ data CheckoutTarget = TargetSession | TargetParty | TargetRoom
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "CheckoutTarget"
 
+data CheckoutDisposition = Loan | Rental | Sale | Repair | Transfer | OtherDisposition
+  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
+derivePersistField "CheckoutDisposition"
+
 data StockUnit = Pcs | Set | Roll | Pack | Bottle | OtherUnit
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "StockUnit"
@@ -553,13 +557,18 @@ AssetCheckout
     targetSessionId  SessionId   Maybe
     targetPartyRef   Text        Maybe
     targetRoomId     RoomId      Maybe
+    disposition      CheckoutDisposition default='Loan'
+    holderEmail      Text Maybe
+    holderPhone      Text Maybe
     checkedOutByRef  Text
     checkedOutAt     UTCTime default=now()
     dueAt            UTCTime Maybe
     conditionOut     Text Maybe
+    photoOutUrl      Text Maybe
     photoDriveFileId Text Maybe
     returnedAt       UTCTime Maybe
     conditionIn      Text Maybe
+    photoInUrl       Text Maybe
     notes            Text Maybe
     deriving Show Generic
 

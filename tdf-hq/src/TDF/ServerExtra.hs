@@ -51,7 +51,7 @@ import           Servant
 import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
-import           TDF.API.Inventory          (InventoryAPI, AssetUploadForm(..))
+import           TDF.API.Inventory          (InventoryAPI, InventoryPublicAPI, AssetUploadForm(..))
 import           TDF.API.Bands              (BandsAPI)
 import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
@@ -115,6 +115,23 @@ parseCheckoutTargetKind (Just raw) =
     "party" -> Right TargetParty
     "room" -> Right TargetRoom
     _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
+
+parseCheckoutDisposition :: Maybe Text -> Either ServerError CheckoutDisposition
+parseCheckoutDisposition Nothing = Right Loan
+parseCheckoutDisposition (Just raw) =
+  case T.toLower (T.strip raw) of
+    "" -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
+    "loan" -> Right Loan
+    "lend" -> Right Loan
+    "rental" -> Right Rental
+    "rent" -> Right Rental
+    "sale" -> Right Sale
+    "sell" -> Right Sale
+    "repair" -> Right Repair
+    "maintenance" -> Right Repair
+    "transfer" -> Right Transfer
+    "other" -> Right OtherDisposition
+    _ -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
 
 validateCheckoutTargets
   :: CheckoutTarget
@@ -192,7 +209,8 @@ inventoryServer user =
       let filteredEntities = filterAssetsByQuery mq entities
           totalCount = length filteredEntities
           pagedEntities = take pageSize' (drop pageOffset filteredEntities)
-      pure (mkPage pageNum pageSize' totalCount (map toAssetDTO pagedEntities))
+      activeMap <- withPool $ loadActiveCheckoutMap (map entityKey pagedEntities)
+      pure (mkPage pageNum pageSize' totalCount (map (\entity -> toAssetDTO entity (Map.lookup (entityKey entity) activeMap)) pagedEntities))
 
     createAssetH req = do
       ensureInventoryAccess
@@ -220,36 +238,16 @@ inventoryServer user =
           , assetNextMaintenanceDue    = Nothing
           }
         getJustEntity newAssetId
-      pure (toAssetDTO entity)
+      pure (toAssetDTO entity Nothing)
 
-    uploadAssetPhotoH AssetUploadForm{..} = do
+    uploadAssetPhotoH uploadForm = do
       ensureInventoryAccess
-      Env{envConfig} <- ask
-      let assetsBase = resolveConfiguredAssetsBase envConfig
-          assetsRoot = assetsRootDir envConfig
-          fallbackName = nonEmptyText (fdFileName aufFile)
-          requestedName = aufName >>= nonEmptyText
-          nameWithExt = applyExtension (requestedName <|> fallbackName) fallbackName
-          safeName = sanitizeAssetName nameWithExt
-      uuid <- liftIO nextRandom
-      let storedName = toText uuid <> "-" <> safeName
-          relPath = "inventory/" <> storedName
-          targetDir = assetsRoot </> "inventory"
-          targetPath = targetDir </> T.unpack storedName
-      liftIO $ createDirectoryIfMissing True targetDir
-      liftIO $ copyFile (fdPayload aufFile) targetPath
-      let publicUrl = buildAssetUrl assetsBase relPath
-      pure AssetUploadDTO
-        { auFileName = storedName
-        , auPath = relPath
-        , auPublicUrl = publicUrl
-        }
+      storeAssetUpload uploadForm
 
     getAssetH rawId = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
-      mEntity <- withPool $ getEntity assetKey
-      maybe (throwError err404) (pure . toAssetDTO) mEntity
+      loadAssetDTOByKey assetKey
 
     patchAssetH rawId req = do
       ensureInventoryAccess
@@ -275,7 +273,11 @@ inventoryServer user =
           Just _  -> do
             unless (null updates) (update assetKey updates)
             getEntity assetKey
-      maybe (throwError err404) (pure . toAssetDTO) result
+      case result of
+        Nothing -> throwError err404
+        Just entity -> do
+          activeMap <- withPool $ loadActiveCheckoutMap [entityKey entity]
+          pure (toAssetDTO entity (Map.lookup (entityKey entity) activeMap))
 
     deleteAssetH rawId = do
       ensureInventoryAccess
@@ -288,115 +290,18 @@ inventoryServer user =
       unless deleted (throwError err404)
       pure NoContent
 
-    toAssetDTO (Entity key asset) = AssetDTO
-      { assetId  = toPathPiece key
-      , name     = assetName asset
-      , category = assetCategory asset
-      , status   = T.pack (show (assetStatus asset))
-      , condition = Just (T.pack (show (assetCondition asset)))
-      , brand    = assetBrand asset
-      , model    = assetModel asset
-      , location = fmap toPathPiece (assetLocationId asset)
-      , qrToken  = assetQrCode asset
-      , photoUrl = assetPhotoUrl asset
-      }
-
-    nonEmptyText txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
-
-    applyExtension name fallback =
-      let resolved = fromMaybe "upload" name
-          extFromFallback =
-            case fallback of
-              Nothing -> ""
-              Just raw -> T.pack (takeExtension (T.unpack raw))
-          extFromName = T.pack (takeExtension (T.unpack resolved))
-      in if T.null extFromName && not (T.null extFromFallback)
-          then resolved <> extFromFallback
-          else resolved
-
-    sanitizeAssetName raw =
-      let trimmed = T.strip raw
-          baseName = T.pack (takeFileName (T.unpack trimmed))
-          cleaned = T.map normalizeChar baseName
-          stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
-      in if T.null stripped || stripped == "." || stripped == ".."
-          then "upload"
-          else stripped
-
-    normalizeChar ch
-      | isAscii ch && isAlphaNum ch = ch
-      | ch == '.' || ch == '-' || ch == '_' = ch
-      | ch == ' ' = '-'
-      | otherwise = '-'
-
-    buildAssetUrl assetsBase relPath =
-      let base = T.dropWhileEnd (== '/') assetsBase
-          path = T.dropWhile (== '/') relPath
-      in base <> "/" <> path
-
     checkoutAssetH rawId req = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
-      asset <- withPool $ get assetKey
-      assetRecord <- maybe (throwError err404) pure asset
-      now <- liftIO getCurrentTime
-      targetKind <- either throwError pure (parseCheckoutTargetKind (coTargetKind req))
-      targetRoomKey <- either throwError pure (parseOptionalKeyField @Room "targetRoom" (coTargetRoom req))
-      targetSessionKey <- either throwError pure (parseOptionalKeyField @ME.Session "targetSession" (coTargetSession req))
-      let conditionOutVal = normalizeOptionalTextField (coConditionOut req)
-          checkoutNotes = normalizeOptionalTextField (coNotes req)
+      assetEntity <- loadAssetEntityByKey assetKey
       let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
-      active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-      when (isJust active) $
-        throwError err409 { errBody = "Asset already checked out" }
-      either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
-      (mTargetParty, mRoom, mSession) <-
-        either throwError pure (validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey)
-      either throwError pure =<< withPool (validateCheckoutTargetReferences mRoom mSession)
-      recEnt <- withPool $ do
-        checkoutId <- insert AssetCheckout
-          { assetCheckoutAssetId          = assetKey
-          , assetCheckoutTargetKind       = targetKind
-          , assetCheckoutTargetSessionId  = mSession
-          , assetCheckoutTargetPartyRef   = mTargetParty
-          , assetCheckoutTargetRoomId     = mRoom
-          , assetCheckoutCheckedOutByRef  = checkedOutBy
-          , assetCheckoutCheckedOutAt     = now
-          , assetCheckoutDueAt            = coDueAt req
-          , assetCheckoutConditionOut     = conditionOutVal
-          , assetCheckoutPhotoDriveFileId = Nothing
-          , assetCheckoutReturnedAt       = Nothing
-          , assetCheckoutConditionIn      = Nothing
-          , assetCheckoutNotes            = checkoutNotes
-          }
-        update assetKey [AssetStatus =. Booked]
-        getJustEntity checkoutId
-      pure (toCheckoutDTO recEnt)
+      performCheckout checkedOutBy assetEntity req
 
     checkinAssetH rawId req = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
-      mAsset <- withPool $ get assetKey
-      when (isNothing mAsset) $
-        throwError err404 { errBody = "Asset not found" }
-      now <- liftIO getCurrentTime
-      let (conditionInUpdate, checkinNotesUpdate) = normalizeAssetCheckinFields req
-      mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-      case mOpen of
-        Nothing -> throwError err404 { errBody = "No active checkout" }
-        Just (Entity checkoutId _) -> do
-          recEnt <- withPool $ do
-            let updates = catMaybes
-                  [ Just (AssetCheckoutReturnedAt =. Just now)
-                  , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
-                  , fmap (\notesText -> AssetCheckoutNotes =. Just notesText) checkinNotesUpdate
-                  ]
-            update checkoutId updates
-            update assetKey [AssetStatus =. Active]
-            getJustEntity checkoutId
-          pure (toCheckoutDTO recEnt)
+      assetEntity <- loadAssetEntityByKey assetKey
+      performCheckin assetEntity req
 
     checkoutHistoryH rawId = do
       ensureInventoryAccess
@@ -416,24 +321,352 @@ inventoryServer user =
 
     resolveByQrH token = do
       ensureInventoryAccess
-      mAsset <- withPool $ selectFirst [AssetQrCode ==. Just token] []
-      maybe (throwError err404) (pure . toAssetDTO) mAsset
+      loadAssetDTOByQrToken token
 
-    toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
-      { checkoutId      = toPathPiece key
-      , assetId         = toPathPiece (assetCheckoutAssetId rec)
-      , targetKind      = T.pack (show (assetCheckoutTargetKind rec))
-      , targetSessionId = fmap toPathPiece (assetCheckoutTargetSessionId rec)
-      , targetPartyRef  = assetCheckoutTargetPartyRef rec
-      , targetRoomId    = fmap toPathPiece (assetCheckoutTargetRoomId rec)
-      , checkedOutBy    = assetCheckoutCheckedOutByRef rec
-      , checkedOutAt    = assetCheckoutCheckedOutAt rec
-      , dueAt           = assetCheckoutDueAt rec
-      , conditionOut    = assetCheckoutConditionOut rec
-      , conditionIn     = assetCheckoutConditionIn rec
-      , returnedAt      = assetCheckoutReturnedAt rec
-      , notes           = assetCheckoutNotes rec
+inventoryPublicServer
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => ServerT InventoryPublicAPI m
+inventoryPublicServer =
+       loadAssetDTOByQrToken
+  :<|> checkoutByQrToken
+  :<|> checkinByQrToken
+  :<|> uploadByQrToken
+  where
+    checkoutByQrToken token req = do
+      assetEntity <- loadAssetEntityByQrToken token
+      performCheckout "public-link" assetEntity req
+
+    checkinByQrToken token req = do
+      assetEntity <- loadAssetEntityByQrToken token
+      performCheckin assetEntity req
+
+    uploadByQrToken token uploadForm = do
+      _ <- loadAssetEntityByQrToken token
+      storeAssetUpload uploadForm
+
+loadAssetEntityByKey
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Key Asset
+  -> m (Entity Asset)
+loadAssetEntityByKey assetKey = do
+  mEntity <- withPool $ getEntity assetKey
+  maybe (throwError err404 { errBody = "Asset not found" }) pure mEntity
+
+loadAssetEntityByQrToken
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> m (Entity Asset)
+loadAssetEntityByQrToken token = do
+  mEntity <- withPool $ selectFirst [AssetQrCode ==. Just token] []
+  maybe (throwError err404 { errBody = "Asset not found" }) pure mEntity
+
+loadAssetDTOByKey
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Key Asset
+  -> m AssetDTO
+loadAssetDTOByKey assetKey = do
+  assetEntity <- loadAssetEntityByKey assetKey
+  activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
+  pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+
+loadAssetDTOByQrToken
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> m AssetDTO
+loadAssetDTOByQrToken token = do
+  assetEntity@(Entity assetKey _) <- loadAssetEntityByQrToken token
+  activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
+  pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+
+loadActiveCheckoutMap
+  :: MonadIO m
+  => [Key Asset]
+  -> SqlPersistT m (Map.Map (Key Asset) (Entity AssetCheckout))
+loadActiveCheckoutMap [] = pure Map.empty
+loadActiveCheckoutMap assetKeys = do
+  recs <- selectList
+    [ AssetCheckoutAssetId <-. assetKeys
+    , AssetCheckoutReturnedAt ==. Nothing
+    ]
+    [Desc AssetCheckoutCheckedOutAt]
+  pure (Map.fromListWith (\left _ -> left) [(assetCheckoutAssetId rec, ent) | ent@(Entity _ rec) <- recs])
+
+performCheckout
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> Entity Asset
+  -> AssetCheckoutRequest
+  -> m AssetCheckoutDTO
+performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
+  now <- liftIO getCurrentTime
+  normalized <- either throwError pure (normalizeCheckoutRequest req)
+  active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+  when (isJust active) $
+    throwError err409 { errBody = "Asset already checked out" }
+  either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
+  either throwError pure =<< withPool (validateCheckoutTargetReferences (ncrTargetRoom normalized) (ncrTargetSession normalized))
+  recEnt <- withPool $ do
+    checkoutId <- insert AssetCheckout
+      { assetCheckoutAssetId          = assetKey
+      , assetCheckoutTargetKind       = ncrTargetKind normalized
+      , assetCheckoutTargetSessionId  = ncrTargetSession normalized
+      , assetCheckoutTargetPartyRef   = ncrTargetParty normalized
+      , assetCheckoutTargetRoomId     = ncrTargetRoom normalized
+      , assetCheckoutDisposition      = ncrDisposition normalized
+      , assetCheckoutHolderEmail      = ncrHolderEmail normalized
+      , assetCheckoutHolderPhone      = ncrHolderPhone normalized
+      , assetCheckoutCheckedOutByRef  = checkedOutBy
+      , assetCheckoutCheckedOutAt     = now
+      , assetCheckoutDueAt            = ncrDueAt normalized
+      , assetCheckoutConditionOut     = ncrConditionOut normalized
+      , assetCheckoutPhotoOutUrl      = ncrPhotoOutUrl normalized
+      , assetCheckoutPhotoDriveFileId = Nothing
+      , assetCheckoutReturnedAt       = Nothing
+      , assetCheckoutConditionIn      = Nothing
+      , assetCheckoutPhotoInUrl       = Nothing
+      , assetCheckoutNotes            = ncrNotes normalized
       }
+    update assetKey [AssetStatus =. assetStatusForCheckoutDisposition (ncrDisposition normalized)]
+    getJustEntity checkoutId
+  pure (toCheckoutDTO recEnt)
+
+performCheckin
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Entity Asset
+  -> AssetCheckinRequest
+  -> m AssetCheckoutDTO
+performCheckin (Entity assetKey _) req = do
+  now <- liftIO getCurrentTime
+  (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
+  mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
+  case mOpen of
+    Nothing -> throwError err404 { errBody = "No active checkout" }
+    Just (Entity checkoutId checkoutRecord) -> do
+      recEnt <- withPool $ do
+        let updates = catMaybes
+              [ Just (AssetCheckoutReturnedAt =. Just now)
+              , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
+              , fmap (\notesText -> AssetCheckoutNotes =. Just notesText) checkinNotesUpdate
+              , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
+              ]
+        update checkoutId updates
+        update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
+        getJustEntity checkoutId
+      pure (toCheckoutDTO recEnt)
+
+data NormalizedCheckoutRequest = NormalizedCheckoutRequest
+  { ncrTargetKind :: CheckoutTarget
+  , ncrTargetParty :: Maybe Text
+  , ncrTargetRoom :: Maybe (Key Room)
+  , ncrTargetSession :: Maybe (Key ME.Session)
+  , ncrDisposition :: CheckoutDisposition
+  , ncrHolderEmail :: Maybe Text
+  , ncrHolderPhone :: Maybe Text
+  , ncrDueAt :: Maybe UTCTime
+  , ncrConditionOut :: Maybe Text
+  , ncrPhotoOutUrl :: Maybe Text
+  , ncrNotes :: Maybe Text
+  }
+
+normalizeCheckoutRequest :: AssetCheckoutRequest -> Either ServerError NormalizedCheckoutRequest
+normalizeCheckoutRequest req = do
+  targetKind <- parseCheckoutTargetKind (coTargetKind req)
+  targetRoomKey <- parseOptionalKeyField @Room "targetRoom" (coTargetRoom req)
+  targetSessionKey <- parseOptionalKeyField @ME.Session "targetSession" (coTargetSession req)
+  (mTargetParty, mRoom, mSession) <-
+    validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey
+  disposition <- parseCheckoutDisposition (coDisposition req)
+  holderEmail <- validateCheckoutContactField "holderEmail" 160 (coHolderEmail req)
+  holderPhone <- validateCheckoutContactField "holderPhone" 60 (coHolderPhone req)
+  photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
+  pure NormalizedCheckoutRequest
+    { ncrTargetKind = targetKind
+    , ncrTargetParty = mTargetParty
+    , ncrTargetRoom = mRoom
+    , ncrTargetSession = mSession
+    , ncrDisposition = disposition
+    , ncrHolderEmail = holderEmail
+    , ncrHolderPhone = holderPhone
+    , ncrDueAt = coDueAt req
+    , ncrConditionOut = normalizeOptionalTextField (coConditionOut req)
+    , ncrPhotoOutUrl = photoOutUrl
+    , ncrNotes = normalizeOptionalTextField (coNotes req)
+    }
+
+validateCheckoutContactField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutContactField fieldName maxLen rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue
+      | T.length cleanValue > maxLen ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLen) <> " characters or fewer")) }
+      | T.any isControl cleanValue ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
+      | otherwise ->
+          Right (Just cleanValue)
+
+assetStatusForCheckoutDisposition :: CheckoutDisposition -> AssetStatus
+assetStatusForCheckoutDisposition Sale = Retired
+assetStatusForCheckoutDisposition _ = Booked
+
+assetStatusForCheckinDisposition :: CheckoutDisposition -> AssetStatus
+assetStatusForCheckinDisposition Sale = Retired
+assetStatusForCheckinDisposition _ = Active
+
+checkoutTargetToText :: CheckoutTarget -> Text
+checkoutTargetToText TargetParty = "party"
+checkoutTargetToText TargetRoom = "room"
+checkoutTargetToText TargetSession = "session"
+
+checkoutDispositionToText :: CheckoutDisposition -> Text
+checkoutDispositionToText Loan = "loan"
+checkoutDispositionToText Rental = "rental"
+checkoutDispositionToText Sale = "sale"
+checkoutDispositionToText Repair = "repair"
+checkoutDispositionToText Transfer = "transfer"
+checkoutDispositionToText OtherDisposition = "other"
+
+checkoutTargetRef :: AssetCheckout -> Maybe Text
+checkoutTargetRef rec =
+  assetCheckoutTargetPartyRef rec
+    <|> fmap toPathPiece (assetCheckoutTargetRoomId rec)
+    <|> fmap toPathPiece (assetCheckoutTargetSessionId rec)
+
+checkoutPhotoOutUrl :: AssetCheckout -> Maybe Text
+checkoutPhotoOutUrl rec = assetCheckoutPhotoOutUrl rec <|> assetCheckoutPhotoDriveFileId rec
+
+toAssetDTO :: Entity Asset -> Maybe (Entity AssetCheckout) -> AssetDTO
+toAssetDTO (Entity key asset) mCurrentCheckout = AssetDTO
+  { assetId  = toPathPiece key
+  , name     = assetName asset
+  , category = assetCategory asset
+  , status   = T.pack (show (assetStatus asset))
+  , condition = Just (T.pack (show (assetCondition asset)))
+  , brand    = assetBrand asset
+  , model    = assetModel asset
+  , location = fmap toPathPiece (assetLocationId asset)
+  , qrToken  = assetQrCode asset
+  , photoUrl = assetPhotoUrl asset
+  , currentCheckoutKind = fmap (checkoutTargetToText . assetCheckoutTargetKind . entityVal) mCurrentCheckout
+  , currentCheckoutTarget = mCurrentCheckout >>= (checkoutTargetRef . entityVal)
+  , currentCheckoutDisposition = fmap (checkoutDispositionToText . assetCheckoutDisposition . entityVal) mCurrentCheckout
+  , currentCheckoutHolderEmail = mCurrentCheckout >>= (assetCheckoutHolderEmail . entityVal)
+  , currentCheckoutHolderPhone = mCurrentCheckout >>= (assetCheckoutHolderPhone . entityVal)
+  , currentCheckoutAt = fmap (assetCheckoutCheckedOutAt . entityVal) mCurrentCheckout
+  , currentCheckoutDueAt = mCurrentCheckout >>= (assetCheckoutDueAt . entityVal)
+  , currentCheckoutPhotoUrl = mCurrentCheckout >>= (checkoutPhotoOutUrl . entityVal)
+  }
+
+toCheckoutDTO :: Entity AssetCheckout -> AssetCheckoutDTO
+toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
+  { checkoutId      = toPathPiece key
+  , assetId         = toPathPiece (assetCheckoutAssetId rec)
+  , targetKind      = checkoutTargetToText (assetCheckoutTargetKind rec)
+  , targetSessionId = fmap toPathPiece (assetCheckoutTargetSessionId rec)
+  , targetPartyRef  = assetCheckoutTargetPartyRef rec
+  , targetRoomId    = fmap toPathPiece (assetCheckoutTargetRoomId rec)
+  , disposition     = checkoutDispositionToText (assetCheckoutDisposition rec)
+  , holderEmail     = assetCheckoutHolderEmail rec
+  , holderPhone     = assetCheckoutHolderPhone rec
+  , checkedOutBy    = assetCheckoutCheckedOutByRef rec
+  , checkedOutAt    = assetCheckoutCheckedOutAt rec
+  , dueAt           = assetCheckoutDueAt rec
+  , conditionOut    = assetCheckoutConditionOut rec
+  , photoOutUrl     = checkoutPhotoOutUrl rec
+  , conditionIn     = assetCheckoutConditionIn rec
+  , photoInUrl      = assetCheckoutPhotoInUrl rec
+  , returnedAt      = assetCheckoutReturnedAt rec
+  , notes           = assetCheckoutNotes rec
+  }
+
+storeAssetUpload
+  :: ( MonadReader Env m
+     , MonadIO m
+     )
+  => AssetUploadForm
+  -> m AssetUploadDTO
+storeAssetUpload AssetUploadForm{..} = do
+  Env{envConfig} <- ask
+  let assetsBase = resolveConfiguredAssetsBase envConfig
+      assetsRoot = assetsRootDir envConfig
+      fallbackName = nonEmptyText (fdFileName aufFile)
+      requestedName = aufName >>= nonEmptyText
+      nameWithExt = applyExtension (requestedName <|> fallbackName) fallbackName
+      safeName = sanitizeAssetName nameWithExt
+  uuid <- liftIO nextRandom
+  let storedName = toText uuid <> "-" <> safeName
+      relPath = "inventory/" <> storedName
+      targetDir = assetsRoot </> "inventory"
+      targetPath = targetDir </> T.unpack storedName
+  liftIO $ createDirectoryIfMissing True targetDir
+  liftIO $ copyFile (fdPayload aufFile) targetPath
+  let publicUrl = buildAssetUrl assetsBase relPath
+  pure AssetUploadDTO
+    { auFileName = storedName
+    , auPath = relPath
+    , auPublicUrl = publicUrl
+    }
+
+nonEmptyText :: Text -> Maybe Text
+nonEmptyText txt =
+  let trimmed = T.strip txt
+  in if T.null trimmed then Nothing else Just trimmed
+
+applyExtension :: Maybe Text -> Maybe Text -> Text
+applyExtension name fallback =
+  let resolved = fromMaybe "upload" name
+      extFromFallback =
+        case fallback of
+          Nothing -> ""
+          Just raw -> T.pack (takeExtension (T.unpack raw))
+      extFromName = T.pack (takeExtension (T.unpack resolved))
+  in if T.null extFromName && not (T.null extFromFallback)
+      then resolved <> extFromFallback
+      else resolved
+
+sanitizeAssetName :: Text -> Text
+sanitizeAssetName raw =
+  let trimmed = T.strip raw
+      baseName = T.pack (takeFileName (T.unpack trimmed))
+      cleaned = T.map normalizeAssetUploadChar baseName
+      stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+  in if T.null stripped || stripped == "." || stripped == ".."
+      then "upload"
+      else stripped
+
+normalizeAssetUploadChar :: Char -> Char
+normalizeAssetUploadChar ch
+  | isAscii ch && isAlphaNum ch = ch
+  | ch == '.' || ch == '-' || ch == '_' = ch
+  | ch == ' ' = '-'
+  | otherwise = '-'
+
+buildAssetUrl :: Text -> Text -> Text
+buildAssetUrl assetsBase relPath =
+  let base = T.dropWhileEnd (== '/') assetsBase
+      path = T.dropWhile (== '/') relPath
+  in base <> "/" <> path
 
 bandsServer
   :: ( MonadReader Env m
@@ -1473,11 +1706,13 @@ normalizeAssetNotesUpdate Nothing = Nothing
 normalizeAssetNotesUpdate (Just rawNotes) =
   Just (normalizeOptionalTextField (Just rawNotes))
 
-normalizeAssetCheckinFields :: AssetCheckinRequest -> (Maybe Text, Maybe Text)
+normalizeAssetCheckinFields :: AssetCheckinRequest -> Either ServerError (Maybe Text, Maybe Text, Maybe Text)
 normalizeAssetCheckinFields AssetCheckinRequest{..} =
-  ( normalizeOptionalTextField ciConditionIn
-  , normalizeOptionalTextField ciNotes
-  )
+  (\photoUrl -> ( normalizeOptionalTextField ciConditionIn
+                , normalizeOptionalTextField ciNotes
+                , photoUrl
+                ))
+    <$> validateAssetPhotoUrl ciPhotoUrl
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise

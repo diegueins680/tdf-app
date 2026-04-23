@@ -26,7 +26,7 @@ import           TDF.API.Admin     (AdminAPI)
 import           TDF.API.Future    (FutureAPI)
 import           TDF.API.Bands     (BandsAPI)
 import           TDF.API.Facebook  (FacebookAPI, FacebookWebhookAPI)
-import           TDF.API.Inventory (InventoryAPI)
+import           TDF.API.Inventory (InventoryAPI, InventoryPublicAPI)
 import           TDF.API.Payments (PaymentsAPI)
 import           TDF.API.Instagram (InstagramAPI, InstagramWebhookAPI)
 import           TDF.API.InstagramOAuth (InstagramOAuthAPI)
@@ -394,6 +394,7 @@ type API =
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI
   :<|> WhatsAppConsentPublicAPI
+  :<|> InventoryPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> "contracts" :> ContractsAPI
   :<|> RadioPublicAPI

@@ -33,6 +33,10 @@ export interface AssetCheckoutRequest {
   coTargetSession?: string | null;
   coTargetParty?: string | null;
   coTargetRoom?: string | null;
+  coDisposition?: string | null;
+  coHolderEmail?: string | null;
+  coHolderPhone?: string | null;
+  coPhotoUrl?: string | null;
   coDueAt?: string | null;
   coConditionOut?: string | null;
   coNotes?: string | null;
@@ -41,6 +45,7 @@ export interface AssetCheckoutRequest {
 export interface AssetCheckinRequest {
   ciConditionIn?: string | null;
   ciNotes?: string | null;
+  ciPhotoUrl?: string | null;
 }
 
 export interface AssetQrDTO {
@@ -53,7 +58,8 @@ export interface AssetUploadOptions {
   onProgress?: (pct: number) => void;
 }
 
-export async function uploadAssetPhoto(
+async function uploadAssetPhotoToPath(
+  path: string,
   file: File,
   options: AssetUploadOptions = {},
 ): Promise<DriveFileInfo> {
@@ -66,7 +72,7 @@ export async function uploadAssetPhoto(
 
   const dto = await new Promise<AssetUploadDTO>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${base}/assets/upload`);
+    xhr.open('POST', `${base}${path}`);
     if (authHeader) xhr.setRequestHeader('Authorization', authHeader);
     xhr.onreadystatechange = () => {
       if (xhr.readyState !== XMLHttpRequest.DONE) return;
@@ -97,6 +103,21 @@ export async function uploadAssetPhoto(
   };
 }
 
+export async function uploadAssetPhoto(
+  file: File,
+  options: AssetUploadOptions = {},
+): Promise<DriveFileInfo> {
+  return uploadAssetPhotoToPath('/assets/upload', file, options);
+}
+
+export async function uploadAssetPhotoByQrToken(
+  token: string,
+  file: File,
+  options: AssetUploadOptions = {},
+): Promise<DriveFileInfo> {
+  return uploadAssetPhotoToPath(`/public/assets/qr/${encodeURIComponent(token)}/upload`, file, options);
+}
+
 export const Inventory = {
   list: (params?: AssetListParams) => get<AssetListResponse>(`/assets${buildQuery(params)}`),
   create: (body: AssetCreate) => post<AssetDTO>('/assets', body),
@@ -110,4 +131,14 @@ export const Inventory = {
   history: (assetId: string) => get<AssetCheckoutDTO[]>(`/assets/${assetId}/history`),
   generateQr: (assetId: string) => post<AssetQrDTO>(`/assets/${assetId}/qr`, {}),
   byQrToken: (token: string) => get<AssetDTO>(`/assets/qr/${token}`),
+};
+
+export const InventoryPublic = {
+  byQrToken: (token: string) => get<AssetDTO>(`/public/assets/qr/${encodeURIComponent(token)}`),
+  checkout: (token: string, body: AssetCheckoutRequest) =>
+    post<AssetCheckoutDTO>(`/public/assets/qr/${encodeURIComponent(token)}/checkout`, body),
+  checkin: (token: string, body: AssetCheckinRequest) =>
+    post<AssetCheckoutDTO>(`/public/assets/qr/${encodeURIComponent(token)}/checkin`, body),
+  uploadPhoto: (token: string, file: File, options?: AssetUploadOptions) =>
+    uploadAssetPhotoByQrToken(token, file, options),
 };

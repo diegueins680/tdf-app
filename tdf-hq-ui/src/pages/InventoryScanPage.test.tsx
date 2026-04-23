@@ -6,14 +6,16 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { AssetDTO } from '../api/types';
 
 const byQrTokenMock = jest.fn<(token: string) => Promise<AssetDTO>>();
-const checkoutMock = jest.fn<(assetId: string, payload: unknown) => Promise<unknown>>();
-const checkinMock = jest.fn<(assetId: string, payload: unknown) => Promise<unknown>>();
+const checkoutMock = jest.fn<(token: string, payload: unknown) => Promise<unknown>>();
+const checkinMock = jest.fn<(token: string, payload: unknown) => Promise<unknown>>();
+const uploadPhotoMock = jest.fn<(token: string, file: File, options?: unknown) => Promise<unknown>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
-  Inventory: {
+  InventoryPublic: {
     byQrToken: (token: string) => byQrTokenMock(token),
-    checkout: (assetId: string, payload: unknown) => checkoutMock(assetId, payload),
-    checkin: (assetId: string, payload: unknown) => checkinMock(assetId, payload),
+    checkout: (token: string, payload: unknown) => checkoutMock(token, payload),
+    checkin: (token: string, payload: unknown) => checkinMock(token, payload),
+    uploadPhoto: (token: string, file: File, options?: unknown) => uploadPhotoMock(token, file, options),
   },
 }));
 
@@ -116,25 +118,27 @@ describe('InventoryScanPage', () => {
     byQrTokenMock.mockReset();
     checkoutMock.mockReset();
     checkinMock.mockReset();
+    uploadPhotoMock.mockReset();
     checkoutMock.mockResolvedValue({});
     checkinMock.mockResolvedValue({});
+    uploadPhotoMock.mockResolvedValue({ publicUrl: 'https://files.example.com/photo.jpg', webContentLink: 'https://files.example.com/photo.jpg', id: 'inventory/photo.jpg', name: 'photo.jpg' });
   });
 
   it.each([
     {
       label: 'available',
       asset: buildAsset({ status: 'Active' }),
-      expectedText: 'Registrar check-out',
+      expectedText: 'Registrar salida',
     },
     {
       label: 'checked-out',
       asset: buildAsset({ status: 'Booked' }),
-      expectedText: 'Registrar check-in',
+      expectedText: 'Registrar retorno',
     },
     {
       label: 'unavailable',
       asset: buildAsset({ status: 'OutForMaintenance' }),
-      expectedText: 'No se permite check-in/out mientras esté fuera de servicio.',
+      expectedText: 'No se permiten movimientos mientras esté fuera de servicio.',
     },
   ])('keeps one shared refresh action for the $label scan state', async ({ asset, expectedText }) => {
     byQrTokenMock.mockResolvedValue(asset);
@@ -151,7 +155,7 @@ describe('InventoryScanPage', () => {
         expect(
           countOccurrences(
             container,
-            'Si otro operador ya movio este equipo desde otra pantalla, usa Refrescar estado para confirmar que accion sigue aqui.',
+            'Si otro operador ya movió este equipo desde otra pantalla, usa Refrescar estado para confirmar qué acción sigue aquí.',
           ),
         ).toBe(1);
       });

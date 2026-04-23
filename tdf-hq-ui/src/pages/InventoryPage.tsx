@@ -18,6 +18,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -32,6 +33,10 @@ import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
+import {
+  formatCheckoutTargetDisplay,
+  getCheckoutDispositionLabel,
+} from '../utils/inventoryCheckout';
 
 const toLocalDateTime = (date: Date) => {
   const pad = (val: number) => String(val).padStart(2, '0');
@@ -68,6 +73,10 @@ function normalizeInventoryField(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
+function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>) {
+  return formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
+}
+
 const INVENTORY_LOCATION_SETUP_GUIDANCE =
   'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
 const INVENTORY_MOVEMENT_GUIDANCE =
@@ -93,6 +102,7 @@ export default function InventoryPage() {
   });
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrShareUrl, setQrShareUrl] = useState<string>('');
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const [historyViewMode, setHistoryViewMode] = useState<'panel' | 'embedded' | null>(null);
   const [actionsMenuTarget, setActionsMenuTarget] = useState<{ anchorEl: HTMLButtonElement; asset: AssetDTO } | null>(null);
@@ -103,14 +113,21 @@ export default function InventoryPage() {
     coTargetParty: '',
     coTargetRoom: '',
     coTargetSession: '',
+    coDisposition: 'loan',
+    coHolderEmail: '',
+    coHolderPhone: '',
+    coPhotoUrl: '',
     coConditionOut: '',
     coNotes: '',
   });
   const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({
     ciConditionIn: '',
     ciNotes: '',
+    ciPhotoUrl: '',
   });
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [checkoutPhotoUploading, setCheckoutPhotoUploading] = useState(false);
+  const [checkinPhotoUploading, setCheckinPhotoUploading] = useState(false);
 
   const assetHistoryMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.history(assetId),
@@ -124,9 +141,11 @@ export default function InventoryPage() {
   const qrMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.generateQr(assetId),
     onSuccess: (data: AssetQrDTO) => {
+      void qc.invalidateQueries({ queryKey: ['assets'] });
       const url = data.qrUrl;
       const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
       setQrDataUrl(qrImg);
+      setQrShareUrl(url);
       setDialogOpen('qr');
     },
   });
@@ -165,6 +184,10 @@ export default function InventoryPage() {
       coTargetParty: '',
       coTargetRoom: '',
       coTargetSession: '',
+      coDisposition: 'loan',
+      coHolderEmail: '',
+      coHolderPhone: '',
+      coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',
       coDueAt: toLocalDateTime(defaultDue),
@@ -176,6 +199,11 @@ export default function InventoryPage() {
   const openCheckin = (asset: AssetDTO) => {
     setHistoryViewMode(null);
     setSelected(asset);
+    setCheckinForm({
+      ciConditionIn: '',
+      ciNotes: '',
+      ciPhotoUrl: '',
+    });
     setDialogOpen('checkin');
   };
 
@@ -186,6 +214,7 @@ export default function InventoryPage() {
       const url = buildInventoryScanUrl(asset.qrToken);
       const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}`;
       setQrDataUrl(qrImg);
+      setQrShareUrl(url);
       setDialogOpen('qr');
     } else if (asset.assetId) {
       qrMutation.mutate(asset.assetId);
@@ -220,9 +249,54 @@ export default function InventoryPage() {
     if (asset) action(asset);
   };
 
+  const copyShareUrl = async (asset: AssetDTO) => {
+    let url = asset.qrToken ? buildInventoryScanUrl(asset.qrToken) : '';
+    if (!url && asset.assetId) {
+      try {
+        const generated = await Inventory.generateQr(asset.assetId);
+        url = generated.qrUrl;
+        void qc.invalidateQueries({ queryKey: ['assets'] });
+      } catch (error) {
+        setFeedback(error instanceof Error ? error.message : 'No se pudo generar el enlace público.');
+        return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setFeedback('Enlace público copiado.');
+    } catch {
+      setFeedback(url);
+    }
+  };
+
+  const uploadCheckoutPhoto = async (file: File) => {
+    setCheckoutPhotoUploading(true);
+    try {
+      const uploaded = await Inventory.uploadPhoto(file, { name: file.name });
+      setForm((prev) => ({ ...prev, coPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'No se pudo subir la foto de salida.');
+    } finally {
+      setCheckoutPhotoUploading(false);
+    }
+  };
+
+  const uploadCheckinPhoto = async (file: File) => {
+    setCheckinPhotoUploading(true);
+    try {
+      const uploaded = await Inventory.uploadPhoto(file, { name: file.name });
+      setCheckinForm((prev) => ({ ...prev, ciPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'No se pudo subir la foto de retorno.');
+    } finally {
+      setCheckinPhotoUploading(false);
+    }
+  };
+
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
   const grouped = useMemo(() => assets, [assets]);
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const roomMap = useMemo(() => new Map(roomOptions.map((room) => [room.roomId, room])), [roomOptions]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const singleAsset = grouped.length === 1 ? (grouped[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
@@ -253,7 +327,7 @@ export default function InventoryPage() {
             Inventario de equipo
           </Typography>
           <Typography variant="body2" color="rgba(226,232,240,0.75)">
-            Administra equipos, genera QR y registra check-out / check-in.
+            Administra equipos, ve quién los tiene, comparte enlaces públicos y registra check-out / check-in con evidencia.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
@@ -317,6 +391,21 @@ export default function InventoryPage() {
                     Condición: {singleAssetCondition}
                   </Typography>
                 )}
+                {singleAsset.currentCheckoutTarget && (
+                  <>
+                    <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                      Tiene: {getCurrentTargetSummary(singleAsset, roomMap)}
+                    </Typography>
+                    <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                      Movimiento: {getCheckoutDispositionLabel(singleAsset.currentCheckoutDisposition)}
+                    </Typography>
+                    {singleAsset.currentCheckoutAt && (
+                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                        Salió: {formatDate(singleAsset.currentCheckoutAt)}
+                      </Typography>
+                    )}
+                  </>
+                )}
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                 <Button
@@ -327,6 +416,9 @@ export default function InventoryPage() {
                   aria-label={`Abrir QR de ${singleAsset.name}`}
                 >
                   Ver QR
+                </Button>
+                <Button size="small" variant="outlined" onClick={() => void copyShareUrl(singleAsset)}>
+                  Copiar enlace
                 </Button>
                 {getInventoryMovementState(singleAsset.status).canCheckout && (
                   <Button
@@ -371,6 +463,8 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableCell>Equipo</TableCell>
                     <TableCell>Estado</TableCell>
+                    <TableCell>Tenencia actual</TableCell>
+                    <TableCell>Salida</TableCell>
                     {showLocationColumn && <TableCell>Ubicación</TableCell>}
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
@@ -395,6 +489,26 @@ export default function InventoryPage() {
                           </Stack>
                         </TableCell>
                         <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
+                        <TableCell>
+                          {asset.currentCheckoutTarget ? (
+                            <Stack spacing={0.25}>
+                              <Typography variant="body2">
+                                {getCurrentTargetSummary(asset, roomMap)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
+                              </Typography>
+                              {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                </Typography>
+                              )}
+                            </Stack>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                        <TableCell>{asset.currentCheckoutAt ? formatDate(asset.currentCheckoutAt) : '—'}</TableCell>
                         {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
                         <TableCell align="right">
                           <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
@@ -424,10 +538,10 @@ export default function InventoryPage() {
                               size="small"
                               variant="text"
                               onClick={(event) => openActionsMenu(event, asset)}
-                              aria-label={`Abrir QR e historial de ${asset.name}`}
+                              aria-label={`Abrir acciones de ${asset.name}`}
                               sx={{ textTransform: 'none' }}
                             >
-                              QR e historial
+                              Acciones
                             </Button>
                           </Stack>
                         </TableCell>
@@ -455,6 +569,8 @@ export default function InventoryPage() {
         loadingParties={partiesQuery.isLoading}
         currentCheckout={currentCheckout}
         recentHistory={history}
+        onCheckoutPhotoSelect={(file) => void uploadCheckoutPhoto(file)}
+        checkoutPhotoUploading={checkoutPhotoUploading}
       />
 
       <CheckinDialog
@@ -465,23 +581,50 @@ export default function InventoryPage() {
         onFormChange={setCheckinForm}
         onSubmit={() => selected && checkinMutation.mutate({ assetId: selected.assetId, payload: checkinForm })}
         loading={checkinMutation.isPending}
+        onCheckinPhotoSelect={(file) => void uploadCheckinPhoto(file)}
+        checkinPhotoUploading={checkinPhotoUploading}
       />
 
       <Dialog open={dialogOpen === 'qr'} onClose={() => setDialogOpen(null)} maxWidth="sm" fullWidth>
         <DialogTitle>QR de equipo</DialogTitle>
         <DialogContent sx={{ textAlign: 'center' }}>
-          {qrDataUrl ? (
-            <img src={qrDataUrl} alt="QR" style={{ width: '100%', maxWidth: 320 }} />
-          ) : (
-            <Typography variant="body2">Generando QR…</Typography>
-          )}
-          {selected?.qrToken && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Token: {selected.qrToken}
-            </Typography>
-          )}
+          <Stack spacing={2} alignItems="center">
+            {qrDataUrl ? (
+              <img src={qrDataUrl} alt="QR" style={{ width: '100%', maxWidth: 320 }} />
+            ) : (
+              <Typography variant="body2">Generando QR…</Typography>
+            )}
+            <TextField
+              label="Enlace público"
+              value={qrShareUrl}
+              fullWidth
+              InputProps={{ readOnly: true }}
+            />
+            {selected?.qrToken && (
+              <Typography variant="body2">
+                Token: {selected.qrToken}
+              </Typography>
+            )}
+          </Stack>
         </DialogContent>
         <DialogActions>
+          <Button
+            onClick={async () => {
+              if (!qrShareUrl) return;
+              try {
+                await navigator.clipboard.writeText(qrShareUrl);
+                setFeedback('Enlace público copiado.');
+              } catch {
+                setFeedback(qrShareUrl);
+              }
+            }}
+            disabled={!qrShareUrl}
+          >
+            Copiar enlace
+          </Button>
+          <Button onClick={() => qrShareUrl && window.open(qrShareUrl, '_blank')} disabled={!qrShareUrl}>
+            Abrir
+          </Button>
           <Button onClick={() => setDialogOpen(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
@@ -493,6 +636,9 @@ export default function InventoryPage() {
       >
         <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
           Ver QR
+        </MenuItem>
+        <MenuItem onClick={() => runAssetMenuAction((asset) => { void copyShareUrl(asset); })}>
+          Copiar enlace
         </MenuItem>
         <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
           Historial
@@ -524,18 +670,52 @@ export default function InventoryPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
+                    <TableCell>Tipo</TableCell>
                     <TableCell>Salida</TableCell>
                     <TableCell>Devuelto</TableCell>
                     <TableCell>Destino</TableCell>
+                    <TableCell>Estado visual</TableCell>
                     <TableCell>Notas</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {history.map((h) => (
                     <TableRow key={h.checkoutId}>
+                      <TableCell>{getCheckoutDispositionLabel(h.disposition)}</TableCell>
                       <TableCell>{formatDate(h.checkedOutAt)}</TableCell>
                       <TableCell>{h.returnedAt ? formatDate(h.returnedAt) : '—'}</TableCell>
-                      <TableCell>{h.targetKind}</TableCell>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2">
+                            {formatCheckoutTargetDisplay(
+                              h.targetKind,
+                              h.targetPartyRef ?? h.targetRoomId ?? h.targetSessionId,
+                              roomMap,
+                            )}
+                          </Typography>
+                          {(h.holderEmail || h.holderPhone) && (
+                            <Typography variant="caption" color="text.secondary">
+                              {[h.holderEmail, h.holderPhone].filter(Boolean).join(' · ')}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        {h.photoOutUrl || h.photoInUrl ? (
+                          <Stack direction="row" spacing={1}>
+                            {h.photoOutUrl && (
+                              <Button size="small" href={h.photoOutUrl} target="_blank" rel="noreferrer">
+                                Salida
+                              </Button>
+                            )}
+                            {h.photoInUrl && (
+                              <Button size="small" href={h.photoInUrl} target="_blank" rel="noreferrer">
+                                Retorno
+                              </Button>
+                            )}
+                          </Stack>
+                        ) : '—'}
+                      </TableCell>
                       <TableCell>{h.notes ?? '—'}</TableCell>
                     </TableRow>
                   ))}

@@ -56,6 +56,7 @@ import qualified TDF.ModelsExtra as ME
 import TDF.ModelsExtra
   ( Asset (..)
   , AssetCondition (Good)
+  , CheckoutDisposition (Loan, Rental, Sale)
   , AssetStatus (Active, Booked, OutForMaintenance, Retired)
   , Band (..)
   , CheckoutTarget (TargetParty, TargetRoom, TargetSession)
@@ -111,6 +112,7 @@ import TDF.ServerExtra (
     persistMetaInbound,
     validatePaymentMethod,
     parseUTCTimeText,
+    parseCheckoutDisposition,
     validateDistinctSessionRooms,
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
@@ -214,13 +216,17 @@ spec = do
 
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
-        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coConditionOut\":\"Excelente\",\"coNotes\":\"Cableado completo\"}" of
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
         Left err ->
           expectationFailure ("Expected canonical asset checkout payload to decode, got: " <> err)
         Right payload -> do
           coTargetKind payload `shouldBe` Just "room"
           coTargetRoom payload `shouldBe` Just "00000000-0000-0000-0000-000000000042"
+          coDisposition payload `shouldBe` Just "rental"
+          coHolderEmail payload `shouldBe` Just "ops@example.com"
+          coHolderPhone payload `shouldBe` Just "0999999999"
           coConditionOut payload `shouldBe` Just "Excelente"
+          coPhotoUrl payload `shouldBe` Just "inventory/foto.jpg"
           coNotes payload `shouldBe` Just "Cableado completo"
 
     it "rejects response-shaped or unexpected checkout keys so typos cannot silently fall back to party checkout" $ do
@@ -235,12 +241,13 @@ spec = do
 
     it "accepts canonical inventory check-in keys used by current clients" $
       case A.eitherDecode
-        "{\"ciConditionIn\":\"Returned OK\",\"ciNotes\":\"Cables verified\"}" of
+        "{\"ciConditionIn\":\"Returned OK\",\"ciNotes\":\"Cables verified\",\"ciPhotoUrl\":\"inventory/returned.jpg\"}" of
         Left err ->
           expectationFailure ("Expected canonical asset check-in payload to decode, got: " <> err)
         Right payload -> do
           ciConditionIn payload `shouldBe` Just "Returned OK"
           ciNotes payload `shouldBe` Just "Cables verified"
+          ciPhotoUrl payload `shouldBe` Just "inventory/returned.jpg"
 
     it "rejects response-shaped or unexpected check-in keys so metadata typos fail explicitly" $ do
       (A.eitherDecode
@@ -728,6 +735,22 @@ spec = do
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "   "))
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "locker"))
 
+  describe "parseCheckoutDisposition" $ do
+    it "defaults omitted dispositions to loan and normalizes supported values" $ do
+      parseCheckoutDisposition Nothing `shouldBe` Right Loan
+      parseCheckoutDisposition (Just " rent ") `shouldBe` Right Rental
+      parseCheckoutDisposition (Just "SALE") `shouldBe` Right Sale
+
+    it "rejects blank or unknown disposition values" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid checkout disposition error, got " <> show value)
+      assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "   "))
+      assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "borrowed-forever"))
+
   describe "parseOptionalKeyField" $ do
     it "treats missing or blank optional ids as absent and trims valid identifiers" $ do
       (parseOptionalKeyField "targetRoom" Nothing :: Either ServerError (Maybe (Key M.Party)))
@@ -825,19 +848,19 @@ spec = do
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
-      normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  "))
-        `shouldBe` (Just "Returned OK", Just "Cables verified")
+      normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  ") (Just "inventory/checkin.jpg"))
+        `shouldBe` Right (Just "Returned OK", Just "Cables verified", Just "inventory/checkin.jpg")
 
     it "drops omitted or blank check-in text so existing checkout context is not silently erased" $ do
-      normalizeAssetCheckinFields (AssetCheckinRequest Nothing Nothing)
-        `shouldBe` (Nothing, Nothing)
-      normalizeAssetCheckinFields (AssetCheckinRequest (Just "   ") (Just "   "))
-        `shouldBe` (Nothing, Nothing)
+      normalizeAssetCheckinFields (AssetCheckinRequest Nothing Nothing Nothing)
+        `shouldBe` Right (Nothing, Nothing, Nothing)
+      normalizeAssetCheckinFields (AssetCheckinRequest (Just "   ") (Just "   ") (Just "   "))
+        `shouldBe` Right (Nothing, Nothing, Nothing)
 
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"
         existingAssetId = "00000000-0000-0000-0000-000000000902"
-        request = AssetCheckinRequest Nothing Nothing
+        request = AssetCheckinRequest Nothing Nothing Nothing
 
     it "rejects unknown asset ids before collapsing them into missing checkout errors" $ do
       result <- runInventoryCheckinHandler (pure ()) missingAssetId request
@@ -2154,13 +2177,18 @@ initializeInventoryCheckinSchema = do
         \\"target_session_id\" uuid NULL,\
         \\"target_party_ref\" VARCHAR NULL,\
         \\"target_room_id\" uuid NULL,\
+        \\"disposition\" VARCHAR NOT NULL,\
+        \\"holder_email\" VARCHAR NULL,\
+        \\"holder_phone\" VARCHAR NULL,\
         \\"checked_out_by_ref\" VARCHAR NOT NULL,\
         \\"checked_out_at\" TIMESTAMP NOT NULL,\
         \\"due_at\" TIMESTAMP NULL,\
         \\"condition_out\" VARCHAR NULL,\
+        \\"photo_out_url\" VARCHAR NULL,\
         \\"photo_drive_file_id\" VARCHAR NULL,\
         \\"returned_at\" TIMESTAMP NULL,\
         \\"condition_in\" VARCHAR NULL,\
+        \\"photo_in_url\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL\
         \)"
         []

@@ -1959,12 +1959,14 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceSummary
     && hasCustomFilters
     && hasVisibleRegistrations
+    && !hasLocalSearch
     && !showEmptyLocalSearchResults,
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showEmptyLocalSearchResults
+    && !hasLocalSearch
     && !showInlineSummaryResetAction
     && !cohortFilterCanSelfReset
     && !statusFilterCanSelfReset;
