@@ -1213,6 +1213,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       nameClean <- normalizeName sccName
       currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
       taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
+      billingUnitClean <-
+        either throwError pure (validateServiceCatalogBillingUnit sccBillingUnit)
       when (maybe False (< 0) sccRateCents) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       duplicate <- withPool $ selectFirst [M.ServiceCatalogName ==. nameClean] []
@@ -1226,7 +1228,7 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
               , M.serviceCatalogDefaultRateCents = sccRateCents
               , M.serviceCatalogTaxBps = taxClean
               , M.serviceCatalogCurrency = currencyClean
-              , M.serviceCatalogBillingUnit = normalizeTextMaybe sccBillingUnit
+              , M.serviceCatalogBillingUnit = billingUnitClean
               , M.serviceCatalogActive = fromMaybe True sccActive
               }
         newId <- insert record
@@ -1239,6 +1241,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       let rateCandidate = join scuRateCents
       currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
       taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
+      billingUnitUpdate <-
+        either throwError pure (validateServiceCatalogBillingUnitUpdate scuBillingUnit)
       when (maybe False (< 0) rateCandidate) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
       nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
@@ -1257,22 +1261,14 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
         case mExisting of
           Nothing -> pure Nothing
           Just _ -> do
-            let billingClean :: Maybe (Maybe Text)
-                billingClean = case scuBillingUnit of
-                  Nothing -> Nothing
-                  Just inner -> case inner of
-                    Nothing -> Just Nothing
-                    Just val ->
-                      let trimmed = T.strip val
-                      in Just (if T.null trimmed then Nothing else Just trimmed)
-                updates = catMaybes
+            let updates = catMaybes
                   [ (M.ServiceCatalogName =.) <$> nameClean
                   , (M.ServiceCatalogKind =.) <$> scuKind
                   , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
                   , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
                   , (M.ServiceCatalogTaxBps =.) <$> taxUpdate
                   , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
-                  , (M.ServiceCatalogBillingUnit =.) <$> billingClean
+                  , (M.ServiceCatalogBillingUnit =.) <$> billingUnitUpdate
                   , (M.ServiceCatalogActive =.) <$> scuActive
                   ]
             unless (null updates) (update svcKey updates)
@@ -1292,12 +1288,6 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
     normalizeName txt =
       either throwError pure (normalizeServiceCatalogName txt)
 
-    normalizeTextMaybe mTxt = case mTxt of
-      Nothing -> Nothing
-      Just raw ->
-        let trimmed = T.strip raw
-        in if T.null trimmed then Nothing else Just trimmed
-
 normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeServiceCatalogNameUpdate Nothing = Right Nothing
 normalizeServiceCatalogNameUpdate (Just rawName) =
@@ -1311,8 +1301,36 @@ normalizeServiceCatalogName rawName =
        else if T.length trimmed > 160
          then Left err400 { errBody = "Nombre debe tener 160 caracteres o menos" }
          else if T.any isControl trimmed
-           then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
-           else Right trimmed
+         then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
+         else Right trimmed
+
+validateServiceCatalogBillingUnit :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceCatalogBillingUnit Nothing = Right Nothing
+validateServiceCatalogBillingUnit (Just rawBillingUnit) =
+  case normalizeOptionalTextField (Just rawBillingUnit) of
+    Nothing -> Right Nothing
+    Just billingUnit -> Just <$> validateServiceCatalogBillingUnitValue billingUnit
+
+validateServiceCatalogBillingUnitUpdate
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateServiceCatalogBillingUnitUpdate Nothing = Right Nothing
+validateServiceCatalogBillingUnitUpdate (Just Nothing) = Right (Just Nothing)
+validateServiceCatalogBillingUnitUpdate (Just (Just rawBillingUnit)) =
+  case normalizeOptionalTextField (Just rawBillingUnit) of
+    Nothing ->
+      Left err400 { errBody = "Unidad debe omitirse, ser null, o contener texto" }
+    Just billingUnit ->
+      Just . Just <$> validateServiceCatalogBillingUnitValue billingUnit
+
+validateServiceCatalogBillingUnitValue :: Text -> Either ServerError Text
+validateServiceCatalogBillingUnitValue billingUnit
+  | T.length billingUnit > 80 =
+      Left err400 { errBody = "Unidad debe tener 80 caracteres o menos" }
+  | T.any isControl billingUnit =
+      Left err400 { errBody = "Unidad no debe contener caracteres de control" }
+  | otherwise =
+      Right billingUnit
 
 validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
 validateServiceCatalogCurrency Nothing = Right "USD"

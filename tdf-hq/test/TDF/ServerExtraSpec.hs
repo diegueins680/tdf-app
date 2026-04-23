@@ -120,6 +120,8 @@ import TDF.ServerExtra (
     validateCheckoutTargetReferences,
     validateServiceCatalogCurrency,
     validateServiceCatalogCurrencyUpdate,
+    validateServiceCatalogBillingUnit,
+    validateServiceCatalogBillingUnitUpdate,
     validateServiceCatalogTaxBps,
     validateServiceCatalogTaxBpsUpdate,
     validateAssetCheckoutStatus,
@@ -1535,6 +1537,48 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
         Right value ->
           expectationFailure ("Expected invalid currency update error, got " <> show value)
+
+  describe "validateServiceCatalogBillingUnit" $ do
+    it "normalizes bounded billing units and treats omitted create values as empty" $ do
+      validateServiceCatalogBillingUnit Nothing `shouldBe` Right Nothing
+      validateServiceCatalogBillingUnit (Just "   ") `shouldBe` Right Nothing
+      validateServiceCatalogBillingUnit (Just "  por sesión  ")
+        `shouldBe` Right (Just "por sesión")
+
+    it "rejects malformed billing units before service catalog writes persist opaque labels" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid billing unit error, got " <> show value)
+      assertInvalid
+        "80 caracteres o menos"
+        (validateServiceCatalogBillingUnit (Just (T.replicate 81 "a")))
+      assertInvalid
+        "caracteres de control"
+        (validateServiceCatalogBillingUnit (Just "sesión\nextra"))
+
+  describe "validateServiceCatalogBillingUnitUpdate" $ do
+    it "preserves omitted and explicit-null updates while trimming meaningful billing units" $ do
+      validateServiceCatalogBillingUnitUpdate Nothing `shouldBe` Right Nothing
+      validateServiceCatalogBillingUnitUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
+      validateServiceCatalogBillingUnitUpdate (Just (Just "  por hora  "))
+        `shouldBe` Right (Just (Just "por hora"))
+
+    it "rejects blank or malformed updates instead of silently clearing billing units" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid billing unit update error, got " <> show value)
+      assertInvalid
+        "debe omitirse, ser null, o contener texto"
+        (validateServiceCatalogBillingUnitUpdate (Just (Just "   ")))
+      assertInvalid
+        "caracteres de control"
+        (validateServiceCatalogBillingUnitUpdate (Just (Just "por\nhora")))
 
   describe "validateServiceCatalogTaxBps" $ do
     it "accepts omitted values and basis points within a 0..10000 percentage range" $ do
