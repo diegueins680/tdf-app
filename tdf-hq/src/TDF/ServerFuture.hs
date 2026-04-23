@@ -5,6 +5,7 @@ module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
 import           Data.Char            (isControl)
+import           Data.List            (nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Servant
@@ -72,12 +73,11 @@ futureServer user = accessStubs
 
     adminConsole = do
       requireFutureAdminAccess user
-      consoleCards <- either throwError pure $
-        traverse validateFutureAdminConsoleCard adminConsoleCards
-      pure $
+      either throwError pure $
+        validateFutureAdminConsoleView $
         AdminConsoleView
           { status = "preview"
-          , cards = consoleCards
+          , cards = adminConsoleCards
           }
 
     crossCuttingStubs = adminStub "experience" "navigation"
@@ -122,6 +122,21 @@ validateFutureAdminConsoleCard card
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
   | otherwise = Right card
+
+validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminConsoleView
+validateFutureAdminConsoleView view
+  | status view /= "preview" = invalidFutureAdminConsoleMetadata
+  | otherwise = do
+      validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
+      if null validatedCards
+          || length validatedCards > 12
+          || hasDuplicateCardIds validatedCards
+        then invalidFutureAdminConsoleMetadata
+        else Right view { cards = validatedCards }
+  where
+    hasDuplicateCardIds consoleCards =
+      let cardIds = map cardId consoleCards
+      in length cardIds /= length (nub cardIds)
 
 invalidCardText :: Int -> Text -> Bool
 invalidCardText maxLength value =

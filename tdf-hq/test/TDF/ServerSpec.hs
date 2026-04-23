@@ -277,6 +277,7 @@ import TDF.ServerFuture
     ( futureServer
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
+    , validateFutureAdminConsoleView
     , validateFutureStubMetadata
     )
 import TDF.ServerExtra (validateSocialReplyBody)
@@ -6281,6 +6282,45 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkCard "user-management" "Gestión\nusuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" [])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", " "])
+
+    describe "validateFutureAdminConsoleView" $ do
+        it "rejects duplicate card ids or malformed status before serving fallback discovery" $ do
+            let mkCard cardIdValue =
+                    Future.AdminConsoleCard
+                        { Future.cardId = cardIdValue
+                        , Future.title = "Gestión de usuarios"
+                        , Future.body = ["Roles y permisos"]
+                        }
+                mkView statusValue cardsValue =
+                    Future.AdminConsoleView
+                        { Future.status = statusValue
+                        , Future.cards = cardsValue
+                        }
+                validView =
+                    mkView "preview" [mkCard "user-management", mkCard "api-tokens"]
+                assertInvalid view =
+                    case validateFutureAdminConsoleView view of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid admin console view, got: " <> show value)
+
+            case validateFutureAdminConsoleView validView of
+                Right view ->
+                    map Future.cardId (Future.cards view)
+                        `shouldBe` ["user-management", "api-tokens"]
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid admin console view, got: " <> show serverErr)
+
+            assertInvalid (mkView "planned" [mkCard "user-management"])
+            assertInvalid (mkView "preview" [])
+            assertInvalid
+                (mkView "preview" [mkCard "user-management", mkCard "user-management"])
+            assertInvalid (mkView "preview" [mkCard "User Management"])
 
     describe "futureServer" $ do
         it "requires literal Admin before serving fallback discovery stubs" $ do
