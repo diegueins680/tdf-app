@@ -2737,6 +2737,7 @@ export default function CourseRegistrationsAdminPage() {
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
+  const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
   const hasDossierRefreshContext = hasReceipts
     || followUps.length > 0
     || hasSavedNotes
@@ -2745,6 +2746,7 @@ export default function CourseRegistrationsAdminPage() {
     && !dossierQuery.isLoading
     && !dossierQuery.isError
     && !isMarkPaidIntent
+    && !hasOpenDossierComposer
     && !showSystemEmailHistoryRetryAction
     && hasDossierRefreshContext;
   const dossierRefreshLabel = showSystemEmailHistoryAction && showEmailHistory

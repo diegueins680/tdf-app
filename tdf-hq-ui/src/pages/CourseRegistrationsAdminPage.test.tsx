@@ -3882,6 +3882,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the dossier refresh out of the title while an inline receipt editor is open', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier({
+      crdReceipts: [buildReceipt()],
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
+      expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
+      expect(getButtonByText(document.body, 'Guardar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Refrescar expediente')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('replaces the empty receipt list area with one guided first-receipt CTA', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
