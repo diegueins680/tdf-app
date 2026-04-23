@@ -232,7 +232,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('keeps detailed service checks visible when one dependency is not healthy', async () => {
+  it('compresses degraded service checks into one warning line plus status chips', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
 
     renderPage();
@@ -240,8 +240,14 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Estado del servicio')).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Atención: base de datos requiere revisión antes de cambiar permisos o seguir con otras acciones administrativas\./i,
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByText('API: ok')).toBeInTheDocument();
       expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+      expect(screen.getAllByTestId('admin-service-health-chip')).toHaveLength(2);
     });
 
     expect(

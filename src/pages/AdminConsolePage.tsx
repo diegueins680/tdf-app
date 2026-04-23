@@ -238,6 +238,8 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
+const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
+const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
   'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
@@ -619,6 +621,28 @@ function isHealthyHealthIndicator(value?: string | null) {
   return HEALTHY_HEALTH_INDICATORS.has(normalizeHealthIndicator(value));
 }
 
+function getHealthStatusChipColor(value?: string | null): 'default' | 'success' | 'warning' | 'error' {
+  const normalizedValue = normalizeHealthIndicator(value);
+
+  if (normalizedValue === '') {
+    return 'default';
+  }
+
+  if (HEALTHY_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'success';
+  }
+
+  if (ERROR_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'error';
+  }
+
+  if (WARNING_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'warning';
+  }
+
+  return 'warning';
+}
+
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
   return normalizeRoleList(roles);
 }
@@ -644,6 +668,28 @@ function formatRoleGroupLabel(roles: readonly string[]) {
   }
 
   return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
+}
+
+function buildServiceHealthWarningMessage({
+  apiStatus,
+  dbStatus,
+}: {
+  apiStatus?: string | null;
+  dbStatus?: string | null;
+}) {
+  const dependenciesNeedingAttention = [
+    !isHealthyHealthIndicator(apiStatus) ? 'API' : null,
+    !isHealthyHealthIndicator(dbStatus) ? 'base de datos' : null,
+  ].filter((dependency): dependency is string => dependency != null);
+
+  if (dependenciesNeedingAttention.length === 0) {
+    return null;
+  }
+
+  const dependenciesLabel = formatRoleGroupLabel(dependenciesNeedingAttention);
+  const verb = dependenciesNeedingAttention.length === 1 ? 'requiere' : 'requieren';
+
+  return `Atención: ${dependenciesLabel} ${verb} revisión antes de cambiar permisos o seguir con otras acciones administrativas.`;
 }
 
 function buildCompactHiddenColumnsDescription(hiddenColumnLabels: readonly string[]) {
@@ -952,6 +998,10 @@ export default function AdminConsolePage() {
     healthQuery.data != null
     && isHealthyHealthIndicator(healthQuery.data.status)
     && isHealthyHealthIndicator(healthQuery.data.db);
+  const serviceHealthWarningMessage = buildServiceHealthWarningMessage({
+    apiStatus: healthQuery.data?.status,
+    dbStatus: healthQuery.data?.db,
+  });
   const showGettingStartedGuidance =
     !consoleQuery.isPending
     && !usersQuery.isLoading
@@ -1262,10 +1312,29 @@ export default function AdminConsolePage() {
                 Todo listo: API y base de datos responden correctamente.
               </Typography>
             ) : healthQuery.data ? (
-              <>
-                <Typography variant="body2">API: {healthQuery.data?.status ?? '—'}</Typography>
-                <Typography variant="body2">Base de datos: {healthQuery.data?.db ?? '—'}</Typography>
-              </>
+              <Stack spacing={1.25}>
+                {serviceHealthWarningMessage && (
+                  <Typography variant="body2">
+                    {serviceHealthWarningMessage}
+                  </Typography>
+                )}
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                  <Chip
+                    data-testid="admin-service-health-chip"
+                    label={`API: ${healthQuery.data?.status ?? '—'}`}
+                    color={getHealthStatusChipColor(healthQuery.data?.status)}
+                    size="small"
+                    variant={isHealthyHealthIndicator(healthQuery.data?.status) ? 'outlined' : 'filled'}
+                  />
+                  <Chip
+                    data-testid="admin-service-health-chip"
+                    label={`Base de datos: ${healthQuery.data?.db ?? '—'}`}
+                    color={getHealthStatusChipColor(healthQuery.data?.db)}
+                    size="small"
+                    variant={isHealthyHealthIndicator(healthQuery.data?.db) ? 'outlined' : 'filled'}
+                  />
+                </Stack>
+              </Stack>
             ) : null}
             {healthQuery.isError && (
               <Alert severity="error" sx={{ mt: 2 }}>
