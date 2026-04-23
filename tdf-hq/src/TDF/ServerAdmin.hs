@@ -1177,14 +1177,14 @@ validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject
+  | T.any isEmailHeaderLineBreak rawSubject =
+      Left err400 { errBody = "Subject must be a single line" }
+  | T.any isControl rawSubject =
+      Left err400 { errBody = "Subject must not contain control characters" }
   | T.null subject =
       Left err400 { errBody = "Subject must not be empty" }
   | T.length subject > adminEmailSubjectMaxLength =
       Left err400 { errBody = "Subject must be 160 characters or fewer" }
-  | T.any isEmailHeaderLineBreak subject =
-      Left err400 { errBody = "Subject must be a single line" }
-  | T.any isControl subject =
-      Left err400 { errBody = "Subject must not contain control characters" }
   | otherwise = Right subject
   where
     subject = T.strip rawSubject
@@ -1196,12 +1196,12 @@ adminEmailSubjectMaxLength = 160
 validateAdminEmailCtaUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdminEmailCtaUrl Nothing = Right Nothing
 validateAdminEmailCtaUrl (Just rawUrl)
+  | T.any isControl rawUrl =
+      Left err400 { errBody = "CTA URL must not contain control characters" }
   | T.null url =
       Right Nothing
   | T.length url > 2048 =
       Left err400 { errBody = "CTA URL must be 2048 characters or fewer" }
-  | T.any isControl url =
-      Left err400 { errBody = "CTA URL must not contain control characters" }
   | T.any isSpace url =
       Left err400 { errBody = "CTA URL must not contain whitespace" }
   | Nothing <- mRemainder =

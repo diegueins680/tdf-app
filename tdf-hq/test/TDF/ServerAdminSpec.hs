@@ -110,6 +110,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "Subject must be a single line"
                 (validateAdminEmailSubject "Launch\r\nBcc: ops@example.com")
             assertInvalid
+                "Subject must be a single line"
+                (validateAdminEmailSubject "\nLaunch")
+            assertInvalid
+                "Subject must not contain control characters"
+                (validateAdminEmailSubject "\tLaunch")
+            assertInvalid
                 "Subject must not contain control characters"
                 (validateAdminEmailSubject "Launch\NULHidden")
 
@@ -131,6 +137,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "include a host" (validateAdminEmailCtaUrl (Just "https:///course"))
             assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
+            assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "\nhttps://example.com/course"))
             assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
             assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
             assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
