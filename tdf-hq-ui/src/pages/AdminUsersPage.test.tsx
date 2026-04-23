@@ -272,7 +272,8 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
-        expect(container.textContent).toContain('Incluir inactivos');
+        expect(container.textContent).toContain('Inactivos incluidos');
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(
           buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
         ).toBe('1 usuario inactivo');
@@ -1403,6 +1404,8 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
@@ -2462,6 +2465,8 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
