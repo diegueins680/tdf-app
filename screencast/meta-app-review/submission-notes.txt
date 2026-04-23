@@ -1,22 +1,27 @@
-This file is the combined reviewer narrative for the Meta submission packet. For each permission-specific "Describe how your app uses this permission or feature" field, use the matching file under `screencast/meta-app-review/permission-notes/`.
+This file is the canonical reviewer-instructions narrative for the Meta submission packet. Use it as the source of truth for the dedicated reviewer-instructions editor body (`instructions-web-2`). For each permission-specific "Describe how your app uses this permission or feature" field outside that editor, use the matching file under `screencast/meta-app-review/permission-notes/`.
 
 TDF Records uses Instagram Direct as the customer booking and support inbox for its business account. Customers send real booking and support questions to the TDF business Instagram profile, and TDF staff read and reply to those conversations from the business side inside TDF HQ.
 
 These requested permissions are used only to identify the connected business/professional Instagram account, read inbound messages sent to that business account, and reply from the business side. TDF does not request these permissions for consumer browsing or unrelated account access.
 
-This resubmission includes one refreshed Facebook Login evidence video plus the existing Instagram Login evidence video because TDF HQ supports two Meta login/provider flows for Instagram messaging.
+This resubmission uses one canonical combined reviewer-proof video because TDF HQ supports two Meta login/provider flows for Instagram messaging.
+Canonical reviewer-proof video: /Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4
+The previously uploaded split Facebook/Instagram videos remain historical source segments only and are not the packet-of-record upload set for the next live reviewer-instructions mutation.
 
-1) Facebook Login evidence
-Evidence artifact: screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4
-Permissions shown in this run: instagram_basic, instagram_manage_messages
-Dependency scopes used for Page/asset discovery in this run: pages_show_list, pages_read_engagement
-Connected asset shown in the refreshed run: the professional Instagram account linked to the selected Facebook Page before messaging begins.
-This refreshed final was rendered from the March 28 desktop source plus the matching native-client proof segment for the same clean marker thread.
+1) Facebook Login evidence segment inside the canonical combined reviewer-proof video
+Evidence artifact: /Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4
+Primary proof anchor: 00:00:00
+Permissions shown in this segment: instagram_basic, instagram_manage_messages
+Dependency scopes used for Page/asset discovery in this segment: pages_show_list, pages_read_engagement
+Connected asset shown in this segment: the professional Instagram account linked to the selected Facebook Page before messaging begins.
+Historical source segment only: screencast/meta-app-review/output/final-facebook-login-2026-03-28.mp4
 
-2) Instagram Login evidence
-Evidence artifact: screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4
-Permissions shown in this run: instagram_business_basic, instagram_business_manage_messages
-Connected asset shown in the refreshed run: the professional/business Instagram messaging account that TDF HQ uses for the review flow, with the selected asset kept visible before the inbox flow begins.
+2) Instagram Login evidence segment inside the canonical combined reviewer-proof video
+Evidence artifact: /Users/diegosaa/GitHub/tdf-app/screencast/meta-app-review/output/final-meta-review-combined-2026-04-18.mp4
+Primary proof anchor: 00:02:59
+Permissions shown in this segment: instagram_business_basic, instagram_business_manage_messages
+Connected asset shown in this segment: the professional/business Instagram messaging account that TDF HQ uses for the review flow, with the selected asset kept visible before the inbox flow begins.
+Historical source segment only: screencast/meta-app-review/output/final-instagram-business-login-2026-03-10.mp4
 
 Selected asset used in the validated review flow:
 - Facebook Page: TDF Studio

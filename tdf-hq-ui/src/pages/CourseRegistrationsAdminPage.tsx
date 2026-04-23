@@ -620,7 +620,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(
-      /^(?:formulario\s+(?:p[uú]blico|de\s+inscripci[oó]n|de\s+registro)|p[aá]gina\s+(?:de\s+inscripci[oó]n|de\s+registro)|public\s+form|(?:course\s+)?registration(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
+      /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+inscripci[oó]n|de\s+registro)|p[aá]gina\s+(?:de\s+inscripci[oó]n|de\s+registro)|public\s+form|course\s+form|(?:course\s+)?registration(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
     )
     .trim();
