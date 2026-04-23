@@ -161,6 +161,12 @@ export default function LabelArtistsPage() {
       return haystack.includes(term);
     });
   }, [search, sortedArtists]);
+  const hasArtistProfiles = artists.length > 0;
+  const hasArtistSearch = search.trim().length > 0;
+  const showArtistSearch = hasArtistProfiles || hasArtistSearch;
+  const showArtistRefresh = hasArtistProfiles || Boolean(artistsQuery.error);
+  const showQuickNotesCard = filteredArtists.length > 0;
+  const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
   const selectedParty = useMemo(
     () => parties.find((party) => party.partyId === form.partyId) ?? null,
@@ -321,99 +327,102 @@ export default function LabelArtistsPage() {
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            size="small"
-            aria-label="Buscar artistas"
-            placeholder="Buscar por nombre, slug o ciudad"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            inputProps={{ 'aria-label': 'Buscar artistas' }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: { xs: 200, md: 280 } }}
-          />
-          <Tooltip title="Refrescar">
-            <span>
-              <IconButton
-                onClick={handleRefresh}
-                disabled={artistsQuery.isFetching}
-                aria-label="Refrescar artistas"
-              >
-                <RefreshIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          {showArtistSearch && (
+            <TextField
+              size="small"
+              aria-label="Buscar artistas"
+              placeholder="Buscar por nombre, slug o ciudad"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              inputProps={{ 'aria-label': 'Buscar artistas' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: { xs: 200, md: 280 } }}
+            />
+          )}
+          {showArtistRefresh && (
+            <Tooltip title="Refrescar">
+              <span>
+                <IconButton
+                  onClick={handleRefresh}
+                  disabled={artistsQuery.isFetching}
+                  aria-label="Refrescar artistas"
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
             Nuevo perfil
           </Button>
         </Stack>
       </Stack>
 
-      <Card>
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography variant="h6">Notas rápidas por artista</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Usa este espacio para pendientes breves; se guardan en las notas del contacto (Party.notes) y se reutilizan en el CRM.
-            </Typography>
+      {showQuickNotesCard && (
+        <Card>
+          <CardContent>
             <Stack spacing={1.5}>
-              {filteredArtists.length === 0 && (
-                <Typography color="text.secondary">No hay artistas para mostrar.</Typography>
-              )}
-              {filteredArtists.map((artist) => {
-                const party = partyMap.get(artist.apArtistId);
-                const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
-                return (
-                  <Box
-                    key={artist.apArtistId}
-                    sx={{
-                      border: '1px solid rgba(148,163,184,0.35)',
-                      borderRadius: 2,
-                      p: 1.5,
-                      display: 'flex',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      gap: 1,
-                      alignItems: { xs: 'stretch', sm: 'center' },
-                    }}
-                  >
-                    <Box sx={{ minWidth: 220 }}>
-                      <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {artist.apCity ?? 'Sin ciudad'}
-                      </Typography>
-                    </Box>
-                    <TextField
-                      value={noteValue}
-                      onChange={(e) =>
-                        setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
-                      }
-                      aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
-                      placeholder="Agregar nota o pendiente"
-                      fullWidth
-                      size="small"
-                      multiline
-                      minRows={1}
-                    />
-                    <Button
-                      variant="contained"
-                      onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
-                      disabled={noteMutation.isPending}
-                      sx={{ minWidth: 140 }}
+              <Typography variant="h6">Notas rápidas por artista</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Usa este espacio para pendientes breves; se guardan en las notas del contacto (Party.notes) y se reutilizan en el CRM.
+              </Typography>
+              <Stack spacing={1.5}>
+                {filteredArtists.map((artist) => {
+                  const party = partyMap.get(artist.apArtistId);
+                  const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
+                  return (
+                    <Box
+                      key={artist.apArtistId}
+                      sx={{
+                        border: '1px solid rgba(148,163,184,0.35)',
+                        borderRadius: 2,
+                        p: 1.5,
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 1,
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                      }}
                     >
-                      {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
-                    </Button>
-                  </Box>
-                );
-              })}
+                      <Box sx={{ minWidth: 220 }}>
+                        <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {artist.apCity ?? 'Sin ciudad'}
+                        </Typography>
+                      </Box>
+                      <TextField
+                        value={noteValue}
+                        onChange={(e) =>
+                          setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
+                        }
+                        aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
+                        placeholder="Agregar nota o pendiente"
+                        fullWidth
+                        size="small"
+                        multiline
+                        minRows={1}
+                      />
+                      <Button
+                        variant="contained"
+                        onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
+                        disabled={noteMutation.isPending}
+                        sx={{ minWidth: 140 }}
+                      >
+                        {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
+                      </Button>
+                    </Box>
+                  );
+                })}
+              </Stack>
             </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent>
@@ -423,8 +432,13 @@ export default function LabelArtistsPage() {
               No pudimos cargar los artistas. Verifica tus permisos de admin.
             </Alert>
           )}
-          {!artistsQuery.isLoading && filteredArtists.length === 0 && !artistsQuery.error && (
-            <Typography color="text.secondary">Aún no hay perfiles de artista.</Typography>
+          {showFirstArtistSetup && (
+            <Alert severity="info" variant="outlined">
+              Todavía no hay perfiles de artista. Usa Nuevo perfil para enlazar el primer contacto del CRM; la búsqueda, notas rápidas, refresco y tabla aparecerán cuando exista al menos un perfil.
+            </Alert>
+          )}
+          {!showFirstArtistSetup && !artistsQuery.isLoading && filteredArtists.length === 0 && !artistsQuery.error && (
+            <Typography color="text.secondary">No hay perfiles de artista que coincidan con la búsqueda.</Typography>
           )}
           {filteredArtists.length > 0 && (
             <Box sx={{ overflowX: 'auto' }}>
