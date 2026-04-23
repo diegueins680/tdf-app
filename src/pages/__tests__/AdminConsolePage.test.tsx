@@ -1280,6 +1280,51 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
+  it('keeps a single long first-run module title compact until the admin expands it', async () => {
+    const user = userEvent.setup();
+    const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'shared-credentials',
+          title: longModuleTitle,
+          body: [
+            'Revisa credenciales técnicas y responsables sin salir del recorrido inicial.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+    await screen.findByText('Primeros pasos');
+
+    const firstRunAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+    if (!(firstRunAlert instanceof HTMLElement)) {
+      throw new Error('Expected first-run alert container to render');
+    }
+
+    await waitFor(() => {
+      expect(
+        within(firstRunAlert).getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    const actionButton = within(firstRunAlert).getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i });
+    expect(actionButton).toHaveAttribute('title', `Opcional: ver ${longModuleTitle}`);
+    expect(within(firstRunAlert).queryByText(longModuleTitle)).not.toBeInTheDocument();
+
+    await user.click(actionButton);
+
+    expect(await within(firstRunAlert).findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await within(firstRunAlert).findByText(longModuleTitle)).toBeInTheDocument();
+    expect(
+      within(firstRunAlert).getByText(/Revisa credenciales técnicas y responsables sin salir del recorrido inicial\./i),
+    ).toBeInTheDocument();
+  });
+
   it('removes the first-run optional modules area when no actionable fallback cards remain', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
@@ -2522,6 +2567,44 @@ describe('AdminConsolePage', () => {
     expect(
       screen.getByRole('button', { name: /Ocultar módulos adicionales/i }),
     ).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('keeps a single long standalone module title compact until the admin expands it', async () => {
+    const user = userEvent.setup();
+    const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'shared-credentials',
+          title: longModuleTitle,
+          body: [
+            'Revisa credenciales técnicas y responsables sin salir de esta consola.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Ver 1 módulo adicional$/i })).toBeInTheDocument();
+    });
+
+    const actionButton = screen.getByRole('button', { name: /^Ver 1 módulo adicional$/i });
+    expect(actionButton).toHaveAttribute('title', `Ver ${longModuleTitle}`);
+    expect(screen.queryByText(longModuleTitle)).not.toBeInTheDocument();
+
+    await user.click(actionButton);
+
+    expect(await screen.findByText(longModuleTitle)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Revisa credenciales técnicas y responsables sin salir de esta consola\./i),
+    ).toBeInTheDocument();
   });
 
   it('refreshes every admin dataset from the single panel action', async () => {

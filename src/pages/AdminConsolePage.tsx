@@ -235,6 +235,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '2. Usuarios y roles', targetId: 'admin-users-and-roles' },
   { label: '3. Auditoría reciente', targetId: 'admin-recent-audit' },
 ] as const;
+const MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH = 32;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
@@ -784,32 +785,50 @@ function buildAuditSectionDescription({
   return buildCompactHiddenColumnsDescription(hiddenColumnLabels);
 }
 
-function formatFirstRunAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
-  const count = cards.length;
-
-  if (count === 0) {
-    return 'Opcional: ver módulos adicionales';
-  }
-
-  if (count === 1) {
-    return `Opcional: ver ${cards[0]?.title ?? 'módulo adicional'}`;
-  }
-
-  return `Opcional: ver ${count} módulos adicionales`;
+function formatAdditionalModuleCountLabel(count: number) {
+  return count === 1 ? '1 módulo adicional' : `${count} módulos adicionales`;
 }
 
-function formatStandaloneAdditionalModulesActionLabel(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+function shouldCollapseSingleAdditionalModuleActionTitle(title: string) {
+  return title.trim().length > MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH;
+}
+
+function buildAdditionalModulesActionCopy({
+  cards,
+  optionalPrefix,
+}: {
+  cards: readonly Pick<AdminConsoleCard, 'title'>[];
+  optionalPrefix: boolean;
+}) {
   const count = cards.length;
+  const prefix = optionalPrefix ? 'Opcional: ver' : 'Ver';
 
   if (count === 0) {
-    return 'Ver módulos adicionales';
+    return { label: `${prefix} módulos adicionales` };
   }
 
   if (count === 1) {
-    return `Ver ${cards[0]?.title ?? 'módulo adicional'}`;
+    const title = cards[0]?.title?.trim() ?? '';
+    const shouldCollapseTitle = shouldCollapseSingleAdditionalModuleActionTitle(title);
+    const summary = shouldCollapseTitle
+      ? formatAdditionalModuleCountLabel(count)
+      : (title || 'módulo adicional');
+
+    return {
+      label: `${prefix} ${summary}`,
+      title: shouldCollapseTitle && title ? `${prefix} ${title}` : undefined,
+    };
   }
 
-  return `Ver ${count} módulos adicionales`;
+  return { label: `${prefix} ${formatAdditionalModuleCountLabel(count)}` };
+}
+
+function formatFirstRunAdditionalModulesActionCopy(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+  return buildAdditionalModulesActionCopy({ cards, optionalPrefix: true });
+}
+
+function formatStandaloneAdditionalModulesActionCopy(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+  return buildAdditionalModulesActionCopy({ cards, optionalPrefix: false });
 }
 
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
@@ -1045,7 +1064,7 @@ export default function AdminConsolePage() {
         })
         : null
     );
-  const firstRunAdditionalModulesActionLabel = formatFirstRunAdditionalModulesActionLabel(consoleCards);
+  const firstRunAdditionalModulesActionCopy = formatFirstRunAdditionalModulesActionCopy(consoleCards);
   const canShowFirstRunAdditionalModules =
     showGettingStartedGuidance && showCompactHealthyServiceSummary;
   const shouldShowAdditionalModuleCards =
@@ -1059,7 +1078,7 @@ export default function AdminConsolePage() {
     canShowFirstRunAdditionalModules
     && shouldShowAdditionalModuleCards;
   const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
-  const standaloneAdditionalModulesActionLabel = formatStandaloneAdditionalModulesActionLabel(consoleCards);
+  const standaloneAdditionalModulesActionCopy = formatStandaloneAdditionalModulesActionCopy(consoleCards);
   const firstRunAdditionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
@@ -1222,9 +1241,10 @@ export default function AdminConsolePage() {
                 onClick={() => setShowFirstRunAdditionalModules(true)}
                 aria-controls="admin-additional-modules-list"
                 aria-expanded="false"
+                title={firstRunAdditionalModulesActionCopy.title}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                {firstRunAdditionalModulesActionLabel}
+                {firstRunAdditionalModulesActionCopy.label}
               </Button>
             )}
             {showFirstRunAdditionalModulesHideAction && (
@@ -1617,10 +1637,11 @@ export default function AdminConsolePage() {
                 onClick={() => setShowStandaloneAdditionalModules((current) => !current)}
                 aria-controls="admin-additional-modules-list"
                 aria-expanded={showStandaloneAdditionalModules}
+                title={showStandaloneAdditionalModules ? undefined : standaloneAdditionalModulesActionCopy.title}
               >
                 {showStandaloneAdditionalModules
                   ? 'Ocultar módulos adicionales'
-                  : standaloneAdditionalModulesActionLabel}
+                  : standaloneAdditionalModulesActionCopy.label}
               </Button>
             </Stack>
           </Box>
