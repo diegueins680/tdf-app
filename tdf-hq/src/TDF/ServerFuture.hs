@@ -5,19 +5,28 @@ module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
 import           Data.Text            (Text)
+import qualified Data.Text            as T
 import           Servant
 
 import           TDF.API.Future
 import           TDF.Auth             (AuthedUser, hasStrictAdminAccess)
 
 -- | Shared helper to quickly craft stub responses.
-stub :: Applicative m => Text -> Text -> m StubResponse
-stub area endpoint = pure StubResponse
-  { stubArea        = area
-  , stubEndpoint    = endpoint
-  , stubStatus      = "planned"
-  , stubImplemented = False
-  }
+stub
+  :: MonadError ServerError m
+  => Text
+  -> Text
+  -> m StubResponse
+stub rawArea rawEndpoint = do
+  (area, endpoint) <-
+    either throwError pure (validateFutureStubMetadata rawArea rawEndpoint)
+  pure $
+    StubResponse
+      { stubArea        = area
+      , stubEndpoint    = endpoint
+      , stubStatus      = "planned"
+      , stubImplemented = False
+      }
 
 futureServer
   :: MonadError ServerError m
@@ -91,3 +100,47 @@ validateFutureAdminAccess user
 requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
 requireFutureAdminAccess user =
   either throwError pure (validateFutureAdminAccess user)
+
+validateFutureStubMetadata :: Text -> Text -> Either ServerError (Text, Text)
+validateFutureStubMetadata rawArea rawEndpoint = do
+  area <- validateFutureStubArea rawArea
+  endpoint <- validateFutureStubEndpoint rawEndpoint
+  pure (area, endpoint)
+
+validateFutureStubArea :: Text -> Either ServerError Text
+validateFutureStubArea rawArea
+  | rawArea /= area = invalidFutureStubMetadata
+  | validFutureStubSlug area = Right area
+  | otherwise = invalidFutureStubMetadata
+  where
+    area = T.strip rawArea
+
+validateFutureStubEndpoint :: Text -> Either ServerError Text
+validateFutureStubEndpoint rawEndpoint
+  | rawEndpoint /= endpoint = invalidFutureStubMetadata
+  | validFutureStubPath endpoint = Right endpoint
+  | otherwise = invalidFutureStubMetadata
+  where
+    endpoint = T.strip rawEndpoint
+
+validFutureStubPath :: Text -> Bool
+validFutureStubPath endpoint =
+  not (T.null endpoint)
+    && T.length endpoint <= 128
+    && all validFutureStubSlug (T.splitOn "/" endpoint)
+
+validFutureStubSlug :: Text -> Bool
+validFutureStubSlug slug =
+  not (T.null slug)
+    && T.length slug <= 64
+    && T.all validFutureStubSlugChar slug
+
+validFutureStubSlugChar :: Char -> Bool
+validFutureStubSlugChar ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= '0' && ch <= '9')
+    || ch == '-'
+
+invalidFutureStubMetadata :: Either ServerError a
+invalidFutureStubMetadata =
+  Left err500 { errBody = "Invalid future stub metadata" }

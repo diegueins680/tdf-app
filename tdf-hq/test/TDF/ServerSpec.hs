@@ -271,7 +271,11 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReference
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
-import TDF.ServerFuture (futureServer, validateFutureAdminAccess)
+import TDF.ServerFuture
+    ( futureServer
+    , validateFutureAdminAccess
+    , validateFutureStubMetadata
+    )
 import TDF.ServerExtra (validateSocialReplyBody)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import Test.Hspec
@@ -6072,6 +6076,31 @@ spec = describe "TDF.Server helpers" $ do
                     Right value ->
                         expectationFailure
                             ("Expected admin discovery access to be rejected, got: " <> show value)
+
+    describe "validateFutureStubMetadata" $ do
+        it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
+            case validateFutureStubMetadata "crm" "parties/list-columns" of
+                Right value ->
+                    value `shouldBe` ("crm", "parties/list-columns")
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid future stub metadata, got: " <> show serverErr)
+
+            let assertInvalid area endpoint =
+                    case validateFutureStubMetadata area endpoint of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub metadata"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid future stub metadata, got: " <> show value)
+
+            assertInvalid " crm" "parties/list-columns"
+            assertInvalid "CRM" "parties/list-columns"
+            assertInvalid "crm" "/parties/list-columns"
+            assertInvalid "crm" "parties//list-columns"
+            assertInvalid "crm" "parties/list columns"
 
     describe "futureServer" $ do
         it "requires literal Admin before serving fallback discovery stubs" $ do
