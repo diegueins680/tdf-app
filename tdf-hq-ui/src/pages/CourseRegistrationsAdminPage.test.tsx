@@ -7243,6 +7243,46 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('matches hyphenated registration names from spaced search so admins avoid a false empty recovery', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => (
+      index === 4
+        ? {
+          crFullName: 'Nina-Simone',
+          crEmail: 'nina@example.com',
+        }
+        : {}
+    )));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina simone');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina-Simone');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "nina simone"');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('explains short phone searches instead of leaving admins with generic empty-search recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => ({
       crPhoneE164: index === 4 ? '+593 99 900-0111' : `+593 98 000-00${index + 1}`,

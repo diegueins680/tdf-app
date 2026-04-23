@@ -305,6 +305,8 @@ const normalizeLocalSearchText = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
+const normalizeCompactLocalSearchText = (value: string) =>
+  normalizeLocalSearchText(value).replace(/[^a-z0-9]+/g, '');
 const normalizeVisibleLocalSearchInput = (value: string) => (
   value.trim().length === 0 ? '' : value
 );
@@ -727,8 +729,19 @@ const formatHiddenLocalSearchFieldList = (fields: readonly HiddenLocalSearchFiel
   return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
 };
 
-const localSearchTextMatches = (value: string | null | undefined, localSearchKey: string) =>
-  Boolean(localSearchKey) && normalizeLocalSearchText(value ?? '').includes(localSearchKey);
+const localSearchTextMatches = (value: string | null | undefined, localSearchKey: string) => {
+  if (!localSearchKey) return false;
+
+  const normalizedValue = normalizeLocalSearchText(value ?? '');
+  if (normalizedValue.includes(localSearchKey)) return true;
+  if (/^\d+$/.test(localSearchKey) && localSearchKey.length < MIN_PHONE_SEARCH_DIGITS) {
+    return false;
+  }
+
+  const compactSearchKey = normalizeCompactLocalSearchText(localSearchKey);
+  return Boolean(compactSearchKey)
+    && normalizeCompactLocalSearchText(normalizedValue).includes(compactSearchKey);
+};
 
 const registrationVisibleSearchText = (
   reg: CourseRegistrationDTO,
@@ -1570,8 +1583,7 @@ export default function CourseRegistrationsAdminPage() {
         getSearchableRegistrationSource(reg.crSource),
         getSearchableRegistrationAcquisitionContext(reg),
       ].join(' ');
-      const searchableText = normalizeLocalSearchText(haystack);
-      if (searchableText.includes(localSearchKey)) return true;
+      if (localSearchTextMatches(haystack, localSearchKey)) return true;
 
       if (localSearchDigitsKey.length >= MIN_PHONE_SEARCH_DIGITS) {
         const phoneDigits = normalizeLocalSearchDigits(reg.crPhoneE164 ?? '');
