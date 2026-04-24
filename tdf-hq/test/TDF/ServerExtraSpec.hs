@@ -2424,6 +2424,53 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR rental checkout without terms to be rejected, got " <> show value)
 
+    it "requires explicit rental payment metadata on public QR links so anonymous paid custody records cannot be price-less" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      let dueAtValue = UTCTime (fromGregorian 2035 5 1) 0
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "rental")
+              (Just "Devuelve con estuche y fuente.")
+              (Just "ops@example.com")
+              Nothing
+              (Just "card")
+              Nothing
+              Nothing
+              (Just "1200.00")
+              (Just "USD")
+              Nothing
+              (Just "inventory/checkout.jpg")
+              (Just dueAtValue)
+              (Just "Equipo completo")
+              Nothing
+          assertInvalid expectedMessage req = do
+            result <- runInventoryPublicCheckoutHandler
+              (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+              canonicalToken
+              req
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected public QR rental checkout to be rejected, got " <> show value)
+
+      assertInvalid
+        "Public QR rental checkout requires coPaymentType"
+        baseRequest { coPaymentType = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentAmount"
+        baseRequest { coPaymentAmount = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentCurrency"
+        baseRequest { coPaymentCurrency = Nothing }
+
     it "rejects malformed holder contact on public QR links before creating unusable custody rows" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

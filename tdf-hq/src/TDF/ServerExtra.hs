@@ -366,6 +366,7 @@ inventoryPublicServer =
   where
     checkoutByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
+      either throwError pure (validatePublicQrCheckoutRequestFields req)
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
       sanitizePublicCheckoutDTO <$> performCheckout "public-link" assetEntity req
@@ -720,6 +721,12 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
   | ncrDisposition normalized == Rental && isNothing (ncrTermsAndConditions normalized) =
       Left err400 { errBody = "Public QR rental checkout requires coTermsAndConditions" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentType normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentAmountCents normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentCurrency normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrConditionOut normalized) =
@@ -732,6 +739,23 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout requires coDueAt" }
   | otherwise =
       Right ()
+
+validatePublicQrCheckoutRequestFields :: AssetCheckoutRequest -> Either ServerError ()
+validatePublicQrCheckoutRequestFields req
+  | isRentalDisposition (coDisposition req)
+      && isNothing (normalizeOptionalTextField (coPaymentType req)) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
+  | isRentalDisposition (coDisposition req)
+      && isNothing (normalizeOptionalTextField (coPaymentAmount req)) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
+  | isRentalDisposition (coDisposition req)
+      && isNothing (normalizeOptionalTextField (coPaymentCurrency req)) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  | otherwise =
+      Right ()
+  where
+    isRentalDisposition =
+      maybe False (\raw -> T.toLower (T.strip raw) `elem` ["rental", "rent"])
 
 validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
 validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
