@@ -1038,6 +1038,9 @@ export default function AdminConsolePage() {
     && !seedMutation.isSuccess;
   const showFirstRunServiceHealthGate =
     showGettingStartedGuidance && !showCompactHealthyServiceSummary;
+  const gettingStartedSections = showFirstRunServiceHealthGate
+    ? GETTING_STARTED_ADMIN_SECTIONS.slice(0, 1)
+    : GETTING_STARTED_ADMIN_SECTIONS;
   const firstRunServiceNeedsRefresh =
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
   const showHeaderRefreshAction =
@@ -1135,8 +1138,8 @@ export default function AdminConsolePage() {
     pendingLabel: 'Cargando ejemplo…',
   } as const;
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
-    ? 'Espera la comprobación de API y base de datos antes de cargar datos de ejemplo.'
-    : 'Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas.';
+    ? 'Espera la comprobación de API y base de datos para habilitar usuarios, auditoría y datos de ejemplo.'
+    : 'Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo.';
   const firstRunDataGateCopy = 'Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo.';
   const firstRunDemoStatusCopy = seedMutation.isSuccess
     ? null
@@ -1226,7 +1229,7 @@ export default function AdminConsolePage() {
               </Typography>
             </Box>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-              {GETTING_STARTED_ADMIN_SECTIONS.map((section) => (
+              {gettingStartedSections.map((section) => (
                 <Chip
                   key={section.targetId}
                   component="a"
@@ -1380,256 +1383,260 @@ export default function AdminConsolePage() {
         </Card>
       </Box>
 
-      <Paper variant="outlined" id="admin-users-and-roles">
-        <Box sx={{ px: 2, py: 1 }}>
-          <Box>
-            <Typography variant="h6">Usuarios y roles</Typography>
-            {usersSectionDescription && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-              >
-                {usersSectionDescription}
-              </Typography>
-            )}
-          </Box>
-        </Box>
-        {usersError && (
-          <Alert severity="error" sx={{ mx: 2 }}>
-            {usersError}
-          </Alert>
-        )}
-        {isUsersLoading ? (
-          renderSectionLoading('Cargando usuarios…')
-        ) : showUsersTable ? (
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Usuario</TableCell>
-                  <TableCell>Roles</TableCell>
-                  {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
-                  {showUsersStatusColumn && <TableCell>Estado</TableCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => {
-                  const identity = summarizeAdminUserIdentity(user);
-                  const editRoleLabel = buildAdminUserRoleEditLabel(user);
-                  const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
-                  return (
-                    <TableRow key={user.userId} hover>
-                      <TableCell>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {identity.primary}
-                          </Typography>
-                          {identity.showUsername && (
-                            <Typography variant="caption" color="text.secondary">
-                              Usuario: {identity.username}
-                            </Typography>
-                          )}
-                          {shouldShowPartyId ? (
-                            <Typography variant="caption" color="text.secondary">
-                              Party #{user.partyId}
-                            </Typography>
-                          ) : null}
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="small"
-                          endIcon={<EditOutlinedIcon fontSize="small" />}
-                          onClick={() => setEditingUser(user)}
-                          aria-label={editRoleLabel}
-                          title={editRoleLabel}
-                          sx={{
-                            px: 0,
-                            minWidth: 0,
-                            justifyContent: 'flex-start',
-                            textTransform: 'none',
-                          }}
-                        >
-                          {formatInlineEditableRoleList(user.roles)}
-                        </Button>
-                      </TableCell>
-                      {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
-                      {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : singleAdminUser && !usersError ? (
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Stack
-              spacing={1}
-              direction={{ xs: 'column', md: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ xs: 'flex-start', md: 'center' }}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
-                px: 1.5,
-                py: 1.25,
-              }}
-            >
-              <Stack spacing={0.25}>
-                <Typography variant="body2" fontWeight={600}>
-                  {singleAdminUserIdentity?.primary}
-                </Typography>
-                {singleAdminUserIdentity?.showUsername && (
-                  <Typography variant="caption" color="text.secondary">
-                    Usuario: {singleAdminUserIdentity.username}
+      {!showFirstRunServiceHealthGate && (
+        <>
+          <Paper variant="outlined" id="admin-users-and-roles">
+            <Box sx={{ px: 2, py: 1 }}>
+              <Box>
+                <Typography variant="h6">Usuarios y roles</Typography>
+                {usersSectionDescription && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    {usersSectionDescription}
                   </Typography>
                 )}
-                {singleAdminUser.partyId != null && userIdsRequiringPartyId.has(singleAdminUser.userId) ? (
-                  <Typography variant="caption" color="text.secondary">
-                    Party #{singleAdminUser.partyId}
-                  </Typography>
-                ) : null}
-              </Stack>
-              <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                <Button
-                  size="small"
-                  endIcon={<EditOutlinedIcon fontSize="small" />}
-                  onClick={() => setEditingUser(singleAdminUser)}
-                  aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
-                  title={buildAdminUserRoleEditLabel(singleAdminUser)}
+              </Box>
+            </Box>
+            {usersError && (
+              <Alert severity="error" sx={{ mx: 2 }}>
+                {usersError}
+              </Alert>
+            )}
+            {isUsersLoading ? (
+              renderSectionLoading('Cargando usuarios…')
+            ) : showUsersTable ? (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Usuario</TableCell>
+                      <TableCell>Roles</TableCell>
+                      {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
+                      {showUsersStatusColumn && <TableCell>Estado</TableCell>}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => {
+                      const identity = summarizeAdminUserIdentity(user);
+                      const editRoleLabel = buildAdminUserRoleEditLabel(user);
+                      const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
+                      return (
+                        <TableRow key={user.userId} hover>
+                          <TableCell>
+                            <Stack spacing={0.25}>
+                              <Typography variant="body2" fontWeight={600}>
+                                {identity.primary}
+                              </Typography>
+                              {identity.showUsername && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Usuario: {identity.username}
+                                </Typography>
+                              )}
+                              {shouldShowPartyId ? (
+                                <Typography variant="caption" color="text.secondary">
+                                  Party #{user.partyId}
+                                </Typography>
+                              ) : null}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="small"
+                              endIcon={<EditOutlinedIcon fontSize="small" />}
+                              onClick={() => setEditingUser(user)}
+                              aria-label={editRoleLabel}
+                              title={editRoleLabel}
+                              sx={{
+                                px: 0,
+                                minWidth: 0,
+                                justifyContent: 'flex-start',
+                                textTransform: 'none',
+                              }}
+                            >
+                              {formatInlineEditableRoleList(user.roles)}
+                            </Button>
+                          </TableCell>
+                          {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
+                          {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : singleAdminUser && !usersError ? (
+              <Box sx={{ px: 2, pb: 2 }}>
+                <Stack
+                  spacing={1}
+                  direction={{ xs: 'column', md: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', md: 'center' }}
                   sx={{
-                    px: 0,
-                    minWidth: 0,
-                    textTransform: 'none',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    px: 1.5,
+                    py: 1.25,
                   }}
                 >
-                  {formatInlineEditableRoleList(singleAdminUser.roles)}
-                </Button>
-                {singleAdminUserLastAccess && (
-                  <Typography variant="body2" color="text.secondary">
-                    Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
-                  </Typography>
-                )}
-                {singleAdminUserStatusLabel && (
-                  <Typography variant="body2" color="text.secondary">
-                    Estado: {singleAdminUserStatusLabel}
-                  </Typography>
-                )}
-              </Stack>
-            </Stack>
-          </Box>
-        ) : !usersError ? (
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {showGettingStartedGuidance
-                ? FIRST_RUN_USERS_EMPTY_STATE
-                : 'Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles.'}
-            </Typography>
-          </Box>
-        ) : null}
-      </Paper>
-
-      <Paper variant="outlined" id="admin-recent-audit">
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="h6">Auditoría reciente</Typography>
-          {auditSectionDescription && (
-            <Typography variant="body2" color="text.secondary">
-              {auditSectionDescription}
-            </Typography>
-          )}
-        </Box>
-        {auditQuery.isError && (
-          <Alert severity="error" sx={{ mx: 2 }}>
-            {(auditQuery.error as Error).message}
-          </Alert>
-        )}
-        {auditQuery.isLoading ? (
-          renderSectionLoading('Cargando auditoría…')
-        ) : showAuditTable ? (
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Fecha</TableCell>
-                  <TableCell>Entidad</TableCell>
-                  <TableCell>Acción</TableCell>
-                  {showAuditActorColumn && <TableCell>Actor</TableCell>}
-                  {showAuditDetailColumn && <TableCell>Detalle</TableCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {audits.map((entry: AuditLogEntry, index: number) => (
-                  <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
-                    <TableCell>{formatDate(entry.createdAt)}</TableCell>
-                    <TableCell>{entry.entity} · {entry.entityId}</TableCell>
-                    <TableCell>
-                      <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
-                        {formatAuditAction(entry.action)}
+                  <Stack spacing={0.25}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {singleAdminUserIdentity?.primary}
+                    </Typography>
+                    {singleAdminUserIdentity?.showUsername && (
+                      <Typography variant="caption" color="text.secondary">
+                        Usuario: {singleAdminUserIdentity.username}
                       </Typography>
-                    </TableCell>
-                    {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
-                    {showAuditDetailColumn && (
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
-                          {entry.diff ?? '—'}
-                        </Typography>
-                      </TableCell>
                     )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : singleAuditEntry && !auditQuery.isError ? (
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Stack spacing={1.25}>
-              <Typography variant="body2" color="text.secondary">
-                Primer evento de auditoría. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica.
-              </Typography>
-              <Stack
-                spacing={0.75}
-                sx={{
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  px: 1.5,
-                  py: 1.25,
-                }}
-              >
-                <Typography variant="body2" title={getAuditActionTitle(singleAuditEntry.action)}>
-                  <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box>{' '}
-                  {formatAuditAction(singleAuditEntry.action)}
-                </Typography>
+                    {singleAdminUser.partyId != null && userIdsRequiringPartyId.has(singleAdminUser.userId) ? (
+                      <Typography variant="caption" color="text.secondary">
+                        Party #{singleAdminUser.partyId}
+                      </Typography>
+                    ) : null}
+                  </Stack>
+                  <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                    <Button
+                      size="small"
+                      endIcon={<EditOutlinedIcon fontSize="small" />}
+                      onClick={() => setEditingUser(singleAdminUser)}
+                      aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
+                      title={buildAdminUserRoleEditLabel(singleAdminUser)}
+                      sx={{
+                        px: 0,
+                        minWidth: 0,
+                        textTransform: 'none',
+                      }}
+                    >
+                      {formatInlineEditableRoleList(singleAdminUser.roles)}
+                    </Button>
+                    {singleAdminUserLastAccess && (
+                      <Typography variant="body2" color="text.secondary">
+                        Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
+                      </Typography>
+                    )}
+                    {singleAdminUserStatusLabel && (
+                      <Typography variant="body2" color="text.secondary">
+                        Estado: {singleAdminUserStatusLabel}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Stack>
+              </Box>
+            ) : !usersError ? (
+              <Box sx={{ px: 2, pb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
+                  {showGettingStartedGuidance
+                    ? FIRST_RUN_USERS_EMPTY_STATE
+                    : 'Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles.'}
                 </Typography>
+              </Box>
+            ) : null}
+          </Paper>
+
+          <Paper variant="outlined" id="admin-recent-audit">
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant="h6">Auditoría reciente</Typography>
+              {auditSectionDescription && (
                 <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {singleAuditEntry.entity} · {singleAuditEntry.entityId}
+                  {auditSectionDescription}
                 </Typography>
-                {singleAuditHasActor && (
+              )}
+            </Box>
+            {auditQuery.isError && (
+              <Alert severity="error" sx={{ mx: 2 }}>
+                {(auditQuery.error as Error).message}
+              </Alert>
+            )}
+            {auditQuery.isLoading ? (
+              renderSectionLoading('Cargando auditoría…')
+            ) : showAuditTable ? (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>Entidad</TableCell>
+                      <TableCell>Acción</TableCell>
+                      {showAuditActorColumn && <TableCell>Actor</TableCell>}
+                      {showAuditDetailColumn && <TableCell>Detalle</TableCell>}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {audits.map((entry: AuditLogEntry, index: number) => (
+                      <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
+                        <TableCell>{formatDate(entry.createdAt)}</TableCell>
+                        <TableCell>{entry.entity} · {entry.entityId}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
+                            {formatAuditAction(entry.action)}
+                          </Typography>
+                        </TableCell>
+                        {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
+                        {showAuditDetailColumn && (
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
+                              {entry.diff ?? '—'}
+                            </Typography>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : singleAuditEntry && !auditQuery.isError ? (
+              <Box sx={{ px: 2, pb: 2 }}>
+                <Stack spacing={1.25}>
                   <Typography variant="body2" color="text.secondary">
-                    <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId, usersById)}
+                    Primer evento de auditoría. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica.
                   </Typography>
-                )}
-                {singleAuditHasDetail && (
-                  <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                    <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff}
-                  </Typography>
-                )}
-              </Stack>
-            </Stack>
-          </Box>
-        ) : !auditQuery.isError ? (
-          <Box sx={{ px: 2, pb: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {showGettingStartedGuidance
-                ? FIRST_RUN_AUDIT_EMPTY_STATE
-                : 'Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.'}
-            </Typography>
-          </Box>
-        ) : null}
-      </Paper>
+                  <Stack
+                    spacing={0.75}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 1.25,
+                    }}
+                  >
+                    <Typography variant="body2" title={getAuditActionTitle(singleAuditEntry.action)}>
+                      <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box>{' '}
+                      {formatAuditAction(singleAuditEntry.action)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {singleAuditEntry.entity} · {singleAuditEntry.entityId}
+                    </Typography>
+                    {singleAuditHasActor && (
+                      <Typography variant="body2" color="text.secondary">
+                        <Box component="span" sx={{ fontWeight: 600 }}>Actor:</Box> {formatAuditActor(singleAuditEntry.actorId, usersById)}
+                      </Typography>
+                    )}
+                    {singleAuditHasDetail && (
+                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                        <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Stack>
+              </Box>
+            ) : !auditQuery.isError ? (
+              <Box sx={{ px: 2, pb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {showGettingStartedGuidance
+                    ? FIRST_RUN_AUDIT_EMPTY_STATE
+                    : 'Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.'}
+                </Typography>
+              </Box>
+            ) : null}
+          </Paper>
+        </>
+      )}
 
       {showStandaloneAdditionalModulesSection && (
         <Paper variant="outlined" id="admin-additional-modules">

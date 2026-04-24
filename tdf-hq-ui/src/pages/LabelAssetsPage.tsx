@@ -195,12 +195,21 @@ export default function LabelAssetsPage() {
     coTargetParty: '',
     coTargetRoom: '',
     coTargetSession: '',
+    coDisposition: 'loan',
+    coTermsAndConditions: '',
+    coHolderEmail: '',
+    coHolderPhone: '',
+    coPaymentType: '',
+    coPaymentInstallments: null,
+    coPaymentReference: '',
+    coPhotoUrl: '',
     coConditionOut: '',
     coNotes: '',
   });
   const [checkinForm, setCheckinForm] = useState<AssetCheckinRequest>({
     ciConditionIn: '',
     ciNotes: '',
+    ciPhotoUrl: '',
   });
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -309,8 +318,12 @@ export default function LabelAssetsPage() {
       coTargetRoom: '',
       coTargetSession: '',
       coDisposition: 'loan',
+      coTermsAndConditions: '',
       coHolderEmail: '',
       coHolderPhone: '',
+      coPaymentType: '',
+      coPaymentInstallments: null,
+      coPaymentReference: '',
       coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',

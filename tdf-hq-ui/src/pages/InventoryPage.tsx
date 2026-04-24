@@ -433,6 +433,11 @@ export default function InventoryPage() {
                         Salió: {formatDate(singleAsset.currentCheckoutAt)}
                       </Typography>
                     )}
+                    {singleAsset.currentCheckoutDueAt && (
+                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                        Retorno pactado: {formatDate(singleAsset.currentCheckoutDueAt)}
+                      </Typography>
+                    )}
                     {formatCheckoutPaymentSummary(
                       singleAsset.currentCheckoutPaymentType,
                       singleAsset.currentCheckoutPaymentInstallments,
@@ -543,6 +548,11 @@ export default function InventoryPage() {
                                 {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
                                   <Typography variant="caption" color="text.secondary">
                                     {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                  </Typography>
+                                )}
+                                {asset.currentCheckoutDueAt && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Retorno pactado: {formatDate(asset.currentCheckoutDueAt)}
                                   </Typography>
                                 )}
                                 {formatCheckoutPaymentSummary(

@@ -20,7 +20,14 @@ import {
   type AssetCheckinRequest,
   type AssetCheckoutRequest,
 } from '../api/inventory';
-import { CHECKOUT_DISPOSITION_OPTIONS, getCheckoutDispositionLabel } from '../utils/inventoryCheckout';
+import {
+  CHECKOUT_DISPOSITION_OPTIONS,
+  CHECKOUT_PAYMENT_TYPE_OPTIONS,
+  checkoutSupportsPaymentDetails,
+  checkoutSupportsReturnDate,
+  formatCheckoutPaymentSummary,
+  getCheckoutDispositionLabel,
+} from '../utils/inventoryCheckout';
 
 const REFRESH_STATE_HELP_TEXT =
   'Si otro operador ya movió este equipo desde otra pantalla, usa Refrescar estado para confirmar qué acción sigue aquí.';
@@ -45,8 +52,12 @@ export default function InventoryScanPage() {
     coTargetKind: 'party',
     coTargetParty: '',
     coDisposition: 'loan',
+    coTermsAndConditions: '',
     coHolderEmail: '',
     coHolderPhone: '',
+    coPaymentType: '',
+    coPaymentInstallments: null,
+    coPaymentReference: '',
     coConditionOut: '',
     coPhotoUrl: '',
     coNotes: '',
@@ -126,6 +137,8 @@ export default function InventoryScanPage() {
     if (!asset?.currentCheckoutTarget) return null;
     return asset.currentCheckoutTarget;
   }, [asset?.currentCheckoutTarget]);
+  const supportsReturnDate = checkoutSupportsReturnDate(checkoutForm.coDisposition);
+  const supportsPaymentDetails = checkoutSupportsPaymentDetails(checkoutForm.coDisposition);
 
   const handleCheckoutSubmit = () => {
     const holderName = checkoutForm.coTargetParty?.trim() ?? '';
@@ -264,6 +277,15 @@ export default function InventoryScanPage() {
                       {asset.currentCheckoutAt ? `Salió: ${formatDate(asset.currentCheckoutAt)}.` : ''}
                       {' '}
                       {asset.currentCheckoutDueAt ? `Devuelve: ${formatDate(asset.currentCheckoutDueAt)}.` : 'Sin fecha de devolución.'}
+                      {formatCheckoutPaymentSummary(
+                        asset.currentCheckoutPaymentType,
+                        asset.currentCheckoutPaymentInstallments,
+                      )
+                        ? ` Pago: ${formatCheckoutPaymentSummary(
+                            asset.currentCheckoutPaymentType,
+                            asset.currentCheckoutPaymentInstallments,
+                          )}.`
+                        : ''}
                     </Alert>
                   )}
 
@@ -350,7 +372,20 @@ export default function InventoryScanPage() {
                         label="Tipo de movimiento"
                         select
                         value={checkoutForm.coDisposition ?? 'loan'}
-                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coDisposition: e.target.value }))}
+                        onChange={(e) =>
+                          setCheckoutForm((prev) => ({
+                            ...prev,
+                            coDisposition: e.target.value,
+                            coDueAt: checkoutSupportsReturnDate(e.target.value) ? (prev.coDueAt ?? '') : '',
+                            coPaymentType: checkoutSupportsPaymentDetails(e.target.value) ? (prev.coPaymentType ?? '') : '',
+                            coPaymentInstallments: checkoutSupportsPaymentDetails(e.target.value)
+                              ? (prev.coPaymentInstallments ?? null)
+                              : null,
+                            coPaymentReference: checkoutSupportsPaymentDetails(e.target.value)
+                              ? (prev.coPaymentReference ?? '')
+                              : '',
+                          }))
+                        }
                         fullWidth
                       >
                         {CHECKOUT_DISPOSITION_OPTIONS.map((option) => (
@@ -372,14 +407,61 @@ export default function InventoryScanPage() {
                         onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coHolderPhone: e.target.value }))}
                         fullWidth
                       />
+                      {supportsReturnDate && (
+                        <TextField
+                          label="Fecha pactada de retorno"
+                          type="datetime-local"
+                          value={checkoutForm.coDueAt ?? ''}
+                          onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coDueAt: e.target.value }))}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      )}
                       <TextField
-                        label="Fecha estimada de retorno"
-                        type="datetime-local"
-                        value={checkoutForm.coDueAt ?? ''}
-                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coDueAt: e.target.value }))}
+                        label="Términos y condiciones"
+                        value={checkoutForm.coTermsAndConditions ?? ''}
+                        onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coTermsAndConditions: e.target.value }))}
                         fullWidth
-                        InputLabelProps={{ shrink: true }}
+                        multiline
+                        minRows={3}
                       />
+                      {supportsPaymentDetails && (
+                        <>
+                          <TextField
+                            label="Tipo de pago"
+                            select
+                            value={checkoutForm.coPaymentType ?? ''}
+                            onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coPaymentType: e.target.value }))}
+                            fullWidth
+                          >
+                            <MenuItem value="">Sin registrar</MenuItem>
+                            {CHECKOUT_PAYMENT_TYPE_OPTIONS.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                          <TextField
+                            label="Número de cuotas"
+                            type="number"
+                            value={checkoutForm.coPaymentInstallments ?? ''}
+                            onChange={(e) =>
+                              setCheckoutForm((prev) => ({
+                                ...prev,
+                                coPaymentInstallments: e.target.value === '' ? null : Number(e.target.value),
+                              }))
+                            }
+                            fullWidth
+                            inputProps={{ min: 1, max: 60, step: 1 }}
+                          />
+                          <TextField
+                            label="Referencia de pago"
+                            value={checkoutForm.coPaymentReference ?? ''}
+                            onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coPaymentReference: e.target.value }))}
+                            fullWidth
+                          />
+                        </>
+                      )}
                       <TextField
                         label="Condición al salir"
                         value={checkoutForm.coConditionOut ?? ''}

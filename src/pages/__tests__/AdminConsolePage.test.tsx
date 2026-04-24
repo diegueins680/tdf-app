@@ -256,13 +256,13 @@ describe('AdminConsolePage', () => {
     expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+        /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
-  it('keeps optional fallback modules hidden until first-run service health is ready', async () => {
+  it('keeps first-run onboarding focused on service health until that gate is ready', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
@@ -285,12 +285,19 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+          /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
     });
 
+    expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');
+    expect(screen.queryByRole('link', { name: /2\. Usuarios y roles/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /3\. Auditoría reciente/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios y roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Auditoría reciente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Aún no hay usuarios administrables.')).not.toBeInTheDocument();
+    expect(screen.queryByText(/La auditoría aparecerá cuando se registre el primer cambio\./i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Opcional: ver Tokens de servicio/i }),
     ).not.toBeInTheDocument();
@@ -318,7 +325,7 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,
+        /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();

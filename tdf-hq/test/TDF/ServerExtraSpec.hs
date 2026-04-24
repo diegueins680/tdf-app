@@ -222,15 +222,19 @@ spec = do
 
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
-        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
         Left err ->
           expectationFailure ("Expected canonical asset checkout payload to decode, got: " <> err)
         Right payload -> do
           coTargetKind payload `shouldBe` Just "room"
           coTargetRoom payload `shouldBe` Just "00000000-0000-0000-0000-000000000042"
           coDisposition payload `shouldBe` Just "rental"
+          coTermsAndConditions payload `shouldBe` Just "Devuelve con estuche y fuente."
           coHolderEmail payload `shouldBe` Just "ops@example.com"
           coHolderPhone payload `shouldBe` Just "0999999999"
+          coPaymentType payload `shouldBe` Just "bank_transfer"
+          coPaymentInstallments payload `shouldBe` Just 3
+          coPaymentReference payload `shouldBe` Just "TRX-009"
           coConditionOut payload `shouldBe` Just "Excelente"
           coPhotoUrl payload `shouldBe` Just "inventory/foto.jpg"
           coNotes payload `shouldBe` Just "Cableado completo"
@@ -918,8 +922,12 @@ spec = do
           Nothing
           (Just roomIdText)
           (Just " rental ")
+          (Just "  Devuelve con estuche y fuente.  ")
           Nothing
           Nothing
+          (Just " transferencia ")
+          (Just 3)
+          (Just "  TRX-009  ")
           Nothing
           Nothing
           (Just "  Returned with stand  ")
@@ -930,6 +938,10 @@ spec = do
           ncrTargetKind normalized `shouldBe` TargetRoom
           ncrTargetRoom normalized `shouldBe` Just roomId
           ncrDisposition normalized `shouldBe` Rental
+          ncrTermsAndConditions normalized `shouldBe` Just "Devuelve con estuche y fuente."
+          ncrPaymentType normalized `shouldBe` Just "bank_transfer"
+          ncrPaymentInstallments normalized `shouldBe` Just 3
+          ncrPaymentReference normalized `shouldBe` Just "TRX-009"
           ncrConditionOut normalized `shouldBe` Just "Returned with stand"
           ncrNotes normalized `shouldBe` Just "Cableado completo\n\tListo para sala"
 
@@ -947,6 +959,10 @@ spec = do
               (Just "party")
               Nothing
               (Just "Backline Crew")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
               Nothing
               Nothing
               Nothing
@@ -1247,6 +1263,10 @@ spec = do
             Nothing
             Nothing
             Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
 
     it "rejects room or session targets on public QR links before external callers can attach internal references" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1280,7 +1300,11 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
+          Nothing
           (Just "Sale completo")
+          Nothing
+          Nothing
           Nothing)
       case result of
         Left err -> do
@@ -2864,8 +2888,12 @@ initializeInventoryCheckinSchema = do
         \\"target_party_ref\" VARCHAR NULL,\
         \\"target_room_id\" uuid NULL,\
         \\"disposition\" VARCHAR NOT NULL,\
+        \\"terms_and_conditions\" VARCHAR NULL,\
         \\"holder_email\" VARCHAR NULL,\
         \\"holder_phone\" VARCHAR NULL,\
+        \\"payment_type\" VARCHAR NULL,\
+        \\"payment_installments\" INTEGER NULL,\
+        \\"payment_reference\" VARCHAR NULL,\
         \\"checked_out_by_ref\" VARCHAR NOT NULL,\
         \\"checked_out_at\" TIMESTAMP NOT NULL,\
         \\"due_at\" TIMESTAMP NULL,\
