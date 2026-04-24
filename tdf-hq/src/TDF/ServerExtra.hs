@@ -277,10 +277,12 @@ inventoryServer user =
               , AssetCheckoutReturnedAt ==. Nothing
               ]
               [Desc AssetCheckoutCheckedOutAt]
+            let activeCheckoutStatus =
+                  assetStatusForCheckoutDisposition . assetCheckoutDisposition . entityVal <$> mActiveCheckout
             case validateAssetPatchStatusInvariant
               (assetStatus (entityVal entity))
               statusValue
-              (isJust mActiveCheckout) of
+              activeCheckoutStatus of
               Left err ->
                 pure (Left err)
               Right () -> do
@@ -1860,11 +1862,21 @@ validateAssetStatusUpdate (Just rawStatus) =
       { errBody = "Invalid asset status. Allowed values: active, booked, out_for_maintenance, retired"
       }
 
-validateAssetPatchStatusInvariant :: AssetStatus -> Maybe AssetStatus -> Bool -> Either ServerError ()
-validateAssetPatchStatusInvariant currentStatus requestedStatus hasActiveCheckout =
+validateAssetPatchStatusInvariant
+  :: AssetStatus
+  -> Maybe AssetStatus
+  -> Maybe AssetStatus
+  -> Either ServerError ()
+validateAssetPatchStatusInvariant currentStatus requestedStatus mActiveCheckoutStatus =
   case requestedStatus of
+    Just requestedStatusValue
+      | Just activeCheckoutStatus <- mActiveCheckoutStatus
+      , requestedStatusValue /= activeCheckoutStatus ->
+          Left err409
+            { errBody = "Asset status cannot change while an active checkout exists"
+            }
     Just Booked
-      | hasActiveCheckout || currentStatus == Booked ->
+      | isJust mActiveCheckoutStatus || currentStatus == Booked ->
           Right ()
       | otherwise ->
           Left err409
