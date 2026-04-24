@@ -1014,6 +1014,73 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps search reset in the field while the tray clears only extra filters', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, 'ada');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('ada');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+      const fromDateInput = getInputByLabel(container, 'Desde');
+      await setInputValue(fromDateInput, '2030-01-02');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay órdenes en la vista actual. Usa Limpiar otros filtros para conservar la búsqueda o Limpiar dentro del campo para volver a la bandeja completa.',
+        );
+        expect(queryActionByText(container, 'Limpiar otros filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).not.toBeNull();
+      });
+
+      await clickActionByText(container, 'Limpiar otros filtros');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('ada');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar otros filtros')).toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+        expect(container.textContent).toContain(
+          'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps phone lookup inside the existing contact search instead of adding phone filter chrome', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

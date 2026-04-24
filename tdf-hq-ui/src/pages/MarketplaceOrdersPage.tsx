@@ -321,6 +321,7 @@ export default function MarketplaceOrdersPage() {
   const hasSearchInput = search.trim() !== '';
   const hasNonSearchFiltersActive =
     statusFilter !== 'all' || providerFilter !== 'all' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
+  const showSearchWithExtraFilters = hasSearchInput && hasNonSearchFiltersActive;
   const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
   const filtersActiveCount =
     (statusFilter !== 'all' ? 1 : 0) +
@@ -362,10 +363,13 @@ export default function MarketplaceOrdersPage() {
     !ordersQuery.isLoading && !showFirstOrderEmptyState && !showSingleOrderFocusedState;
   const emptyOrdersMessage = showSearchOwnedFilterHelper
     ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
-    : 'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.';
+    : showSearchWithExtraFilters
+      ? 'No hay órdenes en la vista actual. Usa Limpiar otros filtros para conservar la búsqueda o Limpiar dentro del campo para volver a la bandeja completa.'
+      : 'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.';
   const filterTrayHelperText = showSearchOwnedFilterHelper
     ? 'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.'
     : 'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.';
+  const clearFiltersActionLabel = showSearchWithExtraFilters ? 'Limpiar otros filtros' : 'Limpiar filtros';
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -442,7 +446,15 @@ export default function MarketplaceOrdersPage() {
   };
 
   const clearFilters = () => {
-    applyFilters(createDefaultMarketplaceOrderFilters());
+    if (hasSearchInput) {
+      setStatusFilter(defaultFilters.statusFilter);
+      setProviderFilter(defaultFilters.providerFilter);
+      setFromDate(defaultFilters.fromDate);
+      setToDate(defaultFilters.toDate);
+      setPaidOnly(defaultFilters.paidOnly);
+    } else {
+      applyFilters(createDefaultMarketplaceOrderFilters());
+    }
     setShowAdvancedFilters(false);
   };
 
@@ -793,7 +805,7 @@ export default function MarketplaceOrdersPage() {
                   {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
                   {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
                   <Button onClick={clearFilters} variant="text">
-                    Limpiar filtros
+                    {clearFiltersActionLabel}
                   </Button>
                 </>
               ) : (
