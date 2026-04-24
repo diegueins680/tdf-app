@@ -16,7 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
+import { ColumnDef, useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
 import { listByParty as listPipelinesByParty } from '../api/pipelines';
@@ -965,18 +965,37 @@ export default function PartiesPage() {
         ] as Array<[string, string | undefined]>
       ).flatMap(([label, value]) => (value ? [[label, value]] : []))
     : [];
-  const showEmailColumn = data.some((party) => hasPresentContactValue(party.primaryEmail));
-  const showInstagramColumn = data.some((party) => hasPresentContactValue(party.instagram));
-  const contactsTableDescription = buildCompactContactColumnsDescription([
+  const visibleContacts = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (normalizedSearch === '') {
+      return data;
+    }
+
+    return data.filter((party) => Object.values(party).join(' ').toLowerCase().includes(normalizedSearch));
+  }, [data, search]);
+  const showOrgColumn =
+    visibleContacts.some((party) => !party.isOrg)
+    && visibleContacts.some((party) => party.isOrg);
+  const showEmailColumn = visibleContacts.some((party) => hasPresentContactValue(party.primaryEmail));
+  const showInstagramColumn = visibleContacts.some((party) => hasPresentContactValue(party.instagram));
+  const compactContactColumnsDescription = buildCompactContactColumnsDescription([
     ...(!showEmailColumn ? ['Email'] : []),
     ...(!showInstagramColumn ? ['Instagram'] : []),
   ]);
+  const contactsTableDescriptions = [
+    ...(!showOrgColumn ? ['Vista compacta: Org aparecerá cuando convivan personas y organizaciones.'] : []),
+    ...(compactContactColumnsDescription ? [compactContactColumnsDescription] : []),
+  ];
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => {
     const visibleColumns: ColumnDef<PartyDTO>[] = [
       { header: 'Nombre', accessorKey: 'displayName' },
-      { header: 'Org', cell: ({ row }) => row.original.isOrg ? 'Sí' : 'No' },
     ];
+
+    if (showOrgColumn) {
+      visibleColumns.push({ header: 'Org', cell: ({ row }) => row.original.isOrg ? 'Sí' : 'No' });
+    }
 
     if (showEmailColumn) {
       visibleColumns.push({
@@ -1014,19 +1033,12 @@ export default function PartiesPage() {
     });
 
     return visibleColumns;
-  }, [showEmailColumn, showInstagramColumn]);
+  }, [showEmailColumn, showInstagramColumn, showOrgColumn]);
 
   const table = useReactTable({
-    data,
+    data: visibleContacts,
     columns,
-    state: { globalFilter: search },
-    onGlobalFilterChange: setSearch,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const v = (filterValue || '').toString().toLowerCase();
-      return Object.values(row.original).join(' ').toLowerCase().includes(v);
-    },
   });
   const filteredContactRows = table.getRowModel().rows;
   const showFilteredContactsEmptyState = !isLoading && !error && filteredContactRows.length === 0;
@@ -1142,11 +1154,11 @@ export default function PartiesPage() {
         </Paper>
       ) : showContactsTable ? (
         <>
-          {contactsTableDescription && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {contactsTableDescription}
+          {contactsTableDescriptions.map((description) => (
+            <Typography key={description} variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {description}
             </Typography>
-          )}
+          ))}
           <TextField
             placeholder="Buscar…"
             value={search}

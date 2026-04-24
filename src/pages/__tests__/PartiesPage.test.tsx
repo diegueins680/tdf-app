@@ -287,6 +287,43 @@ describe('PartiesPage', () => {
     expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
   });
 
+  it('hides the Org column when the current CRM search only shows one contact type', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([
+      buildParty(),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        instagram: null,
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+    await user.type(await screen.findByPlaceholderText(/Buscar…/i), 'acme');
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Nombre$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Email$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Instagram$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Acciones$/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(/Vista compacta: Org aparecerá cuando convivan personas y organizaciones\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Org$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sí$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Ada Lovelace')).not.toBeInTheDocument();
+  });
+
   it('replaces an empty filtered CRM table with a focused no-results state', async () => {
     const user = userEvent.setup();
     mockPartiesList.mockResolvedValue([
