@@ -407,20 +407,58 @@ data EventMomentCreateDTO = EventMomentCreateDTO
   , emCreateMediaDurationMs :: Maybe Int
   } deriving (Show, Eq, Generic)
 instance ToJSON EventMomentCreateDTO
-instance FromJSON EventMomentCreateDTO
+instance FromJSON EventMomentCreateDTO where
+  parseJSON = withObject "EventMomentCreateDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventMomentCreateDTO"
+      [ "emCreateAuthorName"
+      , "emCreateCaption"
+      , "emCreateMediaUrl"
+      , "emCreateMediaType"
+      , "emCreateMediaWidth"
+      , "emCreateMediaHeight"
+      , "emCreateMediaDurationMs"
+      ]
+      o
+    EventMomentCreateDTO
+      <$> o .:? "emCreateAuthorName"
+      <*> o .:? "emCreateCaption"
+      <*> o .: "emCreateMediaUrl"
+      <*> o .: "emCreateMediaType"
+      <*> o .:? "emCreateMediaWidth"
+      <*> o .:? "emCreateMediaHeight"
+      <*> o .:? "emCreateMediaDurationMs"
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
   { emrrReaction :: Text
   } deriving (Show, Eq, Generic)
 instance ToJSON EventMomentReactionRequestDTO
-instance FromJSON EventMomentReactionRequestDTO
+instance FromJSON EventMomentReactionRequestDTO where
+  parseJSON = withObject "EventMomentReactionRequestDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventMomentReactionRequestDTO"
+      [ "emrrReaction"
+      ]
+      o
+    EventMomentReactionRequestDTO
+      <$> o .: "emrrReaction"
 
 data EventMomentCommentCreateDTO = EventMomentCommentCreateDTO
   { emccAuthorName :: Maybe Text
   , emccBody       :: Text
   } deriving (Show, Eq, Generic)
 instance ToJSON EventMomentCommentCreateDTO
-instance FromJSON EventMomentCommentCreateDTO
+instance FromJSON EventMomentCommentCreateDTO where
+  parseJSON = withObject "EventMomentCommentCreateDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventMomentCommentCreateDTO"
+      [ "emccAuthorName"
+      , "emccBody"
+      ]
+      o
+    EventMomentCommentCreateDTO
+      <$> o .:? "emccAuthorName"
+      <*> o .: "emccBody"
 
 data TicketTierDTO = TicketTierDTO
   { ticketTierId            :: Maybe Text

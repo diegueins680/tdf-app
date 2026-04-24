@@ -75,6 +75,9 @@ import qualified TDF.Invoice.SRI as Sri
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
       EventMetadataUpdateDTO (..),
+      EventMomentCommentCreateDTO (..),
+      EventMomentCreateDTO (..),
+      EventMomentReactionRequestDTO (..),
       EventUpdateDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
@@ -3426,6 +3429,61 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure
                         ("Expected unexpected invitation update keys to be rejected, got " <> show parsed)
+
+    describe "social event moment request parsing" $ do
+        it "accepts canonical moment payloads and rejects unexpected keys before handlers silently ignore them" $ do
+            case eitherDecode
+                "{\"emCreateAuthorName\":\"Ada\",\"emCreateCaption\":\"Aftermovie\",\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":1080}"
+                :: Either String EventMomentCreateDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment create payload to decode, got " <> err)
+                Right parsed -> do
+                    emCreateAuthorName parsed `shouldBe` Just "Ada"
+                    emCreateCaption parsed `shouldBe` Just "Aftermovie"
+                    emCreateMediaUrl parsed `shouldBe` "https://cdn.example.com/moment.jpg"
+                    emCreateMediaType parsed `shouldBe` "image"
+                    emCreateMediaWidth parsed `shouldBe` Just 1080
+
+            case eitherDecode
+                "{\"emrrReaction\":\"fire\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment reaction payload to decode, got " <> err)
+                Right parsed ->
+                    emrrReaction parsed `shouldBe` "fire"
+
+            case eitherDecode
+                "{\"emccAuthorName\":\"Ada\",\"emccBody\":\"Set impecable\"}"
+                :: Either String EventMomentCommentCreateDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment comment payload to decode, got " <> err)
+                Right parsed -> do
+                    emccAuthorName parsed `shouldBe` Just "Ada"
+                    emccBody parsed `shouldBe` "Set impecable"
+
+            case eitherDecode
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"unexpected\":true}"
+                :: Either String EventMomentCreateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment create key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emrrReaction\":\"fire\",\"reaction\":\"love\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment reaction key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emccBody\":\"Set impecable\",\"comment\":\"typo\"}"
+                :: Either String EventMomentCommentCreateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment comment key to be rejected, got " <> show parsed)
 
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
