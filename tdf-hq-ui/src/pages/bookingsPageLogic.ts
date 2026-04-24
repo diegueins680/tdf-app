@@ -25,6 +25,12 @@ interface BookingEngineerFieldState {
   showField: boolean;
 }
 
+interface BookingRoomsFieldState {
+  helperText: string;
+  setupActionLabel?: string;
+  showField: boolean;
+}
+
 interface BookingOptionalDetailsState {
   collapsedHelperText: string;
   defaultExpanded: boolean;
@@ -246,6 +252,34 @@ export const getBookingEngineerFieldState = ({
   return {
     helperText: 'Opcional.',
     label: 'Ingeniero',
+    showField: true,
+  };
+};
+
+export const getBookingRoomsFieldState = ({
+  roomCatalogLoading,
+  roomCount,
+}: {
+  roomCatalogLoading: boolean;
+  roomCount: number;
+}): BookingRoomsFieldState => {
+  if (roomCatalogLoading && roomCount <= 0) {
+    return {
+      helperText: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás asignarlas aquí.',
+      showField: false,
+    };
+  }
+
+  if (roomCount <= 0) {
+    return {
+      helperText: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos para poder guardar sesiones.',
+      setupActionLabel: 'Abrir salas y recursos',
+      showField: false,
+    };
+  }
+
+  return {
+    helperText: 'Se precargan según el tipo de servicio.',
     showField: true,
   };
 };

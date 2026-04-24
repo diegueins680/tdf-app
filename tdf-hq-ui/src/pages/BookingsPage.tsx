@@ -40,6 +40,7 @@ import {
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
+  getBookingRoomsFieldState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -384,6 +385,13 @@ export default function BookingsPage() {
     }),
     [engineerName, engineerOptions.length, engineerPartyId, serviceType],
   );
+  const roomsFieldState = useMemo(
+    () => getBookingRoomsFieldState({
+      roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
+      roomCount: rooms.length,
+    }),
+    [rooms.length, roomsQuery.data, roomsQuery.isLoading],
+  );
   const optionalDetailsState = useMemo(
     () => getBookingOptionalDetailsState({
       mode,
@@ -655,6 +663,10 @@ const openDialogForRange = (start: Date, end: Date) => {
     }
     if (!customerPartyId) {
       setFormError('Selecciona un cliente para la sesión.');
+      return;
+    }
+    if (rooms.length === 0) {
+      setFormError('Todavía no hay salas registradas. Abre Salas y recursos antes de guardar la sesión.');
       return;
     }
     if (assignedRoomIds.length === 0) {
@@ -1038,7 +1050,6 @@ const openDialogForRange = (start: Date, end: Date) => {
         <DialogContent dividers>
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
-            {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
             {prefillNotice && (
               <Alert
                 severity="info"
@@ -1327,30 +1338,49 @@ const openDialogForRange = (start: Date, end: Date) => {
                 {engineerFieldState.helperText}
               </Alert>
             )}
-            <Autocomplete
-              multiple
-              options={rooms}
-              getOptionLabel={(option) => option.rName}
-              value={assignedRooms}
-              onChange={(_, value) => {
-                setAssignedRoomIds(value.map((room) => room.roomId));
-                setRoomsManuallyAdjusted(true);
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Salas asignadas"
-                  placeholder="Agregar/ajustar salas"
-                  helperText="Se precargan según el tipo de servicio."
-                />
-              )}
-              noOptionsText="No hay salas registradas"
-            />
+            {roomsFieldState.showField ? (
+              <Autocomplete
+                multiple
+                options={rooms}
+                getOptionLabel={(option) => option.rName}
+                value={assignedRooms}
+                onChange={(_, value) => {
+                  setAssignedRoomIds(value.map((room) => room.roomId));
+                  setRoomsManuallyAdjusted(true);
+                }}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Salas asignadas"
+                    placeholder="Agregar/ajustar salas"
+                    helperText={roomsFieldState.helperText}
+                  />
+                )}
+                noOptionsText="No hay salas registradas"
+              />
+            ) : (
+              <Alert
+                severity="info"
+                variant="outlined"
+                action={roomsFieldState.setupActionLabel ? (
+                  <Button
+                    color="inherit"
+                    size="small"
+                    component={RouterLink}
+                    to="/estudio/salas"
+                  >
+                    {roomsFieldState.setupActionLabel}
+                  </Button>
+                ) : undefined}
+              >
+                {roomsFieldState.helperText}
+              </Alert>
+            )}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}

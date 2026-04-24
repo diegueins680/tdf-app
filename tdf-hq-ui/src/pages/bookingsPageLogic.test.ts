@@ -6,6 +6,7 @@ import {
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
+  getBookingRoomsFieldState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -227,6 +228,33 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       helperText: 'No hay ingenieros en el catálogo de contactos. Conserva el nombre actual o actualiza contactos para volver a seleccionarlo.',
       label: 'Ingeniero',
+      showField: true,
+    });
+  });
+
+  it('replaces the empty room picker with first-run setup guidance until rooms exist', () => {
+    expect(getBookingRoomsFieldState({
+      roomCatalogLoading: true,
+      roomCount: 0,
+    })).toEqual({
+      helperText: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás asignarlas aquí.',
+      showField: false,
+    });
+
+    expect(getBookingRoomsFieldState({
+      roomCatalogLoading: false,
+      roomCount: 0,
+    })).toEqual({
+      helperText: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos para poder guardar sesiones.',
+      setupActionLabel: 'Abrir salas y recursos',
+      showField: false,
+    });
+
+    expect(getBookingRoomsFieldState({
+      roomCatalogLoading: false,
+      roomCount: 2,
+    })).toEqual({
+      helperText: 'Se precargan según el tipo de servicio.',
       showField: true,
     });
   });
