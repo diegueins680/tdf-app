@@ -11,6 +11,7 @@ import Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
+import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, utctDay)
@@ -58,7 +59,29 @@ import TDF.API.Types
       , location
       , qrToken
       )
-  , AssetCheckoutDTO (conditionIn, notes)
+  , AssetCheckoutDTO
+      ( AssetCheckoutDTO
+      , checkedOutBy
+      , conditionIn
+      , conditionOut
+      , disposition
+      , dueAt
+      , holderEmail
+      , holderPhone
+      , notes
+      , paymentAmountCents
+      , paymentCurrency
+      , paymentInstallments
+      , paymentOutstandingCents
+      , paymentReference
+      , paymentType
+      , photoInUrl
+      , photoOutUrl
+      , returnedAt
+      , targetKind
+      , targetPartyRef
+      , termsAndConditions
+      )
   , AssetCheckoutRequest (..)
   , AssetQrDTO
   , AssetUpdate (..)
@@ -156,6 +179,7 @@ import TDF.ServerExtra (
     validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
     validatePageParams,
+    sanitizePublicCheckoutDTO,
     validateSessionReferences,
     bandsServer,
     inventoryPublicServer,
@@ -2037,6 +2061,60 @@ spec = do
           currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
           currentCheckoutPhotoUrl asset `shouldBe` Nothing
 
+  describe "sanitizePublicCheckoutDTO" $ do
+    it "redacts private checkout metadata before public QR flows return a movement payload" $ do
+      let dueAtValue = UTCTime (fromGregorian 2035 5 1) 0
+          checkedOutAtValue = UTCTime (fromGregorian 2035 4 30) 0
+          returnedAtValue = UTCTime (fromGregorian 2035 5 2) 0
+          sanitized =
+            sanitizePublicCheckoutDTO
+              (AssetCheckoutDTO
+                "00000000-0000-0000-0000-000000000915"
+                "00000000-0000-0000-0000-000000000907"
+                "party"
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                "rental"
+                (Just "Devuelve con estuche y fuente.")
+                (Just "ops@example.com")
+                (Just "+593991234567")
+                (Just "card")
+                (Just 3)
+                (Just "TRX-009")
+                (Just 120050)
+                (Just "USD")
+                (Just 40025)
+                "42"
+                checkedOutAtValue
+                (Just dueAtValue)
+                (Just "Equipo completo")
+                (Just "inventory/checkout.jpg")
+                (Just "Returned OK")
+                (Just "inventory/checkin.jpg")
+                (Just returnedAtValue)
+                (Just "Solo visible para ops"))
+      targetKind sanitized `shouldBe` "party"
+      targetPartyRef sanitized `shouldBe` Just "Backline Crew"
+      disposition sanitized `shouldBe` "rental"
+      dueAt sanitized `shouldBe` Just dueAtValue
+      returnedAt sanitized `shouldBe` Just returnedAtValue
+      termsAndConditions sanitized `shouldBe` Nothing
+      holderEmail sanitized `shouldBe` Nothing
+      holderPhone sanitized `shouldBe` Nothing
+      paymentType sanitized `shouldBe` Nothing
+      paymentInstallments sanitized `shouldBe` Nothing
+      paymentReference sanitized `shouldBe` Nothing
+      paymentAmountCents sanitized `shouldBe` Nothing
+      paymentCurrency sanitized `shouldBe` Nothing
+      paymentOutstandingCents sanitized `shouldBe` Nothing
+      checkedOutBy sanitized `shouldBe` "redacted"
+      conditionOut sanitized `shouldBe` Nothing
+      photoOutUrl sanitized `shouldBe` Nothing
+      conditionIn sanitized `shouldBe` Nothing
+      photoInUrl sanitized `shouldBe` Nothing
+      notes sanitized `shouldBe` Nothing
+
   describe "inventoryPublicServer checkoutByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000907"
         canonicalToken = "00000000-0000-0000-0000-00000000dcba"
@@ -2421,7 +2499,80 @@ spec = do
         canonicalToken = "00000000-0000-0000-0000-00000000dcbb"
         checkoutIdText = "00000000-0000-0000-0000-000000000915"
         roomIdText = "00000000-0000-0000-0000-000000000042"
+        dueAtValue = UTCTime (fromGregorian 2035 6 1) 0
         request = AssetCheckinRequest (Just "Returned OK") Nothing (Just "inventory/checkin.jpg")
+
+    it "redacts private checkout metadata from successful public QR check-in responses" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Just "Devuelve con estuche y fuente."
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Just 3
+              , ME.assetCheckoutPaymentReference = Just "TRX-009"
+              , ME.assetCheckoutPaymentAmountCents = Just 120050
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 40025
+              , ME.assetCheckoutCheckedOutByRef = "42"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Just dueAtValue
+              , ME.assetCheckoutConditionOut = Just "Equipo completo"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Solo visible para ops"
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verificados")
+          (Just "inventory/checkin.jpg"))
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR check-in to succeed, got " <> show err)
+        Right checkout -> do
+          targetKind checkout `shouldBe` "party"
+          targetPartyRef checkout `shouldBe` Just "Backline Crew"
+          disposition checkout `shouldBe` "rental"
+          dueAt checkout `shouldBe` Just dueAtValue
+          returnedAt checkout `shouldSatisfy` isJust
+          termsAndConditions checkout `shouldBe` Nothing
+          holderEmail checkout `shouldBe` Nothing
+          holderPhone checkout `shouldBe` Nothing
+          paymentType checkout `shouldBe` Nothing
+          paymentInstallments checkout `shouldBe` Nothing
+          paymentReference checkout `shouldBe` Nothing
+          paymentAmountCents checkout `shouldBe` Nothing
+          paymentCurrency checkout `shouldBe` Nothing
+          paymentOutstandingCents checkout `shouldBe` Nothing
+          checkedOutBy checkout `shouldBe` "redacted"
+          conditionOut checkout `shouldBe` Nothing
+          photoOutUrl checkout `shouldBe` Nothing
+          conditionIn checkout `shouldBe` Nothing
+          photoInUrl checkout `shouldBe` Nothing
+          notes checkout `shouldBe` Nothing
 
     it "returns a conflict when a valid public QR asset exists but has no active checkout" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

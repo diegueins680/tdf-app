@@ -368,13 +368,13 @@ inventoryPublicServer =
       assetEntity <- loadAssetEntityByQrToken token
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
-      performCheckout "public-link" assetEntity req
+      sanitizePublicCheckoutDTO <$> performCheckout "public-link" assetEntity req
 
     checkinByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
       normalized <- either throwError pure (normalizeAssetCheckinFields req)
       either throwError pure (validatePublicQrCheckinFields normalized)
-      performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
+      sanitizePublicCheckoutDTO <$> performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
 
     uploadByQrToken token uploadForm = do
       Entity assetKey assetRecord <- loadAssetEntityByQrToken token
@@ -477,6 +477,26 @@ sanitizePublicAssetDTO dto =
     publicCheckoutDispositionField value
       | exposesPublicDisposition = value
       | otherwise = Nothing
+
+sanitizePublicCheckoutDTO :: AssetCheckoutDTO -> AssetCheckoutDTO
+sanitizePublicCheckoutDTO dto =
+  dto
+    { termsAndConditions = Nothing
+    , holderEmail = Nothing
+    , holderPhone = Nothing
+    , paymentType = Nothing
+    , paymentInstallments = Nothing
+    , paymentReference = Nothing
+    , paymentAmountCents = Nothing
+    , paymentCurrency = Nothing
+    , paymentOutstandingCents = Nothing
+    , checkedOutBy = "redacted"
+    , conditionOut = Nothing
+    , photoOutUrl = Nothing
+    , conditionIn = Nothing
+    , photoInUrl = Nothing
+    , notes = Nothing
+    }
 
 loadActiveCheckoutMap
   :: MonadIO m
