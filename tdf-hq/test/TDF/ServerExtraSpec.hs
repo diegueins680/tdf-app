@@ -1142,6 +1142,9 @@ spec = do
               Nothing
 
       assertInvalid
+        "paymentInstallments requires paymentAmount"
+        baseRequest { coPaymentInstallments = Just 3 }
+      assertInvalid
         "paymentAmount requires paymentCurrency"
         baseRequest { coPaymentAmount = Just "1200" }
       assertInvalid
