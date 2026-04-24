@@ -5950,6 +5950,8 @@ main = hspec $ do
             assertInvalid False (Just "TDF Live Sessions v2") "acceptedTerms must be true"
             assertInvalid True Nothing "termsVersion is required"
             assertInvalid True (Just "   ") "termsVersion is required"
+            assertInvalid True (Just (Data.Text.replicate 161 "v")) "termsVersion must be 160 characters or fewer"
+            assertInvalid True (Just "TDF Live Sessions v2\NUL") "termsVersion must not contain control characters"
 
     describe "sanitizeLiveSessionRiderFileName" $ do
         it "reduces rider upload names to a stable safe basename before persistence" $ do

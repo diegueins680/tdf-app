@@ -17,7 +17,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
-import           Data.Char                  (isAlphaNum, isAscii)
+import           Data.Char                  (isAlphaNum, isAscii, isControl)
 import           Data.Maybe                 (fromMaybe, mapMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
@@ -42,6 +42,9 @@ import qualified TDF.ModelsExtra           as ME
 
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
+
+liveSessionTermsVersionMaxLength :: Int
+liveSessionTermsVersionMaxLength = 160
 
 data LiveSessionMusicianLookup
   = LookupLiveSessionMusicianByEmail Text
@@ -271,9 +274,29 @@ validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
         { errBody = "acceptedTerms must be true before submitting live session intake" }
   | otherwise =
       case T.strip <$> rawTermsVersion of
-        Just termsVersion | not (T.null termsVersion) -> Right termsVersion
+        Just termsVersion
+          | T.null termsVersion ->
+              missingTermsVersion
+          | T.length termsVersion > liveSessionTermsVersionMaxLength ->
+              Left err400
+                { errBody =
+                    BL.fromStrict
+                      ( TE.encodeUtf8
+                          ( "termsVersion must be "
+                              <> T.pack (show liveSessionTermsVersionMaxLength)
+                              <> " characters or fewer"
+                          )
+                      )
+                }
+          | T.any isControl termsVersion ->
+              Left err400 { errBody = "termsVersion must not contain control characters" }
+          | otherwise ->
+              Right termsVersion
         _ ->
-          Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
+          missingTermsVersion
+  where
+    missingTermsVersion =
+      Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
 
 sanitizeLiveSessionRiderFileName :: Text -> Text
 sanitizeLiveSessionRiderFileName rawName =
