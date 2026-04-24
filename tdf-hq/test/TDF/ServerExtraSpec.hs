@@ -37,6 +37,7 @@ import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
+  , AssetDTO
   , AssetCheckoutDTO
   , AssetCheckoutRequest (..)
   , AssetQrDTO
@@ -48,6 +49,8 @@ import TDF.API.Types
   , RoomDTO
   , RoomUpdate (..)
   , SessionInputRow (SessionInputRow)
+  , assetId
+  , qrToken
   )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (AppConfig (..))
@@ -917,6 +920,33 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Asset not found"
         Right value ->
           expectationFailure ("Expected missing asset QR refresh to fail, got " <> show value)
+
+  describe "resolveByQrH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000904"
+        canonicalToken = "00000000-0000-0000-0000-00000000abcd"
+
+    it "rejects malformed QR tokens before inventory lookup turns them into ambiguous 404s" $ do
+      result <- runInventoryResolveQrHandler (pure ()) "not-a-uuid"
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid asset QR token"
+        Right value ->
+          expectationFailure ("Expected malformed QR token lookup to fail, got " <> show value)
+
+    it "normalizes UUID casing so copied QR links still resolve the intended asset" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        "00000000-0000-0000-0000-00000000ABCD"
+      case result of
+        Left err ->
+          expectationFailure ("Expected uppercase QR token lookup to resolve, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          qrToken asset `shouldBe` Just canonicalToken
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
@@ -1967,6 +1997,22 @@ runInventoryRefreshQrHandler setup rawId =
             }
     liftIO $ runExceptT (runReaderT (refreshQrHandlerFor inventoryUser rawId) env)
 
+runInventoryResolveQrHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetDTO)
+runInventoryResolveQrHandler setup token =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory QR resolve tests"
+            }
+    liftIO $ runExceptT (runReaderT (resolveByQrHandlerFor inventoryUser token) env)
+
 runRoomCreateHandler
   :: SqlPersistT IO ()
   -> RoomCreate
@@ -2074,6 +2120,22 @@ refreshQrHandlerFor user =
       :<|> refreshQr
       :<|> _resolveByQr ->
           refreshQr
+
+resolveByQrHandlerFor :: AuthedUser -> Text -> InventoryTestM AssetDTO
+resolveByQrHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> resolveByQr ->
+          resolveByQr
 
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =

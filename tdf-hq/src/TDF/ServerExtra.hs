@@ -30,6 +30,7 @@ import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
 import           Data.UUID                  (toText)
+import qualified Data.UUID                  as UUID
 import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
 import           Data.Aeson.Types           (Parser, parseMaybe, withObject, (.!=))
@@ -367,7 +368,8 @@ loadAssetEntityByQrToken
   => Text
   -> m (Entity Asset)
 loadAssetEntityByQrToken token = do
-  mEntity <- withPool $ selectFirst [AssetQrCode ==. Just token] []
+  tokenCanonical <- either throwError pure (validateAssetQrToken token)
+  mEntity <- withPool $ selectFirst [AssetQrCode ==. Just tokenCanonical] []
   maybe (throwError err404 { errBody = "Asset not found" }) pure mEntity
 
 loadAssetDTOByKey
@@ -1704,6 +1706,12 @@ parseOptionalKeyField fieldName (Just raw) =
         (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
         (Right . Just)
         (fromPathPiece trimmed)
+
+validateAssetQrToken :: Text -> Either ServerError Text
+validateAssetQrToken rawToken =
+  case UUID.fromText (T.strip rawToken) of
+    Just uuid -> Right (UUID.toText uuid)
+    Nothing -> Left err400 { errBody = "Invalid asset QR token" }
 
 normalizeOptionalTextField :: Maybe Text -> Maybe Text
 normalizeOptionalTextField Nothing = Nothing
