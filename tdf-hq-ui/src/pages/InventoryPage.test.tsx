@@ -180,7 +180,7 @@ describe('InventoryPage', () => {
     historyMock.mockResolvedValue([]);
   });
 
-  it('replaces the blank inventory table with first-run guidance when there are no assets', async () => {
+  it('replaces the blank inventory table and detached refresh chrome with one first-run reload path when there are no assets', async () => {
     listAssetsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -194,11 +194,37 @@ describe('InventoryPage', () => {
           'Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila.',
         );
         expect(container.textContent).toContain(
-          'Si estás esperando la carga inicial del inventario, usa Actualizar para volver a consultar sin revisar una tabla vacía.',
+          'Si estás esperando la carga inicial del inventario, vuelve a consultar desde aquí sin revisar una tabla vacía.',
         );
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Volver a consultar inventario',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toHaveLength(0);
+      });
+
+      const initialCallCount = listAssetsMock.mock.calls.length;
+      expect(initialCallCount).toBeGreaterThan(0);
+
+      await act(async () => {
+        const reloadButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Volver a consultar inventario',
+        );
+        reloadButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock.mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     } finally {
       await cleanup();

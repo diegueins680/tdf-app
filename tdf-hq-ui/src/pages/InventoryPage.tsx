@@ -167,6 +167,9 @@ function getInventoryMovementGuidance({
 
 export default function InventoryPage() {
   const qc = useQueryClient();
+  const handleRefreshAssets = () => {
+    void qc.invalidateQueries({ queryKey: ['assets'] });
+  };
   const assetsQuery = useQuery({
     queryKey: ['assets'],
     queryFn: () => Inventory.list().then(normalizeAssets),
@@ -437,6 +440,7 @@ export default function InventoryPage() {
   ]
     .filter(Boolean)
     .join(' ');
+  const showHeaderRefreshAction = !showFirstAssetEmptyState;
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -449,11 +453,13 @@ export default function InventoryPage() {
             Administra equipos, ve quién los tiene, comparte enlaces públicos y registra check-out / check-in con evidencia.
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => void qc.invalidateQueries({ queryKey: ['assets'] })}>
-            Actualizar
-          </Button>
-        </Stack>
+        {showHeaderRefreshAction && (
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRefreshAssets}>
+              Actualizar
+            </Button>
+          </Stack>
+        )}
       </Stack>
 
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
@@ -472,8 +478,17 @@ export default function InventoryPage() {
                 para operar check-out y check-in desde una sola fila.
               </Typography>
               <Typography variant="body2" color="rgba(226,232,240,0.68)">
-                Si estás esperando la carga inicial del inventario, usa Actualizar para volver a consultar sin revisar una tabla vacía.
+                Si estás esperando la carga inicial del inventario, vuelve a consultar desde aquí sin revisar una tabla vacía.
               </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={handleRefreshAssets}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Volver a consultar inventario
+              </Button>
             </Stack>
           </CardContent>
         </Card>
