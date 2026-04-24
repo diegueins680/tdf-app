@@ -2085,6 +2085,40 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without photo to be rejected, got " <> show value)
 
+    it "rejects externally hosted checkout proof on public QR links so anonymous custody evidence stays under managed storage" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "https://cdn.example.com/checkouts/juno-106.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Sale completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "uploaded inventory asset path"
+        Right value ->
+          expectationFailure ("Expected public QR checkout with external photo proof to be rejected, got " <> show value)
+
   describe "inventoryPublicServer checkinByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000910"
         canonicalToken = "00000000-0000-0000-0000-00000000dcbb"
@@ -2316,6 +2350,60 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Public QR check-in requires ciPhotoUrl"
         Right value ->
           expectationFailure ("Expected public QR check-in without photo to be rejected, got " <> show value)
+
+    it "rejects externally hosted return proof on public QR check-ins so anonymous custody evidence cannot point at arbitrary remote URLs" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verified")
+          (Just "https://cdn.example.com/checkins/juno-106.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "uploaded inventory asset path"
+        Right value ->
+          expectationFailure ("Expected public QR check-in with external photo proof to be rejected, got " <> show value)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do

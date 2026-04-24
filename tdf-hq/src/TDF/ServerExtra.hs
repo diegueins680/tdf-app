@@ -652,6 +652,8 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrPhotoOutUrl normalized) =
       Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
+  | not (maybe False isManagedInventoryPhotoProof (ncrPhotoOutUrl normalized)) =
+      Left err400 { errBody = "Public QR checkout requires coPhotoUrl to reference an uploaded inventory asset path" }
   | isNothing (ncrDueAt normalized) =
       Left err400 { errBody = "Public QR checkout requires coDueAt" }
   | otherwise =
@@ -663,8 +665,14 @@ validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
       Left err400 { errBody = "Public QR check-in requires ciConditionIn" }
   | isNothing mPhotoIn =
       Left err400 { errBody = "Public QR check-in requires ciPhotoUrl" }
+  | not (maybe False isManagedInventoryPhotoProof mPhotoIn) =
+      Left err400 { errBody = "Public QR check-in requires ciPhotoUrl to reference an uploaded inventory asset path" }
   | otherwise =
       Right ()
+
+isManagedInventoryPhotoProof :: Text -> Bool
+isManagedInventoryPhotoProof =
+  isJust . normalizeAssetPhotoPath
 
 validateCheckoutHolderEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutHolderEmail rawValue =
