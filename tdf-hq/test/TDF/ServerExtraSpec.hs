@@ -1754,6 +1754,7 @@ spec = do
 
   describe "patchAssetH" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000908"
+        missingRoomId = "00000000-0000-0000-0000-000000000099"
         request =
           AssetUpdate
             Nothing
@@ -1778,6 +1779,22 @@ spec = do
             `shouldContain` "Asset notes must not contain control characters other than tabs or line breaks"
         Right value ->
           expectationFailure ("Expected invalid asset patch notes to fail, got " <> show value)
+
+    it "rejects unknown location ids on asset patch instead of persisting dangling room references" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetUpdate Nothing Nothing Nothing (Just missingRoomId) Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "locationId references an unknown room"
+        Right value ->
+          expectationFailure ("Expected unknown locationId asset patch to fail, got " <> show value)
 
     it "rejects patch requests that try to mark an available asset as booked without creating a checkout" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -4110,6 +4127,7 @@ runInventoryPatchHandler setup rawId req =
   runStdoutLoggingT $ do
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool initializeRoomSchema pool
     liftIO $ runSqlPool setup pool
     let env =
           Env

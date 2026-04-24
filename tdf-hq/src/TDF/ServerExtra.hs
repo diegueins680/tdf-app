@@ -274,6 +274,7 @@ inventoryServer user =
         case mEntity of
           Nothing -> pure (Right Nothing)
           Just entity -> do
+            locationResult <- validateAssetLocationReference locationKey
             mActiveCheckout <- selectFirst
               [ AssetCheckoutAssetId ==. assetKey
               , AssetCheckoutReturnedAt ==. Nothing
@@ -281,7 +282,7 @@ inventoryServer user =
               [Desc AssetCheckoutCheckedOutAt]
             let activeCheckoutStatus =
                   assetStatusForCheckoutDisposition . assetCheckoutDisposition . entityVal <$> mActiveCheckout
-            case validateAssetPatchStatusInvariant
+            case locationResult *> validateAssetPatchStatusInvariant
               (assetStatus (entityVal entity))
               statusValue
               activeCheckoutStatus of
@@ -2493,6 +2494,18 @@ validateCheckoutTargetReferences mRoomKey mSessionKey = do
       else if isJust mSessionKey && isNothing mSession
         then Left err400 { errBody = "targetSession references an unknown session" }
         else Right ()
+
+validateAssetLocationReference
+  :: MonadIO m
+  => Maybe (Key Room)
+  -> SqlPersistT m (Either ServerError ())
+validateAssetLocationReference Nothing = pure (Right ())
+validateAssetLocationReference (Just roomKey) = do
+  mRoom <- getEntity roomKey
+  pure $
+    if isNothing mRoom
+      then Left err400 { errBody = "locationId references an unknown room" }
+      else Right ()
 
 validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
 validateDistinctBandMemberIds partyKeys
