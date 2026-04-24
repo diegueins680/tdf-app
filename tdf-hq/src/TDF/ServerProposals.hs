@@ -24,7 +24,7 @@ import           Control.Monad              (unless)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import           Data.Int                   (Int64)
 import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
@@ -402,11 +402,14 @@ validateOptionalProposalContactPhone Nothing = Right Nothing
 validateOptionalProposalContactPhone (Just rawPhone) =
   case normalizeOptionalText (Just rawPhone) of
     Nothing -> Right Nothing
-    Just _ ->
-      case normalizeWhatsAppPhone rawPhone of
-        Just phoneVal -> Right (Just phoneVal)
-        Nothing ->
-          Left err400 { errBody = "contactPhone must be a valid phone number" }
+    Just phoneVal
+      | T.any isControl phoneVal ->
+          Left err400 { errBody = "contactPhone must not contain control characters" }
+      | otherwise ->
+          case normalizeWhatsAppPhone phoneVal of
+            Just normalizedPhone -> Right (Just normalizedPhone)
+            Nothing ->
+              Left err400 { errBody = "contactPhone must be a valid phone number" }
 
 validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalProposalClientPartyId Nothing = Right Nothing

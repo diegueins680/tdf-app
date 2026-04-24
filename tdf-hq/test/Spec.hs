@@ -4792,18 +4792,19 @@ main = hspec $ do
                 `shouldBe` Right (Just "+593991234567")
 
         it "rejects malformed proposal contact phones before CRM storage" $ do
-            let assertInvalid raw = case validateOptionalProposalContactPhone (Just raw) of
+            let assertInvalid raw expected = case validateOptionalProposalContactPhone (Just raw) of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL.unpack (errBody err)
-                            `shouldContain` "contactPhone must be a valid phone number"
+                            `shouldContain` expected
                     Right value ->
                         expectationFailure
                             ("Expected invalid proposal contact phone to be rejected, got " <> show value)
-            assertInvalid "---"
-            assertInvalid "12345"
-            assertInvalid "+1234567890123456"
-            assertInvalid "call me at 099 123 4567"
+            assertInvalid "---" "contactPhone must be a valid phone number"
+            assertInvalid "12345" "contactPhone must be a valid phone number"
+            assertInvalid "+1234567890123456" "contactPhone must be a valid phone number"
+            assertInvalid "call me at 099 123 4567" "contactPhone must be a valid phone number"
+            assertInvalid "+593 99\n123 4567" "contactPhone must not contain control characters"
 
     describe "validateOptionalProposalClientPartyId" $ do
         it "preserves omitted ids and accepts positive client party ids" $ do
