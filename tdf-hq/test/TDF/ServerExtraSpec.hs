@@ -1239,7 +1239,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected missing asset check-in to fail, got " <> show value)
 
-    it "keeps the active-checkout 404 for real assets that are not currently checked out" $ do
+    it "returns a conflict for real assets that are not currently checked out" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
@@ -1249,8 +1249,8 @@ spec = do
         request
       case result of
         Left err -> do
-          errHTTPCode err `shouldBe` 404
-          BL8.unpack (errBody err) `shouldContain` "No active checkout"
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is not currently checked out"
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
 
@@ -1761,6 +1761,24 @@ spec = do
         checkoutIdText = "00000000-0000-0000-0000-000000000915"
         roomIdText = "00000000-0000-0000-0000-000000000042"
         request = AssetCheckinRequest (Just "Returned OK") Nothing (Just "inventory/checkin.jpg")
+
+    it "returns a conflict when a valid public QR asset exists but has no active checkout" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            }))
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is not currently checked out"
+        Right value ->
+          expectationFailure ("Expected idle public QR check-in to fail, got " <> show value)
 
     it "rejects public QR check-ins for internal room or session movements" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

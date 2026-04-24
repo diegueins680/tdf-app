@@ -514,7 +514,7 @@ performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
   mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
   case mOpen of
-    Nothing -> throwError err404 { errBody = "No active checkout" }
+    Nothing -> throwError err409 { errBody = "Asset is not currently checked out" }
     Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
       validateOpenCheckout checkoutEnt
       notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
