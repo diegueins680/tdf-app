@@ -358,7 +358,7 @@ export default function MarketplaceOrdersPage() {
       ? 'Editar fechas y pago'
       : 'Mostrar fechas y pago';
   const showHeaderRefreshAction =
-    Boolean(ordersQuery.error) || (!ordersQuery.isLoading && (orders.length > 1 || filtersDirty));
+    Boolean(ordersQuery.error) || (!ordersQuery.isLoading && !hasSearchInput && (orders.length > 1 || filtersDirty));
   const showPermissionNotice =
     !ordersQuery.isLoading && !showFirstOrderEmptyState && !showSingleOrderFocusedState;
   const emptyOrdersMessage = showSearchOwnedFilterHelper

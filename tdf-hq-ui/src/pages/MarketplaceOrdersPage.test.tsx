@@ -1014,6 +1014,54 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('hides the generic refresh action while search is active so the field owns the recovery path', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('grace');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+      });
+
+      await clickButtonByAriaLabel(container, 'Limpiar búsqueda');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps search reset in the field while the tray clears only extra filters', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
