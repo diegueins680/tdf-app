@@ -183,6 +183,18 @@ function buildCurrentCheckoutContextSummary({
     .join(' · ');
 }
 
+function buildCurrentCheckoutContactSummary({
+  holderEmail,
+  holderPhone,
+}: {
+  holderEmail?: string | null;
+  holderPhone?: string | null;
+}) {
+  return [normalizeInventoryField(holderEmail), normalizeInventoryField(holderPhone)]
+    .filter((value): value is string => value != null)
+    .join(' · ');
+}
+
 const INVENTORY_LOCATION_SETUP_GUIDANCE =
   'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
 const INVENTORY_CHECKOUT_CONTEXT_GUIDANCE =
@@ -449,6 +461,37 @@ export default function InventoryPage() {
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
+  const singleAssetPaymentSummary = singleAsset
+    ? formatCheckoutPaymentSummary(
+        singleAsset.currentCheckoutPaymentType,
+        singleAsset.currentCheckoutPaymentInstallments,
+        singleAsset.currentCheckoutPaymentAmountCents,
+        singleAsset.currentCheckoutPaymentCurrency,
+        singleAsset.currentCheckoutPaymentOutstandingCents,
+      )
+    : '';
+  const singleAssetCheckoutContextSummary = singleAsset
+    ? buildCurrentCheckoutContextSummary({
+        disposition: singleAsset.currentCheckoutDisposition,
+        checkedOutAt: singleAsset.currentCheckoutAt,
+        dueAt: singleAsset.currentCheckoutDueAt,
+        paymentSummary: singleAssetPaymentSummary,
+      })
+    : '';
+  const singleAssetCheckoutContactSummary = singleAsset
+    ? buildCurrentCheckoutContactSummary({
+        holderEmail: singleAsset.currentCheckoutHolderEmail,
+        holderPhone: singleAsset.currentCheckoutHolderPhone,
+      })
+    : '';
+  const showSingleAssetCheckoutSummary = Boolean(
+    singleAsset
+    && (
+      normalizeInventoryField(singleAsset.currentCheckoutTarget)
+      || singleAssetCheckoutContextSummary
+      || singleAssetCheckoutContactSummary
+    ),
+  );
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
@@ -580,40 +623,21 @@ export default function InventoryPage() {
                     Condición: {singleAssetCondition}
                   </Typography>
                 )}
-                {singleAsset.currentCheckoutTarget && (
+                {showSingleAssetCheckoutSummary && (
                   <>
-                    <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                      Tiene: {getCurrentTargetSummary(singleAsset, roomMap)}
-                    </Typography>
-                    <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                      Movimiento: {getCheckoutDispositionLabel(singleAsset.currentCheckoutDisposition)}
-                    </Typography>
-                    {singleAsset.currentCheckoutAt && (
+                    {normalizeInventoryField(singleAsset.currentCheckoutTarget) && (
                       <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Salió: {formatDate(singleAsset.currentCheckoutAt)}
+                        Tenencia actual: {getCurrentTargetSummary(singleAsset, roomMap)}
                       </Typography>
                     )}
-                    {singleAsset.currentCheckoutDueAt && (
+                    {singleAssetCheckoutContextSummary && (
                       <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Retorno pactado: {formatDate(singleAsset.currentCheckoutDueAt)}
+                        Contexto: {singleAssetCheckoutContextSummary}
                       </Typography>
                     )}
-                    {formatCheckoutPaymentSummary(
-                      singleAsset.currentCheckoutPaymentType,
-                      singleAsset.currentCheckoutPaymentInstallments,
-                      singleAsset.currentCheckoutPaymentAmountCents,
-                      singleAsset.currentCheckoutPaymentCurrency,
-                      singleAsset.currentCheckoutPaymentOutstandingCents,
-                    ) && (
+                    {singleAssetCheckoutContactSummary && (
                       <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Pago:{' '}
-                        {formatCheckoutPaymentSummary(
-                          singleAsset.currentCheckoutPaymentType,
-                          singleAsset.currentCheckoutPaymentInstallments,
-                          singleAsset.currentCheckoutPaymentAmountCents,
-                          singleAsset.currentCheckoutPaymentCurrency,
-                          singleAsset.currentCheckoutPaymentOutstandingCents,
-                        )}
+                        Contacto: {singleAssetCheckoutContactSummary}
                       </Typography>
                     )}
                   </>
@@ -733,6 +757,10 @@ export default function InventoryPage() {
                       dueAt: asset.currentCheckoutDueAt,
                       paymentSummary,
                     });
+                    const checkoutContactSummary = buildCurrentCheckoutContactSummary({
+                      holderEmail: asset.currentCheckoutHolderEmail,
+                      holderPhone: asset.currentCheckoutHolderPhone,
+                    });
 
                     return (
                       <TableRow key={asset.assetId} hover>
@@ -768,9 +796,9 @@ export default function InventoryPage() {
                                     {checkoutContextSummary}
                                   </Typography>
                                 )}
-                                {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
+                                {checkoutContactSummary && (
                                   <Typography variant="caption" color="text.secondary">
-                                    {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                    {checkoutContactSummary}
                                   </Typography>
                                 )}
                               </Stack>

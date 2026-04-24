@@ -348,6 +348,46 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('collapses single-asset checkout detail into one custody summary plus contact', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: ' grace@example.com ',
+        currentCheckoutHolderPhone: ' 0999999999 ',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+        currentCheckoutPaymentType: 'card',
+        currentCheckoutPaymentInstallments: 2,
+        currentCheckoutPaymentAmountCents: 250000,
+        currentCheckoutPaymentCurrency: 'USD',
+        currentCheckoutPaymentOutstandingCents: 50000,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain('Primer equipo registrado');
+        expect(text).toContain('Tenencia actual: Grace Hopper');
+        expect(text).toContain('Contexto: Alquiler');
+        expect(text).toContain('Salida:');
+        expect(text).toContain('Retorno pactado:');
+        expect(text).toContain('Pago: Tarjeta');
+        expect(text).toContain('Contacto: grace@example.com · 0999999999');
+        expect(text).not.toContain('Tiene:');
+        expect(text).not.toContain('Movimiento:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('explains the single-asset no-movement state instead of leaving the lone secondary menu unexplained', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
