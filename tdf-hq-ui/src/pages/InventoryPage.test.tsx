@@ -272,7 +272,7 @@ describe('InventoryPage', () => {
         ).toBe(true);
         expect(
           Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'Ver QR',
+            (button) => (button.textContent ?? '').trim() === 'QR y enlace público',
           ),
         ).toBe(false);
         expect(
@@ -291,7 +291,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('collapses the single-asset QR, link, and history actions into one secondary menu so the movement stays primary', async () => {
+  it('keeps QR sharing behind one clearer entry point so the secondary menu does not duplicate copy-link actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -314,9 +314,28 @@ describe('InventoryPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Ver QR');
-        expect(document.body.textContent).toContain('Copiar enlace');
+        expect(document.body.textContent).toContain('QR y enlace público');
         expect(document.body.textContent).toContain('Historial');
+        expect(
+          Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).some(
+            (item) => (item.textContent ?? '').trim() === 'Copiar enlace',
+          ),
+        ).toBe(false);
+      });
+
+      await act(async () => {
+        const qrMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'QR y enlace público',
+        );
+        qrMenuItem?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('QR y enlace público');
+        expect(document.body.textContent).toContain('Enlace público');
+        expect(document.body.textContent).toContain('Copiar enlace');
       });
     } finally {
       await cleanup();
@@ -473,8 +492,9 @@ describe('InventoryPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Ver QR');
+        expect(document.body.textContent).toContain('QR y enlace público');
         expect(document.body.textContent).toContain('Historial');
+        expect(document.body.textContent).not.toContain('Copiar enlace');
       });
     } finally {
       await cleanup();

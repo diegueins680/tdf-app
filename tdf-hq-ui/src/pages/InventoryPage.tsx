@@ -232,6 +232,7 @@ const INVENTORY_NO_MOVEMENT_GUIDANCE =
 const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
+const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
 
 function getInventoryMovementGuidance({
   canCheckout,
@@ -426,26 +427,6 @@ export default function InventoryPage() {
     const asset = actionsMenuTarget?.asset;
     closeActionsMenu();
     if (asset) action(asset);
-  };
-
-  const copyShareUrl = async (asset: AssetDTO) => {
-    let url = asset.qrToken ? buildInventoryScanUrl(asset.qrToken) : '';
-    if (!url && asset.assetId) {
-      try {
-        const generated = await Inventory.generateQr(asset.assetId);
-        url = generated.qrUrl;
-        void qc.invalidateQueries({ queryKey: ['assets'] });
-      } catch (error) {
-        setFeedback(error instanceof Error ? error.message : 'No se pudo generar el enlace público.');
-        return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setFeedback('Enlace público copiado.');
-    } catch {
-      setFeedback(url);
-    }
   };
 
   const uploadCheckoutPhoto = async (file: File) => {
@@ -913,7 +894,7 @@ export default function InventoryPage() {
       />
 
       <Dialog open={dialogOpen === 'qr'} onClose={() => setDialogOpen(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>QR de equipo</DialogTitle>
+        <DialogTitle>{INVENTORY_QR_SHARE_ACTION_LABEL}</DialogTitle>
         <DialogContent sx={{ textAlign: 'center' }}>
           <Stack spacing={2} alignItems="center">
             {qrDataUrl ? (
@@ -962,10 +943,7 @@ export default function InventoryPage() {
         onClose={closeActionsMenu}
       >
         <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
-          Ver QR
-        </MenuItem>
-        <MenuItem onClick={() => runAssetMenuAction((asset) => { void copyShareUrl(asset); })}>
-          Copiar enlace
+          {INVENTORY_QR_SHARE_ACTION_LABEL}
         </MenuItem>
         <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
           Historial
