@@ -42,6 +42,7 @@ import TDF.API.Types
   , BandDTO (bName)
   , AssetDTO
       ( assetId
+      , currentCheckoutKind
       , currentCheckoutHolderEmail
       , currentCheckoutHolderPhone
       , currentCheckoutPaymentAmountCents
@@ -1813,6 +1814,7 @@ spec = do
           assetId asset `shouldBe` existingAssetId
           location asset `shouldBe` Nothing
           qrToken asset `shouldBe` Nothing
+          currentCheckoutKind asset `shouldBe` Just "party"
           currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
           currentCheckoutHolderEmail asset `shouldBe` Nothing
           currentCheckoutHolderPhone asset `shouldBe` Nothing
@@ -1874,6 +1876,7 @@ spec = do
           expectationFailure ("Expected public QR resolve to succeed, got " <> show err)
         Right asset -> do
           assetId asset `shouldBe` existingAssetId
+          currentCheckoutKind asset `shouldBe` Nothing
           currentCheckoutTarget asset `shouldBe` Nothing
 
   describe "inventoryPublicServer checkoutByQrToken" $ do

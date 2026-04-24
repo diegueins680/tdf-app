@@ -442,6 +442,7 @@ sanitizePublicAssetDTO dto =
   dto
     { location = Nothing
     , qrToken = Nothing
+    , currentCheckoutKind = publicCheckoutKind (currentCheckoutKind dto)
     , currentCheckoutTarget = publicCheckoutTarget (currentCheckoutKind dto) (currentCheckoutTarget dto)
     , currentCheckoutHolderEmail = Nothing
     , currentCheckoutHolderPhone = Nothing
@@ -453,6 +454,8 @@ sanitizePublicAssetDTO dto =
     , currentCheckoutPhotoUrl = Nothing
     }
   where
+    publicCheckoutKind (Just "party") = Just "party"
+    publicCheckoutKind _ = Nothing
     publicCheckoutTarget (Just "party") target = target
     publicCheckoutTarget _ _ = Nothing
 
