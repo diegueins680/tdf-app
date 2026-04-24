@@ -41,6 +41,11 @@ import TDF.API.Types
       ( assetId
       , currentCheckoutHolderEmail
       , currentCheckoutHolderPhone
+      , currentCheckoutPaymentAmountCents
+      , currentCheckoutPaymentCurrency
+      , currentCheckoutPaymentInstallments
+      , currentCheckoutPaymentOutstandingCents
+      , currentCheckoutPaymentType
       , currentCheckoutTarget
       , location
       , qrToken
@@ -1643,7 +1648,7 @@ spec = do
         checkoutIdText = "00000000-0000-0000-0000-000000000922"
         roomIdText = "00000000-0000-0000-0000-000000000923"
 
-    it "redacts holder contact and internal location ids on public QR loads while keeping party labels readable" $ do
+    it "redacts holder contact, payment metadata, and internal location ids on public QR loads while keeping party labels readable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
@@ -1668,16 +1673,16 @@ spec = do
               , ME.assetCheckoutTargetSessionId = Nothing
               , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
               , ME.assetCheckoutTargetRoomId = Nothing
-              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutDisposition = Rental
               , ME.assetCheckoutTermsAndConditions = Nothing
               , ME.assetCheckoutHolderEmail = Just "ops@example.com"
               , ME.assetCheckoutHolderPhone = Just "+593991234567"
-              , ME.assetCheckoutPaymentType = Nothing
-              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentType = Just "bank_transfer"
+              , ME.assetCheckoutPaymentInstallments = Just 3
               , ME.assetCheckoutPaymentReference = Nothing
-              , ME.assetCheckoutPaymentAmountCents = Nothing
-              , ME.assetCheckoutPaymentCurrency = Nothing
-              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 40000
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1699,6 +1704,11 @@ spec = do
           currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
           currentCheckoutHolderEmail asset `shouldBe` Nothing
           currentCheckoutHolderPhone asset `shouldBe` Nothing
+          currentCheckoutPaymentType asset `shouldBe` Nothing
+          currentCheckoutPaymentInstallments asset `shouldBe` Nothing
+          currentCheckoutPaymentAmountCents asset `shouldBe` Nothing
+          currentCheckoutPaymentCurrency asset `shouldBe` Nothing
+          currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
 
     it "hides room or session checkout targets on public QR loads instead of exposing internal references" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

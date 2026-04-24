@@ -445,6 +445,11 @@ sanitizePublicAssetDTO dto =
     , currentCheckoutTarget = publicCheckoutTarget (currentCheckoutKind dto) (currentCheckoutTarget dto)
     , currentCheckoutHolderEmail = Nothing
     , currentCheckoutHolderPhone = Nothing
+    , currentCheckoutPaymentType = Nothing
+    , currentCheckoutPaymentInstallments = Nothing
+    , currentCheckoutPaymentAmountCents = Nothing
+    , currentCheckoutPaymentCurrency = Nothing
+    , currentCheckoutPaymentOutstandingCents = Nothing
     }
   where
     publicCheckoutTarget (Just "party") target = target
