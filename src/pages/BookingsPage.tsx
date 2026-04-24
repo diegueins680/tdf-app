@@ -3,7 +3,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bookings, CreateBookingReq } from '../api/bookings';
 import { Parties } from '../api/parties';
 import type { BookingDTO, PartyDTO } from '../api/types';
-import { Typography, Paper, Stack, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem } from '@mui/material';
+import {
+  Alert,
+  CircularProgress,
+  Typography,
+  Paper,
+  Stack,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+} from '@mui/material';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -134,30 +147,86 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
 }
 
 export default function BookingsPage() {
-  const { data } = useQuery({ queryKey: ['bookings'], queryFn: Bookings.list });
+  const bookingsQuery = useQuery({ queryKey: ['bookings'], queryFn: Bookings.list });
   const [open, setOpen] = useState(false);
   const [start, setStart] = useState<string | undefined>();
   const [end, setEnd] = useState<string | undefined>();
+  const bookings = bookingsQuery.data ?? [];
+  const showFirstBookingSetup =
+    !bookingsQuery.isPending
+    && !bookingsQuery.isError
+    && bookings.length === 0;
+  const bookingPageDescription = bookingsQuery.isPending
+    ? 'Cargando agenda y reservas…'
+    : bookingsQuery.isError
+      ? 'No se pudo cargar la agenda. Revisa la conexión y vuelve a intentar.'
+    : showFirstBookingSetup
+      ? 'Empieza con Nueva reserva. El calendario aparecerá cuando exista la primera reserva.'
+      : 'Selecciona un bloque del calendario o usa Nueva reserva para registrar un horario manualmente.';
 
-  const events = useMemo(() => (data || []).map((b: BookingDTO) => ({
+  const events = useMemo(() => bookings.map((b: BookingDTO) => ({
     id: String(b.bookingId),
     title: b.title,
     start: b.startsAt,
     end: b.endsAt,
-  })), [data]);
+  })), [bookings]);
 
   const handleSelect = (s: string, e: string) => { setStart(s); setEnd(e); setOpen(true); };
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h5">Agenda</Typography>
-        <Button variant="contained" onClick={()=>{ setStart(new Date().toISOString()); setEnd(new Date(Date.now()+60*60*1000).toISOString()); setOpen(true); }}>Nuevo</Button>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+        sx={{ mb: 2 }}
+      >
+        <Stack spacing={0.5}>
+          <Typography variant="h5">Agenda</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {bookingPageDescription}
+          </Typography>
+        </Stack>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setStart(new Date().toISOString());
+            setEnd(new Date(Date.now() + 60 * 60 * 1000).toISOString());
+            setOpen(true);
+          }}
+        >
+          Nueva reserva
+        </Button>
       </Stack>
 
-      <Paper variant="outlined" sx={{ p: 1.5 }}>
-        <CalendarView events={events} onSelect={handleSelect} />
-      </Paper>
+      {bookingsQuery.isPending ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
+            <CircularProgress size={20} />
+            <Typography variant="body2" color="text.secondary">
+              Cargando agenda…
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : bookingsQuery.isError ? (
+        <Alert severity="error">
+          {(bookingsQuery.error as Error).message}
+        </Alert>
+      ) : showFirstBookingSetup ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1}>
+            <Typography variant="h6">Todavía no hay reservas registradas.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Usa Nueva reserva para cargar la primera. Cuando exista al menos una, aquí podrás revisar la semana completa y seleccionar nuevos horarios desde el calendario.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : (
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <CalendarView events={events} onSelect={handleSelect} />
+        </Paper>
+      )}
 
       <CreateBookingDialog open={open} onClose={()=>setOpen(false)} initialStart={start} initialEnd={end} />
     </>
