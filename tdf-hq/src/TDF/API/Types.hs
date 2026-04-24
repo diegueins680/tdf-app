@@ -6,8 +6,9 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isDigit, toLower)
+import           Data.Char    (isControl, isDigit, toLower)
 import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
+import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import qualified Data.Text    as T
@@ -1400,14 +1401,20 @@ data ClockInRequest = ClockInRequest
   } deriving (Show, Generic)
 instance ToJSON ClockInRequest
 instance FromJSON ClockInRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    request <- genericParseJSON strictObjectOptions value
+    notes <- normalizeTimeEntryNotesField "cirNotes" (cirNotes request)
+    pure request { cirNotes = notes }
 
 data ClockOutRequest = ClockOutRequest
   { corNotes :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClockOutRequest
 instance FromJSON ClockOutRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    request <- genericParseJSON strictObjectOptions value
+    notes <- normalizeTimeEntryNotesField "corNotes" (corNotes request)
+    pure request { corNotes = notes }
 
 data InternTimeEntryDTO = InternTimeEntryDTO
   { iteId       :: Text
@@ -1420,6 +1427,27 @@ data InternTimeEntryDTO = InternTimeEntryDTO
   } deriving (Show, Generic)
 instance ToJSON InternTimeEntryDTO
 instance FromJSON InternTimeEntryDTO
+
+timeEntryNotesMaxLength :: Int
+timeEntryNotesMaxLength = 1000
+
+normalizeTimeEntryNotesField :: String -> Maybe Text -> Parser (Maybe Text)
+normalizeTimeEntryNotesField _ Nothing = pure Nothing
+normalizeTimeEntryNotesField fieldName (Just rawValue)
+  | T.null trimmed =
+      pure Nothing
+  | T.length trimmed > timeEntryNotesMaxLength =
+      fail (fieldName <> " must be 1000 characters or fewer")
+  | T.any isUnsafeTimeEntryNotesControl trimmed =
+      fail (fieldName <> " must not contain control characters other than tabs or line breaks")
+  | otherwise =
+      pure (Just trimmed)
+  where
+    trimmed = T.strip rawValue
+
+isUnsafeTimeEntryNotesControl :: Char -> Bool
+isUnsafeTimeEntryNotesControl ch =
+  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
 
 data InternPermissionDTO = InternPermissionDTO
   { iprId          :: Text

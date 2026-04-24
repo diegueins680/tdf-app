@@ -6,6 +6,7 @@ import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Proxy (Proxy (..))
+import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Servant.API (MimeUnrender (mimeUnrender), OctetStream, PlainText)
 import Test.Hspec
@@ -987,10 +988,16 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "internship time-entry request FromJSON" $ do
-        it "accepts canonical clock-in and clock-out payloads" $ do
+        it "accepts canonical clock-in and clock-out payloads while trimming blank notes to omission" $ do
             case decodeClockIn "{}" of
                 Left err ->
                     expectationFailure ("Expected empty clock-in payload to decode, got: " <> err)
+                Right (ClockInRequest notesVal) ->
+                    notesVal `shouldBe` Nothing
+
+            case decodeClockIn "{\"cirNotes\":\"   \"}" of
+                Left err ->
+                    expectationFailure ("Expected blank clock-in notes to decode as omitted, got: " <> err)
                 Right (ClockInRequest notesVal) ->
                     notesVal `shouldBe` Nothing
 
@@ -1000,11 +1007,19 @@ spec = do
                 Right (ClockInRequest notesVal) ->
                     notesVal `shouldBe` Just "Opening studio"
 
-            case decodeClockOut "{\"corNotes\":\"Closed after inventory\"}" of
+            case decodeClockOut "{\"corNotes\":\"  Closed after inventory  \"}" of
                 Left err ->
                     expectationFailure ("Expected clock-out payload to decode, got: " <> err)
                 Right (ClockOutRequest notesVal) ->
                     notesVal `shouldBe` Just "Closed after inventory"
+
+        it "rejects oversized or unsafe-control notes before time-entry handlers can persist ambiguous text" $ do
+            decodeClockIn
+                ("{\"cirNotes\":\"" <> BL8.pack (T.unpack (T.replicate 1001 "x")) <> "\"}")
+                `shouldSatisfy` isLeft
+            decodeClockOut
+                "{\"corNotes\":\"Closed\\u0000after inventory\"}"
+                `shouldSatisfy` isLeft
 
         it "rejects unexpected clock fields so over-posted time-entry intent fails explicitly" $ do
             decodeClockIn
