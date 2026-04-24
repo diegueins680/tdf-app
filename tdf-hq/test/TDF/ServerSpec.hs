@@ -4886,6 +4886,20 @@ spec = describe "TDF.Server helpers" $ do
                 "paypalOrderId does not match this order's PayPal order"
                 (validatePayPalCaptureOrderReference (Just "EXPECTED") "OTHER")
 
+        it "rejects malformed stored PayPal order ids as server state errors" $
+            case validatePayPalCaptureOrderReference
+                    (Just "PAYPAL/../ORDER")
+                    "PAYPAL-ORDER_123" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Stored PayPal order id is invalid"
+                Right orderId ->
+                    expectationFailure
+                        ( "Expected malformed stored PayPal order id to be rejected, got: "
+                            <> show orderId
+                        )
+
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do
             validateCourseRegistrationPhoneE164 Nothing `shouldBe` Right Nothing

@@ -6956,14 +6956,25 @@ isPayPalOrderIdChar c =
 
 validatePayPalCaptureOrderReference :: Maybe Text -> Text -> Either ServerError Text
 validatePayPalCaptureOrderReference mStoredOrderId paypalOrderId =
-  case normalizeOptionalInput mStoredOrderId of
+  case mStoredOrderId of
     Nothing ->
       Left err409 { errBody = "Order does not have a PayPal order to capture" }
-    Just storedOrderId
-      | storedOrderId == paypalOrderId ->
-          Right paypalOrderId
-      | otherwise ->
-          Left err400 { errBody = "paypalOrderId does not match this order's PayPal order" }
+    Just rawStoredOrderId -> do
+      storedOrderId <- validateStoredPayPalOrderId rawStoredOrderId
+      if storedOrderId == paypalOrderId
+        then Right paypalOrderId
+        else Left err400 { errBody = "paypalOrderId does not match this order's PayPal order" }
+
+validateStoredPayPalOrderId :: Text -> Either ServerError Text
+validateStoredPayPalOrderId rawStoredOrderId
+  | T.null storedOrderId =
+      Left err409 { errBody = "Order does not have a PayPal order to capture" }
+  | isValidPayPalOrderId storedOrderId =
+      Right storedOrderId
+  | otherwise =
+      Left err500 { errBody = "Stored PayPal order id is invalid" }
+  where
+    storedOrderId = T.strip rawStoredOrderId
 
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
