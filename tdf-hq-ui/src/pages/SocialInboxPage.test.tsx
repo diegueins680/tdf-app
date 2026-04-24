@@ -625,6 +625,37 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps filtered views focused on channels that still have messages in the current status', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'msg-2',
+        senderId: 'sender-2',
+        senderName: 'Grace',
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('table')).toHaveLength(1);
+      expect(container.textContent).toContain('Ada');
+      expect(container.textContent).not.toContain('Grace');
+      expect(container.textContent).toContain(
+        'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
+      );
+      expect(container.textContent).not.toContain('No messages for this filter.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single native-client CTA in the review dialog once a reply already exists', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -1318,13 +1318,13 @@ export default function SocialInboxPage() {
       whatsappStats,
     ],
   );
-  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.stats.incoming.length > 0);
+  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.messages.length > 0);
   const visibleChannelPanels = hasVisibleChannelMessages
-    ? channelPanels.filter((panel) => panel.loading || panel.stats.incoming.length > 0)
+    ? channelPanels.filter((panel) => panel.loading || panel.messages.length > 0)
     : channelPanels;
   const hiddenEmptyChannelLabels = hasVisibleChannelMessages
     ? channelPanels
-        .filter((panel) => !panel.loading && !panel.hasError && panel.stats.incoming.length === 0)
+        .filter((panel) => !panel.loading && !panel.hasError && panel.messages.length === 0)
         .map((panel) => panel.label)
     : [];
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
