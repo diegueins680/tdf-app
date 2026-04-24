@@ -36,6 +36,7 @@ instance FromMultipart Tmp AssetUploadForm where
     file <- lookupSingleFile "file" multipart
     nameTxt <- optionalText "name" multipart
     rejectAmbiguousFileName nameTxt file
+    validateBrowserFileName file
     validateImageUpload nameTxt file
     pure AssetUploadForm
       { aufFile = file
@@ -84,6 +85,12 @@ instance FromMultipart Tmp AssetUploadForm where
           (Nothing, fileName) | T.null fileName ->
             Left "Either field name or uploaded file name must be provided"
           _ -> Right ()
+
+      validateBrowserFileName file =
+        let fileName = T.strip (fdFileName file)
+        in if T.any isControl fileName
+             then Left "Uploaded file name must not contain control characters"
+             else Right ()
 
       validateImageUpload nameTxt file = do
         allowedExts <- allowedImageExtensions (fdFileCType file)
