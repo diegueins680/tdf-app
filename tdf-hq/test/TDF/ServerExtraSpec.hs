@@ -38,7 +38,7 @@ import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
   , AssetDTO (assetId, qrToken)
-  , AssetCheckoutDTO
+  , AssetCheckoutDTO (conditionIn, notes)
   , AssetCheckoutRequest (..)
   , AssetQrDTO
   , AssetUpdate (..)
@@ -1194,6 +1194,7 @@ spec = do
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"
         existingAssetId = "00000000-0000-0000-0000-000000000902"
+        checkoutIdText = "00000000-0000-0000-0000-000000000903"
         request = AssetCheckinRequest Nothing Nothing Nothing
 
     it "rejects unknown asset ids before collapsing them into missing checkout errors" $ do
@@ -1219,6 +1220,106 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "No active checkout"
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+
+    it "preserves checkout notes by appending labeled check-in notes instead of overwriting custody context" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Bring hard case"
+              })
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned OK") (Just "Extra cable included") Nothing)
+      case result of
+        Left err ->
+          expectationFailure ("Expected check-in note merge to succeed, got " <> show err)
+        Right value -> do
+          conditionIn value `shouldBe` Just "Returned OK"
+          notes value `shouldBe` Just "Bring hard case\n\nCheck-in: Extra cable included"
+
+    it "rejects check-in notes that would overflow the shared movement notes field after preserving checkout context" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just (T.replicate 990 "a")
+              })
+        existingAssetId
+        (AssetCheckinRequest Nothing (Just "b") Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "notes must be 1000 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized merged check-in notes to be rejected, got " <> show value)
 
   describe "checkoutHistoryH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000907"
@@ -3685,7 +3786,7 @@ seedPaymentReferenceFixture now = do
     )
 
 fixtureAsset :: Text -> Text -> Maybe Text -> Maybe Text -> Text -> Maybe Text -> Asset
-fixtureAsset name category brand model owner notes =
+fixtureAsset name category brand model owner mNotes =
   Asset
     { assetName = name
     , assetCategory = category
@@ -3700,7 +3801,7 @@ fixtureAsset name category brand model owner notes =
     , assetOwner = owner
     , assetQrCode = Nothing
     , assetPhotoUrl = Nothing
-    , assetNotes = notes
+    , assetNotes = mNotes
     , assetWarrantyExpires = Nothing
     , assetMaintenancePolicy = None
     , assetNextMaintenanceDue = Nothing

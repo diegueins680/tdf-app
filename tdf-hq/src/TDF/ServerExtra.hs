@@ -517,11 +517,12 @@ performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
     Nothing -> throwError err404 { errBody = "No active checkout" }
     Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
       validateOpenCheckout checkoutEnt
+      notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
       recEnt <- withPool $ do
         let updates = catMaybes
               [ Just (AssetCheckoutReturnedAt =. Just now)
               , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
-              , fmap (\notesText -> AssetCheckoutNotes =. Just notesText) checkinNotesUpdate
+              , (AssetCheckoutNotes =.) <$> notesUpdate
               , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
               ]
         update checkoutId updates
@@ -2160,6 +2161,15 @@ normalizeAssetCheckinFields AssetCheckinRequest{..} =
     <$> validateInventoryConditionField "conditionIn" ciConditionIn
     <*> validateInventoryNotesField "notes" ciNotes
     <*> validateAssetPhotoUrl ciPhotoUrl
+
+prepareCheckinNotesUpdate :: Maybe Text -> Maybe Text -> Either ServerError (Maybe (Maybe Text))
+prepareCheckinNotesUpdate _ Nothing = Right Nothing
+prepareCheckinNotesUpdate Nothing (Just checkinNotes) = Right (Just (Just checkinNotes))
+prepareCheckinNotesUpdate (Just existingNotes) (Just checkinNotes)
+  | existingNotes == checkinNotes =
+      Right (Just (Just existingNotes))
+  | otherwise =
+      Just <$> validateInventoryNotesField "notes" (Just (existingNotes <> "\n\nCheck-in: " <> checkinNotes))
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise
