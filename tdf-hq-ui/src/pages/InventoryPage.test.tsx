@@ -498,13 +498,51 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Ubicación')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).toContain(
-          'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo. Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
+          'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo. Usa check-out para registrar la siguiente salida.',
         );
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
         expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
         expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('matches the table guidance to check-in only rows so first-time admins do not look for missing check-out controls', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        currentCheckoutTarget: 'Ada Lovelace',
+        currentCheckoutAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Usa check-in para registrar el siguiente retorno.');
+        expect(container.textContent).not.toContain('Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.');
+        expect(container.textContent).not.toContain('Usa check-out para registrar la siguiente salida.');
+        expect(container.querySelector('[aria-label="Abrir check-in de Prestado Uno"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Prestado Uno"]')).toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-in de Prestado Dos"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Prestado Dos"]')).toBeNull();
       });
     } finally {
       await cleanup();

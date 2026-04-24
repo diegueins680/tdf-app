@@ -84,11 +84,28 @@ const INVENTORY_CHECKOUT_CONTEXT_GUIDANCE =
   'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo.';
 const INVENTORY_MOVEMENT_GUIDANCE =
   'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.';
+const INVENTORY_CHECKOUT_ONLY_GUIDANCE =
+  'Usa check-out para registrar la siguiente salida.';
+const INVENTORY_CHECKIN_ONLY_GUIDANCE =
+  'Usa check-in para registrar el siguiente retorno.';
 const INVENTORY_NO_MOVEMENT_GUIDANCE =
   'En esta vista no hay movimientos disponibles por ahora.';
 const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
+
+function getInventoryMovementGuidance({
+  canCheckout,
+  canCheckin,
+}: {
+  canCheckout: boolean;
+  canCheckin: boolean;
+}) {
+  if (canCheckout && canCheckin) return INVENTORY_MOVEMENT_GUIDANCE;
+  if (canCheckout) return INVENTORY_CHECKOUT_ONLY_GUIDANCE;
+  if (canCheckin) return INVENTORY_CHECKIN_ONLY_GUIDANCE;
+  return INVENTORY_NO_MOVEMENT_GUIDANCE;
+}
 
 export default function InventoryPage() {
   const qc = useQueryClient();
@@ -340,16 +357,21 @@ export default function InventoryPage() {
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
   const showCheckoutContextGuidance = grouped.length > 1 && !showCurrentCheckoutColumns;
   const showMovementGuidance = grouped.length > 1;
-  const hasVisibleMovementActions = grouped.some((asset) => {
-    const movementState = getInventoryMovementState(asset.status);
-    return movementState.canCheckout || movementState.canCheckin;
-  });
+  const visibleMovementActions = grouped.reduce(
+    (summary, asset) => {
+      const movementState = getInventoryMovementState(asset.status);
+      return {
+        canCheckout: summary.canCheckout || movementState.canCheckout,
+        canCheckin: summary.canCheckin || movementState.canCheckin,
+      };
+    },
+    { canCheckout: false, canCheckin: false },
+  );
+  const movementGuidance = showMovementGuidance ? getInventoryMovementGuidance(visibleMovementActions) : '';
   const tableGuidance = [
     showLocationSetupGuidance ? INVENTORY_LOCATION_SETUP_GUIDANCE : '',
     showCheckoutContextGuidance ? INVENTORY_CHECKOUT_CONTEXT_GUIDANCE : '',
-    showMovementGuidance
-      ? (hasVisibleMovementActions ? INVENTORY_MOVEMENT_GUIDANCE : INVENTORY_NO_MOVEMENT_GUIDANCE)
-      : '',
+    movementGuidance,
   ]
     .filter(Boolean)
     .join(' ');
