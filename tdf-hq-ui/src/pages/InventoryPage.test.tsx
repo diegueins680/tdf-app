@@ -501,6 +501,54 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('combines repeated shared-column guidance into one summary when the visible inventory already matches on several fields', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: ' micrófono ',
+        location: 'sala a',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent?.trim()).toBe(
+          'Se ocultaron columnas porque toda esta vista coincide en estado Disponible, categoría Micrófono y ubicación Sala A. Volverán cuando esta vista mezcle valores distintos.',
+        );
+        expect(text).not.toContain('Mostrando un solo estado:');
+        expect(text).not.toContain('Mostrando una sola categoría:');
+        expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(countOccurrencesIgnoringCase(text, 'Se ocultaron columnas porque toda esta vista coincide en')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Disponible')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(2);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes one shared location once and restores the location column when assets diverge again', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
@@ -510,8 +558,10 @@ describe('InventoryPage', () => {
       }),
       buildAsset({
         assetId: 'asset-2',
-        name: 'Activo Dos',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
         location: 'sala a',
+        status: 'Retired',
       }),
     ]);
 
@@ -527,13 +577,14 @@ describe('InventoryPage', () => {
         );
         expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola ubicación: Sala A.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
-        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(2);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
       });
     } finally {
       await cleanup();
@@ -547,8 +598,10 @@ describe('InventoryPage', () => {
       }),
       buildAsset({
         assetId: 'asset-2',
-        name: 'Activo Dos',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
         location: 'Sala B',
+        status: 'Retired',
       }),
     ]);
 
@@ -560,7 +613,8 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         const text = secondContainer.textContent ?? '';
         expect(text).not.toContain('Mostrando una sola ubicación:');
-        expect(hasTableHeader(secondContainer, 'Estado')).toBe(false);
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(secondContainer, 'Estado')).toBe(true);
         expect(hasTableHeader(secondContainer, 'Ubicación')).toBe(true);
         expect(text).toContain('Sala A');
         expect(text).toContain('Sala B');
@@ -579,8 +633,10 @@ describe('InventoryPage', () => {
       }),
       buildAsset({
         assetId: 'asset-2',
-        name: 'Activo Dos',
+        name: 'Retirado Uno',
         category: ' micrófono ',
+        location: 'Sala B',
+        status: 'Retired',
       }),
     ]);
 
@@ -596,6 +652,9 @@ describe('InventoryPage', () => {
         );
         expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola categoría: Micrófono.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
@@ -616,8 +675,10 @@ describe('InventoryPage', () => {
       }),
       buildAsset({
         assetId: 'asset-2',
-        name: 'Activo Dos',
+        name: 'Retirado Uno',
         category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Retired',
       }),
     ]);
 
@@ -629,6 +690,7 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         const text = secondContainer.textContent ?? '';
         expect(text).not.toContain('Mostrando una sola categoría:');
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
         expect(text).toContain('Micrófono');
         expect(text).toContain('Interfaz');
       });

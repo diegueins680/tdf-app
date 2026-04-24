@@ -109,7 +109,7 @@ function getSharedInventoryLocationSummary(assets: readonly AssetDTO[]) {
   return normalizedLocations.every(
     (location) => normalizeInventoryComparisonValue(location) === firstComparableLocation,
   )
-    ? firstLocation
+    ? (firstLocation ?? '')
     : '';
 }
 
@@ -128,8 +128,34 @@ function getSharedInventoryCategorySummary(assets: readonly AssetDTO[]) {
   return normalizedCategories.every(
     (category) => normalizeInventoryComparisonValue(category) === firstComparableCategory,
   )
-    ? firstCategory
+    ? (firstCategory ?? '')
     : '';
+}
+
+function joinInventorySummaryParts(parts: readonly string[]) {
+  if (parts.length <= 1) return parts[0] ?? '';
+  if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+}
+
+function getSharedInventoryColumnSummary({
+  status,
+  category,
+  location,
+}: {
+  status: string;
+  category: string;
+  location: string;
+}) {
+  const sharedParts = [
+    status ? `estado ${status}` : '',
+    category ? `categoría ${category}` : '',
+    location ? `ubicación ${location}` : '',
+  ].filter(Boolean);
+
+  if (sharedParts.length < 2) return '';
+
+  return `Se ocultaron columnas porque toda esta vista coincide en ${joinInventorySummaryParts(sharedParts)}. Volverán cuando esta vista mezcle valores distintos.`;
 }
 
 function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>) {
@@ -405,6 +431,14 @@ export default function InventoryPage() {
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
+  const sharedColumnSummary = useMemo(
+    () => getSharedInventoryColumnSummary({
+      status: sharedStatusSummary,
+      category: sharedCategorySummary,
+      location: sharedLocationSummary,
+    }),
+    [sharedCategorySummary, sharedLocationSummary, sharedStatusSummary],
+  );
   const showSingleAssetNoMovementGuidance = Boolean(
     showSingleAssetSummary
     && singleAssetMovementState
@@ -610,20 +644,32 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
-              {sharedStatusSummary && (
-                <Typography variant="caption" color="rgba(226,232,240,0.68)">
-                  {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+              {sharedColumnSummary ? (
+                <Typography
+                  variant="caption"
+                  color="rgba(226,232,240,0.68)"
+                  data-testid="inventory-shared-columns-summary"
+                >
+                  {sharedColumnSummary}
                 </Typography>
-              )}
-              {sharedCategorySummary && (
-                <Typography variant="caption" color="rgba(226,232,240,0.68)">
-                  {`Mostrando una sola categoría: ${sharedCategorySummary}. La categoría volverá cuando esta vista mezcle categorías distintas.`}
-                </Typography>
-              )}
-              {sharedLocationSummary && (
-                <Typography variant="caption" color="rgba(226,232,240,0.68)">
-                  {`Mostrando una sola ubicación: ${sharedLocationSummary}. La columna volverá cuando esta vista mezcle ubicaciones distintas.`}
-                </Typography>
+              ) : (
+                <>
+                  {sharedStatusSummary && (
+                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                      {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+                    </Typography>
+                  )}
+                  {sharedCategorySummary && (
+                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                      {`Mostrando una sola categoría: ${sharedCategorySummary}. La categoría volverá cuando esta vista mezcle categorías distintas.`}
+                    </Typography>
+                  )}
+                  {sharedLocationSummary && (
+                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                      {`Mostrando una sola ubicación: ${sharedLocationSummary}. La columna volverá cuando esta vista mezcle ubicaciones distintas.`}
+                    </Typography>
+                  )}
+                </>
               )}
               {tableGuidance && (
                 <Typography variant="body2" color="rgba(226,232,240,0.68)">
