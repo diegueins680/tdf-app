@@ -590,6 +590,7 @@ performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
     Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
       either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
       validateOpenCheckout checkoutEnt
+      either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
       notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
       recEnt <- withPool $ do
         let updates = catMaybes
@@ -996,6 +997,16 @@ validateCheckinDisposition :: CheckoutDisposition -> Either ServerError ()
 validateCheckinDisposition Sale =
   Left err409 { errBody = "Sale checkouts cannot be checked in" }
 validateCheckinDisposition _ =
+  Right ()
+
+validateCheckinPayload
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError ()
+validateCheckinPayload Nothing Nothing Nothing =
+  Left err400 { errBody = "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl" }
+validateCheckinPayload _ _ _ =
   Right ()
 
 checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
