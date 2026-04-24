@@ -45,6 +45,7 @@ import TDF.API.Types
       , currentCheckoutPaymentCurrency
       , currentCheckoutPaymentInstallments
       , currentCheckoutPaymentOutstandingCents
+      , currentCheckoutPhotoUrl
       , currentCheckoutPaymentType
       , currentCheckoutTarget
       , location
@@ -1693,7 +1694,7 @@ spec = do
         checkoutIdText = "00000000-0000-0000-0000-000000000922"
         roomIdText = "00000000-0000-0000-0000-000000000923"
 
-    it "redacts holder contact, payment metadata, and internal location ids on public QR loads while keeping party labels readable" $ do
+    it "redacts holder contact, payment metadata, proof photos, and internal location ids on public QR loads while keeping party labels readable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
@@ -1732,7 +1733,7 @@ spec = do
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
               , ME.assetCheckoutConditionOut = Just "Good"
-              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof.jpg"
               , ME.assetCheckoutPhotoDriveFileId = Nothing
               , ME.assetCheckoutReturnedAt = Nothing
               , ME.assetCheckoutConditionIn = Nothing
@@ -1754,6 +1755,7 @@ spec = do
           currentCheckoutPaymentAmountCents asset `shouldBe` Nothing
           currentCheckoutPaymentCurrency asset `shouldBe` Nothing
           currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
+          currentCheckoutPhotoUrl asset `shouldBe` Nothing
 
     it "hides room or session checkout targets on public QR loads instead of exposing internal references" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
