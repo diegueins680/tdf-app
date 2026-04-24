@@ -1315,7 +1315,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR room checkout to be rejected, got " <> show value)
 
-    it "requires a checkout photo on public QR links so anonymous custody records keep visual proof" $ do
+    it "requires holder contact on public QR links so anonymous custody records stay actionable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
@@ -1330,6 +1330,37 @@ spec = do
           (Just "loan")
           Nothing
           Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires holderEmail or holderPhone"
+        Right value ->
+          expectationFailure ("Expected public QR checkout without contact details to be rejected, got " <> show value)
+
+    it "requires a checkout photo on public QR links so anonymous custody records keep visual proof" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops@example.com")
           Nothing
           Nothing
           Nothing

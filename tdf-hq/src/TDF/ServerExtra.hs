@@ -592,6 +592,8 @@ validatePublicQrCheckoutRequest :: NormalizedCheckoutRequest -> Either ServerErr
 validatePublicQrCheckoutRequest normalized
   | ncrTargetKind normalized /= TargetParty =
       Left err400 { errBody = "Public QR checkout only supports party targets" }
+  | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
+      Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrPhotoOutUrl normalized) =
       Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
   | otherwise =
