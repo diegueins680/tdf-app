@@ -651,6 +651,8 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
+  | isNothing (ncrConditionOut normalized) =
+      Left err400 { errBody = "Public QR checkout requires coConditionOut" }
   | isNothing (ncrPhotoOutUrl normalized) =
       Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
   | not (maybe False isManagedInventoryPhotoProof (ncrPhotoOutUrl normalized)) =

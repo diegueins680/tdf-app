@@ -2152,6 +2152,40 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without photo to be rejected, got " <> show value)
 
+    it "requires an explicit checkout condition on public QR links so custody handoff records are not left ambiguous" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coConditionOut"
+        Right value ->
+          expectationFailure ("Expected public QR checkout without condition text to be rejected, got " <> show value)
+
     it "rejects externally hosted checkout proof on public QR links so anonymous custody evidence stays under managed storage" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
