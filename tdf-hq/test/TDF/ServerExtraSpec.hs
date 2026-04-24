@@ -388,6 +388,27 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects overlong effective upload names before storage hits filesystem limits" $ do
+      let assertInvalid :: MultipartData Tmp -> Expectation
+          assertInvalid multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` "Asset upload file name must be 218 characters or fewer"
+              Right payload ->
+                expectationFailure
+                  ( "Expected overlong asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+          longName = T.replicate 215 "a" <> ".jpg"
+
+      assertInvalid
+        (mkAssetUploadMultipart
+          [("name", longName)]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        (mkAssetUploadMultipart [] [mkAssetUploadFile longName])
+
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

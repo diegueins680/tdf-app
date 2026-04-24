@@ -6,6 +6,7 @@
 
 module TDF.API.Inventory where
 
+import           Control.Applicative ((<|>))
 import           Data.Text         (Text)
 import           Servant
 import           Servant.Multipart ( FileData
@@ -20,7 +21,7 @@ import           Servant.Multipart ( FileData
                                     )
 import           Data.Char         (isControl)
 import qualified Data.Text         as T
-import           System.FilePath   (takeExtension)
+import           System.FilePath   (takeExtension, takeFileName)
 
 import           TDF.API.Types
 
@@ -85,6 +86,7 @@ instance FromMultipart Tmp AssetUploadForm where
       validateImageUpload nameTxt file = do
         allowedExts <- allowedImageExtensions (fdFileCType file)
         ext <- resolveImageExtension nameTxt file
+        validateResolvedUploadNameLength nameTxt file
         let providedExts =
               filter (not . T.null)
                 [ maybe "" imageExtension nameTxt
@@ -115,10 +117,34 @@ instance FromMultipart Tmp AssetUploadForm where
              then Left "Asset upload file name must include a supported image extension"
              else Right ext
 
+      validateResolvedUploadNameLength nameTxt file =
+        let fallbackName = nonEmptyBaseName (fdFileName file)
+            nameWithExt = applyExtension (nameTxt <|> fallbackName) fallbackName
+        in if T.length nameWithExt > maxAssetUploadFileNameChars
+             then Left
+               ( "Asset upload file name must be "
+                   <> show maxAssetUploadFileNameChars
+                   <> " characters or fewer"
+               )
+             else Right ()
+
+      nonEmptyBaseName rawName =
+        let baseName = T.pack (takeFileName (T.unpack (T.strip rawName)))
+        in if T.null baseName then Nothing else Just baseName
+
+      applyExtension mName fallback =
+        let resolved = maybe "upload" T.strip mName
+            extFromFallback = maybe "" imageExtension fallback
+            extFromName = imageExtension resolved
+        in if T.null extFromName && not (T.null extFromFallback)
+             then resolved <> extFromFallback
+             else resolved
+
       imageExtension =
         T.toLower . T.pack . takeExtension . T.unpack . T.strip
 
       allImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+      maxAssetUploadFileNameChars = 218
 
       rejectUnexpectedParts mp =
         case (unexpectedInputs, unexpectedFiles) of
