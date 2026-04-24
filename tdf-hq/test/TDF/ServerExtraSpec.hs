@@ -1058,6 +1058,39 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid asset patch notes to fail, got " <> show value)
 
+    it "rejects patch requests that try to mark an available asset as booked without creating a checkout" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid booked patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetUpdate Nothing Nothing (Just "booked") Nothing Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err)
+            `shouldContain` "Asset status can only become booked through the checkout endpoint"
+        Right value ->
+          expectationFailure ("Expected impossible booked status patch to fail, got " <> show value)
+
+    it "still allows booked status no-ops on legacy rows so unrelated asset edits stay unblocked" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid legacy booked asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetStatus = Booked
+            }))
+        existingAssetId
+        (AssetUpdate Nothing Nothing (Just "booked") Nothing (Just "Needs relabeling") Nothing)
+      case result of
+        Left err ->
+          expectationFailure ("Expected legacy booked asset patch to succeed, got " <> show err)
+        Right asset ->
+          assetId asset `shouldBe` existingAssetId
+
   describe "deleteAssetH" $ do
     let deletableAssetId = "00000000-0000-0000-0000-000000000903"
         historicAssetId = "00000000-0000-0000-0000-000000000904"

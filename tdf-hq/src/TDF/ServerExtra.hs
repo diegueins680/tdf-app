@@ -270,13 +270,26 @@ inventoryServer user =
       result <- withPool $ do
         mEntity <- getEntity assetKey
         case mEntity of
-          Nothing -> pure Nothing
-          Just _  -> do
-            unless (null updates) (update assetKey updates)
-            getEntity assetKey
+          Nothing -> pure (Right Nothing)
+          Just entity -> do
+            mActiveCheckout <- selectFirst
+              [ AssetCheckoutAssetId ==. assetKey
+              , AssetCheckoutReturnedAt ==. Nothing
+              ]
+              [Desc AssetCheckoutCheckedOutAt]
+            case validateAssetPatchStatusInvariant
+              (assetStatus (entityVal entity))
+              statusValue
+              (isJust mActiveCheckout) of
+              Left err ->
+                pure (Left err)
+              Right () -> do
+                unless (null updates) (update assetKey updates)
+                Right <$> getEntity assetKey
       case result of
-        Nothing -> throwError err404
-        Just entity -> do
+        Left err -> throwError err
+        Right Nothing -> throwError err404
+        Right (Just entity) -> do
           activeMap <- withPool $ loadActiveCheckoutMap [entityKey entity]
           pure (toAssetDTO entity (Map.lookup (entityKey entity) activeMap))
 
@@ -1846,6 +1859,19 @@ validateAssetStatusUpdate (Just rawStatus) =
     Nothing -> Left err400
       { errBody = "Invalid asset status. Allowed values: active, booked, out_for_maintenance, retired"
       }
+
+validateAssetPatchStatusInvariant :: AssetStatus -> Maybe AssetStatus -> Bool -> Either ServerError ()
+validateAssetPatchStatusInvariant currentStatus requestedStatus hasActiveCheckout =
+  case requestedStatus of
+    Just Booked
+      | hasActiveCheckout || currentStatus == Booked ->
+          Right ()
+      | otherwise ->
+          Left err409
+            { errBody = "Asset status can only become booked through the checkout endpoint"
+            }
+    _ ->
+      Right ()
 
 validateAssetCheckoutStatus :: AssetStatus -> Either ServerError ()
 validateAssetCheckoutStatus Active = Right ()
