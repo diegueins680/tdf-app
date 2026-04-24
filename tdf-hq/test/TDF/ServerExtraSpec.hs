@@ -1896,6 +1896,68 @@ spec = do
           currentCheckoutAt asset `shouldBe` Nothing
           currentCheckoutDueAt asset `shouldBe` Nothing
 
+    it "hides buyer identity on public QR loads for sold assets while still surfacing that the asset was sold" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let now = UTCTime (fromGregorian 2035 5 4) 0
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Cliente final"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Just "bank_transfer"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Just "SALE-001"
+              , ME.assetCheckoutPaymentAmountCents = Just 250000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold as-is"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-sale-proof.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected sold public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          currentCheckoutKind asset `shouldBe` Nothing
+          currentCheckoutTarget asset `shouldBe` Nothing
+          currentCheckoutDisposition asset `shouldBe` Just "sale"
+          currentCheckoutAt asset `shouldBe` Nothing
+          currentCheckoutDueAt asset `shouldBe` Nothing
+          currentCheckoutHolderEmail asset `shouldBe` Nothing
+          currentCheckoutHolderPhone asset `shouldBe` Nothing
+          currentCheckoutPaymentType asset `shouldBe` Nothing
+          currentCheckoutPaymentInstallments asset `shouldBe` Nothing
+          currentCheckoutPaymentAmountCents asset `shouldBe` Nothing
+          currentCheckoutPaymentCurrency asset `shouldBe` Nothing
+          currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
+          currentCheckoutPhotoUrl asset `shouldBe` Nothing
+
   describe "inventoryPublicServer checkoutByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000907"
         canonicalToken = "00000000-0000-0000-0000-00000000dcba"

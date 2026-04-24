@@ -442,13 +442,13 @@ sanitizePublicAssetDTO dto =
   dto
     { location = Nothing
     , qrToken = Nothing
-    , currentCheckoutKind = publicCheckoutField (currentCheckoutKind dto)
-    , currentCheckoutTarget = publicCheckoutField (currentCheckoutTarget dto)
-    , currentCheckoutDisposition = publicCheckoutField (currentCheckoutDisposition dto)
+    , currentCheckoutKind = publicCheckoutContextField (currentCheckoutKind dto)
+    , currentCheckoutTarget = publicCheckoutContextField (currentCheckoutTarget dto)
+    , currentCheckoutDisposition = publicCheckoutDispositionField (currentCheckoutDisposition dto)
     , currentCheckoutHolderEmail = Nothing
     , currentCheckoutHolderPhone = Nothing
-    , currentCheckoutAt = publicCheckoutField (currentCheckoutAt dto)
-    , currentCheckoutDueAt = publicCheckoutField (currentCheckoutDueAt dto)
+    , currentCheckoutAt = publicCheckoutContextField (currentCheckoutAt dto)
+    , currentCheckoutDueAt = publicCheckoutContextField (currentCheckoutDueAt dto)
     , currentCheckoutPaymentType = Nothing
     , currentCheckoutPaymentInstallments = Nothing
     , currentCheckoutPaymentAmountCents = Nothing
@@ -457,9 +457,18 @@ sanitizePublicAssetDTO dto =
     , currentCheckoutPhotoUrl = Nothing
     }
   where
-    exposesCheckoutDetails = currentCheckoutKind dto == Just "party"
-    publicCheckoutField value
-      | exposesCheckoutDetails = value
+    disposition = currentCheckoutDisposition dto
+    exposesPublicCheckoutContext =
+      currentCheckoutKind dto == Just "party"
+        && disposition `elem` [Just "loan", Just "rental"]
+    exposesPublicDisposition =
+      currentCheckoutKind dto == Just "party"
+        && disposition `elem` [Just "loan", Just "rental", Just "sale"]
+    publicCheckoutContextField value
+      | exposesPublicCheckoutContext = value
+      | otherwise = Nothing
+    publicCheckoutDispositionField value
+      | exposesPublicDisposition = value
       | otherwise = Nothing
 
 loadActiveCheckoutMap
