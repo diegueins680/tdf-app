@@ -202,6 +202,7 @@ export default function TrialLessonsPage() {
       return toLocalInput(end.toISOString());
     })();
   });
+  const [quickFiltersExpanded, setQuickFiltersExpanded] = useState(false);
 
   const toIsoOrUndefined = (val: string) => {
     if (!val) return undefined;
@@ -304,6 +305,7 @@ export default function TrialLessonsPage() {
     setSubjectFilter('all');
     setTeacherFilter('all');
     setStatusFilter('all');
+    setQuickFiltersExpanded(false);
     applyRangePreset(7, 30);
   };
 
@@ -483,6 +485,9 @@ export default function TrialLessonsPage() {
     (!rangeError && classesQuery.isLoading);
   const queryError = rangeError ? null : classesQuery.error;
   const showRefreshAction = Boolean(queryError) || data.length > 0;
+  const hasQuickFiltersActive =
+    subjectFilter !== 'all' || teacherFilter !== 'all' || statusFilter !== 'all';
+  const showQuickFilters = quickFiltersExpanded || hasQuickFiltersActive;
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -673,7 +678,25 @@ export default function TrialLessonsPage() {
               {rangeError} Ajusta las fechas o restablece los filtros.
             </Alert>
           )}
-          {chipFilters}
+          {!hasQuickFiltersActive && (
+            <Stack spacing={0.75} alignItems="flex-start">
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setQuickFiltersExpanded((current) => !current)}
+                sx={{ px: 0, textTransform: 'none' }}
+              >
+                {showQuickFilters ? 'Ocultar filtros rápidos' : 'Filtrar por materia, profesor y estado'}
+              </Button>
+              {!showQuickFilters && (
+                <Typography variant="body2" color="text.secondary" data-testid="trial-lessons-quick-filters-hint">
+                  Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o
+                  estado.
+                </Typography>
+              )}
+            </Stack>
+          )}
+          {showQuickFilters && chipFilters}
           {loading && <LinearProgress />}
           {queryError && (
             <Alert severity="error">

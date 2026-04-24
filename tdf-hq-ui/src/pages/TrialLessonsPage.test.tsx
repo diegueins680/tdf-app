@@ -108,6 +108,25 @@ const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s
 const hasButton = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).some((button) => buttonText(button) === labelText);
 
+const hasExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).some((element) => buttonText(element) === labelText);
+
+const clickButton = async (root: ParentNode, labelText: string) => {
+  const button = Array.from(root.querySelectorAll<HTMLElement>('button')).find(
+    (element) => buttonText(element) === labelText,
+  );
+
+  if (!(button instanceof HTMLElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+
+  await act(async () => {
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 const buildClassSession = (overrides: Partial<ClassSessionDTO> = {}): ClassSessionDTO => ({
   classSessionId: 301,
   teacherId: 7,
@@ -213,6 +232,52 @@ describe('TrialLessonsPage', () => {
         expect(container.textContent).toContain('Produccion Musical');
         expect(hasButton(container, 'Exportar CSV')).toBe(true);
         expect(hasButton(container, 'Refrescar')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps subject, teacher, and status chips behind one explicit toggle until the admin asks for them', async () => {
+    listSubjectsMock.mockResolvedValue([
+      { subjectId: 1, name: 'Produccion Musical', active: true, roomIds: ['1'] },
+      { subjectId: 2, name: 'Canto', active: true, roomIds: ['1'] },
+    ]);
+    listTeachersMock.mockResolvedValue([
+      { teacherId: 7, teacherName: 'Ada Lovelace', subjects: [{ subjectId: 1, name: 'Produccion Musical' }] },
+      { teacherId: 8, teacherName: 'Lin-Manuel Miranda', subjects: [{ subjectId: 2, name: 'Canto' }] },
+    ]);
+    listClassSessionsMock.mockResolvedValue([buildClassSession()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasButton(container, 'Filtrar por materia, profesor y estado')).toBe(true);
+        expect(container.textContent).toContain(
+          'Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o estado.',
+        );
+        expect(hasExactText(container, 'Todas las materias')).toBe(false);
+        expect(hasExactText(container, 'Todos los profesores')).toBe(false);
+        expect(hasExactText(container, 'Todos los estados')).toBe(false);
+        expect(hasExactText(container, 'Canto')).toBe(false);
+        expect(hasExactText(container, 'Lin-Manuel Miranda')).toBe(false);
+      });
+
+      await clickButton(container, 'Filtrar por materia, profesor y estado');
+
+      await waitForExpectation(() => {
+        expect(hasButton(container, 'Ocultar filtros rápidos')).toBe(true);
+        expect(container.textContent).not.toContain(
+          'Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o estado.',
+        );
+        expect(hasExactText(container, 'Todas las materias')).toBe(true);
+        expect(hasExactText(container, 'Todos los profesores')).toBe(true);
+        expect(hasExactText(container, 'Todos los estados')).toBe(true);
+        expect(hasExactText(container, 'Canto')).toBe(true);
+        expect(hasExactText(container, 'Lin-Manuel Miranda')).toBe(true);
       });
     } finally {
       await cleanup();
