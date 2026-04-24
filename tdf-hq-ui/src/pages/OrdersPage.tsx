@@ -127,6 +127,36 @@ const getSharedSummaryValue = (values: readonly string[]) => {
     : '';
 };
 
+function formatNaturalLanguageList(values: readonly string[], conjunction: 'y' | 'o') {
+  if (values.length === 0) return '';
+  if (values.length === 1) return values[0] ?? '';
+  if (values.length === 2) return `${values[0]} ${conjunction} ${values[1]}`;
+  return `${values.slice(0, -1).join(', ')} ${conjunction} ${values[values.length - 1]}`;
+}
+
+function buildCombinedSharedContextSummary(
+  contexts: ReadonlyArray<{
+    value: string;
+    singularLabel: string;
+    pluralLabel: string;
+  }>,
+) {
+  const visibleContexts = contexts.filter((context) => context.value !== '');
+
+  if (visibleContexts.length < 2) return '';
+
+  const summaryDetails = formatNaturalLanguageList(
+    visibleContexts.map((context) => `${context.singularLabel}: ${context.value}`),
+    'y',
+  );
+  const hiddenColumns = formatNaturalLanguageList(
+    visibleContexts.map((context) => context.pluralLabel),
+    'o',
+  );
+
+  return `Mostrando ${summaryDetails}. Las columnas volverán cuando ya no coincidan ${hiddenColumns}.`;
+}
+
 const hasDisplayValue = (value: string) => {
   const trimmed = value.trim();
   return trimmed !== '' && trimmed !== '—';
@@ -264,9 +294,27 @@ export default function OrdersPage() {
     [rows],
   );
   const showRoomsColumn = sharedRoomsSummary === '';
-  const combinedSharedContextSummary = sharedServiceSummary && sharedRoomsSummary
-    ? `Mostrando un solo servicio: ${sharedServiceSummary} y una sola sala: ${sharedRoomsSummary}. Las columnas volverán cuando esta vista mezcle servicios o salas distintas.`
-    : '';
+  const combinedSharedContextSummary = useMemo(
+    () =>
+      buildCombinedSharedContextSummary([
+        {
+          pluralLabel: 'servicios',
+          singularLabel: 'un solo servicio',
+          value: sharedServiceSummary,
+        },
+        {
+          pluralLabel: 'ingenieros',
+          singularLabel: 'un solo ingeniero',
+          value: sharedEngineerSummary,
+        },
+        {
+          pluralLabel: 'salas',
+          singularLabel: 'una sola sala',
+          value: sharedRoomsSummary,
+        },
+      ]),
+    [sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary],
+  );
   const visibleTableColumnCount = 3
     + (showServiceColumn ? 1 : 0)
     + (showEngineerColumn ? 1 : 0)
