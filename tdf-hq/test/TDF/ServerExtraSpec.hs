@@ -1334,7 +1334,9 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
           (Just "Sale completo")
+          Nothing
           Nothing
           Nothing
           Nothing)
