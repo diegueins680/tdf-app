@@ -303,6 +303,36 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects explicit upload names that would be silently reshaped into a different stored filename" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected invalid asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must not contain path separators"
+        (mkAssetUploadMultipart
+          [("name", "folder/front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload name must not contain path separators"
+        (mkAssetUploadMultipart
+          [("name", "folder\\\\front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload name must not contain control characters"
+        (mkAssetUploadMultipart
+          [("name", "front-room\nshot.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+
     it "rejects non-image asset uploads before inventory storage can persist them" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

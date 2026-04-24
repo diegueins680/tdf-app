@@ -18,6 +18,7 @@ import           Servant.Multipart ( FileData
                                     , fdFileName
                                     , fdFileCType
                                     )
+import           Data.Char         (isControl)
 import qualified Data.Text         as T
 import           System.FilePath   (takeExtension)
 
@@ -41,11 +42,27 @@ instance FromMultipart Tmp AssetUploadForm where
       }
     where
       optionalText field mp =
-        fmap (>>= normalizeInputText) (lookupSingleInput field mp)
+        do
+          mInput <- lookupSingleInput field mp
+          case mInput of
+            Nothing -> Right Nothing
+            Just input -> normalizeInputText input
 
       normalizeInputText (Input _ rawValue) =
         let trimmed = T.strip rawValue
-        in if T.null trimmed then Nothing else Just trimmed
+        in if T.null trimmed
+             then Right Nothing
+             else validateUploadName trimmed
+
+      validateUploadName rawName
+        | T.any isControl rawName =
+            Left "Asset upload name must not contain control characters"
+        | T.any isPathSeparator rawName =
+            Left "Asset upload name must not contain path separators"
+        | otherwise =
+            Right (Just rawName)
+
+      isPathSeparator ch = ch == '/' || ch == '\\'
 
       lookupSingleInput field mp =
         case filter (\(Input inputName _) -> inputName == field) (inputs mp) of
