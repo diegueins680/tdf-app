@@ -298,7 +298,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
-  it('keeps the header refresh action available when first-run data is empty because a query failed', async () => {
+  it('keeps the first-run refresh action inside onboarding guidance when the health check fails', async () => {
     mockHealthFetch.mockRejectedValue(new Error('Sin conexión'));
 
     renderPage();
@@ -306,11 +306,16 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
       expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Actualizar panel/i })).toHaveLength(1);
     });
 
     expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+    const gettingStartedAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+    expect(gettingStartedAlert).not.toBeNull();
+    expect(
+      within(gettingStartedAlert as HTMLElement).getByRole('button', { name: /Actualizar panel/i }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         /Primero resuelve el estado del servicio; luego podrás cargar datos de ejemplo con la API y base de datos listas\./i,

@@ -1042,7 +1042,8 @@ export default function AdminConsolePage() {
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
   const showHeaderRefreshAction =
     hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
-  const showHeaderActions = showHeaderRefreshAction;
+  const showFirstRunRefreshAction = showGettingStartedGuidance && showHeaderRefreshAction;
+  const showHeaderActions = showHeaderRefreshAction && !showGettingStartedGuidance;
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
@@ -1289,12 +1290,23 @@ export default function AdminConsolePage() {
                 })}
               </Stack>
             )}
-            {(firstRunDemoStatusCopy || showFirstRunDemoAction) && (
+            {(firstRunDemoStatusCopy || showFirstRunDemoAction || showFirstRunRefreshAction) && (
               <Stack spacing={1} alignItems="flex-start">
                 {firstRunDemoStatusCopy && (
                   <Typography variant="body2" color="text.secondary">
                     {firstRunDemoStatusCopy}
                   </Typography>
+                )}
+                {showFirstRunRefreshAction && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleRefreshPanel}
+                    disabled={isRefreshingPanel}
+                  >
+                    {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
+                  </Button>
                 )}
                 {showFirstRunDemoAction && (
                   <Button
