@@ -650,6 +650,11 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   return stripTrailingCohortSlug(stripFirstRunCohortDescriptorPrefix(title), slug);
 };
 
+const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
+  const summaryLabel = cohortFirstRunLabel(cohort);
+  return summaryLabel || cohortOptionLabel(cohort);
+};
+
 const humanizeDelimitedSourceLabel = (source: string) => {
   if (!/[_./-]/.test(source)) return source;
   const normalized = source.replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1388,6 +1393,18 @@ export default function CourseRegistrationsAdminPage() {
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
+  const cohortSummaryLabelsBySlug = useMemo(() => {
+    const bySlug = new Map<string, string>();
+    for (const cohort of cohortsQuery.data ?? []) {
+      const cohortSlug = cohort.ccSlug.trim();
+      if (!cohortSlug || bySlug.has(cohortSlug)) continue;
+      bySlug.set(cohortSlug, cohortSummaryLabel(cohort));
+    }
+    if (selectedSlug && !bySlug.has(selectedSlug)) {
+      bySlug.set(selectedSlug, selectedSlug);
+    }
+    return bySlug;
+  }, [cohortsQuery.data, selectedSlug]);
 
   const cohortOptions = useMemo(
     () => Array.from(cohortLabelsBySlug.entries()).map(([value, label]) => ({ value, label })),
@@ -1421,7 +1438,9 @@ export default function CourseRegistrationsAdminPage() {
     return configuredCohortOptions.find((option) => option.value === selectedSlug) ?? null;
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
 
-  const activeCohortLabel = selectedSlug ? (cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug) : '';
+  const activeCohortLabel = selectedSlug
+    ? (cohortSummaryLabelsBySlug.get(selectedSlug) ?? cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug)
+    : '';
 
   const regsQuery = useQuery({
     queryKey: listQueryKey,
