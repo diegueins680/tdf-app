@@ -10749,7 +10749,7 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
   appendDriveResourceKey resolvedResourceKey baseUrl
   where
     fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
-    baseUrl = fromMaybe fallbackPublicUrl (sanitizeDriveWebContentLink mWebContentLink)
+    baseUrl = fromMaybe fallbackPublicUrl (sanitizeDriveWebContentLink fileId mWebContentLink)
     resolvedResourceKey =
       sanitizeDriveResourceKey mUploadResourceKey
         <|> sanitizeDriveResourceKey mMetaResourceKey
@@ -10761,28 +10761,83 @@ sanitizeDriveResourceKey mResourceKey = do
     then Just resourceKey
     else Nothing
 
-sanitizeDriveWebContentLink :: Maybe Text -> Maybe Text
-sanitizeDriveWebContentLink mWebContentLink = do
+sanitizeDriveWebContentLink :: Text -> Maybe Text -> Maybe Text
+sanitizeDriveWebContentLink expectedFileId mWebContentLink = do
   url <- cleanOptional mWebContentLink
   if "https://" `T.isPrefixOf` T.toLower url
       && TrialsServer.isValidHttpUrl url
       && isGoogleDriveDownloadHost url
-      && hasDriveContentLocator url
+      && extractDriveContentFileId url == Just expectedFileId
     then Just url
     else Nothing
 
-hasDriveContentLocator :: Text -> Bool
-hasDriveContentLocator rawUrl =
-  hasNonBlankQueryParam "id" rawUrl || length pathSegments >= 2
+extractDriveContentFileId :: Text -> Maybe Text
+extractDriveContentFileId rawUrl =
+  case drivePathSegments rawUrl of
+    ["uc"] ->
+      singleDriveIdQueryParam rawUrl
+    ["download"] ->
+      singleDriveIdQueryParam rawUrl
+    ["download", fileId]
+      | isValidDriveFileId fileId
+      , not (hasNamedQueryParam "id" rawUrl) ->
+          Just fileId
+    ["u", userSegment, "uc"]
+      | T.all isDigit userSegment ->
+          singleDriveIdQueryParam rawUrl
+    ["file", "d", fileId]
+      | isValidDriveFileId fileId
+      , not (hasNamedQueryParam "id" rawUrl) ->
+          Just fileId
+    ["file", "d", fileId, suffix]
+      | isValidDriveFileId fileId
+      , not (hasNamedQueryParam "id" rawUrl)
+      , suffix `elem` ["view", "preview", "edit"] ->
+          Just fileId
+    _ ->
+      Nothing
   where
-    pathSegments =
-      filter (not . T.null) (T.splitOn "/" path)
+    isValidDriveFileId fileId =
+      T.length fileId <= 256 && T.all isDriveFolderIdChar fileId
+
+singleDriveIdQueryParam :: Text -> Maybe Text
+singleDriveIdQueryParam rawUrl =
+  case [ cleanValue
+       | rawParam <- queryParams rawUrl
+       , isNamedQueryParam "id" rawParam
+       , let rawValue = T.drop 1 (snd (T.breakOn "=" rawParam))
+       , let cleanValue = T.strip rawValue
+       , not (T.null rawValue)
+       , not (T.null cleanValue)
+       ] of
+    [fileId]
+      | T.length fileId <= 256 && T.all isDriveFolderIdChar fileId ->
+          Just fileId
+    _ ->
+      Nothing
+
+drivePathSegments :: Text -> [Text]
+drivePathSegments rawUrl =
+  filter (not . T.null) (T.splitOn "/" path)
+  where
     remainder = T.drop 8 rawUrl
     afterAuthority =
       T.dropWhile
         (\c -> c /= '/' && c /= '?' && c /= '#')
         remainder
     path = T.takeWhile (\c -> c /= '?' && c /= '#') afterAuthority
+
+queryParams :: Text -> [Text]
+queryParams url =
+  filter (not . T.null) (T.splitOn "&" query)
+  where
+    (withoutFragment, _) = T.breakOn "#" url
+    queryWithMarker = snd (T.breakOn "?" withoutFragment)
+    query = T.drop 1 queryWithMarker
+
+hasNamedQueryParam :: Text -> Text -> Bool
+hasNamedQueryParam paramName url =
+  any (isNamedQueryParam paramName) (queryParams url)
 
 isGoogleDriveDownloadHost :: Text -> Bool
 isGoogleDriveDownloadHost rawUrl =

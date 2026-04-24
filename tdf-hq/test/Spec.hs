@@ -161,6 +161,7 @@ import TDF.ServerFeedback
 import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
 import TDF.Server
     ( buildWhatsappCtaFor,
+      resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
       validateWhatsAppConsentDisplayName,
@@ -2810,6 +2811,39 @@ main = hspec $ do
                 (Just (Data.Text.replicate 4097 "a"))
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
+
+    describe "resolveDrivePublicUrl" $ do
+        it "keeps canonical Google Drive download links only when they point at the uploaded file" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just " https://drive.usercontent.google.com/download?id=1A_B-99&export=download ")
+                Nothing
+                (Just " rk_123 ")
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download&resourcekey=rk_123"
+
+        it "falls back to the canonical download URL when Drive returns an ambiguous or mismatched content link" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/uc?export=download&id=other-file")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99&resourcekey=rk_123"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/uc?export=download&id=1A_B-99&id=other-file")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/settings/storage?id=1A_B-99")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
