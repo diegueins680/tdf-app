@@ -1277,6 +1277,75 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('humanizes payment provider labels in the order detail and copied summary', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moPaymentProvider: 'datafast',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moCreatedAt: '2030-01-01T12:00:00.000Z',
+        moUpdatedAt: '2030-01-01T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Pago: Tarjeta (Datafast)');
+        expect(document.body.textContent).not.toContain('Pago: datafast');
+      });
+
+      await clickActionByText(document.body, 'Copiar');
+
+      await waitForExpectation(() => {
+        expect(
+          Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).some(
+            (item) => (item.textContent ?? '').trim() === 'Copiar resumen',
+          ),
+        ).toBe(true);
+      });
+
+      await act(async () => {
+        const copySummaryMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'Copiar resumen',
+        );
+        copySummaryMenuItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining('Pago: Tarjeta (Datafast)'));
+        expect(writeTextMock).not.toHaveBeenCalledWith(expect.stringContaining('Pago: datafast'));
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits per-row currency captions when the total already carries the currency', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

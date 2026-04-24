@@ -533,7 +533,7 @@ export default function MarketplaceOrdersPage() {
       `Pedido: ${order.moOrderId}`,
       `Estado: ${statusLabel(order.moStatus)}`,
       `Total: ${order.moTotalDisplay} (${order.moCurrency.toUpperCase()})`,
-      `Pago: ${order.moPaymentProvider ?? '—'}`,
+      `Pago: ${formatPaymentProvider(order.moPaymentProvider)}`,
       `Comprador: ${order.moBuyerName} (${order.moBuyerEmail ?? 'sin email'})`,
       `Items: ${summarizeItems(order.moItems)}`,
     ];
@@ -1091,7 +1091,7 @@ export default function MarketplaceOrdersPage() {
                           <strong>Creado:</strong> {formatDate(selectedOrder.moCreatedAt)}
                         </Typography>
                         <Typography variant="body2">
-                          <strong>Pago:</strong> {selectedOrder.moPaymentProvider ?? '—'}
+                          <strong>Pago:</strong> {formatPaymentProvider(selectedOrder.moPaymentProvider)}
                         </Typography>
                         {selectedOrder.moPaypalOrderId && (
                           <Typography variant="caption" color="text.secondary">
