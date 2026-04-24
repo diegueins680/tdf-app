@@ -257,7 +257,7 @@ inventoryServer user =
       nameUpdate <- either throwError pure (normalizeAssetNameUpdate (uName req))
       categoryUpdate <- either throwError pure (normalizeAssetCategoryUpdate (uCategory req))
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
-      let notesUpdate = normalizeAssetNotesUpdate (uNotes req)
+      notesUpdate <- either throwError pure (normalizeAssetNotesUpdate (uNotes req))
       photoUrlUpdate <- either throwError pure (validateAssetPhotoUrlUpdate (uPhotoUrl req))
       let updates = catMaybes
             [ (AssetName =.) <$> nameUpdate
@@ -1360,10 +1360,7 @@ normalizeOptionalTextFieldUpdate = fmap normalizeOptionalTextField
 
 normalizeAssetName :: Text -> Either ServerError Text
 normalizeAssetName rawName =
-  let trimmed = T.strip rawName
-  in if T.null trimmed
-       then Left err400 { errBody = "Asset name is required" }
-       else Right trimmed
+  validateRequiredAssetTextField "Asset name" assetNameMaxLength rawName
 
 normalizeAssetNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeAssetNameUpdate Nothing = Right Nothing
@@ -1372,15 +1369,36 @@ normalizeAssetNameUpdate (Just rawName) =
 
 normalizeAssetCategory :: Text -> Either ServerError Text
 normalizeAssetCategory rawCategory =
-  let trimmed = T.strip rawCategory
-  in if T.null trimmed
-       then Left err400 { errBody = "Asset category is required" }
-       else Right trimmed
+  validateRequiredAssetTextField "Asset category" assetCategoryMaxLength rawCategory
 
 normalizeAssetCategoryUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeAssetCategoryUpdate Nothing = Right Nothing
 normalizeAssetCategoryUpdate (Just rawCategory) =
   Just <$> normalizeAssetCategory rawCategory
+
+validateRequiredAssetTextField :: Text -> Int -> Text -> Either ServerError Text
+validateRequiredAssetTextField fieldName maxLength rawValue =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed
+      then Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required")) }
+      else if T.length trimmed > maxLength
+        then Left err400
+          { errBody =
+              BL.fromStrict
+                (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
+          }
+        else if T.any isControl trimmed
+          then Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+            }
+          else Right trimmed
+
+assetNameMaxLength :: Int
+assetNameMaxLength = 160
+
+assetCategoryMaxLength :: Int
+assetCategoryMaxLength = 120
 
 validateAssetPhotoUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAssetPhotoUrl Nothing = Right Nothing
@@ -1771,10 +1789,13 @@ normalizeOptionalTextField (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-normalizeAssetNotesUpdate :: Maybe Text -> Maybe (Maybe Text)
-normalizeAssetNotesUpdate Nothing = Nothing
+normalizeAssetNotesUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
+normalizeAssetNotesUpdate Nothing = Right Nothing
 normalizeAssetNotesUpdate (Just rawNotes) =
-  Just (normalizeOptionalTextField (Just rawNotes))
+  case normalizeOptionalTextField (Just rawNotes) of
+    Nothing -> Right (Just Nothing)
+    Just _ ->
+      Just <$> validateInventoryNotesField "Asset notes" (Just rawNotes)
 
 normalizeAssetCheckinFields :: AssetCheckinRequest -> Either ServerError (Maybe Text, Maybe Text, Maybe Text)
 normalizeAssetCheckinFields AssetCheckinRequest{..} =

@@ -431,6 +431,26 @@ spec = do
       assertInvalid "Asset category is required" (normalizeAssetCategory "   ")
       assertInvalid "Asset category is required" (normalizeAssetCategoryUpdate (Just "   "))
 
+    it "rejects oversized or control-character asset labels before they can corrupt inventory metadata" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid asset label error, got " <> show value)
+      assertInvalid
+        "Asset name must be 160 characters or fewer"
+        (normalizeAssetName (T.replicate 161 "a"))
+      assertInvalid
+        "Asset name must not contain control characters"
+        (normalizeAssetName "Roland\nJuno-106")
+      assertInvalid
+        "Asset category must be 120 characters or fewer"
+        (normalizeAssetCategory (T.replicate 121 "a"))
+      assertInvalid
+        "Asset category must not contain control characters"
+        (normalizeAssetCategory "Synth\NULLead")
+
   describe "validateAssetPhotoUrl" $ do
     it "treats omitted or blank asset photo inputs as absent and canonicalizes supported URL shapes" $ do
       validateAssetPhotoUrl Nothing `shouldBe` Right Nothing
@@ -480,10 +500,24 @@ spec = do
 
   describe "normalizeAssetNotesUpdate" $ do
     it "preserves omitted notes, trims meaningful updates, and maps blanks to an explicit clear" $ do
-      normalizeAssetNotesUpdate Nothing `shouldBe` Nothing
+      normalizeAssetNotesUpdate Nothing `shouldBe` Right Nothing
       normalizeAssetNotesUpdate (Just "  Analog poly synth  ")
-        `shouldBe` Just (Just "Analog poly synth")
-      normalizeAssetNotesUpdate (Just "   ") `shouldBe` Just Nothing
+        `shouldBe` Right (Just (Just "Analog poly synth"))
+      normalizeAssetNotesUpdate (Just "   ") `shouldBe` Right (Just Nothing)
+
+    it "rejects oversized or unsafe-control notes instead of silently persisting opaque asset text" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid asset notes error, got " <> show value)
+      assertInvalid
+        "Asset notes must be 1000 characters or fewer"
+        (normalizeAssetNotesUpdate (Just (T.replicate 1001 "a")))
+      assertInvalid
+        "Asset notes must not contain control characters other than tabs or line breaks"
+        (normalizeAssetNotesUpdate (Just "Service notes\NULhere"))
 
   describe "normalizeRoomName" $ do
     it "trims and collapses meaningful room names on create and update" $ do
@@ -996,6 +1030,33 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "No active checkout"
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+
+  describe "patchAssetH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000908"
+        request =
+          AssetUpdate
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            (Just "Service notes\NULhere")
+            Nothing
+
+    it "rejects invalid notes on asset patch instead of persisting unreadable inventory metadata" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Asset notes must not contain control characters other than tabs or line breaks"
+        Right value ->
+          expectationFailure ("Expected invalid asset patch notes to fail, got " <> show value)
 
   describe "deleteAssetH" $ do
     let deletableAssetId = "00000000-0000-0000-0000-000000000903"
@@ -2158,6 +2219,23 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runInventoryPatchHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetUpdate
+  -> IO (Either ServerError AssetDTO)
+runInventoryPatchHandler setup rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory patch tests"
+            }
+    liftIO $ runExceptT (runReaderT (patchAssetHandlerFor inventoryUser rawId req) env)
+
 runInventoryDeleteHandler
   :: SqlPersistT IO ()
   -> Text
@@ -2318,6 +2396,22 @@ checkinHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           checkinAsset
+
+patchAssetHandlerFor :: AuthedUser -> Text -> AssetUpdate -> InventoryTestM AssetDTO
+patchAssetHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          patchAsset
 
 deleteHandlerFor :: AuthedUser -> Text -> InventoryTestM ()
 deleteHandlerFor user =
