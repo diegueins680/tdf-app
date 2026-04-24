@@ -741,7 +741,7 @@ export default function AdminUsersPage() {
     showSingleUserGuidance && !includeInactive && !usersQuery.isLoading && !usersQuery.error;
   const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
   const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
-    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
+    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && showSearchField);
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);

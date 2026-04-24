@@ -2301,6 +2301,7 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(container.textContent).toContain('Inactivos incluidos');
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(
           buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),
         ).toBe('Ver inactivo: Ada Inactiva');
