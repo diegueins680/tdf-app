@@ -151,6 +151,8 @@ const STATUS_OPTIONS = [
   { value: 'OutForMaintenance', label: 'Mantenimiento' },
   { value: 'Retired', label: 'Retirados' },
 ];
+const SINGLE_ASSET_SETUP_GUIDANCE =
+  'Solo hay un asset por ahora. Usa prestamo/devolucion o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.';
 
 export default function LabelAssetsPage() {
   const qc = useQueryClient();
@@ -515,7 +517,8 @@ export default function LabelAssetsPage() {
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
-  const showFilterCard = assetsQuery.isLoading || assets.length > 0;
+  const showSingleAssetSetupGuidance = !assetsQuery.isLoading && assets.length === 1 && filtersActiveCount === 0;
+  const showFilterCard = assetsQuery.isLoading || assets.length > 1 || filtersActiveCount > 0;
   const showRefreshAction = assetsQuery.isError || assets.length > 0;
 
   const handleOpenNew = () => {
@@ -837,9 +840,14 @@ export default function LabelAssetsPage() {
             </Stack>
           )}
           {!assetsQuery.isLoading && assets.length > 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-              Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar,
-              ver el QR, revisar el historial o eliminar el asset.
+            <Typography
+              variant={showSingleAssetSetupGuidance ? 'body2' : 'caption'}
+              color="text.secondary"
+              sx={{ display: 'block', mb: 1.5 }}
+            >
+              {showSingleAssetSetupGuidance
+                ? SINGLE_ASSET_SETUP_GUIDANCE
+                : 'Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.'}
             </Typography>
           )}
           {showFilteredEmptyState ? (

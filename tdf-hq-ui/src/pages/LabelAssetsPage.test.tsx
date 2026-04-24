@@ -260,6 +260,32 @@ describe('LabelAssetsPage', () => {
     }
   });
 
+  it('replaces single-asset filter chrome with one first-asset helper line', async () => {
+    listAssetsMock.mockResolvedValue([buildAsset()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Solo hay un asset por ahora. Usa prestamo/devolucion o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.',
+        );
+        expect(countLabelsByText(container, 'Buscar assets')).toBe(0);
+        expect(countLabelsByText(container, 'Categoría')).toBe(0);
+        expect(container.querySelectorAll('[aria-label^="Filtrar assets por estado "]')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Mostrando 1 de 1 assets');
+        expect(container.textContent).not.toContain('Vista actual');
+        expect(queryButtonByText(container, 'Limpiar filtros')).toBeNull();
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Sintetizador Uno');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('renders one movement action per asset and picks the relevant action from status', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
