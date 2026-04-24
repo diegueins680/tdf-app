@@ -141,6 +141,7 @@ import TDF.ServerExtra (
     validateSocialReplyExternalId,
     socialReplyOutcomeFields,
     validateSocialReplySenderId,
+    validateInventoryAssetUploadSize,
     validateInventoryPageParams,
     validatePaymentAmountCents,
     validatePaymentPaidAt,
@@ -513,6 +514,24 @@ spec = do
           []
           [(mkAssetUploadFile "file.jpg") { fdInputName = "photo" }]
         )
+
+  describe "validateInventoryAssetUploadSize" $ do
+    it "accepts non-empty inventory images up to the managed storage limit" $ do
+      validateInventoryAssetUploadSize 1 `shouldBe` Right ()
+      validateInventoryAssetUploadSize (10 * 1024 * 1024) `shouldBe` Right ()
+
+    it "rejects empty or oversized inventory images before proof uploads hit storage" $ do
+      let assertInvalid rawSize expectedMessage =
+            case validateInventoryAssetUploadSize rawSize of
+              Left serverErr -> do
+                errHTTPCode serverErr `shouldBe` 400
+                BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid asset upload size to be rejected, got " <> show value)
+
+      assertInvalid (-1) "asset upload size is invalid"
+      assertInvalid 0 "asset upload must not be empty"
+      assertInvalid (10 * 1024 * 1024 + 1) "asset upload must be 10 MB or smaller"
 
   describe "inventory asset query filtering" $ do
     it "normalizes missing or blank queries to no filter" $ do

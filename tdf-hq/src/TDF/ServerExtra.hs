@@ -38,7 +38,7 @@ import qualified Data.Aeson                as A
 import           Data.Int                   (Int64)
 import qualified Data.Scientific            as Sci
 import           Numeric                    (showHex)
-import           System.Directory           (copyFile, createDirectoryIfMissing)
+import           System.Directory           (copyFile, createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import           Database.Persist        hiding (Active)
@@ -1188,6 +1188,7 @@ toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
 storeAssetUpload
   :: ( MonadReader Env m
      , MonadIO m
+     , MonadError ServerError m
      )
   => AssetUploadForm
   -> m AssetUploadDTO
@@ -1204,6 +1205,8 @@ storeAssetUpload AssetUploadForm{..} = do
       relPath = "inventory/" <> storedName
       targetDir = assetsRoot </> "inventory"
       targetPath = targetDir </> T.unpack storedName
+  fileSize <- liftIO (getFileSize (fdPayload aufFile))
+  either throwError pure (validateInventoryAssetUploadSize fileSize)
   liftIO $ createDirectoryIfMissing True targetDir
   liftIO $ copyFile (fdPayload aufFile) targetPath
   let publicUrl = buildAssetUrl assetsBase relPath
@@ -1212,6 +1215,20 @@ storeAssetUpload AssetUploadForm{..} = do
     , auPath = relPath
     , auPublicUrl = publicUrl
     }
+
+maxInventoryAssetUploadBytes :: Integer
+maxInventoryAssetUploadBytes = 10 * 1024 * 1024
+
+validateInventoryAssetUploadSize :: Integer -> Either ServerError ()
+validateInventoryAssetUploadSize size
+  | size < 0 =
+      Left err400 { errBody = "asset upload size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "asset upload must not be empty" }
+  | size > maxInventoryAssetUploadBytes =
+      Left err400 { errBody = "asset upload must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =
