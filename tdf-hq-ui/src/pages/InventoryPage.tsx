@@ -34,6 +34,7 @@ import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import {
+  formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
   getCheckoutDispositionLabel,
 } from '../utils/inventoryCheckout';
@@ -119,8 +120,12 @@ export default function InventoryPage() {
     coTargetRoom: '',
     coTargetSession: '',
     coDisposition: 'loan',
+    coTermsAndConditions: '',
     coHolderEmail: '',
     coHolderPhone: '',
+    coPaymentType: '',
+    coPaymentInstallments: null,
+    coPaymentReference: '',
     coPhotoUrl: '',
     coConditionOut: '',
     coNotes: '',
@@ -190,8 +195,12 @@ export default function InventoryPage() {
       coTargetRoom: '',
       coTargetSession: '',
       coDisposition: 'loan',
+      coTermsAndConditions: '',
       coHolderEmail: '',
       coHolderPhone: '',
+      coPaymentType: '',
+      coPaymentInstallments: null,
+      coPaymentReference: '',
       coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',
@@ -424,6 +433,18 @@ export default function InventoryPage() {
                         Salió: {formatDate(singleAsset.currentCheckoutAt)}
                       </Typography>
                     )}
+                    {formatCheckoutPaymentSummary(
+                      singleAsset.currentCheckoutPaymentType,
+                      singleAsset.currentCheckoutPaymentInstallments,
+                    ) && (
+                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                        Pago:{' '}
+                        {formatCheckoutPaymentSummary(
+                          singleAsset.currentCheckoutPaymentType,
+                          singleAsset.currentCheckoutPaymentInstallments,
+                        )}
+                      </Typography>
+                    )}
                   </>
                 )}
               </Stack>
@@ -522,6 +543,18 @@ export default function InventoryPage() {
                                 {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
                                   <Typography variant="caption" color="text.secondary">
                                     {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                  </Typography>
+                                )}
+                                {formatCheckoutPaymentSummary(
+                                  asset.currentCheckoutPaymentType,
+                                  asset.currentCheckoutPaymentInstallments,
+                                ) && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Pago:{' '}
+                                    {formatCheckoutPaymentSummary(
+                                      asset.currentCheckoutPaymentType,
+                                      asset.currentCheckoutPaymentInstallments,
+                                    )}
                                   </Typography>
                                 )}
                               </Stack>
@@ -699,7 +732,7 @@ export default function InventoryPage() {
                     <TableCell>Devuelto</TableCell>
                     <TableCell>Destino</TableCell>
                     <TableCell>Estado visual</TableCell>
-                    <TableCell>Notas</TableCell>
+                    <TableCell>Acuerdo</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -740,7 +773,31 @@ export default function InventoryPage() {
                           </Stack>
                         ) : '—'}
                       </TableCell>
-                      <TableCell>{h.notes ?? '—'}</TableCell>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          {h.dueAt && (
+                            <Typography variant="caption" color="text.secondary">
+                              Retorno pactado: {formatDate(h.dueAt)}
+                            </Typography>
+                          )}
+                          {formatCheckoutPaymentSummary(h.paymentType, h.paymentInstallments) && (
+                            <Typography variant="caption" color="text.secondary">
+                              Pago: {formatCheckoutPaymentSummary(h.paymentType, h.paymentInstallments)}
+                            </Typography>
+                          )}
+                          {h.paymentReference && (
+                            <Typography variant="caption" color="text.secondary">
+                              Referencia: {h.paymentReference}
+                            </Typography>
+                          )}
+                          {h.termsAndConditions && (
+                            <Typography variant="caption" color="text.secondary">
+                              Términos: {h.termsAndConditions}
+                            </Typography>
+                          )}
+                          <Typography variant="body2">{h.notes ?? '—'}</Typography>
+                        </Stack>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

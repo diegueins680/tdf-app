@@ -15,9 +15,13 @@ import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types
 import type { AssetCheckinRequest, AssetCheckoutRequest } from '../api/inventory';
 import {
   CHECKOUT_DISPOSITION_OPTIONS,
+  CHECKOUT_PAYMENT_TYPE_OPTIONS,
   CHECKOUT_TARGET_OPTIONS,
+  checkoutSupportsPaymentDetails,
+  checkoutSupportsReturnDate,
   formatCheckoutTargetDisplay,
   getCheckoutDispositionLabel,
+  formatCheckoutPaymentSummary,
 } from '../utils/inventoryCheckout';
 
 export function CheckoutDialog({
@@ -57,6 +61,8 @@ export function CheckoutDialog({
   const targetKind = form.coTargetKind ?? 'party';
   const selectedRoom = roomOptions?.find((room) => room.roomId === form.coTargetRoom) ?? null;
   const activeCheckout = currentCheckout && !currentCheckout.returnedAt ? currentCheckout : null;
+  const supportsReturnDate = checkoutSupportsReturnDate(form.coDisposition);
+  const supportsPaymentDetails = checkoutSupportsPaymentDetails(form.coDisposition);
   const formatDue = (value?: string | null) => {
     if (!value) return null;
     const d = new Date(value);
@@ -68,7 +74,12 @@ export function CheckoutDialog({
       `Equipo: ${asset.name}`,
       `Movimiento: ${getCheckoutDispositionLabel(form.coDisposition)}`,
       `Destino: ${form.coTargetKind ?? 'party'} ${form.coTargetParty ?? form.coTargetRoom ?? ''}`.trim(),
-      form.coDueAt ? `Vence: ${formatDue(form.coDueAt) ?? form.coDueAt}` : null,
+      supportsReturnDate && form.coDueAt ? `Retorno pactado: ${formatDue(form.coDueAt) ?? form.coDueAt}` : null,
+      formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)
+        ? `Pago: ${formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)}`
+        : null,
+      form.coPaymentReference ? `Referencia: ${form.coPaymentReference}` : null,
+      form.coTermsAndConditions ? `Términos: ${form.coTermsAndConditions}` : null,
       form.coNotes ? `Notas: ${form.coNotes}` : null,
     ].filter(Boolean);
     try {
@@ -92,7 +103,10 @@ export function CheckoutDialog({
               roomOptions ? new Map(roomOptions.map((room) => [room.roomId, room])) : undefined,
             )}.{' '}
             Tipo: {getCheckoutDispositionLabel(activeCheckout?.disposition)}.{' '}
-            {activeCheckout?.dueAt ? `Vence: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
+            {activeCheckout?.dueAt ? `Retorno pactado: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
+            {formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)
+              ? ` Pago: ${formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)}.`
+              : ''}
             {' '}Registra el check-in antes de asignarlo de nuevo.
           </Alert>
         )}
@@ -113,7 +127,20 @@ export function CheckoutDialog({
             select
             label="Tipo de movimiento"
             value={form.coDisposition ?? 'loan'}
-            onChange={(e) => onFormChange({ ...form, coDisposition: e.target.value })}
+            onChange={(e) =>
+              onFormChange({
+                ...form,
+                coDisposition: e.target.value,
+                coDueAt: checkoutSupportsReturnDate(e.target.value) ? (form.coDueAt ?? '') : '',
+                coPaymentType: checkoutSupportsPaymentDetails(e.target.value) ? (form.coPaymentType ?? '') : '',
+                coPaymentInstallments: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentInstallments ?? null)
+                  : null,
+                coPaymentReference: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentReference ?? '')
+                  : '',
+              })
+            }
           >
             {CHECKOUT_DISPOSITION_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
@@ -201,37 +228,85 @@ export function CheckoutDialog({
             value={form.coHolderPhone ?? ''}
             onChange={(e) => onFormChange({ ...form, coHolderPhone: e.target.value })}
           />
+          {supportsReturnDate && (
+            <>
+              <TextField
+                label="Fecha pactada de retorno"
+                type="datetime-local"
+                value={form.coDueAt ?? ''}
+                onChange={(e) => onFormChange({ ...form, coDueAt: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {[
+                  { label: '+24h', hours: 24 },
+                  { label: '+72h', hours: 72 },
+                  { label: 'Fin de día', hours: null },
+                ].map((opt) => (
+                  <Button
+                    key={opt.label}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                      const base = new Date();
+                      if (opt.hours !== null) {
+                        base.setHours(base.getHours() + opt.hours);
+                      } else {
+                        base.setHours(23, 30, 0, 0);
+                      }
+                      onFormChange({ ...form, coDueAt: base.toISOString().slice(0, 16) });
+                    }}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </Stack>
+            </>
+          )}
           <TextField
-            label="Fecha estimada de retorno"
-            type="datetime-local"
-            value={form.coDueAt ?? ''}
-            onChange={(e) => onFormChange({ ...form, coDueAt: e.target.value })}
-            InputLabelProps={{ shrink: true }}
+            label="Términos y condiciones"
+            value={form.coTermsAndConditions ?? ''}
+            onChange={(e) => onFormChange({ ...form, coTermsAndConditions: e.target.value })}
+            multiline
+            minRows={3}
+            helperText="Usa este campo para cláusulas de préstamo, venta, alquiler o responsabilidad."
           />
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            {[
-              { label: '+24h', hours: 24 },
-              { label: '+72h', hours: 72 },
-              { label: 'Fin de día', hours: null },
-            ].map((opt) => (
-              <Button
-                key={opt.label}
-                size="small"
-                variant="outlined"
-                onClick={() => {
-                  const base = new Date();
-                  if (opt.hours !== null) {
-                    base.setHours(base.getHours() + opt.hours);
-                  } else {
-                    base.setHours(23, 30, 0, 0);
-                  }
-                  onFormChange({ ...form, coDueAt: base.toISOString().slice(0, 16) });
-                }}
+          {supportsPaymentDetails && (
+            <>
+              <TextField
+                select
+                label="Tipo de pago"
+                value={form.coPaymentType ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentType: e.target.value })}
               >
-                {opt.label}
-              </Button>
-            ))}
-          </Stack>
+                <MenuItem value="">Sin registrar</MenuItem>
+                {CHECKOUT_PAYMENT_TYPE_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Número de cuotas"
+                type="number"
+                value={form.coPaymentInstallments ?? ''}
+                onChange={(e) =>
+                  onFormChange({
+                    ...form,
+                    coPaymentInstallments: e.target.value === '' ? null : Number(e.target.value),
+                  })
+                }
+                inputProps={{ min: 1, max: 60, step: 1 }}
+                helperText="Déjalo vacío si el pago no aplica o no se pactó en cuotas."
+              />
+              <TextField
+                label="Referencia de pago"
+                value={form.coPaymentReference ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentReference: e.target.value })}
+                helperText="Ej.: comprobante, transferencia, contrato o promesa de pago."
+              />
+            </>
+          )}
           <TextField
             label="Condición al salir"
             value={form.coConditionOut ?? ''}
