@@ -1254,6 +1254,56 @@ spec = do
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
 
+    it "rejects sale check-ins so retired ownership records cannot be silently closed" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Buyer"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/sale-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Factura entregada"
+              })
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned by buyer") Nothing (Just "inventory/return.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Sale checkouts cannot be checked in"
+        Right value ->
+          expectationFailure ("Expected sale asset check-in to be rejected, got " <> show value)
+
     it "preserves checkout notes by appending labeled check-in notes instead of overwriting custody context" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
@@ -1884,6 +1934,57 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Public QR check-in requires ciConditionIn"
         Right value ->
           expectationFailure ("Expected public QR check-in without condition to be rejected, got " <> show value)
+
+    it "rejects public QR sale check-ins so sold assets stay query-only even on direct API calls" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Buyer"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/sale-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Factura entregada"
+              })
+        canonicalToken
+        (AssetCheckinRequest (Just "Returned by buyer") (Just "Should stay sold") (Just "inventory/return.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Sale checkouts cannot be checked in"
+        Right value ->
+          expectationFailure ("Expected public QR sale check-in to be rejected, got " <> show value)
 
     it "requires a return photo on public QR check-ins so anonymous returns keep visual proof" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

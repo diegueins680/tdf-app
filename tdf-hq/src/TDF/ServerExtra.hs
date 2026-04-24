@@ -516,6 +516,7 @@ performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   case mOpen of
     Nothing -> throwError err409 { errBody = "Asset is not currently checked out" }
     Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
+      either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
       validateOpenCheckout checkoutEnt
       notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
       recEnt <- withPool $ do
@@ -871,6 +872,12 @@ validateCheckoutDispositionFields
 validateCheckoutDispositionFields Sale (Just _) =
   Left err400 { errBody = "dueAt is not allowed for sale checkout" }
 validateCheckoutDispositionFields _ _ =
+  Right ()
+
+validateCheckinDisposition :: CheckoutDisposition -> Either ServerError ()
+validateCheckinDisposition Sale =
+  Left err409 { errBody = "Sale checkouts cannot be checked in" }
+validateCheckinDisposition _ =
   Right ()
 
 checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
