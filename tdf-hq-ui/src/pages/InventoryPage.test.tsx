@@ -499,12 +499,13 @@ describe('InventoryPage', () => {
         );
         expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola ubicación: Sala A.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(2);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(2);
       });
     } finally {
       await cleanup();
@@ -531,6 +532,7 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         const text = secondContainer.textContent ?? '';
         expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(hasTableHeader(secondContainer, 'Estado')).toBe(false);
         expect(hasTableHeader(secondContainer, 'Ubicación')).toBe(true);
         expect(text).toContain('Sala A');
         expect(text).toContain('Sala B');
@@ -607,6 +609,81 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('summarizes one shared status once and restores the status column when the visible inventory mixes states again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo estado: Disponible. La columna volverá cuando esta vista mezcle estados distintos.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo estado: Disponible.')).toBe(1);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando un solo estado:');
+        expect(hasTableHeader(secondContainer, 'Estado')).toBe(true);
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('hides empty current-custody columns until a checked-out asset adds real context', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
@@ -629,7 +706,7 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
-        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
         expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
         expect(hasTableHeader(container, 'Salida')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(true);
@@ -640,8 +717,8 @@ describe('InventoryPage', () => {
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
       });
     } finally {
       await cleanup();

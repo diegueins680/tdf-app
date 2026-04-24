@@ -69,6 +69,23 @@ function getInventoryStatusLabel(status: string) {
   return status.trim() || 'Estado desconocido';
 }
 
+function getSharedInventoryStatusSummary(assets: readonly AssetDTO[]) {
+  if (assets.length < 2) return '';
+
+  const normalizedStatuses = assets
+    .map((asset) => asset.status.trim())
+    .filter((status) => status !== '');
+
+  if (normalizedStatuses.length !== assets.length) return '';
+
+  const firstStatus = normalizedStatuses[0]!;
+  const firstComparableStatus = firstStatus.toLocaleLowerCase('es');
+
+  return normalizedStatuses.every((status) => status.toLocaleLowerCase('es') === firstComparableStatus)
+    ? getInventoryStatusLabel(firstStatus)
+    : '';
+}
+
 function normalizeInventoryField(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -382,6 +399,7 @@ export default function InventoryPage() {
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
+  const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
   const showSingleAssetNoMovementGuidance = Boolean(
@@ -390,6 +408,7 @@ export default function InventoryPage() {
     && !singleAssetMovementState.canCheckout
     && !singleAssetMovementState.canCheckin,
   );
+  const showStatusColumn = sharedStatusSummary === '';
   const showLocationColumn = sharedLocationSummary === '' && grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showCurrentCheckoutColumns = grouped.some((asset) => {
     const movementState = getInventoryMovementState(asset.status);
@@ -576,6 +595,11 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
+              {sharedStatusSummary && (
+                <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                  {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+                </Typography>
+              )}
               {sharedCategorySummary && (
                 <Typography variant="caption" color="rgba(226,232,240,0.68)">
                   {`Mostrando una sola categoría: ${sharedCategorySummary}. La categoría volverá cuando esta vista mezcle categorías distintas.`}
@@ -595,7 +619,7 @@ export default function InventoryPage() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Equipo</TableCell>
-                    <TableCell>Estado</TableCell>
+                    {showStatusColumn && <TableCell>Estado</TableCell>}
                     {showCurrentCheckoutColumns && <TableCell>Tenencia actual</TableCell>}
                     {showCurrentCheckoutColumns && <TableCell>Salida</TableCell>}
                     {showLocationColumn && <TableCell>Ubicación</TableCell>}
@@ -623,7 +647,7 @@ export default function InventoryPage() {
                             </Typography>
                           </Stack>
                         </TableCell>
-                        <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
+                        {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}
                         {showCurrentCheckoutColumns && (
                           <TableCell>
                             {asset.currentCheckoutTarget ? (
