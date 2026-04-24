@@ -355,7 +355,7 @@ inventoryPublicServer =
 
     checkinByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
-      performCheckin assetEntity req
+      performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
 
     uploadByQrToken token uploadForm = do
       _ <- loadAssetEntityByQrToken token
@@ -472,13 +472,26 @@ performCheckin
   => Entity Asset
   -> AssetCheckinRequest
   -> m AssetCheckoutDTO
-performCheckin (Entity assetKey _) req = do
+performCheckin =
+  performCheckinWith (\_ -> pure ())
+
+performCheckinWith
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => (Entity AssetCheckout -> m ())
+  -> Entity Asset
+  -> AssetCheckinRequest
+  -> m AssetCheckoutDTO
+performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   now <- liftIO getCurrentTime
   (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
   mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
   case mOpen of
     Nothing -> throwError err404 { errBody = "No active checkout" }
-    Just (Entity checkoutId checkoutRecord) -> do
+    Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
+      validateOpenCheckout checkoutEnt
       recEnt <- withPool $ do
         let updates = catMaybes
               [ Just (AssetCheckoutReturnedAt =. Just now)
@@ -490,6 +503,16 @@ performCheckin (Entity assetKey _) req = do
         update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
         getJustEntity checkoutId
       pure (toCheckoutDTO recEnt)
+
+ensurePublicQrCheckinAllowed
+  :: MonadError ServerError m
+  => Entity AssetCheckout
+  -> m ()
+ensurePublicQrCheckinAllowed (Entity _ checkoutRecord)
+  | assetCheckoutTargetKind checkoutRecord == TargetParty =
+      pure ()
+  | otherwise =
+      throwError err409 { errBody = "Public QR check-in only supports party checkouts" }
 
 data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   { ncrTargetKind :: CheckoutTarget

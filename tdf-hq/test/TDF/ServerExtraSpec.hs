@@ -1186,6 +1186,60 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR room checkout to be rejected, got " <> show value)
 
+  describe "inventoryPublicServer checkinByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000910"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcbb"
+        checkoutIdText = "00000000-0000-0000-0000-000000000915"
+        roomIdText = "00000000-0000-0000-0000-000000000042"
+        request = AssetCheckinRequest (Just "Returned OK") Nothing Nothing
+
+    it "rejects public QR check-ins for internal room or session movements" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      roomKey <- case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in room fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetRoom
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Nothing
+              , ME.assetCheckoutTargetRoomId = Just roomKey
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Public QR check-in only supports party checkouts"
+        Right value ->
+          expectationFailure ("Expected public QR room check-in to be rejected, got " <> show value)
+
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
       validateSessionStatusInput Nothing `shouldBe` Right Nothing
@@ -2305,6 +2359,23 @@ runInventoryPublicCheckoutHandler setup token req =
             }
     liftIO $ runExceptT (runReaderT (publicCheckoutHandlerFor token req) env)
 
+runInventoryPublicCheckinHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetCheckinRequest
+  -> IO (Either ServerError AssetCheckoutDTO)
+runInventoryPublicCheckinHandler setup token req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in public inventory check-in tests"
+            }
+    liftIO $ runExceptT (runReaderT (publicCheckinHandlerFor token req) env)
+
 runRoomCreateHandler
   :: SqlPersistT IO ()
   -> RoomCreate
@@ -2469,6 +2540,15 @@ publicCheckoutHandlerFor =
       :<|> _checkinByQr
       :<|> _uploadByQr ->
           checkoutByQr
+
+publicCheckinHandlerFor :: Text -> AssetCheckinRequest -> InventoryTestM AssetCheckoutDTO
+publicCheckinHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    _loadByQr
+      :<|> _checkoutByQr
+      :<|> checkinByQr
+      :<|> _uploadByQr ->
+          checkinByQr
 
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =
