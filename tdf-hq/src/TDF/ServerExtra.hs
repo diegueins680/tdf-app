@@ -590,25 +590,48 @@ performCheckinWith
 performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   now <- liftIO getCurrentTime
   (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
-  mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-  case mOpen of
-    Nothing -> throwError err409 { errBody = "Asset is not currently checked out" }
-    Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
-      either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
-      validateOpenCheckout checkoutEnt
-      either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
-      notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
-      recEnt <- withPool $ do
-        let updates = catMaybes
-              [ Just (AssetCheckoutReturnedAt =. Just now)
-              , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
-              , (AssetCheckoutNotes =.) <$> notesUpdate
-              , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
-              ]
-        update checkoutId updates
-        update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
-        getJustEntity checkoutId
-      pure (toCheckoutDTO recEnt)
+  checkoutEnt@(Entity checkoutId checkoutRecord) <- loadSingleOpenCheckout assetKey
+  either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
+  validateOpenCheckout checkoutEnt
+  either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
+  notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
+  recEnt <- withPool $ do
+    let updates = catMaybes
+          [ Just (AssetCheckoutReturnedAt =. Just now)
+          , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
+          , (AssetCheckoutNotes =.) <$> notesUpdate
+          , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
+          ]
+    update checkoutId updates
+    update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
+    getJustEntity checkoutId
+  pure (toCheckoutDTO recEnt)
+
+loadSingleOpenCheckout
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Key Asset
+  -> m (Entity AssetCheckout)
+loadSingleOpenCheckout assetKey = do
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      throwError err409 { errBody = "Asset is not currently checked out" }
+    [checkoutEnt] ->
+      pure checkoutEnt
+    _ ->
+      throwError err409
+        { errBody = "Asset has multiple active checkouts; resolve the inventory state before check-in"
+        }
 
 ensurePublicQrCheckinAllowed
   :: MonadError ServerError m
