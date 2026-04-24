@@ -259,6 +259,9 @@ export default function OrdersPage() {
     [rows],
   );
   const showRoomsColumn = sharedRoomsSummary === '';
+  const combinedSharedContextSummary = sharedServiceSummary && sharedRoomsSummary
+    ? `Mostrando un solo servicio: ${sharedServiceSummary} y una sola sala: ${sharedRoomsSummary}. Las columnas volverán cuando esta vista mezcle servicios o salas distintas.`
+    : '';
   const visibleTableColumnCount = 4
     + (showServiceColumn ? 1 : 0)
     + (showRoomsColumn ? 1 : 0)
@@ -443,17 +446,25 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {(sharedServiceSummary || sharedRoomsSummary) && (
+            {(combinedSharedContextSummary || sharedServiceSummary || sharedRoomsSummary) && (
               <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
-                {sharedServiceSummary && (
+                {combinedSharedContextSummary ? (
                   <Typography variant="caption" color="text.secondary">
-                    {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                    {combinedSharedContextSummary}
                   </Typography>
-                )}
-                {sharedRoomsSummary && (
-                  <Typography variant="caption" color="text.secondary">
-                    {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
-                  </Typography>
+                ) : (
+                  <>
+                    {sharedServiceSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                      </Typography>
+                    )}
+                    {sharedRoomsSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
+                      </Typography>
+                    )}
+                  </>
                 )}
               </Stack>
             )}

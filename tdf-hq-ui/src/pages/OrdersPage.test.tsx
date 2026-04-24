@@ -516,6 +516,57 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('combines shared service and room context into one helper line when both columns are unnecessary', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 171,
+        title: 'Voz principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 172,
+        title: 'Coros finales',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-2', brRoomName: 'Nina', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo servicio: Mixing y una sola sala: Studio A. Las columnas volverán cuando esta vista mezcle servicios o salas distintas.',
+        );
+        expect(text).not.toContain('Mostrando un solo servicio: Mixing. La columna volverá cuando esta vista mezcle servicios distintos.');
+        expect(text).not.toContain('Mostrando una sola sala: Studio A. La columna volverá cuando esta vista mezcle salas distintas.');
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo servicio: Mixing y una sola sala: Studio A.')).toBe(1);
+        expect(hasTableHeader(container, 'Servicio')).toBe(false);
+        expect(hasTableHeader(container, 'Salas')).toBe(false);
+        expect(text).toContain('Booking #171');
+        expect(text).toContain('Booking #172');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps pagination hidden until the sessions list actually needs a second page and localizes it when it does', async () => {
     listBookingsMock.mockResolvedValue(
       Array.from({ length: 11 }, (_, index) => ({
