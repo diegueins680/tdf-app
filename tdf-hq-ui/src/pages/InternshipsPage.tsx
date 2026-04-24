@@ -153,6 +153,10 @@ const PERSONAL_CHECKLIST_TODOS = [
   '[Prácticas] Registrar aprendizaje clave',
   '[Prácticas] Preparar demo day',
 ];
+const emptyAdminHoursMessage =
+  'Todavía no hay registros de horas en esta vista. Cuando llegue el primer clock-in, aquí aparecerán entrada, salida y horas.';
+const emptySelfHoursMessage =
+  'Todavía no hay registros de horas. Usa Clock-in para iniciar tu primera jornada; luego aquí verás entrada, salida y horas.';
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—';
@@ -569,6 +573,8 @@ export default function InternshipsPage() {
   const totalHoursSummaryLabel = showReadOnlyAdminHoursView
     ? `${minutesToHours(totalMinutes)} h registradas en esta vista`
     : `${minutesToHours(totalMinutes)} h registradas`;
+  const showHoursEmptyState = !showFirstRunAdminHoursEmptyState && entries.length === 0;
+  const hoursEmptyStateMessage = isAdmin ? emptyAdminHoursMessage : emptySelfHoursMessage;
 
   const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
@@ -948,7 +954,11 @@ export default function InternshipsPage() {
               </Typography>
             )}
 
-            {!showFirstRunAdminHoursEmptyState && (
+            {showHoursEmptyState ? (
+              <Alert severity="info" variant="outlined">
+                {hoursEmptyStateMessage}
+              </Alert>
+            ) : !showFirstRunAdminHoursEmptyState && (
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -959,13 +969,6 @@ export default function InternshipsPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {entries.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <Typography color="text.secondary">Sin registros todavía.</Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
                   {entries.map((entry) => {
                     const entryMinutes = resolveEntryMinutes(entry);
                     return (

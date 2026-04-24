@@ -598,6 +598,32 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('replaces empty admin hour-table chrome with one contextual setup message once interns exist', async () => {
+    listInternsMock.mockResolvedValue([buildIntern()]);
+    listTimeEntriesMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(container.textContent).toContain('Link de registro para pasantes');
+        expect(container.textContent).toContain('Pasante disponible');
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).toContain(
+          'Todavía no hay registros de horas en esta vista. Cuando llegue el primer clock-in, aquí aparecerán entrada, salida y horas.',
+        );
+        expect(container.textContent).not.toContain('Sin registros todavía.');
+        expect(container.textContent).not.toContain('PasanteEntradaSalidaHoras');
+        expect(container.querySelectorAll('thead')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces disabled self-only hour actions with a read-only admin summary when viewing cohort hours', async () => {
     useSessionMock.mockReturnValue({ session: { roles: ['admin'], modules: ['internships'], partyId: 999 } });
     listInternsMock.mockResolvedValue([buildIntern()]);
