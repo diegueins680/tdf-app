@@ -728,7 +728,9 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
-  const showInactiveFilterAction = hasMultipleUsers || (includeInactive && hasUsers);
+  const showReviewInactiveSearchEmptyAction = showSearchEmptyState && !includeInactive;
+  const showInactiveFilterAction = !showReviewInactiveSearchEmptyAction
+    && (hasMultipleUsers || (includeInactive && hasUsers));
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
   const showReviewInactiveSingleUserAction =
@@ -772,7 +774,7 @@ export default function AdminUsersPage() {
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
       !includeInactive
-        ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.`
+        ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos.`
         : `No hay coincidencias para "${activeSearchSummary}".`
     )
     : '';
@@ -1023,14 +1025,25 @@ export default function AdminUsersPage() {
                 <Typography color="text.secondary">
                   {searchEmptyStateMessage}
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleClearSearch}
-                  data-testid="admin-users-empty-search-clear"
-                >
-                  Limpiar búsqueda
-                </Button>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {showReviewInactiveSearchEmptyAction && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setIncludeInactive(true)}
+                    >
+                      {ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION}
+                    </Button>
+                  )}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={handleClearSearch}
+                    data-testid="admin-users-empty-search-clear"
+                  >
+                    Limpiar búsqueda
+                  </Button>
+                </Stack>
               </Stack>
             ) : null}
             {visibleUsers.length ? (
