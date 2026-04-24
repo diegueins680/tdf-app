@@ -3551,6 +3551,62 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('omits shared access terms from the first-time search placeholder while shared-role search still works', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryPhone: '+593999000444',
+        primaryEmail: null,
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario o contacto');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'manager');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'La búsqueda coincide con los 3 usuarios de esta vista. Acceso compartido en esta vista: Roles: Manager · Módulos: crm.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits unavailable contact and access dimensions from the first-time search placeholder', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

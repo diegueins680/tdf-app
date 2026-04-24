@@ -468,8 +468,8 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   let hasNameIdentity = false;
   let hasDistinctUsername = false;
   let hasContact = false;
-  let hasNonDefaultRoles = false;
-  let hasNonDefaultModules = false;
+  const roleSummaries: string[] = [];
+  const moduleSummaries: string[] = [];
 
   users.forEach((user) => {
     const partyName = user.partyName.trim();
@@ -482,13 +482,17 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
       hasDistinctUsername = true;
     }
     if (getVisibleUserContactSummary(user)) hasContact = true;
-    if (rolesSummary && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY)) {
-      hasNonDefaultRoles = true;
-    }
-    if (modulesSummary && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY)) {
-      hasNonDefaultModules = true;
-    }
+
+    roleSummaries.push(rolesSummary);
+    moduleSummaries.push(modulesSummary);
   });
+
+  const hasNonDefaultRoles = users.length > 1
+    && roleSummaries.some((summary) => summary && !isSameAccessSummary(summary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY))
+    && getSharedAccessSummary(roleSummaries) === '';
+  const hasNonDefaultModules = users.length > 1
+    && moduleSummaries.some((summary) => summary && !isSameAccessSummary(summary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY))
+    && getSharedAccessSummary(moduleSummaries) === '';
 
   const terms: string[] = [];
   if (hasNameIdentity) terms.push('Nombre');
