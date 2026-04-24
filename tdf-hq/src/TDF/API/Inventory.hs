@@ -60,6 +60,8 @@ instance FromMultipart Tmp AssetUploadForm where
             Left "Asset upload name must not contain control characters"
         | T.any isPathSeparator rawName =
             Left "Asset upload name must not contain path separators"
+        | T.null (imageExtension rawName) =
+            Left "Asset upload name must include a supported image extension"
         | otherwise =
             Right (Just rawName)
 

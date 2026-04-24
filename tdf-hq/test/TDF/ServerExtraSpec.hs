@@ -337,6 +337,12 @@ spec = do
                   )
 
       assertInvalid
+        "Asset upload name must include a supported image extension"
+        (mkAssetUploadMultipart
+          [("name", "front-room")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
         "Asset upload name must not contain path separators"
         (mkAssetUploadMultipart
           [("name", "folder/front-room.jpg")]
