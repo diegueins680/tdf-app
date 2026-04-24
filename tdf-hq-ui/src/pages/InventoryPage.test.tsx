@@ -470,6 +470,47 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('hides empty current-custody columns until a checked-out asset adds real context', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        location: 'Sala B',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+        expect(hasTableHeader(container, 'Acciones')).toBe(true);
+        expect(container.textContent).toContain(
+          'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo. Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
+        );
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps category and condition inside the equipment cell instead of restoring extra detail columns', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),

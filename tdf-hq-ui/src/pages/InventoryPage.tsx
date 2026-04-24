@@ -79,6 +79,8 @@ function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>)
 
 const INVENTORY_LOCATION_SETUP_GUIDANCE =
   'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
+const INVENTORY_CHECKOUT_CONTEXT_GUIDANCE =
+  'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo.';
 const INVENTORY_MOVEMENT_GUIDANCE =
   'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.';
 const INVENTORY_NO_MOVEMENT_GUIDANCE =
@@ -314,7 +316,14 @@ export default function InventoryPage() {
     && !singleAssetMovementState.canCheckin,
   );
   const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
+  const showCurrentCheckoutColumns = grouped.some((asset) => {
+    const movementState = getInventoryMovementState(asset.status);
+    return movementState.canCheckin
+      || normalizeInventoryField(asset.currentCheckoutTarget) != null
+      || Boolean(asset.currentCheckoutAt);
+  });
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
+  const showCheckoutContextGuidance = grouped.length > 1 && !showCurrentCheckoutColumns;
   const showMovementGuidance = grouped.length > 1;
   const hasVisibleMovementActions = grouped.some((asset) => {
     const movementState = getInventoryMovementState(asset.status);
@@ -322,6 +331,7 @@ export default function InventoryPage() {
   });
   const tableGuidance = [
     showLocationSetupGuidance ? INVENTORY_LOCATION_SETUP_GUIDANCE : '',
+    showCheckoutContextGuidance ? INVENTORY_CHECKOUT_CONTEXT_GUIDANCE : '',
     showMovementGuidance
       ? (hasVisibleMovementActions ? INVENTORY_MOVEMENT_GUIDANCE : INVENTORY_NO_MOVEMENT_GUIDANCE)
       : '',
@@ -473,8 +483,8 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableCell>Equipo</TableCell>
                     <TableCell>Estado</TableCell>
-                    <TableCell>Tenencia actual</TableCell>
-                    <TableCell>Salida</TableCell>
+                    {showCurrentCheckoutColumns && <TableCell>Tenencia actual</TableCell>}
+                    {showCurrentCheckoutColumns && <TableCell>Salida</TableCell>}
                     {showLocationColumn && <TableCell>Ubicación</TableCell>}
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
@@ -499,26 +509,30 @@ export default function InventoryPage() {
                           </Stack>
                         </TableCell>
                         <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>
-                        <TableCell>
-                          {asset.currentCheckoutTarget ? (
-                            <Stack spacing={0.25}>
-                              <Typography variant="body2">
-                                {getCurrentTargetSummary(asset, roomMap)}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
-                              </Typography>
-                              {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                        {showCurrentCheckoutColumns && (
+                          <TableCell>
+                            {asset.currentCheckoutTarget ? (
+                              <Stack spacing={0.25}>
+                                <Typography variant="body2">
+                                  {getCurrentTargetSummary(asset, roomMap)}
                                 </Typography>
-                              )}
-                            </Stack>
-                          ) : (
-                            '—'
-                          )}
-                        </TableCell>
-                        <TableCell>{asset.currentCheckoutAt ? formatDate(asset.currentCheckoutAt) : '—'}</TableCell>
+                                <Typography variant="caption" color="text.secondary">
+                                  {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
+                                </Typography>
+                                {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            ) : (
+                              '—'
+                            )}
+                          </TableCell>
+                        )}
+                        {showCurrentCheckoutColumns && (
+                          <TableCell>{asset.currentCheckoutAt ? formatDate(asset.currentCheckoutAt) : '—'}</TableCell>
+                        )}
                         {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
                         <TableCell align="right">
                           <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
