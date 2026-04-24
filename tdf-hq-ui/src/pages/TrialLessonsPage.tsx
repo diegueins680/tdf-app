@@ -719,7 +719,8 @@ export default function TrialLessonsPage() {
           )}
           <Stack spacing={1.25}>
             {data.map((cls) => {
-              const meta = statusMeta[normalizeStatus(cls.status)];
+              const currentStatus = normalizeStatus(cls.status);
+              const meta = statusMeta[currentStatus];
               const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
               const subject = subjects.find((s) => s.subjectId === cls.subjectId);
               const room = rooms.find((r) => r.roomId === cls.roomId);
@@ -732,6 +733,7 @@ export default function TrialLessonsPage() {
               return (
                 <Paper
                   key={cls.classSessionId}
+                  data-testid={`trial-lesson-row-${cls.classSessionId}`}
                   variant="outlined"
                   sx={{ p: 1.5, borderRadius: 2, borderColor: meta?.border ?? 'divider' }}
                 >
@@ -790,33 +792,37 @@ export default function TrialLessonsPage() {
                       <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
                         Editar
                       </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        startIcon={
-                          rowPending
-                            ? <CircularProgress size={14} />
-                            : <CheckCircleIcon fontSize="small" />
-                        }
-                        onClick={() => handleQuickStatus(cls, 'realizada')}
-                        disabled={rowPending || normalizeStatus(cls.status) === 'realizada'}
-                      >
-                        Realizada
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        color="inherit"
-                        startIcon={
-                          rowPending
-                            ? <CircularProgress size={14} />
-                            : <CancelIcon fontSize="small" />
-                        }
-                        onClick={() => handleQuickStatus(cls, 'cancelada')}
-                        disabled={rowPending || normalizeStatus(cls.status) === 'cancelada'}
-                      >
-                        Cancelar
-                      </Button>
+                      {currentStatus !== 'realizada' && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          startIcon={
+                            rowPending
+                              ? <CircularProgress size={14} />
+                              : <CheckCircleIcon fontSize="small" />
+                          }
+                          onClick={() => handleQuickStatus(cls, 'realizada')}
+                          disabled={rowPending}
+                        >
+                          Realizada
+                        </Button>
+                      )}
+                      {currentStatus !== 'cancelada' && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          color="inherit"
+                          startIcon={
+                            rowPending
+                              ? <CircularProgress size={14} />
+                              : <CancelIcon fontSize="small" />
+                          }
+                          onClick={() => handleQuickStatus(cls, 'cancelada')}
+                          disabled={rowPending}
+                        >
+                          Cancelar
+                        </Button>
+                      )}
                     </Stack>
                   </Stack>
                 </Paper>
