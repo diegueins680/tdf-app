@@ -689,6 +689,7 @@ export default function InventoryPage() {
                 <TableBody>
                   {grouped.map((asset) => {
                     const movementState = getInventoryMovementState(asset.status);
+                    const assetCondition = normalizeInventoryField(asset.condition);
                     const paymentSummary = formatCheckoutPaymentSummary(
                       asset.currentCheckoutPaymentType,
                       asset.currentCheckoutPaymentInstallments,
@@ -718,9 +719,11 @@ export default function InventoryPage() {
                                 {asset.category}
                               </Typography>
                             )}
-                            <Typography variant="caption" color="text.secondary">
-                              Condición: {asset.condition ?? '—'}
-                            </Typography>
+                            {assetCondition && (
+                              <Typography variant="caption" color="text.secondary">
+                                Condición: {assetCondition}
+                              </Typography>
+                            )}
                           </Stack>
                         </TableCell>
                         {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}

@@ -125,6 +125,16 @@ const hasTableHeader = (root: ParentNode, labelText: string) =>
 const countOccurrencesIgnoringCase = (value: string, fragment: string) =>
   value.toLocaleLowerCase().split(fragment.toLocaleLowerCase()).length - 1;
 
+const getRowTextByAssetName = (root: ParentNode, assetName: string) => {
+  const row = Array.from(root.querySelectorAll<HTMLTableRowElement>('tbody tr')).find(
+    (tableRow) => (tableRow.textContent ?? '').includes(assetName),
+  );
+
+  if (!row) throw new Error(`Row not found for asset ${assetName}`);
+
+  return row.textContent ?? '';
+};
+
 const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabel: string) => {
   await act(async () => {
     const actionsButton = container.querySelector<HTMLButtonElement>(
@@ -932,6 +942,46 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Neumann U87');
         expect(container.textContent).toContain('Micrófono');
         expect(container.textContent).toContain('Condición: Excelente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides empty condition labels in table rows so busy inventory views only show real metadata', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        condition: 'Excelente',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        condition: '   ',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Activo Tres',
+        condition: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Activo Dos');
+        expect(container.textContent).toContain('Activo Tres');
+        expect(container.textContent).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(container, 'Activo Uno')).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(container, 'Activo Dos')).not.toContain('Condición:');
+        expect(getRowTextByAssetName(container, 'Activo Tres')).not.toContain('Condición:');
+        expect(countOccurrencesIgnoringCase(container.textContent ?? '', 'Condición:')).toBe(1);
       });
     } finally {
       await cleanup();
