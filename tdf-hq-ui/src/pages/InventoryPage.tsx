@@ -621,7 +621,6 @@ export default function InventoryPage() {
                     <TableCell>Equipo</TableCell>
                     {showStatusColumn && <TableCell>Estado</TableCell>}
                     {showCurrentCheckoutColumns && <TableCell>Tenencia actual</TableCell>}
-                    {showCurrentCheckoutColumns && <TableCell>Salida</TableCell>}
                     {showLocationColumn && <TableCell>Ubicación</TableCell>}
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
@@ -629,6 +628,22 @@ export default function InventoryPage() {
                 <TableBody>
                   {grouped.map((asset) => {
                     const movementState = getInventoryMovementState(asset.status);
+                    const paymentSummary = formatCheckoutPaymentSummary(
+                      asset.currentCheckoutPaymentType,
+                      asset.currentCheckoutPaymentInstallments,
+                      asset.currentCheckoutPaymentAmountCents,
+                      asset.currentCheckoutPaymentCurrency,
+                      asset.currentCheckoutPaymentOutstandingCents,
+                    );
+                    const hasCurrentCheckoutContext = Boolean(
+                      normalizeInventoryField(asset.currentCheckoutTarget)
+                      || asset.currentCheckoutAt
+                      || normalizeInventoryField(asset.currentCheckoutHolderEmail)
+                      || normalizeInventoryField(asset.currentCheckoutHolderPhone)
+                      || asset.currentCheckoutDueAt
+                      || paymentSummary
+                      || normalizeInventoryField(asset.currentCheckoutDisposition),
+                    );
 
                     return (
                       <TableRow key={asset.assetId} hover>
@@ -650,17 +665,26 @@ export default function InventoryPage() {
                         {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}
                         {showCurrentCheckoutColumns && (
                           <TableCell>
-                            {asset.currentCheckoutTarget ? (
+                            {hasCurrentCheckoutContext ? (
                               <Stack spacing={0.25}>
-                                <Typography variant="body2">
-                                  {getCurrentTargetSummary(asset, roomMap)}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
-                                </Typography>
+                                {normalizeInventoryField(asset.currentCheckoutTarget) && (
+                                  <Typography variant="body2">
+                                    {getCurrentTargetSummary(asset, roomMap)}
+                                  </Typography>
+                                )}
+                                {normalizeInventoryField(asset.currentCheckoutDisposition) && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
+                                  </Typography>
+                                )}
                                 {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
                                   <Typography variant="caption" color="text.secondary">
                                     {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
+                                  </Typography>
+                                )}
+                                {asset.currentCheckoutAt && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Salida: {formatDate(asset.currentCheckoutAt)}
                                   </Typography>
                                 )}
                                 {asset.currentCheckoutDueAt && (
@@ -668,22 +692,9 @@ export default function InventoryPage() {
                                     Retorno pactado: {formatDate(asset.currentCheckoutDueAt)}
                                   </Typography>
                                 )}
-                                {formatCheckoutPaymentSummary(
-                                  asset.currentCheckoutPaymentType,
-                                  asset.currentCheckoutPaymentInstallments,
-                                  asset.currentCheckoutPaymentAmountCents,
-                                  asset.currentCheckoutPaymentCurrency,
-                                  asset.currentCheckoutPaymentOutstandingCents,
-                                ) && (
+                                {paymentSummary && (
                                   <Typography variant="caption" color="text.secondary">
-                                    Pago:{' '}
-                                    {formatCheckoutPaymentSummary(
-                                      asset.currentCheckoutPaymentType,
-                                      asset.currentCheckoutPaymentInstallments,
-                                      asset.currentCheckoutPaymentAmountCents,
-                                      asset.currentCheckoutPaymentCurrency,
-                                      asset.currentCheckoutPaymentOutstandingCents,
-                                    )}
+                                    Pago: {paymentSummary}
                                   </Typography>
                                 )}
                               </Stack>
@@ -691,9 +702,6 @@ export default function InventoryPage() {
                               '—'
                             )}
                           </TableCell>
-                        )}
-                        {showCurrentCheckoutColumns && (
-                          <TableCell>{asset.currentCheckoutAt ? formatDate(asset.currentCheckoutAt) : '—'}</TableCell>
                         )}
                         {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
                         <TableCell align="right">

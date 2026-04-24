@@ -457,6 +457,8 @@ describe('InventoryPage', () => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
         expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(true);
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).toContain(
@@ -465,8 +467,8 @@ describe('InventoryPage', () => {
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(5);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
       });
     } finally {
       await cleanup();
@@ -719,6 +721,62 @@ describe('InventoryPage', () => {
         expect(rows).toHaveLength(2);
         expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
         expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps current custody details in one table column so admins can scan context without a separate salida column', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        location: 'Sala B',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+        currentCheckoutPaymentType: 'card',
+        currentCheckoutPaymentInstallments: 2,
+        currentCheckoutPaymentAmountCents: 250000,
+        currentCheckoutPaymentCurrency: 'USD',
+        currentCheckoutPaymentOutstandingCents: 50000,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(true);
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(5);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
+
+        const custodyCell = rows[1]?.querySelectorAll('td')[2];
+        expect(custodyCell?.textContent).toContain('Grace Hopper');
+        expect(custodyCell?.textContent).toContain('Alquiler');
+        expect(custodyCell?.textContent).toContain('grace@example.com');
+        expect(custodyCell?.textContent).toContain('Salida:');
+        expect(custodyCell?.textContent).toContain('Retorno pactado:');
+        expect(custodyCell?.textContent).toContain('Pago: Tarjeta');
       });
     } finally {
       await cleanup();
