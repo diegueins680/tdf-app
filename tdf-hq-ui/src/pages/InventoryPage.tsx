@@ -96,6 +96,25 @@ function getSharedInventoryLocationSummary(assets: readonly AssetDTO[]) {
     : '';
 }
 
+function getSharedInventoryCategorySummary(assets: readonly AssetDTO[]) {
+  if (assets.length < 2) return '';
+
+  const normalizedCategories = assets
+    .map((asset) => normalizeInventoryField(asset.category))
+    .filter((category): category is string => category != null);
+
+  if (normalizedCategories.length !== assets.length) return '';
+
+  const [firstCategory] = normalizedCategories;
+  const firstComparableCategory = normalizeInventoryComparisonValue(firstCategory);
+
+  return normalizedCategories.every(
+    (category) => normalizeInventoryComparisonValue(category) === firstComparableCategory,
+  )
+    ? firstCategory
+    : '';
+}
+
 function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>) {
   return formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
 }
@@ -363,6 +382,7 @@ export default function InventoryPage() {
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
+  const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
   const showSingleAssetNoMovementGuidance = Boolean(
     showSingleAssetSummary
@@ -556,6 +576,11 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
+              {sharedCategorySummary && (
+                <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                  {`Mostrando una sola categoría: ${sharedCategorySummary}. La categoría volverá cuando esta vista mezcle categorías distintas.`}
+                </Typography>
+              )}
               {sharedLocationSummary && (
                 <Typography variant="caption" color="rgba(226,232,240,0.68)">
                   {`Mostrando una sola ubicación: ${sharedLocationSummary}. La columna volverá cuando esta vista mezcle ubicaciones distintas.`}
@@ -588,9 +613,11 @@ export default function InventoryPage() {
                             <Typography variant="body2" fontWeight={700}>
                               {asset.name}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {asset.category}
-                            </Typography>
+                            {!sharedCategorySummary && (
+                              <Typography variant="caption" color="text.secondary">
+                                {asset.category}
+                              </Typography>
+                            )}
                             <Typography variant="caption" color="text.secondary">
                               Condición: {asset.condition ?? '—'}
                             </Typography>

@@ -540,6 +540,73 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('summarizes one shared category once and restores row categories when the visible inventory mix changes', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: ' micrófono ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola categoría: Micrófono. La categoría volverá cuando esta vista mezcle categorías distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola categoría: Micrófono.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.textContent).not.toContain('Micrófono');
+        expect(rows[1]?.textContent).not.toContain('Micrófono');
+        expect(rows[0]?.textContent).toContain('Condición: Excelente');
+        expect(rows[1]?.textContent).toContain('Condición: Excelente');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: 'Interfaz',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola categoría:');
+        expect(text).toContain('Micrófono');
+        expect(text).toContain('Interfaz');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('hides empty current-custody columns until a checked-out asset adds real context', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
@@ -625,6 +692,7 @@ describe('InventoryPage', () => {
       buildAsset({
         assetId: 'asset-2',
         name: 'Apollo Twin',
+        category: 'Interfaz',
         status: 'Booked',
       }),
     ]);
