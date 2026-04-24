@@ -169,6 +169,9 @@ const hasLabel = (root: ParentNode, labelText: string) =>
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
 
+const hasExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).some((el) => (el.textContent ?? '').trim() === labelText);
+
 const queryFilterChip = (root: ParentNode, labelText: string) =>
   root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
 
@@ -590,6 +593,7 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(hasExactText(container, 'Filter')).toBe(false);
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');

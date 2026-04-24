@@ -1272,6 +1272,7 @@ export default function SocialInboxPage() {
   const displayFilter = singleVisibleFilter ?? activeFilter;
   const showSingleFilterSummary = Boolean(singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
+  const showStatusFilterHeading = !showSingleFilterSummary;
   const showChannelStatusChips = displayFilter === 'all' && !showSingleFilterSummary;
   const instagramMessages = useMemo(() => selectMessages(instagramStats, displayFilter), [instagramStats, displayFilter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, displayFilter), [facebookStats, displayFilter]);
@@ -1521,9 +1522,11 @@ export default function SocialInboxPage() {
         <>
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack spacing={1.5}>
-              <Typography variant="subtitle2" color="text.secondary">
-                {reviewMode ? 'Filter' : 'Filtro'}
-              </Typography>
+              {showStatusFilterHeading && (
+                <Typography variant="subtitle2" color="text.secondary">
+                  {reviewMode ? 'Filter' : 'Filtro'}
+                </Typography>
+              )}
               {showSingleFilterSummary ? (
                 <Stack
                   spacing={0.5}
