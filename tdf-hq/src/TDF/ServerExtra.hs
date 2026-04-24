@@ -653,6 +653,8 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrPhotoOutUrl normalized) =
       Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
+  | isNothing (ncrDueAt normalized) =
+      Left err400 { errBody = "Public QR checkout requires coDueAt" }
   | otherwise =
       Right ()
 
