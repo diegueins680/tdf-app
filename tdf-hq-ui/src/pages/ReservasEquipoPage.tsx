@@ -103,7 +103,7 @@ export default function ReservasEquipoPage() {
                 Reservas de equipo
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Comparte el enlace público por activo para que el prestatario registre salida, responsable, fecha y foto.
+                Comparte el enlace público por activo para que el prestatario registre salida, responsable, fecha, foto y, si aplica, monto, moneda y saldo pendiente.
               </Typography>
             </Box>
           </Stack>
@@ -135,7 +135,7 @@ export default function ReservasEquipoPage() {
                 2. Envíalo al usuario que se lo lleva.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                3. El usuario registra nombre, contacto, tipo de movimiento y foto del estado del equipo al salir.
+                3. El usuario registra nombre, contacto, tipo de movimiento, foto del estado del equipo y, en ventas o alquileres, pago, cuotas y saldo pendiente.
               </Typography>
             </Stack>
           </CardContent>
@@ -189,12 +189,18 @@ export default function ReservasEquipoPage() {
                           {formatCheckoutPaymentSummary(
                             asset.currentCheckoutPaymentType,
                             asset.currentCheckoutPaymentInstallments,
+                            asset.currentCheckoutPaymentAmountCents,
+                            asset.currentCheckoutPaymentCurrency,
+                            asset.currentCheckoutPaymentOutstandingCents,
                           ) && (
                             <Typography variant="body2" color="text.secondary">
                               <strong>Pago:</strong>{' '}
                               {formatCheckoutPaymentSummary(
                                 asset.currentCheckoutPaymentType,
                                 asset.currentCheckoutPaymentInstallments,
+                                asset.currentCheckoutPaymentAmountCents,
+                                asset.currentCheckoutPaymentCurrency,
+                                asset.currentCheckoutPaymentOutstandingCents,
                               )}
                             </Typography>
                           )}

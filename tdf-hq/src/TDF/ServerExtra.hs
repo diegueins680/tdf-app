@@ -20,7 +20,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isDigit, isSpace, ord)
+import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace, ord)
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -74,6 +74,7 @@ import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
 import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
 import qualified TDF.Handlers.InputList     as InputList
+import           TDF.WhatsApp.History       (normalizeWhatsAppPhone)
 
 -- Helpers for simple date parsing (YYYY-MM-DD)
 parseDayText :: MonadError ServerError m => Text -> m Day
@@ -469,6 +470,9 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
       , assetCheckoutPaymentType      = ncrPaymentType normalized
       , assetCheckoutPaymentInstallments = ncrPaymentInstallments normalized
       , assetCheckoutPaymentReference = ncrPaymentReference normalized
+      , assetCheckoutPaymentAmountCents = ncrPaymentAmountCents normalized
+      , assetCheckoutPaymentCurrency  = ncrPaymentCurrency normalized
+      , assetCheckoutPaymentOutstandingCents = ncrPaymentOutstandingCents normalized
       , assetCheckoutCheckedOutByRef  = checkedOutBy
       , assetCheckoutCheckedOutAt     = now
       , assetCheckoutDueAt            = dueAtValue
@@ -546,6 +550,9 @@ data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   , ncrPaymentType :: Maybe Text
   , ncrPaymentInstallments :: Maybe Int
   , ncrPaymentReference :: Maybe Text
+  , ncrPaymentAmountCents :: Maybe Int
+  , ncrPaymentCurrency :: Maybe Text
+  , ncrPaymentOutstandingCents :: Maybe Int
   , ncrDueAt :: Maybe UTCTime
   , ncrConditionOut :: Maybe Text
   , ncrPhotoOutUrl :: Maybe Text
@@ -561,12 +568,21 @@ normalizeCheckoutRequest req = do
     validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey
   disposition <- parseCheckoutDisposition (coDisposition req)
   termsAndConditions <- validateCheckoutTermsField "termsAndConditions" (coTermsAndConditions req)
-  holderEmail <- validateCheckoutContactField "holderEmail" 160 (coHolderEmail req)
-  holderPhone <- validateCheckoutContactField "holderPhone" 60 (coHolderPhone req)
+  holderEmail <- validateCheckoutHolderEmail (coHolderEmail req)
+  holderPhone <- validateCheckoutHolderPhone (coHolderPhone req)
   paymentType <- normalizeCheckoutPaymentType (coPaymentType req)
   paymentInstallments <- validateCheckoutInstallments (coPaymentInstallments req)
   paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
-  validateCheckoutFinancials paymentType paymentInstallments paymentReference
+  paymentAmountCents <- validateCheckoutAmountField "paymentAmount" (coPaymentAmount req)
+  paymentCurrency <- validateCheckoutCurrency (coPaymentCurrency req)
+  paymentOutstandingCents <- validateCheckoutMoneyField "paymentOutstanding" True (coPaymentOutstanding req)
+  validateCheckoutFinancials
+    paymentType
+    paymentInstallments
+    paymentReference
+    paymentAmountCents
+    paymentCurrency
+    paymentOutstandingCents
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -582,6 +598,9 @@ normalizeCheckoutRequest req = do
     , ncrPaymentType = paymentType
     , ncrPaymentInstallments = paymentInstallments
     , ncrPaymentReference = paymentReference
+    , ncrPaymentAmountCents = paymentAmountCents
+    , ncrPaymentCurrency = paymentCurrency
+    , ncrPaymentOutstandingCents = paymentOutstandingCents
     , ncrDueAt = coDueAt req
     , ncrConditionOut = conditionOut
     , ncrPhotoOutUrl = photoOutUrl
@@ -606,17 +625,92 @@ validatePublicQrCheckinFields (mConditionIn, _, _)
   | otherwise =
       Right ()
 
-validateCheckoutContactField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
-validateCheckoutContactField fieldName maxLen rawValue =
+validateCheckoutHolderEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutHolderEmail rawValue =
   case normalizeOptionalTextField rawValue of
     Nothing -> Right Nothing
     Just cleanValue
-      | T.length cleanValue > maxLen ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLen) <> " characters or fewer")) }
+      | T.length cleanValue > maxCheckoutHolderEmailChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 ("holderEmail must be " <> T.pack (show maxCheckoutHolderEmailChars) <> " characters or fewer"))
+            }
       | T.any isControl cleanValue ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
+          Left err400 { errBody = "holderEmail must not contain control characters" }
+      | isValidCheckoutHolderEmail normalized ->
+          Right (Just normalized)
       | otherwise ->
-          Right (Just cleanValue)
+          Left err400 { errBody = "holderEmail must be a valid email address" }
+      where
+        normalized = T.toLower cleanValue
+
+validateCheckoutHolderPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutHolderPhone rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue
+      | T.length cleanValue > maxCheckoutHolderPhoneChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 ("holderPhone must be " <> T.pack (show maxCheckoutHolderPhoneChars) <> " characters or fewer"))
+            }
+      | T.any isControl cleanValue ->
+          Left err400 { errBody = "holderPhone must not contain control characters" }
+      | otherwise ->
+          maybe
+            (Left err400 { errBody = "holderPhone must be a valid phone number" })
+            (Right . Just)
+            (normalizeWhatsAppPhone cleanValue)
+
+isValidCheckoutHolderEmail :: Text -> Bool
+isValidCheckoutHolderEmail candidate =
+  case T.split (== '@') candidate of
+    [localPart, domain] ->
+      T.length candidate <= maxCheckoutHolderEmailChars
+        && isValidCheckoutHolderEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
+        && T.isInfixOf "." domain
+        && all isValidCheckoutHolderDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+isValidCheckoutHolderEmailLocalPart :: Text -> Bool
+isValidCheckoutHolderEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= maxCheckoutHolderEmailLocalPartChars
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidCheckoutHolderEmailLocalChar localPart
+
+isValidCheckoutHolderEmailLocalChar :: Char -> Bool
+isValidCheckoutHolderEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidCheckoutHolderDomainLabel :: Text -> Bool
+isValidCheckoutHolderDomainLabel label =
+  not (T.null label)
+    && T.length label <= maxCheckoutHolderEmailDomainLabelChars
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidCheckoutHolderDomainChar label
+
+isValidCheckoutHolderDomainChar :: Char -> Bool
+isValidCheckoutHolderDomainChar c = isAsciiLower c || isDigit c || c == '-'
+
+maxCheckoutHolderEmailChars :: Int
+maxCheckoutHolderEmailChars = 160
+
+maxCheckoutHolderEmailLocalPartChars :: Int
+maxCheckoutHolderEmailLocalPartChars = 64
+
+maxCheckoutHolderEmailDomainLabelChars :: Int
+maxCheckoutHolderEmailDomainLabelChars = 63
+
+maxCheckoutHolderPhoneChars :: Int
+maxCheckoutHolderPhoneChars = 60
 
 validateCheckoutTermsField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutTermsField fieldName =
@@ -640,12 +734,112 @@ validateCheckoutInstallments (Just installments)
   | otherwise =
       Right (Just installments)
 
-validateCheckoutFinancials :: Maybe Text -> Maybe Int -> Maybe Text -> Either ServerError ()
-validateCheckoutFinancials Nothing (Just _) _ =
+validateCheckoutAmountField :: Text -> Maybe Text -> Either ServerError (Maybe Int)
+validateCheckoutAmountField fieldName rawValue = do
+  amountCents <- validateCheckoutMoneyField fieldName False rawValue
+  case amountCents of
+    Just 0 ->
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+        }
+    _ ->
+      Right amountCents
+
+validateCheckoutCurrency :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutCurrency Nothing = Right Nothing
+validateCheckoutCurrency (Just rawCurrency) =
+  case normalizeOptionalTextField (Just rawCurrency) of
+    Nothing -> Right Nothing
+    Just currency ->
+      let normalized = T.toUpper currency
+      in if T.length normalized == 3 && T.all isAsciiUpper normalized
+           then Right (Just normalized)
+           else Left err400 { errBody = "paymentCurrency must be a 3-letter ISO code" }
+
+validateCheckoutMoneyField :: Text -> Bool -> Maybe Text -> Either ServerError (Maybe Int)
+validateCheckoutMoneyField fieldName allowZero rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue ->
+      case parseMoneyToCents cleanValue of
+        Nothing ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must be a non-negative amount with up to 2 decimals"))
+            }
+        Just cents
+          | not allowZero && cents <= 0 ->
+              Left err400
+                { errBody =
+                    BL.fromStrict
+                      (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+                }
+          | otherwise ->
+              Right (Just cents)
+
+parseMoneyToCents :: Text -> Maybe Int
+parseMoneyToCents rawValue
+  | T.any isSpace rawValue = Nothing
+  | T.any isControl rawValue = Nothing
+  | T.isPrefixOf "-" rawValue = Nothing
+  | otherwise =
+      case T.splitOn "." rawValue of
+        [wholePart]
+          | validWholePart wholePart ->
+              buildCents wholePart ""
+        [wholePart, fractionalPart]
+          | validWholePart wholePart
+              && not (T.null fractionalPart)
+              && T.length fractionalPart <= 2
+              && T.all isDigit fractionalPart ->
+                  buildCents wholePart fractionalPart
+        _ ->
+          Nothing
+  where
+    validWholePart part = not (T.null part) && T.all isDigit part
+    buildCents wholePart fractionalPart = do
+      wholeUnits <- parseInteger wholePart
+      fractionalUnits <- parseInteger (fractionalPart <> T.replicate (2 - T.length fractionalPart) "0")
+      let totalCents = wholeUnits * 100 + fractionalUnits
+      if totalCents <= fromIntegral (maxBound :: Int)
+        then Just (fromIntegral totalCents)
+        else Nothing
+    parseInteger txt =
+      case reads (T.unpack txt) :: [(Integer, String)] of
+        [(value, "")] -> Just value
+        _             -> Nothing
+
+validateCheckoutFinancials
+  :: Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Either ServerError ()
+validateCheckoutFinancials Nothing (Just _) _ _ _ _ =
   Left err400 { errBody = "paymentInstallments requires paymentType" }
-validateCheckoutFinancials Nothing _ (Just _) =
+validateCheckoutFinancials Nothing _ (Just _) _ _ _ =
   Left err400 { errBody = "paymentReference requires paymentType" }
-validateCheckoutFinancials _ _ _ =
+validateCheckoutFinancials Nothing _ _ (Just _) _ _ =
+  Left err400 { errBody = "paymentAmount requires paymentType" }
+validateCheckoutFinancials Nothing _ _ _ (Just _) _ =
+  Left err400 { errBody = "paymentCurrency requires paymentType" }
+validateCheckoutFinancials Nothing _ _ _ _ (Just _) =
+  Left err400 { errBody = "paymentOutstanding requires paymentType" }
+validateCheckoutFinancials _ _ _ Nothing (Just _) _ =
+  Left err400 { errBody = "paymentCurrency requires paymentAmount" }
+validateCheckoutFinancials _ _ _ (Just _) Nothing _ =
+  Left err400 { errBody = "paymentAmount requires paymentCurrency" }
+validateCheckoutFinancials _ _ _ Nothing _ (Just _) =
+  Left err400 { errBody = "paymentOutstanding requires paymentAmount" }
+validateCheckoutFinancials _ _ _ (Just amountCents) _ (Just outstandingCents)
+  | outstandingCents > amountCents =
+      Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }
+validateCheckoutFinancials _ _ _ _ _ _ =
   Right ()
 
 validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
@@ -759,6 +953,9 @@ toAssetDTO (Entity key asset) mCurrentCheckout = AssetDTO
   , currentCheckoutDueAt = mCurrentCheckout >>= (assetCheckoutDueAt . entityVal)
   , currentCheckoutPaymentType = mCurrentCheckout >>= (assetCheckoutPaymentType . entityVal)
   , currentCheckoutPaymentInstallments = mCurrentCheckout >>= (assetCheckoutPaymentInstallments . entityVal)
+  , currentCheckoutPaymentAmountCents = mCurrentCheckout >>= (assetCheckoutPaymentAmountCents . entityVal)
+  , currentCheckoutPaymentCurrency = mCurrentCheckout >>= (assetCheckoutPaymentCurrency . entityVal)
+  , currentCheckoutPaymentOutstandingCents = mCurrentCheckout >>= (assetCheckoutPaymentOutstandingCents . entityVal)
   , currentCheckoutPhotoUrl = mCurrentCheckout >>= (checkoutPhotoOutUrl . entityVal)
   }
 
@@ -777,6 +974,9 @@ toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
   , paymentType     = assetCheckoutPaymentType rec
   , paymentInstallments = assetCheckoutPaymentInstallments rec
   , paymentReference = assetCheckoutPaymentReference rec
+  , paymentAmountCents = assetCheckoutPaymentAmountCents rec
+  , paymentCurrency = assetCheckoutPaymentCurrency rec
+  , paymentOutstandingCents = assetCheckoutPaymentOutstandingCents rec
   , checkedOutBy    = assetCheckoutCheckedOutByRef rec
   , checkedOutAt    = assetCheckoutCheckedOutAt rec
   , dueAt           = assetCheckoutDueAt rec
@@ -2151,7 +2351,7 @@ paymentsServer user =
       , payPartyId     = fromSqlKey (paymentPartyId p)
       , payOrderId     = fmap fromSqlKey (paymentOrderId p)
       , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
-      , payAmountCents = paymentAmountCents p
+      , payAmountCents = M.paymentAmountCents p
       , payCurrency    = "USD"
       , payMethod      = T.pack (show (paymentMethod p))
       , payReference   = M.paymentReference p

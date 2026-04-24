@@ -636,7 +636,13 @@ describe('InventoryPage', () => {
 
   it('keeps checkout history inside the checkout flow until the admin explicitly opens the standalone history panel', async () => {
     historyMock.mockResolvedValue([
-      buildCheckoutHistoryEntry(),
+      buildCheckoutHistoryEntry({
+        paymentType: 'card',
+        paymentInstallments: 3,
+        paymentAmountCents: 250000,
+        paymentCurrency: 'USD',
+        paymentOutstandingCents: 50000,
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -667,6 +673,9 @@ describe('InventoryPage', () => {
         expect(historyMock).toHaveBeenCalledTimes(2);
         expect(container.textContent).toContain('Historial · Neumann U87');
         expect(container.textContent).toContain('Uso en grabación.');
+        expect(container.textContent).toContain('Tarjeta');
+        expect(container.textContent).toContain('3 cuotas');
+        expect(container.textContent).toContain('saldo');
       });
     } finally {
       await cleanup();

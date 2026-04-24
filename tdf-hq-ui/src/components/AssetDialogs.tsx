@@ -78,6 +78,12 @@ export function CheckoutDialog({
       formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)
         ? `Pago: ${formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)}`
         : null,
+      form.coPaymentAmount
+        ? `Monto: ${[form.coPaymentCurrency?.trim().toUpperCase(), form.coPaymentAmount].filter(Boolean).join(' ')}`
+        : null,
+      form.coPaymentOutstanding
+        ? `Saldo pendiente: ${[form.coPaymentCurrency?.trim().toUpperCase(), form.coPaymentOutstanding].filter(Boolean).join(' ')}`
+        : null,
       form.coPaymentReference ? `Referencia: ${form.coPaymentReference}` : null,
       form.coTermsAndConditions ? `Términos: ${form.coTermsAndConditions}` : null,
       form.coNotes ? `Notas: ${form.coNotes}` : null,
@@ -104,8 +110,20 @@ export function CheckoutDialog({
             )}.{' '}
             Tipo: {getCheckoutDispositionLabel(activeCheckout?.disposition)}.{' '}
             {activeCheckout?.dueAt ? `Retorno pactado: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
-            {formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)
-              ? ` Pago: ${formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)}.`
+            {formatCheckoutPaymentSummary(
+              activeCheckout?.paymentType,
+              activeCheckout?.paymentInstallments,
+              activeCheckout?.paymentAmountCents,
+              activeCheckout?.paymentCurrency,
+              activeCheckout?.paymentOutstandingCents,
+            )
+              ? ` Pago: ${formatCheckoutPaymentSummary(
+                  activeCheckout?.paymentType,
+                  activeCheckout?.paymentInstallments,
+                  activeCheckout?.paymentAmountCents,
+                  activeCheckout?.paymentCurrency,
+                  activeCheckout?.paymentOutstandingCents,
+                )}.`
               : ''}
             {' '}Registra el check-in antes de asignarlo de nuevo.
           </Alert>
@@ -138,6 +156,15 @@ export function CheckoutDialog({
                   : null,
                 coPaymentReference: checkoutSupportsPaymentDetails(e.target.value)
                   ? (form.coPaymentReference ?? '')
+                  : '',
+                coPaymentAmount: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentAmount ?? '')
+                  : '',
+                coPaymentCurrency: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentCurrency ?? '')
+                  : '',
+                coPaymentOutstanding: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentOutstanding ?? '')
                   : '',
               })
             }
@@ -298,6 +325,29 @@ export function CheckoutDialog({
                 }
                 inputProps={{ min: 1, max: 60, step: 1 }}
                 helperText="Déjalo vacío si el pago no aplica o no se pactó en cuotas."
+              />
+              <TextField
+                label="Monto total"
+                type="number"
+                value={form.coPaymentAmount ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentAmount: e.target.value })}
+                inputProps={{ min: 0, step: '0.01' }}
+                helperText="Ej.: 1200.50"
+              />
+              <TextField
+                label="Moneda"
+                value={form.coPaymentCurrency ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentCurrency: e.target.value.toUpperCase() })}
+                inputProps={{ maxLength: 3 }}
+                helperText="Código ISO de 3 letras. Ej.: USD, EUR."
+              />
+              <TextField
+                label="Saldo pendiente"
+                type="number"
+                value={form.coPaymentOutstanding ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentOutstanding: e.target.value })}
+                inputProps={{ min: 0, step: '0.01' }}
+                helperText="Déjalo en 0.00 si ya quedó pagado por completo."
               />
               <TextField
                 label="Referencia de pago"

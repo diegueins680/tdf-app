@@ -142,6 +142,9 @@ export interface AssetDTO {
   currentCheckoutDueAt?: string | null;
   currentCheckoutPaymentType?: string | null;
   currentCheckoutPaymentInstallments?: number | null;
+  currentCheckoutPaymentAmountCents?: number | null;
+  currentCheckoutPaymentCurrency?: string | null;
+  currentCheckoutPaymentOutstandingCents?: number | null;
   currentCheckoutPhotoUrl?: string | null;
 }
 
@@ -298,6 +301,9 @@ export interface AssetCheckoutDTO {
   paymentType?: string | null;
   paymentInstallments?: number | null;
   paymentReference?: string | null;
+  paymentAmountCents?: number | null;
+  paymentCurrency?: string | null;
+  paymentOutstandingCents?: number | null;
   checkedOutBy: string;
   checkedOutAt: string;
   dueAt?: string | null;

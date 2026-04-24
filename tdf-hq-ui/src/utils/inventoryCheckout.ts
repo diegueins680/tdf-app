@@ -45,6 +45,23 @@ export function getCheckoutPaymentTypeLabel(value?: string | null) {
   return CHECKOUT_PAYMENT_TYPE_OPTIONS.find((option) => option.value === normalized)?.label ?? value;
 }
 
+export function formatCheckoutMoney(cents?: number | null, currency?: string | null) {
+  if (typeof cents !== 'number' || !Number.isFinite(cents)) return '';
+  const normalizedCurrency = currency?.trim().toUpperCase();
+  if (!normalizedCurrency) return '';
+  const amount = cents / 100;
+  try {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: normalizedCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${normalizedCurrency} ${amount.toFixed(2)}`;
+  }
+}
+
 export function checkoutSupportsReturnDate(disposition?: string | null) {
   return (disposition?.trim().toLowerCase() ?? '') !== 'sale';
 }
@@ -54,12 +71,22 @@ export function checkoutSupportsPaymentDetails(disposition?: string | null) {
   return normalized === 'sale' || normalized === 'rental';
 }
 
-export function formatCheckoutPaymentSummary(paymentType?: string | null, installments?: number | null) {
+export function formatCheckoutPaymentSummary(
+  paymentType?: string | null,
+  installments?: number | null,
+  amountCents?: number | null,
+  currency?: string | null,
+  outstandingCents?: number | null,
+) {
   const parts = [];
   if (paymentType) parts.push(getCheckoutPaymentTypeLabel(paymentType));
+  const amountLabel = formatCheckoutMoney(amountCents, currency);
+  if (amountLabel) parts.push(amountLabel);
   if (typeof installments === 'number' && Number.isFinite(installments) && installments > 0) {
     parts.push(`${installments} ${installments === 1 ? 'cuota' : 'cuotas'}`);
   }
+  const outstandingLabel = formatCheckoutMoney(outstandingCents, currency);
+  if (outstandingLabel) parts.push(`saldo ${outstandingLabel}`);
   return parts.join(' · ');
 }
 

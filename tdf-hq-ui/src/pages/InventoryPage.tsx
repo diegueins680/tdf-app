@@ -126,6 +126,9 @@ export default function InventoryPage() {
     coPaymentType: '',
     coPaymentInstallments: null,
     coPaymentReference: '',
+    coPaymentAmount: '',
+    coPaymentCurrency: '',
+    coPaymentOutstanding: '',
     coPhotoUrl: '',
     coConditionOut: '',
     coNotes: '',
@@ -201,6 +204,9 @@ export default function InventoryPage() {
       coPaymentType: '',
       coPaymentInstallments: null,
       coPaymentReference: '',
+      coPaymentAmount: '',
+      coPaymentCurrency: '',
+      coPaymentOutstanding: '',
       coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',
@@ -441,12 +447,18 @@ export default function InventoryPage() {
                     {formatCheckoutPaymentSummary(
                       singleAsset.currentCheckoutPaymentType,
                       singleAsset.currentCheckoutPaymentInstallments,
+                      singleAsset.currentCheckoutPaymentAmountCents,
+                      singleAsset.currentCheckoutPaymentCurrency,
+                      singleAsset.currentCheckoutPaymentOutstandingCents,
                     ) && (
                       <Typography variant="body2" color="rgba(226,232,240,0.78)">
                         Pago:{' '}
                         {formatCheckoutPaymentSummary(
                           singleAsset.currentCheckoutPaymentType,
                           singleAsset.currentCheckoutPaymentInstallments,
+                          singleAsset.currentCheckoutPaymentAmountCents,
+                          singleAsset.currentCheckoutPaymentCurrency,
+                          singleAsset.currentCheckoutPaymentOutstandingCents,
                         )}
                       </Typography>
                     )}
@@ -558,12 +570,18 @@ export default function InventoryPage() {
                                 {formatCheckoutPaymentSummary(
                                   asset.currentCheckoutPaymentType,
                                   asset.currentCheckoutPaymentInstallments,
+                                  asset.currentCheckoutPaymentAmountCents,
+                                  asset.currentCheckoutPaymentCurrency,
+                                  asset.currentCheckoutPaymentOutstandingCents,
                                 ) && (
                                   <Typography variant="caption" color="text.secondary">
                                     Pago:{' '}
                                     {formatCheckoutPaymentSummary(
                                       asset.currentCheckoutPaymentType,
                                       asset.currentCheckoutPaymentInstallments,
+                                      asset.currentCheckoutPaymentAmountCents,
+                                      asset.currentCheckoutPaymentCurrency,
+                                      asset.currentCheckoutPaymentOutstandingCents,
                                     )}
                                   </Typography>
                                 )}
@@ -790,9 +808,22 @@ export default function InventoryPage() {
                               Retorno pactado: {formatDate(h.dueAt)}
                             </Typography>
                           )}
-                          {formatCheckoutPaymentSummary(h.paymentType, h.paymentInstallments) && (
+                          {formatCheckoutPaymentSummary(
+                            h.paymentType,
+                            h.paymentInstallments,
+                            h.paymentAmountCents,
+                            h.paymentCurrency,
+                            h.paymentOutstandingCents,
+                          ) && (
                             <Typography variant="caption" color="text.secondary">
-                              Pago: {formatCheckoutPaymentSummary(h.paymentType, h.paymentInstallments)}
+                              Pago:{' '}
+                              {formatCheckoutPaymentSummary(
+                                h.paymentType,
+                                h.paymentInstallments,
+                                h.paymentAmountCents,
+                                h.paymentCurrency,
+                                h.paymentOutstandingCents,
+                              )}
                             </Typography>
                           )}
                           {h.paymentReference && (

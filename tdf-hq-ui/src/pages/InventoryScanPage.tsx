@@ -58,6 +58,9 @@ export default function InventoryScanPage() {
     coPaymentType: '',
     coPaymentInstallments: null,
     coPaymentReference: '',
+    coPaymentAmount: '',
+    coPaymentCurrency: '',
+    coPaymentOutstanding: '',
     coConditionOut: '',
     coPhotoUrl: '',
     coNotes: '',
@@ -280,10 +283,16 @@ export default function InventoryScanPage() {
                       {formatCheckoutPaymentSummary(
                         asset.currentCheckoutPaymentType,
                         asset.currentCheckoutPaymentInstallments,
+                        asset.currentCheckoutPaymentAmountCents,
+                        asset.currentCheckoutPaymentCurrency,
+                        asset.currentCheckoutPaymentOutstandingCents,
                       )
                         ? ` Pago: ${formatCheckoutPaymentSummary(
                             asset.currentCheckoutPaymentType,
                             asset.currentCheckoutPaymentInstallments,
+                            asset.currentCheckoutPaymentAmountCents,
+                            asset.currentCheckoutPaymentCurrency,
+                            asset.currentCheckoutPaymentOutstandingCents,
                           )}.`
                         : ''}
                     </Alert>
@@ -384,6 +393,15 @@ export default function InventoryScanPage() {
                             coPaymentReference: checkoutSupportsPaymentDetails(e.target.value)
                               ? (prev.coPaymentReference ?? '')
                               : '',
+                            coPaymentAmount: checkoutSupportsPaymentDetails(e.target.value)
+                              ? (prev.coPaymentAmount ?? '')
+                              : '',
+                            coPaymentCurrency: checkoutSupportsPaymentDetails(e.target.value)
+                              ? (prev.coPaymentCurrency ?? '')
+                              : '',
+                            coPaymentOutstanding: checkoutSupportsPaymentDetails(e.target.value)
+                              ? (prev.coPaymentOutstanding ?? '')
+                              : '',
                           }))
                         }
                         fullWidth
@@ -453,6 +471,33 @@ export default function InventoryScanPage() {
                             }
                             fullWidth
                             inputProps={{ min: 1, max: 60, step: 1 }}
+                          />
+                          <TextField
+                            label="Monto total"
+                            type="number"
+                            value={checkoutForm.coPaymentAmount ?? ''}
+                            onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coPaymentAmount: e.target.value }))}
+                            fullWidth
+                            inputProps={{ min: 0, step: '0.01' }}
+                          />
+                          <TextField
+                            label="Moneda"
+                            value={checkoutForm.coPaymentCurrency ?? ''}
+                            onChange={(e) =>
+                              setCheckoutForm((prev) => ({ ...prev, coPaymentCurrency: e.target.value.toUpperCase() }))
+                            }
+                            fullWidth
+                            inputProps={{ maxLength: 3 }}
+                          />
+                          <TextField
+                            label="Saldo pendiente"
+                            type="number"
+                            value={checkoutForm.coPaymentOutstanding ?? ''}
+                            onChange={(e) =>
+                              setCheckoutForm((prev) => ({ ...prev, coPaymentOutstanding: e.target.value }))
+                            }
+                            fullWidth
+                            inputProps={{ min: 0, step: '0.01' }}
                           />
                           <TextField
                             label="Referencia de pago"

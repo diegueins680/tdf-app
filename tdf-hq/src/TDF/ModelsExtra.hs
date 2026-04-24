@@ -564,6 +564,9 @@ AssetCheckout
     paymentType      Text Maybe
     paymentInstallments Int Maybe
     paymentReference Text Maybe
+    paymentAmountCents Int Maybe
+    paymentCurrency  Text Maybe
+    paymentOutstandingCents Int Maybe
     checkedOutByRef  Text
     checkedOutAt     UTCTime default=now()
     dueAt            UTCTime Maybe

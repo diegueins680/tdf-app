@@ -286,6 +286,9 @@ data AssetDTO = AssetDTO
   , currentCheckoutDueAt :: Maybe UTCTime
   , currentCheckoutPaymentType :: Maybe Text
   , currentCheckoutPaymentInstallments :: Maybe Int
+  , currentCheckoutPaymentAmountCents :: Maybe Int
+  , currentCheckoutPaymentCurrency :: Maybe Text
+  , currentCheckoutPaymentOutstandingCents :: Maybe Int
   , currentCheckoutPhotoUrl :: Maybe Text
   } deriving (Show, Generic)
 
@@ -556,6 +559,9 @@ data AssetCheckoutDTO = AssetCheckoutDTO
   , paymentType    :: Maybe Text
   , paymentInstallments :: Maybe Int
   , paymentReference :: Maybe Text
+  , paymentAmountCents :: Maybe Int
+  , paymentCurrency :: Maybe Text
+  , paymentOutstandingCents :: Maybe Int
   , checkedOutBy   :: Text
   , checkedOutAt   :: UTCTime
   , dueAt          :: Maybe UTCTime
@@ -623,6 +629,9 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coPaymentType   :: Maybe Text
   , coPaymentInstallments :: Maybe Int
   , coPaymentReference :: Maybe Text
+  , coPaymentAmount :: Maybe Text
+  , coPaymentCurrency :: Maybe Text
+  , coPaymentOutstanding :: Maybe Text
   , coPhotoUrl      :: Maybe Text
   , coDueAt         :: Maybe UTCTime
   , coConditionOut  :: Maybe Text

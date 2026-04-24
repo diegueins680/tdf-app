@@ -222,7 +222,7 @@ spec = do
 
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
-        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coPaymentAmount\":\"1200.50\",\"coPaymentCurrency\":\"usd\",\"coPaymentOutstanding\":\"400.25\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
         Left err ->
           expectationFailure ("Expected canonical asset checkout payload to decode, got: " <> err)
         Right payload -> do
@@ -235,6 +235,9 @@ spec = do
           coPaymentType payload `shouldBe` Just "bank_transfer"
           coPaymentInstallments payload `shouldBe` Just 3
           coPaymentReference payload `shouldBe` Just "TRX-009"
+          coPaymentAmount payload `shouldBe` Just "1200.50"
+          coPaymentCurrency payload `shouldBe` Just "usd"
+          coPaymentOutstanding payload `shouldBe` Just "400.25"
           coConditionOut payload `shouldBe` Just "Excelente"
           coPhotoUrl payload `shouldBe` Just "inventory/foto.jpg"
           coNotes payload `shouldBe` Just "Cableado completo"
@@ -914,6 +917,33 @@ spec = do
           Just key -> key
           Nothing -> error "invalid checkout room fixture key"
 
+    it "normalizes actionable holder email and phone fields before writing inventory custody records" $ do
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just " Ops@Example.com ")
+          (Just " +593 99 123 4567 ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err ->
+          expectationFailure ("Expected holder contact normalization to succeed, got " <> show err)
+        Right normalized -> do
+          ncrHolderEmail normalized `shouldBe` Just "ops@example.com"
+          ncrHolderPhone normalized `shouldBe` Just "+593991234567"
+
     it "trims meaningful condition and notes while preserving safe line breaks for inventory checkout writes" $ do
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
@@ -928,6 +958,9 @@ spec = do
           (Just " transferencia ")
           (Just 3)
           (Just "  TRX-009  ")
+          (Just " 1200.50 ")
+          (Just " usd ")
+          (Just " 400.25 ")
           Nothing
           Nothing
           (Just "  Returned with stand  ")
@@ -942,6 +975,9 @@ spec = do
           ncrPaymentType normalized `shouldBe` Just "bank_transfer"
           ncrPaymentInstallments normalized `shouldBe` Just 3
           ncrPaymentReference normalized `shouldBe` Just "TRX-009"
+          ncrPaymentAmountCents normalized `shouldBe` Just 120050
+          ncrPaymentCurrency normalized `shouldBe` Just "USD"
+          ncrPaymentOutstandingCents normalized `shouldBe` Just 40025
           ncrConditionOut normalized `shouldBe` Just "Returned with stand"
           ncrNotes normalized `shouldBe` Just "Cableado completo\n\tListo para sala"
 
@@ -971,6 +1007,9 @@ spec = do
               Nothing
               Nothing
               Nothing
+              Nothing
+              Nothing
+              Nothing
 
       assertInvalid
         "conditionOut must be 240 characters or fewer"
@@ -984,6 +1023,12 @@ spec = do
       assertInvalid
         "notes must not contain control characters other than tabs or line breaks"
         baseRequest { coNotes = Just "Cableado\NULcompleto" }
+      assertInvalid
+        "holderEmail must be a valid email address"
+        baseRequest { coHolderEmail = Just "ops at example.com" }
+      assertInvalid
+        "holderPhone must be a valid phone number"
+        baseRequest { coHolderPhone = Just "call me maybe" }
 
     it "rejects payment references without payment types so checkout financial metadata stays unambiguous" $
       case normalizeCheckoutRequest
@@ -1002,12 +1047,62 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
+          Nothing
+          Nothing
           Nothing) of
         Left err -> do
           errHTTPCode err `shouldBe` 400
           BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentType"
         Right value ->
           value `seq` expectationFailure "Expected orphan payment reference to be rejected"
+
+    it "rejects incomplete or contradictory checkout money fields before storing unusable balances" $ do
+      let assertInvalid expectedMessage req =
+            case normalizeCheckoutRequest req of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid checkout financial metadata to fail, got a normalized payload"
+
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "sale")
+              Nothing
+              (Just "ops@example.com")
+              Nothing
+              (Just "card")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+
+      assertInvalid
+        "paymentAmount requires paymentCurrency"
+        baseRequest { coPaymentAmount = Just "1200" }
+      assertInvalid
+        "paymentCurrency requires paymentAmount"
+        baseRequest { coPaymentCurrency = Just "USD" }
+      assertInvalid
+        "paymentOutstanding requires paymentAmount"
+        baseRequest { coPaymentOutstanding = Just "10.00" }
+      assertInvalid
+        "paymentOutstanding must be less than or equal to paymentAmount"
+        baseRequest
+          { coPaymentAmount = Just "100.00"
+          , coPaymentCurrency = Just "USD"
+          , coPaymentOutstanding = Just "150.00"
+          }
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
@@ -1141,6 +1236,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1220,6 +1318,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1299,6 +1400,9 @@ spec = do
             Nothing
             Nothing
             Nothing
+            Nothing
+            Nothing
+            Nothing
 
     it "rejects room or session targets on public QR links before external callers can attach internal references" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1336,6 +1440,9 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
+          Nothing
+          Nothing
           (Just "inventory/checkout.jpg")
           Nothing
           )
@@ -1345,6 +1452,40 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires holderEmail or holderPhone"
         Right value ->
           expectationFailure ("Expected public QR checkout without contact details to be rejected, got " <> show value)
+
+    it "rejects malformed holder contact on public QR links before creating unusable custody rows" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops at example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "holderEmail must be a valid email address"
+        Right value ->
+          expectationFailure ("Expected malformed public QR checkout contact to be rejected, got " <> show value)
 
     it "requires a checkout photo on public QR links so anonymous custody records keep visual proof" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1361,6 +1502,9 @@ spec = do
           (Just "loan")
           Nothing
           (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
           Nothing
           Nothing
           Nothing
@@ -1415,6 +1559,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1463,6 +1610,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "public-link"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -2966,6 +3116,9 @@ initializeInventoryCheckinSchema = do
         \\"payment_type\" VARCHAR NULL,\
         \\"payment_installments\" INTEGER NULL,\
         \\"payment_reference\" VARCHAR NULL,\
+        \\"payment_amount_cents\" INTEGER NULL,\
+        \\"payment_currency\" VARCHAR NULL,\
+        \\"payment_outstanding_cents\" INTEGER NULL,\
         \\"checked_out_by_ref\" VARCHAR NOT NULL,\
         \\"checked_out_at\" TIMESTAMP NOT NULL,\
         \\"due_at\" TIMESTAMP NULL,\
