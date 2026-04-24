@@ -1342,7 +1342,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('summarizes the default active-only scope once and groups even a lone inactive row under one inactive section label', async () => {
+  it('keeps inactive scope and visibility labels separate when a lone inactive row stays collapsed', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -1404,9 +1404,9 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
-        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
-        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(true);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
@@ -2299,8 +2299,8 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
-        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
-        expect(container.textContent).not.toContain('Inactivos incluidos');
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(container.textContent).toContain('Inactivos incluidos');
         expect(
           buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),
         ).toBe('Ver inactivo: Ada Inactiva');
@@ -2522,9 +2522,9 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
-        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
-        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(true);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
