@@ -1982,6 +1982,30 @@ main = hspec $ do
                             <> show value
                         )
 
+        it "rejects unexpected top-level or nested SRI keys so script schema drift fails explicitly" $ do
+            let assertInvalid raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` "Invalid SRI script JSON output"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected unexpected SRI script keys to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\","
+                    <> "\"traceId\":\"abc\"}"
+                )
+            assertInvalid
+                ( "{\"ok\":true,\"status\":\"autorización emitida\","
+                    <> "\"buyer\":{"
+                    <> "\"ruc\":\"0999999999001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"country\":\"EC\"}}"
+                )
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"

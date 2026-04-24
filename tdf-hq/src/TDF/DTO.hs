@@ -596,7 +596,11 @@ data SriIssueBuyerDTO = SriIssueBuyerDTO
 instance ToJSON SriIssueBuyerDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
 instance FromJSON SriIssueBuyerDTO where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
 
 data SriIssueResultDTO = SriIssueResultDTO
   { sirOk                  :: Bool
@@ -611,7 +615,11 @@ data SriIssueResultDTO = SriIssueResultDTO
 instance ToJSON SriIssueResultDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
 instance FromJSON SriIssueResultDTO where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
 
 dtoCamelDrop :: Int -> String -> String
 dtoCamelDrop n xs = case drop n xs of
