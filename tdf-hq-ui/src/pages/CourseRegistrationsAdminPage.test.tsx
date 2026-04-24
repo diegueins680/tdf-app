@@ -6897,6 +6897,29 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy single-choice defaults focused on search instead of a passive current-view panel', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Beatmaking 101 (beatmaking-101) · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
+      );
+      expect(container.textContent).toContain(dossierOnlyScopeHint);
+    });
+
+    await cleanup();
+  });
+
   it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
@@ -8189,7 +8212,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
     });
@@ -8225,7 +8248,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });

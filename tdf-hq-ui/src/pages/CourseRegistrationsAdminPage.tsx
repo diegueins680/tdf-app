@@ -1729,7 +1729,7 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
     ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
     : '';
-  const localSearchHelperText = localSearchKey
+  const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
       : localSearchNarrowsRegistrations
@@ -1922,6 +1922,26 @@ export default function CourseRegistrationsAdminPage() {
     singleVisibleMissingContactSummary,
   ].filter(Boolean).join(' ');
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const hasSharedListContextSummary = Boolean(
+    combinedSharedListContextSummary
+    || shouldShowSharedStatusSummary
+    || shouldShowSharedCohortSummary
+    || shouldShowSharedSourceSummary
+    || sharedVisibleCreatedAtSummary
+    || sharedVisibleMissingContactSummary
+    || sharedVisibleNotesSummary,
+  );
+  const hideBusyListPassiveCurrentViewPanel = showBusyListSearchOnboarding
+    && Boolean(combinedSingleChoiceSummary)
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !combinedSingleChoiceContextSummary
+    && !hasSharedListContextSummary;
+  const localSearchHelperText = !localSearchKey
+    && hideBusyListPassiveCurrentViewPanel
+    && baseLocalSearchHelperText
+    ? `${combinedSingleChoiceSummary}. ${baseLocalSearchHelperText}`
+    : baseLocalSearchHelperText;
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
     && !hasUsedFilterControl
@@ -3300,7 +3320,7 @@ export default function CourseRegistrationsAdminPage() {
         </Alert>
       )}
 
-      {showRegistrationFilterPanel && !showInitialFilterGuidance && (
+      {showRegistrationFilterPanel && !showInitialFilterGuidance && !hideBusyListPassiveCurrentViewPanel && (
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           <>
             <Grid container spacing={2}>
