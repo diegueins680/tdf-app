@@ -312,6 +312,44 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps review proof guidance in one compact helper block once inbound messages arrive', async () => {
+    getMetaReviewAssetSelectionMock.mockReturnValue({
+      pageId: 'page-1',
+      pageName: 'TDF Review Page',
+      instagramUserId: 'ig-user-1',
+      instagramUsername: 'tdfreview',
+      selectedAt: 1_763_000_000_000,
+    });
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Step 2/3: send a live reply from app UI, then show the same message in native client.',
+      );
+      expect(container.textContent).toContain(
+        'Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.',
+      );
+      expect(container.textContent).toContain(
+        'Keep this panel visible while recording. It already shows the selected account, inbound message, send action, native-client confirmation, and deleted-message refresh. App Review mode auto-refreshes every 5 seconds.',
+      );
+      expect(container.textContent).not.toContain('Recording checklist');
+      expect(container.textContent).not.toContain('Keep this panel visible and narrate:');
+      expect(container.textContent).not.toContain(
+        'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
+      );
+      expect(countTextOccurrences(container, 'App Review mode auto-refreshes every 5 seconds')).toBe(1);
+      expect(countInstagramSetupLinks(container)).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps first-time App Review setup focused on asset selection instead of duplicate refresh guidance', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

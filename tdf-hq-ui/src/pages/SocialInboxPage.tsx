@@ -1452,10 +1452,17 @@ export default function SocialInboxPage() {
                 </Typography>
                 <Typography variant="body2">Requested scopes: {reviewScopes.join(', ')}</Typography>
                 {showReviewMessageProofGuidance && (
-                  <Typography variant="body2">
-                    Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
-                    Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
-                  </Typography>
+                  <>
+                    <Typography variant="body2">
+                      Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
+                      Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Keep this panel visible while recording. It already shows the selected account, inbound message,
+                      send action, native-client confirmation, and deleted-message refresh. App Review mode auto-refreshes
+                      every 5 seconds.
+                    </Typography>
+                  </>
                 )}
               </Stack>
             </Alert>
@@ -1473,20 +1480,6 @@ export default function SocialInboxPage() {
             <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
               {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
             </Button>
-            {showReviewMessageProofGuidance && (
-              <>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Recording checklist
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Keep this panel visible and narrate: the selected professional/business account, the inbound message, the send
-                  action, the native-client delivery confirmation, and the deleted-message refresh.
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
-                </Typography>
-              </>
-            )}
           </Stack>
         </Paper>
       )}
