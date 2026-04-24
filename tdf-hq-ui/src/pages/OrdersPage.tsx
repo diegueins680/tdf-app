@@ -162,20 +162,62 @@ const hasDisplayValue = (value: string) => {
   return trimmed !== '' && trimmed !== '—';
 };
 
+function getDistinctSessionTitle(title: string | null | undefined, service: string) {
+  const trimmedTitle = title?.trim() ?? '';
+  if (!trimmedTitle || trimmedTitle === '—') return '';
+  return normalizeComparableString(trimmedTitle) === normalizeComparableString(service) ? '' : trimmedTitle;
+}
+
+function buildBookingPrimary({
+  customerName,
+  partyDisplayName,
+  partyName,
+  serviceOrderId,
+  serviceOrderTitle,
+  sessionTitle,
+}: {
+  customerName?: string | null;
+  partyDisplayName?: string | null;
+  partyName?: string | null;
+  serviceOrderId?: number | null;
+  serviceOrderTitle?: string | null;
+  sessionTitle: string;
+}) {
+  return serviceOrderTitle?.trim()
+    || customerName?.trim()
+    || partyDisplayName?.trim()
+    || partyName?.trim()
+    || sessionTitle
+    || (serviceOrderId ? `SO #${serviceOrderId}` : 'Sin booking asignado');
+}
+
 function buildBookingSecondarySummary({
   bookingPrimary,
   partyNames,
+  sessionTitle,
   serviceOrderId,
 }: {
   bookingPrimary: string;
   partyNames: string[];
+  sessionTitle: string;
   serviceOrderId?: number | null;
 }) {
   const normalizedPrimary = normalizeComparableString(bookingPrimary);
   const secondaryParts = partyNames.filter((name) => normalizeComparableString(name) !== normalizedPrimary);
 
   if (serviceOrderId) {
-    secondaryParts.push(`SO #${serviceOrderId}`);
+    const serviceOrderLabel = `SO #${serviceOrderId}`;
+    if (normalizeComparableString(serviceOrderLabel) !== normalizedPrimary) {
+      secondaryParts.push(serviceOrderLabel);
+    }
+  }
+
+  if (
+    sessionTitle
+    && normalizeComparableString(sessionTitle) !== normalizedPrimary
+    && !secondaryParts.some((value) => normalizeComparableString(value) === normalizeComparableString(sessionTitle))
+  ) {
+    secondaryParts.push(sessionTitle);
   }
 
   return secondaryParts.join(' · ');
@@ -229,16 +271,20 @@ export default function OrdersPage() {
       const party = booking.partyId ? partyLookup.get(booking.partyId) : undefined;
       const partyNames = dedupeStrings([booking.customerName, booking.partyDisplayName, party?.displayName]);
       const serviceTitle = booking.serviceType ?? booking.title ?? '—';
+      const sessionTitle = getDistinctSessionTitle(booking.title, serviceTitle);
       const isRecording = serviceTitle.toLowerCase().includes('grab');
-      const bookingPrimary =
-        booking.serviceOrderTitle ??
-        booking.customerName ??
-        booking.partyDisplayName ??
-        party?.displayName ??
-        `Booking #${booking.bookingId}`;
+      const bookingPrimary = buildBookingPrimary({
+        customerName: booking.customerName,
+        partyDisplayName: booking.partyDisplayName,
+        partyName: party?.displayName,
+        serviceOrderId: booking.serviceOrderId,
+        serviceOrderTitle: booking.serviceOrderTitle,
+        sessionTitle,
+      });
       const bookingSecondarySummary = buildBookingSecondarySummary({
         bookingPrimary,
         partyNames,
+        sessionTitle,
         serviceOrderId: booking.serviceOrderId,
       });
 

@@ -273,6 +273,40 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('uses the session title as booking context in the first-session summary before falling back to a generic id', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 112,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const summaryText = container.textContent ?? '';
+
+        expect(summaryText).toContain('Primera sesión registrada');
+        expect(summaryText).toContain('Servicio: Mixing');
+        expect(summaryText).toContain('Booking: Tracking principal');
+        expect(summaryText).not.toContain('Booking #112');
+        expect(summaryText).not.toContain('Sin booking asignado');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses row click for editing and only shows the Live Sessions shortcut on recording rows', async () => {
     listBookingsMock.mockResolvedValue([
       {
@@ -373,8 +407,10 @@ describe('OrdersPage', () => {
         expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola sala: Studio A.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Studio A')).toBe(1);
         expect(hasTableHeader(container, 'Salas')).toBe(false);
-        expect(text).toContain('Booking #151');
-        expect(text).toContain('Booking #152');
+        expect(text).toContain('Tracking principal');
+        expect(text).toContain('Edición vocal');
+        expect(text).not.toContain('Booking #151');
+        expect(text).not.toContain('Booking #152');
       });
     } finally {
       await cleanup();
@@ -465,8 +501,10 @@ describe('OrdersPage', () => {
         expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo ingeniero: Vale.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Vale')).toBe(1);
         expect(hasTableHeader(container, 'Ingeniero')).toBe(false);
-        expect(text).toContain('Booking #156');
-        expect(text).toContain('Booking #157');
+        expect(text).toContain('Tracking principal');
+        expect(text).toContain('Edición vocal');
+        expect(text).not.toContain('Booking #156');
+        expect(text).not.toContain('Booking #157');
       });
     } finally {
       await cleanup();
@@ -557,8 +595,10 @@ describe('OrdersPage', () => {
         expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo servicio: Mixing.')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Mixing')).toBe(1);
         expect(hasTableHeader(container, 'Servicio')).toBe(false);
-        expect(text).toContain('Booking #161');
-        expect(text).toContain('Booking #162');
+        expect(text).toContain('Voz principal');
+        expect(text).toContain('Coros finales');
+        expect(text).not.toContain('Booking #161');
+        expect(text).not.toContain('Booking #162');
       });
     } finally {
       await cleanup();
@@ -656,8 +696,10 @@ describe('OrdersPage', () => {
         ).toBe(1);
         expect(hasTableHeader(container, 'Servicio')).toBe(false);
         expect(hasTableHeader(container, 'Salas')).toBe(false);
-        expect(text).toContain('Booking #171');
-        expect(text).toContain('Booking #172');
+        expect(text).toContain('Voz principal');
+        expect(text).toContain('Coros finales');
+        expect(text).not.toContain('Booking #171');
+        expect(text).not.toContain('Booking #172');
       });
     } finally {
       await cleanup();
@@ -714,8 +756,10 @@ describe('OrdersPage', () => {
         expect(hasTableHeader(container, 'Servicio')).toBe(false);
         expect(hasTableHeader(container, 'Ingeniero')).toBe(false);
         expect(hasTableHeader(container, 'Salas')).toBe(false);
-        expect(text).toContain('Booking #181');
-        expect(text).toContain('Booking #182');
+        expect(text).toContain('Tracking principal');
+        expect(text).toContain('Coros finales');
+        expect(text).not.toContain('Booking #181');
+        expect(text).not.toContain('Booking #182');
       });
     } finally {
       await cleanup();
