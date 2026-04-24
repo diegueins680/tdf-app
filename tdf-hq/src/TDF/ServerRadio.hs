@@ -1007,8 +1007,10 @@ radioServer user =
     upsertPresence :: RadioPresenceUpsert -> m RadioPresenceDTO
     upsertPresence RadioPresenceUpsert{..} = do
       streamUrl <- either throwError pure (validateRadioStreamUrl rpuStreamUrl)
-      let name      = normalizeMaybe rpuStationName
-          stationId = normalizeMaybe rpuStationId
+      name <- either throwError pure $
+        validateRadioOptionalMetadataField "rpuStationName" 160 rpuStationName
+      stationId <- either throwError pure $
+        validateRadioOptionalMetadataField "rpuStationId" 160 rpuStationId
       now <- liftIO getCurrentTime
       Env{..} <- ask
       entity <- liftIO $ flip runSqlPool envPool $ do

@@ -7,7 +7,7 @@ import Control.Exception (IOException, bracket)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
-import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
@@ -4490,6 +4490,60 @@ main = hspec $ do
                             rpStreamUrl persisted `shouldBe` "https://radio.example.com/alt"
                             rpStationName persisted `shouldBe` Nothing
                             rpStationId persisted `shouldBe` Nothing
+
+        it "rejects malformed station metadata before overwriting the current presence row" $ do
+            let initialPayload =
+                    RadioPresenceUpsert
+                        { rpuStreamUrl = "https://radio.example.com/live"
+                        , rpuStationName = Just "Radio Uno"
+                        , rpuStationId = Just "station-uno"
+                        }
+                invalidPayload =
+                    RadioPresenceUpsert
+                        { rpuStreamUrl = "https://radio.example.com/alt"
+                        , rpuStationName = Just "Radio\NULUno"
+                        , rpuStationId = Just (Data.Text.replicate 161 "a")
+                        }
+                _searchStreams
+                    :<|> _upsertActive
+                    :<|> _importStreams
+                    :<|> _refreshMetadata
+                    :<|> _nowPlaying
+                    :<|> _createTransmission
+                    :<|> getSelfPresenceHandler
+                    :<|> upsertPresenceHandler
+                    :<|> _clearPresence
+                    :<|> _getPresenceByParty =
+                        radioServer radioPresenceUser :: ServerT RadioAPI RadioPresenceTestM
+
+            result <- runRadioPresenceTest $ do
+                _ <- upsertPresenceHandler initialPayload
+                env <- ask
+                rejected <- liftIO $
+                    runExceptT (runReaderT (upsertPresenceHandler invalidPayload) env)
+                current <- getSelfPresenceHandler
+                pure (rejected, current)
+
+            case result of
+                Left err ->
+                    expectationFailure
+                        ("Expected radio presence validation test to complete, got " <> show err)
+                Right (rejected, current) -> do
+                    case rejected of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "rpuStationName must not contain control characters"
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed radio presence metadata to be rejected, got " <> show value)
+                    case current of
+                        Nothing ->
+                            expectationFailure "Expected previous radio presence to remain readable"
+                        Just persisted -> do
+                            rpStreamUrl persisted `shouldBe` "https://radio.example.com/live"
+                            rpStationName persisted `shouldBe` Just "Radio Uno"
+                            rpStationId persisted `shouldBe` Just "station-uno"
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do
