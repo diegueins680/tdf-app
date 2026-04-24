@@ -132,6 +132,25 @@ function getSharedInventoryCategorySummary(assets: readonly AssetDTO[]) {
     : '';
 }
 
+function getSharedInventoryConditionSummary(assets: readonly AssetDTO[]) {
+  if (assets.length < 2) return '';
+
+  const normalizedConditions = assets
+    .map((asset) => normalizeInventoryField(asset.condition))
+    .filter((condition): condition is string => condition != null);
+
+  if (normalizedConditions.length !== assets.length) return '';
+
+  const [firstCondition] = normalizedConditions;
+  const firstComparableCondition = normalizeInventoryComparisonValue(firstCondition);
+
+  return normalizedConditions.every(
+    (condition) => normalizeInventoryComparisonValue(condition) === firstComparableCondition,
+  )
+    ? (firstCondition ?? '')
+    : '';
+}
+
 function joinInventorySummaryParts(parts: readonly string[]) {
   if (parts.length <= 1) return parts[0] ?? '';
   if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
@@ -494,6 +513,7 @@ export default function InventoryPage() {
   );
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
+  const sharedConditionSummary = useMemo(() => getSharedInventoryConditionSummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
   const sharedColumnSummary = useMemo(
     () => getSharedInventoryColumnSummary({
@@ -721,6 +741,11 @@ export default function InventoryPage() {
                   {tableGuidance}
                 </Typography>
               )}
+              {sharedConditionSummary && (
+                <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                  {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
+                </Typography>
+              )}
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -774,7 +799,7 @@ export default function InventoryPage() {
                                 {asset.category}
                               </Typography>
                             )}
-                            {assetCondition && (
+                            {assetCondition && !sharedConditionSummary && (
                               <Typography variant="caption" color="text.secondary">
                                 Condición: {assetCondition}
                               </Typography>

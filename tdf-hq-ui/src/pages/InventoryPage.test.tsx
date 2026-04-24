@@ -687,6 +687,7 @@ describe('InventoryPage', () => {
         category: ' micrófono ',
         location: 'Sala B',
         status: 'Retired',
+        condition: 'Bueno',
       }),
     ]);
 
@@ -711,7 +712,7 @@ describe('InventoryPage', () => {
         expect(rows[0]?.textContent).not.toContain('Micrófono');
         expect(rows[1]?.textContent).not.toContain('Micrófono');
         expect(rows[0]?.textContent).toContain('Condición: Excelente');
-        expect(rows[1]?.textContent).toContain('Condición: Excelente');
+        expect(rows[1]?.textContent).toContain('Condición: Bueno');
       });
     } finally {
       await cleanup();
@@ -973,6 +974,7 @@ describe('InventoryPage', () => {
         name: 'Apollo Twin',
         category: 'Interfaz',
         status: 'Booked',
+        condition: 'Bueno',
       }),
     ]);
 
@@ -988,9 +990,84 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Neumann U87');
         expect(container.textContent).toContain('Micrófono');
         expect(container.textContent).toContain('Condición: Excelente');
+        expect(container.textContent).toContain('Condición: Bueno');
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('summarizes one shared condition once and restores row detail when the visible inventory conditions diverge again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        condition: ' excelente ',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola condición: Excelente. El detalle volverá cuando esta vista mezcle condiciones distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola condición: Excelente.')).toBe(1);
+        expect(getRowTextByAssetName(container, 'Activo Uno')).not.toContain('Condición:');
+        expect(getRowTextByAssetName(container, 'Retirado Uno')).not.toContain('Condición:');
+        expect(countOccurrencesIgnoringCase(text, 'Condición:')).toBe(1);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        condition: 'Bueno',
+        status: 'Retired',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola condición:');
+        expect(getRowTextByAssetName(secondContainer, 'Activo Uno')).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(secondContainer, 'Retirado Uno')).toContain('Condición: Bueno');
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 
