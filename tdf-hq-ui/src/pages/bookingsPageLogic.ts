@@ -4,6 +4,7 @@ interface BookingCustomerFieldState {
   helperText: string;
   dialogTitle: string;
   quickCreateLabel: string;
+  showCustomerSelector: boolean;
   showQuickCreateAction: boolean;
 }
 
@@ -73,6 +74,7 @@ export const getBookingCustomerFieldState = ({
       helperText: 'Cliente asignado. Cambia la selección solo si necesitas reemplazarlo.',
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
+      showCustomerSelector: true,
       showQuickCreateAction: false,
     };
   }
@@ -82,6 +84,7 @@ export const getBookingCustomerFieldState = ({
       helperText: 'Todavía no hay clientes guardados. Agrega el primero sin salir de esta sesión.',
       dialogTitle: 'Agregar primer contacto',
       quickCreateLabel: 'Agregar primer contacto',
+      showCustomerSelector: false,
       showQuickCreateAction: true,
     };
   }
@@ -90,6 +93,7 @@ export const getBookingCustomerFieldState = ({
     helperText: 'Selecciona un cliente guardado. Si todavía no existe, créalo aquí.',
     dialogTitle: 'Nuevo contacto',
     quickCreateLabel: 'Crear contacto nuevo',
+    showCustomerSelector: true,
     showQuickCreateAction: true,
   };
 };

@@ -34,6 +34,7 @@ describe('bookingsPageLogic', () => {
       helperText: 'Todavía no hay clientes guardados. Agrega el primero sin salir de esta sesión.',
       dialogTitle: 'Agregar primer contacto',
       quickCreateLabel: 'Agregar primer contacto',
+      showCustomerSelector: false,
       showQuickCreateAction: true,
     });
   });
@@ -43,6 +44,7 @@ describe('bookingsPageLogic', () => {
       helperText: 'Selecciona un cliente guardado. Si todavía no existe, créalo aquí.',
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
+      showCustomerSelector: true,
       showQuickCreateAction: true,
     });
   });
@@ -52,6 +54,7 @@ describe('bookingsPageLogic', () => {
       helperText: 'Cliente asignado. Cambia la selección solo si necesitas reemplazarlo.',
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
+      showCustomerSelector: true,
       showQuickCreateAction: false,
     });
   });

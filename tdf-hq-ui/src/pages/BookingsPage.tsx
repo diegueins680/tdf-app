@@ -1010,32 +1010,38 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
             />
-            <Autocomplete
-              options={customerOptions}
-              getOptionLabel={(option) => option.displayName}
-              loading={partiesQuery.isFetching}
-              value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
-              onChange={(_, value) => {
-                setCustomerPartyId(value?.partyId ?? null);
-                setCustomerName(value?.displayName ?? '');
-              }}
-              inputValue={customerName}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'clear') {
-                  setCustomerPartyId(null);
-                  setCustomerName('');
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Cliente"
-                  required
-                  helperText={customerFieldState.helperText}
-                />
-              )}
-              noOptionsText="Sin clientes en el catálogo"
-            />
+            {customerFieldState.showCustomerSelector ? (
+              <Autocomplete
+                options={customerOptions}
+                getOptionLabel={(option) => option.displayName}
+                loading={partiesQuery.isFetching}
+                value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
+                onChange={(_, value) => {
+                  setCustomerPartyId(value?.partyId ?? null);
+                  setCustomerName(value?.displayName ?? '');
+                }}
+                inputValue={customerName}
+                onInputChange={(_, value, reason) => {
+                  if (reason === 'clear') {
+                    setCustomerPartyId(null);
+                    setCustomerName('');
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Cliente"
+                    required
+                    helperText={customerFieldState.helperText}
+                  />
+                )}
+                noOptionsText="Sin clientes en el catálogo"
+              />
+            ) : (
+              <Alert severity="info" variant="outlined">
+                {customerFieldState.helperText}
+              </Alert>
+            )}
             {customerFieldState.showQuickCreateAction && (
               <Button
                 variant="outlined"
