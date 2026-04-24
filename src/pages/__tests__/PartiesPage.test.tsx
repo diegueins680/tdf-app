@@ -286,4 +286,38 @@ describe('PartiesPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Instagram$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
   });
+
+  it('replaces an empty filtered CRM table with a focused no-results state', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([
+      buildParty(),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        instagram: null,
+      }),
+    ]);
+
+    renderPage();
+
+    const searchInput = await screen.findByPlaceholderText(/Buscar…/i);
+    await user.type(searchInput, 'zzz');
+
+    await waitFor(() => {
+      expect(screen.getByText('No hay coincidencias para esa búsqueda.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Ajusta el filtro o usa Nueva Persona si el contacto todavía no existe\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Nombre$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Org$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('zzz')).toBeInTheDocument();
+  });
 });

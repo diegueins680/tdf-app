@@ -1028,6 +1028,8 @@ export default function PartiesPage() {
       return Object.values(row.original).join(' ').toLowerCase().includes(v);
     },
   });
+  const filteredContactRows = table.getRowModel().rows;
+  const showFilteredContactsEmptyState = !isLoading && !error && filteredContactRows.length === 0;
 
   return (
     <>
@@ -1154,66 +1156,88 @@ export default function PartiesPage() {
             sx={{ mb: 1 }}
           />
 
-          <Paper variant="outlined">
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    {table.getHeaderGroups().map(hg => hg.headers.map(h => (
-                      <TableCell key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
-                    )))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {table.getRowModel().rows.map(r => (
-                    <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
-                      {r.getVisibleCells().map(c => (
-                        <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Menu
-              anchorEl={rowActionsAnchorEl}
-              open={!!rowActionsAnchorEl && !!activeRowActionParty}
-              onClose={handleCloseRowActions}
+          {showFilteredContactsEmptyState ? (
+            <Paper
+              variant="outlined"
+              sx={{
+                minHeight: 220,
+                px: 3,
+                py: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+              }}
             >
-              <MenuItem
-                onClick={() => {
-                  if (!activeRowActionParty) return;
-                  handleCloseRowActions();
-                  setDetail(activeRowActionParty);
-                }}
+              <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
+                <Typography variant="h6">No hay coincidencias para esa búsqueda.</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Ajusta el filtro o usa Nueva Persona si el contacto todavía no existe.
+                </Typography>
+              </Stack>
+            </Paper>
+          ) : (
+            <Paper variant="outlined">
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      {table.getHeaderGroups().map(hg => hg.headers.map(h => (
+                        <TableCell key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
+                      )))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredContactRows.map(r => (
+                      <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
+                        {r.getVisibleCells().map(c => (
+                          <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Menu
+                anchorEl={rowActionsAnchorEl}
+                open={!!rowActionsAnchorEl && !!activeRowActionParty}
+                onClose={handleCloseRowActions}
               >
-                Abrir ficha
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  if (!activeRowActionParty) return;
-                  handleCloseRowActions();
-                  setEditing(activeRowActionParty);
-                }}
-              >
-                Editar contacto
-              </MenuItem>
-              {!activeRowActionParty?.isOrg && (
                 <MenuItem
                   onClick={() => {
                     if (!activeRowActionParty) return;
-                    const party = activeRowActionParty;
                     handleCloseRowActions();
-                    handleConvertToStudent(party);
+                    setDetail(activeRowActionParty);
                   }}
                 >
-                  Convertir a estudiante
+                  Abrir ficha
                 </MenuItem>
-              )}
-            </Menu>
-            {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
-            {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
-          </Paper>
+                <MenuItem
+                  onClick={() => {
+                    if (!activeRowActionParty) return;
+                    handleCloseRowActions();
+                    setEditing(activeRowActionParty);
+                  }}
+                >
+                  Editar contacto
+                </MenuItem>
+                {!activeRowActionParty?.isOrg && (
+                  <MenuItem
+                    onClick={() => {
+                      if (!activeRowActionParty) return;
+                      const party = activeRowActionParty;
+                      handleCloseRowActions();
+                      handleConvertToStudent(party);
+                    }}
+                  >
+                    Convertir a estudiante
+                  </MenuItem>
+                )}
+              </Menu>
+              {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
+              {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
+            </Paper>
+          )}
         </>
       ) : null}
 
