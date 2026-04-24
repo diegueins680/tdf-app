@@ -114,6 +114,18 @@ function dedupeStrings(values: (string | null | undefined)[]) {
 }
 
 const normalizeComparableString = (value: string | null | undefined) => value?.trim().toLocaleLowerCase() ?? '';
+const getSharedSummaryValue = (values: readonly string[]) => {
+  if (values.length < 2) return '';
+
+  const trimmedValues = values.map((value) => value.trim());
+  const [firstValue] = trimmedValues;
+  if (!firstValue || firstValue === '—') return '';
+
+  const firstComparableValue = normalizeComparableString(firstValue);
+  return trimmedValues.every((value) => normalizeComparableString(value) === firstComparableValue)
+    ? firstValue
+    : '';
+};
 
 function buildBookingSecondarySummary({
   bookingPrimary,
@@ -232,6 +244,11 @@ export default function OrdersPage() {
   }, [rows, page, rowsPerPage]);
   const showPagination = totalRows > rowsPerPage;
   const showLiveSessionsColumn = paginatedRows.some((row) => row.isRecording);
+  const sharedRoomsSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => row.rooms)),
+    [rows],
+  );
+  const showRoomsColumn = sharedRoomsSummary === '';
   const rowActionSummary = rows.some((row) => row.isRecording)
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
@@ -408,6 +425,11 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
+            {sharedRoomsSummary && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 3, pt: 2 }}>
+                {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
+              </Typography>
+            )}
             <TableContainer>
               <Table size="small">
                 <TableHead>
@@ -416,7 +438,7 @@ export default function OrdersPage() {
                     <TableCell>Servicio</TableCell>
                     <TableCell>Booking</TableCell>
                     <TableCell>Ingeniero</TableCell>
-                    <TableCell>Salas</TableCell>
+                    {showRoomsColumn && <TableCell>Salas</TableCell>}
                     <TableCell>Estado</TableCell>
                     {showLiveSessionsColumn && <TableCell align="right">Live Sessions</TableCell>}
                   </TableRow>
@@ -457,7 +479,7 @@ export default function OrdersPage() {
                         )}
                       </TableCell>
                       <TableCell>{row.engineers}</TableCell>
-                      <TableCell>{row.rooms}</TableCell>
+                      {showRoomsColumn && <TableCell>{row.rooms}</TableCell>}
                       <TableCell>{renderStatus(row.status ?? '')}</TableCell>
                       {showLiveSessionsColumn && (
                         <TableCell align="right">

@@ -1335,11 +1335,10 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
           (Just "Sale completo")
           Nothing
-          Nothing
-          Nothing
-          Nothing)
+          )
       case result of
         Left err -> do
           errHTTPCode err `shouldBe` 400
