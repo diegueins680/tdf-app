@@ -1037,7 +1037,7 @@ spec = do
           Nothing
           (Just "Backline Crew")
           Nothing
-          (Just "loan")
+          (Just "sale")
           Nothing
           Nothing
           Nothing
@@ -1056,6 +1056,33 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentType"
         Right value ->
           value `seq` expectationFailure "Expected orphan payment reference to be rejected"
+
+    it "rejects payment metadata for non-commercial dispositions so loans and repairs cannot carry sale-only fields" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          Nothing
+          Nothing
+          (Just "cash")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "payment fields are only allowed for sale or rental checkout"
+        Right value ->
+          value `seq` expectationFailure "Expected loan checkout payment metadata to be rejected"
 
     it "rejects incomplete or contradictory checkout money fields before storing unusable balances" $ do
       let assertInvalid expectedMessage req =

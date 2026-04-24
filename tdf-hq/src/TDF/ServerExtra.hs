@@ -577,6 +577,7 @@ normalizeCheckoutRequest req = do
   paymentCurrency <- validateCheckoutCurrency (coPaymentCurrency req)
   paymentOutstandingCents <- validateCheckoutMoneyField "paymentOutstanding" True (coPaymentOutstanding req)
   validateCheckoutFinancials
+    disposition
     paymentType
     paymentInstallments
     paymentReference
@@ -813,34 +814,51 @@ parseMoneyToCents rawValue
         _             -> Nothing
 
 validateCheckoutFinancials
-  :: Maybe Text
+  :: CheckoutDisposition
+  -> Maybe Text
   -> Maybe Int
   -> Maybe Text
   -> Maybe Int
   -> Maybe Text
   -> Maybe Int
   -> Either ServerError ()
-validateCheckoutFinancials Nothing (Just _) _ _ _ _ =
+validateCheckoutFinancials disposition paymentType paymentInstallments paymentReference paymentAmount paymentCurrency paymentOutstanding
+  | not (checkoutDispositionSupportsPaymentDetails disposition)
+      && any isJust
+        [ fmap (const ()) paymentType
+        , fmap (const ()) paymentInstallments
+        , fmap (const ()) paymentReference
+        , fmap (const ()) paymentAmount
+        , fmap (const ()) paymentCurrency
+        , fmap (const ()) paymentOutstanding
+        ] =
+      Left err400 { errBody = "payment fields are only allowed for sale or rental checkout" }
+validateCheckoutFinancials _ Nothing (Just _) _ _ _ _ =
   Left err400 { errBody = "paymentInstallments requires paymentType" }
-validateCheckoutFinancials Nothing _ (Just _) _ _ _ =
+validateCheckoutFinancials _ Nothing _ (Just _) _ _ _ =
   Left err400 { errBody = "paymentReference requires paymentType" }
-validateCheckoutFinancials Nothing _ _ (Just _) _ _ =
+validateCheckoutFinancials _ Nothing _ _ (Just _) _ _ =
   Left err400 { errBody = "paymentAmount requires paymentType" }
-validateCheckoutFinancials Nothing _ _ _ (Just _) _ =
+validateCheckoutFinancials _ Nothing _ _ _ (Just _) _ =
   Left err400 { errBody = "paymentCurrency requires paymentType" }
-validateCheckoutFinancials Nothing _ _ _ _ (Just _) =
+validateCheckoutFinancials _ Nothing _ _ _ _ (Just _) =
   Left err400 { errBody = "paymentOutstanding requires paymentType" }
-validateCheckoutFinancials _ _ _ Nothing (Just _) _ =
+validateCheckoutFinancials _ _ _ _ Nothing (Just _) _ =
   Left err400 { errBody = "paymentCurrency requires paymentAmount" }
-validateCheckoutFinancials _ _ _ (Just _) Nothing _ =
+validateCheckoutFinancials _ _ _ _ (Just _) Nothing _ =
   Left err400 { errBody = "paymentAmount requires paymentCurrency" }
-validateCheckoutFinancials _ _ _ Nothing _ (Just _) =
+validateCheckoutFinancials _ _ _ _ Nothing _ (Just _) =
   Left err400 { errBody = "paymentOutstanding requires paymentAmount" }
-validateCheckoutFinancials _ _ _ (Just amountCents) _ (Just outstandingCents)
+validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
   | outstandingCents > amountCents =
       Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }
-validateCheckoutFinancials _ _ _ _ _ _ =
+validateCheckoutFinancials _ _ _ _ _ _ _ =
   Right ()
+
+checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
+checkoutDispositionSupportsPaymentDetails Rental = True
+checkoutDispositionSupportsPaymentDetails Sale = True
+checkoutDispositionSupportsPaymentDetails _ = False
 
 validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateInventoryConditionField fieldName =
