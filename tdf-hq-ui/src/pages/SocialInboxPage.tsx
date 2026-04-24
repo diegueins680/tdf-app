@@ -53,6 +53,9 @@ type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
 type RealFilterKey = Exclude<FilterKey, 'all'>;
 const LIMIT_OPTIONS = [50, 100, 200] as const;
 const DEFAULT_LIMIT = 100;
+const reviewSelectedAssetEmptyStateTitle = 'Waiting for the first inbound message.';
+const reviewSelectedAssetEmptyStateMessage =
+  'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.';
 
 const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
@@ -1506,12 +1509,16 @@ export default function SocialInboxPage() {
         >
           <Stack spacing={0.5}>
             <Typography variant="body2" fontWeight={700}>
-              {reviewMode ? 'No inbound messages yet.' : 'Todavia no hay mensajes entrantes.'}
+              {reviewMode
+                ? activeAsset
+                  ? reviewSelectedAssetEmptyStateTitle
+                  : 'No inbound messages yet.'
+                : 'Todavia no hay mensajes entrantes.'}
             </Typography>
             <Typography variant="body2">
               {reviewMode
                 ? activeAsset
-                  ? 'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.'
+                  ? reviewSelectedAssetEmptyStateMessage
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                 : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
             </Typography>

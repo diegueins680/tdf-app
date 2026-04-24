@@ -288,8 +288,11 @@ describe('SocialInboxPage', () => {
       );
       expect(container.textContent).toContain('@tdfreview');
       expect(container.textContent).toContain('IG User ID: ig-user-1');
-      expect(container.textContent).toContain('No inbound messages yet.');
+      expect(container.textContent).toContain('Waiting for the first inbound message.');
       expect(container.textContent).toContain(
+        'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+      );
+      expect(container.textContent).not.toContain(
         'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.',
       );
       expect(container.textContent).not.toContain(
@@ -299,9 +302,6 @@ describe('SocialInboxPage', () => {
         container,
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       )).toBe(0);
-      expect(container.textContent).not.toContain(
-        'The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
-      );
       expect(countInstagramSetupLinks(container)).toBe(1);
       expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
