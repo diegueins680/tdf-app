@@ -1286,6 +1286,24 @@ spec = do
                 "{\"email\":\"ada@example.com\",\"code\":\"REF-42\",\"status\":\"claimed\"}"
                 `shouldSatisfy` isLeft
 
+    describe "social event create request FromJSON" $ do
+        it "accepts canonical event create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
+            case (eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\"}"
+                    :: Either String SocialEvents.EventDTO) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical event create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.eventTitle payload `shouldBe` "Test"
+                    SocialEvents.eventStatus payload `shouldBe` Just "draft"
+                    SocialEvents.eventArtists payload `shouldBe` []
+
+            (eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\",\"unexpected\":true}"
+                    :: Either String SocialEvents.EventDTO)
+                `shouldSatisfy` isLeft
+
     describe "social event ticket request FromJSON" $ do
         it "rejects unexpected artist follow keys before handler fallback validation" $ do
             case decodeArtistFollowRequest "{\"followerPartyId\":\"42\"}" of

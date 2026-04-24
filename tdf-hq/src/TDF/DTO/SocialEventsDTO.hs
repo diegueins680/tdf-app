@@ -35,7 +35,7 @@ module TDF.DTO.SocialEventsDTO
   , EventFinanceSummaryDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON, Value(..), withObject, (.:), (.:!), (.:?), (.=), object, toJSON, parseJSON)
+import           Data.Aeson (FromJSON, ToJSON, Value(..), defaultOptions, genericParseJSON, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=), object, toJSON, parseJSON)
 import           Data.Aeson.Types (Object, Parser)
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -254,7 +254,10 @@ data EventDTO = EventDTO
   , eventArtists     :: [ArtistDTO]
   } deriving (Show, Eq, Generic)
 instance ToJSON EventDTO
-instance FromJSON EventDTO
+instance FromJSON EventDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data EventMetadataUpdateDTO = EventMetadataUpdateDTO
   { emuTicketUrl   :: NullableFieldUpdate Text
