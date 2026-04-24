@@ -127,6 +127,11 @@ const getSharedSummaryValue = (values: readonly string[]) => {
     : '';
 };
 
+const hasDisplayValue = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed !== '' && trimmed !== '—';
+};
+
 function buildBookingSecondarySummary({
   bookingPrimary,
   partyNames,
@@ -411,12 +416,16 @@ export default function OrdersPage() {
                   <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleRow.bookingSecondary}
                 </Typography>
               )}
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleRow.engineers}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleRow.rooms}
-              </Typography>
+              {hasDisplayValue(singleRow.engineers) && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleRow.engineers}
+                </Typography>
+              )}
+              {hasDisplayValue(singleRow.rooms) && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleRow.rooms}
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>

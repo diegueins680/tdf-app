@@ -240,6 +240,39 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('hides empty engineer and room placeholders in the first-session summary so setup stays focused on real context', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 111,
+        title: 'Sesión sin recursos',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mixing',
+        customerName: 'Ada Sessions',
+        resources: [],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primera sesión registrada');
+        expect(container.textContent).toContain('Servicio: Mixing');
+        expect(container.textContent).toContain('Booking: Ada Sessions');
+        expect(container.textContent).not.toContain('Ingeniero:');
+        expect(container.textContent).not.toContain('Salas:');
+        expect(container.textContent).not.toContain('Ingeniero: —');
+        expect(container.textContent).not.toContain('Salas: —');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses row click for editing and only shows the Live Sessions shortcut on recording rows', async () => {
     listBookingsMock.mockResolvedValue([
       {
