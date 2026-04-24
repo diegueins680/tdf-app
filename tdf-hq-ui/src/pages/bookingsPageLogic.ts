@@ -14,6 +14,11 @@ interface BookingCalendarStatusState {
   severity: 'info';
 }
 
+interface BookingServiceFieldState {
+  helperText: string;
+  mode: 'catalog' | 'manual';
+}
+
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
   return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
@@ -145,6 +150,37 @@ export const shouldShowQuickBookingTemplate = ({
   serviceCatalogReady: boolean;
   serviceLocked: boolean;
 }) => mode === 'create' && !serviceLocked && serviceCatalogReady && !hasServiceCatalog;
+
+export const getBookingServiceFieldState = ({
+  hasServiceCatalog,
+  mode,
+  serviceCatalogReady,
+  serviceLocked,
+}: {
+  hasServiceCatalog: boolean;
+  mode: 'create' | 'edit';
+  serviceCatalogReady: boolean;
+  serviceLocked: boolean;
+}): BookingServiceFieldState => {
+  if (serviceLocked || hasServiceCatalog || !serviceCatalogReady) {
+    return {
+      helperText: '',
+      mode: 'catalog',
+    };
+  }
+
+  if (mode === 'create') {
+    return {
+      helperText: 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
+      mode: 'manual',
+    };
+  }
+
+  return {
+    helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
+    mode: 'manual',
+  };
+};
 
 export const getBookingConflictAlertText = (conflictTitles: (string | null | undefined)[]) => {
   if (conflictTitles.length === 0) return null;

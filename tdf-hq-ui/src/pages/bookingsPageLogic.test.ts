@@ -4,6 +4,7 @@ import {
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
+  getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
@@ -90,6 +91,50 @@ describe('bookingsPageLogic', () => {
       serviceCatalogReady: true,
       serviceLocked: true,
     })).toBe(false);
+  });
+
+  it('switches the service field to manual entry when the catalog fallback is active', () => {
+    expect(getBookingServiceFieldState({
+      hasServiceCatalog: false,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toEqual({
+      helperText: 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
+      mode: 'manual',
+    });
+
+    expect(getBookingServiceFieldState({
+      hasServiceCatalog: false,
+      mode: 'edit',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toEqual({
+      helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
+      mode: 'manual',
+    });
+  });
+
+  it('keeps the catalog selector once services are available or still loading', () => {
+    expect(getBookingServiceFieldState({
+      hasServiceCatalog: true,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toEqual({
+      helperText: '',
+      mode: 'catalog',
+    });
+
+    expect(getBookingServiceFieldState({
+      hasServiceCatalog: false,
+      mode: 'create',
+      serviceCatalogReady: false,
+      serviceLocked: false,
+    })).toEqual({
+      helperText: '',
+      mode: 'catalog',
+    });
   });
 
   it('keeps room conflict guidance in one specific warning with a capped conflict list', () => {

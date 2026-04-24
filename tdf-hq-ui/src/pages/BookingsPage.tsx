@@ -37,6 +37,7 @@ import {
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
+  getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
@@ -344,12 +345,29 @@ export default function BookingsPage() {
     () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
     [customerOptions.length, customerPartyId],
   );
+  const serviceCatalogReady = !serviceCatalogQuery.isLoading;
   const showQuickTemplateField = shouldShowQuickBookingTemplate({
     hasServiceCatalog: serviceTypes.length > 0,
     mode,
-    serviceCatalogReady: !serviceCatalogQuery.isLoading,
+    serviceCatalogReady,
     serviceLocked,
   });
+  const serviceFieldState = useMemo(
+    () =>
+      getBookingServiceFieldState({
+        hasServiceCatalog: serviceTypes.length > 0,
+        mode,
+        serviceCatalogReady,
+        serviceLocked,
+      }),
+    [mode, serviceCatalogReady, serviceLocked, serviceTypes.length],
+  );
+  const serviceFieldHelperText =
+    serviceFieldState.mode === 'manual'
+      ? serviceType.trim()
+        ? `${serviceFieldState.helperText} ${describeServiceDefaults(serviceType)}`
+        : serviceFieldState.helperText
+      : describeServiceDefaults(serviceType);
   const conflictAlertText = useMemo(
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
@@ -1178,52 +1196,67 @@ const openDialogForRange = (start: Date, end: Date) => {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              select
-              label="Servicio"
-              value={serviceType}
-              disabled={serviceLocked}
-              onChange={(e) => {
-                const value = e.target.value;
-                const wasDurationManual = durationManuallyAdjusted;
-                const wasRoomsManual = roomsManuallyAdjusted;
-                setDurationManuallyAdjusted(false);
-                setRoomsManuallyAdjusted(false);
-                setServiceType(value);
-                const messageParts: string[] = [];
-                if (!wasRoomsManual || assignedRoomIds.length === 0) {
-                  const defaults = defaultRoomsForService(value);
-                  if (defaults.length) {
-                    setAssignedRoomIds(defaults.map((room) => room.roomId));
-                    messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
-                    setRoomsManuallyAdjusted(false);
-                  }
-                }
-                if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
-                  const eng = engineerOptions[0]!;
-                  setEngineerName(eng.displayName);
-                  setEngineerPartyId(eng.partyId);
-                  messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
-                }
-                const minutes = defaultMinutesForService(value);
-                const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
-                if (!wasDurationManual && startDt.isValid && minutes > 0) {
-                  const endDt = startDt.plus({ minutes });
-                  setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
-                  messageParts.push(`Duración ajustada a ${minutes} min`);
+            {serviceFieldState.mode === 'manual' ? (
+              <TextField
+                label="Servicio"
+                value={serviceType}
+                disabled={serviceLocked}
+                onChange={(e) => {
+                  setServiceType(e.target.value);
+                  setAutoAssignMessage('');
+                }}
+                helperText={serviceFieldHelperText}
+                placeholder="Ej. Recording, ensayo, podcast"
+                fullWidth
+              />
+            ) : (
+              <TextField
+                select
+                label="Servicio"
+                value={serviceType}
+                disabled={serviceLocked}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const wasDurationManual = durationManuallyAdjusted;
+                  const wasRoomsManual = roomsManuallyAdjusted;
                   setDurationManuallyAdjusted(false);
-                }
-                setAutoAssignMessage(messageParts.join(' · '));
-              }}
-              helperText={describeServiceDefaults(serviceType)}
-            >
-              <MenuItem value="">(Sin asignar)</MenuItem>
-              {serviceTypes.map((svc) => (
-                <MenuItem key={svc.id} value={svc.name}>
-                  {formatServiceLabel(svc)}
-                </MenuItem>
-              ))}
-            </TextField>
+                  setRoomsManuallyAdjusted(false);
+                  setServiceType(value);
+                  const messageParts: string[] = [];
+                  if (!wasRoomsManual || assignedRoomIds.length === 0) {
+                    const defaults = defaultRoomsForService(value);
+                    if (defaults.length) {
+                      setAssignedRoomIds(defaults.map((room) => room.roomId));
+                      messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
+                      setRoomsManuallyAdjusted(false);
+                    }
+                  }
+                  if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
+                    const eng = engineerOptions[0]!;
+                    setEngineerName(eng.displayName);
+                    setEngineerPartyId(eng.partyId);
+                    messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
+                  }
+                  const minutes = defaultMinutesForService(value);
+                  const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
+                  if (!wasDurationManual && startDt.isValid && minutes > 0) {
+                    const endDt = startDt.plus({ minutes });
+                    setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
+                    messageParts.push(`Duración ajustada a ${minutes} min`);
+                    setDurationManuallyAdjusted(false);
+                  }
+                  setAutoAssignMessage(messageParts.join(' · '));
+                }}
+                helperText={serviceFieldHelperText}
+              >
+                <MenuItem value="">(Sin asignar)</MenuItem>
+                {serviceTypes.map((svc) => (
+                  <MenuItem key={svc.id} value={svc.name}>
+                    {formatServiceLabel(svc)}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
             {serviceLocked && (
               <Alert severity="info" variant="outlined">
                 Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
