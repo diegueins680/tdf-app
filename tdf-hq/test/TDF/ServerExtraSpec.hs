@@ -126,6 +126,8 @@ import TDF.ServerExtra (
     normalizeAssetName,
     normalizeAssetNameUpdate,
     normalizeBandName,
+    normalizePublicQrCheckinRequest,
+    normalizePublicQrCheckoutRequest,
     validateAssetPhotoUrl,
     validateAssetPhotoUrlUpdate,
     normalizeRoomName,
@@ -2677,6 +2679,34 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout with external photo proof to be rejected, got " <> show value)
 
+    it "normalizes managed absolute checkout proof URLs returned by the public upload endpoint before public QR validation" $ do
+      cfg <- Config.loadConfig
+      let uploadUrl = Config.resolveConfiguredAssetsBase cfg <> "/inventory/checkout.jpg"
+      coPhotoUrl
+        (normalizePublicQrCheckoutRequest
+          cfg
+          (AssetCheckoutRequest
+            (Just "party")
+            Nothing
+            (Just "Backline Crew")
+            Nothing
+            (Just "loan")
+            Nothing
+            (Just "ops@example.com")
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            (Just uploadUrl)
+            (Just (UTCTime (fromGregorian 2035 5 1) 0))
+            (Just "Equipo completo")
+            Nothing
+          ))
+        `shouldBe` Just "inventory/checkout.jpg"
+
   describe "inventoryPublicServer checkinByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000910"
         canonicalToken = "00000000-0000-0000-0000-00000000dcbb"
@@ -3086,6 +3116,72 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "uploaded inventory asset path"
         Right value ->
           expectationFailure ("Expected public QR check-in with external photo proof to be rejected, got " <> show value)
+
+    it "accepts managed absolute return proof URLs returned by the public upload endpoint" $ do
+      cfg <- Config.loadConfig
+      let uploadUrl = Config.resolveConfiguredAssetsBase cfg <> "/inventory/checkin.jpg"
+      ciPhotoUrl
+        (normalizePublicQrCheckinRequest
+          cfg
+          (AssetCheckinRequest
+            (Just "Returned OK")
+            (Just "Cables verified")
+            (Just uploadUrl)))
+        `shouldBe` Just "inventory/checkin.jpg"
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verified")
+          (Just uploadUrl))
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR check-in with managed upload URL to succeed, got " <> show err)
+        Right checkout -> do
+          targetKind checkout `shouldBe` "party"
+          targetPartyRef checkout `shouldBe` Just "Backline Crew"
+          disposition checkout `shouldBe` "loan"
+          returnedAt checkout `shouldSatisfy` isJust
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
@@ -4249,10 +4345,11 @@ runInventoryPublicCheckoutHandler setup token req =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
     liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
     let env =
           Env
             { envPool = pool
-            , envConfig = error "envConfig should be unused in public inventory checkout tests"
+            , envConfig = cfg
             }
     liftIO $ runExceptT (runReaderT (publicCheckoutHandlerFor token req) env)
 
@@ -4266,10 +4363,11 @@ runInventoryPublicCheckinHandler setup token req =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
     liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
     let env =
           Env
             { envPool = pool
-            , envConfig = error "envConfig should be unused in public inventory check-in tests"
+            , envConfig = cfg
             }
     liftIO $ runExceptT (runReaderT (publicCheckinHandlerFor token req) env)
 

@@ -365,15 +365,19 @@ inventoryPublicServer =
   :<|> checkinByQrToken
   :<|> uploadByQrToken
   where
-    checkoutByQrToken token req = do
+    checkoutByQrToken token rawReq = do
       assetEntity <- loadAssetEntityByQrToken token
+      Env{envConfig} <- ask
+      let req = normalizePublicQrCheckoutRequest envConfig rawReq
       either throwError pure (validatePublicQrCheckoutRequestFields req)
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
       sanitizePublicCheckoutDTO <$> performCheckout "public-link" assetEntity req
 
-    checkinByQrToken token req = do
+    checkinByQrToken token rawReq = do
       assetEntity <- loadAssetEntityByQrToken token
+      Env{envConfig} <- ask
+      let req = normalizePublicQrCheckinRequest envConfig rawReq
       normalized <- either throwError pure (normalizeAssetCheckinFields req)
       either throwError pure (validatePublicQrCheckinFields normalized)
       sanitizePublicCheckoutDTO <$> performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
@@ -711,6 +715,34 @@ normalizeCheckoutRequest req = do
     , ncrPhotoOutUrl = photoOutUrl
     , ncrNotes = checkoutNotes
     }
+
+normalizePublicQrCheckoutRequest :: AppConfig -> AssetCheckoutRequest -> AssetCheckoutRequest
+normalizePublicQrCheckoutRequest cfg req =
+  req
+    { coPhotoUrl = normalizePublicQrProofField cfg (coPhotoUrl req)
+    }
+
+normalizePublicQrCheckinRequest :: AppConfig -> AssetCheckinRequest -> AssetCheckinRequest
+normalizePublicQrCheckinRequest cfg req =
+  req
+    { ciPhotoUrl = normalizePublicQrProofField cfg (ciPhotoUrl req)
+    }
+
+normalizePublicQrProofField :: AppConfig -> Maybe Text -> Maybe Text
+normalizePublicQrProofField cfg rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Nothing
+    Just cleanValue ->
+      Just (fromMaybe cleanValue (normalizeManagedInventoryProofUrl cfg cleanValue))
+
+normalizeManagedInventoryProofUrl :: AppConfig -> Text -> Maybe Text
+normalizeManagedInventoryProofUrl cfg rawValue =
+  normalizeAssetPhotoPath rawValue
+    <|> do
+      relPath <- T.stripPrefix assetsPrefix (T.strip rawValue)
+      normalizeAssetPhotoPath relPath
+  where
+    assetsPrefix = T.dropWhileEnd (== '/') (resolveConfiguredAssetsBase cfg) <> "/"
 
 validatePublicQrCheckoutRequest :: NormalizedCheckoutRequest -> Either ServerError ()
 validatePublicQrCheckoutRequest normalized
