@@ -365,6 +365,8 @@ inventoryPublicServer =
   where
     checkoutByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
+      when (isNothing (coDisposition req)) $
+        throwError err400 { errBody = "Public QR checkout requires coDisposition" }
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
       performCheckout "public-link" assetEntity req
