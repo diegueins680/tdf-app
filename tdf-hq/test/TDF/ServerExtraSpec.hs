@@ -1417,6 +1417,33 @@ spec = do
         Right value ->
           value `seq` expectationFailure "Expected orphan payment reference to be rejected"
 
+    it "rejects payment references without amounts so checkout payment metadata cannot lose its money context" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          (Just "  TRX-009  ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentAmount"
+        Right value ->
+          value `seq` expectationFailure "Expected amount-less payment reference to be rejected"
+
     it "rejects payment metadata for non-commercial dispositions so loans and repairs cannot carry sale-only fields" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
