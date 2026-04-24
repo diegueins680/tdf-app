@@ -311,12 +311,13 @@ export default function OrdersPage() {
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
   const showInitialLoadingState = bookingsQuery.isLoading && bookingsQuery.data == null;
+  const showInitialErrorState = Boolean(bookingsQuery.error) && totalRows === 0;
   const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
   const singleRow = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 1
     ? (rows[0] ?? null)
     : null;
   const showSingleSessionSummary = singleRow != null;
-  const showRefreshAction = Boolean(bookingsQuery.error) || totalRows > 0;
+  const showRefreshAction = totalRows > 0;
 
   useEffect(() => {
     if (page > maxPage) {
@@ -402,6 +403,10 @@ export default function OrdersPage() {
     navigate('/estudio/calendario');
   };
 
+  const handleRefresh = () => {
+    void bookingsQuery.refetch();
+  };
+
   const updateMutation = useMutation<BookingDTO, Error, { id: number; payload: BookingUpdatePayload }>({
     mutationFn: ({ id, payload }: { id: number; payload: BookingUpdatePayload }) => Bookings.update(id, payload),
     onSuccess: () => {
@@ -452,9 +457,7 @@ export default function OrdersPage() {
             <Tooltip title="Actualizar lista">
               <span>
                 <IconButton
-                  onClick={() => {
-                    void bookingsQuery.refetch();
-                  }}
+                  onClick={handleRefresh}
                   disabled={bookingsQuery.isFetching}
                   color="primary"
                   aria-label="Actualizar lista de sesiones"
@@ -470,12 +473,24 @@ export default function OrdersPage() {
         </Stack>
       </Stack>
 
-      {bookingsQuery.error && (
+      {bookingsQuery.error && !showInitialErrorState && (
         <Alert severity="error">{bookingsQuery.error.message}</Alert>
       )}
 
       <Paper variant="outlined">
-        {showInitialLoadingState ? (
+        {showInitialErrorState ? (
+          <Stack spacing={1.5} sx={{ p: 3 }} alignItems="flex-start">
+            <Typography variant="h6" fontWeight={700}>
+              No se pudieron cargar las sesiones
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Reintenta la carga para recuperar la tabla. El resumen comparativo volverá cuando la lista responda.
+            </Typography>
+            <Button variant="outlined" onClick={handleRefresh} disabled={bookingsQuery.isFetching}>
+              Reintentar carga
+            </Button>
+          </Stack>
+        ) : showInitialLoadingState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
               Cargando sesiones…

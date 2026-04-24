@@ -186,6 +186,51 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('keeps the first-load error focused on one inline retry instead of header refresh and empty table chrome', async () => {
+    listBookingsMock
+      .mockRejectedValueOnce(new Error('Gateway timeout'))
+      .mockResolvedValueOnce([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudieron cargar las sesiones');
+        expect(container.textContent).toContain(
+          'Reintenta la carga para recuperar la tabla. El resumen comparativo volverá cuando la lista responda.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(hasTableHeader(container, 'Horario')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Reintentar carga',
+          ),
+        ).toHaveLength(1);
+      });
+
+      await clickButton(
+        Array.from(container.querySelectorAll<HTMLElement>('button')).find(
+          (button) => buttonText(button) === 'Reintentar carga',
+        ) ?? (() => {
+          throw new Error('Retry button not found');
+        })(),
+      );
+
+      await waitForExpectation(() => {
+        expect(listBookingsMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('Primeras sesiones');
+        expect(container.textContent).not.toContain('No se pudieron cargar las sesiones');
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the one-row sessions table with a first-session summary and one edit action', async () => {
     listBookingsMock.mockResolvedValue([
       {
