@@ -2050,6 +2050,40 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without contact details to be rejected, got " <> show value)
 
+    it "requires rental terms on public QR links so anonymous paid custody records do not omit the agreed conditions" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Equipo completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR rental checkout requires coTermsAndConditions"
+        Right value ->
+          expectationFailure ("Expected public QR rental checkout without terms to be rejected, got " <> show value)
+
     it "rejects malformed holder contact on public QR links before creating unusable custody rows" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

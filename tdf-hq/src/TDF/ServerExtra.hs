@@ -649,6 +649,8 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR checkout does not allow sale disposition" }
   | ncrDisposition normalized /= Loan && ncrDisposition normalized /= Rental =
       Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
+  | ncrDisposition normalized == Rental && isNothing (ncrTermsAndConditions normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coTermsAndConditions" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrConditionOut normalized) =
