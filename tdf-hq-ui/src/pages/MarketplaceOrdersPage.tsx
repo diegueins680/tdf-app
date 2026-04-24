@@ -20,6 +20,7 @@ import {
   InputAdornment,
   InputLabel,
   Link,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -152,6 +153,7 @@ export default function MarketplaceOrdersPage() {
   const [paymentProviderInput, setPaymentProviderInput] = useState<string>('');
   const [paidAtInput, setPaidAtInput] = useState<string>('');
   const [toast, setToast] = useState<string | null>(null);
+  const [copyMenuAnchorEl, setCopyMenuAnchorEl] = useState<HTMLElement | null>(null);
 
   const ordersQuery = useQuery<MarketplaceOrderDTO[], Error>({
     queryKey: ['marketplace-orders', statusFilter],
@@ -474,7 +476,20 @@ export default function MarketplaceOrdersPage() {
     setStatusInput('');
     setPaymentProviderInput('');
     setPaidAtInput('');
+    setCopyMenuAnchorEl(null);
     updateMutation.reset();
+  };
+
+  const closeCopyMenu = () => {
+    setCopyMenuAnchorEl(null);
+  };
+
+  const runCopyMenuAction = (action: (order: MarketplaceOrderDTO) => void | Promise<void>) => {
+    const order = selectedOrder;
+    closeCopyMenu();
+    if (order) {
+      void action(order);
+    }
   };
 
   const handleSave = async () => {
@@ -1035,20 +1050,16 @@ export default function MarketplaceOrdersPage() {
                       title={`Pedido ${selectedOrder.moOrderId.slice(0, 8)}`}
                       subheader={`Total ${selectedOrder.moTotalDisplay}`}
                       action={
-                        <Stack direction="row" spacing={1}>
-                          <Tooltip title="Copiar ID de pedido">
-                            <IconButton
-                              size="small"
-                              aria-label={`Copiar ID del pedido ${selectedOrder.moOrderId}`}
-                              onClick={() => void handleCopyOrderId(selectedOrder.moOrderId)}
-                            >
-                              <ContentCopyIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Button size="small" onClick={() => void copyOrderSummary(selectedOrder)}>
-                            Copiar resumen
-                          </Button>
-                        </Stack>
+                        <Button
+                          size="small"
+                          startIcon={<ContentCopyIcon />}
+                          aria-label={`Abrir opciones de copia para ${selectedOrder.moOrderId}`}
+                          aria-haspopup="menu"
+                          aria-expanded={Boolean(copyMenuAnchorEl)}
+                          onClick={(event) => setCopyMenuAnchorEl(event.currentTarget)}
+                        >
+                          Copiar
+                        </Button>
                       }
                     />
                     <CardContent>
@@ -1209,6 +1220,14 @@ export default function MarketplaceOrdersPage() {
             <DialogActions>
               <Button onClick={closeDialog}>Cerrar</Button>
             </DialogActions>
+            <Menu anchorEl={copyMenuAnchorEl} open={Boolean(copyMenuAnchorEl)} onClose={closeCopyMenu}>
+              <MenuItem onClick={() => runCopyMenuAction((order) => handleCopyOrderId(order.moOrderId))}>
+                Copiar ID
+              </MenuItem>
+              <MenuItem onClick={() => runCopyMenuAction(copyOrderSummary)}>
+                Copiar resumen
+              </MenuItem>
+            </Menu>
           </>
         )}
       </Dialog>

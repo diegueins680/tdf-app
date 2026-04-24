@@ -1222,7 +1222,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('uses row click as the primary table action and removes the duplicate action column', async () => {
+  it('uses row click as the primary table action and keeps copy helpers collapsed behind one labeled menu', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1260,8 +1260,17 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
-        expect(document.body.querySelectorAll('button[aria-label^="Copiar ID del pedido "]')).toHaveLength(1);
-        expect(queryActionByText(document.body, 'Copiar resumen')).not.toBeNull();
+        expect(document.body.querySelectorAll('button[aria-label^="Copiar ID del pedido "]')).toHaveLength(0);
+        expect(queryActionByText(document.body, 'Copiar')).not.toBeNull();
+        expect(document.body.textContent).not.toContain('Copiar ID');
+        expect(document.body.textContent).not.toContain('Copiar resumen');
+      });
+
+      await clickActionByText(document.body, 'Copiar');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Copiar ID');
+        expect(document.body.textContent).toContain('Copiar resumen');
       });
     } finally {
       await cleanup();
