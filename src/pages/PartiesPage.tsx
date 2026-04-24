@@ -59,6 +59,38 @@ const bandSchema = z.object({
 
 type BandForm = z.infer<typeof bandSchema>;
 
+const hasPresentContactValue = (value?: string | null) => (value?.trim().length ?? 0) > 0;
+
+function formatCompactColumnList(labels: readonly string[]) {
+  if (labels.length === 0) {
+    return '';
+  }
+
+  if (labels.length === 1) {
+    return labels[0] ?? '';
+  }
+
+  if (labels.length === 2) {
+    const [first, second] = labels;
+    const conjunction = second?.trim().toLowerCase().startsWith('i') ? ' e ' : ' y ';
+    return `${first ?? ''}${conjunction}${second ?? ''}`;
+  }
+
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+}
+
+function buildCompactContactColumnsDescription(hiddenColumnLabels: readonly string[]) {
+  if (hiddenColumnLabels.length === 0) {
+    return null;
+  }
+
+  const labels = formatCompactColumnList(hiddenColumnLabels);
+  const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
+  const fieldLabel = hiddenColumnLabels.length === 1 ? 'ese campo' : 'esos campos';
+
+  return `Vista compacta: ${labels} ${verb} cuando exista información real en ${fieldLabel}.`;
+}
+
 function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { handleSubmit, register, control, formState: { errors }, reset } = useForm<CreateForm>({
@@ -933,13 +965,34 @@ export default function PartiesPage() {
         ] as Array<[string, string | undefined]>
       ).flatMap(([label, value]) => (value ? [[label, value]] : []))
     : [];
+  const showEmailColumn = data.some((party) => hasPresentContactValue(party.primaryEmail));
+  const showInstagramColumn = data.some((party) => hasPresentContactValue(party.instagram));
+  const contactsTableDescription = buildCompactContactColumnsDescription([
+    ...(!showEmailColumn ? ['Email'] : []),
+    ...(!showInstagramColumn ? ['Instagram'] : []),
+  ]);
 
-  const columns = useMemo<ColumnDef<PartyDTO>[]>(() => [
-    { header: 'Nombre', accessorKey: 'displayName' },
-    { header: 'Org', cell: ({ row }) => row.original.isOrg ? 'Sí' : 'No' },
-    { header: 'Email', accessorKey: 'primaryEmail' },
-    { header: 'Instagram', accessorKey: 'instagram' },
-    {
+  const columns = useMemo<ColumnDef<PartyDTO>[]>(() => {
+    const visibleColumns: ColumnDef<PartyDTO>[] = [
+      { header: 'Nombre', accessorKey: 'displayName' },
+      { header: 'Org', cell: ({ row }) => row.original.isOrg ? 'Sí' : 'No' },
+    ];
+
+    if (showEmailColumn) {
+      visibleColumns.push({
+        header: 'Email',
+        cell: ({ row }) => row.original.primaryEmail?.trim() ?? '',
+      });
+    }
+
+    if (showInstagramColumn) {
+      visibleColumns.push({
+        header: 'Instagram',
+        cell: ({ row }) => row.original.instagram?.trim() ?? '',
+      });
+    }
+
+    visibleColumns.push({
       header: 'Acciones', cell: ({ row }) => (
         <Tooltip title="Abrir ficha, editar o convertir desde un solo menú">
           <Button
@@ -958,8 +1011,10 @@ export default function PartiesPage() {
           </Button>
         </Tooltip>
       )
-    }
-  ], []);
+    });
+
+    return visibleColumns;
+  }, [showEmailColumn, showInstagramColumn]);
 
   const table = useReactTable({
     data,
@@ -1085,6 +1140,11 @@ export default function PartiesPage() {
         </Paper>
       ) : showContactsTable ? (
         <>
+          {contactsTableDescription && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {contactsTableDescription}
+            </Typography>
+          )}
           <TextField
             placeholder="Buscar…"
             value={search}

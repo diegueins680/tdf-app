@@ -248,4 +248,42 @@ describe('PartiesPage', () => {
 
     expect(await screen.findByRole('menuitem', { name: /Convertir a estudiante/i })).toBeInTheDocument();
   });
+
+  it('hides empty contact columns once the CRM table is in compact mode', async () => {
+    mockPartiesList.mockResolvedValue([
+      buildParty({
+        primaryEmail: '   ',
+        instagram: null,
+      }),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: null,
+        primaryPhone: null,
+        instagram: '   ',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Nombre$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Org$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Acciones$/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Vista compacta: Email e Instagram aparecerán cuando exista información real en esos campos\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Email$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Instagram$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
 });
