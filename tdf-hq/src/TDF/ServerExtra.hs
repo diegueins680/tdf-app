@@ -441,6 +441,7 @@ sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
 sanitizePublicAssetDTO dto =
   dto
     { location = Nothing
+    , qrToken = Nothing
     , currentCheckoutTarget = publicCheckoutTarget (currentCheckoutKind dto) (currentCheckoutTarget dto)
     , currentCheckoutHolderEmail = Nothing
     , currentCheckoutHolderPhone = Nothing

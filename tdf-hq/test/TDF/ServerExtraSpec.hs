@@ -1812,6 +1812,7 @@ spec = do
         Right asset -> do
           assetId asset `shouldBe` existingAssetId
           location asset `shouldBe` Nothing
+          qrToken asset `shouldBe` Nothing
           currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
           currentCheckoutHolderEmail asset `shouldBe` Nothing
           currentCheckoutHolderPhone asset `shouldBe` Nothing
