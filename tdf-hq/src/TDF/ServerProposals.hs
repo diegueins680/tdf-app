@@ -441,19 +441,23 @@ resolveOptionalProposalPipelineCardReference
   -> SqlPersistT IO (Either ServerError (Maybe ME.PipelineCardId))
 resolveOptionalProposalPipelineCardReference Nothing = pure (Right Nothing)
 resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId) = do
-  case fromPathPiece rawPipelineCardId of
+  case normalizeOptionalText (Just rawPipelineCardId) of
     Nothing ->
-      pure
-        (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be a valid identifier" })
-    Just pipelineCardKey -> do
-      mPipelineCard <- getEntity pipelineCardKey
-      pure $
-        case mPipelineCard of
-          Nothing ->
-            Left err422
-              { errBody = encodeUtf8Lazy "pipelineCardId references an unknown pipeline card" }
-          Just _ ->
-            Right (Just pipelineCardKey)
+      pure (Right Nothing)
+    Just pipelineCardId ->
+      case fromPathPiece pipelineCardId of
+        Nothing ->
+          pure
+            (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be a valid identifier" })
+        Just pipelineCardKey -> do
+          mPipelineCard <- getEntity pipelineCardKey
+          pure $
+            case mPipelineCard of
+              Nothing ->
+                Left err422
+                  { errBody = encodeUtf8Lazy "pipelineCardId references an unknown pipeline card" }
+              Just _ ->
+                Right (Just pipelineCardKey)
 
 resolveOptionalProposalPipelineCardReferenceUpdate
   :: Maybe (Maybe Text)

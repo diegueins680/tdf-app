@@ -1629,7 +1629,11 @@ spec = describe "TDF.Server helpers" $ do
         it "preserves omitted refs and resolves existing proposal pipeline cards" $ do
             (expectedPipelineCardId, omittedResult, resolvedResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
-                pipelineCardId <- insert ME.PipelineCard
+                let pipelineCardIdText = "00000000-0000-0000-0000-000000000701"
+                pipelineCardId <- case fromPathPiece pipelineCardIdText of
+                    Just key -> pure key
+                    Nothing -> fail "invalid proposal pipeline card fixture key"
+                insertKey pipelineCardId ME.PipelineCard
                     { ME.pipelineCardServiceKind = Recording
                     , ME.pipelineCardTitle = "Proposal pipeline card"
                     , ME.pipelineCardArtist = Just "Ada"
@@ -1645,6 +1649,31 @@ spec = describe "TDF.Server helpers" $ do
 
             omittedResult `shouldBe` Right Nothing
             resolvedResult `shouldBe` Right (Just expectedPipelineCardId)
+
+        it "treats blank or whitespace-wrapped proposal pipeline card ids like the rest of the optional payload" $ do
+            (expectedPipelineCardId, blankResult, trimmedResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let pipelineCardIdText = "00000000-0000-0000-0000-000000000702"
+                pipelineCardId <- case fromPathPiece pipelineCardIdText of
+                    Just key -> pure key
+                    Nothing -> fail "invalid whitespace proposal pipeline card fixture key"
+                insertKey pipelineCardId ME.PipelineCard
+                    { ME.pipelineCardServiceKind = Recording
+                    , ME.pipelineCardTitle = "Whitespace pipeline card"
+                    , ME.pipelineCardArtist = Nothing
+                    , ME.pipelineCardStage = "qualified"
+                    , ME.pipelineCardSortOrder = 3
+                    , ME.pipelineCardNotes = Nothing
+                    , ME.pipelineCardCreatedAt = now
+                    , ME.pipelineCardUpdatedAt = now
+                    }
+                blank <- resolveOptionalProposalPipelineCardReference (Just "   ")
+                trimmed <- resolveOptionalProposalPipelineCardReference
+                    (Just ("  " <> toPathPiece pipelineCardId <> "  "))
+                pure (pipelineCardId, blank, trimmed)
+
+            blankResult `shouldBe` Right Nothing
+            trimmedResult `shouldBe` Right (Just expectedPipelineCardId)
 
         it "rejects invalid or unknown proposal pipeline card ids before proposals can persist dangling references" $ do
             invalidResult <- runAuthSqlite $
@@ -1672,9 +1701,13 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "resolveOptionalProposalPipelineCardReferenceUpdate" $ do
         it "preserves omitted and clear operations while resolving explicit proposal pipeline card updates" $ do
-            (pipelineCardId, omittedResult, clearResult, resolvedResult) <- runAuthSqlite $ do
+            (pipelineCardId, omittedResult, clearResult, blankResult, resolvedResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
-                insertedPipelineCardId <- insert ME.PipelineCard
+                let pipelineCardIdText = "00000000-0000-0000-0000-000000000703"
+                insertedPipelineCardId <- case fromPathPiece pipelineCardIdText of
+                    Just key -> pure key
+                    Nothing -> fail "invalid updated proposal pipeline card fixture key"
+                insertKey insertedPipelineCardId ME.PipelineCard
                     { ME.pipelineCardServiceKind = Mixing
                     , ME.pipelineCardTitle = "Updated pipeline card"
                     , ME.pipelineCardArtist = Nothing
@@ -1686,11 +1719,13 @@ spec = describe "TDF.Server helpers" $ do
                     }
                 omitted <- resolveOptionalProposalPipelineCardReferenceUpdate Nothing
                 cleared <- resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing)
+                blank <- resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just "   "))
                 resolved <- resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just (toPathPiece insertedPipelineCardId)))
-                pure (insertedPipelineCardId, omitted, cleared, resolved)
+                pure (insertedPipelineCardId, omitted, cleared, blank, resolved)
 
             omittedResult `shouldBe` Right Nothing
             clearResult `shouldBe` Right (Just Nothing)
+            blankResult `shouldBe` Right (Just Nothing)
             resolvedResult `shouldBe` Right (Just (Just pipelineCardId))
 
     describe "PackagePurchaseReq FromJSON" $ do
