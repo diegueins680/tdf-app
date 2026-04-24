@@ -1188,17 +1188,11 @@ bandsServer user =
 
     createBandH req = do
       ensureModule ModuleCRM user
-      let trimmedName = T.strip (bcName req)
-          toPartyKey pid = toSqlKey pid :: Key Party
+      let toPartyKey pid = toSqlKey pid :: Key Party
+      nameClean <- either throwError pure (normalizeBandName (bcName req))
       memberPartyKeys <- either throwError pure
         (validateDistinctBandMemberIds (map (toPartyKey . bmiPartyId) (bcMembers req)))
-      when (trimmedName == "") $
-        throwError err400 { errBody = "Band name is required" }
-      nameExists <- withPool $ do
-        existing <- selectFirst [BandName ==. trimmedName] []
-        pure (isJust existing)
-      when nameExists $
-        throwError err409 { errBody = "A band with this name already exists" }
+      ensureBandNameAvailable nameClean
       missingMemberKeys <- if null memberPartyKeys
         then pure []
         else withPool $ filterM (fmap isNothing . get) memberPartyKeys
@@ -1208,7 +1202,7 @@ bandsServer user =
       (bandEntity, memberEntities, partyEntities) <- withPool $ do
         partyId <- insert Party
           { partyLegalName        = Nothing
-          , partyDisplayName      = trimmedName
+          , partyDisplayName      = nameClean
           , partyIsOrg            = True
           , partyTaxId            = Nothing
           , partyPrimaryEmail     = Nothing
@@ -1221,7 +1215,7 @@ bandsServer user =
           }
         let band = Band
               { bandPartyId      = partyId
-              , bandName         = trimmedName
+              , bandName         = nameClean
               , bandLabelArtist  = fromMaybe False (bcLabelArtist req)
               , bandPrimaryGenre = bcPrimaryGenre req
               , bandHomeCity     = bcHomeCity req
@@ -1288,6 +1282,17 @@ bandsServer user =
         { roles  = map toOptionDTO roleOptions
         , genres = map toOptionDTO genreOptions
         }
+
+    ensureBandNameAvailable nameClean = do
+      let canonicalName = canonicalBandName nameClean
+      duplicate <- withPool $ do
+        existing <- selectList ([] :: [Filter Band]) []
+        pure $
+          any
+            (\(Entity _ band) -> canonicalBandName (bandName band) == canonicalName)
+            existing
+      when duplicate $
+        throwError err409 { errBody = "A band with this name already exists" }
 
     toOptionDTO (Entity optKey option) = DropdownOptionDTO
       { optionId  = toPathPiece optKey
@@ -1732,6 +1737,19 @@ toRoomDTO (Entity key room) = RoomDTO
   , rName     = roomName room
   , rBookable = roomIsBookable room
   }
+
+normalizeBandName :: Text -> Either ServerError Text
+normalizeBandName rawName =
+  let normalized = normalizeBandNameValue rawName
+  in if T.null normalized
+       then Left err400 { errBody = "Band name is required" }
+       else Right normalized
+
+normalizeBandNameValue :: Text -> Text
+normalizeBandNameValue = T.unwords . T.words
+
+canonicalBandName :: Text -> Text
+canonicalBandName = T.toCaseFold . normalizeBandNameValue
 
 normalizeRoomName :: Text -> Either ServerError Text
 normalizeRoomName rawName =

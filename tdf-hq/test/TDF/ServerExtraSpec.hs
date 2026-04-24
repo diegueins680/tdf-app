@@ -30,6 +30,7 @@ import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
+import TDF.API.Bands (BandsAPI)
 import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI, InventoryPublicAPI)
 import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
@@ -37,6 +38,8 @@ import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
+  , BandCreate (..)
+  , BandDTO (bName)
   , AssetDTO
       ( assetId
       , currentCheckoutHolderEmail
@@ -95,6 +98,7 @@ import TDF.ServerExtra (
     normalizeAssetNotesUpdate,
     normalizeAssetName,
     normalizeAssetNameUpdate,
+    normalizeBandName,
     validateAssetPhotoUrl,
     validateAssetPhotoUrlUpdate,
     normalizeRoomName,
@@ -148,6 +152,7 @@ import TDF.ServerExtra (
     validateAssetStatusUpdate,
     validatePageParams,
     validateSessionReferences,
+    bandsServer,
     inventoryPublicServer,
     inventoryServer,
     pipelinesServer,
@@ -715,6 +720,45 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "A room with this name already exists"
         Right value ->
           expectationFailure ("Expected canonical duplicate room patch to fail, got " <> show value)
+
+  describe "normalizeBandName" $ do
+    it "trims and collapses meaningful CRM band names before they are stored" $ do
+      normalizeBandName "  TDF   House \t Band  " `shouldBe` Right "TDF House Band"
+
+    it "rejects explicit blank band names instead of storing whitespace-only CRM records" $
+      case normalizeBandName "   " of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Band name is required"
+        Right value ->
+          expectationFailure ("Expected invalid band name error, got " <> show value)
+
+  describe "bandsServer createBandH name handling" $ do
+    let existingBandId = "00000000-0000-0000-0000-000000000711"
+
+    it "normalizes band names before storing and returning the new CRM record" $ do
+      result <- runBandCreateHandler
+        (pure ())
+        (BandCreate "  TDF   House \t Band  " Nothing Nothing Nothing Nothing Nothing [])
+      case result of
+        Left err ->
+          expectationFailure ("Expected normalized band create to succeed, got " <> show err)
+        Right band ->
+          bName band `shouldBe` "TDF House Band"
+
+    it "rejects band creates that only differ by case or repeated whitespace" $ do
+      existingKey <- case (fromPathPiece existingBandId :: Maybe (Key Band)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing band fixture key" >> fail "unreachable"
+      result <- runBandCreateHandler
+        (insertKey existingKey (fixtureBand (toSqlKey 1) "TDF House Band"))
+        (BandCreate "  tdf   house   band  " Nothing Nothing Nothing Nothing Nothing [])
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A band with this name already exists"
+        Right value ->
+          expectationFailure ("Expected canonical duplicate band create to fail, got " <> show value)
 
   describe "pipeline card write normalization" $ do
     let pipelineType = "recording"
@@ -3646,6 +3690,22 @@ runRoomPatchHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (patchRoomHandlerFor inventoryUser rawId req) env)
 
+runBandCreateHandler
+  :: SqlPersistT IO ()
+  -> BandCreate
+  -> IO (Either ServerError BandDTO)
+runBandCreateHandler setup req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeBandSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in band tests"
+            }
+    liftIO $ runExceptT (runReaderT (createBandHandlerFor inventoryUser req) env)
+
 runPipelineCreateHandler
   :: SqlPersistT IO ()
   -> Text
@@ -3844,6 +3904,15 @@ patchRoomHandlerFor user =
       :<|> patchRoom ->
           patchRoom
 
+createBandHandlerFor :: AuthedUser -> BandCreate -> InventoryTestM BandDTO
+createBandHandlerFor user =
+  case (bandsServer user :: ServerT BandsAPI InventoryTestM) of
+    _listBands
+      :<|> createBand
+      :<|> _bandOptions
+      :<|> _getBand ->
+          createBand
+
 createPipelineHandlerFor :: AuthedUser -> Text -> PipelineCardCreate -> InventoryTestM PipelineCardDTO
 createPipelineHandlerFor user rawType =
   case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
@@ -3920,7 +3989,7 @@ initializeSessionReferenceValidationSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"band\" (\
-        \\"id\" uuid PRIMARY KEY,\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
         \\"party_id\" INTEGER NOT NULL,\
         \\"name\" VARCHAR NOT NULL,\
         \\"label_artist\" BOOLEAN NOT NULL,\
@@ -4014,6 +4083,49 @@ initializeInventoryCheckinSchema = do
         \\"condition_in\" VARCHAR NULL,\
         \\"photo_in_url\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL\
+        \)"
+        []
+
+initializeBandSchema :: SqlPersistT IO ()
+initializeBandSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"band\" (\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"label_artist\" BOOLEAN NOT NULL,\
+        \\"primary_genre\" VARCHAR NULL,\
+        \\"home_city\" VARCHAR NULL,\
+        \\"photo_url\" VARCHAR NULL,\
+        \\"contract_flags\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_band_name\" UNIQUE (\"name\"),\
+        \CONSTRAINT \"unique_band_party\" UNIQUE (\"party_id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"band_member\" (\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
+        \\"band_id\" uuid NOT NULL,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"role_in_band\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_band_member\" UNIQUE (\"band_id\", \"party_id\")\
         \)"
         []
 
@@ -4417,4 +4529,16 @@ fixtureRoom name =
     , roomChannelCount = Nothing
     , roomDefaultSampleRate = Nothing
     , roomPatchbayNotes = Nothing
+    }
+
+fixtureBand :: Key M.Party -> Text -> Band
+fixtureBand partyKey name =
+  Band
+    { bandPartyId = partyKey
+    , bandName = name
+    , bandLabelArtist = False
+    , bandPrimaryGenre = Nothing
+    , bandHomeCity = Nothing
+    , bandPhotoUrl = Nothing
+    , bandContractFlags = Nothing
     }
