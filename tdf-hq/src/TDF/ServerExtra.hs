@@ -623,9 +623,11 @@ validatePublicQrCheckoutRequest normalized
       Right ()
 
 validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
-validatePublicQrCheckinFields (mConditionIn, _, _)
+validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
   | isNothing mConditionIn =
       Left err400 { errBody = "Public QR check-in requires ciConditionIn" }
+  | isNothing mPhotoIn =
+      Left err400 { errBody = "Public QR check-in requires ciPhotoUrl" }
   | otherwise =
       Right ()
 
