@@ -246,6 +246,25 @@ describe('InternshipsPage', () => {
     updatePermissionMock.mockResolvedValue({});
   });
 
+  it('replaces the empty playbook assignee picker with unassigned first-run guidance', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Playbook de prácticas');
+        expect(container.textContent).toContain(
+          'Todavía no hay pasantes para asignar. Si generas el plan ahora, quedará sin asignar.',
+        );
+        expect(hasLabel(container, 'Asignar plan a')).toBe(false);
+        expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the project form collapsed behind one CTA and one contextual empty state until an admin opens it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

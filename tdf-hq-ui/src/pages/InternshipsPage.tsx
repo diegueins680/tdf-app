@@ -566,6 +566,17 @@ export default function InternshipsPage() {
   const checklistDataReady = todosQuery.isSuccess;
   const canSeedPlaybook = isAdmin && playbookDataReady && missingPlaybookTasks.length > 0 && !seedPlaybookMutation.isPending;
   const canSeedChecklist = isIntern && checklistDataReady && missingChecklist.length > 0 && !seedChecklistMutation.isPending;
+  const showPlaybookAssigneeField = isAdmin && internsQuery.isSuccess && interns.length > 0;
+  const showPlaybookUnassignedGuidance = isAdmin && internsQuery.isSuccess && interns.length === 0;
+  const playbookSeedActionLabel = seedPlaybookMutation.isPending
+    ? 'Creando…'
+    : showPlaybookUnassignedGuidance
+      ? playbookProjectExists
+        ? 'Completar plan base sin asignar'
+        : 'Generar plan base sin asignar'
+      : playbookProjectExists
+        ? 'Completar plan base'
+        : 'Generar plan base';
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
   const totalMinutes = entries.reduce((sum, entry) => sum + (resolveEntryMinutes(entry) ?? 0), 0);
@@ -704,22 +715,28 @@ export default function InternshipsPage() {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
               {isAdmin && (
                 <>
-                  <FormControl size="small" sx={{ minWidth: 240 }}>
-                    <InputLabel id="playbook-assignee-label">Asignar plan a</InputLabel>
-                    <Select
-                      labelId="playbook-assignee-label"
-                      label="Asignar plan a"
-                      value={playbookAssigneeId}
-                      onChange={(event) =>
-                        setPlaybookAssigneeId(event.target.value === '' ? '' : Number(event.target.value))
-                      }
-                    >
-                      <MenuItem value="">Sin asignar</MenuItem>
-                      {interns.map((intern) => (
-                        <MenuItem key={intern.isPartyId} value={intern.isPartyId}>{intern.isName}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  {showPlaybookAssigneeField ? (
+                    <FormControl size="small" sx={{ minWidth: 240 }}>
+                      <InputLabel id="playbook-assignee-label">Asignar plan a</InputLabel>
+                      <Select
+                        labelId="playbook-assignee-label"
+                        label="Asignar plan a"
+                        value={playbookAssigneeId}
+                        onChange={(event) =>
+                          setPlaybookAssigneeId(event.target.value === '' ? '' : Number(event.target.value))
+                        }
+                      >
+                        <MenuItem value="">Sin asignar</MenuItem>
+                        {interns.map((intern) => (
+                          <MenuItem key={intern.isPartyId} value={intern.isPartyId}>{intern.isName}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : showPlaybookUnassignedGuidance ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Todavía no hay pasantes para asignar. Si generas el plan ahora, quedará sin asignar.
+                    </Typography>
+                  ) : null}
                   <Button
                     variant="contained"
                     onClick={() =>
@@ -732,11 +749,7 @@ export default function InternshipsPage() {
                     }
                     disabled={!canSeedPlaybook}
                   >
-                    {seedPlaybookMutation.isPending
-                      ? 'Creando…'
-                      : playbookProjectExists
-                        ? 'Completar plan base'
-                        : 'Generar plan base'}
+                    {playbookSeedActionLabel}
                   </Button>
                 </>
               )}
