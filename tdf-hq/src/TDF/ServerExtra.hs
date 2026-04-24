@@ -442,10 +442,13 @@ sanitizePublicAssetDTO dto =
   dto
     { location = Nothing
     , qrToken = Nothing
-    , currentCheckoutKind = publicCheckoutKind (currentCheckoutKind dto)
-    , currentCheckoutTarget = publicCheckoutTarget (currentCheckoutKind dto) (currentCheckoutTarget dto)
+    , currentCheckoutKind = publicCheckoutField (currentCheckoutKind dto)
+    , currentCheckoutTarget = publicCheckoutField (currentCheckoutTarget dto)
+    , currentCheckoutDisposition = publicCheckoutField (currentCheckoutDisposition dto)
     , currentCheckoutHolderEmail = Nothing
     , currentCheckoutHolderPhone = Nothing
+    , currentCheckoutAt = publicCheckoutField (currentCheckoutAt dto)
+    , currentCheckoutDueAt = publicCheckoutField (currentCheckoutDueAt dto)
     , currentCheckoutPaymentType = Nothing
     , currentCheckoutPaymentInstallments = Nothing
     , currentCheckoutPaymentAmountCents = Nothing
@@ -454,10 +457,10 @@ sanitizePublicAssetDTO dto =
     , currentCheckoutPhotoUrl = Nothing
     }
   where
-    publicCheckoutKind (Just "party") = Just "party"
-    publicCheckoutKind _ = Nothing
-    publicCheckoutTarget (Just "party") target = target
-    publicCheckoutTarget _ _ = Nothing
+    exposesCheckoutDetails = currentCheckoutKind dto == Just "party"
+    publicCheckoutField value
+      | exposesCheckoutDetails = value
+      | otherwise = Nothing
 
 loadActiveCheckoutMap
   :: MonadIO m

@@ -42,6 +42,9 @@ import TDF.API.Types
   , BandDTO (bName)
   , AssetDTO
       ( assetId
+      , currentCheckoutAt
+      , currentCheckoutDisposition
+      , currentCheckoutDueAt
       , currentCheckoutKind
       , currentCheckoutHolderEmail
       , currentCheckoutHolderPhone
@@ -1760,7 +1763,7 @@ spec = do
         checkoutIdText = "00000000-0000-0000-0000-000000000922"
         roomIdText = "00000000-0000-0000-0000-000000000923"
 
-    it "redacts holder contact, payment metadata, proof photos, and internal location ids on public QR loads while keeping party labels readable" $ do
+    it "redacts sensitive fields on public QR loads while keeping party checkout context readable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
@@ -1772,7 +1775,8 @@ spec = do
         Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
       result <- runInventoryPublicResolveQrHandler
         (do
-            now <- liftIO getCurrentTime
+            let now = UTCTime (fromGregorian 2035 5 1) 0
+                dueAt = addUTCTime (60 * 60 * 24) now
             insertKey assetKey
               ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
                 { assetQrCode = Just canonicalToken
@@ -1797,7 +1801,7 @@ spec = do
               , ME.assetCheckoutPaymentOutstandingCents = Just 40000
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
-              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutDueAt = Just dueAt
               , ME.assetCheckoutConditionOut = Just "Good"
               , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof.jpg"
               , ME.assetCheckoutPhotoDriveFileId = Nothing
@@ -1816,6 +1820,9 @@ spec = do
           qrToken asset `shouldBe` Nothing
           currentCheckoutKind asset `shouldBe` Just "party"
           currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
+          currentCheckoutDisposition asset `shouldBe` Just "rental"
+          currentCheckoutAt asset `shouldBe` Just (UTCTime (fromGregorian 2035 5 1) 0)
+          currentCheckoutDueAt asset `shouldBe` Just (UTCTime (fromGregorian 2035 5 2) 0)
           currentCheckoutHolderEmail asset `shouldBe` Nothing
           currentCheckoutHolderPhone asset `shouldBe` Nothing
           currentCheckoutPaymentType asset `shouldBe` Nothing
@@ -1825,7 +1832,7 @@ spec = do
           currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
           currentCheckoutPhotoUrl asset `shouldBe` Nothing
 
-    it "hides room or session checkout targets on public QR loads instead of exposing internal references" $ do
+    it "hides internal room or session checkout metadata on public QR loads instead of exposing partial internal movement details" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
@@ -1837,7 +1844,8 @@ spec = do
         Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
       result <- runInventoryPublicResolveQrHandler
         (do
-            now <- liftIO getCurrentTime
+            let now = UTCTime (fromGregorian 2035 5 3) 0
+                dueAt = addUTCTime (60 * 60 * 24) now
             insertKey assetKey
               ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
                 { assetQrCode = Just canonicalToken
@@ -1861,7 +1869,7 @@ spec = do
               , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
-              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutDueAt = Just dueAt
               , ME.assetCheckoutConditionOut = Just "Good"
               , ME.assetCheckoutPhotoOutUrl = Nothing
               , ME.assetCheckoutPhotoDriveFileId = Nothing
@@ -1878,6 +1886,9 @@ spec = do
           assetId asset `shouldBe` existingAssetId
           currentCheckoutKind asset `shouldBe` Nothing
           currentCheckoutTarget asset `shouldBe` Nothing
+          currentCheckoutDisposition asset `shouldBe` Nothing
+          currentCheckoutAt asset `shouldBe` Nothing
+          currentCheckoutDueAt asset `shouldBe` Nothing
 
   describe "inventoryPublicServer checkoutByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000907"
