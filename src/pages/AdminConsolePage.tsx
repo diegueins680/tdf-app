@@ -796,6 +796,17 @@ function shouldCollapseSingleAdditionalModuleActionTitle(title: string) {
   return title.trim().length > MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH;
 }
 
+function formatCompactAdditionalModuleActionTitle(title: string) {
+  const trimmedTitle = title.trim();
+
+  if (trimmedTitle.length <= MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH) {
+    return trimmedTitle;
+  }
+
+  const visibleTitleLength = Math.max(MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH - 3, 1);
+  return `${trimmedTitle.slice(0, visibleTitleLength).trimEnd()}...`;
+}
+
 function buildAdditionalModulesActionCopy({
   cards,
   optionalPrefix,
@@ -813,13 +824,18 @@ function buildAdditionalModulesActionCopy({
   if (count === 1) {
     const title = cards[0]?.title?.trim() ?? '';
     const shouldCollapseTitle = shouldCollapseSingleAdditionalModuleActionTitle(title);
-    const summary = shouldCollapseTitle
-      ? formatAdditionalModuleCountLabel(count)
-      : (title || 'módulo adicional');
+    const summary = title
+      ? (
+        shouldCollapseTitle
+          ? formatCompactAdditionalModuleActionTitle(title)
+          : title
+      )
+      : 'módulo adicional';
 
     return {
       label: `${prefix} ${summary}`,
       title: shouldCollapseTitle && title ? `${prefix} ${title}` : undefined,
+      ariaLabel: shouldCollapseTitle && title ? `${prefix} ${title}` : undefined,
     };
   }
 
@@ -1248,6 +1264,7 @@ export default function AdminConsolePage() {
                 onClick={() => setShowFirstRunAdditionalModules(true)}
                 aria-controls="admin-additional-modules-list"
                 aria-expanded="false"
+                aria-label={firstRunAdditionalModulesActionCopy.ariaLabel}
                 title={firstRunAdditionalModulesActionCopy.title}
                 sx={{ alignSelf: 'flex-start' }}
               >
@@ -1659,6 +1676,7 @@ export default function AdminConsolePage() {
                 onClick={() => setShowStandaloneAdditionalModules((current) => !current)}
                 aria-controls="admin-additional-modules-list"
                 aria-expanded={showStandaloneAdditionalModules}
+                aria-label={standaloneAdditionalModulesActionCopy.ariaLabel}
                 title={showStandaloneAdditionalModules ? undefined : standaloneAdditionalModulesActionCopy.title}
               >
                 {showStandaloneAdditionalModules

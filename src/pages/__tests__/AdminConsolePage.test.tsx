@@ -1295,6 +1295,7 @@ describe('AdminConsolePage', () => {
   it('keeps a single long first-run module title compact until the admin expands it', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
+    const compactActionLabel = 'Opcional: ver Configuración operativa para...';
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
       cards: [
@@ -1320,12 +1321,14 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        within(firstRunAlert).getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+        within(firstRunAlert).getByRole('button', { name: `Opcional: ver ${longModuleTitle}` }),
       ).toBeInTheDocument();
     });
 
-    const actionButton = within(firstRunAlert).getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i });
+    const actionButton = within(firstRunAlert).getByRole('button', { name: `Opcional: ver ${longModuleTitle}` });
     expect(actionButton).toHaveAttribute('title', `Opcional: ver ${longModuleTitle}`);
+    expect(actionButton).toHaveTextContent(compactActionLabel);
+    expect(screen.queryByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i })).not.toBeInTheDocument();
     expect(within(firstRunAlert).queryByText(longModuleTitle)).not.toBeInTheDocument();
 
     await user.click(actionButton);
@@ -2644,6 +2647,7 @@ describe('AdminConsolePage', () => {
   it('keeps a single long standalone module title compact until the admin expands it', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
+    const compactActionLabel = 'Ver Configuración operativa para...';
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
@@ -2664,11 +2668,13 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^Ver 1 módulo adicional$/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `Ver ${longModuleTitle}` })).toBeInTheDocument();
     });
 
-    const actionButton = screen.getByRole('button', { name: /^Ver 1 módulo adicional$/i });
+    const actionButton = screen.getByRole('button', { name: `Ver ${longModuleTitle}` });
     expect(actionButton).toHaveAttribute('title', `Ver ${longModuleTitle}`);
+    expect(actionButton).toHaveTextContent(compactActionLabel);
+    expect(screen.queryByRole('button', { name: /^Ver 1 módulo adicional$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(longModuleTitle)).not.toBeInTheDocument();
 
     await user.click(actionButton);
