@@ -1442,6 +1442,7 @@ spec = do
 
   describe "checkoutAssetH" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000900"
+        roomIdText = "00000000-0000-0000-0000-000000000042"
 
     it "requires an explicit disposition so authenticated checkout writes cannot silently default to loan" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1475,6 +1476,39 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "disposition is required"
         Right value ->
           expectationFailure ("Expected missing inventory checkout disposition to be rejected, got " <> show value)
+
+    it "rejects sale checkouts aimed at rooms so ownership transfers cannot be stored with internal-only targets" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "room")
+          Nothing
+          Nothing
+          (Just roomIdText)
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "sale checkout only supports party targets"
+        Right value ->
+          expectationFailure ("Expected room-targeted sale checkout to be rejected, got " <> show value)
 
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"

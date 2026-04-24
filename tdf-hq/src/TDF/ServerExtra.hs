@@ -684,7 +684,7 @@ normalizeCheckoutRequest req = do
     paymentAmountCents
     paymentCurrency
     paymentOutstandingCents
-  validateCheckoutDispositionFields disposition (coDueAt req)
+  validateCheckoutDispositionFields targetKind disposition (coDueAt req)
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -979,12 +979,17 @@ validateCheckoutFinancials _ _ _ _ _ _ _ =
   Right ()
 
 validateCheckoutDispositionFields
-  :: CheckoutDisposition
+  :: CheckoutTarget
+  -> CheckoutDisposition
   -> Maybe UTCTime
   -> Either ServerError ()
-validateCheckoutDispositionFields Sale (Just _) =
+validateCheckoutDispositionFields TargetParty Sale (Just _) =
   Left err400 { errBody = "dueAt is not allowed for sale checkout" }
-validateCheckoutDispositionFields _ _ =
+validateCheckoutDispositionFields TargetParty _ _ =
+  Right ()
+validateCheckoutDispositionFields _ Sale _ =
+  Left err400 { errBody = "sale checkout only supports party targets" }
+validateCheckoutDispositionFields _ _ _ =
   Right ()
 
 validateCheckinDisposition :: CheckoutDisposition -> Either ServerError ()
