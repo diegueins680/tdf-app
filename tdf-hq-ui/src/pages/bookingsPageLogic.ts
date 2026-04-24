@@ -25,6 +25,12 @@ interface BookingEngineerFieldState {
   showField: boolean;
 }
 
+interface BookingOptionalDetailsState {
+  collapsedHelperText: string;
+  defaultExpanded: boolean;
+  toggleLabel: string;
+}
+
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
   return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
@@ -241,6 +247,34 @@ export const getBookingEngineerFieldState = ({
     helperText: 'Opcional.',
     label: 'Ingeniero',
     showField: true,
+  };
+};
+
+export const getBookingOptionalDetailsState = ({
+  mode,
+  notes,
+  status,
+}: {
+  mode: 'create' | 'edit';
+  notes: string;
+  status: string;
+}): BookingOptionalDetailsState => {
+  const hasNotes = notes.trim() !== '';
+  const normalizedStatus = status.trim().toLowerCase();
+  const usesDefaultStatus = normalizedStatus === '' || normalizedStatus === 'confirmed';
+
+  if (mode === 'edit' || hasNotes || !usesDefaultStatus) {
+    return {
+      collapsedHelperText: '',
+      defaultExpanded: true,
+      toggleLabel: 'Agregar notas o cambiar estado',
+    };
+  }
+
+  return {
+    collapsedHelperText: 'Opcional. Déjalo cerrado para una sesión estándar confirmada.',
+    defaultExpanded: false,
+    toggleLabel: 'Agregar notas o cambiar estado',
   };
 };
 

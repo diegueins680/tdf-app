@@ -5,6 +5,7 @@ import {
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
+  getBookingOptionalDetailsState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -228,6 +229,36 @@ describe('bookingsPageLogic', () => {
       label: 'Ingeniero',
       showField: true,
     });
+  });
+
+  it('keeps notes and status collapsed until a session needs extra context', () => {
+    expect(getBookingOptionalDetailsState({
+      mode: 'create',
+      notes: '',
+      status: 'Confirmed',
+    })).toEqual({
+      collapsedHelperText: 'Opcional. Déjalo cerrado para una sesión estándar confirmada.',
+      defaultExpanded: false,
+      toggleLabel: 'Agregar notas o cambiar estado',
+    });
+
+    expect(getBookingOptionalDetailsState({
+      mode: 'create',
+      notes: 'Cliente pidió backline extra',
+      status: 'Confirmed',
+    }).defaultExpanded).toBe(true);
+
+    expect(getBookingOptionalDetailsState({
+      mode: 'create',
+      notes: '',
+      status: 'Tentative',
+    }).defaultExpanded).toBe(true);
+
+    expect(getBookingOptionalDetailsState({
+      mode: 'edit',
+      notes: '',
+      status: 'Confirmed',
+    }).defaultExpanded).toBe(true);
   });
 
   it('keeps room conflict guidance in one specific warning with a capped conflict list', () => {

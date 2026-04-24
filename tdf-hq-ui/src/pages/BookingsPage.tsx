@@ -13,6 +13,7 @@ import {
   Stack,
   TextField,
   Alert,
+  Collapse,
   MenuItem,
   FormControl,
   InputLabel,
@@ -38,6 +39,7 @@ import {
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
+  getBookingOptionalDetailsState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -239,6 +241,7 @@ export default function BookingsPage() {
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
   const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const defaultServiceName = serviceTypes[0]?.name ?? '';
   const formatServiceLabel = useCallback(
     (svc: ServiceType) => {
@@ -381,6 +384,15 @@ export default function BookingsPage() {
     }),
     [engineerName, engineerOptions.length, engineerPartyId, serviceType],
   );
+  const optionalDetailsState = useMemo(
+    () => getBookingOptionalDetailsState({
+      mode,
+      notes,
+      status,
+    }),
+    [mode, notes, status],
+  );
+  const optionalDetailsExpanded = showOptionalDetails || optionalDetailsState.defaultExpanded;
   const conflictAlertText = useMemo(
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
@@ -388,6 +400,10 @@ export default function BookingsPage() {
   const missingEngineer = engineerFieldState.showField
     && requiresEngineerForService(serviceType)
     && !(engineerName.trim() || engineerPartyId);
+  const handleCloseBookingDialog = useCallback(() => {
+    setDialogOpen(false);
+    setShowOptionalDetails(false);
+  }, []);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
@@ -454,6 +470,7 @@ useEffect(() => {
 const openDialogForRange = (start: Date, end: Date) => {
   setStartInput(formatForInput(start));
   setEndInput(formatForInput(end));
+  setShowOptionalDetails(false);
   setDialogOpen(true);
   setDurationManuallyAdjusted(false);
   setRoomsManuallyAdjusted(false);
@@ -573,6 +590,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       }),
     onSuccess: () => {
       setDialogOpen(false);
+      setShowOptionalDetails(false);
       setFormError(null);
       setTitle('Bloque de estudio');
       setNotes('');
@@ -600,6 +618,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['bookings'] });
       setDialogOpen(false);
+      setShowOptionalDetails(false);
       setEditingId(null);
       setMode('create');
       setFormError(null);
@@ -727,7 +746,7 @@ const openDialogForRange = (start: Date, end: Date) => {
   }) => {
     const ext = info.event.extendedProps ?? {};
     if (ext['isCourse']) {
-      setDialogOpen(false);
+      handleCloseBookingDialog();
       const slug = (ext['courseSlug'] as string | undefined) ?? undefined;
       const shareUrl =
         slug && typeof window !== 'undefined' ? `${window.location.origin}/inscripcion/${slug}` : undefined;
@@ -1007,7 +1026,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseBookingDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {mode === 'edit' ? 'Editar sesión' : 'Nueva sesión en el calendario'}
           {startInput && (
@@ -1209,14 +1228,60 @@ const openDialogForRange = (start: Date, end: Date) => {
                 Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
               </Alert>
             )}
-            <TextField
-              label="Notas (opcional)"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-            />
+            <Stack spacing={0.75}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                justifyContent="space-between"
+                alignItems={{ sm: 'center' }}
+              >
+                <div>
+                  <Typography variant="subtitle2">Notas y estado</Typography>
+                  {!optionalDetailsExpanded && (
+                    <Typography variant="body2" color="text.secondary">
+                      {optionalDetailsState.collapsedHelperText}
+                    </Typography>
+                  )}
+                </div>
+                {!optionalDetailsState.defaultExpanded && (
+                  <Button
+                    variant={optionalDetailsExpanded ? 'text' : 'outlined'}
+                    size="small"
+                    onClick={() => setShowOptionalDetails((current) => !current)}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
+                  >
+                    {optionalDetailsExpanded ? 'Ocultar' : optionalDetailsState.toggleLabel}
+                  </Button>
+                )}
+              </Stack>
+              <Collapse in={optionalDetailsExpanded} unmountOnExit>
+                <Stack spacing={2} sx={{ pt: 0.5 }}>
+                  <TextField
+                    label="Notas (opcional)"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    fullWidth
+                    multiline
+                    minRows={2}
+                  />
+                  <FormControl>
+                    <InputLabel id="booking-status-label">Estado</InputLabel>
+                    <Select
+                      labelId="booking-status-label"
+                      label="Estado"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      {statusOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Collapse>
+            </Stack>
             {conflictAlertText && (
               <Alert severity="warning" variant="outlined">
                 {conflictAlertText}
@@ -1262,21 +1327,6 @@ const openDialogForRange = (start: Date, end: Date) => {
                 {engineerFieldState.helperText}
               </Alert>
             )}
-            <FormControl>
-              <InputLabel id="booking-status-label">Estado</InputLabel>
-              <Select
-                labelId="booking-status-label"
-                label="Estado"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <Autocomplete
               multiple
               options={rooms}
@@ -1309,7 +1359,7 @@ const openDialogForRange = (start: Date, end: Date) => {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleCloseBookingDialog}>Cancelar</Button>
           {mode === 'edit' && (
             <Button onClick={openDuplicateModal} color="inherit">
               Duplicar
