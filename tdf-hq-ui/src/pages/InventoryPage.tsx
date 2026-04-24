@@ -233,6 +233,8 @@ const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
 const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
+const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
+const INVENTORY_HISTORY_OPEN_ACTION_LABEL = 'Historial abierto aquí abajo';
 
 function getInventoryMovementGuidance({
   canCheckout,
@@ -402,6 +404,7 @@ export default function InventoryPage() {
   };
 
   const openHistory = (asset: AssetDTO) => {
+    if (historyViewMode === 'panel' && selected?.assetId === asset.assetId) return;
     setHistoryViewMode('panel');
     setHistory([]);
     setCurrentCheckout(null);
@@ -544,6 +547,9 @@ export default function InventoryPage() {
     .filter(Boolean)
     .join(' ');
   const showHeaderRefreshAction = !showFirstAssetEmptyState;
+  const historyAlreadyOpenFromMenu = Boolean(
+    actionsMenuTarget && historyViewMode === 'panel' && selected?.assetId === actionsMenuTarget.asset.assetId,
+  );
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
@@ -945,8 +951,11 @@ export default function InventoryPage() {
         <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
           {INVENTORY_QR_SHARE_ACTION_LABEL}
         </MenuItem>
-        <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
-          Historial
+        <MenuItem
+          onClick={() => runAssetMenuAction(openHistory)}
+          disabled={historyAlreadyOpenFromMenu}
+        >
+          {historyAlreadyOpenFromMenu ? INVENTORY_HISTORY_OPEN_ACTION_LABEL : INVENTORY_HISTORY_ACTION_LABEL}
         </MenuItem>
       </Menu>
 

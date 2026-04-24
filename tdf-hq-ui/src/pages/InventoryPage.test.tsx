@@ -1216,6 +1216,33 @@ describe('InventoryPage', () => {
       });
 
       await act(async () => {
+        const actionsButton = container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Abrir QR, enlace e historial de Neumann U87"]',
+        );
+        actionsButton?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const historyMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'Historial abierto aquí abajo',
+        );
+        expect(historyMenuItem).toBeDefined();
+        expect(historyMenuItem?.getAttribute('aria-disabled')).toBe('true');
+      });
+
+      await act(async () => {
+        const historyMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'Historial abierto aquí abajo',
+        );
+        historyMenuItem?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(historyMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
         const hideButton = Array.from(container.querySelectorAll('button')).find(
           (button) => (button.textContent ?? '').trim() === 'Ocultar historial',
         );
