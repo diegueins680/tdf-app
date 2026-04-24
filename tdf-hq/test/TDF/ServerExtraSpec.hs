@@ -142,6 +142,7 @@ import TDF.ServerExtra (
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
+    validatePublicQrUploadContext,
     normalizeCheckoutRequest,
     validateCheckoutTargets,
     validateCheckoutDueAt,
@@ -488,6 +489,72 @@ spec = do
       assetMatchesSearchQuery "tdf" synthAsset `shouldBe` True
       assetMatchesSearchQuery "analog" synthAsset `shouldBe` True
       assetMatchesSearchQuery "juno" drumAsset `shouldBe` False
+
+  describe "validatePublicQrUploadContext" $ do
+    let checkoutKey =
+          case (fromPathPiece "00000000-0000-0000-0000-000000000921" :: Maybe (Key ME.AssetCheckout)) of
+            Just key -> key
+            Nothing -> error "invalid public QR upload checkout fixture key"
+        assetKey =
+          case (fromPathPiece "00000000-0000-0000-0000-000000000922" :: Maybe (Key Asset)) of
+            Just key -> key
+            Nothing -> error "invalid public QR upload asset fixture key"
+        mkOpenCheckout target disposition =
+          Entity
+            checkoutKey
+            ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = target
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = disposition
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = UTCTime (fromGregorian 2026 4 24) 0
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+
+    it "allows uploads only for assets that can still complete a public checkout or return flow" $ do
+      validatePublicQrUploadContext Active Nothing `shouldBe` Right ()
+      validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Loan)) `shouldBe` Right ()
+      validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Rental)) `shouldBe` Right ()
+
+    it "reuses checkout-status validation when an idle asset is no longer publicly checkoutable" $
+      case validatePublicQrUploadContext Retired Nothing of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is retired and cannot be checked out"
+        Right value ->
+          expectationFailure ("Expected retired public QR upload context to be rejected, got " <> show value)
+
+    it "rejects uploads for internal-only or terminal active checkout flows" $ do
+      let assertInvalid ctx =
+            case validatePublicQrUploadContext Active (Just ctx) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err)
+                  `shouldContain` "available for checkout or currently checked out to a party loan or rental"
+              Right value ->
+                expectationFailure ("Expected invalid public QR upload context to be rejected, got " <> show value)
+
+      assertInvalid (mkOpenCheckout TargetRoom Loan)
+      assertInvalid (mkOpenCheckout TargetParty Sale)
 
   describe "shared list pagination validation" $ do
     it "defaults omitted params and preserves explicit supported values" $ do

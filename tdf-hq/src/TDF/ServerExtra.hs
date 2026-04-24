@@ -377,7 +377,14 @@ inventoryPublicServer =
       performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
 
     uploadByQrToken token uploadForm = do
-      _ <- loadAssetEntityByQrToken token
+      Entity assetKey assetRecord <- loadAssetEntityByQrToken token
+      mOpenCheckout <- withPool $
+        selectFirst
+          [ AssetCheckoutAssetId ==. assetKey
+          , AssetCheckoutReturnedAt ==. Nothing
+          ]
+          [Desc AssetCheckoutCheckedOutAt]
+      either throwError pure (validatePublicQrUploadContext (assetStatus assetRecord) mOpenCheckout)
       storeAssetUpload uploadForm
 
 loadAssetEntityByKey
@@ -589,6 +596,27 @@ ensurePublicQrCheckinAllowed (Entity _ checkoutRecord)
           throwError err409 { errBody = "Public QR check-in only supports party loan or rental checkouts" }
   | otherwise =
       throwError err409 { errBody = "Public QR check-in only supports party checkouts" }
+
+validatePublicQrUploadContext
+  :: AssetStatus
+  -> Maybe (Entity AssetCheckout)
+  -> Either ServerError ()
+validatePublicQrUploadContext assetState Nothing =
+  validateAssetCheckoutStatus assetState
+validatePublicQrUploadContext _ (Just (Entity _ checkoutRecord))
+  | assetCheckoutTargetKind checkoutRecord /= TargetParty =
+      Left err409
+        { errBody =
+            "Public QR upload only supports assets that are available for checkout or currently checked out to a party loan or rental"
+        }
+  | assetCheckoutDisposition checkoutRecord /= Loan
+      && assetCheckoutDisposition checkoutRecord /= Rental =
+      Left err409
+        { errBody =
+            "Public QR upload only supports assets that are available for checkout or currently checked out to a party loan or rental"
+        }
+  | otherwise =
+      Right ()
 
 data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   { ncrTargetKind :: CheckoutTarget
