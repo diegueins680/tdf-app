@@ -75,9 +75,11 @@ export const describeServiceDefaults = (serviceType: string) => {
 
 export const getBookingCustomerFieldState = ({
   customerCount,
+  customerCatalogLoading,
   selectedCustomerId,
 }: {
   customerCount: number;
+  customerCatalogLoading: boolean;
   selectedCustomerId: number | null;
 }): BookingCustomerFieldState => {
   if (selectedCustomerId != null) {
@@ -86,6 +88,16 @@ export const getBookingCustomerFieldState = ({
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
       showCustomerSelector: true,
+      showQuickCreateAction: false,
+    };
+  }
+
+  if (customerCatalogLoading) {
+    return {
+      helperText: 'Cargando clientes guardados… Espera un momento antes de crear un contacto nuevo para evitar duplicados.',
+      dialogTitle: 'Nuevo contacto',
+      quickCreateLabel: 'Crear contacto nuevo',
+      showCustomerSelector: false,
       showQuickCreateAction: false,
     };
   }

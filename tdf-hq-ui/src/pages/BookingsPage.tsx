@@ -343,8 +343,12 @@ export default function BookingsPage() {
   );
   const customerOptions = parties;
   const customerFieldState = useMemo(
-    () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
-    [customerOptions.length, customerPartyId],
+    () => getBookingCustomerFieldState({
+      customerCount: customerOptions.length,
+      customerCatalogLoading: partiesQuery.isLoading && partiesQuery.data == null,
+      selectedCustomerId: customerPartyId,
+    }),
+    [customerOptions.length, customerPartyId, partiesQuery.data, partiesQuery.isLoading],
   );
   const serviceCatalogReady = !serviceCatalogQuery.isLoading;
   const showQuickTemplateField = shouldShowQuickBookingTemplate({

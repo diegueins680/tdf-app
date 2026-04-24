@@ -32,7 +32,11 @@ describe('bookingsPageLogic', () => {
   });
 
   it('uses first-contact copy when the customer catalog is still empty', () => {
-    expect(getBookingCustomerFieldState({ customerCount: 0, selectedCustomerId: null })).toEqual({
+    expect(getBookingCustomerFieldState({
+      customerCount: 0,
+      customerCatalogLoading: false,
+      selectedCustomerId: null,
+    })).toEqual({
       helperText: 'Todavía no hay clientes guardados. Agrega el primero sin salir de esta sesión.',
       dialogTitle: 'Agregar primer contacto',
       quickCreateLabel: 'Agregar primer contacto',
@@ -41,8 +45,26 @@ describe('bookingsPageLogic', () => {
     });
   });
 
+  it('keeps quick contact creation hidden while the customer catalog is still loading', () => {
+    expect(getBookingCustomerFieldState({
+      customerCount: 0,
+      customerCatalogLoading: true,
+      selectedCustomerId: null,
+    })).toEqual({
+      helperText: 'Cargando clientes guardados… Espera un momento antes de crear un contacto nuevo para evitar duplicados.',
+      dialogTitle: 'Nuevo contacto',
+      quickCreateLabel: 'Crear contacto nuevo',
+      showCustomerSelector: false,
+      showQuickCreateAction: false,
+    });
+  });
+
   it('keeps one create-contact action available until a customer is selected', () => {
-    expect(getBookingCustomerFieldState({ customerCount: 4, selectedCustomerId: null })).toEqual({
+    expect(getBookingCustomerFieldState({
+      customerCount: 4,
+      customerCatalogLoading: false,
+      selectedCustomerId: null,
+    })).toEqual({
       helperText: 'Selecciona un cliente guardado. Si todavía no existe, créalo aquí.',
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
@@ -52,7 +74,11 @@ describe('bookingsPageLogic', () => {
   });
 
   it('hides the extra create-contact action after a customer is already assigned', () => {
-    expect(getBookingCustomerFieldState({ customerCount: 4, selectedCustomerId: 12 })).toEqual({
+    expect(getBookingCustomerFieldState({
+      customerCount: 4,
+      customerCatalogLoading: false,
+      selectedCustomerId: 12,
+    })).toEqual({
       helperText: 'Cliente asignado. Cambia la selección solo si necesitas reemplazarlo.',
       dialogTitle: 'Nuevo contacto',
       quickCreateLabel: 'Crear contacto nuevo',
