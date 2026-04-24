@@ -282,9 +282,12 @@ function normalizeAdminConsoleParagraphKey(value: string) {
 }
 
 function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
-  return card.body
-    .map((paragraph) => normalizeAdminConsoleParagraphKey(paragraph))
-    .filter((paragraphKey) => paragraphKey.length > 0)
+  return [...new Set(
+    card.body
+      .map((paragraph) => normalizeAdminConsoleParagraphKey(paragraph))
+      .filter((paragraphKey) => paragraphKey.length > 0),
+  )]
+    .sort()
     .join('\n');
 }
 
