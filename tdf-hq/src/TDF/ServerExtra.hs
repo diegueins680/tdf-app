@@ -318,6 +318,8 @@ inventoryServer user =
 
     checkoutAssetH rawId req = do
       ensureInventoryAccess
+      when (isNothing (coDisposition req)) $
+        throwError err400 { errBody = "Inventory checkout requires coDisposition" }
       assetKey <- parseKey @Asset rawId
       assetEntity <- loadAssetEntityByKey assetKey
       let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))

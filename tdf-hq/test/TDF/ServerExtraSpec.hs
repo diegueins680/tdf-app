@@ -1236,6 +1236,42 @@ spec = do
         "notes must not contain control characters other than tabs or line breaks"
         (AssetCheckinRequest Nothing (Just "Cableado\NULverificado") Nothing)
 
+  describe "checkoutAssetH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000900"
+
+    it "requires an explicit disposition so authenticated checkout writes cannot silently default to loan" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Inventory checkout requires coDisposition"
+        Right value ->
+          expectationFailure ("Expected missing inventory checkout disposition to be rejected, got " <> show value)
+
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"
         existingAssetId = "00000000-0000-0000-0000-000000000902"
@@ -3305,6 +3341,23 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runInventoryCheckoutHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetCheckoutRequest
+  -> IO (Either ServerError AssetCheckoutDTO)
+runInventoryCheckoutHandler setup rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory checkout tests"
+            }
+    liftIO $ runExceptT (runReaderT (checkoutHandlerFor inventoryUser rawId req) env)
+
 runInventoryPatchHandler
   :: SqlPersistT IO ()
   -> Text
@@ -3515,6 +3568,22 @@ inventoryUser =
     , auRoles = [M.Admin]
     , auModules = modulesForRoles [M.Admin]
     }
+
+checkoutHandlerFor :: AuthedUser -> Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
+checkoutHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          checkoutAsset
 
 checkinHandlerFor :: AuthedUser -> Text -> AssetCheckinRequest -> InventoryTestM AssetCheckoutDTO
 checkinHandlerFor user =
