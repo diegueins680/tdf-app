@@ -566,7 +566,7 @@ normalizeCheckoutRequest req = do
   paymentType <- normalizeCheckoutPaymentType (coPaymentType req)
   paymentInstallments <- validateCheckoutInstallments (coPaymentInstallments req)
   paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
-  validateCheckoutFinancials paymentType paymentInstallments
+  validateCheckoutFinancials paymentType paymentInstallments paymentReference
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -638,10 +638,12 @@ validateCheckoutInstallments (Just installments)
   | otherwise =
       Right (Just installments)
 
-validateCheckoutFinancials :: Maybe Text -> Maybe Int -> Either ServerError ()
-validateCheckoutFinancials Nothing (Just _) =
+validateCheckoutFinancials :: Maybe Text -> Maybe Int -> Maybe Text -> Either ServerError ()
+validateCheckoutFinancials Nothing (Just _) _ =
   Left err400 { errBody = "paymentInstallments requires paymentType" }
-validateCheckoutFinancials _ _ =
+validateCheckoutFinancials Nothing _ (Just _) =
+  Left err400 { errBody = "paymentReference requires paymentType" }
+validateCheckoutFinancials _ _ _ =
   Right ()
 
 validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)

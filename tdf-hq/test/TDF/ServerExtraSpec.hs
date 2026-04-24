@@ -985,6 +985,30 @@ spec = do
         "notes must not contain control characters other than tabs or line breaks"
         baseRequest { coNotes = Just "Cableado\NULcompleto" }
 
+    it "rejects payment references without payment types so checkout financial metadata stays unambiguous" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "  TRX-009  ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentType"
+        Right value ->
+          value `seq` expectationFailure "Expected orphan payment reference to be rejected"
+
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
       normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  ") (Just "inventory/checkin.jpg"))
@@ -1111,8 +1135,12 @@ spec = do
               , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
               , ME.assetCheckoutTargetRoomId = Nothing
               , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
               , ME.assetCheckoutHolderEmail = Just "ops@example.com"
               , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1186,8 +1214,12 @@ spec = do
               , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
               , ME.assetCheckoutTargetRoomId = Nothing
               , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
               , ME.assetCheckoutHolderEmail = Just "ops@example.com"
               , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1345,8 +1377,12 @@ spec = do
               , ME.assetCheckoutTargetPartyRef = Nothing
               , ME.assetCheckoutTargetRoomId = Just roomKey
               , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
               , ME.assetCheckoutHolderEmail = Nothing
               , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1389,8 +1425,12 @@ spec = do
               , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
               , ME.assetCheckoutTargetRoomId = Nothing
               , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
               , ME.assetCheckoutHolderEmail = Nothing
               , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
               , ME.assetCheckoutCheckedOutByRef = "public-link"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
