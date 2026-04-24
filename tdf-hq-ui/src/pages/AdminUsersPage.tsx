@@ -731,6 +731,8 @@ export default function AdminUsersPage() {
   const showInactiveFilterAction = hasMultipleUsers || (includeInactive && hasUsers);
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
+  const showReviewInactiveSingleUserAction =
+    showSingleUserGuidance && !includeInactive && !usersQuery.isLoading && !usersQuery.error;
   const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
   const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
@@ -943,10 +945,19 @@ export default function AdminUsersPage() {
                   }}
                 />
               )}
-              {pageGuidance && (
-                <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
-                  {pageGuidance}
-                </Typography>
+              {(pageGuidance || showReviewInactiveSingleUserAction) && (
+                <Stack spacing={0.75} alignItems="flex-start">
+                  {pageGuidance && (
+                    <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
+                      {pageGuidance}
+                    </Typography>
+                  )}
+                  {showReviewInactiveSingleUserAction && (
+                    <Button size="small" variant="text" onClick={() => setIncludeInactive(true)}>
+                      {ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION}
+                    </Button>
+                  )}
+                </Stack>
               )}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>

@@ -2255,6 +2255,59 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('offers one inactive-user check from the lone-user view without reopening the inactive checkbox by default', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              username: 'solo-admin',
+            }),
+            buildUser({
+              userId: 202,
+              partyId: 21,
+              partyName: 'Ada Inactiva',
+              username: 'ada-inactiva',
+              active: false,
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              username: 'solo-admin',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+      });
+
+      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(
+          buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),
+        ).toBe('Ver inactivo: Ada Inactiva');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps non-default lone-user access in the header instead of adding row copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
