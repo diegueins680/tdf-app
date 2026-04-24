@@ -34,8 +34,12 @@ export interface AssetCheckoutRequest {
   coTargetParty?: string | null;
   coTargetRoom?: string | null;
   coDisposition?: string | null;
+  coTermsAndConditions?: string | null;
   coHolderEmail?: string | null;
   coHolderPhone?: string | null;
+  coPaymentType?: string | null;
+  coPaymentInstallments?: number | null;
+  coPaymentReference?: string | null;
   coPhotoUrl?: string | null;
   coDueAt?: string | null;
   coConditionOut?: string | null;

@@ -558,8 +558,12 @@ AssetCheckout
     targetPartyRef   Text        Maybe
     targetRoomId     RoomId      Maybe
     disposition      CheckoutDisposition default='Loan'
+    termsAndConditions Text Maybe
     holderEmail      Text Maybe
     holderPhone      Text Maybe
+    paymentType      Text Maybe
+    paymentInstallments Int Maybe
+    paymentReference Text Maybe
     checkedOutByRef  Text
     checkedOutAt     UTCTime default=now()
     dueAt            UTCTime Maybe

@@ -140,6 +140,8 @@ export interface AssetDTO {
   currentCheckoutHolderPhone?: string | null;
   currentCheckoutAt?: string | null;
   currentCheckoutDueAt?: string | null;
+  currentCheckoutPaymentType?: string | null;
+  currentCheckoutPaymentInstallments?: number | null;
   currentCheckoutPhotoUrl?: string | null;
 }
 
@@ -290,8 +292,12 @@ export interface AssetCheckoutDTO {
   targetPartyRef?: string | null;
   targetRoomId?: string | null;
   disposition: string;
+  termsAndConditions?: string | null;
   holderEmail?: string | null;
   holderPhone?: string | null;
+  paymentType?: string | null;
+  paymentInstallments?: number | null;
+  paymentReference?: string | null;
   checkedOutBy: string;
   checkedOutAt: string;
   dueAt?: string | null;

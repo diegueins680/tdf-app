@@ -284,6 +284,8 @@ data AssetDTO = AssetDTO
   , currentCheckoutHolderPhone :: Maybe Text
   , currentCheckoutAt :: Maybe UTCTime
   , currentCheckoutDueAt :: Maybe UTCTime
+  , currentCheckoutPaymentType :: Maybe Text
+  , currentCheckoutPaymentInstallments :: Maybe Int
   , currentCheckoutPhotoUrl :: Maybe Text
   } deriving (Show, Generic)
 
@@ -548,8 +550,12 @@ data AssetCheckoutDTO = AssetCheckoutDTO
   , targetPartyRef :: Maybe Text
   , targetRoomId   :: Maybe Text
   , disposition    :: Text
+  , termsAndConditions :: Maybe Text
   , holderEmail    :: Maybe Text
   , holderPhone    :: Maybe Text
+  , paymentType    :: Maybe Text
+  , paymentInstallments :: Maybe Int
+  , paymentReference :: Maybe Text
   , checkedOutBy   :: Text
   , checkedOutAt   :: UTCTime
   , dueAt          :: Maybe UTCTime
@@ -611,8 +617,12 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coTargetParty   :: Maybe Text
   , coTargetRoom    :: Maybe Text
   , coDisposition   :: Maybe Text
+  , coTermsAndConditions :: Maybe Text
   , coHolderEmail   :: Maybe Text
   , coHolderPhone   :: Maybe Text
+  , coPaymentType   :: Maybe Text
+  , coPaymentInstallments :: Maybe Int
+  , coPaymentReference :: Maybe Text
   , coPhotoUrl      :: Maybe Text
   , coDueAt         :: Maybe UTCTime
   , coConditionOut  :: Maybe Text

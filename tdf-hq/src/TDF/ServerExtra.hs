@@ -364,12 +364,13 @@ inventoryPublicServer =
     checkoutByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
       normalized <- either throwError pure (normalizeCheckoutRequest req)
-      when (ncrTargetKind normalized /= TargetParty) $
-        throwError err400 { errBody = "Public QR checkout only supports party targets" }
+      either throwError pure (validatePublicQrCheckoutRequest normalized)
       performCheckout "public-link" assetEntity req
 
     checkinByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
+      normalized <- either throwError pure (normalizeAssetCheckinFields req)
+      either throwError pure (validatePublicQrCheckinFields normalized)
       performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
 
     uploadByQrToken token uploadForm = do
@@ -462,8 +463,12 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
       , assetCheckoutTargetPartyRef   = ncrTargetParty normalized
       , assetCheckoutTargetRoomId     = ncrTargetRoom normalized
       , assetCheckoutDisposition      = ncrDisposition normalized
+      , assetCheckoutTermsAndConditions = ncrTermsAndConditions normalized
       , assetCheckoutHolderEmail      = ncrHolderEmail normalized
       , assetCheckoutHolderPhone      = ncrHolderPhone normalized
+      , assetCheckoutPaymentType      = ncrPaymentType normalized
+      , assetCheckoutPaymentInstallments = ncrPaymentInstallments normalized
+      , assetCheckoutPaymentReference = ncrPaymentReference normalized
       , assetCheckoutCheckedOutByRef  = checkedOutBy
       , assetCheckoutCheckedOutAt     = now
       , assetCheckoutDueAt            = dueAtValue
@@ -535,8 +540,12 @@ data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   , ncrTargetRoom :: Maybe (Key Room)
   , ncrTargetSession :: Maybe (Key ME.Session)
   , ncrDisposition :: CheckoutDisposition
+  , ncrTermsAndConditions :: Maybe Text
   , ncrHolderEmail :: Maybe Text
   , ncrHolderPhone :: Maybe Text
+  , ncrPaymentType :: Maybe Text
+  , ncrPaymentInstallments :: Maybe Int
+  , ncrPaymentReference :: Maybe Text
   , ncrDueAt :: Maybe UTCTime
   , ncrConditionOut :: Maybe Text
   , ncrPhotoOutUrl :: Maybe Text
@@ -551,8 +560,13 @@ normalizeCheckoutRequest req = do
   (mTargetParty, mRoom, mSession) <-
     validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey
   disposition <- parseCheckoutDisposition (coDisposition req)
+  termsAndConditions <- validateCheckoutTermsField "termsAndConditions" (coTermsAndConditions req)
   holderEmail <- validateCheckoutContactField "holderEmail" 160 (coHolderEmail req)
   holderPhone <- validateCheckoutContactField "holderPhone" 60 (coHolderPhone req)
+  paymentType <- normalizeCheckoutPaymentType (coPaymentType req)
+  paymentInstallments <- validateCheckoutInstallments (coPaymentInstallments req)
+  paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
+  validateCheckoutFinancials paymentType paymentInstallments
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -562,13 +576,33 @@ normalizeCheckoutRequest req = do
     , ncrTargetRoom = mRoom
     , ncrTargetSession = mSession
     , ncrDisposition = disposition
+    , ncrTermsAndConditions = termsAndConditions
     , ncrHolderEmail = holderEmail
     , ncrHolderPhone = holderPhone
+    , ncrPaymentType = paymentType
+    , ncrPaymentInstallments = paymentInstallments
+    , ncrPaymentReference = paymentReference
     , ncrDueAt = coDueAt req
     , ncrConditionOut = conditionOut
     , ncrPhotoOutUrl = photoOutUrl
     , ncrNotes = checkoutNotes
     }
+
+validatePublicQrCheckoutRequest :: NormalizedCheckoutRequest -> Either ServerError ()
+validatePublicQrCheckoutRequest normalized
+  | ncrTargetKind normalized /= TargetParty =
+      Left err400 { errBody = "Public QR checkout only supports party targets" }
+  | isNothing (ncrPhotoOutUrl normalized) =
+      Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
+  | otherwise =
+      Right ()
+
+validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
+validatePublicQrCheckinFields (mConditionIn, _, _)
+  | isNothing mConditionIn =
+      Left err400 { errBody = "Public QR check-in requires ciConditionIn" }
+  | otherwise =
+      Right ()
 
 validateCheckoutContactField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutContactField fieldName maxLen rawValue =
@@ -581,6 +615,34 @@ validateCheckoutContactField fieldName maxLen rawValue =
           Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
       | otherwise ->
           Right (Just cleanValue)
+
+validateCheckoutTermsField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutTermsField fieldName =
+  validateInventoryOptionalTextField fieldName inventoryTermsMaxLength
+
+normalizeCheckoutPaymentType :: Maybe Text -> Either ServerError (Maybe Text)
+normalizeCheckoutPaymentType Nothing = Right Nothing
+normalizeCheckoutPaymentType (Just rawValue) =
+  case normalizeOptionalTextField (Just rawValue) of
+    Nothing -> Right Nothing
+    Just cleanValue ->
+      fmap (Just . paymentMethodToInventoryPaymentType) (validatePaymentMethod cleanValue)
+
+validateCheckoutInstallments :: Maybe Int -> Either ServerError (Maybe Int)
+validateCheckoutInstallments Nothing = Right Nothing
+validateCheckoutInstallments (Just installments)
+  | installments < 1 =
+      Left err400 { errBody = "paymentInstallments must be at least 1" }
+  | installments > 60 =
+      Left err400 { errBody = "paymentInstallments must be 60 or fewer" }
+  | otherwise =
+      Right (Just installments)
+
+validateCheckoutFinancials :: Maybe Text -> Maybe Int -> Either ServerError ()
+validateCheckoutFinancials Nothing (Just _) =
+  Left err400 { errBody = "paymentInstallments requires paymentType" }
+validateCheckoutFinancials _ _ =
+  Right ()
 
 validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateInventoryConditionField fieldName =
@@ -620,6 +682,9 @@ inventoryConditionMaxLength = 240
 inventoryNotesMaxLength :: Int
 inventoryNotesMaxLength = 1000
 
+inventoryTermsMaxLength :: Int
+inventoryTermsMaxLength = 4000
+
 validateCheckoutDueAt :: UTCTime -> Maybe UTCTime -> Either ServerError (Maybe UTCTime)
 validateCheckoutDueAt _ Nothing = Right Nothing
 validateCheckoutDueAt now (Just dueAt)
@@ -649,6 +714,17 @@ checkoutDispositionToText Repair = "repair"
 checkoutDispositionToText Transfer = "transfer"
 checkoutDispositionToText OtherDisposition = "other"
 
+paymentMethodToInventoryPaymentType :: PaymentMethod -> Text
+paymentMethodToInventoryPaymentType CashM = "cash"
+paymentMethodToInventoryPaymentType BankTransferM = "bank_transfer"
+paymentMethodToInventoryPaymentType CardPOSM = "card"
+paymentMethodToInventoryPaymentType PayPalM = "paypal"
+paymentMethodToInventoryPaymentType StripeM = "stripe"
+paymentMethodToInventoryPaymentType WompiM = "wompi"
+paymentMethodToInventoryPaymentType PayPhoneM = "payphone"
+paymentMethodToInventoryPaymentType CryptoM = "crypto"
+paymentMethodToInventoryPaymentType OtherM = "other"
+
 checkoutTargetRef :: AssetCheckout -> Maybe Text
 checkoutTargetRef rec =
   assetCheckoutTargetPartyRef rec
@@ -677,6 +753,8 @@ toAssetDTO (Entity key asset) mCurrentCheckout = AssetDTO
   , currentCheckoutHolderPhone = mCurrentCheckout >>= (assetCheckoutHolderPhone . entityVal)
   , currentCheckoutAt = fmap (assetCheckoutCheckedOutAt . entityVal) mCurrentCheckout
   , currentCheckoutDueAt = mCurrentCheckout >>= (assetCheckoutDueAt . entityVal)
+  , currentCheckoutPaymentType = mCurrentCheckout >>= (assetCheckoutPaymentType . entityVal)
+  , currentCheckoutPaymentInstallments = mCurrentCheckout >>= (assetCheckoutPaymentInstallments . entityVal)
   , currentCheckoutPhotoUrl = mCurrentCheckout >>= (checkoutPhotoOutUrl . entityVal)
   }
 
@@ -689,8 +767,12 @@ toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
   , targetPartyRef  = assetCheckoutTargetPartyRef rec
   , targetRoomId    = fmap toPathPiece (assetCheckoutTargetRoomId rec)
   , disposition     = checkoutDispositionToText (assetCheckoutDisposition rec)
+  , termsAndConditions = assetCheckoutTermsAndConditions rec
   , holderEmail     = assetCheckoutHolderEmail rec
   , holderPhone     = assetCheckoutHolderPhone rec
+  , paymentType     = assetCheckoutPaymentType rec
+  , paymentInstallments = assetCheckoutPaymentInstallments rec
+  , paymentReference = assetCheckoutPaymentReference rec
   , checkedOutBy    = assetCheckoutCheckedOutByRef rec
   , checkedOutAt    = assetCheckoutCheckedOutAt rec
   , dueAt           = assetCheckoutDueAt rec
