@@ -362,6 +362,22 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects browser filenames with path separators instead of silently collapsing them into another stored asset name" $ do
+      let assertInvalid rawFileName =
+            case fromMultipart
+              (mkAssetUploadMultipart [] [mkAssetUploadFile rawFileName])
+                :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` "Uploaded file name must not contain path separators"
+              Right payload ->
+                expectationFailure
+                  ( "Expected path-like browser filename to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid "inventory/front-room.jpg"
+      assertInvalid "inventory\\\\front-room.jpg"
+
     it "rejects explicit upload names that would be silently reshaped into a different stored filename" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

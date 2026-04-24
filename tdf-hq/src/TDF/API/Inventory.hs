@@ -90,6 +90,8 @@ instance FromMultipart Tmp AssetUploadForm where
         let fileName = T.strip (fdFileName file)
         in if T.any isControl fileName
              then Left "Uploaded file name must not contain control characters"
+             else if T.any isPathSeparator fileName
+               then Left "Uploaded file name must not contain path separators"
              else Right ()
 
       validateImageUpload nameTxt file = do
