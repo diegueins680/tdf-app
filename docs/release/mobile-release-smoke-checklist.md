@@ -17,7 +17,11 @@ Every `FAIL` must name one blocker owner.
 
 ## Release verdict
 - RC verdict: `GO` / `NO-GO`
+- Shipping decision: `SHIPPABLE` / `NOT YET SHIPPABLE` / `ONE MORE BOUNDED FIX/BUILD CYCLE`
 - Summary in 2-4 lines:
+- Exact ship blocker (required if not shippable):
+- Blocker owner (required if not shippable):
+- External review lane status: `BACKGROUND ONLY` / `ACTIVE BLOCKER`
 - Exact next shipping step:
 
 ## Release-critical flows

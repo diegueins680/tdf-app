@@ -2428,6 +2428,57 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR room check-in to be rejected, got " <> show value)
 
+    it "rejects public QR check-ins for internal party repair movements" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Taller externo"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = ME.Repair
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Pending repair"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/repair-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Only ops should close this movement"
+              })
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Public QR check-in only supports party loan or rental checkouts"
+        Right value ->
+          expectationFailure ("Expected public QR repair check-in to be rejected, got " <> show value)
+
     it "requires a return condition on public QR check-ins before closing the active movement" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

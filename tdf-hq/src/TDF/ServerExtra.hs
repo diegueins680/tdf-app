@@ -582,7 +582,11 @@ ensurePublicQrCheckinAllowed
   -> m ()
 ensurePublicQrCheckinAllowed (Entity _ checkoutRecord)
   | assetCheckoutTargetKind checkoutRecord == TargetParty =
-      pure ()
+      case assetCheckoutDisposition checkoutRecord of
+        Loan -> pure ()
+        Rental -> pure ()
+        _ ->
+          throwError err409 { errBody = "Public QR check-in only supports party loan or rental checkouts" }
   | otherwise =
       throwError err409 { errBody = "Public QR check-in only supports party checkouts" }
 
