@@ -119,7 +119,8 @@ parseCheckoutTargetKind (Just raw) =
     _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
 
 parseCheckoutDisposition :: Maybe Text -> Either ServerError CheckoutDisposition
-parseCheckoutDisposition Nothing = Right Loan
+parseCheckoutDisposition Nothing =
+  Left err400 { errBody = "disposition is required and must be one of: loan, rental, sale, repair, transfer, other" }
 parseCheckoutDisposition (Just raw) =
   case T.toLower (T.strip raw) of
     "" -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
@@ -318,8 +319,6 @@ inventoryServer user =
 
     checkoutAssetH rawId req = do
       ensureInventoryAccess
-      when (isNothing (coDisposition req)) $
-        throwError err400 { errBody = "Inventory checkout requires coDisposition" }
       assetKey <- parseKey @Asset rawId
       assetEntity <- loadAssetEntityByKey assetKey
       let checkedOutBy = T.pack (show (fromSqlKey (auPartyId user)))
@@ -367,8 +366,6 @@ inventoryPublicServer =
   where
     checkoutByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
-      when (isNothing (coDisposition req)) $
-        throwError err400 { errBody = "Public QR checkout requires coDisposition" }
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
       performCheckout "public-link" assetEntity req

@@ -825,8 +825,14 @@ spec = do
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "locker"))
 
   describe "parseCheckoutDisposition" $ do
-    it "defaults omitted dispositions to loan and normalizes supported values" $ do
-      parseCheckoutDisposition Nothing `shouldBe` Right Loan
+    it "requires explicit dispositions and normalizes supported values" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid checkout disposition error, got " <> show value)
+      assertInvalid "disposition is required" (parseCheckoutDisposition Nothing)
       parseCheckoutDisposition (Just " rent ") `shouldBe` Right Rental
       parseCheckoutDisposition (Just "SALE") `shouldBe` Right Sale
 
@@ -1038,7 +1044,7 @@ spec = do
               Nothing
               (Just "Backline Crew")
               Nothing
-              Nothing
+              (Just "loan")
               Nothing
               Nothing
               Nothing
@@ -1268,7 +1274,7 @@ spec = do
       case result of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Inventory checkout requires coDisposition"
+          BL8.unpack (errBody err) `shouldContain` "disposition is required"
         Right value ->
           expectationFailure ("Expected missing inventory checkout disposition to be rejected, got " <> show value)
 
@@ -1853,7 +1859,7 @@ spec = do
       case result of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coDisposition"
+          BL8.unpack (errBody err) `shouldContain` "disposition is required"
         Right value ->
           expectationFailure ("Expected public QR checkout without explicit disposition to be rejected, got " <> show value)
 
