@@ -1220,6 +1220,18 @@ spec = do
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
 
+  describe "checkoutHistoryH" $ do
+    let missingAssetId = "00000000-0000-0000-0000-000000000907"
+
+    it "rejects unknown asset ids instead of collapsing them into empty history responses" $ do
+      result <- runInventoryCheckoutHistoryHandler (pure ()) missingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Asset not found"
+        Right value ->
+          expectationFailure ("Expected missing asset history lookup to fail, got " <> show value)
+
   describe "patchAssetH" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000908"
         request =
@@ -2822,6 +2834,22 @@ runInventoryPatchHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (patchAssetHandlerFor inventoryUser rawId req) env)
 
+runInventoryCheckoutHistoryHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError [AssetCheckoutDTO])
+runInventoryCheckoutHistoryHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory checkout history tests"
+            }
+    liftIO $ runExceptT (runReaderT (checkoutHistoryHandlerFor inventoryUser rawId) env)
+
 runInventoryDeleteHandler
   :: SqlPersistT IO ()
   -> Text
@@ -3015,6 +3043,22 @@ patchAssetHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           patchAsset
+
+checkoutHistoryHandlerFor :: AuthedUser -> Text -> InventoryTestM [AssetCheckoutDTO]
+checkoutHistoryHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          checkoutHistory
 
 deleteHandlerFor :: AuthedUser -> Text -> InventoryTestM ()
 deleteHandlerFor user =

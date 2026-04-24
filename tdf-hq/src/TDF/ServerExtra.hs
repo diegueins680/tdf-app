@@ -332,6 +332,7 @@ inventoryServer user =
     checkoutHistoryH rawId = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
+      _ <- loadAssetEntityByKey assetKey
       recs <- withPool $ selectList [AssetCheckoutAssetId ==. assetKey] [Desc AssetCheckoutCheckedOutAt, LimitTo 50]
       pure (map toCheckoutDTO recs)
 
