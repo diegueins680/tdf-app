@@ -613,6 +613,8 @@ validatePublicQrCheckoutRequest :: NormalizedCheckoutRequest -> Either ServerErr
 validatePublicQrCheckoutRequest normalized
   | ncrTargetKind normalized /= TargetParty =
       Left err400 { errBody = "Public QR checkout only supports party targets" }
+  | ncrDisposition normalized == Sale =
+      Left err400 { errBody = "Public QR checkout does not allow sale disposition" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrPhotoOutUrl normalized) =
