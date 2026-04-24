@@ -204,6 +204,13 @@ const buildEmptyTaskForm = (): InternTaskCreate => ({
   itcDueAt: '',
 });
 
+const buildEmptyPermissionForm = (): InternPermissionCreate => ({
+  ipcCategory: '',
+  ipcReason: '',
+  ipcStartAt: '',
+  ipcEndAt: '',
+});
+
 export default function InternshipsPage() {
   const { session } = useSession();
   const qc = useQueryClient();
@@ -247,12 +254,8 @@ export default function InternshipsPage() {
   const [taskForm, setTaskForm] = useState<InternTaskCreate>(buildEmptyTaskForm);
   const [showTaskComposer, setShowTaskComposer] = useState(false);
   const [todoForm, setTodoForm] = useState<InternTodoCreate>({ itdcText: '' });
-  const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>({
-    ipcCategory: '',
-    ipcReason: '',
-    ipcStartAt: '',
-    ipcEndAt: '',
-  });
+  const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>(buildEmptyPermissionForm);
+  const [showPermissionComposer, setShowPermissionComposer] = useState(false);
 
   const entriesScope = isAdmin ? (selectedPartyId ?? 'all') : 'self';
   const internsQuery = useQuery({
@@ -397,7 +400,8 @@ export default function InternshipsPage() {
     mutationFn: (payload: InternPermissionCreate) => Internships.createPermission(payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['internships', 'permissions'] });
-      setPermissionForm({ ipcCategory: '', ipcReason: '', ipcStartAt: '', ipcEndAt: '' });
+      setPermissionForm(buildEmptyPermissionForm());
+      setShowPermissionComposer(false);
     },
   });
   const updatePermissionMutation = useMutation({
@@ -587,6 +591,11 @@ export default function InternshipsPage() {
   const resetTaskComposer = () => {
     setTaskForm(buildEmptyTaskForm());
     setShowTaskComposer(false);
+  };
+
+  const resetPermissionComposer = () => {
+    setPermissionForm(buildEmptyPermissionForm());
+    setShowPermissionComposer(false);
   };
 
   if (!canAccess) {
@@ -1449,63 +1458,100 @@ export default function InternshipsPage() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={700}>Permisos</Typography>
-              {showPermissionCountChip && (
-                <Chip label={formatCountLabel(permissions.length, 'solicitud', 'solicitudes')} variant="outlined" />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={1}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight={700}>Permisos</Typography>
+                {showPermissionCountChip && (
+                  <Chip label={formatCountLabel(permissions.length, 'solicitud', 'solicitudes')} variant="outlined" />
+                )}
+              </Stack>
+              {!showPermissionComposer && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setShowPermissionComposer(true)}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                >
+                  Nueva solicitud
+                </Button>
               )}
             </Stack>
 
-            <Stack spacing={1}>
-              <Typography fontWeight={600}>Solicitar permiso</Typography>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+            {showPermissionComposer && (
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  spacing={1}
+                >
+                  <Typography fontWeight={600}>Nueva solicitud</Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    onClick={resetPermissionComposer}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                  >
+                    Cancelar solicitud
+                  </Button>
+                </Stack>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                  <TextField
+                    label="Tipo de permiso"
+                    value={permissionForm.ipcCategory}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcCategory: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Inicio"
+                    type="date"
+                    value={permissionForm.ipcStartAt}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcStartAt: event.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label="Fin"
+                    type="date"
+                    value={permissionForm.ipcEndAt ?? ''}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcEndAt: event.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Stack>
                 <TextField
-                  label="Tipo de permiso"
-                  value={permissionForm.ipcCategory}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcCategory: event.target.value }))}
+                  label="Motivo"
+                  value={permissionForm.ipcReason ?? ''}
+                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcReason: event.target.value }))}
                   fullWidth
+                  multiline
+                  minRows={2}
                 />
-                <TextField
-                  label="Inicio"
-                  type="date"
-                  value={permissionForm.ipcStartAt}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcStartAt: event.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Fin"
-                  type="date"
-                  value={permissionForm.ipcEndAt ?? ''}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcEndAt: event.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    const payload = {
+                      ...permissionForm,
+                      ipcReason: normalizeOptional(permissionForm.ipcReason),
+                      ipcEndAt: normalizeOptional(permissionForm.ipcEndAt),
+                    };
+                    void createPermissionMutation.mutateAsync(payload);
+                  }}
+                  disabled={!permissionForm.ipcCategory.trim() || !permissionForm.ipcStartAt || createPermissionMutation.isPending}
+                >
+                  Enviar solicitud
+                </Button>
               </Stack>
-              <TextField
-                label="Motivo"
-                value={permissionForm.ipcReason ?? ''}
-                onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcReason: event.target.value }))}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const payload = {
-                    ...permissionForm,
-                    ipcReason: normalizeOptional(permissionForm.ipcReason),
-                    ipcEndAt: normalizeOptional(permissionForm.ipcEndAt),
-                  };
-                  void createPermissionMutation.mutateAsync(payload);
-                }}
-                disabled={!permissionForm.ipcCategory.trim() || !permissionForm.ipcStartAt || createPermissionMutation.isPending}
-              >
-                Enviar solicitud
-              </Button>
-            </Stack>
+            )}
 
-            {permissions.length === 0 && (
-              <Typography color="text.secondary">Sin solicitudes registradas.</Typography>
+            {permissions.length === 0 && !showPermissionComposer && (
+              <Alert severity="info" variant="outlined">
+                Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.
+              </Alert>
             )}
 
             <Stack spacing={1}>

@@ -345,6 +345,55 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('keeps the permission form collapsed behind one CTA and one contextual empty state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Permisos');
+        expect(container.textContent).toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(0);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(false);
+        expect(hasLabel(container, 'Motivo')).toBe(false);
+        expect(container.textContent).not.toContain('Sin solicitudes registradas.');
+      });
+
+      await clickButton(getButtonsByText(container, 'Nueva solicitud')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(1);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(true);
+        expect(hasLabel(container, 'Motivo')).toBe(true);
+        expect(container.textContent).not.toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+      });
+
+      await clickButton(getButtonsByText(container, 'Cancelar solicitud')[0]!);
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(0);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(false);
+        expect(hasLabel(container, 'Motivo')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides zero-count header chips until work exists and uses singular labels for the first project and task', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
