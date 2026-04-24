@@ -4555,6 +4555,13 @@ main = hspec $ do
                 )
                 `shouldSatisfy` isLeft
 
+        it "rejects extra radio presence keys so typoed station metadata cannot be silently ignored" $
+            ( eitherDecode
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":\"Radio Uno\",\"stationName\":\"typo\"}"
+                    :: Either String RadioPresenceUpsert
+                )
+                `shouldSatisfy` isLeft
+
     describe "radio presence updates" $ do
         it "clears stale station metadata when a user switches streams without sending fresh station labels" $ do
             let initialPayload =

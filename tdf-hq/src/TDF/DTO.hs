@@ -302,7 +302,8 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   , rpuStationName :: Maybe Text
   , rpuStationId   :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON RadioPresenceUpsert
+instance FromJSON RadioPresenceUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data VCardExchangeRequest = VCardExchangeRequest
   { vcerPartyId :: Int64
