@@ -1584,6 +1584,8 @@ spec = do
   describe "checkoutAssetH" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000900"
         roomIdText = "00000000-0000-0000-0000-000000000042"
+        checkoutIdText = "00000000-0000-0000-0000-000000000901"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000902"
 
     it "requires an explicit disposition so authenticated checkout writes cannot silently default to loan" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1650,6 +1652,81 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "sale checkout only supports party targets"
         Right value ->
           expectationFailure ("Expected room-targeted sale checkout to be rejected, got " <> show value)
+
+    it "rejects assets with multiple active checkouts so new checkout writes do not hide broken inventory state behind a generic conflict" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second checkout fixture key" >> fail "unreachable"
+      let insertOpenCheckout key checkedOutByRef checkedOutAtVal targetRef photoUrl =
+            insertKey key ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just targetRef
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = checkedOutByRef
+              , ME.assetCheckoutCheckedOutAt = checkedOutAtVal
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just photoUrl
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Open custody row"
+              }
+      result <- runInventoryCheckoutHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertOpenCheckout checkoutKey "1" (addUTCTime (-60) now) "Backline Crew" "inventory/checkout-1.jpg"
+            insertOpenCheckout secondCheckoutKey "2" now "Guest Synth Player" "inventory/checkout-2.jpg"
+        )
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Another Borrower")
+          Nothing
+          (Just "loan")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right value ->
+          expectationFailure ("Expected ambiguous checkout state to block checkout creation, got " <> show value)
 
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"

@@ -541,9 +541,23 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
   now <- liftIO getCurrentTime
   normalized <- either throwError pure (normalizeCheckoutRequest req)
   dueAtValue <- either throwError pure (validateCheckoutDueAt now (ncrDueAt normalized))
-  active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-  when (isJust active) $
-    throwError err409 { errBody = "Asset already checked out" }
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      pure ()
+    [_] ->
+      throwError err409 { errBody = "Asset already checked out" }
+    _ ->
+      throwError err409
+        { errBody = "Asset has multiple active checkouts; resolve the inventory state before checkout"
+        }
   either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
   either throwError pure =<< withPool (validateCheckoutTargetReferences (ncrTargetRoom normalized) (ncrTargetSession normalized))
   recEnt <- withPool $ do
