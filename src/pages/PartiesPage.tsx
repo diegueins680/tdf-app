@@ -12,11 +12,10 @@ import {
   TableRow, InputAdornment, Switch, FormControlLabel, Grid, FormControl,
   InputLabel, Select, Checkbox, ListItemText, FormHelperText, Tabs, Tab, Chip, Tooltip, Snackbar
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import SchoolIcon from '@mui/icons-material/School';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { ColumnDef, useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import { Bookings } from '../api/bookings';
 import { Invoices } from '../api/invoices';
@@ -864,6 +863,8 @@ export default function PartiesPage() {
   const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState<string | null>(null);
   const [singleContactActionsAnchorEl, setSingleContactActionsAnchorEl] = useState<HTMLElement | null>(null);
+  const [rowActionsAnchorEl, setRowActionsAnchorEl] = useState<HTMLElement | null>(null);
+  const [activeRowActionParty, setActiveRowActionParty] = useState<PartyDTO | null>(null);
   const hasContacts = data.length > 0;
   const hasPeople = data.some((party) => !party.isOrg);
   const showFirstContactSetup = !isLoading && !error && !hasContacts;
@@ -894,6 +895,11 @@ export default function PartiesPage() {
 
   const handleCloseSingleContactActions = () => {
     setSingleContactActionsAnchorEl(null);
+  };
+
+  const handleCloseRowActions = () => {
+    setRowActionsAnchorEl(null);
+    setActiveRowActionParty(null);
   };
 
   const handleOpenSingleContactDetail = () => {
@@ -935,35 +941,25 @@ export default function PartiesPage() {
     { header: 'Instagram', accessorKey: 'instagram' },
     {
       header: 'Acciones', cell: ({ row }) => (
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="Editar">
-            <IconButton
-              size="small"
-              onClick={(event) => {
-                event.stopPropagation();
-                setEditing(row.original);
-              }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {!row.original.isOrg && (
-            <Tooltip title="Convertir a estudiante">
-              <IconButton
-                size="small"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleConvertToStudent(row.original);
-                }}
-              >
-                <SchoolIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Stack>
+        <Tooltip title="Abrir ficha, editar o convertir desde un solo menú">
+          <Button
+            size="small"
+            variant="text"
+            endIcon={<MoreHorizIcon fontSize="small" />}
+            aria-label={`Acciones de ${row.original.displayName}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setRowActionsAnchorEl(event.currentTarget);
+              setActiveRowActionParty(row.original);
+            }}
+            sx={{ textTransform: 'none' }}
+          >
+            Acciones
+          </Button>
+        </Tooltip>
       )
     }
-  ], [handleConvertToStudent]);
+  ], []);
 
   const table = useReactTable({
     data,
@@ -1119,6 +1115,42 @@ export default function PartiesPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+            <Menu
+              anchorEl={rowActionsAnchorEl}
+              open={!!rowActionsAnchorEl && !!activeRowActionParty}
+              onClose={handleCloseRowActions}
+            >
+              <MenuItem
+                onClick={() => {
+                  if (!activeRowActionParty) return;
+                  handleCloseRowActions();
+                  setDetail(activeRowActionParty);
+                }}
+              >
+                Abrir ficha
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  if (!activeRowActionParty) return;
+                  handleCloseRowActions();
+                  setEditing(activeRowActionParty);
+                }}
+              >
+                Editar contacto
+              </MenuItem>
+              {!activeRowActionParty?.isOrg && (
+                <MenuItem
+                  onClick={() => {
+                    if (!activeRowActionParty) return;
+                    const party = activeRowActionParty;
+                    handleCloseRowActions();
+                    handleConvertToStudent(party);
+                  }}
+                >
+                  Convertir a estudiante
+                </MenuItem>
+              )}
+            </Menu>
             {isLoading && <Typography sx={{ p: 2 }}>Cargando…</Typography>}
             {error && <Typography color="error" sx={{ p: 2 }}>{(error as Error).message}</Typography>}
           </Paper>

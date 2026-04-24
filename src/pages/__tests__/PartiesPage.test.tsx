@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import PartiesPage from '../PartiesPage';
@@ -195,5 +195,57 @@ describe('PartiesPage', () => {
     expect(screen.queryByText(/Teléfono \/ WhatsApp:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Instagram:/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
+
+  it('uses one explicit actions trigger per CRM row and reveals role-specific actions inside the menu', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([
+      buildParty(),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        instagram: null,
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+
+    const orgRow = await screen.findByText('Acme Studios').then((cell) => cell.closest('tr'));
+    const personRow = await screen.findByText('Ada Lovelace').then((cell) => cell.closest('tr'));
+
+    if (!(orgRow instanceof HTMLElement) || !(personRow instanceof HTMLElement)) {
+      throw new Error('Expected CRM rows to render for both contacts');
+    }
+
+    await waitFor(() => {
+      expect(within(orgRow).getAllByRole('button')).toHaveLength(1);
+      expect(within(personRow).getAllByRole('button')).toHaveLength(1);
+      expect(
+        within(orgRow).getByRole('button', { name: /Acciones de Acme Studios/i }),
+      ).toBeInTheDocument();
+      expect(
+        within(personRow).getByRole('button', { name: /Acciones de Ada Lovelace/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('menuitem', { name: /Abrir ficha/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Editar contacto/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
+
+    await user.click(within(orgRow).getByRole('button', { name: /Acciones de Acme Studios/i }));
+
+    expect(await screen.findByRole('menuitem', { name: /Abrir ficha/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /Editar contacto/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
+
+    await user.click(within(personRow).getByRole('button', { name: /Acciones de Ada Lovelace/i }));
+
+    expect(await screen.findByRole('menuitem', { name: /Convertir a estudiante/i })).toBeInTheDocument();
   });
 });
