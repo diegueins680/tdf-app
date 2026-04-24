@@ -218,4 +218,30 @@ describe('BrainAdminPage', () => {
       await cleanup();
     }
   });
+
+  it('replaces the one-entry list card with a first-entry summary so the next step stays obvious', async () => {
+    listEntriesMock.mockResolvedValue([buildEntry()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primera entrada del Brain');
+        expect(container.textContent).toContain(
+          'Revisa esta entrada desde un resumen simple. Cuando exista la segunda, volvera la lista completa para comparar titulo, categoria y actualizacion.',
+        );
+        expect(container.textContent).toContain('Precios de estudio');
+        expect(container.textContent).toContain('Categoria: pricing');
+        expect(container.textContent).toContain('Tags: precios, estudio');
+        expect(container.textContent).toContain('Actualizado:');
+        expect(getActionByText(container, 'Editar entrada')).toBeTruthy();
+        expect(() => getActionByText(container, 'Editar')).toThrow();
+        expect(container.textContent).not.toContain('Activa');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
 });

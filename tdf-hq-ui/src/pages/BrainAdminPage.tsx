@@ -56,6 +56,18 @@ const parseTags = (raw: string) =>
     .map((tag) => tag.trim())
     .filter(Boolean);
 
+const summarizeEntryBody = (value: string, maxLength = 220) => {
+  const trimmed = value.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return `${trimmed.slice(0, maxLength)}...`;
+};
+
+const formatEntryTagsSummary = (tags?: string[] | null) =>
+  (tags ?? [])
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .join(', ');
+
 export default function BrainAdminPage() {
   const { session } = useSession();
   const qc = useQueryClient();
@@ -115,6 +127,15 @@ export default function BrainAdminPage() {
     ? 'No hay entradas cargadas, incluyendo inactivas.'
     : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
   const showRagFirstEntryGuidance = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
+  const singleActiveEntry = !entriesQuery.isLoading
+    && !entriesQuery.isError
+    && !includeInactive
+    && entries.length === 1
+    && (entries[0]?.bedActive ?? false)
+      ? (entries[0] ?? null)
+      : null;
+  const singleEntryTagsSummary = singleActiveEntry ? formatEntryTagsSummary(singleActiveEntry.bedTags) : '';
+  const singleEntryBodyPreview = singleActiveEntry ? summarizeEntryBody(singleActiveEntry.bedBody) : '';
 
   const openCreate = () => {
     setEditingId(null);
@@ -301,52 +322,102 @@ export default function BrainAdminPage() {
               </Alert>
             )}
 
-            <Stack spacing={2}>
-              {entries.map((entry) => (
-                <Card key={entry.bedId} variant="outlined">
-                  <CardContent>
-                    <Stack spacing={1}>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                        <Typography variant="h6" fontWeight={700}>
-                          {entry.bedTitle}
-                        </Typography>
-                        <Chip
-                          label={entry.bedActive ? 'Activa' : 'Inactiva'}
-                          color={entry.bedActive ? 'success' : 'default'}
-                          size="small"
-                        />
-                        {entry.bedCategory && (
-                          <Chip label={entry.bedCategory} variant="outlined" size="small" />
-                        )}
-                      </Stack>
-                      <Typography variant="body2" color="text.secondary">
-                        {entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody}
+            {singleActiveEntry ? (
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1.5}>
+                    <Stack spacing={0.5}>
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        Primera entrada del Brain
                       </Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {(entry.bedTags ?? []).map((tag) => (
-                          <Chip key={tag} label={tag} size="small" variant="outlined" />
-                        ))}
-                        <Chip
-                          label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
-                          size="small"
-                        />
-                      </Stack>
+                      <Typography variant="body2" color="text.secondary">
+                        Revisa esta entrada desde un resumen simple. Cuando exista la segunda, volvera la lista
+                        completa para comparar titulo, categoria y actualizacion.
+                      </Typography>
                     </Stack>
-                  </CardContent>
-                  <CardActions>
+                    <Stack spacing={0.75}>
+                      <Typography variant="h6" fontWeight={700}>
+                        {singleActiveEntry.bedTitle}
+                      </Typography>
+                      {singleActiveEntry.bedCategory && (
+                        <Typography variant="body2" color="text.secondary">
+                          Categoria: {singleActiveEntry.bedCategory}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" color="text.secondary">
+                        {singleEntryBodyPreview}
+                      </Typography>
+                      {singleEntryTagsSummary && (
+                        <Typography variant="body2" color="text.secondary">
+                          Tags: {singleEntryTagsSummary}
+                        </Typography>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {`Actualizado: ${formatTimestamp(singleActiveEntry.bedUpdatedAt)}`}
+                      </Typography>
+                    </Stack>
                     <Button
                       startIcon={<EditIcon />}
                       size="small"
+                      variant="outlined"
                       onClick={() => {
-                        openEdit(entry);
+                        openEdit(singleActiveEntry);
                       }}
+                      sx={{ alignSelf: 'flex-start' }}
                     >
-                      Editar
+                      Editar entrada
                     </Button>
-                  </CardActions>
-                </Card>
-              ))}
-            </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ) : (
+              <Stack spacing={2}>
+                {entries.map((entry) => (
+                  <Card key={entry.bedId} variant="outlined">
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                          <Typography variant="h6" fontWeight={700}>
+                            {entry.bedTitle}
+                          </Typography>
+                          <Chip
+                            label={entry.bedActive ? 'Activa' : 'Inactiva'}
+                            color={entry.bedActive ? 'success' : 'default'}
+                            size="small"
+                          />
+                          {entry.bedCategory && (
+                            <Chip label={entry.bedCategory} variant="outlined" size="small" />
+                          )}
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          {entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody}
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {(entry.bedTags ?? []).map((tag) => (
+                            <Chip key={tag} label={tag} size="small" variant="outlined" />
+                          ))}
+                          <Chip
+                            label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
+                            size="small"
+                          />
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                    <CardActions>
+                      <Button
+                        startIcon={<EditIcon />}
+                        size="small"
+                        onClick={() => {
+                          openEdit(entry);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                    </CardActions>
+                  </Card>
+                ))}
+              </Stack>
+            )}
           </Stack>
         </Paper>
       </Stack>
