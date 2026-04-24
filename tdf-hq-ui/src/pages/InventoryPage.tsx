@@ -83,6 +83,8 @@ const INVENTORY_MOVEMENT_GUIDANCE =
   'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.';
 const INVENTORY_NO_MOVEMENT_GUIDANCE =
   'En esta vista no hay movimientos disponibles por ahora.';
+const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
+  'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
 
 export default function InventoryPage() {
@@ -305,6 +307,12 @@ export default function InventoryPage() {
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
+  const showSingleAssetNoMovementGuidance = Boolean(
+    showSingleAssetSummary
+    && singleAssetMovementState
+    && !singleAssetMovementState.canCheckout
+    && !singleAssetMovementState.canCheckin,
+  );
   const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
   const showMovementGuidance = grouped.length > 1;
@@ -432,6 +440,11 @@ export default function InventoryPage() {
                     Registrar check-in
                   </Button>
                 )}
+                {showSingleAssetNoMovementGuidance && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                    {INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE}
+                  </Typography>
+                )}
                 <Button
                   size="small"
                   variant="outlined"
@@ -440,7 +453,7 @@ export default function InventoryPage() {
                   aria-label={`Abrir QR, enlace e historial de ${singleAsset.name}`}
                   sx={{ textTransform: 'none' }}
                 >
-                  QR, enlace e historial
+                  {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
                 </Button>
               </Stack>
             </Stack>

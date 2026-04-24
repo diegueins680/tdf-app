@@ -223,7 +223,7 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(
           Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'QR, enlace e historial',
+            (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
         ).toBe(true);
         expect(
@@ -303,6 +303,37 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Estado: Disponible');
         expect(container.textContent).not.toContain('Ubicación:');
         expect(container.textContent).not.toContain('Condición:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('explains the single-asset no-movement state instead of leaving the lone secondary menu unexplained', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primer equipo registrado');
+        expect(container.textContent).toContain('Estado: Retirado');
+        expect(container.textContent).toContain(
+          'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.',
+        );
+        expect(container.querySelector('button[aria-label="Abrir check-out de Neumann U87"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Abrir check-in de Neumann U87"]')).toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'QR e historial',
+          ),
+        ).toBe(true);
       });
     } finally {
       await cleanup();
