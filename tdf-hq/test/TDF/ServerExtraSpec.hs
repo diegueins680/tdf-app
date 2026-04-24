@@ -72,6 +72,7 @@ import TDF.ServerExtra (
     IGInboundDeleted (..),
     MetaChannel (..),
     MetaInboundEvent (..),
+    NormalizedCheckoutRequest (..),
     assetMatchesSearchQuery,
     extractMetaInbound,
     normalizeAssetSearchQuery,
@@ -120,6 +121,7 @@ import TDF.ServerExtra (
     validateSessionStatusInput,
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
+    normalizeCheckoutRequest,
     validateCheckoutTargets,
     validateCheckoutDueAt,
     validateCheckoutTargetReferences,
@@ -867,6 +869,71 @@ spec = do
         Right value ->
           expectationFailure ("Expected past checkout dueAt to be rejected, got " <> show value)
 
+  describe "normalizeCheckoutRequest" $ do
+    let roomIdText = "00000000-0000-0000-0000-000000000042"
+        roomId = case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+          Just key -> key
+          Nothing -> error "invalid checkout room fixture key"
+
+    it "trims meaningful condition and notes while preserving safe line breaks for inventory checkout writes" $ do
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just " room ")
+          Nothing
+          Nothing
+          (Just roomIdText)
+          (Just " rental ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "  Returned with stand  ")
+          (Just "  Cableado completo\n\tListo para sala  ")) of
+        Left err ->
+          expectationFailure ("Expected checkout request normalization to succeed, got " <> show err)
+        Right normalized -> do
+          ncrTargetKind normalized `shouldBe` TargetRoom
+          ncrTargetRoom normalized `shouldBe` Just roomId
+          ncrDisposition normalized `shouldBe` Rental
+          ncrConditionOut normalized `shouldBe` Just "Returned with stand"
+          ncrNotes normalized `shouldBe` Just "Cableado completo\n\tListo para sala"
+
+    it "rejects oversized or unsafe-control checkout condition and notes instead of storing ambiguous movement text" $ do
+      let assertInvalid expectedMessage req =
+            case normalizeCheckoutRequest req of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid checkout request error, got a normalized payload"
+
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+
+      assertInvalid
+        "conditionOut must be 240 characters or fewer"
+        baseRequest { coConditionOut = Just (T.replicate 241 "a") }
+      assertInvalid
+        "conditionOut must not contain control characters other than tabs or line breaks"
+        baseRequest { coConditionOut = Just "Returned\NULOK" }
+      assertInvalid
+        "notes must be 1000 characters or fewer"
+        baseRequest { coNotes = Just (T.replicate 1001 "a") }
+      assertInvalid
+        "notes must not contain control characters other than tabs or line breaks"
+        baseRequest { coNotes = Just "Cableado\NULcompleto" }
+
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
       normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  ") (Just "inventory/checkin.jpg"))
@@ -877,6 +944,28 @@ spec = do
         `shouldBe` Right (Nothing, Nothing, Nothing)
       normalizeAssetCheckinFields (AssetCheckinRequest (Just "   ") (Just "   ") (Just "   "))
         `shouldBe` Right (Nothing, Nothing, Nothing)
+
+    it "rejects oversized or unsafe-control check-in condition and notes before closing inventory movements" $ do
+      let assertInvalid expectedMessage req =
+            case normalizeAssetCheckinFields req of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid check-in normalization error, got " <> show value)
+
+      assertInvalid
+        "conditionIn must be 240 characters or fewer"
+        (AssetCheckinRequest (Just (T.replicate 241 "a")) Nothing Nothing)
+      assertInvalid
+        "conditionIn must not contain control characters other than tabs or line breaks"
+        (AssetCheckinRequest (Just "Returned\NULOK") Nothing Nothing)
+      assertInvalid
+        "notes must be 1000 characters or fewer"
+        (AssetCheckinRequest Nothing (Just (T.replicate 1001 "a")) Nothing)
+      assertInvalid
+        "notes must not contain control characters other than tabs or line breaks"
+        (AssetCheckinRequest Nothing (Just "Cableado\NULverificado") Nothing)
 
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"

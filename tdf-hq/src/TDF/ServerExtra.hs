@@ -512,6 +512,8 @@ normalizeCheckoutRequest req = do
   disposition <- parseCheckoutDisposition (coDisposition req)
   holderEmail <- validateCheckoutContactField "holderEmail" 160 (coHolderEmail req)
   holderPhone <- validateCheckoutContactField "holderPhone" 60 (coHolderPhone req)
+  conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
+  checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
   pure NormalizedCheckoutRequest
     { ncrTargetKind = targetKind
@@ -522,9 +524,9 @@ normalizeCheckoutRequest req = do
     , ncrHolderEmail = holderEmail
     , ncrHolderPhone = holderPhone
     , ncrDueAt = coDueAt req
-    , ncrConditionOut = normalizeOptionalTextField (coConditionOut req)
+    , ncrConditionOut = conditionOut
     , ncrPhotoOutUrl = photoOutUrl
-    , ncrNotes = normalizeOptionalTextField (coNotes req)
+    , ncrNotes = checkoutNotes
     }
 
 validateCheckoutContactField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
@@ -538,6 +540,44 @@ validateCheckoutContactField fieldName maxLen rawValue =
           Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
       | otherwise ->
           Right (Just cleanValue)
+
+validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateInventoryConditionField fieldName =
+  validateInventoryOptionalTextField fieldName inventoryConditionMaxLength
+
+validateInventoryNotesField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateInventoryNotesField fieldName =
+  validateInventoryOptionalTextField fieldName inventoryNotesMaxLength
+
+validateInventoryOptionalTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateInventoryOptionalTextField fieldName maxLength rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue
+      | T.length cleanValue > maxLength ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
+            }
+      | T.any isUnsafeInventoryTextControl cleanValue ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must not contain control characters other than tabs or line breaks"))
+            }
+      | otherwise ->
+          Right (Just cleanValue)
+
+isUnsafeInventoryTextControl :: Char -> Bool
+isUnsafeInventoryTextControl ch =
+  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+inventoryConditionMaxLength :: Int
+inventoryConditionMaxLength = 240
+
+inventoryNotesMaxLength :: Int
+inventoryNotesMaxLength = 1000
 
 validateCheckoutDueAt :: UTCTime -> Maybe UTCTime -> Either ServerError (Maybe UTCTime)
 validateCheckoutDueAt _ Nothing = Right Nothing
@@ -1735,11 +1775,10 @@ normalizeAssetNotesUpdate (Just rawNotes) =
 
 normalizeAssetCheckinFields :: AssetCheckinRequest -> Either ServerError (Maybe Text, Maybe Text, Maybe Text)
 normalizeAssetCheckinFields AssetCheckinRequest{..} =
-  (\photoUrl -> ( normalizeOptionalTextField ciConditionIn
-                , normalizeOptionalTextField ciNotes
-                , photoUrl
-                ))
-    <$> validateAssetPhotoUrl ciPhotoUrl
+  (\conditionIn notesVal photoUrl -> (conditionIn, notesVal, photoUrl))
+    <$> validateInventoryConditionField "conditionIn" ciConditionIn
+    <*> validateInventoryNotesField "notes" ciNotes
+    <*> validateAssetPhotoUrl ciPhotoUrl
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise
