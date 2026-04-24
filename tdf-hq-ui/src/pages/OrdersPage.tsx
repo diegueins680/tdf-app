@@ -254,6 +254,11 @@ export default function OrdersPage() {
     [rows],
   );
   const showServiceColumn = sharedServiceSummary === '';
+  const sharedEngineerSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => row.engineers)),
+    [rows],
+  );
+  const showEngineerColumn = sharedEngineerSummary === '';
   const sharedRoomsSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.rooms)),
     [rows],
@@ -262,8 +267,9 @@ export default function OrdersPage() {
   const combinedSharedContextSummary = sharedServiceSummary && sharedRoomsSummary
     ? `Mostrando un solo servicio: ${sharedServiceSummary} y una sola sala: ${sharedRoomsSummary}. Las columnas volverán cuando esta vista mezcle servicios o salas distintas.`
     : '';
-  const visibleTableColumnCount = 4
+  const visibleTableColumnCount = 3
     + (showServiceColumn ? 1 : 0)
+    + (showEngineerColumn ? 1 : 0)
     + (showRoomsColumn ? 1 : 0)
     + (showLiveSessionsColumn ? 1 : 0);
   const rowActionSummary = rows.some((row) => row.isRecording)
@@ -446,7 +452,7 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {(combinedSharedContextSummary || sharedServiceSummary || sharedRoomsSummary) && (
+            {(combinedSharedContextSummary || sharedServiceSummary || sharedEngineerSummary || sharedRoomsSummary) && (
               <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
                 {combinedSharedContextSummary ? (
                   <Typography variant="caption" color="text.secondary">
@@ -457,6 +463,11 @@ export default function OrdersPage() {
                     {sharedServiceSummary && (
                       <Typography variant="caption" color="text.secondary">
                         {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                      </Typography>
+                    )}
+                    {sharedEngineerSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {`Mostrando un solo ingeniero: ${sharedEngineerSummary}. La columna volverá cuando esta vista mezcle ingenieros distintos.`}
                       </Typography>
                     )}
                     {sharedRoomsSummary && (
@@ -475,7 +486,7 @@ export default function OrdersPage() {
                     <TableCell>Horario</TableCell>
                     {showServiceColumn && <TableCell>Servicio</TableCell>}
                     <TableCell>Booking</TableCell>
-                    <TableCell>Ingeniero</TableCell>
+                    {showEngineerColumn && <TableCell>Ingeniero</TableCell>}
                     {showRoomsColumn && <TableCell>Salas</TableCell>}
                     <TableCell>Estado</TableCell>
                     {showLiveSessionsColumn && <TableCell align="right">Live Sessions</TableCell>}
@@ -516,7 +527,7 @@ export default function OrdersPage() {
                           <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
                         )}
                       </TableCell>
-                      <TableCell>{row.engineers}</TableCell>
+                      {showEngineerColumn && <TableCell>{row.engineers}</TableCell>}
                       {showRoomsColumn && <TableCell>{row.rooms}</TableCell>}
                       <TableCell>{renderStatus(row.status ?? '')}</TableCell>
                       {showLiveSessionsColumn && (
