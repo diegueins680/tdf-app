@@ -4,6 +4,7 @@ import {
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
+  getBookingEngineerFieldState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -134,6 +135,60 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       helperText: '',
       mode: 'catalog',
+    });
+  });
+
+  it('hides engineer selection until the operator chooses a service or keeps an assigned engineer', () => {
+    expect(getBookingEngineerFieldState({
+      engineerCount: 2,
+      hasAssignedEngineer: false,
+      serviceType: '',
+    })).toEqual({
+      helperText: 'Selecciona el servicio primero para decidir si hace falta un ingeniero.',
+      label: 'Ingeniero',
+      showField: false,
+    });
+
+    expect(getBookingEngineerFieldState({
+      engineerCount: 2,
+      hasAssignedEngineer: true,
+      serviceType: '',
+    })).toEqual({
+      helperText: 'Opcional.',
+      label: 'Ingeniero',
+      showField: true,
+    });
+  });
+
+  it('keeps engineer guidance concise and contextual once the service is known', () => {
+    expect(getBookingEngineerFieldState({
+      engineerCount: 2,
+      hasAssignedEngineer: false,
+      serviceType: 'Mixing',
+    })).toEqual({
+      helperText: 'Recomendado para recording/mixing/mastering.',
+      label: 'Ingeniero',
+      showField: true,
+    });
+
+    expect(getBookingEngineerFieldState({
+      engineerCount: 2,
+      hasAssignedEngineer: false,
+      serviceType: 'Band rehearsal',
+    })).toEqual({
+      helperText: 'Opcional.',
+      label: 'Ingeniero',
+      showField: true,
+    });
+
+    expect(getBookingEngineerFieldState({
+      engineerCount: 0,
+      hasAssignedEngineer: false,
+      serviceType: 'Mixing',
+    })).toEqual({
+      helperText: 'No hay ingenieros en el catálogo de contactos.',
+      label: 'Ingeniero',
+      showField: true,
     });
   });
 

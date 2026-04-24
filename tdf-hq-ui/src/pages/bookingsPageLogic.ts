@@ -19,6 +19,12 @@ interface BookingServiceFieldState {
   mode: 'catalog' | 'manual';
 }
 
+interface BookingEngineerFieldState {
+  helperText: string;
+  label: string;
+  showField: boolean;
+}
+
 export const requiresEngineerForService = (serviceType: string) => {
   const lowered = normalizeServiceType(serviceType);
   return ['recording', 'grabacion', 'grabación', 'mezcla', 'mixing', 'master', 'mastering'].some((keyword) =>
@@ -179,6 +185,48 @@ export const getBookingServiceFieldState = ({
   return {
     helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
     mode: 'manual',
+  };
+};
+
+export const getBookingEngineerFieldState = ({
+  engineerCount,
+  hasAssignedEngineer,
+  serviceType,
+}: {
+  engineerCount: number;
+  hasAssignedEngineer: boolean;
+  serviceType: string;
+}): BookingEngineerFieldState => {
+  const normalizedServiceType = serviceType.trim();
+
+  if (!hasAssignedEngineer && normalizedServiceType === '') {
+    return {
+      helperText: 'Selecciona el servicio primero para decidir si hace falta un ingeniero.',
+      label: 'Ingeniero',
+      showField: false,
+    };
+  }
+
+  if (engineerCount === 0) {
+    return {
+      helperText: 'No hay ingenieros en el catálogo de contactos.',
+      label: 'Ingeniero',
+      showField: true,
+    };
+  }
+
+  if (requiresEngineerForService(normalizedServiceType)) {
+    return {
+      helperText: 'Recomendado para recording/mixing/mastering.',
+      label: 'Ingeniero',
+      showField: true,
+    };
+  }
+
+  return {
+    helperText: 'Opcional.',
+    label: 'Ingeniero',
+    showField: true,
   };
 };
 

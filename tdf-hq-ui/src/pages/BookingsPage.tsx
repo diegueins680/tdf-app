@@ -37,6 +37,7 @@ import {
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
+  getBookingEngineerFieldState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -368,6 +369,14 @@ export default function BookingsPage() {
         ? `${serviceFieldState.helperText} ${describeServiceDefaults(serviceType)}`
         : serviceFieldState.helperText
       : describeServiceDefaults(serviceType);
+  const engineerFieldState = useMemo(
+    () => getBookingEngineerFieldState({
+      engineerCount: engineerOptions.length,
+      hasAssignedEngineer: engineerPartyId != null || engineerName.trim() !== '',
+      serviceType,
+    }),
+    [engineerName, engineerOptions.length, engineerPartyId, serviceType],
+  );
   const conflictAlertText = useMemo(
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
@@ -1005,11 +1014,6 @@ const openDialogForRange = (start: Date, end: Date) => {
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
             {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
-            {missingEngineer && (
-              <Alert severity="warning">
-                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
-              </Alert>
-            )}
             {prefillNotice && (
               <Alert
                 severity="info"
@@ -1133,69 +1137,6 @@ const openDialogForRange = (start: Date, end: Date) => {
                 <MenuItem value="curso">Curso/bloque</MenuItem>
               </TextField>
             )}
-            <TextField
-              label="Notas (opcional)"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-            />
-            {conflictAlertText && (
-              <Alert severity="warning" variant="outlined">
-                {conflictAlertText}
-              </Alert>
-            )}
-            <Autocomplete
-              options={engineerOptions}
-              getOptionLabel={(option) => option.displayName}
-              loading={partiesQuery.isFetching}
-              value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
-              onChange={(_, value) => {
-                setEngineerPartyId(value?.partyId ?? null);
-                setEngineerName(value?.displayName ?? '');
-              }}
-              inputValue={engineerName}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'input') {
-                  setEngineerName(value);
-                  setEngineerPartyId(null);
-                }
-                if (reason === 'clear') {
-                  setEngineerName('');
-                  setEngineerPartyId(null);
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Ingeniero (sugerido para recording/mixing/mastering)"
-                  helperText={
-                    engineerOptions.length === 0
-                      ? 'No hay ingenieros en el catálogo de contactos.'
-                      : requiresEngineerForService(serviceType)
-                        ? 'Recomendado para recording/mixing/mastering.'
-                        : 'Opcional.'
-                  }
-                />
-              )}
-              noOptionsText="Sin ingenieros en el catálogo"
-            />
-            <FormControl>
-              <InputLabel id="booking-status-label">Estado</InputLabel>
-              <Select
-                labelId="booking-status-label"
-                label="Estado"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             {serviceFieldState.mode === 'manual' ? (
               <TextField
                 label="Servicio"
@@ -1262,6 +1203,74 @@ const openDialogForRange = (start: Date, end: Date) => {
                 Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
               </Alert>
             )}
+            <TextField
+              label="Notas (opcional)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            {conflictAlertText && (
+              <Alert severity="warning" variant="outlined">
+                {conflictAlertText}
+              </Alert>
+            )}
+            {missingEngineer && (
+              <Alert severity="warning">
+                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
+              </Alert>
+            )}
+            {engineerFieldState.showField ? (
+              <Autocomplete
+                options={engineerOptions}
+                getOptionLabel={(option) => option.displayName}
+                loading={partiesQuery.isFetching}
+                value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
+                onChange={(_, value) => {
+                  setEngineerPartyId(value?.partyId ?? null);
+                  setEngineerName(value?.displayName ?? '');
+                }}
+                inputValue={engineerName}
+                onInputChange={(_, value, reason) => {
+                  if (reason === 'input') {
+                    setEngineerName(value);
+                    setEngineerPartyId(null);
+                  }
+                  if (reason === 'clear') {
+                    setEngineerName('');
+                    setEngineerPartyId(null);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={engineerFieldState.label}
+                    helperText={engineerFieldState.helperText}
+                  />
+                )}
+                noOptionsText="Sin ingenieros en el catálogo"
+              />
+            ) : (
+              <Alert severity="info" variant="outlined">
+                {engineerFieldState.helperText}
+              </Alert>
+            )}
+            <FormControl>
+              <InputLabel id="booking-status-label">Estado</InputLabel>
+              <Select
+                labelId="booking-status-label"
+                label="Estado"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {statusOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Autocomplete
               multiple
               options={rooms}
