@@ -3085,7 +3085,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes one shared custom status instead of repeating it across every row action', async () => {
+  it('collapses one shared custom status into the current-view summary instead of repeating passive filter chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crStatus: 'needs_review',
@@ -3103,20 +3103,16 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const singleCohortSummary = container.querySelector<HTMLElement>(
-        '[data-testid="course-registration-single-cohort-summary"]',
-      );
-      const customStatusSummary = container.querySelector<HTMLElement>(
-        '[data-testid="course-registration-single-custom-status-summary"]',
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
       );
 
-      expect(singleCohortSummary?.textContent).toContain('Cohorte disponible');
-      expect(singleCohortSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(singleCohortSummary?.textContent).toContain('Cohorte única por ahora.');
-      expect(singleCohortSummary?.textContent).not.toContain('Usa Estado');
-      expect(customStatusSummary?.textContent).toContain('Estado no estándar');
-      expect(customStatusSummary?.textContent).toContain('Needs Review');
-      expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(currentViewSummary?.textContent).toContain('Vista actual');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101) · Needs Review');
+      expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(currentViewSummary?.textContent).toContain('Vista única por ahora: una cohorte y un estado.');
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
@@ -3154,12 +3150,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const customStatusSummary = container.querySelector<HTMLElement>(
-        '[data-testid="course-registration-single-custom-status-summary"]',
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
       );
 
-      expect(customStatusSummary?.textContent).toContain('Estado no estándar');
-      expect(customStatusSummary?.textContent).toContain('Needs Review');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101) · Needs Review');
+      expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
@@ -3191,12 +3188,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const customStatusSummary = container.querySelector<HTMLElement>(
-        '[data-testid="course-registration-single-custom-status-summary"]',
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
       );
 
-      expect(customStatusSummary?.textContent).toContain('Estado no estándar');
-      expect(customStatusSummary?.textContent).toContain('Estado desconocido');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101) · Estado desconocido');
+      expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');

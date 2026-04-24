@@ -1573,8 +1573,16 @@ export default function CourseRegistrationsAdminPage() {
     }),
     [activeCohortLabel, hasEffectiveSlugFilter, status, limit],
   );
-  const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
-    ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
+  const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
+  const combinedSingleChoiceStatusLabel = singleAvailableCohortLabel
+    ? showSingleStatusSummary && singleVisibleStatus
+      ? statusFilterLabels[singleVisibleStatus]
+      : showSingleCustomStatusSummary && singleVisibleCustomStatus != null
+        ? customRegistrationStatusLabel(singleVisibleCustomStatus)
+        : ''
+    : '';
+  const combinedSingleChoiceSummary = singleAvailableCohortLabel && combinedSingleChoiceStatusLabel
+    ? `${singleAvailableCohortLabel} · ${combinedSingleChoiceStatusLabel}`
     : '';
   const loadedRegistrationCount = registrations.length;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
@@ -1776,6 +1784,9 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoiceLimitSummary,
     combinedSingleChoiceCountSummary,
   ].filter(Boolean).join(' ');
+  const combinedSingleChoiceCustomStatusGuidance = combinedSingleChoiceSummary && showSingleCustomStatusSummary
+    ? customStatusFilterUnavailableMessage
+    : '';
   const showSingleStatusSummaryBlock = showSingleStatusSummary
     && !(showCohortFilterUnavailableSummary && loadedRegistrationCount === 1);
   const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary
@@ -1830,7 +1841,6 @@ export default function CourseRegistrationsAdminPage() {
     && !standaloneSingleChoiceSourceSummary;
   const showActiveStatusFilterSummary = hasStatusFilter && (hasEffectiveSlugFilter || hasCustomLimit);
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
-  const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
     && !statusAlreadyVisibleInFilterStrip
@@ -3345,6 +3355,11 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="body2" fontWeight={600}>
                       {combinedSingleChoiceSummary}
                     </Typography>
+                    {combinedSingleChoiceCustomStatusGuidance && (
+                      <Typography variant="caption" color="text.secondary">
+                        {combinedSingleChoiceCustomStatusGuidance}
+                      </Typography>
+                    )}
                     {combinedSingleChoiceContextSummary && (
                       <Typography
                         variant="caption"
