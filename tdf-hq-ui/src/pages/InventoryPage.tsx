@@ -161,15 +161,18 @@ function getSharedInventoryColumnSummary({
   status,
   category,
   location,
+  condition,
 }: {
   status: string;
   category: string;
   location: string;
+  condition: string;
 }) {
   const sharedParts = [
     status ? `estado ${status}` : '',
     category ? `categoría ${category}` : '',
     location ? `ubicación ${location}` : '',
+    condition ? `condición ${condition}` : '',
   ].filter(Boolean);
 
   if (sharedParts.length < 2) return '';
@@ -520,8 +523,9 @@ export default function InventoryPage() {
       status: sharedStatusSummary,
       category: sharedCategorySummary,
       location: sharedLocationSummary,
+      condition: sharedConditionSummary,
     }),
-    [sharedCategorySummary, sharedLocationSummary, sharedStatusSummary],
+    [sharedCategorySummary, sharedConditionSummary, sharedLocationSummary, sharedStatusSummary],
   );
   const showSingleAssetNoMovementGuidance = Boolean(
     showSingleAssetSummary
@@ -741,7 +745,7 @@ export default function InventoryPage() {
                   {tableGuidance}
                 </Typography>
               )}
-              {sharedConditionSummary && (
+              {sharedConditionSummary && !sharedColumnSummary && (
                 <Typography variant="caption" color="rgba(226,232,240,0.68)">
                   {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
                 </Typography>

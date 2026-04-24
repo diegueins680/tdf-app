@@ -558,6 +558,7 @@ describe('InventoryPage', () => {
         name: 'Activo Uno',
         category: 'Micrófono',
         location: 'Sala A',
+        condition: 'Excelente',
         status: 'Active',
       }),
       buildAsset({
@@ -565,6 +566,7 @@ describe('InventoryPage', () => {
         name: 'Activo Dos',
         category: ' micrófono ',
         location: 'sala a',
+        condition: ' excelente ',
         status: ' active ',
       }),
     ]);
@@ -577,15 +579,17 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         const text = container.textContent ?? '';
         expect(container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent?.trim()).toBe(
-          'Se ocultaron columnas porque toda esta vista coincide en estado Disponible, categoría Micrófono y ubicación Sala A. Volverán cuando esta vista mezcle valores distintos.',
+          'Se ocultaron columnas porque toda esta vista coincide en estado Disponible, categoría Micrófono, ubicación Sala A y condición Excelente. Volverán cuando esta vista mezcle valores distintos.',
         );
         expect(text).not.toContain('Mostrando un solo estado:');
         expect(text).not.toContain('Mostrando una sola categoría:');
         expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(text).not.toContain('Mostrando una sola condición:');
         expect(countOccurrencesIgnoringCase(text, 'Se ocultaron columnas porque toda esta vista coincide en')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Disponible')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Excelente')).toBe(1);
         expect(hasTableHeader(container, 'Estado')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
 
@@ -605,12 +609,14 @@ describe('InventoryPage', () => {
         assetId: 'asset-1',
         name: 'Activo Uno',
         location: 'Sala A',
+        condition: 'Excelente',
       }),
       buildAsset({
         assetId: 'asset-2',
         name: 'Retirado Uno',
         category: 'Interfaz',
         location: 'sala a',
+        condition: 'Bueno',
         status: 'Retired',
       }),
     ]);
@@ -757,6 +763,7 @@ describe('InventoryPage', () => {
         name: 'Activo Uno',
         category: 'Micrófono',
         location: 'Sala A',
+        condition: 'Excelente',
         status: 'Active',
       }),
       buildAsset({
@@ -764,6 +771,7 @@ describe('InventoryPage', () => {
         name: 'Activo Dos',
         category: 'Interfaz',
         location: 'Sala B',
+        condition: 'Bueno',
         status: ' active ',
       }),
     ]);
