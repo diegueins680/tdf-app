@@ -309,7 +309,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps repeated table actions compact by moving QR and history into one row actions menu', async () => {
+  it('keeps repeated table actions compact by naming the secondary row menu after QR and history', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
       buildAsset({
@@ -334,14 +334,19 @@ describe('InventoryPage', () => {
           'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
         expect(container.textContent).not.toContain('Abre Acciones para ver QR o historial.');
-        expect(container.querySelectorAll('button[aria-label^="Abrir acciones de "]')).toHaveLength(2);
+        expect(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir historial de Neumann U87"]')).toBeNull();
         expect(
           Array.from(container.querySelectorAll('button')).filter(
-            (button) => (button.textContent ?? '').trim() === 'Acciones',
+            (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
         ).toHaveLength(2);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Acciones',
+          ),
+        ).toBe(false);
         expect(
           Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Historial',
@@ -350,7 +355,9 @@ describe('InventoryPage', () => {
       });
 
       await act(async () => {
-        const actionsButton = container.querySelector<HTMLButtonElement>('[aria-label="Abrir acciones de Neumann U87"]');
+        const actionsButton = container.querySelector<HTMLButtonElement>(
+          '[aria-label="Abrir QR, enlace e historial de Neumann U87"]',
+        );
         actionsButton?.click();
         await flushPromises();
       });
@@ -506,7 +513,7 @@ describe('InventoryPage', () => {
         expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Uno"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir check-out de Retirado Dos"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Abrir check-in de Retirado Dos"]')).toBeNull();
-        expect(container.querySelectorAll('button[aria-label^="Abrir acciones de "]')).toHaveLength(2);
+        expect(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).toHaveLength(2);
       });
     } finally {
       await cleanup();

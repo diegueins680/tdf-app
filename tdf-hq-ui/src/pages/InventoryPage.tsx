@@ -83,6 +83,7 @@ const INVENTORY_MOVEMENT_GUIDANCE =
   'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.';
 const INVENTORY_NO_MOVEMENT_GUIDANCE =
   'En esta vista no hay movimientos disponibles por ahora.';
+const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
 
 export default function InventoryPage() {
   const qc = useQueryClient();
@@ -534,10 +535,10 @@ export default function InventoryPage() {
                               size="small"
                               variant="text"
                               onClick={(event) => openActionsMenu(event, asset)}
-                              aria-label={`Abrir acciones de ${asset.name}`}
+                              aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
                               sx={{ textTransform: 'none' }}
                             >
-                              Acciones
+                              {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
                             </Button>
                           </Stack>
                         </TableCell>
