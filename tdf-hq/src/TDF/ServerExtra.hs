@@ -348,6 +348,9 @@ inventoryPublicServer =
   where
     checkoutByQrToken token req = do
       assetEntity <- loadAssetEntityByQrToken token
+      normalized <- either throwError pure (normalizeCheckoutRequest req)
+      when (ncrTargetKind normalized /= TargetParty) $
+        throwError err400 { errBody = "Public QR checkout only supports party targets" }
       performCheckout "public-link" assetEntity req
 
     checkinByQrToken token req = do

@@ -30,7 +30,7 @@ import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
-import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI)
+import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI, InventoryPublicAPI)
 import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
@@ -135,6 +135,7 @@ import TDF.ServerExtra (
     validateAssetStatusUpdate,
     validatePageParams,
     validateSessionReferences,
+    inventoryPublicServer,
     inventoryServer,
     pipelinesServer,
     roomsServer,
@@ -1091,6 +1092,38 @@ spec = do
         Right asset -> do
           assetId asset `shouldBe` existingAssetId
           qrToken asset `shouldBe` Just canonicalToken
+
+  describe "inventoryPublicServer checkoutByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000907"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcba"
+        request =
+          AssetCheckoutRequest
+            (Just "room")
+            Nothing
+            Nothing
+            (Just "00000000-0000-0000-0000-000000000042")
+            (Just "loan")
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+
+    it "rejects room or session targets on public QR links before external callers can attach internal references" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout only supports party targets"
+        Right value ->
+          expectationFailure ("Expected public QR room checkout to be rejected, got " <> show value)
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
@@ -2177,6 +2210,23 @@ runInventoryResolveQrHandler setup token =
             }
     liftIO $ runExceptT (runReaderT (resolveByQrHandlerFor inventoryUser token) env)
 
+runInventoryPublicCheckoutHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetCheckoutRequest
+  -> IO (Either ServerError AssetCheckoutDTO)
+runInventoryPublicCheckoutHandler setup token req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in public inventory checkout tests"
+            }
+    liftIO $ runExceptT (runReaderT (publicCheckoutHandlerFor token req) env)
+
 runRoomCreateHandler
   :: SqlPersistT IO ()
   -> RoomCreate
@@ -2316,6 +2366,15 @@ resolveByQrHandlerFor user =
       :<|> _refreshQr
       :<|> resolveByQr ->
           resolveByQr
+
+publicCheckoutHandlerFor :: Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
+publicCheckoutHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    _loadByQr
+      :<|> checkoutByQr
+      :<|> _checkinByQr
+      :<|> _uploadByQr ->
+          checkoutByQr
 
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =
