@@ -92,6 +92,12 @@ function formatScheduleRange(start: string, end: string) {
   return `${datePart}, ${timeRange}`;
 }
 
+function getStatusPresentation(status: string) {
+  const trimmedStatus = status.trim();
+  const fallbackLabel = trimmedStatus === '' ? 'Desconocido' : trimmedStatus;
+  return STATUS_LOOKUP[trimmedStatus] ?? { label: fallbackLabel, color: 'default' as ChipProps['color'] };
+}
+
 function filterResources(resources: BookingResourceDTO[] | undefined, predicate: (role: string) => boolean) {
   if (!resources) return [];
   return resources
@@ -340,6 +346,11 @@ export default function OrdersPage() {
     [rows],
   );
   const showRoomsColumn = sharedRoomsSummary === '';
+  const sharedStatusSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => getStatusPresentation(row.status).label)),
+    [rows],
+  );
+  const showStatusColumn = sharedStatusSummary === '';
   const combinedSharedContextSummary = useMemo(
     () =>
       buildCombinedSharedContextSummary([
@@ -358,13 +369,19 @@ export default function OrdersPage() {
           singularLabel: 'una sola sala',
           value: sharedRoomsSummary,
         },
+        {
+          pluralLabel: 'estados',
+          singularLabel: 'un solo estado',
+          value: sharedStatusSummary,
+        },
       ]),
-    [sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary],
+    [sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary, sharedStatusSummary],
   );
-  const visibleTableColumnCount = 3
+  const visibleTableColumnCount = 2
     + (showServiceColumn ? 1 : 0)
     + (showEngineerColumn ? 1 : 0)
     + (showRoomsColumn ? 1 : 0)
+    + (showStatusColumn ? 1 : 0)
     + (showLiveSessionsColumn ? 1 : 0);
   const rowActionSummary = rows.some((row) => row.isRecording)
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
@@ -410,9 +427,7 @@ export default function OrdersPage() {
   const mutationError = updateMutation.error?.message ?? null;
 
   const renderStatus = (status: string) => {
-    const trimmedStatus = status.trim();
-    const fallbackLabel = trimmedStatus === '' ? 'Desconocido' : trimmedStatus;
-    const config = STATUS_LOOKUP[status] ?? { label: fallbackLabel, color: 'default' as ChipProps['color'] };
+    const config = getStatusPresentation(status);
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 
@@ -546,7 +561,11 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {(combinedSharedContextSummary || sharedServiceSummary || sharedEngineerSummary || sharedRoomsSummary) && (
+            {(combinedSharedContextSummary
+              || sharedServiceSummary
+              || sharedEngineerSummary
+              || sharedRoomsSummary
+              || sharedStatusSummary) && (
               <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
                 {combinedSharedContextSummary ? (
                   <Typography variant="caption" color="text.secondary">
@@ -569,6 +588,11 @@ export default function OrdersPage() {
                         {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
                       </Typography>
                     )}
+                    {sharedStatusSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+                      </Typography>
+                    )}
                   </>
                 )}
               </Stack>
@@ -582,7 +606,7 @@ export default function OrdersPage() {
                     <TableCell>Booking</TableCell>
                     {showEngineerColumn && <TableCell>Ingeniero</TableCell>}
                     {showRoomsColumn && <TableCell>Salas</TableCell>}
-                    <TableCell>Estado</TableCell>
+                    {showStatusColumn && <TableCell>Estado</TableCell>}
                     {showLiveSessionsColumn && <TableCell align="right">Live Sessions</TableCell>}
                   </TableRow>
                 </TableHead>
@@ -623,7 +647,7 @@ export default function OrdersPage() {
                       </TableCell>
                       {showEngineerColumn && <TableCell>{row.engineers}</TableCell>}
                       {showRoomsColumn && <TableCell>{row.rooms}</TableCell>}
-                      <TableCell>{renderStatus(row.status ?? '')}</TableCell>
+                      {showStatusColumn && <TableCell>{renderStatus(row.status ?? '')}</TableCell>}
                       {showLiveSessionsColumn && (
                         <TableCell align="right">
                           {row.isRecording ? (
