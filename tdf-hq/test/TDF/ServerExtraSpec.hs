@@ -37,7 +37,7 @@ import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
-  , AssetDTO
+  , AssetDTO (assetId, qrToken)
   , AssetCheckoutDTO
   , AssetCheckoutRequest (..)
   , AssetQrDTO
@@ -49,8 +49,6 @@ import TDF.API.Types
   , RoomDTO
   , RoomUpdate (..)
   , SessionInputRow (SessionInputRow)
-  , assetId
-  , qrToken
   )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (AppConfig (..))
@@ -909,8 +907,65 @@ spec = do
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
 
+  describe "deleteAssetH" $ do
+    let deletableAssetId = "00000000-0000-0000-0000-000000000903"
+        historicAssetId = "00000000-0000-0000-0000-000000000904"
+
+    it "deletes assets that have no checkout history" $ do
+      assetKey <- case (fromPathPiece deletableAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid deletable asset fixture key" >> fail "unreachable"
+      (result, assetStillExists) <- runInventoryDeleteHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        deletableAssetId
+      case result of
+        Left err ->
+          expectationFailure ("Expected asset delete to succeed, got " <> show err)
+        Right () ->
+          assetStillExists `shouldBe` False
+
+    it "rejects assets with checkout history instead of deleting inventory movement context" $ do
+      assetKey <- case (fromPathPiece historicAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid historic asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000914" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid historic checkout fixture key" >> fail "unreachable"
+      (result, assetStillExists) <- runInventoryDeleteHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey (fixtureAsset "Ludwig Supraphonic" "Drum" (Just "Ludwig") Nothing "TDF" Nothing)
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Just now
+              , ME.assetCheckoutConditionIn = Just "Returned OK"
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Returned without issues"
+              })
+        historicAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset has checkout history and cannot be deleted"
+          assetStillExists `shouldBe` True
+        Right () ->
+          expectationFailure "Expected asset delete with checkout history to be rejected"
+
   describe "refreshQrH" $ do
-    let missingAssetId = "00000000-0000-0000-0000-000000000903"
+    let missingAssetId = "00000000-0000-0000-0000-000000000905"
 
     it "rejects unknown asset ids instead of minting orphan QR tokens" $ do
       result <- runInventoryRefreshQrHandler (pure ()) missingAssetId
@@ -922,7 +977,7 @@ spec = do
           expectationFailure ("Expected missing asset QR refresh to fail, got " <> show value)
 
   describe "resolveByQrH" $ do
-    let existingAssetId = "00000000-0000-0000-0000-000000000904"
+    let existingAssetId = "00000000-0000-0000-0000-000000000906"
         canonicalToken = "00000000-0000-0000-0000-00000000abcd"
 
     it "rejects malformed QR tokens before inventory lookup turns them into ambiguous 404s" $ do
@@ -1981,6 +2036,26 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runInventoryDeleteHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError (), Bool)
+runInventoryDeleteHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory delete tests"
+            }
+    result <- liftIO $ runExceptT (runReaderT (deleteHandlerFor inventoryUser rawId) env)
+    assetStillExists <- case (fromPathPiece rawId :: Maybe (Key Asset)) of
+      Nothing -> pure False
+      Just assetKey -> liftIO $ runSqlPool (maybe False (const True) <$> get assetKey) pool
+    pure (result, assetStillExists)
+
 runInventoryRefreshQrHandler
   :: SqlPersistT IO ()
   -> Text
@@ -2104,6 +2179,22 @@ checkinHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           checkinAsset
+
+deleteHandlerFor :: AuthedUser -> Text -> InventoryTestM ()
+deleteHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          \rawId -> () <$ deleteAsset rawId
 
 refreshQrHandlerFor :: AuthedUser -> Text -> InventoryTestM AssetQrDTO
 refreshQrHandlerFor user =

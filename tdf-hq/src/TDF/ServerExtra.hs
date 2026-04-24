@@ -283,12 +283,21 @@ inventoryServer user =
     deleteAssetH rawId = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
-      deleted <- withPool $ do
+      deleteResult <- withPool $ do
         mAsset <- get assetKey
         case mAsset of
-          Nothing -> pure False
-          Just _  -> delete assetKey >> pure True
-      unless deleted (throwError err404)
+          Nothing ->
+            pure (Left err404 { errBody = "Asset not found" })
+          Just _ -> do
+            mCheckout <- selectFirst [AssetCheckoutAssetId ==. assetKey] [LimitTo 1]
+            case mCheckout of
+              Just _ ->
+                pure
+                  (Left err409 { errBody = "Asset has checkout history and cannot be deleted" })
+              Nothing -> do
+                delete assetKey
+                pure (Right ())
+      either throwError pure deleteResult
       pure NoContent
 
     checkoutAssetH rawId req = do
