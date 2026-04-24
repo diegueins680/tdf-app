@@ -74,6 +74,28 @@ function normalizeInventoryField(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
+const normalizeInventoryComparisonValue = (value?: string | null) =>
+  normalizeInventoryField(value)?.toLocaleLowerCase('es') ?? '';
+
+function getSharedInventoryLocationSummary(assets: readonly AssetDTO[]) {
+  if (assets.length < 2) return '';
+
+  const normalizedLocations = assets
+    .map((asset) => normalizeInventoryField(asset.location))
+    .filter((location): location is string => location != null);
+
+  if (normalizedLocations.length !== assets.length) return '';
+
+  const [firstLocation] = normalizedLocations;
+  const firstComparableLocation = normalizeInventoryComparisonValue(firstLocation);
+
+  return normalizedLocations.every(
+    (location) => normalizeInventoryComparisonValue(location) === firstComparableLocation,
+  )
+    ? firstLocation
+    : '';
+}
+
 function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>) {
   return formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
 }
@@ -341,20 +363,21 @@ export default function InventoryPage() {
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
+  const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
   const showSingleAssetNoMovementGuidance = Boolean(
     showSingleAssetSummary
     && singleAssetMovementState
     && !singleAssetMovementState.canCheckout
     && !singleAssetMovementState.canCheckin,
   );
-  const showLocationColumn = grouped.some((asset) => normalizeInventoryField(asset.location) != null);
+  const showLocationColumn = sharedLocationSummary === '' && grouped.some((asset) => normalizeInventoryField(asset.location) != null);
   const showCurrentCheckoutColumns = grouped.some((asset) => {
     const movementState = getInventoryMovementState(asset.status);
     return movementState.canCheckin
       || normalizeInventoryField(asset.currentCheckoutTarget) != null
       || Boolean(asset.currentCheckoutAt);
   });
-  const showLocationSetupGuidance = grouped.length > 1 && !showLocationColumn;
+  const showLocationSetupGuidance = grouped.length > 1 && sharedLocationSummary === '' && !showLocationColumn;
   const showCheckoutContextGuidance = grouped.length > 1 && !showCurrentCheckoutColumns;
   const showMovementGuidance = grouped.length > 1;
   const visibleMovementActions = grouped.reduce(
@@ -533,6 +556,11 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
+              {sharedLocationSummary && (
+                <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                  {`Mostrando una sola ubicación: ${sharedLocationSummary}. La columna volverá cuando esta vista mezcle ubicaciones distintas.`}
+                </Typography>
+              )}
               {tableGuidance && (
                 <Typography variant="body2" color="rgba(226,232,240,0.68)">
                   {tableGuidance}

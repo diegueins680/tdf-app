@@ -122,6 +122,9 @@ const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): A
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
 
+const countOccurrencesIgnoringCase = (value: string, fragment: string) =>
+  value.toLocaleLowerCase().split(fragment.toLocaleLowerCase()).length - 1;
+
 const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabel: string) => {
   await act(async () => {
     const actionsButton = container.querySelector<HTMLButtonElement>(
@@ -467,6 +470,73 @@ describe('InventoryPage', () => {
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('summarizes one shared location once and restores the location column when assets diverge again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        location: 'sala a',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola ubicación: Sala A. La columna volverá cuando esta vista mezcle ubicaciones distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola ubicación: Sala A.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        location: 'Sala B',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(hasTableHeader(secondContainer, 'Ubicación')).toBe(true);
+        expect(text).toContain('Sala A');
+        expect(text).toContain('Sala B');
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 
