@@ -527,6 +527,8 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/manual.pdf"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/folder/no-extension"))
 
   describe "validateAssetPhotoUrlUpdate" $ do
     it "keeps omitted photo updates untouched, trims valid values, and treats blank strings as clear intents" $ do
@@ -546,6 +548,7 @@ spec = do
               expectationFailure ("Expected invalid asset photo update error, got " <> show value)
       assertInvalid (validateAssetPhotoUrlUpdate (Just "roland-juno.jpg"))
       assertInvalid (validateAssetPhotoUrlUpdate (Just "ftp://cdn.example.com/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrlUpdate (Just "inventory/manual.pdf"))
 
   describe "normalizeAssetNotesUpdate" $ do
     it "preserves omitted notes, trims meaningful updates, and maps blanks to an explicit clear" $ do

@@ -1832,7 +1832,9 @@ normalizeAssetPhotoPath rawPath =
         | "assets/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/" :: Text)) path0
         | otherwise = path0
       pathSegments = T.splitOn "/" path1
-  in if "inventory/" `T.isPrefixOf` path1 && all isValidAssetPhotoPathSegment pathSegments
+  in if "inventory/" `T.isPrefixOf` path1
+        && all isValidAssetPhotoPathSegment pathSegments
+        && hasSupportedAssetPhotoExtension path1
        then Just path1
        else Nothing
 
@@ -1846,6 +1848,11 @@ isValidAssetPhotoPathSegment segment =
 isValidAssetPhotoPathChar :: Char -> Bool
 isValidAssetPhotoPathChar ch =
   isAscii ch && (isAlphaNum ch || ch `elem` ("._-" :: String))
+
+hasSupportedAssetPhotoExtension :: Text -> Bool
+hasSupportedAssetPhotoExtension path =
+  T.toLower (T.pack (takeExtension (T.unpack path))) `elem`
+    [".jpg", ".jpeg", ".png", ".webp", ".gif"]
 
 roomsPublicServer
   :: ( MonadReader Env m
