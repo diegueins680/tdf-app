@@ -358,7 +358,7 @@ inventoryPublicServer
      )
   => ServerT InventoryPublicAPI m
 inventoryPublicServer =
-       loadAssetDTOByQrToken
+       loadPublicAssetDTOByQrToken
   :<|> checkoutByQrToken
   :<|> checkinByQrToken
   :<|> uploadByQrToken
@@ -427,6 +427,28 @@ loadAssetDTOByQrToken token = do
   assetEntity@(Entity assetKey _) <- loadAssetEntityByQrToken token
   activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
   pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+
+loadPublicAssetDTOByQrToken
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> m AssetDTO
+loadPublicAssetDTOByQrToken token =
+  sanitizePublicAssetDTO <$> loadAssetDTOByQrToken token
+
+sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
+sanitizePublicAssetDTO dto =
+  dto
+    { location = Nothing
+    , currentCheckoutTarget = publicCheckoutTarget (currentCheckoutKind dto) (currentCheckoutTarget dto)
+    , currentCheckoutHolderEmail = Nothing
+    , currentCheckoutHolderPhone = Nothing
+    }
+  where
+    publicCheckoutTarget (Just "party") target = target
+    publicCheckoutTarget _ _ = Nothing
 
 loadActiveCheckoutMap
   :: MonadIO m

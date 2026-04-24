@@ -37,7 +37,14 @@ import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
-  , AssetDTO (assetId, qrToken)
+  , AssetDTO
+      ( assetId
+      , currentCheckoutHolderEmail
+      , currentCheckoutHolderPhone
+      , currentCheckoutTarget
+      , location
+      , qrToken
+      )
   , AssetCheckoutDTO (conditionIn, notes)
   , AssetCheckoutRequest (..)
   , AssetQrDTO
@@ -1629,6 +1636,122 @@ spec = do
         Right asset -> do
           assetId asset `shouldBe` existingAssetId
           qrToken asset `shouldBe` Just canonicalToken
+
+  describe "inventoryPublicServer loadByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000921"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcbd"
+        checkoutIdText = "00000000-0000-0000-0000-000000000922"
+        roomIdText = "00000000-0000-0000-0000-000000000923"
+
+    it "redacts holder contact and internal location ids on public QR loads while keeping party labels readable" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      roomKey <- case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                , assetLocationId = Just roomKey
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          location asset `shouldBe` Nothing
+          currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
+          currentCheckoutHolderEmail asset `shouldBe` Nothing
+          currentCheckoutHolderPhone asset `shouldBe` Nothing
+
+    it "hides room or session checkout targets on public QR loads instead of exposing internal references" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      roomKey <- case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetRoom
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Nothing
+              , ME.assetCheckoutTargetRoomId = Just roomKey
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          currentCheckoutTarget asset `shouldBe` Nothing
 
   describe "inventoryPublicServer checkoutByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000907"
@@ -3223,6 +3346,22 @@ runInventoryResolveQrHandler setup token =
             }
     liftIO $ runExceptT (runReaderT (resolveByQrHandlerFor inventoryUser token) env)
 
+runInventoryPublicResolveQrHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetDTO)
+runInventoryPublicResolveQrHandler setup token =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in public inventory QR resolve tests"
+            }
+    liftIO $ runExceptT (runReaderT (publicResolveByQrHandlerFor token) env)
+
 runInventoryPublicCheckoutHandler
   :: SqlPersistT IO ()
   -> Text
@@ -3428,6 +3567,15 @@ resolveByQrHandlerFor user =
       :<|> _refreshQr
       :<|> resolveByQr ->
           resolveByQr
+
+publicResolveByQrHandlerFor :: Text -> InventoryTestM AssetDTO
+publicResolveByQrHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    loadByQr
+      :<|> _checkoutByQr
+      :<|> _checkinByQr
+      :<|> _uploadByQr ->
+          loadByQr
 
 publicCheckoutHandlerFor :: Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
 publicCheckoutHandlerFor =
