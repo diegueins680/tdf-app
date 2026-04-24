@@ -114,6 +114,7 @@ export default function BrainAdminPage() {
   const emptyEntriesMessage = includeInactive
     ? 'No hay entradas cargadas, incluyendo inactivas.'
     : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
+  const showRagFirstEntryGuidance = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
 
   const openCreate = () => {
     setEditingId(null);
@@ -205,21 +206,25 @@ export default function BrainAdminPage() {
                   Estado del indice RAG
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Ultima actualizacion y total de chunks indexados.
+                  {showRagFirstEntryGuidance
+                    ? 'Crea la primera entrada del Brain para activar este resumen. El refresco del indice aparecera cuando exista contenido para reindexar.'
+                    : 'Ultima actualizacion y total de chunks indexados.'}
                 </Typography>
               </Box>
               <Box flex={1} />
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => {
-                  setRefreshNotice(null);
-                  refreshMutation.mutate();
-                }}
-                disabled={refreshMutation.isPending}
-              >
-                {refreshMutation.isPending ? 'Actualizando...' : 'Refrescar indice'}
-              </Button>
+              {!showRagFirstEntryGuidance && (
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => {
+                    setRefreshNotice(null);
+                    refreshMutation.mutate();
+                  }}
+                  disabled={refreshMutation.isPending}
+                >
+                  {refreshMutation.isPending ? 'Actualizando...' : 'Refrescar indice'}
+                </Button>
+              )}
             </Stack>
             {ragStatusQuery.isError && (
               <ApiErrorNotice error={ragStatusQuery.error} title="Error cargando RAG" />
@@ -230,7 +235,7 @@ export default function BrainAdminPage() {
               </Alert>
             )}
             {refreshNotice && <Alert severity="success">{refreshNotice}</Alert>}
-            {ragStatusQuery.data && (
+            {ragStatusQuery.data && !showRagFirstEntryGuidance && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <Chip label={`Chunks: ${ragStatusQuery.data.risCount}`} color="primary" />
                 <Chip

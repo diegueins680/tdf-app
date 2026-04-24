@@ -168,6 +168,14 @@ describe('BrainAdminPage', () => {
         expect(container.textContent).toContain(
           'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.',
         );
+        expect(container.textContent).toContain(
+          'Crea la primera entrada del Brain para activar este resumen. El refresco del indice aparecera cuando exista contenido para reindexar.',
+        );
+        expect(container.textContent).not.toContain('Chunks: 0');
+        expect(container.textContent).not.toContain('Actualizado:');
+        expect(container.textContent).not.toContain('OK');
+        expect(container.textContent).not.toContain('Stale');
+        expect(() => getActionByText(container, 'Refrescar indice')).toThrow();
         expect(container.textContent).not.toContain('Incluir inactivas');
         expect(getActionByText(container, 'Revisar inactivas')).toBeTruthy();
       });
@@ -198,6 +206,11 @@ describe('BrainAdminPage', () => {
       await waitForExpectation(() => {
         expect(listEntriesMock).toHaveBeenCalledWith(false);
         expect(container.textContent).toContain('Precios de estudio');
+        expect(container.textContent).toContain('Ultima actualizacion y total de chunks indexados.');
+        expect(container.textContent).toContain('Chunks: 0');
+        expect(container.textContent).toContain('Actualizado: -');
+        expect(container.textContent).toContain('OK');
+        expect(getActionByText(container, 'Refrescar indice')).toBeTruthy();
         expect(container.textContent).toContain('Incluir inactivas');
         expect(container.textContent).not.toContain('Revisar inactivas');
       });
