@@ -1084,6 +1084,33 @@ spec = do
         Right value ->
           value `seq` expectationFailure "Expected loan checkout payment metadata to be rejected"
 
+    it "rejects due dates on sale checkouts so sold assets cannot carry return expectations" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          (Just (UTCTime (fromGregorian 2026 5 1) 0))
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "dueAt is not allowed for sale checkout"
+        Right value ->
+          value `seq` expectationFailure "Expected sale checkout dueAt to be rejected"
+
     it "rejects incomplete or contradictory checkout money fields before storing unusable balances" $ do
       let assertInvalid expectedMessage req =
             case normalizeCheckoutRequest req of

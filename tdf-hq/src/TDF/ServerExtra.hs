@@ -584,6 +584,7 @@ normalizeCheckoutRequest req = do
     paymentAmountCents
     paymentCurrency
     paymentOutstandingCents
+  validateCheckoutDispositionFields disposition (coDueAt req)
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -853,6 +854,15 @@ validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
   | outstandingCents > amountCents =
       Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }
 validateCheckoutFinancials _ _ _ _ _ _ _ =
+  Right ()
+
+validateCheckoutDispositionFields
+  :: CheckoutDisposition
+  -> Maybe UTCTime
+  -> Either ServerError ()
+validateCheckoutDispositionFields Sale (Just _) =
+  Left err400 { errBody = "dueAt is not allowed for sale checkout" }
+validateCheckoutDispositionFields _ _ =
   Right ()
 
 checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
