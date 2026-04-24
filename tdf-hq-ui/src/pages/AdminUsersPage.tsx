@@ -315,6 +315,7 @@ const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
 const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
+const INCLUDE_INACTIVE_SEARCH_SCOPE_LABEL = 'Buscar también inactivos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -768,6 +769,11 @@ export default function AdminUsersPage() {
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === 0;
   const usersErrorMessage = usersQuery.error instanceof Error ? usersQuery.error.message : '';
+  const inactiveFilterLabel = includeInactive && shouldCollapseInactiveUsers
+    ? INCLUDE_INACTIVE_SEARCH_SCOPE_LABEL
+    : includeInactive
+      ? INACTIVE_FILTER_ACTIVE_LABEL
+      : INCLUDE_INACTIVE_FILTER_LABEL;
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos en esta vista.'
     : '';
@@ -972,7 +978,7 @@ export default function AdminUsersPage() {
                         onChange={(event) => setIncludeInactive(event.target.checked)}
                       />
                     )}
-                    label={includeInactive ? INACTIVE_FILTER_ACTIVE_LABEL : INCLUDE_INACTIVE_FILTER_LABEL}
+                    label={inactiveFilterLabel}
                   />
                 </>
               )}

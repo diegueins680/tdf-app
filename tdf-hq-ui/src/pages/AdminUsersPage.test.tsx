@@ -1404,8 +1404,9 @@ describe('AdminUsersPage', () => {
           'Vista actual: solo usuarios activos.',
         );
         expect(hasExactText(getRowByUserId(container, 101), 'Activo')).toBe(false);
-        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
         expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
@@ -2298,7 +2299,8 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
-        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
+        expect(container.textContent).not.toContain('Inactivos incluidos');
         expect(
           buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),
         ).toBe('Ver inactivo: Ada Inactiva');
@@ -2520,8 +2522,9 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
-        expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
+        expect(getCheckboxByLabelText(container, 'Buscar también inactivos').checked).toBe(true);
         expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
