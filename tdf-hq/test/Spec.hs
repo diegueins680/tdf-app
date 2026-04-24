@@ -151,11 +151,12 @@ import TDF.ServerProposals
 import TDF.ServerFeedback
     ( normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
+      validateFeedbackCategory,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
       validateFeedbackTitle,
       validateFeedbackConsent,
-      validateOptionalFeedbackMetadata,
+      validateFeedbackSeverity,
       validateOptionalFeedbackContactEmail )
 import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
 import TDF.Server
@@ -2375,26 +2376,45 @@ main = hspec $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
 
-    describe "validateOptionalFeedbackMetadata" $ do
-        it "normalizes bounded optional feedback metadata before storage and notifications" $ do
-            validateOptionalFeedbackMetadata "category" Nothing `shouldBe` Right Nothing
-            validateOptionalFeedbackMetadata "category" (Just "   ") `shouldBe` Right Nothing
-            validateOptionalFeedbackMetadata "category" (Just "  billing  ")
-                `shouldBe` Right (Just "billing")
-            validateOptionalFeedbackMetadata "severity" (Just " P1 ")
-                `shouldBe` Right (Just "P1")
+    describe "validateFeedbackCategory" $ do
+        it "normalizes supported categories before storage and notifications" $ do
+            validateFeedbackCategory Nothing `shouldBe` Right Nothing
+            validateFeedbackCategory (Just "   ") `shouldBe` Right Nothing
+            validateFeedbackCategory (Just "  BUG  ") `shouldBe` Right (Just "bug")
+            validateFeedbackCategory (Just " Ux ") `shouldBe` Right (Just "ux")
 
-        it "rejects oversized or control-character feedback metadata explicitly" $ do
+        it "rejects unsupported or malformed feedback categories explicitly" $ do
             let assertInvalid raw expectedMessage =
-                    case validateOptionalFeedbackMetadata "severity" (Just raw) of
+                    case validateFeedbackCategory (Just raw) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
                             BL.unpack (errBody err) `shouldContain` expectedMessage
                         Right value ->
                             expectationFailure
-                                ("Expected invalid feedback metadata, got " <> show value)
+                                ("Expected invalid feedback category, got " <> show value)
+            assertInvalid "billing" "category must be one of: bug, idea, ux, datos"
+            assertInvalid (Data.Text.replicate 81 "x") "category must be 80 characters or fewer"
+            assertInvalid "bug\nidea" "category must not contain control characters"
+
+    describe "validateFeedbackSeverity" $ do
+        it "normalizes supported priorities before storage and notifications" $ do
+            validateFeedbackSeverity Nothing `shouldBe` Right Nothing
+            validateFeedbackSeverity (Just "   ") `shouldBe` Right Nothing
+            validateFeedbackSeverity (Just " p1 ") `shouldBe` Right (Just "P1")
+            validateFeedbackSeverity (Just "P4") `shouldBe` Right (Just "P4")
+
+        it "rejects unsupported or malformed feedback priorities explicitly" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackSeverity (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid feedback severity, got " <> show value)
+            assertInvalid "high" "severity must be one of: P1, P2, P3, P4"
             assertInvalid (Data.Text.replicate 81 "x") "severity must be 80 characters or fewer"
-            assertInvalid "high\nBcc: ops@example.com" "severity must not contain control characters"
+            assertInvalid "P1\nBcc: ops@example.com" "severity must not contain control characters"
 
     describe "validateFeedbackTitle" $ do
         it "trims valid feedback titles before storage and notification" $

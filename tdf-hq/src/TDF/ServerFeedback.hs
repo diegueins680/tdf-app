@@ -7,6 +7,8 @@ module TDF.ServerFeedback
   ( feedbackServer
   , normalizeOptionalFeedbackText
   , validateOptionalFeedbackMetadata
+  , validateFeedbackCategory
+  , validateFeedbackSeverity
   , validateFeedbackDescription
   , validateFeedbackTitle
   , validateFeedbackConsent
@@ -56,8 +58,8 @@ feedbackServer user = submitFeedback
     submitFeedback FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
       body <- either throwError pure (validateFeedbackDescription fpDescription)
-      category <- either throwError pure (validateOptionalFeedbackMetadata "category" fpCategory)
-      severity <- either throwError pure (validateOptionalFeedbackMetadata "severity" fpSeverity)
+      category <- either throwError pure (validateFeedbackCategory fpCategory)
+      severity <- either throwError pure (validateFeedbackSeverity fpSeverity)
       either throwError pure (validateFeedbackConsent fpConsent)
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
@@ -121,6 +123,35 @@ validateOptionalFeedbackMetadata fieldName rawValue =
           Left (feedbackFieldError fieldName "must not contain control characters")
       | otherwise ->
           Right (Just value)
+
+validateFeedbackCategory :: Maybe Text -> Either ServerError (Maybe Text)
+validateFeedbackCategory =
+  validateFeedbackEnum "category" T.toLower allowedFeedbackCategories
+
+allowedFeedbackCategories :: [Text]
+allowedFeedbackCategories = ["bug", "idea", "ux", "datos"]
+
+validateFeedbackSeverity :: Maybe Text -> Either ServerError (Maybe Text)
+validateFeedbackSeverity =
+  validateFeedbackEnum "severity" T.toUpper allowedFeedbackSeverities
+
+allowedFeedbackSeverities :: [Text]
+allowedFeedbackSeverities = ["P1", "P2", "P3", "P4"]
+
+validateFeedbackEnum :: Text -> (Text -> Text) -> [Text] -> Maybe Text -> Either ServerError (Maybe Text)
+validateFeedbackEnum fieldName normalizeValue allowedValues rawValue =
+  case validateOptionalFeedbackMetadata fieldName rawValue of
+    Left err ->
+      Left err
+    Right Nothing ->
+      Right Nothing
+    Right (Just value) ->
+      let normalized = normalizeValue value
+      in if normalized `elem` allowedValues
+           then Right (Just normalized)
+           else Left (feedbackFieldError fieldName enumMessage)
+  where
+    enumMessage = "must be one of: " <> T.intercalate ", " allowedValues
 
 feedbackFieldError :: Text -> Text -> ServerError
 feedbackFieldError fieldName message =
