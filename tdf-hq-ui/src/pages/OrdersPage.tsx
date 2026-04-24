@@ -244,11 +244,20 @@ export default function OrdersPage() {
   }, [rows, page, rowsPerPage]);
   const showPagination = totalRows > rowsPerPage;
   const showLiveSessionsColumn = paginatedRows.some((row) => row.isRecording);
+  const sharedServiceSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => row.service)),
+    [rows],
+  );
+  const showServiceColumn = sharedServiceSummary === '';
   const sharedRoomsSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.rooms)),
     [rows],
   );
   const showRoomsColumn = sharedRoomsSummary === '';
+  const visibleTableColumnCount = 4
+    + (showServiceColumn ? 1 : 0)
+    + (showRoomsColumn ? 1 : 0)
+    + (showLiveSessionsColumn ? 1 : 0);
   const rowActionSummary = rows.some((row) => row.isRecording)
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
@@ -425,17 +434,26 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {sharedRoomsSummary && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 3, pt: 2 }}>
-                {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
-              </Typography>
+            {(sharedServiceSummary || sharedRoomsSummary) && (
+              <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
+                {sharedServiceSummary && (
+                  <Typography variant="caption" color="text.secondary">
+                    {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                  </Typography>
+                )}
+                {sharedRoomsSummary && (
+                  <Typography variant="caption" color="text.secondary">
+                    {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
+                  </Typography>
+                )}
+              </Stack>
             )}
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Horario</TableCell>
-                    <TableCell>Servicio</TableCell>
+                    {showServiceColumn && <TableCell>Servicio</TableCell>}
                     <TableCell>Booking</TableCell>
                     <TableCell>Ingeniero</TableCell>
                     {showRoomsColumn && <TableCell>Salas</TableCell>}
@@ -446,7 +464,7 @@ export default function OrdersPage() {
                 <TableBody>
                   {bookingsQuery.isLoading && (
                     <TableRow>
-                      <TableCell colSpan={showLiveSessionsColumn ? 7 : 6} align="center">
+                      <TableCell colSpan={visibleTableColumnCount} align="center">
                         Cargando sesiones…
                       </TableCell>
                     </TableRow>
@@ -471,7 +489,7 @@ export default function OrdersPage() {
                           {row.schedule}
                         </Typography>
                       </TableCell>
-                      <TableCell>{row.service}</TableCell>
+                      {showServiceColumn && <TableCell>{row.service}</TableCell>}
                       <TableCell sx={{ minWidth: 220 }}>
                         <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
                         {row.bookingSecondary && (

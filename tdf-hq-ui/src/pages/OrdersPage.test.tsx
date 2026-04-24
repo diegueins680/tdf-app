@@ -391,6 +391,98 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('summarizes one shared service once and restores the service column when sessions diverge again', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 161,
+        title: 'Voz principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 162,
+        title: 'Coros finales',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+          { brRoomId: 'eng-2', brRoomName: 'Nina', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo servicio: Mixing. La columna volverá cuando esta vista mezcle servicios distintos.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo servicio: Mixing.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Mixing')).toBe(1);
+        expect(hasTableHeader(container, 'Servicio')).toBe(false);
+        expect(text).toContain('Booking #161');
+        expect(text).toContain('Booking #162');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 161,
+        title: 'Voz principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 162,
+        title: 'Coros finales',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mastering',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+          { brRoomId: 'eng-2', brRoomName: 'Nina', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando un solo servicio:');
+        expect(hasTableHeader(secondContainer, 'Servicio')).toBe(true);
+        expect(text).toContain('Mixing');
+        expect(text).toContain('Mastering');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('keeps pagination hidden until the sessions list actually needs a second page and localizes it when it does', async () => {
     listBookingsMock.mockResolvedValue(
       Array.from({ length: 11 }, (_, index) => ({
