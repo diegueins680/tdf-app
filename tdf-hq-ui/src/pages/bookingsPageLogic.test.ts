@@ -206,13 +206,25 @@ describe('bookingsPageLogic', () => {
       label: 'Ingeniero',
       showField: true,
     });
+  });
 
+  it('hides the empty engineer picker until the catalog actually has someone to choose', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 0,
       hasAssignedEngineer: false,
       serviceType: 'Mixing',
     })).toEqual({
-      helperText: 'No hay ingenieros en el catálogo de contactos.',
+      helperText: 'Todavía no hay ingenieros en el catálogo de contactos. Continúa sin asignar uno o agrégalo después.',
+      label: 'Ingeniero',
+      showField: false,
+    });
+
+    expect(getBookingEngineerFieldState({
+      engineerCount: 0,
+      hasAssignedEngineer: true,
+      serviceType: 'Mixing',
+    })).toEqual({
+      helperText: 'No hay ingenieros en el catálogo de contactos. Conserva el nombre actual o actualiza contactos para volver a seleccionarlo.',
       label: 'Ingeniero',
       showField: true,
     });

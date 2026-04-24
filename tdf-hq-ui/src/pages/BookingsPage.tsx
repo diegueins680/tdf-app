@@ -385,7 +385,9 @@ export default function BookingsPage() {
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
   );
-  const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
+  const missingEngineer = engineerFieldState.showField
+    && requiresEngineerForService(serviceType)
+    && !(engineerName.trim() || engineerPartyId);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
