@@ -19,6 +19,7 @@ import { Inventory } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import {
+  formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
   getCheckoutDispositionLabel,
 } from '../utils/inventoryCheckout';
@@ -185,6 +186,18 @@ export default function ReservasEquipoPage() {
                           <Typography variant="body2" color="text.secondary">
                             <strong>Devuelve:</strong> {formatDate(asset.currentCheckoutDueAt)}
                           </Typography>
+                          {formatCheckoutPaymentSummary(
+                            asset.currentCheckoutPaymentType,
+                            asset.currentCheckoutPaymentInstallments,
+                          ) && (
+                            <Typography variant="body2" color="text.secondary">
+                              <strong>Pago:</strong>{' '}
+                              {formatCheckoutPaymentSummary(
+                                asset.currentCheckoutPaymentType,
+                                asset.currentCheckoutPaymentInstallments,
+                              )}
+                            </Typography>
+                          )}
                           {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
                             <Typography variant="body2" color="text.secondary">
                               {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
