@@ -1411,8 +1411,8 @@ describe('AdminUsersPage', () => {
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
         expect(showInactiveListButton.getAttribute('aria-label')).toBe('Ver 1 usuario inactivo');
-        expect(buttonText(showInactiveListButton)).toBe('Ver Grace Hopper');
-        expect(hasExactText(container, 'Ver Grace Hopper')).toBe(true);
+        expect(buttonText(showInactiveListButton)).toBe('Ver inactivo: Grace Hopper');
+        expect(hasExactText(container, 'Ver inactivo: Grace Hopper')).toBe(true);
         expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(false);
       });
 

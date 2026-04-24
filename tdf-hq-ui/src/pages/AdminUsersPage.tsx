@@ -202,7 +202,7 @@ const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => 
     return `Ver ${formatInactiveUserCountLabel(users.length)}`;
   }
 
-  return `Ver ${summarizeUserIdentity(users[0]!).primary}`;
+  return `Ver inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
 };
 
 const getUserAccessSummary = (values: string[]) =>
