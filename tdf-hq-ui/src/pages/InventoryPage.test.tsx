@@ -825,7 +825,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps current custody details in one table column so admins can scan context without a separate salida column', async () => {
+  it('compresses current custody details into one scan-friendly summary line plus contact', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
         assetId: 'asset-1',
@@ -869,12 +869,18 @@ describe('InventoryPage', () => {
         expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
 
         const custodyCell = rows[1]?.querySelectorAll('td')[2];
+        const captionTexts = Array.from(custodyCell?.querySelectorAll('span') ?? [])
+          .map((node) => (node.textContent ?? '').trim())
+          .filter(Boolean);
         expect(custodyCell?.textContent).toContain('Grace Hopper');
-        expect(custodyCell?.textContent).toContain('Alquiler');
-        expect(custodyCell?.textContent).toContain('grace@example.com');
-        expect(custodyCell?.textContent).toContain('Salida:');
-        expect(custodyCell?.textContent).toContain('Retorno pactado:');
-        expect(custodyCell?.textContent).toContain('Pago: Tarjeta');
+        expect(captionTexts).toContain('grace@example.com');
+        expect(captionTexts.some(
+          (text) => text.includes('Alquiler')
+            && text.includes('Salida:')
+            && text.includes('Retorno pactado:')
+            && text.includes('Pago: Tarjeta'),
+        )).toBe(true);
+        expect(captionTexts).toHaveLength(2);
       });
     } finally {
       await cleanup();

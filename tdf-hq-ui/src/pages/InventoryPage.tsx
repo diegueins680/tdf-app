@@ -162,6 +162,27 @@ function getCurrentTargetSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>)
   return formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
 }
 
+function buildCurrentCheckoutContextSummary({
+  disposition,
+  checkedOutAt,
+  dueAt,
+  paymentSummary,
+}: {
+  disposition?: string | null;
+  checkedOutAt?: string | null;
+  dueAt?: string | null;
+  paymentSummary: string;
+}) {
+  return [
+    normalizeInventoryField(disposition) ? getCheckoutDispositionLabel(disposition) : '',
+    checkedOutAt ? `Salida: ${formatDate(checkedOutAt)}` : '',
+    dueAt ? `Retorno pactado: ${formatDate(dueAt)}` : '',
+    paymentSummary ? `Pago: ${paymentSummary}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 const INVENTORY_LOCATION_SETUP_GUIDANCE =
   'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
 const INVENTORY_CHECKOUT_CONTEXT_GUIDANCE =
@@ -706,6 +727,12 @@ export default function InventoryPage() {
                       || paymentSummary
                       || normalizeInventoryField(asset.currentCheckoutDisposition),
                     );
+                    const checkoutContextSummary = buildCurrentCheckoutContextSummary({
+                      disposition: asset.currentCheckoutDisposition,
+                      checkedOutAt: asset.currentCheckoutAt,
+                      dueAt: asset.currentCheckoutDueAt,
+                      paymentSummary,
+                    });
 
                     return (
                       <TableRow key={asset.assetId} hover>
@@ -736,29 +763,14 @@ export default function InventoryPage() {
                                     {getCurrentTargetSummary(asset, roomMap)}
                                   </Typography>
                                 )}
-                                {normalizeInventoryField(asset.currentCheckoutDisposition) && (
+                                {checkoutContextSummary && (
                                   <Typography variant="caption" color="text.secondary">
-                                    {getCheckoutDispositionLabel(asset.currentCheckoutDisposition)}
+                                    {checkoutContextSummary}
                                   </Typography>
                                 )}
                                 {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
                                   <Typography variant="caption" color="text.secondary">
                                     {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
-                                  </Typography>
-                                )}
-                                {asset.currentCheckoutAt && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Salida: {formatDate(asset.currentCheckoutAt)}
-                                  </Typography>
-                                )}
-                                {asset.currentCheckoutDueAt && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Retorno pactado: {formatDate(asset.currentCheckoutDueAt)}
-                                  </Typography>
-                                )}
-                                {paymentSummary && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Pago: {paymentSummary}
                                   </Typography>
                                 )}
                               </Stack>
