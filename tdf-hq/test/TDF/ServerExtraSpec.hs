@@ -84,6 +84,7 @@ import TDF.API.Types
       )
   , AssetCheckoutRequest (..)
   , AssetQrDTO
+  , AssetUploadDTO
   , AssetUpdate (..)
   , PipelineCardCreate (..)
   , PipelineCardDTO (..)
@@ -616,6 +617,98 @@ spec = do
 
       assertInvalid (mkOpenCheckout TargetRoom Loan)
       assertInvalid (mkOpenCheckout TargetParty Sale)
+
+  describe "inventoryPublicServer uploadByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000923"
+        checkoutIdText = "00000000-0000-0000-0000-000000000924"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000925"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcc0"
+        uploadForm =
+          AssetUploadForm
+            { aufFile = mkAssetUploadFile "checkout-proof.jpg"
+            , aufName = Just "checkout-proof.jpg"
+            }
+
+    it "rejects multiple active checkout rows so public proof uploads never target an ambiguous custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second public upload checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicUploadHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Just "Devuelve completo"
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 10000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        uploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right _ ->
+          expectationFailure "Expected ambiguous public QR upload context to be rejected"
 
   describe "shared list pagination validation" $ do
     it "defaults omitted params and preserves explicit supported values" $ do
@@ -4452,6 +4545,24 @@ runInventoryPublicCheckinHandler setup token req =
             }
     liftIO $ runExceptT (runReaderT (publicCheckinHandlerFor token req) env)
 
+runInventoryPublicUploadHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetUploadForm
+  -> IO (Either ServerError AssetUploadDTO)
+runInventoryPublicUploadHandler setup token uploadForm =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = cfg
+            }
+    liftIO $ runExceptT (runReaderT (publicUploadHandlerFor token uploadForm) env)
+
 runRoomCreateHandler
   :: SqlPersistT IO ()
   -> RoomCreate
@@ -4682,6 +4793,15 @@ publicCheckinHandlerFor =
       :<|> checkinByQr
       :<|> _uploadByQr ->
           checkinByQr
+
+publicUploadHandlerFor :: Text -> AssetUploadForm -> InventoryTestM AssetUploadDTO
+publicUploadHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    _loadByQr
+      :<|> _checkoutByQr
+      :<|> _checkinByQr
+      :<|> uploadByQr ->
+          uploadByQr
 
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =

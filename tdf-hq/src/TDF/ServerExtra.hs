@@ -384,12 +384,23 @@ inventoryPublicServer =
 
     uploadByQrToken token uploadForm = do
       Entity assetKey assetRecord <- loadAssetEntityByQrToken token
-      mOpenCheckout <- withPool $
-        selectFirst
+      openCheckouts <- withPool $
+        selectList
           [ AssetCheckoutAssetId ==. assetKey
           , AssetCheckoutReturnedAt ==. Nothing
           ]
-          [Desc AssetCheckoutCheckedOutAt]
+          [ Desc AssetCheckoutCheckedOutAt
+          , LimitTo 2
+          ]
+      mOpenCheckout <- case openCheckouts of
+        [] ->
+          pure Nothing
+        [checkoutEnt] ->
+          pure (Just checkoutEnt)
+        _ ->
+          throwError err409
+            { errBody = "Asset has multiple active checkouts; resolve the inventory state before public upload"
+            }
       either throwError pure (validatePublicQrUploadContext (assetStatus assetRecord) mOpenCheckout)
       storeAssetUpload uploadForm
 
