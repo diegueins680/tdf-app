@@ -13,6 +13,7 @@ module TDF.ServerProposals
   , validateOptionalProposalStatus
   , validateOptionalProposalContactEmail
   , validateOptionalProposalContactPhone
+  , validateOptionalProposalNotes
   , validateOptionalProposalClientPartyId
   , validateProposalContentSource
   , validateProposalTitle
@@ -112,6 +113,8 @@ proposalsServer user =
       contactName <- either throwError pure (validateOptionalProposalContactName pcContactName)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
       contactPhone <- either throwError pure (validateOptionalProposalContactPhone pcContactPhone)
+      notesVal <- either throwError pure (validateOptionalProposalNotes "notes" pcNotes)
+      versionNotesVal <- either throwError pure (validateOptionalProposalNotes "versionNotes" pcVersionNotes)
       clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
         >>= either throwError pure
       pipelineCardKey <- withPool (resolveOptionalProposalPipelineCardReference pcPipelineCardId)
@@ -126,7 +129,7 @@ proposalsServer user =
             , ME.proposalContactPhone   = contactPhone
             , ME.proposalPipelineCardId = pipelineCardKey
             , ME.proposalStatus         = statusVal
-            , ME.proposalNotes          = normalizeOptionalText pcNotes
+            , ME.proposalNotes          = notesVal
             , ME.proposalCreatedAt      = now
             , ME.proposalUpdatedAt      = now
             , ME.proposalLastGeneratedAt = Nothing
@@ -139,7 +142,7 @@ proposalsServer user =
             , ME.proposalVersionLatex        = latex
             , ME.proposalVersionCreatedAt    = now
             , ME.proposalVersionCreatedByRef = Just (toPathPiece (auPartyId user))
-            , ME.proposalVersionNotes        = normalizeOptionalText pcVersionNotes
+            , ME.proposalVersionNotes        = versionNotesVal
             }
       _ <- withPool $ insert versionRecord
       pure (proposalToDTO (Map.singleton proposalKey 1) (Entity proposalKey proposalRecord))
@@ -160,6 +163,8 @@ proposalsServer user =
             (traverse validateOptionalProposalContactEmail puContactEmail)
           contactPhoneUpdate <- either throwError pure
             (traverse validateOptionalProposalContactPhone puContactPhone)
+          notesUpdate <- either throwError pure
+            (traverse (validateOptionalProposalNotes "notes") puNotes)
           clientPartyIdUpdate <- case puClientPartyId of
             Nothing -> pure Nothing
             Just rawClientPartyId -> do
@@ -176,7 +181,7 @@ proposalsServer user =
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) contactPhoneUpdate
                 , fmap (ME.ProposalPipelineCardId =.) pipelineCardUpdate
-                , fmap (ME.ProposalNotes =.) (normalizeOptionalUpdate puNotes)
+                , fmap (ME.ProposalNotes =.) notesUpdate
                 ]
               sentUpdate = sentAtUpdate (ME.proposalSentAt proposal) statusUpdate now
               updates' = updates ++ maybeToList sentUpdate
@@ -207,6 +212,7 @@ proposalsServer user =
       proposalKey <- parseKey @ME.Proposal rawId
       _ <- ensureProposalExists proposalKey
       latex <- resolveLatex pvcLatex pvcTemplateKey
+      notesVal <- either throwError pure (validateOptionalProposalNotes "notes" pvcNotes)
       now <- liftIO getCurrentTime
       mLatest <- withPool $ selectFirst
         [ ME.ProposalVersionProposalId ==. proposalKey ]
@@ -218,7 +224,7 @@ proposalsServer user =
             , ME.proposalVersionLatex        = latex
             , ME.proposalVersionCreatedAt    = now
             , ME.proposalVersionCreatedByRef = Just (toPathPiece (auPartyId user))
-            , ME.proposalVersionNotes        = normalizeOptionalText pvcNotes
+            , ME.proposalVersionNotes        = notesVal
             }
       versionKey <- withPool $ insert versionRecord
       withPool $ update proposalKey [ME.ProposalUpdatedAt =. now]
@@ -436,6 +442,24 @@ validateOptionalProposalContactPhone (Just rawPhone) =
             Just normalizedPhone -> Right (Just normalizedPhone)
             Nothing ->
               Left err400 { errBody = "contactPhone must be a valid phone number" }
+
+validateOptionalProposalNotes :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalNotes _ Nothing = Right Nothing
+validateOptionalProposalNotes fieldName (Just rawNotes) =
+  case normalizeOptionalText (Just rawNotes) of
+    Nothing -> Right Nothing
+    Just notesVal
+      | T.any isUnsafeNoteControl notesVal ->
+          Left err400
+            { errBody =
+                encodeUtf8Lazy
+                  (fieldName <> " must not contain control characters other than tabs or line breaks")
+            }
+      | otherwise ->
+          Right (Just notesVal)
+  where
+    isUnsafeNoteControl ch =
+      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
 
 validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalProposalClientPartyId Nothing = Right Nothing

@@ -10,7 +10,7 @@ import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (get, insertKey)
+import Database.Persist (Entity, get, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
@@ -201,6 +201,47 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
       Right proposalDto ->
         expectationFailure
           ("Expected blank pipelineCardId create to fail, got: " <> show proposalDto)
+
+  it "rejects control characters in proposal notes on creation before any proposal rows are persisted" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.com"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Just "Internal\NULonly"
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected notes rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "notes must not contain control characters other than tabs or line breaks"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected invalid notes create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
