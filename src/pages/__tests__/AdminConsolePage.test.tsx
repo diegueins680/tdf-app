@@ -863,6 +863,61 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps role-access fallback titles out of first-run optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-roles-accesos',
+          title: 'Roles y accesos',
+          body: ['Revisa qué accesos puede abrir cada rol antes de cambiar permisos.'],
+        },
+        {
+          cardId: 'fallback-accesos-roles',
+          title: 'Accesos y roles',
+          body: ['Confirma los roles asignados antes de repetir un cambio administrativo.'],
+        },
+        {
+          cardId: 'fallback-roles-access',
+          title: 'Roles and access',
+          body: ['Review which workflows each role can open before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-access-roles',
+          title: 'Access and roles',
+          body: ['Confirm role coverage before repeating an admin access change.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Roles y accesos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Accesos y roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Roles and access')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access and roles')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa qué accesos puede abrir cada rol antes de cambiar permisos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm role coverage before repeating an admin access change\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps implementation-prefixed built-in fallback titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
