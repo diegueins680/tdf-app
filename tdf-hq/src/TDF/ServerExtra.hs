@@ -854,7 +854,7 @@ normalizeCheckoutRequest req = do
   paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
   paymentAmountCents <- validateCheckoutAmountField "paymentAmount" (coPaymentAmount req)
   paymentCurrency <- validateCheckoutCurrency (coPaymentCurrency req)
-  paymentOutstandingCents <- validateCheckoutMoneyField "paymentOutstanding" True (coPaymentOutstanding req)
+  rawPaymentOutstandingCents <- validateCheckoutMoneyField "paymentOutstanding" True (coPaymentOutstanding req)
   validateCheckoutFinancials
     disposition
     paymentType
@@ -862,7 +862,14 @@ normalizeCheckoutRequest req = do
     paymentReference
     paymentAmountCents
     paymentCurrency
-    paymentOutstandingCents
+    rawPaymentOutstandingCents
+  let paymentOutstandingCents =
+        normalizeCheckoutOutstanding
+          disposition
+          paymentType
+          paymentAmountCents
+          paymentCurrency
+          rawPaymentOutstandingCents
   validateCheckoutDispositionFields targetKind disposition (coDueAt req)
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
@@ -1219,6 +1226,16 @@ validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
       Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }
 validateCheckoutFinancials _ _ _ _ _ _ _ =
   Right ()
+
+normalizeCheckoutOutstanding
+  :: CheckoutDisposition
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+normalizeCheckoutOutstanding Sale (Just _) (Just _) (Just _) Nothing = Just 0
+normalizeCheckoutOutstanding _ _ _ _ outstanding = outstanding
 
 validateCheckoutDispositionFields
   :: CheckoutTarget
