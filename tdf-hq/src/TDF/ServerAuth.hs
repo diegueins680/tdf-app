@@ -23,6 +23,7 @@ module TDF.ServerAuth
   , runPasswordResetConfirm
   , signupEmailExists
   , validateAuthPassword
+  , validatePasswordResetToken
   , validateSignupDisplayName
   , validateRequestedSignupRoles
   , validateSignupArtistClaimIntent
@@ -600,6 +601,28 @@ passwordChangeAuthTokenMaxLength = 512
 invalidPasswordChangeAuthTokenChar :: Char -> Bool
 invalidPasswordChangeAuthTokenChar ch = isSpace ch || isControl ch
 
+validatePasswordResetToken :: Text -> Either ServerError Text
+validatePasswordResetToken rawToken
+  | T.null token =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Token is required")
+        }
+  | T.length token > passwordChangeAuthTokenMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Token must be 512 characters or fewer")
+        }
+  | T.any invalidPasswordChangeAuthTokenChar token =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Token must not contain whitespace or control characters")
+        }
+  | otherwise = Right token
+  where
+    token = T.strip rawToken
+
 passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do
   let emailInput = T.strip email
@@ -634,8 +657,7 @@ passwordReset PasswordResetRequest{..} = do
 
 passwordResetConfirm :: PasswordResetConfirmRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 passwordResetConfirm PasswordResetConfirmRequest{..} = do
-  let tokenClean = T.strip token
-  when (T.null tokenClean) $ throwBadRequest "Token is required"
+  tokenClean <- either throwError pure (validatePasswordResetToken token)
   newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
   Env pool _ <- ask
   result <- liftIO $ flip runSqlPool pool (runPasswordResetConfirm tokenClean newPasswordClean)

@@ -280,6 +280,7 @@ import TDF.Config
       smtpPort )
 import TDF.Version (VersionInfo (..), getVersionInfo)
 import TDF.Seed (seededCredentialSeedingAllowed)
+import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
@@ -6700,6 +6701,7 @@ main = hspec $ do
 
     APITypesSpec.spec
     ArtistSpec.spec
+    ServerAuthSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
