@@ -163,6 +163,7 @@ import TDF.Server
     , validateMarketplaceOrderPaidAtUpdate
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateCourseRegistrationPhoneE164
+    , validateCourseRegistrationStoredName
     , resolveCourseRegistrationAttachmentName
     , validateCourseRegistrationReceiptDeletion
     , validateCourseRegistrationUrlField
@@ -5438,7 +5439,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
 
-    describe "resolveCourseRegistrationAttachmentName" $ do
+    describe "course registration attachment name validation" $ do
+        it "normalizes optional attachment labels before storing course-registration metadata" $ do
+            validateCourseRegistrationStoredName "fileName" Nothing
+                `shouldBe` Right Nothing
+            validateCourseRegistrationStoredName "fileName" (Just "   ")
+                `shouldBe` Right Nothing
+            validateCourseRegistrationStoredName "fileName" (Just " receipt.pdf ")
+                `shouldBe` Right (Just "receipt.pdf")
+
+        it "rejects unsafe attachment labels instead of persisting path-shaped or malformed metadata" $ do
+            let assertInvalid expectedMessage rawName =
+                    case validateCourseRegistrationStoredName "fileName" (Just rawName) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid course-registration fileName, got: " <> show value)
+            assertInvalid "fileName must not contain control characters" "receipt\n2026.pdf"
+            assertInvalid "fileName must not contain path separators" "folder/receipt.pdf"
+            assertInvalid "fileName must not contain path separators" "folder\\receipt.pdf"
+            assertInvalid "fileName must be 240 characters or fewer" (T.replicate 241 "a")
+
         it "keeps or clears attachment names in step with the resolved attachment URL" $ do
             resolveCourseRegistrationAttachmentName
                 (Just "https://files.example.com/proof.pdf")
@@ -5457,6 +5480,21 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right Nothing
             resolveCourseRegistrationAttachmentName Nothing (Just "stored.pdf") Nothing
                 `shouldBe` Right Nothing
+
+        it "rejects unsafe attachment names even when attachmentUrl is present" $ do
+            let assertInvalid expectedMessage rawName =
+                    case resolveCourseRegistrationAttachmentName
+                        (Just "https://files.example.com/proof.pdf")
+                        Nothing
+                        (Just rawName) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid follow-up attachmentName, got: " <> show value)
+            assertInvalid "attachmentName must not contain control characters" "proof\n2026.pdf"
+            assertInvalid "attachmentName must not contain path separators" "folder/proof.pdf"
 
         it "rejects orphan attachment names instead of storing follow-up attachment metadata without a URL" $
             case resolveCourseRegistrationAttachmentName Nothing Nothing (Just " receipt.pdf ") of

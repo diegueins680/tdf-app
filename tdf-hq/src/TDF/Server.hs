@@ -3323,6 +3323,7 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
   fileUrlVal <- do
     normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just fileUrl))
     maybe (throwBadRequest "fileUrl requerido") pure normalized
+  fileNameVal <- either throwError pure (validateCourseRegistrationStoredName "fileName" fileName)
   mimeTypeVal <- either throwError pure (validateCourseRegistrationReceiptMimeType mimeType)
   now <- liftIO getCurrentTime
   let regKey = entityKey ent
@@ -3331,7 +3332,7 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
         { ME.courseRegistrationReceiptRegistrationId = regKey
         , ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId reg
         , ME.courseRegistrationReceiptFileUrl = fileUrlVal
-        , ME.courseRegistrationReceiptFileName = cleanOptional fileName
+        , ME.courseRegistrationReceiptFileName = fileNameVal
         , ME.courseRegistrationReceiptMimeType = mimeTypeVal
         , ME.courseRegistrationReceiptNotes = cleanOptional notes
         , ME.courseRegistrationReceiptUploadedBy = Just (auPartyId user)
@@ -3345,9 +3346,9 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
     (Just (auPartyId user))
     "payment_receipt"
     (Just "Comprobante de pago agregado")
-    (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> cleanOptional fileName))
+    (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> fileNameVal))
     (Just fileUrlVal)
-    (cleanOptional fileName)
+    fileNameVal
     Nothing
     now
   pure (toCourseRegistrationReceiptDTO (Entity receiptId receipt))
@@ -3384,6 +3385,9 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
     Just rawUrl -> do
       normalized <- either throwError pure (validateCourseRegistrationUrlField "fileUrl" (Just rawUrl))
       maybe (throwBadRequest "fileUrl requerido") pure normalized
+  fileNameVal <- case fileName of
+    Nothing -> pure (ME.courseRegistrationReceiptFileName receipt)
+    Just _ -> either throwError pure (validateCourseRegistrationStoredName "fileName" fileName)
   mimeTypeVal <- case mimeType of
     Nothing -> pure (ME.courseRegistrationReceiptMimeType receipt)
     Just rawMimeType ->
@@ -3392,8 +3396,7 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
         receipt
           { ME.courseRegistrationReceiptPartyId = ME.courseRegistrationPartyId (entityVal ent)
           , ME.courseRegistrationReceiptFileUrl = fileUrlVal
-          , ME.courseRegistrationReceiptFileName =
-              maybe (ME.courseRegistrationReceiptFileName receipt) (cleanOptional . Just) fileName
+          , ME.courseRegistrationReceiptFileName = fileNameVal
           , ME.courseRegistrationReceiptMimeType = mimeTypeVal
           , ME.courseRegistrationReceiptNotes =
               maybe (ME.courseRegistrationReceiptNotes receipt) (cleanOptional . Just) notes
@@ -4380,10 +4383,38 @@ resolveCourseRegistrationAttachmentName mAttachmentUrl mExistingName mProvidedNa
         Nothing ->
           Right Nothing
     Just _ ->
-      Right $
-        case mProvidedName of
-          Nothing -> mExistingName
-          Just _ -> cleanOptional mProvidedName
+      case mProvidedName of
+        Nothing -> Right mExistingName
+        Just _ -> validateCourseRegistrationStoredName "attachmentName" mProvidedName
+
+validateCourseRegistrationStoredName
+  :: Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateCourseRegistrationStoredName _ Nothing = Right Nothing
+validateCourseRegistrationStoredName fieldName (Just rawName) =
+  case cleanOptional (Just rawName) of
+    Nothing -> Right Nothing
+    Just nameVal
+      | T.length nameVal > 240 ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 240 characters or fewer"))
+            }
+      | T.any isControl nameVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+            }
+      | T.any isPathSeparator nameVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain path separators"))
+            }
+      | otherwise ->
+          Right (Just nameVal)
+  where
+    isPathSeparator ch = ch == '/' || ch == '\\'
 
 validateCourseRegistrationReceiptMimeType :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationReceiptMimeType Nothing = Right Nothing
