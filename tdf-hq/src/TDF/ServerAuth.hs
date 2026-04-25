@@ -705,22 +705,36 @@ normalizeAuthEmailAddress raw =
   let normalized = T.toLower (T.strip raw)
   in if isValidAuthEmailAddress normalized then Just normalized else Nothing
 
+maxAuthEmailAddressChars :: Int
+maxAuthEmailAddressChars = 254
+
+maxAuthEmailLocalPartChars :: Int
+maxAuthEmailLocalPartChars = 64
+
+maxAuthEmailDomainLabelChars :: Int
+maxAuthEmailDomainLabelChars = 63
+
 isValidAuthEmailAddress :: Text -> Bool
 isValidAuthEmailAddress candidate =
-  case T.splitOn "@" candidate of
-    [localPart, domain] ->
-      isValidAuthEmailLocalPart localPart
-        && not (T.null domain)
-        && not (T.any isSpace candidate)
-        && not (T.isPrefixOf "." domain)
-        && not (T.isSuffixOf "." domain)
-        && T.isInfixOf "." domain
-        && all isValidAuthDomainLabel (T.splitOn "." domain)
-    _ -> False
+  T.length candidate <= maxAuthEmailAddressChars
+    && hasValidShape
+  where
+    hasValidShape =
+      case T.splitOn "@" candidate of
+        [localPart, domain] ->
+          isValidAuthEmailLocalPart localPart
+            && not (T.null domain)
+            && not (T.any isSpace candidate)
+            && not (T.isPrefixOf "." domain)
+            && not (T.isSuffixOf "." domain)
+            && T.isInfixOf "." domain
+            && all isValidAuthDomainLabel (T.splitOn "." domain)
+        _ -> False
 
 isValidAuthEmailLocalPart :: Text -> Bool
 isValidAuthEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxAuthEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
@@ -733,6 +747,7 @@ isValidAuthEmailLocalChar c =
 isValidAuthDomainLabel :: Text -> Bool
 isValidAuthDomainLabel label =
   not (T.null label)
+    && T.length label <= maxAuthEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidAuthDomainChar label

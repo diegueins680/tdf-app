@@ -7,10 +7,47 @@ import qualified Data.Text as T
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.ServerAuth (validatePasswordResetToken)
+import TDF.ServerAuth (normalizeAuthEmailAddress, validatePasswordResetToken)
 
 spec :: Spec
-spec = describe "validatePasswordResetToken" $ do
+spec = do
+  authEmailSpec
+  passwordResetTokenSpec
+
+authEmailSpec :: Spec
+authEmailSpec = describe "normalizeAuthEmailAddress" $ do
+  it "normalizes a maximum-sized auth email before signup or reset flows use it" $ do
+    let localPart = T.replicate 64 "a"
+        domain =
+          T.intercalate
+            "."
+            [ T.replicate 63 "b"
+            , T.replicate 63 "c"
+            , T.replicate 61 "d"
+            ]
+        email = localPart <> "@" <> domain
+    T.length email `shouldBe` 254
+    normalizeAuthEmailAddress (" " <> T.toUpper email <> " ") `shouldBe` Just email
+
+  it "rejects oversized auth email parts before database or email fallbacks run" $ do
+    normalizeAuthEmailAddress (T.replicate 65 "a" <> "@example.com")
+      `shouldBe` Nothing
+    normalizeAuthEmailAddress ("user@" <> T.replicate 64 "b" <> ".com")
+      `shouldBe` Nothing
+    normalizeAuthEmailAddress
+      ( T.replicate 64 "a"
+          <> "@"
+          <> T.intercalate
+            "."
+            [ T.replicate 63 "b"
+            , T.replicate 63 "c"
+            , T.replicate 62 "d"
+            ]
+      )
+      `shouldBe` Nothing
+
+passwordResetTokenSpec :: Spec
+passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
   it "trims surrounding whitespace on canonical reset tokens before confirmation" $
     validatePasswordResetToken "  550e8400-e29b-41d4-a716-446655440000  "
       `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
