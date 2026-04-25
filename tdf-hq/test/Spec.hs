@@ -3321,7 +3321,7 @@ main = hspec $ do
                         [ mkIngestPost "instagram" "ig-media-42" (Just "manual")
                         , mkIngestPost "facebook" "fb-post-7" (Just "meta_ads")
                         ]
-            (result, runs) <- runSocialSyncIngestHandler request
+            (result, posts, runs) <- runSocialSyncIngestHandler request
             case result of
                 Left err ->
                     expectationFailure ("Expected mixed social sync ingest to succeed, got: " <> show err)
@@ -3329,6 +3329,7 @@ main = hspec $ do
                     ssirInserted response `shouldBe` 2
                     ssirUpdated response `shouldBe` 0
                     ssirTotal response `shouldBe` 2
+            length posts `shouldBe` 2
             case runs of
                 [run] -> do
                     socialSyncRunPlatform run `shouldBe` "mixed"
@@ -3355,13 +3356,58 @@ main = hspec $ do
                             , sspViewCount = Nothing
                             }
                         ]
-            (result, runs) <- runSocialSyncIngestHandler request
+            (result, posts, runs) <- runSocialSyncIngestHandler request
             case result of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "mediaUrls entries must not be blank"
                 Right response ->
                     expectationFailure ("Expected invalid social sync ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects the full batch before writing any posts when a later payload is invalid" $ do
+            let validPost =
+                    SocialSyncPostIn
+                        { sspPlatform = "instagram"
+                        , sspExternalPostId = "ig-media-42"
+                        , sspCaption = Just "New single out now"
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Just ["https://cdn.example.com/post.jpg"]
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                invalidPost =
+                    SocialSyncPostIn
+                        { sspPlatform = "instagram"
+                        , sspExternalPostId = "ig-media-43"
+                        , sspCaption = Nothing
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Just ["https://cdn.example.com/post-2.jpg", "   "]
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                request = SocialSyncIngestRequest [validPost, invalidPost]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "mediaUrls entries must not be blank"
+                Right response ->
+                    expectationFailure ("Expected invalid social sync batch to fail, got: " <> show response)
+            length posts `shouldBe` 0
             length runs `shouldBe` 0
 
     describe "social sync posts limit validation" $ do
@@ -6565,7 +6611,7 @@ currentSocialSyncTestTime =
 
 runSocialSyncIngestHandler
     :: SocialSyncIngestRequest
-    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncRun])
+    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncPost], [SocialSyncRun])
 runSocialSyncIngestHandler request =
     runNoLoggingT $ do
         pool <- createSqlitePool ":memory:" 1
@@ -6577,11 +6623,15 @@ runSocialSyncIngestHandler request =
                     }
         result <- liftIO $
             runExceptT (runReaderT (socialSyncIngestHandlerFor socialSyncAdminUser request) env)
+        posts <- liftIO $
+            runSqlPool
+                (fmap entityVal <$> (selectList [] [] :: SqlPersistT IO [Entity SocialSyncPost]))
+                pool
         runs <- liftIO $
             runSqlPool
-                (fmap entityVal <$> selectList [] [])
+                (fmap entityVal <$> (selectList [] [] :: SqlPersistT IO [Entity SocialSyncRun]))
                 pool
-        pure (result, runs)
+        pure (result, posts, runs)
 
 runSocialSyncListHandler
     :: SqlPersistT IO ()

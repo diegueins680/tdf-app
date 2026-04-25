@@ -45,6 +45,17 @@ maxSocialSyncMediaUrls = 20
 maxSocialSyncUrlChars :: Int
 maxSocialSyncUrlChars = 2048
 
+data ValidatedSocialSyncPost = ValidatedSocialSyncPost
+  { vsspPayload          :: SocialSyncPostIn
+  , vsspPlatform         :: Text
+  , vsspExternalPostId   :: Text
+  , vsspIngestSource     :: Text
+  , vsspPermalink        :: Maybe Text
+  , vsspMediaUrls        :: Maybe Text
+  , vsspArtistPartyId    :: Maybe (Key Party)
+  , vsspArtistProfileId  :: Maybe (Key ArtistProfile)
+  }
+
 socialSyncServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -74,30 +85,25 @@ socialSyncServer user =
     ingestHandler SocialSyncIngestRequest{..} = do
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
-      results <- forM ssirPosts $ \payload -> do
-        platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
-        externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
-        ingestSrc <- either throwError pure (validateSocialSyncIngestSource (sspIngestSource payload))
-        permalink <- either throwError pure (validateSocialSyncPermalink (sspPermalink payload))
-        mediaText <- either throwError pure (validateSocialSyncMediaUrls (sspMediaUrls payload))
-        artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
-        artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
+      validatedPosts <- either throwError pure (traverse validateSocialSyncPostPayload ssirPosts)
+      results <- forM validatedPosts $ \ValidatedSocialSyncPost{..} -> do
         let tagList = classifyTags (sspCaption payload)
             summaryTxt = buildSummary (sspCaption payload)
             tagsText = nonEmptyText (T.intercalate "," tagList)
-        existing <- withPool $ getBy (UniqueSocialSyncPost platform externalPostId)
+            payload = vsspPayload
+        existing <- withPool $ getBy (UniqueSocialSyncPost vsspPlatform vsspExternalPostId)
         case existing of
           Just (Entity key _) -> do
             let updates = concat
                   [ setMaybe SocialSyncPostCaption (sspCaption payload)
-                  , setMaybe SocialSyncPostPermalink permalink
-                  , setMaybe SocialSyncPostMediaUrls mediaText
+                  , setMaybe SocialSyncPostPermalink vsspPermalink
+                  , setMaybe SocialSyncPostMediaUrls vsspMediaUrls
                   , setMaybe SocialSyncPostPostedAt (sspPostedAt payload)
                   , setMaybe SocialSyncPostTags tagsText
                   , setMaybe SocialSyncPostSummary summaryTxt
-                  , setMaybe SocialSyncPostArtistPartyId artistPartyKey
-                  , setMaybe SocialSyncPostArtistProfileId artistProfileKey
-                  , [SocialSyncPostIngestSource =. ingestSrc]
+                  , setMaybe SocialSyncPostArtistPartyId vsspArtistPartyId
+                  , setMaybe SocialSyncPostArtistProfileId vsspArtistProfileId
+                  , [SocialSyncPostIngestSource =. vsspIngestSource]
                   , setMaybe SocialSyncPostLikeCount (sspLikeCount payload)
                   , setMaybe SocialSyncPostCommentCount (sspCommentCount payload)
                   , setMaybe SocialSyncPostShareCount (sspShareCount payload)
@@ -107,22 +113,22 @@ socialSyncServer user =
                     ]
                   ]
             withPool $ update key updates
-            pure (False, platform, ingestSrc)
+            pure (False, vsspPlatform, vsspIngestSource)
           Nothing -> do
             let record = SocialSyncPost
                   { socialSyncPostAccountId = Nothing
-                  , socialSyncPostPlatform = platform
-                  , socialSyncPostExternalPostId = externalPostId
-                  , socialSyncPostArtistPartyId = artistPartyKey
-                  , socialSyncPostArtistProfileId = artistProfileKey
+                  , socialSyncPostPlatform = vsspPlatform
+                  , socialSyncPostExternalPostId = vsspExternalPostId
+                  , socialSyncPostArtistPartyId = vsspArtistPartyId
+                  , socialSyncPostArtistProfileId = vsspArtistProfileId
                   , socialSyncPostCaption = sspCaption payload
-                  , socialSyncPostPermalink = permalink
-                  , socialSyncPostMediaUrls = mediaText
+                  , socialSyncPostPermalink = vsspPermalink
+                  , socialSyncPostMediaUrls = vsspMediaUrls
                   , socialSyncPostPostedAt = sspPostedAt payload
                   , socialSyncPostFetchedAt = now
                   , socialSyncPostTags = tagsText
                   , socialSyncPostSummary = summaryTxt
-                  , socialSyncPostIngestSource = ingestSrc
+                  , socialSyncPostIngestSource = vsspIngestSource
                   , socialSyncPostLikeCount = sspLikeCount payload
                   , socialSyncPostCommentCount = sspCommentCount payload
                   , socialSyncPostShareCount = sspShareCount payload
@@ -131,7 +137,7 @@ socialSyncServer user =
                   , socialSyncPostUpdatedAt = now
                   }
             withPool $ insert_ record
-            pure (True, platform, ingestSrc)
+            pure (True, vsspPlatform, vsspIngestSource)
       let inserted = length (filter (\(wasInserted, _, _) -> wasInserted) results)
           updated = length results - inserted
       let platformLabel =
@@ -188,6 +194,34 @@ socialSyncServer user =
     withPool action = do
       pool <- asks envPool
       liftIO $ runSqlPool action pool
+
+validateSocialSyncPostPayload :: SocialSyncPostIn -> Either ServerError ValidatedSocialSyncPost
+validateSocialSyncPostPayload payload = do
+  platform <- validateSocialSyncPlatform (sspPlatform payload)
+  externalPostId <- validateSocialSyncExternalPostId (sspExternalPostId payload)
+  ingestSrc <- validateSocialSyncIngestSource (sspIngestSource payload)
+  permalink <- validateSocialSyncPermalink (sspPermalink payload)
+  mediaUrls <- validateSocialSyncMediaUrls (sspMediaUrls payload)
+  artistPartyId <- traverse validateSocialSyncArtistPartyKey (sspArtistPartyId payload)
+  artistProfileId <- traverse validateSocialSyncArtistProfileKey (sspArtistProfileId payload)
+  pure ValidatedSocialSyncPost
+    { vsspPayload = payload
+    , vsspPlatform = platform
+    , vsspExternalPostId = externalPostId
+    , vsspIngestSource = ingestSrc
+    , vsspPermalink = permalink
+    , vsspMediaUrls = mediaUrls
+    , vsspArtistPartyId = artistPartyId
+    , vsspArtistProfileId = artistProfileId
+    }
+
+validateSocialSyncArtistPartyKey :: Text -> Either ServerError (Key Party)
+validateSocialSyncArtistPartyKey raw =
+  toSqlKey <$> validateSocialSyncArtistPartyId raw
+
+validateSocialSyncArtistProfileKey :: Text -> Either ServerError (Key ArtistProfile)
+validateSocialSyncArtistProfileKey raw =
+  toSqlKey <$> validateSocialSyncArtistProfileId raw
 
 parsePartyId :: MonadError ServerError m => Text -> m (Key Party)
 parsePartyId raw =
