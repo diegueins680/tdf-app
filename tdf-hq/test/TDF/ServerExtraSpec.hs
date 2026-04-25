@@ -1269,6 +1269,44 @@ spec = do
         Right value ->
           expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
 
+    it "rejects control-character titles on create and patch so CRM cards keep single-line labels" $ do
+      createResult <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate "Demo\nLead" Nothing Nothing Nothing Nothing)
+      case createResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Pipeline card title must not contain control characters"
+        Right value ->
+          expectationFailure ("Expected control-character pipeline card create title to fail, got " <> show value)
+
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      patchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Nothing
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 0
+              , ME.pipelineCardNotes = Nothing
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate (Just "Final\tLead") Nothing Nothing Nothing Nothing)
+      case patchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Pipeline card title must not contain control characters"
+        Right value ->
+          expectationFailure ("Expected control-character pipeline card patch title to fail, got " <> show value)
+
     it "rejects empty patch payloads instead of silently returning unchanged pipeline cards" $ do
       existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
         Just key -> pure key
