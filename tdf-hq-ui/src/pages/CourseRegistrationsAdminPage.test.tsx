@@ -1923,9 +1923,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(container.textContent).toContain('Fuente visible: instagram.');
+      expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101) · Fuente: instagram');
       expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
-      expect(container.textContent).not.toContain('Fuente: instagram');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -2294,9 +2293,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Estado disponible');
-      expect(container.textContent).toContain('Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: instagram.');
-      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(container.textContent).toContain('Pendiente de pago · Fuente: instagram');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
       expect(container.textContent).toContain('Ada Lovelace');
@@ -2327,10 +2324,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Fuente visible: Instagram.');
+      expect(container.textContent).toContain('Pendiente de pago · Fuente: Instagram');
       expect(container.textContent).not.toContain('Fuente visible: instagram.');
-      expect(container.textContent).not.toContain('Fuente: Instagram');
-      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(container.textContent).not.toContain('Fuente visible: Instagram.');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).toContain('Cohorte: Mixing Bootcamp (mixing-bootcamp)');
     });
@@ -2459,7 +2455,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Fuente visible: referral.');
+      expect(container.textContent).toContain('Pendiente de pago · Fuente: referral');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Cohorte:');
@@ -2702,6 +2698,42 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('folds the shared source into the single-cohort summary instead of stacking another helper row', async () => {
+    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' }]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crSource: 'meta_ads',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+        crSource: 'meta_ads',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-cohort-summary"]',
+      );
+
+      expect(cohortSummary).not.toBeNull();
+      expect(cohortSummary?.textContent).toContain('Cohorte disponible');
+      expect(cohortSummary?.textContent).toContain('Beatmaking 101 (beatmaking-101) · Fuente: Meta ads');
+      expect(cohortSummary?.textContent).not.toContain('Fuente visible: Meta ads.');
+      expect(countOccurrences(cohortSummary!, 'Fuente: Meta ads')).toBe(1);
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Meta ads.');
     });
 
     await cleanup();

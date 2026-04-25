@@ -1806,9 +1806,10 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const showSingleStatusSummaryBlock = showSingleStatusSummary
     && !(showCohortFilterUnavailableSummary && loadedRegistrationCount === 1);
-  const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary
+  const standaloneSingleChoiceInlineSourceSummary = !combinedSingleChoiceSummary
     && (singleAvailableCohortLabel || showSingleStatusSummaryBlock)
-    ? summarizedVisibleSourceLabel
+    && hasNamedVisibleSource
+    ? `Fuente: ${singleVisibleSourceLabel}`
     : '';
   const resetViewLabel = getResetViewLabel({
     hasCustomLimit,
@@ -1855,7 +1856,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
-    && !standaloneSingleChoiceSourceSummary;
+    && !standaloneSingleChoiceInlineSourceSummary;
   const showActiveStatusFilterSummary = hasVisibleRegistrations
     && hasStatusFilter
     && (hasEffectiveSlugFilter || hasCustomLimit || loadedRegistrationCount === 1);
@@ -3522,12 +3523,8 @@ export default function CourseRegistrationsAdminPage() {
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
                           {singleAvailableCohortLabel}
+                          {standaloneSingleChoiceInlineSourceSummary ? ` · ${standaloneSingleChoiceInlineSourceSummary}` : ''}
                         </Typography>
-                        {standaloneSingleChoiceSourceSummary && (
-                          <Typography variant="caption" color="text.secondary">
-                            {standaloneSingleChoiceSourceSummary}
-                          </Typography>
-                        )}
                         {showFirstRunFilterHelper && (
                           <Typography variant="caption" color="text.secondary">
                             {singleAvailableCohortHelperText}
@@ -3596,12 +3593,8 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                           <Typography variant="body2" fontWeight={600}>
                             {statusFilterLabels[singleVisibleStatus]}
+                            {standaloneSingleChoiceInlineSourceSummary ? ` · ${standaloneSingleChoiceInlineSourceSummary}` : ''}
                           </Typography>
-                          {standaloneSingleChoiceSourceSummary && (
-                            <Typography variant="caption" color="text.secondary">
-                              {standaloneSingleChoiceSourceSummary}
-                            </Typography>
-                          )}
                           {showFirstRunFilterHelper && singleVisibleStatusHelperText && (
                             <Typography variant="caption" color="text.secondary">
                               {singleVisibleStatusHelperText}
