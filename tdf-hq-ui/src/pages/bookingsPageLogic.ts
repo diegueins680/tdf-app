@@ -306,11 +306,15 @@ export const getBookingEngineerFieldState = ({
 };
 
 export const getBookingRoomsFieldState = ({
+  hasAssignedRooms,
   roomCatalogLoading,
   roomCount,
+  serviceType,
 }: {
+  hasAssignedRooms: boolean;
   roomCatalogLoading: boolean;
   roomCount: number;
+  serviceType: string;
 }): BookingRoomsFieldState => {
   if (roomCatalogLoading && roomCount <= 0) {
     return {
@@ -324,6 +328,20 @@ export const getBookingRoomsFieldState = ({
       helperText: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos para poder guardar sesiones.',
       setupActionLabel: 'Abrir salas y recursos',
       showField: false,
+    };
+  }
+
+  if (!hasAssignedRooms && serviceType.trim() === '') {
+    return {
+      helperText: 'Selecciona el servicio primero para sugerir salas y ajustar la combinación si hace falta.',
+      showField: false,
+    };
+  }
+
+  if (hasAssignedRooms && serviceType.trim() === '') {
+    return {
+      helperText: 'Ajusta las salas solo si esta sesión necesita otra combinación.',
+      showField: true,
     };
   }
 

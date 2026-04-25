@@ -273,16 +273,20 @@ describe('bookingsPageLogic', () => {
 
   it('replaces the empty room picker with first-run setup guidance until rooms exist', () => {
     expect(getBookingRoomsFieldState({
+      hasAssignedRooms: false,
       roomCatalogLoading: true,
       roomCount: 0,
+      serviceType: '',
     })).toEqual({
       helperText: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás asignarlas aquí.',
       showField: false,
     });
 
     expect(getBookingRoomsFieldState({
+      hasAssignedRooms: false,
       roomCatalogLoading: false,
       roomCount: 0,
+      serviceType: '',
     })).toEqual({
       helperText: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos para poder guardar sesiones.',
       setupActionLabel: 'Abrir salas y recursos',
@@ -290,8 +294,30 @@ describe('bookingsPageLogic', () => {
     });
 
     expect(getBookingRoomsFieldState({
+      hasAssignedRooms: false,
       roomCatalogLoading: false,
       roomCount: 2,
+      serviceType: '',
+    })).toEqual({
+      helperText: 'Selecciona el servicio primero para sugerir salas y ajustar la combinación si hace falta.',
+      showField: false,
+    });
+
+    expect(getBookingRoomsFieldState({
+      hasAssignedRooms: true,
+      roomCatalogLoading: false,
+      roomCount: 2,
+      serviceType: '',
+    })).toEqual({
+      helperText: 'Ajusta las salas solo si esta sesión necesita otra combinación.',
+      showField: true,
+    });
+
+    expect(getBookingRoomsFieldState({
+      hasAssignedRooms: false,
+      roomCatalogLoading: false,
+      roomCount: 2,
+      serviceType: 'Recording',
     })).toEqual({
       helperText: 'Se precargan según el tipo de servicio.',
       showField: true,

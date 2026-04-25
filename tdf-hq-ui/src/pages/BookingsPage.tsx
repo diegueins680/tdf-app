@@ -398,10 +398,12 @@ export default function BookingsPage() {
   );
   const roomsFieldState = useMemo(
     () => getBookingRoomsFieldState({
+      hasAssignedRooms: assignedRoomIds.length > 0,
       roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
       roomCount: rooms.length,
+      serviceType,
     }),
-    [rooms.length, roomsQuery.data, roomsQuery.isLoading],
+    [assignedRoomIds.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, serviceType],
   );
   const optionalDetailsState = useMemo(
     () => getBookingOptionalDetailsState({
