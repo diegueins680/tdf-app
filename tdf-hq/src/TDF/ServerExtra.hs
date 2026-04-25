@@ -522,8 +522,38 @@ validateAssetReadCheckoutState readContext Booked Nothing =
                 <> readContext
             ))
     }
+validateAssetReadCheckoutState readContext assetState (Just checkoutEnt)
+  | assetReadStateAllowsCheckout assetState checkoutDisposition =
+      Right ()
+  | otherwise =
+      Left err409
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8
+                ( "Asset status is "
+                    <> assetStatusToText assetState
+                    <> " but an active "
+                    <> checkoutDispositionToText checkoutDisposition
+                    <> " checkout exists; resolve the inventory state before "
+                    <> readContext
+                ))
+        }
+  where
+    checkoutDisposition = assetCheckoutDisposition (entityVal checkoutEnt)
 validateAssetReadCheckoutState _ _ _ =
   Right ()
+
+assetReadStateAllowsCheckout :: AssetStatus -> CheckoutDisposition -> Bool
+assetReadStateAllowsCheckout Booked Sale = False
+assetReadStateAllowsCheckout Booked _ = True
+assetReadStateAllowsCheckout Retired Sale = True
+assetReadStateAllowsCheckout _ _ = False
+
+assetStatusToText :: AssetStatus -> Text
+assetStatusToText Active = "active"
+assetStatusToText Booked = "booked"
+assetStatusToText OutForMaintenance = "out_for_maintenance"
+assetStatusToText Retired = "retired"
 
 sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
 sanitizePublicAssetDTO dto =
