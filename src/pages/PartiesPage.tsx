@@ -955,6 +955,24 @@ export default function PartiesPage() {
     handleConvertToStudent(singleContact);
   };
 
+  const handleOpenContactDetail = (party: PartyDTO) => {
+    setDetail(party);
+  };
+
+  const handleContactRowKeyDown = (
+    event: React.KeyboardEvent<HTMLTableRowElement>,
+    party: PartyDTO,
+  ) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleOpenContactDetail(party);
+    }
+  };
+
   const singleContactSummaryRows: Array<[string, string]> = singleContact
     ? (
         [
@@ -984,6 +1002,7 @@ export default function PartiesPage() {
     ...(!showInstagramColumn ? ['Instagram'] : []),
   ]);
   const contactsTableDescriptions = [
+    'Haz clic en una fila o presiona Enter para abrir la ficha. Usa Acciones solo para editar o convertir.',
     ...(!showOrgColumn ? ['Vista compacta: Org aparecerá cuando convivan personas y organizaciones.'] : []),
     ...(compactContactColumnsDescription ? [compactContactColumnsDescription] : []),
   ];
@@ -1013,7 +1032,7 @@ export default function PartiesPage() {
 
     visibleColumns.push({
       header: 'Acciones', cell: ({ row }) => (
-        <Tooltip title="Abrir ficha, editar o convertir desde un solo menú">
+        <Tooltip title="Editar o convertir desde un solo menú">
           <Button
             size="small"
             variant="text"
@@ -1201,7 +1220,21 @@ export default function PartiesPage() {
                   </TableHead>
                   <TableBody>
                     {filteredContactRows.map(r => (
-                      <TableRow key={r.id} hover onClick={() => setDetail(r.original)} sx={{ cursor: 'pointer' }}>
+                      <TableRow
+                        key={r.id}
+                        hover
+                        tabIndex={0}
+                        onClick={() => handleOpenContactDetail(r.original)}
+                        onKeyDown={(event) => handleContactRowKeyDown(event, r.original)}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:focus-visible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: -2,
+                          },
+                        }}
+                      >
                         {r.getVisibleCells().map(c => (
                           <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
                         ))}
@@ -1215,15 +1248,6 @@ export default function PartiesPage() {
                 open={!!rowActionsAnchorEl && !!activeRowActionParty}
                 onClose={handleCloseRowActions}
               >
-                <MenuItem
-                  onClick={() => {
-                    if (!activeRowActionParty) return;
-                    handleCloseRowActions();
-                    setDetail(activeRowActionParty);
-                  }}
-                >
-                  Abrir ficha
-                </MenuItem>
                 <MenuItem
                   onClick={() => {
                     if (!activeRowActionParty) return;

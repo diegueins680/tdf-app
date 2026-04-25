@@ -226,6 +226,8 @@ describe('PartiesPage', () => {
     await waitFor(() => {
       expect(within(orgRow).getAllByRole('button')).toHaveLength(1);
       expect(within(personRow).getAllByRole('button')).toHaveLength(1);
+      expect(orgRow).toHaveAttribute('tabindex', '0');
+      expect(personRow).toHaveAttribute('tabindex', '0');
       expect(
         within(orgRow).getByRole('button', { name: /Acciones de Acme Studios/i }),
       ).toBeInTheDocument();
@@ -234,19 +236,54 @@ describe('PartiesPage', () => {
       ).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText(/Haz clic en una fila o presiona Enter para abrir la ficha\. Usa Acciones solo para editar o convertir\./i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Abrir ficha/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Editar contacto/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
 
     await user.click(within(orgRow).getByRole('button', { name: /Acciones de Acme Studios/i }));
 
-    expect(await screen.findByRole('menuitem', { name: /Abrir ficha/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /Editar contacto/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Abrir ficha/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /Editar contacto/i })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /Convertir a estudiante/i })).not.toBeInTheDocument();
 
     await user.click(within(personRow).getByRole('button', { name: /Acciones de Ada Lovelace/i }));
 
     expect(await screen.findByRole('menuitem', { name: /Convertir a estudiante/i })).toBeInTheDocument();
+  });
+
+  it('opens the contact detail from a focused CRM row so the deduped table still has a keyboard path', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([
+      buildParty(),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: 'ada@example.com',
+        primaryPhone: null,
+        instagram: null,
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+
+    const orgRow = await screen.findByText('Acme Studios').then((cell) => cell.closest('tr'));
+
+    if (!(orgRow instanceof HTMLElement)) {
+      throw new Error('Expected CRM row to be keyboard-focusable');
+    }
+
+    orgRow.focus();
+    await user.keyboard('{Enter}');
+
+    expect(await screen.findByRole('heading', { name: 'Acme Studios' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
   });
 
   it('hides empty contact columns once the CRM table is in compact mode', async () => {
