@@ -4317,9 +4317,9 @@ validateOptionalBookingTitleUpdate (Just rawTitle) =
 bookingTitleMaxLength :: Int
 bookingTitleMaxLength = 160
 
-validatePublicBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
-validatePublicBookingNotes Nothing = Right Nothing
-validatePublicBookingNotes (Just rawNotes) =
+validateBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validateBookingNotes Nothing = Right Nothing
+validateBookingNotes (Just rawNotes) =
   case normalizeOptionalInput (Just rawNotes) of
     Nothing -> Right Nothing
     Just notesVal
@@ -4336,6 +4336,9 @@ validatePublicBookingNotes (Just rawNotes) =
   where
     isUnsafeNoteControl ch =
       isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+validatePublicBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validatePublicBookingNotes = validateBookingNotes
 
 publicBookingNotesMaxLength :: Int
 publicBookingNotesMaxLength = 1000
@@ -6302,6 +6305,7 @@ createBooking user req = do
       engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = entityKey <$> mParty
       requestedRooms   = fromMaybe [] (cbResourceIds req)
+  notesClean <- either throwError pure (validateBookingNotes (cbNotes req))
   case validateEngineer serviceTypeClean engineerIdClean engineerNameClean of
     Left msg -> throwBadRequest msg
     Right () -> pure ()
@@ -6322,7 +6326,7 @@ createBooking user req = do
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
         , bookingCreatedBy      = Nothing
-        , bookingNotes          = normalizeOptionalInput (cbNotes req)
+        , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
 
@@ -6347,6 +6351,7 @@ updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   Env pool _ <- ask
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
+  notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
   requestedEngineerId <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
@@ -6376,7 +6381,10 @@ updateBooking user bookingIdI req = do
                     updated = current
                       { bookingTitle       = fromMaybe (bookingTitle current) titleUpdate
                       , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
-                      , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
+                      , bookingNotes       =
+                          if isJust (ubNotes req)
+                            then notesUpdate
+                            else bookingNotes current
                       , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
                       , bookingStartsAt    = fromMaybe (bookingStartsAt current) (ubStartsAt req)
                       , bookingEndsAt      = fromMaybe (bookingEndsAt current) (ubEndsAt req)

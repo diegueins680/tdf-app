@@ -4,6 +4,27 @@ Use this for one exact build on one exact device/session.
 Do not write "looks good" or "ready" without filling pass/fail fields.
 Every `FAIL` must name one blocker owner.
 
+## Smoke-runnable handoff gate
+Complete this block before any login/onboarding/navigation testing. If this gate fails, stop the run and record only the blocker-driven verdict.
+
+- Handoff source (report entry / timestamp):
+- Simulator/device target:
+- App path / artifact used:
+- Exact install command:
+- Exact launch command:
+- Launch contract type: `PACKAGER-BACKED` / `EMBEDDED-JS-BUNDLE`
+- If `PACKAGER-BACKED`: exact Metro/dev-server start command, URL/port, and same-run proof it was running:
+- If `EMBEDDED-JS-BUNDLE`: exact proof the app can launch without Metro / packager:
+- First screen after launch: `APP UI` / `RUNTIME ERROR` / `OTHER`
+- If first screen is not `APP UI`, stop here and record:
+  - Exact visible error text:
+  - Blocker owner:
+  - Required next handoff piece:
+
+Rules:
+- Do not start the six release-critical flows unless the first screen reaches real app UI beyond any runtime error screen.
+- `No script URL provided`, `unsanitizedScriptURLString = (null)`, or any equivalent Metro/bundle failure means smoke did not start.
+
 ## Test metadata
 - Date/time:
 - Tester:

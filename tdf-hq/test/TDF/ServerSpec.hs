@@ -200,6 +200,7 @@ import TDF.Server
     , requirePersistedBookingDTO
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
+    , validateBookingNotes
     , validatePublicBookingNotes
     , validatePublicBookingServiceType
     , validateRequiredBookingTitle
@@ -5986,6 +5987,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "title must not contain control characters"
                 (validateOptionalBookingTitleUpdate (Just "Sesion\nmezcla"))
+
+    describe "booking notes validation" $ do
+        it "normalizes blank and meaningful booking notes before persistence" $ do
+            validateBookingNotes Nothing `shouldBe` Right Nothing
+            validateBookingNotes (Just "   ") `shouldBe` Right Nothing
+            validateBookingNotes (Just "  Linea uno\nLinea dos  ")
+                `shouldBe` Right (Just "Linea uno\nLinea dos")
+
+        it "rejects oversized or control-character booking notes instead of persisting ambiguous admin updates" $ do
+            let assertInvalid rawNotes expectedMessage =
+                    case validateBookingNotes (Just rawNotes) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid booking notes to be rejected, got: " <> show value)
+            assertInvalid (T.replicate 1001 "x") "notes must be 1000 characters or fewer"
+            assertInvalid "Confirmado\NULinternamente" "notes must not contain control characters"
 
     describe "validatePublicBookingDurationMinutes" $ do
         it "defaults omitted durations to one hour and preserves explicit durations inside the public window" $ do
