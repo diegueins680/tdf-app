@@ -1177,6 +1177,23 @@ const preferNonEmptyText = (primary?: string | null, fallback?: string | null) =
   return null;
 };
 
+const preferMeaningfulRegistrationSource = (primary?: string | null, fallback?: string | null) => {
+  const trimmedPrimary = primary?.trim() ?? '';
+  const trimmedFallback = fallback?.trim() ?? '';
+
+  if (!trimmedPrimary) return trimmedFallback || null;
+  if (!trimmedFallback) return trimmedPrimary;
+
+  const primaryHasMeaningfulSource = Boolean(getSearchableRegistrationSource(trimmedPrimary));
+  const fallbackHasMeaningfulSource = Boolean(getSearchableRegistrationSource(trimmedFallback));
+
+  if (!primaryHasMeaningfulSource && fallbackHasMeaningfulSource) {
+    return trimmedFallback;
+  }
+
+  return trimmedPrimary;
+};
+
 const preferPositiveId = (primary?: number | null, fallback?: number | null) => {
   if (typeof primary === 'number' && Number.isInteger(primary) && primary > 0) return primary;
   if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback > 0) return fallback;
@@ -1212,7 +1229,7 @@ const mergeCourseRegistrationRecords = (
   crEmail: preferNonEmptyText(primary.crEmail, fallback.crEmail),
   crPhoneE164: preferNonEmptyText(primary.crPhoneE164, fallback.crPhoneE164),
   crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
-  crSource: preferNonEmptyText(primary.crSource, fallback.crSource),
+  crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
   crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
   crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
   crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),

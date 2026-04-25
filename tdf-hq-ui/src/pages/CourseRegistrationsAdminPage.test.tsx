@@ -6667,6 +6667,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a custom acquisition source when a duplicate registration also carries the default public-form source', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crSource: 'landing',
+      }),
+      buildRegistration({
+        crId: 101,
+        crSource: 'instagram_story',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crSource: 'landing',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Fuente: Instagram story');
+      expect(container.textContent).not.toContain('Fuente: landing');
+      expect(container.querySelectorAll('button[aria-label="Abrir expediente de Ada Lovelace"]')).toHaveLength(1);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('merges duplicate registration status before deciding whether status filters are useful', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
