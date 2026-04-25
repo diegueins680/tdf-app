@@ -1424,6 +1424,22 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404 { errBody = "Solicitud de prueba no encontrada" }
         Just _  -> pure key
 
+    ensurePurchaseTrialRequestMatches
+      :: PartyId
+      -> Entity PackageCatalog
+      -> Maybe (Entity TrialRequest)
+      -> AppM ()
+    ensurePurchaseTrialRequestMatches _ _ Nothing = pure ()
+    ensurePurchaseTrialRequestMatches studentKey (Entity _ package) (Just (Entity _ trialRequest)) = do
+      when (trialRequestPartyId trialRequest /= studentKey) $
+        liftIO $
+          throwIO err422
+            { errBody = "La solicitud de prueba debe pertenecer al mismo estudiante que la compra" }
+      when (trialRequestSubjectId trialRequest /= packageCatalogSubjectId package) $
+        liftIO $
+          throwIO err422
+            { errBody = "La solicitud de prueba debe corresponder a la misma materia del paquete" }
+
     ensureBookingExists :: Int -> AppM Models.BookingId
     ensureBookingExists bookingIdInt
       | bookingIdInt <= 0 =
@@ -1564,9 +1580,12 @@ privateTrialsServer user@AuthedUser{..} =
       PurchaseIn{..} <- either (liftIO . throwIO) pure (validatePurchaseInput rawInput)
       studentKey <- ensureStudentExists studentId
       packageKey <- ensurePackageExists packageId
+      packageEntity <- getJustEntity packageKey
       sellerKey <- traverse ensureSellerExists sellerId
       commissionKey <- traverse ensureCommissionTeacherExists commissionedTeacherId
       trialKey <- traverse ensurePurchaseTrialRequestExists trialRequestId
+      trialEntity <- traverse getJustEntity trialKey
+      ensurePurchaseTrialRequestMatches studentKey packageEntity trialEntity
       now <- liftIO getCurrentTime
       let discount   = fromMaybe 0 discountCents
           tax        = fromMaybe 0 taxCents

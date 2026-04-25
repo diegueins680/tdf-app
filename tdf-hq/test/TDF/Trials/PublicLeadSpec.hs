@@ -919,6 +919,35 @@ spec = do
         Right _ ->
           expectationFailure "Expected invalid commissioned teachers to be rejected"
 
+    it "rejects trial requests that do not match the purchase student and package subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        studentPartyId <- insertPartyFixture "Student One" now
+        otherStudentPartyId <- insertPartyFixture "Student Two" now
+        sellerPartyId <- insertPartyFixture "Seller One" now
+        packageSubjectKey <- insert (Subject "Piano" True)
+        requestSubjectKey <- insert (Subject "Guitar" True)
+        packageKey <- insertPackageFixture packageSubjectKey
+        requestKey <- insertTrialRequestFixture otherStudentPartyId requestSubjectKey scheduleStart scheduleEnd now
+        privatePurchaseHandler
+          (PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "mismo estudiante"
+        Right _ ->
+          expectationFailure "Expected mismatched trial request references to be rejected"
+
   describe "ClassSessionIn FromJSON" $ do
     it "accepts canonical class-session create payloads" $ do
       let payload = BL8.pack $ concat
