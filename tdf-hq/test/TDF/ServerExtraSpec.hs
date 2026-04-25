@@ -1469,6 +1469,10 @@ spec = do
       validateCheckoutDueAt now (Just now) `shouldBe` Right (Just now)
       validateCheckoutDueAt now (Just future) `shouldBe` Right (Just future)
 
+    it "accepts same-day midnight due values so date-only return fields do not degrade into false past-due errors" $ do
+      let sameDayMidnight = UTCTime (fromGregorian 2026 4 23) 0
+      validateCheckoutDueAt now (Just sameDayMidnight) `shouldBe` Right (Just sameDayMidnight)
+
     it "rejects already-expired due timestamps instead of creating overdue checkouts at insert time" $ do
       let past = addUTCTime (-60) now
       case validateCheckoutDueAt now (Just past) of

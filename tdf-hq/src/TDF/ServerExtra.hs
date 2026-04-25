@@ -1300,6 +1300,8 @@ inventoryTermsMaxLength = 4000
 validateCheckoutDueAt :: UTCTime -> Maybe UTCTime -> Either ServerError (Maybe UTCTime)
 validateCheckoutDueAt _ Nothing = Right Nothing
 validateCheckoutDueAt now (Just dueAt)
+  | utctDay dueAt == utctDay now && utctDayTime dueAt == 0 =
+      Right (Just dueAt)
   | dueAt < now =
       Left err400 { errBody = "dueAt must not be in the past" }
   | otherwise =
