@@ -1480,13 +1480,14 @@ export default function CourseRegistrationsAdminPage() {
   ), [registrations]);
   const singleAvailableCohortLabel = useMemo(() => {
     if (!singleAvailableCohort) return '';
+    const summaryLabel = cohortSummaryLabelsBySlug.get(singleAvailableCohort.value) ?? singleAvailableCohort.label;
     if (!hasVisibleRegistrations || selectedSlug === singleAvailableCohort.value) {
-      return singleAvailableCohort.label;
+      return summaryLabel;
     }
     return visibleCohortSlugs.size === 1 && visibleCohortSlugs.has(singleAvailableCohort.value)
-      ? singleAvailableCohort.label
+      ? summaryLabel
       : '';
-  }, [hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
+  }, [cohortSummaryLabelsBySlug, hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
@@ -1676,8 +1677,8 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueCohortSlugs.length !== 1) return '';
     const cohortSlug = uniqueCohortSlugs[0];
     if (!cohortSlug) return '';
-    return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
-  }, [cohortLabelsBySlug, searchedRegistrations, selectedSlug]);
+    return cohortSummaryLabelsBySlug.get(cohortSlug) ?? cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
+  }, [cohortLabelsBySlug, cohortSummaryLabelsBySlug, searchedRegistrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
     if (searchedRegistrations.length === 0) return '';
     const sourceLabelsByKey = new Map<string, string>();
@@ -4035,7 +4036,9 @@ export default function CourseRegistrationsAdminPage() {
                     );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
                   const rowCohortSlug = reg.crCourseSlug.trim();
-                  const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+                  const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
+                    ?? cohortLabelsBySlug.get(rowCohortSlug)
+                    ?? rowCohortSlug;
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const rowMatchesVisibleSearchFields = hasLocalSearch
                     ? registrationMatchesVisibleSearchFields({
