@@ -1111,6 +1111,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps system and workspace configuration fallback cards from duplicating the configuration shell', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-system-configuration',
+          title: 'System configuration',
+          body: ['Review workspace toggles before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-workspace-configuration',
+          title: 'Configuración del espacio de trabajo',
+          body: ['Valida ajustes globales antes de cambiar accesos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('System configuration')).not.toBeInTheDocument();
+    expect(screen.queryByText('Configuración del espacio de trabajo')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review workspace toggles before changing permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Valida ajustes globales antes de cambiar accesos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps demo-data fallback cards from duplicating the first-run seed action', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
