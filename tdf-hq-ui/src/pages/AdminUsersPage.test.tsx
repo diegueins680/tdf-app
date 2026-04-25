@@ -274,9 +274,10 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
-        expect(
-          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
-        ).toBe('1 usuario inactivo');
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Vista actual: solo usuarios inactivos.',
+        );
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([201]);
       });
     } finally {
@@ -1873,7 +1874,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('uses the inactive section label for a lone inactive roster instead of repeating row status chrome', async () => {
+  it('uses the page scope summary for a lone inactive roster instead of adding a section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -1915,9 +1916,10 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201]);
-        expect(
-          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
-        ).toBe('1 usuario inactivo');
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Vista actual: solo usuarios inactivos.',
+        );
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Ver 1 usuario inactivo"]')).toBeNull();
         expect(getRowByUserId(container, 201).textContent).not.toContain('Inactivo');

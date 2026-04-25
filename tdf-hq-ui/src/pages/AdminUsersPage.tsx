@@ -672,7 +672,7 @@ export default function AdminUsersPage() {
     && includeInactive
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === visibleUsers.length;
-  const showInactiveOnlyScopeSummary = hasMultipleUsers && showOnlyInactiveUsers;
+  const showInactiveOnlyScopeSummary = showOnlyInactiveUsers;
   const showInactiveUsersGroup =
     includeInactive
     && visibleInactiveUsersCount > 0
