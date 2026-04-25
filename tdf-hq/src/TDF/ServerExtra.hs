@@ -2241,6 +2241,7 @@ isValidAssetPhotoPathSegment segment =
   not (T.null segment)
     && segment /= "."
     && segment /= ".."
+    && not ("." `T.isPrefixOf` segment)
     && T.all isValidAssetPhotoPathChar segment
 
 isValidAssetPhotoPathChar :: Char -> Bool

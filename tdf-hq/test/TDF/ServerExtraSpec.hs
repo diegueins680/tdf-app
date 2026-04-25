@@ -356,7 +356,8 @@ spec = do
             )
 
     it "rejects extension-only upload names so stored inventory files always keep a real basename" $ do
-      let assertInvalid multipart =
+      let assertInvalid :: MultipartData Tmp -> Expectation
+          assertInvalid multipart =
             case fromMultipart multipart :: Either String AssetUploadForm of
               Left err ->
                 err `shouldContain` "Asset upload file name must include a non-empty base name before the extension"
@@ -996,6 +997,8 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/.hidden.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/archive/.hidden.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/manual.pdf"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/folder/no-extension"))
 
