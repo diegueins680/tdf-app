@@ -86,7 +86,8 @@ socialSyncServer user =
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
       validatedPosts <- either throwError pure (traverse validateSocialSyncPostPayload ssirPosts)
-      results <- forM validatedPosts $ \ValidatedSocialSyncPost{..} -> do
+      resolvedPosts <- traverse resolveSocialSyncArtistReferences validatedPosts
+      results <- forM resolvedPosts $ \ValidatedSocialSyncPost{..} -> do
         let tagList = classifyTags (sspCaption payload)
             summaryTxt = buildSummary (sspCaption payload)
             tagsText = nonEmptyText (T.intercalate "," tagList)
@@ -194,6 +195,55 @@ socialSyncServer user =
     withPool action = do
       pool <- asks envPool
       liftIO $ runSqlPool action pool
+
+    resolveSocialSyncArtistReferences
+      :: ( MonadReader Env m
+         , MonadIO m
+         , MonadError ServerError m
+         )
+      => ValidatedSocialSyncPost
+      -> m ValidatedSocialSyncPost
+    resolveSocialSyncArtistReferences post@ValidatedSocialSyncPost{..} = do
+      resolvedPartyId <- case vsspArtistPartyId of
+        Nothing -> pure Nothing
+        Just partyId -> do
+          mParty <- withPool (get partyId)
+          case mParty of
+            Nothing ->
+              throwError err404
+                { errBody = BL.fromStrict (TE.encodeUtf8 "artistPartyId not found")
+                }
+            Just _ -> pure (Just partyId)
+      case vsspArtistProfileId of
+        Nothing ->
+          pure post { vsspArtistPartyId = resolvedPartyId }
+        Just profileId -> do
+          mProfile <- withPool (get profileId)
+          profile <- case mProfile of
+            Nothing ->
+              throwError err404
+                { errBody = BL.fromStrict (TE.encodeUtf8 "artistProfileId not found")
+                }
+            Just value -> pure value
+          let profilePartyId = artistProfileArtistPartyId profile
+          case resolvedPartyId of
+            Nothing ->
+              pure post
+                { vsspArtistPartyId = Just profilePartyId
+                , vsspArtistProfileId = Just profileId
+                }
+            Just partyId
+              | partyId == profilePartyId ->
+                  pure post
+                    { vsspArtistPartyId = Just partyId
+                    , vsspArtistProfileId = Just profileId
+                    }
+              | otherwise ->
+                  throwError err400
+                    { errBody =
+                        BL.fromStrict
+                          (TE.encodeUtf8 "artistProfileId must belong to artistPartyId")
+                    }
 
 validateSocialSyncPostPayload :: SocialSyncPostIn -> Either ServerError ValidatedSocialSyncPost
 validateSocialSyncPostPayload payload = do

@@ -16,7 +16,7 @@ import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity (..), Key, insert_, selectList)
+import Database.Persist (Entity (..), Key, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Network.Wai (defaultRequest)
@@ -97,7 +97,7 @@ import TDF.DTO.SocialSyncDTO
       maxSocialSyncIngestPosts )
 import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
+import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
@@ -3410,6 +3410,108 @@ main = hspec $ do
             length posts `shouldBe` 0
             length runs `shouldBe` 0
 
+        it "infers artistPartyId from artistProfileId before persisting social sync rows" $ do
+            let setup = do
+                    partyId <- insertSocialSyncPartyFixture 21 "Artist Party"
+                    _ <- insertSocialSyncArtistProfileFixture 7 partyId
+                    pure ()
+                request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-profile-only"
+                            , sspCaption = Just "Profile-linked post"
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Just "7"
+                            , sspIngestSource = Just "manual"
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandlerWithSetup setup request
+            case result of
+                Left err ->
+                    expectationFailure ("Expected profile-linked social sync ingest to succeed, got: " <> show err)
+                Right response -> do
+                    ssirInserted response `shouldBe` 1
+                    ssirUpdated response `shouldBe` 0
+                    ssirTotal response `shouldBe` 1
+            case posts of
+                [post] -> do
+                    fmap fromSqlKey (socialSyncPostArtistPartyId post) `shouldBe` Just 21
+                    fmap fromSqlKey (socialSyncPostArtistProfileId post) `shouldBe` Just 7
+                _ ->
+                    expectationFailure ("Expected one stored social sync post, got: " <> show posts)
+            length runs `shouldBe` 1
+
+        it "rejects unknown artistProfileId values before any social sync rows are written" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-missing-profile"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Just "999"
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 404
+                    BL.unpack (errBody err) `shouldContain` "artistProfileId not found"
+                Right response ->
+                    expectationFailure ("Expected missing artistProfileId ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects mismatched artistPartyId and artistProfileId before writing social sync rows" $ do
+            let setup = do
+                    _ <- insertSocialSyncPartyFixture 21 "Artist Party A"
+                    otherPartyId <- insertSocialSyncPartyFixture 22 "Artist Party B"
+                    _ <- insertSocialSyncArtistProfileFixture 7 otherPartyId
+                    pure ()
+                request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-mismatched-artist"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Just "21"
+                            , sspArtistProfileId = Just "7"
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandlerWithSetup setup request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "artistProfileId must belong to artistPartyId"
+                Right response ->
+                    expectationFailure ("Expected mismatched artist references to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
     describe "social sync posts limit validation" $ do
         it "keeps the default only when the caller omits the limit and preserves valid explicit values" $ do
             validateSocialSyncPostsLimit Nothing `shouldBe` Right 50
@@ -6631,10 +6733,18 @@ currentSocialSyncTestTime =
 runSocialSyncIngestHandler
     :: SocialSyncIngestRequest
     -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncPost], [SocialSyncRun])
-runSocialSyncIngestHandler request =
+runSocialSyncIngestHandler =
+    runSocialSyncIngestHandlerWithSetup (pure ())
+
+runSocialSyncIngestHandlerWithSetup
+    :: SqlPersistT IO ()
+    -> SocialSyncIngestRequest
+    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncPost], [SocialSyncRun])
+runSocialSyncIngestHandlerWithSetup setup request =
     runNoLoggingT $ do
         pool <- createSqlitePool ":memory:" 1
         liftIO $ runSqlPool initializeSocialSyncSchema pool
+        liftIO $ runSqlPool setup pool
         let env =
                 Env
                     { envPool = pool
@@ -6746,6 +6856,44 @@ initializeSocialSyncSchema :: SqlPersistT IO ()
 initializeSocialSyncSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"slug\" VARCHAR NULL,\
+        \\"bio\" VARCHAR NULL,\
+        \\"city\" VARCHAR NULL,\
+        \\"hero_image_url\" VARCHAR NULL,\
+        \\"spotify_artist_id\" VARCHAR NULL,\
+        \\"spotify_url\" VARCHAR NULL,\
+        \\"youtube_channel_id\" VARCHAR NULL,\
+        \\"youtube_url\" VARCHAR NULL,\
+        \\"website_url\" VARCHAR NULL,\
+        \\"featured_video_url\" VARCHAR NULL,\
+        \\"genres\" VARCHAR NULL,\
+        \\"highlights\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NULL,\
+        \CONSTRAINT \"unique_artist_profile_party\" UNIQUE (\"artist_party_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"social_sync_post\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"account_id\" INTEGER NULL,\
@@ -6767,7 +6915,9 @@ initializeSocialSyncSchema = do
         \\"view_count\" INTEGER NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
-        \UNIQUE(\"platform\", \"external_post_id\")\
+        \UNIQUE(\"platform\", \"external_post_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"artist_profile_id\") REFERENCES \"artist_profile\"(\"id\")\
         \)"
         []
     rawExecute
@@ -6783,6 +6933,52 @@ initializeSocialSyncSchema = do
         \\"error_message\" VARCHAR NULL\
         \)"
         []
+
+insertSocialSyncPartyFixture :: Int -> Text -> SqlPersistT IO (Key Party)
+insertSocialSyncPartyFixture keyVal displayName =
+    let partyId = toSqlKey (fromIntegral keyVal)
+    in do
+        insertKey
+            partyId
+            Party
+                { partyLegalName = Nothing
+                , partyDisplayName = displayName
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Nothing
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyCreatedAt = currentSocialSyncTestTime
+                }
+        pure partyId
+
+insertSocialSyncArtistProfileFixture :: Int -> Key Party -> SqlPersistT IO (Key ArtistProfile)
+insertSocialSyncArtistProfileFixture keyVal partyId =
+    let profileId = toSqlKey (fromIntegral keyVal)
+    in do
+        insertKey
+            profileId
+            ArtistProfile
+                { artistProfileArtistPartyId = partyId
+                , artistProfileSlug = Just "artist-profile"
+                , artistProfileBio = Nothing
+                , artistProfileCity = Nothing
+                , artistProfileHeroImageUrl = Nothing
+                , artistProfileSpotifyArtistId = Nothing
+                , artistProfileSpotifyUrl = Nothing
+                , artistProfileYoutubeChannelId = Nothing
+                , artistProfileYoutubeUrl = Nothing
+                , artistProfileWebsiteUrl = Nothing
+                , artistProfileFeaturedVideoUrl = Nothing
+                , artistProfileGenres = Nothing
+                , artistProfileHighlights = Nothing
+                , artistProfileCreatedAt = currentSocialSyncTestTime
+                , artistProfileUpdatedAt = Nothing
+                }
+        pure profileId
 
 initializeRadioPresenceSchema :: SqlPersistT IO ()
 initializeRadioPresenceSchema = do
