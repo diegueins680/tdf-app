@@ -3474,6 +3474,10 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+        expect(container.textContent).not.toContain('Incluir inactivos');
       });
     } finally {
       await cleanup();

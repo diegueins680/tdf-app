@@ -749,7 +749,7 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showReviewInactiveSearchEmptyAction = showSearchEmptyState && !includeInactive;
-  const showInactiveFilterAction = !showReviewInactiveSearchEmptyAction
+  const showInactiveFilterAction = !showSearchEmptyState
     && (hasMultipleUsers || (includeInactive && hasUsers));
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
