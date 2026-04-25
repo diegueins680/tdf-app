@@ -606,7 +606,7 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Mostrando 0 de 3 equipos.');
         expect(container.textContent).toContain('Sin coincidencias');
         expect(container.textContent).toContain(
-          'No encontramos equipos que coincidan con tu búsqueda. Ajusta el filtro o vuelve a la vista completa.',
+          'No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de arriba para volver a la vista completa.',
         );
         expect(
           Array.from(container.querySelectorAll('button')).some(
@@ -632,6 +632,60 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Apollo Twin');
         expect(container.textContent).toContain('Genelec 8040');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the empty-search recovery attached to the field instead of duplicating clear or refresh actions', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(true);
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'sin-match');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sin coincidencias');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
       });
     } finally {
       await cleanup();

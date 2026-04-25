@@ -622,22 +622,23 @@ export default function InventoryPage() {
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const showInventorySearch = !assetsQuery.isLoading && !assetsQuery.error && assets.length > 1;
   const normalizedInventorySearch = normalizeInventoryComparisonValue(inventorySearch);
+  const hasActiveInventorySearch = normalizedInventorySearch !== '';
   const grouped = useMemo(
     () =>
-      showInventorySearch && normalizedInventorySearch !== ''
+      showInventorySearch && hasActiveInventorySearch
         ? assets.filter((asset) => assetMatchesInventorySearch(asset, normalizedInventorySearch, roomMap))
         : assets,
-    [assets, normalizedInventorySearch, roomMap, showInventorySearch],
+    [assets, hasActiveInventorySearch, normalizedInventorySearch, roomMap, showInventorySearch],
   );
   const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && assets.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
-  const filteredSingleAsset = showInventorySearch && normalizedInventorySearch !== '' && grouped.length === 1
+  const filteredSingleAsset = showInventorySearch && hasActiveInventorySearch && grouped.length === 1
     ? (grouped[0] ?? null)
     : null;
   const showFilteredSingleAssetSummary =
     !assetsQuery.isLoading && !assetsQuery.error && filteredSingleAsset != null;
-  const showFilteredEmptyState = showInventorySearch && normalizedInventorySearch !== '' && grouped.length === 0;
+  const showFilteredEmptyState = showInventorySearch && hasActiveInventorySearch && grouped.length === 0;
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedConditionSummary = useMemo(() => getSharedInventoryConditionSummary(grouped), [grouped]);
@@ -680,7 +681,7 @@ export default function InventoryPage() {
   ]
     .filter(Boolean)
     .join(' ');
-  const showHeaderRefreshAction = !showFirstAssetEmptyState;
+  const showHeaderRefreshAction = !showFirstAssetEmptyState && !hasActiveInventorySearch;
   const historyAlreadyOpenFromMenu = Boolean(
     actionsMenuTarget && historyViewMode === 'panel' && selected?.assetId === actionsMenuTarget.asset.assetId,
   );
@@ -720,13 +721,13 @@ export default function InventoryPage() {
               inputProps={{ 'aria-label': 'Buscar en inventario' }}
               sx={{ minWidth: { xs: '100%', sm: 320 }, maxWidth: 480 }}
             />
-            {normalizedInventorySearch !== '' && (
+            {hasActiveInventorySearch && (
               <Button size="small" variant="text" onClick={() => setInventorySearch('')} sx={{ alignSelf: 'flex-start' }}>
                 Limpiar búsqueda
               </Button>
             )}
           </Stack>
-          {normalizedInventorySearch !== '' && (
+          {hasActiveInventorySearch && (
             <Typography variant="caption" color="rgba(226,232,240,0.68)">
               {`Mostrando ${grouped.length} de ${assets.length} equipos.`}
             </Typography>
@@ -788,16 +789,9 @@ export default function InventoryPage() {
                 Sin coincidencias
               </Typography>
               <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                No encontramos equipos que coincidan con tu búsqueda. Ajusta el filtro o vuelve a la vista completa.
+                No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de
+                arriba para volver a la vista completa.
               </Typography>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => setInventorySearch('')}
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                Limpiar búsqueda
-              </Button>
             </Stack>
           </CardContent>
         </Card>
