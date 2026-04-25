@@ -371,10 +371,10 @@ parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
     fail "name is required"
   when (toolName /= toolNameClean) $
     fail "name must not include surrounding whitespace"
-  mArgs <- o .:? "arguments"
-  args <- case mArgs of
+  args <- case AKeyMap.lookup "arguments" o of
     Nothing -> pure (object [])
     Just value@(Object _) -> pure value
+    Just Null -> fail "arguments must be an object"
     Just _ -> fail "arguments must be an object"
   pure (toolName, args)
 

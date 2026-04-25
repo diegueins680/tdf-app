@@ -24,6 +24,24 @@ Complete this block before any login/onboarding/navigation testing. If this gate
 Rules:
 - Do not start the six release-critical flows unless the first screen reaches real app UI beyond any runtime error screen.
 - `No script URL provided`, `unsanitizedScriptURLString = (null)`, or any equivalent Metro/bundle failure means smoke did not start.
+- Do not infer missing install, launch, Metro, URL, or artifact details from older runs; every handoff field above must come from the same run that produced the artifact being tested.
+
+### Copy/paste handoff block
+Platform should hand Release this exact filled block in the same report entry that claims the build is smoke-runnable:
+
+```md
+### iOS smoke-runnable handoff
+- Handoff timestamp:
+- Simulator target:
+- Artifact path:
+- Exact install command:
+- Launch contract type: `PACKAGER-BACKED` / `EMBEDDED-JS-BUNDLE`
+- If `PACKAGER-BACKED`: exact Metro/dev-server start command:
+- If `PACKAGER-BACKED`: URL/port and same-run proof it is reachable:
+- If `EMBEDDED-JS-BUNDLE`: exact proof the app launches without Metro:
+- Exact launch command:
+- First-screen expectation before Release starts flow smoke: `APP UI`
+```
 
 ## Test metadata
 - Date/time:

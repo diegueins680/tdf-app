@@ -670,6 +670,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ( object
                     [ "name" .= ("tdf_health_check" :: T.Text)
+                    , "arguments" .= A.Null
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "name" .= ("tdf_health_check" :: T.Text)
                     , "arguments" .= ([1, 2] :: [Int])
                     ]
                 )
