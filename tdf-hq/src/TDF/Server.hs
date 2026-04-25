@@ -2893,7 +2893,23 @@ buildWhatsappCtaFor mNumber courseTitle landingUrl =
 
 resolveWhatsappCtaNumber :: Maybe Text -> Maybe Text
 resolveWhatsappCtaNumber mNumber =
-  T.filter isDigit <$> (mNumber >>= normalizeCourseRegistrationPhoneInput)
+  case mNumber >>= normalizeCourseRegistrationPhoneInput of
+    Just phone ->
+      let digitsOnly = T.filter isDigit phone
+      in if isInternationalWhatsappCtaNumber digitsOnly
+           then Just digitsOnly
+           else Nothing
+    Nothing -> Nothing
+
+isInternationalWhatsappCtaNumber :: Text -> Bool
+isInternationalWhatsappCtaNumber digitsOnly =
+  -- wa.me paths require country-code digits, not local trunk-prefix numbers.
+  case T.uncons digitsOnly of
+    Just (firstDigit, _) ->
+      firstDigit /= '0'
+        && T.length digitsOnly >= 8
+        && T.length digitsOnly <= 15
+    Nothing -> False
 
 saveCourse :: CourseUpsert -> AppM CourseMetadata
 saveCourse Courses.CourseUpsert{..} = do

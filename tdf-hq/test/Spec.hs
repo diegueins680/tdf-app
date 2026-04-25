@@ -2798,9 +2798,15 @@ main = hspec $ do
                 `shouldSatisfy`
                     Data.Text.isPrefixOf "https://wa.me/593991234567?text="
 
-        it "falls back to a numberless WhatsApp CTA when the configured contact is malformed" $ do
+        it "falls back to a numberless WhatsApp CTA when the configured contact is malformed or local-only" $ do
             buildWhatsappCtaFor
                 (Just "593")
+                "Curso de Producción Musical"
+                "https://tdf.example.com/curso/produccion"
+                `shouldSatisfy`
+                    Data.Text.isPrefixOf "https://wa.me/?text="
+            buildWhatsappCtaFor
+                (Just "099 123 4567")
                 "Curso de Producción Musical"
                 "https://tdf.example.com/curso/produccion"
                 `shouldSatisfy`
