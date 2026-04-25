@@ -43,6 +43,7 @@ import {
 import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
+import { getSocialEventsOverviewUiState } from './socialEventsPageState';
 
 interface InvitationState {
   partyId: string;
@@ -450,6 +451,12 @@ export default function SocialEventsPage() {
   }, [venuesQuery.data]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventStatusFilter !== '';
+  const eventOverviewUiState = getSocialEventsOverviewUiState({
+    canCreateEvent: hasSession,
+    eventCount: events.length,
+    filtersActive: eventFiltersActive,
+  });
 
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, SocialEventDTO[]>();
@@ -1293,6 +1300,7 @@ export default function SocialEventsPage() {
         ) : (
           <Alert severity="info">Inicia sesión para crear eventos.</Alert>
         )}
+        {eventOverviewUiState.showCalendar && (
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={1.5}>
@@ -1360,6 +1368,7 @@ export default function SocialEventsPage() {
             </Stack>
           </CardContent>
         </Card>
+        )}
         {feedback && (
           <Alert severity={feedback.kind} onClose={() => setFeedback(null)}>
             {feedback.message}
@@ -1375,7 +1384,7 @@ export default function SocialEventsPage() {
           <Typography>Cargando eventos y venues...</Typography>
         </Stack>
       ) : events.length === 0 ? (
-        <Alert severity="info">No hay eventos disponibles para este filtro.</Alert>
+        <Alert severity="info">{eventOverviewUiState.emptyEventsMessage}</Alert>
       ) : (
         <Grid container spacing={2}>
           {events.map((ev, index) => {
