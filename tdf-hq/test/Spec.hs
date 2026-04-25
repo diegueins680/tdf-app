@@ -2419,6 +2419,21 @@ main = hspec $ do
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
 
+        it "rejects explicit Instagram redirect URIs that do not match the configured callback" $ do
+            cfg <- loadInstagramConfig
+            let assertMismatch rawRedirect =
+                    case resolveInstagramRedirectUri cfg (Just rawRedirect) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must match the configured Instagram OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected mismatched Instagram redirectUri to be rejected, got " <> show value)
+            assertMismatch "https://tdf-app.pages.dev/oauth/instagram/callback"
+            assertMismatch "https://hq.example.com/oauth/instagram/callback"
+
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
             case eitherDecode

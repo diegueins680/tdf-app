@@ -279,11 +279,20 @@ loadFacebookCreds cfg =
 
 resolveInstagramRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
 resolveInstagramRedirectUri cfg mProvided =
-  maybe
-    (Right (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback"))
-    validateInstagramRedirectUri
+  let configuredRedirectUri = resolveConfiguredAppBase cfg <> "/oauth/instagram/callback"
+  in maybe
+    (Right configuredRedirectUri)
+    (validateProvidedRedirectUri configuredRedirectUri)
     (mProvided >>= cleanRedirectText)
   where
+    validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
+      redirectUri <- validateInstagramRedirectUri rawRedirect
+      if redirectUri == configuredRedirectUri
+        then Right redirectUri
+        else
+          Left err400
+            { errBody = "redirectUri must match the configured Instagram OAuth callback URL" }
+
     cleanRedirectText txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
