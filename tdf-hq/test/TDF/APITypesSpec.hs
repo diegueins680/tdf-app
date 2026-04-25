@@ -670,6 +670,9 @@ spec = do
                 "{\"code\":\"oauth code 123\"}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\\u0000\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
                 "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
