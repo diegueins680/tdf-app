@@ -5887,13 +5887,22 @@ main = hspec $ do
                     expectationFailure "Expected later valid webhook text to be selected"
 
     describe "PreviewReq" $ do
-        it "accepts only the canonical preview-link request body" $ do
+        it "accepts canonical preview-link bodies and normalizes user-entered phone formatting up front" $ do
             case eitherDecode "{\"phone\":\"+593991234567\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical preview-link payload to decode, got: " <> err)
                 Right payload ->
                     phone payload `shouldBe` "+593991234567"
+            case eitherDecode "{\"phone\":\" +593 99 123 4567 \"}" of
+                Left err ->
+                    expectationFailure ("Expected formatted preview-link payload to decode, got: " <> err)
+                Right payload ->
+                    phone payload `shouldBe` "+593991234567"
+
+        it "rejects malformed or over-posted preview-link request bodies before the handler can mint ambiguous leads" $ do
             (eitherDecode "{\"phone\":\"+593991234567\",\"status\":\"COMPLETED\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"call me maybe\"}" :: Either String PreviewReq)
                 `shouldSatisfy` isLeft
 
     describe "validateLeadCompletionRequest" $ do

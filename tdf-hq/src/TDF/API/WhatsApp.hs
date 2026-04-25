@@ -30,6 +30,7 @@ import Data.Aeson
   , genericParseJSON
   , rejectUnknownFields
   )
+import Data.Aeson.Types (Parser)
 import Control.Monad (unless)
 import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
 import Data.Int (Int64)
@@ -40,6 +41,7 @@ import Control.Monad.IO.Class (liftIO)
 import Database.PostgreSQL.Simple (Connection, Only(..), execute, query)
 
 import TDF.WhatsApp.Types
+import TDF.WhatsApp.History (normalizeWhatsAppPhone)
 import TDF.WhatsApp.Service
 
 -- GET verification + POST inbound + preview
@@ -54,9 +56,12 @@ type WhatsAppApi =
 
 data PreviewReq = PreviewReq { phone :: Text } deriving (Show, Generic)
 instance FromJSON PreviewReq where
-  parseJSON = genericParseJSON defaultOptions
-    { rejectUnknownFields = True
-    }
+  parseJSON rawValue = do
+    req <- genericParseJSON defaultOptions
+      { rejectUnknownFields = True
+      } rawValue
+    phoneValue <- normalizePreviewPhone (phone req)
+    pure req { phone = phoneValue }
 
 whatsappServer :: Connection -> Server WhatsAppApi
 whatsappServer conn =
@@ -148,6 +153,12 @@ isValidE164 t =
   case T.uncons t of
     Just ('+', rest) -> not (T.null rest) && T.all isDigit rest && T.length rest >= 7 && T.length rest <= 15
     _ -> False
+
+normalizePreviewPhone :: Text -> Parser Text
+normalizePreviewPhone rawPhone =
+  case normalizeWhatsAppPhone rawPhone of
+    Just phoneValue -> pure phoneValue
+    Nothing -> fail "phone must be a valid phone number"
 
 isValidEmail :: Text -> Bool
 isValidEmail candidate =
