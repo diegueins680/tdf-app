@@ -1856,7 +1856,9 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceSourceSummary;
-  const showActiveStatusFilterSummary = hasStatusFilter && (hasEffectiveSlugFilter || hasCustomLimit);
+  const showActiveStatusFilterSummary = hasVisibleRegistrations
+    && hasStatusFilter
+    && (hasEffectiveSlugFilter || hasCustomLimit || loadedRegistrationCount === 1);
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary

@@ -2515,7 +2515,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses a status chip group instead of a dropdown and drops filter onboarding copy after that first filter action', async () => {
+  it('uses a status chip group for discovery, then switches a single-result status filter to one explicit reset path', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
       crId: 102,
@@ -2575,23 +2575,24 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 200,
       });
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel)).toBeTruthy();
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).textContent?.trim()).toBe('Pagado (1)');
-      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).getAttribute('aria-pressed')).toBe('true');
-      expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Estado filtrado');
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Pagado');
+      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
+      expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
-      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, clearPaidStatusFilterLabel));
+      clickButton(getButtonByText(container, 'Mostrar todos los estados'));
       await flushPromises();
       await flushPromises();
     });
@@ -2607,7 +2608,6 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
-      expect(container.textContent).not.toContain(activeStatusFilterHelperText);
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).not.toContain(
@@ -2643,10 +2643,10 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'pending_payment',
         limit: 200,
       });
-      expect(getButtonByAriaLabel(container, clearPendingStatusFilterLabel).textContent?.trim()).toBe(
-        'Pendiente de pago (1)',
-      );
-      expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Estado filtrado');
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Pendiente de pago');
+      expect(container.querySelector(`[aria-label="${clearPendingStatusFilterLabel}"]`)).toBeNull();
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(container.textContent).not.toContain('Grace Hopper');
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
@@ -2655,7 +2655,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps a single filtered result focused on shared context instead of repeating an obvious count', async () => {
+  it('keeps a single filtered result focused on shared context instead of a lone status chip', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
       crId: 102,
@@ -2692,14 +2692,14 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.textContent).toContain('Cohorte disponible');
       expect(container.textContent).toContain('Beatmaking 101 (beatmaking-101)');
-      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).textContent?.trim()).toBe('Pagado (1)');
-      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel).getAttribute('aria-pressed')).toBe('true');
-      expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Estado filtrado');
+      expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Pagado');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
-      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).not.toBeNull();
+      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
+      expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       expect(container.textContent).not.toContain('Mostrando 1 inscripción.');
-      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(0);
+      expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
     });
