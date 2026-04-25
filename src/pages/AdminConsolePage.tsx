@@ -1761,6 +1761,9 @@ export default function AdminConsolePage() {
                     ) : null}
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Roles: {formatEditableRoleList(singleAdminUser.roles)}
+                    </Typography>
                     <Button
                       size="small"
                       onClick={() => setEditingUser(singleAdminUser)}
@@ -1772,7 +1775,7 @@ export default function AdminConsolePage() {
                         textTransform: 'none',
                       }}
                     >
-                      {formatInlineEditableRoleList(singleAdminUser.roles)}
+                      Editar roles
                     </Button>
                     {singleAdminUserLastAccess && (
                       <Typography variant="body2" color="text.secondary">

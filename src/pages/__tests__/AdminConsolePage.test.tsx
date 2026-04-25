@@ -376,6 +376,22 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('separates the single-user role summary from the edit action so first-time admins see both clearly', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Roles: Admin')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Editar roles de Ada Lovelace/i })).toHaveTextContent('Editar roles');
+    });
+
+    expect(screen.queryByRole('button', { name: /^Admin$/i })).not.toBeInTheDocument();
+  });
+
   it('shows a compact first-run checklist when preview cards only duplicate built-in admin sections', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
