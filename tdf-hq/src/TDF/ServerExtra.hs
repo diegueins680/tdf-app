@@ -53,6 +53,7 @@ import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Inventory          (InventoryAPI, InventoryPublicAPI, AssetUploadForm(..))
+import qualified TDF.API.Inventory          as Inventory
 import           TDF.API.Bands              (BandsAPI)
 import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
@@ -1394,9 +1395,16 @@ storeAssetUpload
      )
   => AssetUploadForm
   -> m AssetUploadDTO
-storeAssetUpload AssetUploadForm{..} = do
+storeAssetUpload rawUploadForm = do
+  validatedUploadForm <-
+    case Inventory.validateAssetUploadForm rawUploadForm of
+      Left err ->
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+      Right uploadForm ->
+        pure uploadForm
   Env{envConfig} <- ask
-  let assetsBase = resolveConfiguredAssetsBase envConfig
+  let AssetUploadForm{..} = validatedUploadForm
+      assetsBase = resolveConfiguredAssetsBase envConfig
       assetsRoot = assetsRootDir envConfig
       fallbackName = nonEmptyText (fdFileName aufFile)
       requestedName = aufName >>= nonEmptyText

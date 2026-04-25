@@ -725,6 +725,30 @@ spec = do
             , aufName = Just "checkout-proof.jpg"
             }
 
+    it "revalidates upload shape at the handler boundary so forged non-image forms cannot bypass multipart checks" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      let invalidUploadForm =
+            AssetUploadForm
+              { aufFile = (mkAssetUploadFile "checkout-proof.jpg") { fdFileCType = "application/pdf" }
+              , aufName = Just "checkout-proof.jpg"
+              }
+      result <- runInventoryPublicUploadHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            , assetStatus = Active
+            }))
+        canonicalToken
+        invalidUploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Asset upload must be a raster image"
+        Right value ->
+          expectationFailure ("Expected forged non-image upload form to be rejected, got " <> show value)
+
     it "rejects uploads when an active asset still has an open public checkout so proof files cannot mask inconsistent state" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
