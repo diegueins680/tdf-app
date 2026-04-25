@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   Menu,
   MenuItem,
   Stack,
@@ -22,6 +23,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
@@ -773,22 +775,26 @@ export default function InventoryPage() {
       {assetsQuery.error && <Alert severity="error">No se pudo cargar inventario.</Alert>}
       {showInventorySearch && (
         <Stack spacing={0.75} mb={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-            <TextField
-              size="small"
-              label="Buscar en inventario"
-              value={inventorySearch}
-              onChange={(event) => setInventorySearch(event.target.value)}
-              placeholder="Equipo, categoría, ubicación, estado o tenencia"
-              inputProps={{ 'aria-label': 'Buscar en inventario' }}
-              sx={{ minWidth: { xs: '100%', sm: 320 }, maxWidth: 480 }}
-            />
-            {hasActiveInventorySearch && (
-              <Button size="small" variant="text" onClick={() => setInventorySearch('')} sx={{ alignSelf: 'flex-start' }}>
-                {searchResetActionLabel}
-              </Button>
-            )}
-          </Stack>
+          <TextField
+            size="small"
+            label="Buscar en inventario"
+            value={inventorySearch}
+            onChange={(event) => setInventorySearch(event.target.value)}
+            placeholder="Equipo, categoría, ubicación, estado o tenencia"
+            inputProps={{ 'aria-label': 'Buscar en inventario' }}
+            InputProps={{
+              endAdornment: hasActiveInventorySearch ? (
+                <InputAdornment position="end">
+                  <Tooltip title={searchResetActionLabel}>
+                    <IconButton edge="end" size="small" aria-label={searchResetActionLabel} onClick={() => setInventorySearch('')}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </InputAdornment>
+              ) : null,
+            }}
+            sx={{ minWidth: { xs: '100%', sm: 320 }, maxWidth: 480 }}
+          />
           {showFilteredResultsCount && (
             <Typography variant="caption" color="rgba(226,232,240,0.68)">
               {`Mostrando ${grouped.length} de ${assets.length} equipos.`}
