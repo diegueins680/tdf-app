@@ -2520,6 +2520,8 @@ main = hspec $ do
             assertInvalid "user.@example.com"
             assertInvalid "user..name@example.com"
             assertInvalid "user()@example.com"
+            assertInvalid (Data.Text.replicate 65 "a" <> "@example.com")
+            assertInvalid ("user@" <> Data.Text.replicate 64 "a" <> ".com")
 
         it "rejects oversized feedback contact emails before storage and notification" $
             case validateOptionalFeedbackContactEmail

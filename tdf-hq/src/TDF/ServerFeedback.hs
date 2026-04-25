@@ -241,6 +241,7 @@ isValidFeedbackEmail candidate =
 isValidFeedbackEmailLocalPart :: Text -> Bool
 isValidFeedbackEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxFeedbackEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
@@ -253,12 +254,19 @@ isValidFeedbackEmailLocalChar c =
 isValidDomainLabel :: Text -> Bool
 isValidDomainLabel label =
   not (T.null label)
+    && T.length label <= maxFeedbackEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidDomainChar label
 
 isValidDomainChar :: Char -> Bool
 isValidDomainChar c = isAsciiLower c || isDigit c || c == '-'
+
+maxFeedbackEmailLocalPartChars :: Int
+maxFeedbackEmailLocalPartChars = 64
+
+maxFeedbackEmailDomainLabelChars :: Int
+maxFeedbackEmailDomainLabelChars = 63
 
 sanitizeFeedbackAttachmentFileName :: Text -> Text
 sanitizeFeedbackAttachmentFileName rawName =
