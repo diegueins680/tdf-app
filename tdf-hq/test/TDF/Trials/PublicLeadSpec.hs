@@ -1163,6 +1163,31 @@ spec = do
         Right value ->
           expectationFailure ("Expected inverted teacher class window to be rejected, got " <> show value)
 
+  describe "private class session filtering" $ do
+    it "rejects non-positive subject, teacher, or student filters before querying class history" $ do
+      let assertRejected expectedMessage rawSubjectId rawTeacherId rawStudentId = do
+            result <- try $ runTrialsInMemory $
+              privateClassSessionsListHandler rawSubjectId rawTeacherId rawStudentId Nothing Nothing Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid class session filters to be rejected, got " <> show value)
+      assertRejected "subjectId must be a positive integer" (Just 0) Nothing Nothing
+      assertRejected "teacherId must be a positive integer" Nothing (Just (-3)) Nothing
+      assertRejected "studentId must be a positive integer" Nothing Nothing (Just 0)
+
+    it "rejects inverted class session windows instead of silently returning no classes" $ do
+      result <- try $ runTrialsInMemory $
+        privateClassSessionsListHandler Nothing Nothing Nothing (Just slotEnd) (Just slotStart) Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right value ->
+          expectationFailure ("Expected inverted class session window to be rejected, got " <> show value)
+
   describe "private package filtering" $ do
     it "rejects non-positive subject filters before querying packages" $ do
       let assertRejected rawSubjectId = do
@@ -2141,6 +2166,20 @@ privateTeacherClassesHandler =
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> teacherClassesH :<|> _ =
           privateTrialsServer adminUser
   in teacherClassesH
+
+privateClassSessionsListHandler
+  :: Maybe Int
+  -> Maybe Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> SqlPersistT IO [ClassSessionDTO]
+privateClassSessionsListHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> classSessionsListH :<|> _ =
+          privateTrialsServer adminUser
+  in classSessionsListH
 
 privatePackagesHandler :: Maybe Int -> SqlPersistT IO [PackageDTO]
 privatePackagesHandler =

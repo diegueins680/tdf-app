@@ -651,6 +651,24 @@ validateAvailabilityIdInput :: Int -> Either ServerError Int
 validateAvailabilityIdInput =
   validatePositiveIntField "availabilityId"
 
+validateClassSessionListFilters
+  :: Maybe Int
+  -> Maybe Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Either ServerError (Maybe Int, Maybe Int, Maybe Int, Maybe UTCTime, Maybe UTCTime)
+validateClassSessionListFilters rawSubjectId rawTeacherId rawStudentId mFrom mTo = do
+  subjectId <- traverse (validatePositiveIntField "subjectId") rawSubjectId
+  teacherId <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+  studentId <- traverse (validatePositiveIntField "studentId") rawStudentId
+  case (mFrom, mTo) of
+    (Just fromTs, Just toTs)
+      | fromTs > toTs ->
+          Left err400 { errBody = "from must be on or before to" }
+    _ -> pure ()
+  Right (subjectId, teacherId, studentId, mFrom, mTo)
+
 validateTeacherClassesFilters
   :: Int
   -> Maybe Int
@@ -1609,18 +1627,20 @@ privateTrialsServer user@AuthedUser{..} =
     classSessionsListH :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [ClassSessionDTO]
     classSessionsListH mSubject mTeacher mStudent mFrom mTo mStatus = do
       ensureSchoolAccess
+      (subjectIdFilter, teacherIdFilter, studentIdFilter, fromFilter, toFilter) <-
+        either (liftIO . throwIO) pure (validateClassSessionListFilters mSubject mTeacher mStudent mFrom mTo)
       when (not isSchoolStaff) $
-        case mTeacher of
+        case teacherIdFilter of
           Just tid | intKey tid /= auPartyId -> liftIO $ throwIO err403
           _ -> pure ()
       let filters =
-            maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) mSubject
+            maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) subjectIdFilter
             ++ if isSchoolStaff
-                then maybe [] (\tid -> [ClassSessionTeacherId ==. intKey tid]) mTeacher
+                then maybe [] (\tid -> [ClassSessionTeacherId ==. intKey tid]) teacherIdFilter
                 else [ClassSessionTeacherId ==. auPartyId]
-            ++ maybe [] (\pid -> [ClassSessionStudentId ==. intKey pid]) mStudent
-            ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) mFrom
-            ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) mTo
+            ++ maybe [] (\pid -> [ClassSessionStudentId ==. intKey pid]) studentIdFilter
+            ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) fromFilter
+            ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) toFilter
       sessions <- selectList filters [Asc ClassSessionStartAt]
       dtos <- buildClassSessionDTOs sessions
       let normalized = T.toLower . T.strip
