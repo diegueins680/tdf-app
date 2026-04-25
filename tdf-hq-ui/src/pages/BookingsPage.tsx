@@ -424,6 +424,10 @@ export default function BookingsPage() {
     setManualServiceFallbackOpen(false);
     setTemplate('');
   }, []);
+  const openCreateContactDialog = useCallback(() => {
+    setCreateContactError(null);
+    setCreateContactOpen(true);
+  }, []);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
@@ -1122,18 +1126,23 @@ const openDialogForRange = (start: Date, end: Date) => {
                 noOptionsText="Sin clientes en el catálogo"
               />
             ) : (
-              <Alert severity="info" variant="outlined">
+              <Alert
+                severity="info"
+                variant="outlined"
+                action={customerFieldState.showQuickCreateAction && customerFieldState.showQuickCreateInsideAlert ? (
+                  <Button color="inherit" size="small" onClick={openCreateContactDialog}>
+                    {customerFieldState.quickCreateLabel}
+                  </Button>
+                ) : undefined}
+              >
                 {customerFieldState.helperText}
               </Alert>
             )}
-            {customerFieldState.showQuickCreateAction && (
+            {customerFieldState.showQuickCreateAction && !customerFieldState.showQuickCreateInsideAlert && (
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => {
-                  setCreateContactError(null);
-                  setCreateContactOpen(true);
-                }}
+                onClick={openCreateContactDialog}
                 sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
               >
                 {customerFieldState.quickCreateLabel}
