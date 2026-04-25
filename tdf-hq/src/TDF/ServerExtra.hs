@@ -1971,6 +1971,8 @@ pipelinesServer user rawType =
         Just raw  -> Just <$> resolveStage kind (Just raw)
       let artistUpdate = normalizeOptionalTextFieldUpdate (pcuArtist req)
           notesUpdate = normalizeOptionalTextFieldUpdate (pcuNotes req)
+      either throwError pure
+        (validatePipelineCardPatchIntent titleUpdate artistUpdate stageUpdate (pcuSortOrder req) notesUpdate)
       now <- liftIO getCurrentTime
       result <- withPool $ do
         mEntity <- getEntity cardKey
@@ -2137,6 +2139,18 @@ normalizePipelineCardTitleUpdate (Just rawTitle) =
 
 normalizeOptionalTextFieldUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
 normalizeOptionalTextFieldUpdate = fmap normalizeOptionalTextField
+
+validatePipelineCardPatchIntent
+  :: Maybe Text
+  -> Maybe (Maybe Text)
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe (Maybe Text)
+  -> Either ServerError ()
+validatePipelineCardPatchIntent Nothing Nothing Nothing Nothing Nothing =
+  Left err400 { errBody = "Pipeline card patch requires at least one field to update" }
+validatePipelineCardPatchIntent _ _ _ _ _ =
+  Right ()
 
 normalizeAssetName :: Text -> Either ServerError Text
 normalizeAssetName rawName =

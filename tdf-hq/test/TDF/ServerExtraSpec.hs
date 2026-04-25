@@ -1269,6 +1269,33 @@ spec = do
         Right value ->
           expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
 
+    it "rejects empty patch payloads instead of silently returning unchanged pipeline cards" $ do
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      patchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Just "Ada"
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 1
+              , ME.pipelineCardNotes = Just "Needs quote"
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate Nothing Nothing Nothing Nothing Nothing)
+      case patchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Pipeline card patch requires at least one field to update"
+        Right value ->
+          expectationFailure ("Expected empty pipeline card patch to fail, got " <> show value)
+
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
       validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
