@@ -3653,6 +3653,50 @@ describe('AdminConsolePage', () => {
     expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
   });
 
+  it('merges repeated audit ids so one richer event keeps the compact first-event summary', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: '   ',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
+      expect(screen.getByText(/Actor:\s*Usuario #101/i)).toBeInTheDocument();
+      expect(screen.getByText(/Detalle:\s*Admin -> Admin, Manager/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+  });
+
   it('hides empty audit columns until one event adds actor or detail context', async () => {
     mockAuditLogs.mockResolvedValue([
       {

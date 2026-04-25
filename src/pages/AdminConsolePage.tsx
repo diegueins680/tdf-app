@@ -473,26 +473,85 @@ function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
   return [...usersById.values()];
 }
 
+function preferRicherAuditDiff(primary?: string | null, fallback?: string | null) {
+  const normalizedPrimary = primary?.trim() ?? '';
+  const normalizedFallback = fallback?.trim() ?? '';
+
+  if (normalizedPrimary === '') {
+    return fallback ?? primary;
+  }
+
+  if (normalizedFallback === '') {
+    return primary;
+  }
+
+  return normalizedFallback.length > normalizedPrimary.length ? fallback : primary;
+}
+
+function mergeAuditEntries(primary: AuditLogEntry, duplicate: AuditLogEntry): AuditLogEntry {
+  return {
+    ...primary,
+    auditId: preferNonEmptyAdminUserText(primary.auditId, duplicate.auditId) ?? primary.auditId,
+    actorId: primary.actorId ?? duplicate.actorId,
+    entity: preferNonEmptyAdminUserText(primary.entity, duplicate.entity) ?? primary.entity,
+    entityId: preferNonEmptyAdminUserText(primary.entityId, duplicate.entityId) ?? primary.entityId,
+    action: preferNonEmptyAdminUserText(primary.action, duplicate.action) ?? primary.action,
+    diff: preferRicherAuditDiff(primary.diff, duplicate.diff),
+    createdAt: preferNonEmptyAdminUserText(primary.createdAt, duplicate.createdAt) ?? primary.createdAt,
+  };
+}
+
+function getAuditEntryFingerprint(entry: AuditLogEntry) {
+  return [
+    entry.entity,
+    entry.entityId,
+    entry.action,
+    entry.actorId ?? '',
+    entry.diff ?? '',
+    entry.createdAt,
+  ].join('::');
+}
+
 function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {
-  const seenEntries = new Set<string>();
+  const dedupedEntries: AuditLogEntry[] = [];
+  const entryIndexByAuditId = new Map<string, number>();
+  const entryIndexByFingerprint = new Map<string, number>();
 
-  return entries.filter((entry) => {
-    const fingerprint = [
-      entry.entity,
-      entry.entityId,
-      entry.action,
-      entry.actorId ?? '',
-      entry.diff ?? '',
-      entry.createdAt,
-    ].join('::');
+  entries.forEach((entry) => {
+    const auditIdKey = entry.auditId?.trim() ?? '';
 
-    if (seenEntries.has(fingerprint)) {
-      return false;
+    if (auditIdKey !== '') {
+      const existingIndex = entryIndexByAuditId.get(auditIdKey);
+
+      if (existingIndex != null) {
+        const existingEntry = dedupedEntries[existingIndex];
+
+        if (existingEntry) {
+          const mergedEntry = mergeAuditEntries(existingEntry, entry);
+          dedupedEntries[existingIndex] = mergedEntry;
+          entryIndexByFingerprint.set(getAuditEntryFingerprint(mergedEntry), existingIndex);
+        }
+
+        return;
+      }
     }
 
-    seenEntries.add(fingerprint);
-    return true;
+    const fingerprint = getAuditEntryFingerprint(entry);
+
+    if (entryIndexByFingerprint.has(fingerprint)) {
+      return;
+    }
+
+    const index = dedupedEntries.length;
+    dedupedEntries.push(entry);
+    entryIndexByFingerprint.set(fingerprint, index);
+
+    if (auditIdKey !== '') {
+      entryIndexByAuditId.set(auditIdKey, index);
+    }
   });
+
+  return dedupedEntries;
 }
 
 function formatDate(value: string) {
