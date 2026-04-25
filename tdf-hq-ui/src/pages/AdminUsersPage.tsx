@@ -205,6 +205,14 @@ const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => 
   return `Ver inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
 };
 
+const buildExpandedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
+  if (users.length !== 1) {
+    return 'Ocultar';
+  }
+
+  return `Ocultar inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
+};
+
 const getUserAccessSummary = (values: string[]) =>
   normalizeAccessValues(values)
     .join(', ');
@@ -755,6 +763,12 @@ export default function AdminUsersPage() {
     () => buildCollapsedInactiveUsersToggleLabel(inactiveVisibleUsers),
     [inactiveVisibleUsers],
   );
+  const expandedInactiveUsersToggleLabel = useMemo(
+    () => buildExpandedInactiveUsersToggleLabel(inactiveVisibleUsers),
+    [inactiveVisibleUsers],
+  );
+  const showInactiveUsersGroupLabel = showInactiveUsersList
+    && !(shouldCollapseInactiveUsers && visibleInactiveUsersCount === 1);
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
@@ -1083,7 +1097,7 @@ export default function AdminUsersPage() {
                       justifyContent="space-between"
                       alignItems={{ xs: 'flex-start', sm: 'center' }}
                     >
-                      {showInactiveUsersList && (
+                      {showInactiveUsersGroupLabel && (
                         <Typography
                           data-testid="admin-users-inactive-group-label"
                           variant="overline"
@@ -1104,7 +1118,7 @@ export default function AdminUsersPage() {
                             : `Ver ${inactiveUsersToggleTarget}`}
                         >
                           {showInactiveUsers
-                            ? 'Ocultar'
+                            ? expandedInactiveUsersToggleLabel
                             : collapsedInactiveUsersToggleLabel}
                         </Button>
                       )}
