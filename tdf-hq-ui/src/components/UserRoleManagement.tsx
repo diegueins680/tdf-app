@@ -82,6 +82,7 @@ const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 const ROLES_COLUMN_LABEL = 'Roles';
 const EDITABLE_ROLES_LABEL = 'Roles editables';
 const EMPTY_ROLES_LABEL = 'Sin roles';
+const EMPTY_CONTACT_LABEL = 'Sin email ni teléfono';
 const INLINE_ROLE_CHIP_LIMIT = 3;
 
 const normalizeContactValue = (value?: string | null) => {
@@ -473,6 +474,11 @@ export default function UserRoleManagement() {
                         {singleUserContactSummary}
                       </Typography>
                     )}
+                    {!singleUserContactSummary && (
+                      <Typography variant="body2" color="text.secondary">
+                        {EMPTY_CONTACT_LABEL}
+                      </Typography>
+                    )}
                   </Stack>
                   <Stack spacing={0.75} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                     {singleUser.status === 'Inactive' && (
@@ -546,7 +552,7 @@ export default function UserRoleManagement() {
                               </Typography>
                             ) : (
                               <Typography variant="body2" color="text.secondary">
-                                Sin email ni teléfono
+                                {EMPTY_CONTACT_LABEL}
                               </Typography>
                             )}
                           </TableCell>

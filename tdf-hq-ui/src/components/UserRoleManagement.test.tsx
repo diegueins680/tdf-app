@@ -385,6 +385,38 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('keeps a single first-user summary explicit when contact info is still missing', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 302,
+        name: 'Grace Hopper',
+        email: '   ',
+        phone: null,
+        roles: ['Admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain(
+          'Primer usuario administrable. Revisa sus datos clave y edita roles aquí; cuando exista el segundo, volverá la tabla comparativa.',
+        );
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain('Sin email ni teléfono');
+        expect(container.textContent).not.toContain('undefined');
+        expect(container.textContent).not.toContain('null');
+        expect(container.textContent).not.toContain('grace@example.com');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('deduplicates repeated API roles so the landing summary shows one stable access snapshot per user', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
