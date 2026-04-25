@@ -81,13 +81,26 @@ instance ToJSON ArtistSocialLinksDTO where
     ]
 
 instance FromJSON ArtistSocialLinksDTO where
-  parseJSON = withObject "ArtistSocialLinksDTO" $ \o ->
+  parseJSON = withObject "ArtistSocialLinksDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "ArtistSocialLinksDTO"
+      artistSocialLinksAllowedKeys
+      o
     ArtistSocialLinksDTO
       <$> o .:? "spotify"
       <*> o .:? "instagram"
       <*> o .:? "twitter"
       <*> o .:? "youtube"
       <*> o .:? "soundcloud"
+
+artistSocialLinksAllowedKeys :: [Text]
+artistSocialLinksAllowedKeys =
+  [ "spotify"
+  , "instagram"
+  , "twitter"
+  , "youtube"
+  , "soundcloud"
+  ]
 
 data ArtistDTO = ArtistDTO
   { artistId       :: Maybe Text
@@ -103,6 +116,10 @@ data ArtistDTO = ArtistDTO
 instance ToJSON ArtistDTO
 instance FromJSON ArtistDTO where
   parseJSON = withObject "ArtistDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "ArtistDTO"
+      artistAllowedKeys
+      o
     artistId <- o .:? "artistId"
     artistPartyId <- o .:? "artistPartyId"
     mName <- o .:? "artistName"
@@ -123,6 +140,19 @@ instance FromJSON ArtistDTO where
       , artistCreatedAt = artistCreatedAt
       , artistUpdatedAt = artistUpdatedAt
       }
+
+artistAllowedKeys :: [Text]
+artistAllowedKeys =
+  [ "artistId"
+  , "artistPartyId"
+  , "artistName"
+  , "artistGenres"
+  , "artistBio"
+  , "artistAvatarUrl"
+  , "artistSocialLinks"
+  , "artistCreatedAt"
+  , "artistUpdatedAt"
+  ]
 
 data ArtistFollowerDTO = ArtistFollowerDTO
   { afFollowId         :: Maybe Text

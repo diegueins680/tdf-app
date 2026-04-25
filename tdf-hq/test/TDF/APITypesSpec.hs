@@ -1313,6 +1313,25 @@ spec = do
                     :: Either String SocialEvents.EventDTO)
                 `shouldSatisfy` isLeft
 
+        it "rejects unexpected nested artist and social-link keys before event handlers silently drop artist intent" $ do
+            case (eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenres\":[\"electronic\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}"
+                    :: Either String SocialEvents.EventDTO) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical nested event artist payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventArtists payload `shouldSatisfy` (not . null)
+
+            (eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenresTypo\":[\"electronic\"]}]}"
+                    :: Either String SocialEvents.EventDTO)
+                `shouldSatisfy` isLeft
+            (eitherDecode
+                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\",\"bandcamp\":\"https://ada.bandcamp.com\"}}]}"
+                    :: Either String SocialEvents.EventDTO)
+                `shouldSatisfy` isLeft
+
     describe "social venue request FromJSON" $ do
         it "accepts canonical venue create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
             case (eitherDecode
