@@ -3040,9 +3040,8 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
@@ -3056,6 +3055,7 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByText(/Roles · Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en el rol para editarlo aquí/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Edita sus roles aquí/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/^Roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Último acceso:/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
       expect(screen.queryByText(/Revisa esta cuenta aquí/i)).not.toBeInTheDocument();
@@ -3134,9 +3134,8 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
@@ -3192,9 +3191,8 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
     });
@@ -3218,9 +3216,8 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });

@@ -838,11 +838,15 @@ function getNavigationEquivalentRoleGroups(roles?: readonly RoleKey[] | null) {
 function buildAdminUsersSectionDescription({
   showLastAccessColumn,
   showStatusColumn,
+  isSingleUserSummary,
 }: {
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
+  isSingleUserSummary?: boolean;
 }) {
-  const editHint = 'Haz clic en un rol para editarlo desde esta misma vista.';
+  const editHint = isSingleUserSummary
+    ? 'Selecciona el rol actual para editar permisos desde esta misma vista.'
+    : 'Haz clic en un rol para editarlo desde esta misma vista.';
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -1181,6 +1185,7 @@ export default function AdminConsolePage() {
     : buildAdminUsersSectionDescription({
       showLastAccessColumn: showUsersLastAccessColumn,
       showStatusColumn: showUsersStatusColumn,
+      isSingleUserSummary: singleAdminUser != null && !showUsersTable,
     });
   const auditSectionDescription = showGettingStartedGuidance
     ? null
@@ -1655,9 +1660,6 @@ export default function AdminConsolePage() {
                     ) : null}
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {ADMIN_USER_ROLE_COLUMN_HEADER}
-                    </Typography>
                     <Button
                       size="small"
                       onClick={() => setEditingUser(singleAdminUser)}
