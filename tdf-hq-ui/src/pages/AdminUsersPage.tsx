@@ -493,13 +493,19 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   const hasNonDefaultModules = users.length > 1
     && moduleSummaries.some((summary) => summary && !isSameAccessSummary(summary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY))
     && getSharedAccessSummary(moduleSummaries) === '';
+  const modulesAddDistinctSearchValue = !hasNonDefaultRoles || moduleSummaries.some((moduleSummary, index) => {
+    if (!moduleSummary.trim()) return false;
+
+    const roleSummary = roleSummaries[index]?.trim() ?? '';
+    return roleSummary === '' || !isSameAccessSummary(moduleSummary, roleSummary);
+  });
 
   const terms: string[] = [];
   if (hasNameIdentity) terms.push('Nombre');
   if (hasDistinctUsername) terms.push(hasNameIdentity ? 'usuario' : 'Usuario');
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
   if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
-  if (hasNonDefaultModules) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
 
   return formatSearchPlaceholderTerms(terms);
 };

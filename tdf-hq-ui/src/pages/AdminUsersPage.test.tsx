@@ -3608,6 +3608,50 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('drops the duplicated module hint when roles and modules mirror each other per user', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: ['Manager'],
+        modules: ['Manager'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryPhone: '+593999000444',
+        primaryEmail: null,
+        roles: ['Teacher'],
+        modules: ['Teacher'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['ReadOnly'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits unavailable contact and access dimensions from the first-time search placeholder', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
