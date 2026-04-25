@@ -217,6 +217,21 @@ function buildCurrentCheckoutContactSummary({
     .join(' · ');
 }
 
+function assetMatchesInventorySearch(asset: AssetDTO, query: string, roomMap: Map<string, RoomDTO>) {
+  if (query === '') return true;
+
+  const searchableValues = [
+    asset.name,
+    asset.category,
+    asset.location,
+    asset.condition,
+    getInventoryStatusLabel(asset.status),
+    formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap),
+  ];
+
+  return searchableValues.some((value) => normalizeInventoryComparisonValue(value).includes(query));
+}
+
 const INVENTORY_LOCATION_SETUP_GUIDANCE =
   'La ubicación aparecerá en la tabla cuando al menos un equipo tenga una ubicación registrada.';
 const INVENTORY_CHECKOUT_CONTEXT_GUIDANCE =
@@ -303,6 +318,7 @@ export default function InventoryPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [checkoutPhotoUploading, setCheckoutPhotoUploading] = useState(false);
   const [checkinPhotoUploading, setCheckinPhotoUploading] = useState(false);
+  const [inventorySearch, setInventorySearch] = useState('');
 
   const assetHistoryMutation = useMutation({
     mutationFn: (assetId: string) => Inventory.history(assetId),
@@ -457,13 +473,22 @@ export default function InventoryPage() {
   };
 
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
-  const grouped = useMemo(() => assets, [assets]);
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const roomMap = useMemo(() => new Map(roomOptions.map((room) => [room.roomId, room])), [roomOptions]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
-  const singleAsset = grouped.length === 1 ? (grouped[0] ?? null) : null;
-  const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && grouped.length === 0;
+  const showInventorySearch = !assetsQuery.isLoading && !assetsQuery.error && assets.length > 1;
+  const normalizedInventorySearch = normalizeInventoryComparisonValue(inventorySearch);
+  const grouped = useMemo(
+    () =>
+      showInventorySearch && normalizedInventorySearch !== ''
+        ? assets.filter((asset) => assetMatchesInventorySearch(asset, normalizedInventorySearch, roomMap))
+        : assets,
+    [assets, normalizedInventorySearch, roomMap, showInventorySearch],
+  );
+  const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
+  const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && assets.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
+  const showFilteredEmptyState = showInventorySearch && normalizedInventorySearch !== '' && grouped.length === 0;
   const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
   const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
   const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
@@ -574,6 +599,31 @@ export default function InventoryPage() {
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
       {assetsQuery.isLoading && <Typography>Cargando inventario…</Typography>}
       {assetsQuery.error && <Alert severity="error">No se pudo cargar inventario.</Alert>}
+      {showInventorySearch && (
+        <Stack spacing={0.75} mb={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+            <TextField
+              size="small"
+              label="Buscar en inventario"
+              value={inventorySearch}
+              onChange={(event) => setInventorySearch(event.target.value)}
+              placeholder="Equipo, categoría, ubicación, estado o tenencia"
+              inputProps={{ 'aria-label': 'Buscar en inventario' }}
+              sx={{ minWidth: { xs: '100%', sm: 320 }, maxWidth: 480 }}
+            />
+            {normalizedInventorySearch !== '' && (
+              <Button size="small" variant="text" onClick={() => setInventorySearch('')} sx={{ alignSelf: 'flex-start' }}>
+                Limpiar búsqueda
+              </Button>
+            )}
+          </Stack>
+          {normalizedInventorySearch !== '' && (
+            <Typography variant="caption" color="rgba(226,232,240,0.68)">
+              {`Mostrando ${grouped.length} de ${assets.length} equipos.`}
+            </Typography>
+          )}
+        </Stack>
+      )}
 
       {showFirstAssetEmptyState ? (
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -693,6 +743,27 @@ export default function InventoryPage() {
                   {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
                 </Button>
               </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : showFilteredEmptyState ? (
+        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Typography variant="h6" fontWeight={700}>
+                Sin coincidencias
+              </Typography>
+              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                No encontramos equipos que coincidan con tu búsqueda. Ajusta el filtro o vuelve a la vista completa.
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setInventorySearch('')}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Limpiar búsqueda
+              </Button>
             </Stack>
           </CardContent>
         </Card>

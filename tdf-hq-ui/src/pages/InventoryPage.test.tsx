@@ -158,6 +158,17 @@ const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabe
   });
 };
 
+const setInputValue = async (input: HTMLInputElement, value: string) => {
+  await act(async () => {
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    nativeValueSetter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 describe('InventoryPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -523,6 +534,100 @@ describe('InventoryPage', () => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('filters the busy inventory view with one search field and a no-results reset path', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Genelec 8040',
+        category: 'Monitor',
+        location: 'Bodega',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).toContain('Genelec 8040');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Mostrando 1 de 3 equipos.');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).not.toContain('Neumann U87');
+        expect(container.textContent).not.toContain('Genelec 8040');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('[aria-label="Abrir check-in de Apollo Twin"]')).not.toBeNull();
+      });
+
+      await setInputValue(searchInput!, 'zzzz');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain('Mostrando 0 de 3 equipos.');
+        expect(container.textContent).toContain('Sin coincidencias');
+        expect(container.textContent).toContain(
+          'No encontramos equipos que coincidan con tu búsqueda. Ajusta el filtro o vuelve a la vista completa.',
+        );
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+          ),
+        ).toBe(true);
+      });
+
+      await act(async () => {
+        const clearButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+        );
+        clearButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(container.textContent).not.toContain('Mostrando 0 de 3 equipos.');
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).toContain('Genelec 8040');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
       });
     } finally {
       await cleanup();
