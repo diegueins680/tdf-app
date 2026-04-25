@@ -962,11 +962,12 @@ describe('MarketplaceOrdersPage', () => {
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.textContent).not.toContain('1 pagados');
         expect(container.textContent).not.toContain('1 pendientes');
         expect(container.textContent).not.toContain('0 pendientes');
-        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -1002,7 +1003,8 @@ describe('MarketplaceOrdersPage', () => {
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(searchInput.value).toBe('grace');
         expect(countLabelsByText(container, 'Vista rápida')).toBe(0);
         expect(container.textContent).not.toContain('Busca: grace');
@@ -1063,7 +1065,8 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('grace');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
       });
@@ -1114,7 +1117,8 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('ada');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       });
 
@@ -1135,7 +1139,8 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('ada');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
         expect(queryActionByText(container, 'Limpiar otros filtros')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
@@ -1182,7 +1187,8 @@ describe('MarketplaceOrdersPage', () => {
       await setInputValue(searchInput, '999000111');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('Grace Hopper');
         expect(container.textContent).not.toContain('No hay órdenes para la búsqueda actual.');
@@ -1601,6 +1607,51 @@ describe('MarketplaceOrdersPage', () => {
         expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
         expect(queryActionByText(document.body, 'Registrar fecha de pago ahora')).toBeNull();
         expect(queryActionByText(document.body, 'Guardar cambios')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces a one-row marketplace search result with the order summary instead of keeping table export chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, 'grace@example.com');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'La búsqueda dejó una sola orden visible. Revísala aquí y usa Limpiar dentro del campo para volver a comparar pedidos.',
+        );
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain('Pedido: order-2');
+        expect(container.textContent).toContain('Comprador: Grace Hopper');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(container.querySelector('tbody tr')).toBeNull();
       });
     } finally {
       await cleanup();

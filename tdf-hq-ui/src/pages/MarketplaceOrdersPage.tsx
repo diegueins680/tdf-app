@@ -346,10 +346,20 @@ export default function MarketplaceOrdersPage() {
   const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
-  const singleVisibleOrder = showSingleOrderFocusedState ? (filtered[0] ?? null) : null;
+  const showSingleVisibleOrderSummary =
+    !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 1;
+  const showFilteredSingleOrderSummary = showSingleVisibleOrderSummary && !showSingleOrderFocusedState;
+  const singleVisibleOrder = showSingleVisibleOrderSummary ? (filtered[0] ?? null) : null;
+  const singleVisibleOrderSummaryText = showSingleOrderFocusedState
+    ? 'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
+    : showSearchWithExtraFilters
+      ? 'La búsqueda y los filtros dejaron una sola orden visible. Revísala aquí y usa Limpiar dentro del campo o Limpiar otros filtros para volver a comparar pedidos.'
+      : showSearchOwnedFilterHelper
+        ? 'La búsqueda dejó una sola orden visible. Revísala aquí y usa Limpiar dentro del campo para volver a comparar pedidos.'
+        : 'Los filtros dejaron una sola orden visible. Revísala aquí y usa Limpiar filtros para volver a comparar pedidos.';
   const showOrderListHeaderActions =
     !showFirstOrderEmptyState
-    && !showSingleOrderFocusedState
+    && !showSingleVisibleOrderSummary
     && (showVisibleOrderBreakdown || showExportCsvAction);
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
   const showQuickViewControl = !filtersDirty;
@@ -845,8 +855,8 @@ export default function MarketplaceOrdersPage() {
           subheader={
             showFirstOrderEmptyState
               ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
-              : showSingleOrderFocusedState
-                ? 'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
+              : showSingleVisibleOrderSummary
+                ? singleVisibleOrderSummaryText
                 : 'Haz clic en una fila para revisar estado, pago y datos del comprador.'
           }
           action={showOrderListHeaderActions ? (
@@ -954,7 +964,7 @@ export default function MarketplaceOrdersPage() {
               {emptyOrdersMessage}
             </Alert>
           )}
-          {sharedVisibleCurrencyCaption && (
+          {sharedVisibleCurrencyCaption && !showFilteredSingleOrderSummary && (
             <Typography
               variant="body2"
               color="text.secondary"
