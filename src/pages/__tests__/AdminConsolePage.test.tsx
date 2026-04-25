@@ -3248,10 +3248,13 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Haz clic en un rol para editarlo desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles editables$/i })).toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
@@ -3299,9 +3302,9 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
-      ).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+        screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles editables$/i })).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
@@ -3330,11 +3333,11 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
-      ).toBeInTheDocument();
+        screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles editables$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Último acceso/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
