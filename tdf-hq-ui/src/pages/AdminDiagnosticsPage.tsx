@@ -104,6 +104,9 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
   return 'El historial detallado aparecerá aquí cuando exista al menos un mensaje respondido.';
 };
 
+const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
+  `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
+
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
@@ -150,6 +153,12 @@ export default function AdminDiagnosticsPage() {
     : socialChannels
       .filter(({ loading, stats }) => !loading && stats.incoming.length === 0)
       .map(({ label }) => label);
+  const awaitingReplyHistoryChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
+    ? []
+    : socialChannels
+      .filter(({ loading, stats }) => !loading && stats.incoming.length > 0 && stats.replied.length === 0)
+      .map(({ label }) => label);
+  const showSharedAwaitingReplyHistorySummary = awaitingReplyHistoryChannelLabels.length > 1;
   const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
   const showSocialRefreshAction = !showGlobalSocialQuietGuidance;
   const refetchSocialMessages = () => {
@@ -249,6 +258,11 @@ export default function AdminDiagnosticsPage() {
               Sin mensajes entrantes en {formatChannelList(quietSocialChannelLabels)}.
             </Alert>
           )}
+          {showSharedAwaitingReplyHistorySummary && (
+            <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-awaiting-reply-summary">
+              {getAwaitingReplyHistorySummary(awaitingReplyHistoryChannelLabels)}
+            </Alert>
+          )}
           {showSocialChannelCards && (
             <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
               {visibleSocialChannels.map(({ label, stats, loading }) => (
@@ -281,7 +295,7 @@ export default function AdminDiagnosticsPage() {
                       <CircularProgress size={22} />
                     </Stack>
                   ) : stats.replied.length === 0 ? (
-                    showGlobalSocialQuietGuidance ? null : (
+                    showGlobalSocialQuietGuidance || showSharedAwaitingReplyHistorySummary ? null : (
                     <Typography variant="body2" color="text.secondary">
                       {getRepliedHistoryGuidance(stats)}
                     </Typography>

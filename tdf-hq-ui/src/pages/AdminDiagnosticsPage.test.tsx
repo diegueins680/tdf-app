@@ -214,6 +214,43 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('replaces repeated pre-history guidance with one shared summary when multiple channels are still awaiting their first reply', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'instagram-pending',
+        repliedAt: null,
+        replyText: null,
+      }),
+    ]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'facebook-failed',
+        repliedAt: null,
+        replyText: null,
+        replyError: 'timeout',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(2);
+        expect(container.querySelector('[data-testid="admin-diagnostics-social-awaiting-reply-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'Todavía no hay mensajes respondidos en Instagram y Facebook. El historial detallado aparecerá por canal cuando exista la primera respuesta.',
+        );
+        expect(container.textContent).toContain('Sin mensajes entrantes en WhatsApp.');
+        expect(countOccurrences(container, 'El historial detallado aparecerá aquí cuando exista al menos un mensaje respondido.')).toBe(0);
+        expect(container.querySelectorAll('thead')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows only non-zero social state chips so mixed channel panels stay scannable', async () => {
     listInstagramMessagesMock.mockResolvedValue([buildMessage({ externalId: 'instagram-replied' })]);
     listFacebookMessagesMock.mockResolvedValue([
