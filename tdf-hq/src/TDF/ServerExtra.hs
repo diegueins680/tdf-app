@@ -793,7 +793,7 @@ validatePublicQrUploadContext
   -> Either ServerError ()
 validatePublicQrUploadContext assetState Nothing =
   validateAssetCheckoutStatus assetState
-validatePublicQrUploadContext _ (Just (Entity _ checkoutRecord))
+validatePublicQrUploadContext assetState (Just checkoutEnt@(Entity _ checkoutRecord))
   | assetCheckoutTargetKind checkoutRecord /= TargetParty =
       Left err409
         { errBody =
@@ -806,7 +806,7 @@ validatePublicQrUploadContext _ (Just (Entity _ checkoutRecord))
             "Public QR upload only supports assets that are available for checkout or currently checked out to a party loan or rental"
         }
   | otherwise =
-      Right ()
+      validateAssetReadCheckoutState "public QR proof upload" assetState (Just checkoutEnt)
 
 data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   { ncrTargetKind :: CheckoutTarget

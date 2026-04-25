@@ -682,8 +682,8 @@ spec = do
 
     it "allows uploads only for assets that can still complete a public checkout or return flow" $ do
       validatePublicQrUploadContext Active Nothing `shouldBe` Right ()
-      validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Loan)) `shouldBe` Right ()
-      validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Rental)) `shouldBe` Right ()
+      validatePublicQrUploadContext Booked (Just (mkOpenCheckout TargetParty Loan)) `shouldBe` Right ()
+      validatePublicQrUploadContext Booked (Just (mkOpenCheckout TargetParty Rental)) `shouldBe` Right ()
 
     it "reuses checkout-status validation when an idle asset is no longer publicly checkoutable" $
       case validatePublicQrUploadContext Retired Nothing of
@@ -692,6 +692,14 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Asset is retired and cannot be checked out"
         Right value ->
           expectationFailure ("Expected retired public QR upload context to be rejected, got " <> show value)
+
+    it "rejects uploads when the asset status contradicts an active public checkout" $
+      case validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Loan)) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset status is active but an active loan checkout exists"
+        Right value ->
+          expectationFailure ("Expected inconsistent public QR upload state to be rejected, got " <> show value)
 
     it "rejects uploads for internal-only or terminal active checkout flows" $ do
       let assertInvalid ctx =
@@ -716,6 +724,57 @@ spec = do
             { aufFile = mkAssetUploadFile "checkout-proof.jpg"
             , aufName = Just "checkout-proof.jpg"
             }
+
+    it "rejects uploads when an active asset still has an open public checkout so proof files cannot mask inconsistent state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicUploadHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Active
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        uploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset status is active but an active loan checkout exists"
+        Right _ ->
+          expectationFailure "Expected inconsistent public QR upload state to be rejected"
 
     it "rejects multiple active checkout rows so public proof uploads never target an ambiguous custody state" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
