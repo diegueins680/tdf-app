@@ -1678,6 +1678,34 @@ spec = do
         Right value ->
           value `seq` expectationFailure "Expected loan checkout payment metadata to be rejected"
 
+    it "normalizes missing outstanding balances to zero once commercial checkout totals are otherwise explicit" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          (Just "SALE-001")
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          (Just "Equipo vendido tal como está")
+          Nothing) of
+        Left err ->
+          expectationFailure ("Expected checkout payment normalization to succeed, got " <> show err)
+        Right normalized -> do
+          ncrPaymentAmountCents normalized `shouldBe` Just 120000
+          ncrPaymentCurrency normalized `shouldBe` Just "USD"
+          ncrPaymentOutstandingCents normalized `shouldBe` Just 0
+
     it "rejects due dates on sale checkouts so sold assets cannot carry return expectations" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
