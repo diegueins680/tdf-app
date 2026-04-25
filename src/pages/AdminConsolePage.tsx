@@ -33,7 +33,6 @@ import {
 import type { SxProps, Theme } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { AdminApi } from '../api/admin';
 import { Health } from '../utilities/health';
@@ -243,6 +242,8 @@ const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'start
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
 const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
   'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
+const MULTI_ADMIN_USER_INLINE_EDIT_HINT =
+  'Haz clic sobre un rol para editarlo desde esta misma vista.';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
@@ -765,7 +766,11 @@ function buildAdminUsersSectionDescription({
     hiddenColumnLabels.push('estado');
   }
 
-  return buildCompactHiddenColumnsDescription(hiddenColumnLabels);
+  const compactColumnsDescription = buildCompactHiddenColumnsDescription(hiddenColumnLabels);
+
+  return compactColumnsDescription
+    ? `${MULTI_ADMIN_USER_INLINE_EDIT_HINT} ${compactColumnsDescription}`
+    : MULTI_ADMIN_USER_INLINE_EDIT_HINT;
 }
 
 function buildAuditSectionDescription({
@@ -1461,7 +1466,6 @@ export default function AdminConsolePage() {
                           <TableCell>
                             <Button
                               size="small"
-                              endIcon={<EditOutlinedIcon fontSize="small" />}
                               onClick={() => setEditingUser(user)}
                               aria-label={editRoleLabel}
                               title={editRoleLabel}
@@ -1516,7 +1520,6 @@ export default function AdminConsolePage() {
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                     <Button
                       size="small"
-                      endIcon={<EditOutlinedIcon fontSize="small" />}
                       onClick={() => setEditingUser(singleAdminUser)}
                       aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
                       title={buildAdminUserRoleEditLabel(singleAdminUser)}

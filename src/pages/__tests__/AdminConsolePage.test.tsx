@@ -2829,9 +2829,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
       expect(screen.queryByText('Party #9')).not.toBeInTheDocument();
-      expect(
-        within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon'),
-      ).toBeInTheDocument();
+      expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
       expect(screen.queryByText('Editar roles: Admin')).not.toBeInTheDocument();
       expect(screen.queryByText(/Roles · Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en el rol para editarlo aquí/i)).not.toBeInTheDocument();
@@ -2989,7 +2987,7 @@ describe('AdminConsolePage', () => {
     });
   });
 
-  it('moves the inline edit affordance onto each role button and keeps the helper line for hidden columns only', async () => {
+  it('uses one shared inline edit hint and keeps comparison-table role buttons text-only', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -3008,10 +3006,9 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Haz clic sobre un rol para editarlo desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.queryByText(/^Haz clic sobre un rol para editarlo desde esta misma vista\.$/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
@@ -3022,11 +3019,10 @@ describe('AdminConsolePage', () => {
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveAttribute('title', 'Editar roles de Grace Hopper');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).not.toHaveAttribute('aria-describedby');
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
+      expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^Activo$/i)).not.toBeInTheDocument();
@@ -3057,7 +3053,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Haz clic sobre un rol para editarlo desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
     });
@@ -3087,17 +3083,13 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.queryByText(
-          /Vista compacta:/i,
-        ),
-      ).not.toBeInTheDocument();
+      expect(screen.getByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Último acceso/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
-      expect(within(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).getByTestId('EditOutlinedIcon')).toBeInTheDocument();
+      expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
     });
 
     const activeRow = screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }).closest('tr');
