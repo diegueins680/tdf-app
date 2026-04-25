@@ -3048,7 +3048,7 @@ describe('AdminConsolePage', () => {
         screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
       ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
       expect(screen.queryByText('Party #9')).not.toBeInTheDocument();
       expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
@@ -3262,10 +3262,10 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
-      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveAttribute('title', 'Editar roles de Grace Hopper');
+      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveAttribute('title', 'Editar roles de Grace Hopper. Roles actuales: Manager');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).not.toHaveAttribute('aria-describedby');
       expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
@@ -3439,6 +3439,7 @@ describe('AdminConsolePage', () => {
       const roleButton = screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' });
 
       expect(roleButton).toHaveTextContent('Admin, Manager +3 roles');
+      expect(roleButton).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin, Manager, Engineer, Teacher, Reception');
       expect(roleButton).not.toHaveTextContent('Engineer, Teacher, Reception');
     });
 

@@ -587,6 +587,12 @@ function buildAdminUserRoleEditLabel(user: Pick<AdminUserDTO, 'displayName' | 'u
   return `Editar roles de ${summarizeAdminUserIdentity(user).primary}`;
 }
 
+function buildAdminUserRoleButtonTitle(user: Pick<AdminUserDTO, 'displayName' | 'username' | 'roles'>) {
+  const roleSummary = formatEditableRoleList(user.roles);
+
+  return `${buildAdminUserRoleEditLabel(user)}. Roles actuales: ${roleSummary}`;
+}
+
 function formatEditableRoleList(roles?: readonly RoleKey[] | null) {
   const formattedRoles = formatRoleList(roles);
 
@@ -1569,6 +1575,7 @@ export default function AdminConsolePage() {
                     {users.map((user) => {
                       const identity = summarizeAdminUserIdentity(user);
                       const editRoleLabel = buildAdminUserRoleEditLabel(user);
+                      const editRoleTitle = buildAdminUserRoleButtonTitle(user);
                       const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
                       return (
                         <TableRow key={user.userId} hover>
@@ -1594,7 +1601,7 @@ export default function AdminConsolePage() {
                               size="small"
                               onClick={() => setEditingUser(user)}
                               aria-label={editRoleLabel}
-                              title={editRoleLabel}
+                              title={editRoleTitle}
                               sx={{
                                 px: 0,
                                 minWidth: 0,
@@ -1651,7 +1658,7 @@ export default function AdminConsolePage() {
                       size="small"
                       onClick={() => setEditingUser(singleAdminUser)}
                       aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
-                      title={buildAdminUserRoleEditLabel(singleAdminUser)}
+                      title={buildAdminUserRoleButtonTitle(singleAdminUser)}
                       sx={{
                         px: 0,
                         minWidth: 0,
