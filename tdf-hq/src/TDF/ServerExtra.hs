@@ -439,6 +439,32 @@ loadAssetDTOByKey assetKey = do
   activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
   pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
 
+loadSingleActiveCheckoutForQr
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Key Asset
+  -> m (Maybe (Entity AssetCheckout))
+loadSingleActiveCheckoutForQr assetKey = do
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      pure Nothing
+    [checkoutEnt] ->
+      pure (Just checkoutEnt)
+    _ ->
+      throwError err409
+        { errBody = "Asset has multiple active checkouts; resolve the inventory state before QR lookup"
+        }
+
 loadAssetDTOByQrToken
   :: ( MonadReader Env m
      , MonadIO m
@@ -448,8 +474,8 @@ loadAssetDTOByQrToken
   -> m AssetDTO
 loadAssetDTOByQrToken token = do
   assetEntity@(Entity assetKey _) <- loadAssetEntityByQrToken token
-  activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
-  pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+  mActiveCheckout <- loadSingleActiveCheckoutForQr assetKey
+  pure (toAssetDTO assetEntity mActiveCheckout)
 
 loadPublicAssetDTOByQrToken
   :: ( MonadReader Env m
