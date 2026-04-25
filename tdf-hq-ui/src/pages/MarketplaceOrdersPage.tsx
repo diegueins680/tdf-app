@@ -346,6 +346,7 @@ export default function MarketplaceOrdersPage() {
   const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
+  const singleVisibleOrder = showSingleOrderFocusedState ? (filtered[0] ?? null) : null;
   const showOrderListHeaderActions =
     !showFirstOrderEmptyState
     && !showSingleOrderFocusedState
@@ -845,7 +846,7 @@ export default function MarketplaceOrdersPage() {
             showFirstOrderEmptyState
               ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
               : showSingleOrderFocusedState
-                ? 'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
+                ? 'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
                 : 'Haz clic en una fila para revisar estado, pago y datos del comprador.'
           }
           action={showOrderListHeaderActions ? (
@@ -895,6 +896,59 @@ export default function MarketplaceOrdersPage() {
               Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.
             </Alert>
           )}
+          {singleVisibleOrder && (
+            <Stack
+              spacing={1.5}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                p: 2,
+                maxWidth: 720,
+              }}
+              data-testid="marketplace-single-order-summary"
+            >
+              <Typography variant="body2">
+                <Box component="span" sx={{ fontWeight: 600 }}>Pedido:</Box> {singleVisibleOrder.moOrderId}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Comprador:</Box> {singleVisibleOrder.moBuyerName}
+              </Typography>
+              {singleVisibleOrder.moBuyerEmail && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Email:</Box> {singleVisibleOrder.moBuyerEmail}
+                </Typography>
+              )}
+              {normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone) && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Teléfono:</Box> {normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone)}
+                </Typography>
+              )}
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box> {statusLabel(singleVisibleOrder.moStatus)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Pago:</Box> {formatPaymentProvider(singleVisibleOrder.moPaymentProvider)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Total:</Box> {singleVisibleOrder.moTotalDisplay}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Creado:</Box> {formatDate(singleVisibleOrder.moCreatedAt)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Items:</Box> {summarizeItems(singleVisibleOrder.moItems)}
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => openOrder(singleVisibleOrder.moOrderId)}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Abrir orden
+              </Button>
+            </Stack>
+          )}
           {!showFirstOrderEmptyState && !ordersQuery.isLoading && filtered.length === 0 && (
             <Alert severity="info">
               {emptyOrdersMessage}
@@ -910,7 +964,7 @@ export default function MarketplaceOrdersPage() {
               Moneda visible: {sharedVisibleCurrencyCaption}.
             </Typography>
           )}
-          {filtered.length > 0 && (
+          {filtered.length > 0 && !singleVisibleOrder && (
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>

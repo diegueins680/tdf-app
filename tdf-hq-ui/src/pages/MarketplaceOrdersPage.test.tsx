@@ -195,6 +195,15 @@ const clickButtonByAriaLabel = async (root: ParentNode, ariaLabel: string) => {
 };
 
 const clickFirstOrderRow = async (root: ParentNode) => {
+  const explicitOpenAction = queryActionByText(root, 'Abrir orden');
+  if (explicitOpenAction instanceof HTMLElement) {
+    await act(async () => {
+      explicitOpenAction.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+    return;
+  }
+
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
     throw new Error('Order row not found');
@@ -288,7 +297,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps the first marketplace order focused on the lone row instead of showing list filter chrome', async () => {
+  it('replaces the first marketplace order row with a focused summary and one explicit open action', async () => {
     listOrdersMock.mockResolvedValue([buildOrder()]);
 
     const container = document.createElement('div');
@@ -307,13 +316,23 @@ describe('MarketplaceOrdersPage', () => {
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
         expect(container.textContent).toContain(
-          'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
+          'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
         );
+        expect(container.textContent).toContain('Pedido: order-1');
+        expect(container.textContent).toContain('Comprador: Ada Lovelace');
+        expect(container.textContent).toContain('Email: ada@example.com');
+        expect(container.textContent).toContain('Teléfono: +593999000111');
+        expect(container.textContent).toContain('Estado: Pendiente');
+        expect(container.textContent).toContain('Pago: PayPal');
+        expect(container.textContent).toContain('Total: USD $100.00');
+        expect(container.textContent).toContain('Items: 1 × Vintage Mic');
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -1441,7 +1460,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
@@ -1478,7 +1498,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
@@ -1527,7 +1548,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
@@ -1568,7 +1590,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
