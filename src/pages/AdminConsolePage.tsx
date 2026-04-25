@@ -478,6 +478,30 @@ function dedupeAdminUsers(users: readonly AdminUserDTO[]) {
   return [...usersById.values()];
 }
 
+function compareAdminUsers(left: AdminUserDTO, right: AdminUserDTO) {
+  const leftIdentity = summarizeAdminUserIdentity(left);
+  const rightIdentity = summarizeAdminUserIdentity(right);
+  const leftPrimary = leftIdentity.primary.trim().toLowerCase();
+  const rightPrimary = rightIdentity.primary.trim().toLowerCase();
+
+  if (leftPrimary !== rightPrimary) {
+    return leftPrimary.localeCompare(rightPrimary);
+  }
+
+  const leftUsername = leftIdentity.username.trim().toLowerCase();
+  const rightUsername = rightIdentity.username.trim().toLowerCase();
+
+  if (leftUsername !== rightUsername) {
+    return leftUsername.localeCompare(rightUsername);
+  }
+
+  return left.userId - right.userId;
+}
+
+function sortAdminUsers(users: readonly AdminUserDTO[]) {
+  return [...users].sort(compareAdminUsers);
+}
+
 function preferRicherAuditDiff(primary?: string | null, fallback?: string | null) {
   const normalizedPrimary = primary?.trim() ?? '';
   const normalizedFallback = fallback?.trim() ?? '';
@@ -557,6 +581,40 @@ function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {
   });
 
   return dedupedEntries;
+}
+
+function getAuditEntryTimestamp(entry: Pick<AuditLogEntry, 'createdAt'>) {
+  const timestamp = Date.parse(entry.createdAt);
+
+  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+}
+
+function compareAuditEntries(left: AuditLogEntry, right: AuditLogEntry) {
+  const timestampDifference = getAuditEntryTimestamp(right) - getAuditEntryTimestamp(left);
+
+  if (timestampDifference !== 0) {
+    return timestampDifference;
+  }
+
+  const leftEntity = `${left.entity}::${left.entityId}`.toLowerCase();
+  const rightEntity = `${right.entity}::${right.entityId}`.toLowerCase();
+
+  if (leftEntity !== rightEntity) {
+    return leftEntity.localeCompare(rightEntity);
+  }
+
+  const leftAction = left.action.trim().toLowerCase();
+  const rightAction = right.action.trim().toLowerCase();
+
+  if (leftAction !== rightAction) {
+    return leftAction.localeCompare(rightAction);
+  }
+
+  return (left.auditId ?? '').localeCompare(right.auditId ?? '');
+}
+
+function sortAuditEntries(entries: readonly AuditLogEntry[]) {
+  return [...entries].sort(compareAuditEntries);
 }
 
 function formatDate(value: string) {
@@ -1137,7 +1195,7 @@ export default function AdminConsolePage() {
     }
   }, [editingUser]);
 
-  const audits = dedupeAuditEntries(auditQuery.data ?? []);
+  const audits = sortAuditEntries(dedupeAuditEntries(auditQuery.data ?? []));
   const previewCards = sortAdminConsoleCards(dedupeAdminConsoleCards(
     sanitizeAdminConsoleCards(
       consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],
@@ -1145,7 +1203,7 @@ export default function AdminConsolePage() {
   ));
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
-  const users = dedupeAdminUsers(usersQuery.data ?? []);
+  const users = sortAdminUsers(dedupeAdminUsers(usersQuery.data ?? []));
   const usersById = useMemo(
     () => new Map(users.map((user) => [user.userId, user])),
     [users],

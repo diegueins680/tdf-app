@@ -3371,6 +3371,39 @@ describe('AdminConsolePage', () => {
     expect(within(invitedRow).getByText('Invitado')).toBeInTheDocument();
   });
 
+  it('sorts admin users by visible identity so the access table stays easy to scan', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        userId: 103,
+        username: 'zoe',
+        displayName: 'Zoe Washburne',
+        partyId: 11,
+        roles: ['ReadOnly'],
+      }),
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+      expect(screen.getByText('Zoe Washburne')).toBeInTheDocument();
+    });
+
+    expectToAppearBefore(screen.getByText('Ada Lovelace'), screen.getByText('Grace Hopper'));
+    expectToAppearBefore(screen.getByText('Grace Hopper'), screen.getByText('Zoe Washburne'));
+  });
+
   it('summarizes the exact pending role change before enabling save', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);
@@ -3870,6 +3903,40 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByText(/^777$/i)).not.toBeInTheDocument();
+  });
+
+  it('sorts the recent audit table from newest to oldest regardless of API order', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-older',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: null,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-newer',
+        actorId: 777,
+        entity: 'user',
+        entityId: 'USR-1',
+        action: 'roles.updated',
+        diff: 'Admin -> Admin, Manager',
+        createdAt: '2026-04-09T16:00:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Package created')).toBeInTheDocument();
+      expect(screen.getByText('Roles actualizados')).toBeInTheDocument();
+    });
+
+    expectToAppearBefore(screen.getByText('Roles actualizados'), screen.getByText('Package created'));
   });
 
   it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {
