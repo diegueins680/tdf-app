@@ -355,6 +355,25 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects extension-only upload names so stored inventory files always keep a real basename" $ do
+      let assertInvalid multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` "Asset upload file name must include a non-empty base name before the extension"
+              Right payload ->
+                expectationFailure
+                  ( "Expected extension-only asset upload metadata to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        (mkAssetUploadMultipart
+          [("name", ".jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        (mkAssetUploadMultipart [] [mkAssetUploadFile ".jpg"])
+
     it "rejects browser filenames with control characters instead of silently rewriting them into stored asset names" $
       case fromMultipart
         (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\nshot.jpg"])

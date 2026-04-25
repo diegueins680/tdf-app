@@ -120,13 +120,25 @@ validateResolvedUploadNameLength :: Maybe Text -> FileData Tmp -> Either Text ()
 validateResolvedUploadNameLength nameTxt file =
   let fallbackName = nonEmptyBaseName (fdFileName file)
       nameWithExt = applyExtension (nameTxt <|> fallbackName) fallbackName
-  in if T.length nameWithExt > maxAssetUploadFileNameChars
+  in if not (hasNonEmptyUploadBaseName nameWithExt)
+       then Left "Asset upload file name must include a non-empty base name before the extension"
+       else if T.length nameWithExt > maxAssetUploadFileNameChars
        then Left
          ( "Asset upload file name must be "
              <> T.pack (show maxAssetUploadFileNameChars)
              <> " characters or fewer"
          )
        else Right ()
+
+hasNonEmptyUploadBaseName :: Text -> Bool
+hasNonEmptyUploadBaseName rawName =
+  let trimmed = T.strip rawName
+      ext = imageExtension trimmed
+      baseName =
+        if T.null ext
+          then trimmed
+          else T.dropEnd (T.length ext) trimmed
+  in T.any (/= '.') baseName
 
 nonEmptyBaseName :: Text -> Maybe Text
 nonEmptyBaseName rawName =
