@@ -527,13 +527,23 @@ instance FromJSON ServiceMarketplaceBookingReq where
       , rejectUnknownFields = True
       } value
     titleValue <- traverse normalizeTitle (smbTitle req)
-    pure req { smbTitle = titleValue }
+    paymentMethodValue <- traverse normalizePaymentMethod (smbPaymentMethod req)
+    pure req
+      { smbTitle = titleValue
+      , smbPaymentMethod = paymentMethodValue
+      }
     where
       normalizeTitle rawTitle =
         let trimmedTitle = T.strip rawTitle
         in if T.null trimmedTitle
              then fail "title cannot be blank; omit title to use the service ad headline"
              else pure trimmedTitle
+
+      normalizePaymentMethod rawPaymentMethod =
+        let trimmedPaymentMethod = T.strip rawPaymentMethod
+        in if T.null trimmedPaymentMethod
+             then fail "paymentMethod cannot be blank; omit paymentMethod to use other"
+             else pure trimmedPaymentMethod
 
 data ServiceMarketplaceBookingDTO = ServiceMarketplaceBookingDTO
   { smbBookingId         :: Int64

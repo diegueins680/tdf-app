@@ -727,7 +727,7 @@ spec = do
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
         it "accepts canonical service-marketplace booking payloads" $
             case decodeServiceMarketplaceBooking
-                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\"bank_transfer\"}"
+                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\" bank_transfer \"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical service-marketplace booking payload to decode, got: " <> err)
@@ -744,6 +744,9 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeServiceMarketplaceBooking
                 "{\"adId\":42,\"slotId\":84,\"title\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"paymentMethod\":\"   \"}"
                 `shouldSatisfy` isLeft
 
     describe "Service catalog write payload FromJSON" $ do
