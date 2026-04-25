@@ -277,13 +277,14 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
 
     describe "AdminWhatsAppResendRequest FromJSON" $ do
         it "accepts canonical admin wire keys for WhatsApp resends" $
-            case eitherDecode "{\"message\":\"Reintentando\"}" of
+            case eitherDecode "{\"message\":\"  Reintentando  \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical WhatsApp resend payload to decode, got: " <> err)
                 Right payload ->
                     awrrMessage payload `shouldBe` Just "Reintentando"
 
-        it "rejects prefixed or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
+        it "rejects blank, prefixed, or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
+            decodeWhatsAppResend "{\"message\":\"   \"}" `shouldSatisfy` isLeft
             decodeWhatsAppResend "{\"awrrMessage\":\"Hola\"}" `shouldSatisfy` isLeft
             decodeWhatsAppResend "{\"message\":\"Hola\",\"unexpected\":true}" `shouldSatisfy` isLeft
 

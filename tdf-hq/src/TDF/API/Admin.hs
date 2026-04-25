@@ -6,6 +6,7 @@
 module TDF.API.Admin where
 
 import           Data.Text     (Text)
+import qualified Data.Text     as T
 import           Data.Time     (UTCTime)
 import           Servant
 
@@ -133,10 +134,19 @@ data AdminWhatsAppResendRequest = AdminWhatsAppResendRequest
   } deriving (Show, Generic)
 
 instance FromJSON AdminWhatsAppResendRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 4
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    request <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 4
+      , rejectUnknownFields = True
+      } value
+    messageValue <- traverse normalizeOverrideMessage (awrrMessage request)
+    pure request { awrrMessage = messageValue }
+    where
+      normalizeOverrideMessage rawMessage =
+        let trimmedMessage = T.strip rawMessage
+        in if T.null trimmedMessage
+             then fail "message cannot be blank; omit message to resend the original text"
+             else pure trimmedMessage
 
 data WhatsAppMessageAdminDTO = WhatsAppMessageAdminDTO
   { wmdId                :: Int64
