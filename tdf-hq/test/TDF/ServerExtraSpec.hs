@@ -86,6 +86,7 @@ import TDF.API.Types
   , AssetQrDTO
   , AssetUploadDTO
   , AssetUpdate (..)
+  , Page
   , PipelineCardCreate (..)
   , PipelineCardDTO (..)
   , PipelineCardUpdate (..)
@@ -551,6 +552,93 @@ spec = do
       assetMatchesSearchQuery "tdf" synthAsset `shouldBe` True
       assetMatchesSearchQuery "analog" synthAsset `shouldBe` True
       assetMatchesSearchQuery "juno" drumAsset `shouldBe` False
+
+  describe "inventoryServer listAssets" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000926"
+        checkoutIdText = "00000000-0000-0000-0000-000000000927"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000928"
+
+    it "rejects assets with multiple active checkout rows so list views cannot silently hide broken custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid inventory list asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid inventory list checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second inventory list checkout fixture key" >> fail "unreachable"
+      result <- runInventoryListHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        Nothing
+        Nothing
+        Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "listing assets"
+        Right value ->
+          expectationFailure ("Expected inventory list ambiguity to be rejected, got " <> show value)
 
   describe "validatePublicQrUploadContext" $ do
     let checkoutKey =
@@ -4961,6 +5049,24 @@ runInventoryCheckoutHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkoutHandlerFor inventoryUser rawId req) env)
 
+runInventoryListHandler
+  :: SqlPersistT IO ()
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+  -> IO (Either ServerError (Page AssetDTO))
+runInventoryListHandler setup mq mp mps =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory list tests"
+            }
+    liftIO $ runExceptT (runReaderT (listAssetsHandlerFor inventoryUser mq mp mps) env)
+
 runInventoryPatchHandler
   :: SqlPersistT IO ()
   -> Text
@@ -5224,6 +5330,27 @@ inventoryUser =
     , auRoles = [M.Admin]
     , auModules = modulesForRoles [M.Admin]
     }
+
+listAssetsHandlerFor
+  :: AuthedUser
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+  -> InventoryTestM (Page AssetDTO)
+listAssetsHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          listAssets
 
 checkoutHandlerFor :: AuthedUser -> Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
 checkoutHandlerFor user =

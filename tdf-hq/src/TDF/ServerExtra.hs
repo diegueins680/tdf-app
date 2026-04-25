@@ -212,7 +212,8 @@ inventoryServer user =
       let filteredEntities = filterAssetsByQuery mq entities
           totalCount = length filteredEntities
           pagedEntities = take pageSize' (drop pageOffset filteredEntities)
-      activeMap <- withPool $ loadActiveCheckoutMap (map entityKey pagedEntities)
+      activeMap <- either throwError pure =<< withPool
+        (loadActiveCheckoutMap "listing assets" (map entityKey pagedEntities))
       pure (mkPage pageNum pageSize' totalCount (map (\entity -> toAssetDTO entity (Map.lookup (entityKey entity) activeMap)) pagedEntities))
 
     createAssetH req = do
@@ -309,7 +310,8 @@ inventoryServer user =
         Left err -> throwError err
         Right Nothing -> throwError err404
         Right (Just entity) -> do
-          activeMap <- withPool $ loadActiveCheckoutMap [entityKey entity]
+          activeMap <- either throwError pure =<< withPool
+            (loadActiveCheckoutMap "loading asset details" [entityKey entity])
           pure (toAssetDTO entity (Map.lookup (entityKey entity) activeMap))
 
     deleteAssetH rawId = do
@@ -611,16 +613,35 @@ sanitizePublicCheckoutDTO dto =
 
 loadActiveCheckoutMap
   :: MonadIO m
-  => [Key Asset]
-  -> SqlPersistT m (Map.Map (Key Asset) (Entity AssetCheckout))
-loadActiveCheckoutMap [] = pure Map.empty
-loadActiveCheckoutMap assetKeys = do
+  => Text
+  -> [Key Asset]
+  -> SqlPersistT m (Either ServerError (Map.Map (Key Asset) (Entity AssetCheckout)))
+loadActiveCheckoutMap _ [] = pure (Right Map.empty)
+loadActiveCheckoutMap readContext assetKeys = do
   recs <- selectList
     [ AssetCheckoutAssetId <-. assetKeys
     , AssetCheckoutReturnedAt ==. Nothing
     ]
     [Desc AssetCheckoutCheckedOutAt]
-  pure (Map.fromListWith (\left _ -> left) [(assetCheckoutAssetId rec, ent) | ent@(Entity _ rec) <- recs])
+  let activeCheckoutCounts =
+        Map.fromListWith (+)
+          [ (assetCheckoutAssetId rec, 1 :: Int)
+          | Entity _ rec <- recs
+          ]
+  if any (> 1) (Map.elems activeCheckoutCounts)
+    then
+      pure $
+        Left err409
+          { errBody =
+              BL.fromStrict
+                (TE.encodeUtf8
+                  ( "One or more assets have multiple active checkouts; resolve the inventory state before "
+                      <> readContext
+                  ))
+          }
+    else
+      pure $
+        Right (Map.fromList [(assetCheckoutAssetId rec, ent) | ent@(Entity _ rec) <- recs])
 
 performCheckout
   :: ( MonadReader Env m
