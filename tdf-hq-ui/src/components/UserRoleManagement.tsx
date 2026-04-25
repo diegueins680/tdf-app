@@ -26,7 +26,6 @@ import {
   Stack,
   ButtonBase,
 } from '@mui/material';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
@@ -81,6 +80,7 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
 const ROLES_COLUMN_LABEL = 'Roles';
+const EDITABLE_ROLES_LABEL = 'Roles editables';
 const EMPTY_ROLES_LABEL = 'Sin roles';
 const INLINE_ROLE_CHIP_LIMIT = 3;
 
@@ -305,12 +305,6 @@ const renderRoleEditButtonContents = (roles: readonly RoleValue[]) => (
     <Box display="flex" gap={0.5} flexWrap="wrap">
       {renderInlineRoleChips(roles)}
     </Box>
-    <EditOutlinedIcon
-      data-testid="role-edit-affordance-icon"
-      fontSize="inherit"
-      aria-hidden="true"
-      sx={{ color: 'text.secondary', fontSize: '1rem' }}
-    />
   </Box>
 );
 
@@ -486,7 +480,7 @@ export default function UserRoleManagement() {
                     )}
                     <Stack spacing={0.25} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                       <Typography variant="caption" color="text.secondary">
-                        {ROLES_COLUMN_LABEL}
+                        {EDITABLE_ROLES_LABEL}
                       </Typography>
                       <ButtonBase
                         onClick={() => handleEditClick(singleUser)}
@@ -522,7 +516,7 @@ export default function UserRoleManagement() {
                     <TableCell>Usuario</TableCell>
                     {showContactColumn && <TableCell>Contacto</TableCell>}
                     {showStatusColumn && <TableCell>Estado</TableCell>}
-                    <TableCell>{ROLES_COLUMN_LABEL}</TableCell>
+                    <TableCell>{EDITABLE_ROLES_LABEL}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

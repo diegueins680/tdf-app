@@ -199,15 +199,16 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
           'Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
-        expect(countExactText(container, 'Roles')).toBe(1);
+        expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).not.toContain('Active');
         expect(container.textContent).not.toContain('Editar roles');
+        expect(container.querySelectorAll('[data-testid="role-edit-affordance-icon"]')).toHaveLength(0);
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).not.toContain('ID 101');
@@ -261,12 +262,12 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Roles editables']);
         expect(container.textContent).toContain(
           'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
-        expect(countExactText(container, 'Roles')).toBe(1);
+        expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).not.toContain('Sin email ni teléfono');
         expect(container.textContent).not.toContain('Active');
@@ -351,7 +352,7 @@ describe('UserRoleManagement', () => {
         expect(container.querySelectorAll('thead th')).toHaveLength(0);
         expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
         expect(container.textContent).not.toContain('Vista actual:');
-        expect(countExactText(container, 'Roles')).toBe(1);
+        expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).not.toContain('Active');
 
@@ -807,8 +808,8 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles']);
-        expect(countExactText(container, 'Roles')).toBe(1);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Estado', 'Roles editables']);
+        expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).toContain(
@@ -850,11 +851,11 @@ describe('UserRoleManagement', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles']);
+        expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
           'Vista actual: todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar.',
         );
-        expect(countExactText(container, 'Roles')).toBe(1);
+        expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(countExactText(container, 'Inactivo')).toBe(0);
         expect(container.textContent).not.toContain('Inactive');
       });
