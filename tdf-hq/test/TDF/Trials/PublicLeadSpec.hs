@@ -42,6 +42,7 @@ import TDF.Trials.API
   , InterestIn (..)
   , PackageDTO
   , PurchaseIn (..)
+  , PurchaseOut
   , SignupIn (..)
   , SubjectCreate (SubjectCreate)
   , SubjectUpdate (..)
@@ -824,6 +825,99 @@ spec = do
             :: Either String PurchaseIn
         )
         `shouldBe` True
+
+  describe "private purchases" $ do
+    it "rejects missing referenced rows before persisting an orphan purchase" $ do
+      let assertRejected expectedMessage buildPurchase = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let scheduleStart = addUTCTime 3600 now
+                  scheduleEnd = addUTCTime 7200 now
+              studentPartyId <- insertPartyFixture "Student One" now
+              sellerPartyId <- insertPartyFixture "Seller One" now
+              subjectKey <- insert (Subject "Piano" True)
+              packageKey <- insertPackageFixture subjectKey
+              requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+              privatePurchaseHandler
+                (buildPurchase studentPartyId sellerPartyId packageKey requestKey)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 404
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected dangling purchase references to be rejected"
+      assertRejected "Estudiante no encontrado" $
+        \_ sellerPartyId packageKey requestKey ->
+          PurchaseIn
+            9999
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Paquete no encontrado" $
+        \studentPartyId sellerPartyId _ requestKey ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            9999
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Vendedor no encontrado" $
+        \studentPartyId _ packageKey requestKey ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just 9999)
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Solicitud de prueba no encontrada" $
+        \studentPartyId sellerPartyId packageKey _ ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just 9999)
+
+    it "rejects non-teacher commissioned sellers instead of storing an invalid commission target" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        studentPartyId <- insertPartyFixture "Student One" now
+        sellerPartyId <- insertPartyFixture "Seller One" now
+        nonTeacherPartyId <- insertPartyFixture "Studio Assistant" now
+        subjectKey <- insert (Subject "Piano" True)
+        packageKey <- insertPackageFixture subjectKey
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privatePurchaseHandler
+          (PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            (Just (fromIntegral (fromSqlKey nonTeacherPartyId)))
+            (Just (fromIntegral (fromSqlKey requestKey))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected invalid commissioned teachers to be rejected"
 
   describe "ClassSessionIn FromJSON" $ do
     it "accepts canonical class-session create payloads" $ do
@@ -1920,6 +2014,34 @@ initializeTrialsSchema = do
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"package_catalog\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"name\" VARCHAR NOT NULL,\
+    \\"hours_qty\" INTEGER NOT NULL,\
+    \\"price_cents\" INTEGER NOT NULL,\
+    \\"expires_days\" INTEGER NOT NULL,\
+    \\"refund_policy\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"class_package_purchase\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"student_id\" INTEGER NOT NULL,\
+    \\"package_id\" INTEGER NOT NULL,\
+    \\"price_cents\" INTEGER NOT NULL,\
+    \\"discount_cents\" INTEGER NOT NULL,\
+    \\"tax_cents\" INTEGER NOT NULL,\
+    \\"total_paid_cents\" INTEGER NOT NULL,\
+    \\"purchased_at\" TIMESTAMP NOT NULL,\
+    \\"seller_id\" INTEGER NULL,\
+    \\"commissioned_teacher_id\" INTEGER NULL,\
+    \\"trial_request_id\" INTEGER NULL,\
+    \\"status\" VARCHAR NOT NULL\
+    \)"
+    []
 
 adminUser :: AuthedUser
 adminUser =
@@ -1986,6 +2108,12 @@ privatePackagesHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> packagesH :<|> _ =
         privateTrialsServer adminUser
   in packagesH
+
+privatePurchaseHandler :: PurchaseIn -> SqlPersistT IO PurchaseOut
+privatePurchaseHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> purchaseH :<|> _ =
+        privateTrialsServer adminUser
+  in purchaseH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =
@@ -2061,6 +2189,18 @@ insertResourceFixture name slug resourceType =
     , Models.resourceResourceType = resourceType
     , Models.resourceCapacity = Nothing
     , Models.resourceActive = True
+    }
+
+insertPackageFixture :: Trials.SubjectId -> SqlPersistT IO Trials.PackageCatalogId
+insertPackageFixture subjectKey =
+  insert Trials.PackageCatalog
+    { Trials.packageCatalogSubjectId = subjectKey
+    , Trials.packageCatalogName = "Mensual"
+    , Trials.packageCatalogHoursQty = 4
+    , Trials.packageCatalogPriceCents = 12000
+    , Trials.packageCatalogExpiresDays = 30
+    , Trials.packageCatalogRefundPolicy = "No reembolsable"
+    , Trials.packageCatalogActive = True
     }
 
 insertTrialRequestFixture

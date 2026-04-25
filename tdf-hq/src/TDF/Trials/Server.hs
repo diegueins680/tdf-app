@@ -1400,6 +1400,30 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404 { errBody = "Estudiante no encontrado" }
         Just _  -> pure key
 
+    ensureSellerExists :: Int -> AppM PartyId
+    ensureSellerExists sellerIdInt = do
+      let key = intKey sellerIdInt :: PartyId
+      mSeller <- get key
+      case mSeller of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Vendedor no encontrado" }
+        Just _  -> pure key
+
+    ensurePackageExists :: Int -> AppM PackageCatalogId
+    ensurePackageExists packageIdInt = do
+      let key = intKey packageIdInt :: PackageCatalogId
+      mPackage <- get key
+      case mPackage of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Paquete no encontrado" }
+        Just _  -> pure key
+
+    ensurePurchaseTrialRequestExists :: Int -> AppM TrialRequestId
+    ensurePurchaseTrialRequestExists trialRequestIdInt = do
+      let key = intKey trialRequestIdInt :: TrialRequestId
+      mTrialRequest <- get key
+      case mTrialRequest of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Solicitud de prueba no encontrada" }
+        Just _  -> pure key
+
     ensureBookingExists :: Int -> AppM Models.BookingId
     ensureBookingExists bookingIdInt
       | bookingIdInt <= 0 =
@@ -1424,6 +1448,12 @@ privateTrialsServer user@AuthedUser{..} =
             ]
           unless hasTeacherRole $
             liftIO $ throwIO err422 { errBody = "La persona seleccionada no está registrada como profesor" }
+
+    ensureCommissionTeacherExists :: Int -> AppM PartyId
+    ensureCommissionTeacherExists teacherIdInt = do
+      let teacherKey = intKey teacherIdInt :: PartyId
+      ensureTeacherSelection teacherKey
+      pure teacherKey
 
     ensureSchedulableRoom :: ResourceId -> AppM ()
     ensureSchedulableRoom roomKey = do
@@ -1532,13 +1562,13 @@ privateTrialsServer user@AuthedUser{..} =
     purchaseH rawInput = do
       ensureSchoolStaffAccess
       PurchaseIn{..} <- either (liftIO . throwIO) pure (validatePurchaseInput rawInput)
+      studentKey <- ensureStudentExists studentId
+      packageKey <- ensurePackageExists packageId
+      sellerKey <- traverse ensureSellerExists sellerId
+      commissionKey <- traverse ensureCommissionTeacherExists commissionedTeacherId
+      trialKey <- traverse ensurePurchaseTrialRequestExists trialRequestId
       now <- liftIO getCurrentTime
-      let studentKey = intKey studentId
-          packageKey = intKey packageId
-          sellerKey  = maybeKey sellerId
-          commissionKey = maybeKey commissionedTeacherId
-          trialKey   = maybeKey trialRequestId
-          discount   = fromMaybe 0 discountCents
+      let discount   = fromMaybe 0 discountCents
           tax        = fromMaybe 0 taxCents
           total      = priceCents - discount + tax
       pid <- insert ClassPackagePurchase
