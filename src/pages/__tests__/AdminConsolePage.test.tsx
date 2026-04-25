@@ -3455,6 +3455,13 @@ describe('AdminConsolePage', () => {
         /Roles actuales: Sin roles\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,
       ),
     ).toBeInTheDocument();
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    expect(rolesSelect).toHaveTextContent('Sin roles');
+    expect(rolesSelect).not.toHaveTextContent('—');
     expect(screen.queryByText(/Roles actuales: —\./i)).not.toBeInTheDocument();
   });
 

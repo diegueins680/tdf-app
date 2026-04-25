@@ -1809,11 +1809,12 @@ export default function AdminConsolePage() {
             </Alert>
           )}
           <FormControl fullWidth>
-            <InputLabel id="admin-user-roles-label">Roles asignados</InputLabel>
+            <InputLabel id="admin-user-roles-label" shrink>Roles asignados</InputLabel>
             <Select
               labelId="admin-user-roles-label"
               label="Roles asignados"
               multiple
+              displayEmpty
               value={selectedRoles}
               onChange={(event) => setSelectedRoles(normalizeRoleList(event.target.value as RoleKey[]))}
               renderValue={() => selectedRoleControlSummary}
