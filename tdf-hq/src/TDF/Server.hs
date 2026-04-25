@@ -2248,11 +2248,13 @@ protectedServer user =
 validateCalendarRedirectUri :: Text -> Either ServerError Text
 validateCalendarRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
-    Right (Just uri) -> Right uri
+    Right (Just uri)
+      | isSafeCalendarRedirectUri uri -> Right uri
     _ ->
       Left err400
         { errBody =
-            "redirectUri must be an absolute http(s) Google Calendar OAuth callback URL without query or fragment"
+            "redirectUri must be an absolute https Google Calendar OAuth callback URL, "
+              <> "or http://localhost for local development, without query or fragment"
         }
 
 validateCalendarAuthorizationCode :: Text -> Either ServerError Text
@@ -2269,12 +2271,57 @@ validateCalendarAuthorizationCode rawCode =
 validateConfiguredCalendarRedirectUri :: Text -> Either ServerError Text
 validateConfiguredCalendarRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "GOOGLE_REDIRECT_URI" (T.unpack rawRedirect) of
-    Right (Just uri) -> Right uri
+    Right (Just uri)
+      | isSafeCalendarRedirectUri uri -> Right uri
     _ ->
       Left err503
         { errBody =
-            "GOOGLE_REDIRECT_URI must be an absolute http(s) URL without query or fragment"
+            "GOOGLE_REDIRECT_URI must be an absolute https URL, "
+              <> "or http://localhost for local development, without query or fragment"
         }
+
+isSafeCalendarRedirectUri :: Text -> Bool
+isSafeCalendarRedirectUri uri
+  | "https://" `T.isPrefixOf` lowerUri = True
+  | "http://" `T.isPrefixOf` lowerUri =
+      maybe False isLocalCalendarRedirectHost (calendarRedirectHost (T.drop 7 uri))
+  | otherwise = False
+  where
+    lowerUri = T.toLower uri
+
+calendarRedirectHost :: Text -> Maybe Text
+calendarRedirectHost remainder =
+  let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+  in if T.null authority
+       then Nothing
+       else if "[" `T.isPrefixOf` authority
+         then
+           let (hostPart, rest) = T.breakOn "]" authority
+           in if T.null rest
+                then Nothing
+                else Just (T.toLower (T.drop 1 hostPart))
+         else
+           let (host, _) = T.breakOn ":" authority
+           in if T.null host then Nothing else Just (T.toLower host)
+
+isLocalCalendarRedirectHost :: Text -> Bool
+isLocalCalendarRedirectHost host =
+  host == "localhost"
+    || ".localhost" `T.isSuffixOf` host
+    || host == "::1"
+    || isLoopbackIpv4Host host
+
+isLoopbackIpv4Host :: Text -> Bool
+isLoopbackIpv4Host host =
+  case traverse parseOctet (T.splitOn "." host) of
+    Just [first, _, _, _] -> first == (127 :: Int)
+    _ -> False
+  where
+    parseOctet segment = do
+      value <- readMaybe (T.unpack segment)
+      if value >= (0 :: Int) && value <= 255
+        then Just value
+        else Nothing
 
 validateOptionalCalendarIdQuery :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCalendarIdQuery Nothing = Right Nothing

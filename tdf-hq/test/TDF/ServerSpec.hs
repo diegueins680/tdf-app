@@ -245,6 +245,7 @@ import TDF.Server
     , validateCalendarAuthorizationCode
     , validateCalendarEventListQuery
     , validateCalendarRedirectUri
+    , validateConfiguredCalendarRedirectUri
     , validateConfiguredDriveAccessToken
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
@@ -3631,6 +3632,10 @@ spec = describe "TDF.Server helpers" $ do
                 "  https://tdf-app.pages.dev/configuracion/integraciones/calendario  "
                 `shouldBe`
                     Right "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+            validateCalendarRedirectUri
+                "  http://localhost:5173/configuracion/integraciones/calendario  "
+                `shouldBe`
+                    Right "http://localhost:5173/configuracion/integraciones/calendario"
 
             let assertInvalid rawRedirect =
                     case validateCalendarRedirectUri rawRedirect of
@@ -3638,16 +3643,33 @@ spec = describe "TDF.Server helpers" $ do
                             errHTTPCode serverErr `shouldBe` 400
                             BL8.unpack (errBody serverErr)
                                 `shouldContain`
-                                    "redirectUri must be an absolute http(s) Google Calendar OAuth callback URL without query or fragment"
+                                    "redirectUri must be an absolute https Google Calendar OAuth callback URL"
                         Right value ->
                             expectationFailure
                                 ( "Expected invalid Calendar redirect URI, got: "
                                     <> show value
                                 )
             assertInvalid "/configuracion/integraciones/calendario"
+            assertInvalid "http://tdf-app.pages.dev/configuracion/integraciones/calendario"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?code=abc"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#code"
             assertInvalid "https://user:secret@tdf-app.pages.dev/configuracion/integraciones/calendario"
+
+        it "applies the same HTTPS-or-localhost invariant to configured Calendar callbacks" $ do
+            validateConfiguredCalendarRedirectUri
+                "  http://127.0.0.1:5173/configuracion/integraciones/calendario  "
+                `shouldBe`
+                    Right "http://127.0.0.1:5173/configuracion/integraciones/calendario"
+
+            case validateConfiguredCalendarRedirectUri
+                    "http://tdf-app.pages.dev/configuracion/integraciones/calendario" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "GOOGLE_REDIRECT_URI must be an absolute https URL"
+                Right value ->
+                    expectationFailure
+                        ("Expected insecure configured Calendar redirect URI to fail, got: " <> show value)
 
     describe "validateCalendarEventListQuery" $ do
         it "normalizes explicit Calendar event filters before database lookup" $ do
