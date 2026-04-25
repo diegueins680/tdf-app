@@ -449,8 +449,10 @@ loadAssetDTOByKey
   => Key Asset
   -> m AssetDTO
 loadAssetDTOByKey assetKey = do
-  assetEntity <- loadAssetEntityByKey assetKey
+  assetEntity@(Entity _ assetRecord) <- loadAssetEntityByKey assetKey
   mActiveCheckout <- loadSingleActiveCheckoutForRead "loading asset details" assetKey
+  either throwError pure
+    (validateAssetReadCheckoutState "loading asset details" (assetStatus assetRecord) mActiveCheckout)
   pure (toAssetDTO assetEntity mActiveCheckout)
 
 loadSingleActiveCheckoutForRead
@@ -490,8 +492,10 @@ loadAssetDTOByQrToken
   => Text
   -> m AssetDTO
 loadAssetDTOByQrToken token = do
-  assetEntity@(Entity assetKey _) <- loadAssetEntityByQrToken token
+  assetEntity@(Entity assetKey assetRecord) <- loadAssetEntityByQrToken token
   mActiveCheckout <- loadSingleActiveCheckoutForRead "QR lookup" assetKey
+  either throwError pure
+    (validateAssetReadCheckoutState "QR lookup" (assetStatus assetRecord) mActiveCheckout)
   pure (toAssetDTO assetEntity mActiveCheckout)
 
 loadPublicAssetDTOByQrToken
@@ -503,6 +507,23 @@ loadPublicAssetDTOByQrToken
   -> m AssetDTO
 loadPublicAssetDTOByQrToken token =
   sanitizePublicAssetDTO <$> loadAssetDTOByQrToken token
+
+validateAssetReadCheckoutState
+  :: Text
+  -> AssetStatus
+  -> Maybe (Entity AssetCheckout)
+  -> Either ServerError ()
+validateAssetReadCheckoutState readContext Booked Nothing =
+  Left err409
+    { errBody =
+        BL.fromStrict
+          (TE.encodeUtf8
+            ( "Asset status is booked but no active checkout exists; resolve the inventory state before "
+                <> readContext
+            ))
+    }
+validateAssetReadCheckoutState _ _ _ =
+  Right ()
 
 sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
 sanitizePublicAssetDTO dto =

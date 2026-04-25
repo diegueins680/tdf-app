@@ -2044,6 +2044,24 @@ spec = do
         checkoutIdText = "00000000-0000-0000-0000-000000000911"
         secondCheckoutIdText = "00000000-0000-0000-0000-000000000912"
 
+    it "rejects booked assets without an active checkout so detail reads do not fabricate a current holder state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset fixture key" >> fail "unreachable"
+      result <- runInventoryGetHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetStatus = Booked
+            }))
+        existingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "loading asset details"
+        Right value ->
+          expectationFailure ("Expected booked asset without active checkout to fail, got " <> show value)
+
     it "rejects assets with multiple active checkouts so detail views do not silently report an arbitrary current holder" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
@@ -2534,6 +2552,25 @@ spec = do
         canonicalToken = "00000000-0000-0000-0000-00000000dcbd"
         checkoutIdText = "00000000-0000-0000-0000-000000000922"
         roomIdText = "00000000-0000-0000-0000-000000000923"
+
+    it "rejects booked public QR assets without an active checkout so scans do not claim a custody state with no backing row" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            , assetStatus = Booked
+            }))
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "QR lookup"
+        Right asset ->
+          expectationFailure ("Expected booked public QR asset without active checkout to fail, got " <> show asset)
 
     it "redacts sensitive fields on public QR loads while keeping party checkout context readable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
