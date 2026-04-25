@@ -4,7 +4,11 @@
 module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
-import           Data.Char            (GeneralCategory(Format), generalCategory, isControl)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  )
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Servant
@@ -170,7 +174,8 @@ invalidCardText maxLength value =
   where
     stripped = T.strip value
     invalidCardChar ch =
-      isControl ch || generalCategory ch == Format
+      isControl ch
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 allowedFutureStubMetadata :: [(Text, Text)]
 allowedFutureStubMetadata =
