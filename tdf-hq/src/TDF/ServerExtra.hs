@@ -41,6 +41,7 @@ import           Numeric                    (showHex)
 import           System.Directory           (copyFile, createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
+import           Text.Read                  (readMaybe)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
@@ -2938,8 +2939,35 @@ validatePaymentReference =
   validateOptionalPaymentTextField "reference" 160
 
 validatePaymentPeriod :: Maybe Text -> Either ServerError (Maybe Text)
-validatePaymentPeriod =
-  validateOptionalPaymentTextField "period" 80
+validatePaymentPeriod rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just value
+      | T.any isControl value ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 "period must not contain control characters"
+            }
+      | hasValidPaymentPeriodShape value ->
+          Right (Just value)
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 "period must be in YYYY-MM format"
+            }
+  where
+    hasValidPaymentPeriodShape periodValue =
+      case T.splitOn "-" periodValue of
+        [yearPart, monthPart]
+          | T.length yearPart == 4
+              && T.length monthPart == 2
+              && T.all isDigit (yearPart <> monthPart) ->
+                  case readMaybe (T.unpack monthPart) :: Maybe Int of
+                    Just monthNumber -> monthNumber >= 1 && monthNumber <= 12
+                    Nothing -> False
+        _ -> False
 
 validateOptionalPaymentTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPaymentTextField fieldName maxLength rawValue =

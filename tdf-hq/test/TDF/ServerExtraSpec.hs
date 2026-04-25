@@ -4470,7 +4470,7 @@ spec = do
       validatePaymentReference (Just "  REC-42  ") `shouldBe` Right (Just "REC-42")
       validatePaymentPeriod (Just "  2026-04  ") `shouldBe` Right (Just "2026-04")
 
-    it "rejects oversized or control-character optional payment labels" $ do
+    it "rejects malformed optional payment labels before they reach manual payment reporting" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
@@ -4484,8 +4484,14 @@ spec = do
         "reference must not contain control characters"
         (validatePaymentReference (Just "REC\n42"))
       assertInvalid
-        "period must be 80 characters or fewer"
-        (validatePaymentPeriod (Just (T.replicate 81 "a")))
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "2026-4"))
+      assertInvalid
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "abril-2026"))
+      assertInvalid
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "2026-13"))
       assertInvalid
         "period must not contain control characters"
         (validatePaymentPeriod (Just "2026\n04"))
