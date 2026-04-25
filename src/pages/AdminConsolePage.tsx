@@ -1205,10 +1205,8 @@ export default function AdminConsolePage() {
   const firstRunAdditionalModulesHideLabel = singleAdditionalModule
     ? 'Ocultar módulo opcional'
     : 'Ocultar módulos adicionales';
-  const standaloneAdditionalModulesTitle = showStandaloneAdditionalModules && singleAdditionalModule
-    ? singleAdditionalModule.title
-    : 'Módulos adicionales';
-  const standaloneAdditionalModulesDescription = showStandaloneAdditionalModules && singleAdditionalModule
+  const standaloneAdditionalModulesTitle = singleAdditionalModule?.title ?? 'Módulos adicionales';
+  const standaloneAdditionalModulesDescription = singleAdditionalModule
     ? 'Tarjeta auxiliar del panel. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría.'
     : 'Tarjetas auxiliares del panel. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría.';
   const standaloneAdditionalModulesHideLabel = singleAdditionalModule

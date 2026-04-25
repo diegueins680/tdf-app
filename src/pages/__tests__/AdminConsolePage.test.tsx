@@ -2826,7 +2826,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Ver 1 módulo adicional/i })).not.toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
@@ -2834,7 +2834,7 @@ describe('AdminConsolePage', () => {
 
     expect(
       screen.getByText(
-        /Tarjetas auxiliares del panel\. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría\./i,
+        /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
       ),
     ).toBeInTheDocument();
     expect(
@@ -2843,7 +2843,6 @@ describe('AdminConsolePage', () => {
     expect(
       screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
     ).toHaveTextContent('Ver detalles');
-    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
@@ -2853,7 +2852,6 @@ describe('AdminConsolePage', () => {
     await user.click(screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }));
 
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
-    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(
       screen.getByText(
         /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
@@ -2891,7 +2889,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
+      expect(screen.getByText(longModuleTitle)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: `Ver detalles de ${longModuleTitle}` })).toBeInTheDocument();
     });
 
@@ -2899,11 +2897,9 @@ describe('AdminConsolePage', () => {
     expect(actionButton).toHaveAttribute('title', `Ver detalles de ${longModuleTitle}`);
     expect(actionButton).toHaveTextContent('Ver detalles');
     expect(screen.queryByRole('button', { name: /^Ver 1 módulo adicional$/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(longModuleTitle)).not.toBeInTheDocument();
-
     await user.click(actionButton);
 
-    expect(await screen.findByText(longModuleTitle)).toBeInTheDocument();
+    expect(await screen.findAllByText(longModuleTitle)).toHaveLength(1);
     expect(
       screen.getByText(/Revisa credenciales técnicas y responsables sin salir de esta consola\./i),
     ).toBeInTheDocument();
