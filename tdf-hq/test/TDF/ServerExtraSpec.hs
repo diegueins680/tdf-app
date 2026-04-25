@@ -2380,6 +2380,22 @@ spec = do
             (Just "Service notes\NULhere")
             Nothing
 
+    it "rejects empty asset patch bodies instead of returning unchanged records as a misleading success" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid empty patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetUpdate Nothing Nothing Nothing Nothing Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Asset patch requires at least one field to update"
+        Right value ->
+          expectationFailure ("Expected empty asset patch body to fail, got " <> show value)
+
     it "rejects invalid notes on asset patch instead of persisting unreadable inventory metadata" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

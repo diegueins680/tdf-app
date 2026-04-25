@@ -263,6 +263,8 @@ inventoryServer user =
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
       notesUpdate <- either throwError pure (normalizeAssetNotesUpdate (uNotes req))
       photoUrlUpdate <- either throwError pure (validateAssetPhotoUrlUpdate (uPhotoUrl req))
+      either throwError pure
+        (validateAssetPatchIntent nameUpdate categoryUpdate statusValue locationKey notesUpdate photoUrlUpdate)
       let updates = catMaybes
             [ (AssetName =.) <$> nameUpdate
             , (AssetCategory =.) <$> categoryUpdate
@@ -2633,6 +2635,28 @@ validateAssetPatchStatusInvariant currentStatus requestedStatus mActiveCheckoutS
             }
     _ ->
       Right ()
+
+validateAssetPatchIntent
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe AssetStatus
+  -> Maybe (Key Room)
+  -> Maybe (Maybe Text)
+  -> Maybe (Maybe Text)
+  -> Either ServerError ()
+validateAssetPatchIntent nameUpdate categoryUpdate statusUpdate locationUpdate notesUpdate photoUpdate
+  | any
+      isJust
+      [ fmap (const ()) nameUpdate
+      , fmap (const ()) categoryUpdate
+      , fmap (const ()) statusUpdate
+      , fmap (const ()) locationUpdate
+      , fmap (const ()) notesUpdate
+      , fmap (const ()) photoUpdate
+      ] =
+      Right ()
+  | otherwise =
+      Left err400 { errBody = "Asset patch requires at least one field to update" }
 
 validateAssetCheckoutStatus :: AssetStatus -> Either ServerError ()
 validateAssetCheckoutStatus Active = Right ()
