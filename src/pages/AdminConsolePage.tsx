@@ -1131,6 +1131,13 @@ export default function AdminConsolePage() {
   const hasPendingRoleChanges = useMemo(() => (
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
   ), [editingUser, selectedRoles]);
+  const selectedRoleFullSummary = formatEditableRoleList(selectedRoles);
+  const selectedRoleControlSummary = hasPendingRoleChanges
+    ? selectedRoleFullSummary
+    : formatInlineEditableRoleList(selectedRoles);
+  const selectedRoleControlTitle = selectedRoleControlSummary === selectedRoleFullSummary
+    ? undefined
+    : selectedRoleFullSummary;
   const pendingRoleChangesSummary = useMemo(() => (
     editingUser ? buildPendingRoleChangesSummary(editingUser.roles, selectedRoles) : null
   ), [editingUser, selectedRoles]);
@@ -1717,7 +1724,10 @@ export default function AdminConsolePage() {
               multiple
               value={selectedRoles}
               onChange={(event) => setSelectedRoles(normalizeRoleList(event.target.value as RoleKey[]))}
-              renderValue={(value) => formatRoleList(value as RoleKey[])}
+              renderValue={() => selectedRoleControlSummary}
+              SelectDisplayProps={{
+                title: selectedRoleControlTitle,
+              }}
             >
               {ROLE_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>

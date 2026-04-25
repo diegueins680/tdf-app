@@ -3201,6 +3201,15 @@ describe('AdminConsolePage', () => {
         /Roles actuales: Admin, Manager, Engineer, Teacher, Reception\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,
       ),
     ).toBeInTheDocument();
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    expect(rolesSelect).toHaveTextContent('Admin, Manager +3 roles');
+    expect(rolesSelect).toHaveAttribute('title', 'Admin, Manager, Engineer, Teacher, Reception');
+    expect(rolesSelect).not.toHaveTextContent('Engineer, Teacher, Reception');
   });
 
   it('labels empty role assignments explicitly instead of showing a dash in the edit flow', async () => {
