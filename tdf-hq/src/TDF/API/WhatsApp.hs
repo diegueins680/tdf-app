@@ -164,6 +164,7 @@ isValidEmail :: Text -> Bool
 isValidEmail candidate =
   case T.split (== '@') candidate of
     [localPart, domain] ->
+      T.length candidate <= maxLeadCompletionEmailChars &&
       isValidEmailLocalPart localPart &&
       not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
       not (T.null domain) &&
@@ -174,6 +175,7 @@ isValidEmail candidate =
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
   not (T.null localPart) &&
+  T.length localPart <= maxLeadCompletionEmailLocalPartChars &&
   not (T.isPrefixOf "." localPart) &&
   not (T.isSuffixOf "." localPart) &&
   not (".." `T.isInfixOf` localPart) &&
@@ -186,6 +188,7 @@ isValidEmailLocalChar c =
 isValidDomainLabel :: Text -> Bool
 isValidDomainLabel label =
   not (T.null label) &&
+  T.length label <= maxLeadCompletionEmailDomainLabelChars &&
   not (T.isPrefixOf "-" label) &&
   not (T.isSuffixOf "-" label) &&
   T.all isValidDomainChar label
@@ -224,6 +227,12 @@ leadCompletionTokenLength = 20
 
 maxLeadCompletionEmailChars :: Int
 maxLeadCompletionEmailChars = 254
+
+maxLeadCompletionEmailLocalPartChars :: Int
+maxLeadCompletionEmailLocalPartChars = 64
+
+maxLeadCompletionEmailDomainLabelChars :: Int
+maxLeadCompletionEmailDomainLabelChars = 63
 
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =

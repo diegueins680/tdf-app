@@ -6241,6 +6241,12 @@ main = hspec $ do
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada()@example.com") "Invalid email format"
             assertInvalid
+                (CompleteReq validToken "Ada Lovelace" (Data.Text.replicate 65 "a" <> "@example.com"))
+                "Invalid email format"
+            assertInvalid
+                (CompleteReq validToken "Ada Lovelace" ("ada@" <> Data.Text.replicate 64 "a" <> ".com"))
+                "Invalid email format"
+            assertInvalid
                 (CompleteReq validToken "Ada Lovelace" (Data.Text.replicate 245 "a" <> "@example.com"))
                 "Invalid email: must be 254 characters or fewer"
 
