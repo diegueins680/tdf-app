@@ -43,6 +43,7 @@ import TDF.DTO.SocialEventsDTO
   , ArtistDTO
   , ArtistFollowerDTO
   , ArtistFollowRequest
+  , RsvpCreateDTO
   , RsvpDTO
   , InvitationDTO
   , InvitationUpdateDTO
@@ -155,7 +156,7 @@ type ArtistsRoutes =
 
 type RsvpRoutes =
        "events" :> Capture "eventId" Text :> "rsvps" :> Get '[JSON] [RsvpDTO]
-  :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] RsvpDTO :> Post '[JSON] RsvpDTO
+  :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] RsvpCreateDTO :> Post '[JSON] RsvpDTO
 
 type InvitationsRoutes =
        "events" :> Capture "eventId" Text :> "invitations" :>

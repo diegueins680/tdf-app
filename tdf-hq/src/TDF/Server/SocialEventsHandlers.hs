@@ -95,6 +95,7 @@ import           TDF.DTO.SocialEventsDTO
   , ArtistFollowerDTO(..)
   , ArtistFollowRequest(..)
   , NullableFieldUpdate(..)
+  , RsvpCreateDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
   , InvitationUpdateDTO(..)
@@ -1095,16 +1096,18 @@ socialEventsServer user = eventsServer
         , rsvpUpdatedAt = Just (eventRsvpUpdatedAt rsvp)
         }) rsvpRows
 
-    createRsvp :: T.Text -> RsvpDTO -> AppM RsvpDTO
+    createRsvp :: T.Text -> RsvpCreateDTO -> AppM RsvpDTO
     createRsvp eventIdStr dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
       eventKey <- parseKeyOr400 "event" eventIdStr
+      let eventIdVal = T.strip eventIdStr
+          RsvpCreateDTO partyIdInput statusInput = dto
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
-      statusVal <- either throwError pure (validateRsvpStatus (rsvpStatus dto))
+      statusVal <- either throwError pure (validateRsvpStatus statusInput)
       partyIdVal <-
-        liftIO (resolveExistingPartyIdText envPool "rsvpPartyId" (rsvpPartyId dto))
+        liftIO (resolveExistingPartyIdText envPool "rsvpPartyId" partyIdInput)
           >>= either throwError pure
 
       existingRsvps <- liftIO $ runSqlPool
@@ -1121,8 +1124,9 @@ socialEventsServer user = eventsServer
             , eventRsvpCreatedAt = now
             , eventRsvpUpdatedAt = now
             }) envPool
-          pure dto
+          pure RsvpDTO
             { rsvpId = Just (renderKeyText key)
+            , rsvpEventId = eventIdVal
             , rsvpPartyId = partyIdVal
             , rsvpStatus = statusVal
             , rsvpCreatedAt = Just now
@@ -1133,8 +1137,9 @@ socialEventsServer user = eventsServer
             [ EventRsvpStatus =. statusVal
             , EventRsvpUpdatedAt =. now
             ]) envPool
-          pure dto
+          pure RsvpDTO
             { rsvpId = Just (renderKeyText existingKey)
+            , rsvpEventId = eventIdVal
             , rsvpPartyId = partyIdVal
             , rsvpStatus = statusVal
             , rsvpCreatedAt = Just (eventRsvpCreatedAt existing)

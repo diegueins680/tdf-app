@@ -1356,6 +1356,26 @@ spec = do
                 "{\"ticketOrderStatus\":\"paid\",\"ticketPurchaseBuyerPartyId\":\"7\"}"
                 `shouldSatisfy` isLeft
 
+    describe "social event RSVP request FromJSON" $ do
+        it "accepts canonical RSVP create payloads and rejects server-managed RSVP fields" $ do
+            case decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical RSVP create payload to decode, got: " <> err)
+                Right (SocialEvents.RsvpCreateDTO partyIdVal statusVal) -> do
+                    partyIdVal `shouldBe` "42"
+                    statusVal `shouldBe` "Accepted"
+
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpEventId\":\"99\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpId\":\"7\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpCreatedAt\":\"2026-01-01T00:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
@@ -1506,6 +1526,8 @@ spec = do
     decodeReferralClaim = eitherDecode
     decodeArtistFollowRequest :: BL8.ByteString -> Either String SocialEvents.ArtistFollowRequest
     decodeArtistFollowRequest = eitherDecode
+    decodeRsvpCreate :: BL8.ByteString -> Either String SocialEvents.RsvpCreateDTO
+    decodeRsvpCreate = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO

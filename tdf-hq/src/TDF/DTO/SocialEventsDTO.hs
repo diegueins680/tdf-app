@@ -15,6 +15,7 @@ module TDF.DTO.SocialEventsDTO
   , EventDTO(..)
   , EventMetadataUpdateDTO(..)
   , EventUpdateDTO(..)
+  , RsvpCreateDTO(..)
   , RsvpDTO(..)
   , InvitationDTO(..)
   , InvitationUpdateDTO(..)
@@ -321,6 +322,16 @@ data RsvpDTO = RsvpDTO
   , rsvpUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON RsvpDTO
+
+data RsvpCreateDTO = RsvpCreateDTO
+  { rsvpPartyId   :: Text
+  , rsvpStatus    :: Text  -- "Accepted", "Declined", "Maybe"
+  } deriving (Show, Eq, Generic)
+instance FromJSON RsvpCreateDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
+
 instance FromJSON RsvpDTO
 
 data InvitationDTO = InvitationDTO
