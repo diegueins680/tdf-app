@@ -1023,6 +1023,14 @@ function buildAdditionalModulesActionCopy({
 }
 
 function formatFirstRunAdditionalModulesActionCopy(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
+  if (cards.length === 1) {
+    return {
+      label: 'Opcional: ver 1 módulo adicional',
+      title: undefined,
+      ariaLabel: undefined,
+    } as const;
+  }
+
   return buildAdditionalModulesActionCopy({ cards, optionalPrefix: true });
 }
 
