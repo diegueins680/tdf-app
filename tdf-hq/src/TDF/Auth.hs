@@ -230,7 +230,15 @@ extractToken cfg req =
     [rawHeader] ->
       case TE.decodeUtf8' rawHeader of
         Left _ -> Left "Invalid Authorization header"
-        Right txt -> extractTokenFromHeaders cfg (Just txt) Nothing
+        Right txt ->
+          case cookieHeaders req of
+            [] -> extractTokenFromHeaders cfg (Just txt) Nothing
+            [rawCookieHeader] ->
+              case TE.decodeUtf8' rawCookieHeader of
+                Left _ -> Left "Missing or invalid auth token"
+                Right cookieHeader ->
+                  extractTokenFromHeaders cfg (Just txt) (Just cookieHeader)
+            _ -> Left "Multiple Cookie headers found"
     _ ->
       Left "Multiple Authorization headers found"
   where
@@ -261,14 +269,22 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
     Just rawHeader ->
       case T.words rawHeader of
         [scheme, value]
-          | T.toLower scheme == "bearer" ->
-              validateAuthToken value
+          | T.toLower scheme == "bearer" -> do
+              authToken <- validateAuthToken value
+              case mCookieHeader >>= eitherToMaybe . lookupCookie sessionCookieName of
+                Just cookieToken
+                  | cookieToken /= authToken ->
+                      Left "Conflicting auth credentials found"
+                _ -> Right authToken
         _ -> Left "Invalid Authorization header"
     Nothing ->
       maybe
         (Left "Missing or invalid auth token")
         (lookupCookie sessionCookieName)
         mCookieHeader
+
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe = either (const Nothing) Just
 
 lookupCookie :: Text -> Text -> Either Text Text
 lookupCookie cookieName rawHeader =

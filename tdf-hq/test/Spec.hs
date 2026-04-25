@@ -2250,7 +2250,17 @@ main = hspec $ do
             requestWithHeaders headers =
                 defaultRequest { requestHeaders = headers }
 
-        it "accepts a valid bearer token and keeps it authoritative over the cookie" $ do
+        it "accepts matching bearer and session cookie tokens without ambiguity" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Bearer shared-token")
+                    , ("Cookie", "tdf_session_test=shared-token")
+                    ])
+                `shouldBe` Right "shared-token"
+
+        it "rejects conflicting bearer and session cookie tokens instead of silently choosing one credential" $ do
             cfg <- loadAuthConfig
             extractToken
                 cfg
@@ -2258,7 +2268,7 @@ main = hspec $ do
                     [ ("Authorization", "Bearer header-token")
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
-                `shouldBe` Right "header-token"
+                `shouldBe` Left "Conflicting auth credentials found"
 
         it "uses the configured session cookie when no Authorization header is present" $ do
             cfg <- loadAuthConfig
@@ -2287,7 +2297,7 @@ main = hspec $ do
                     [ ("Authorization", "Bearer header\NULtoken")
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
-                `shouldBe` Left "Invalid Authorization header"
+                `shouldBe` Left "Missing or invalid auth token"
 
         it "rejects duplicate Authorization headers instead of choosing an ambiguous token" $ do
             cfg <- loadAuthConfig
@@ -2353,6 +2363,14 @@ main = hspec $ do
                 (Just "Token header-token")
                 (Just "tdf_session_test=cookie-token")
                 `shouldBe` Left "Invalid Authorization header"
+
+        it "rejects conflicting valid authorization and session cookie tokens" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                (Just "Bearer header-token")
+                (Just "tdf_session_test=cookie-token")
+                `shouldBe` Left "Conflicting auth credentials found"
 
     describe "resolveInstagramRedirectUri" $ do
         let loadInstagramConfig =

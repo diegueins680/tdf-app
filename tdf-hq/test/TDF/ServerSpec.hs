@@ -2529,6 +2529,13 @@ spec = describe "TDF.Server helpers" $ do
                 (Just ("tdf_session=" <> tooLongToken))
                 `shouldBe` Left "Auth token must be 512 characters or fewer"
 
+        it "rejects conflicting valid bearer and session cookie tokens" $
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer header-token")
+                (Just "tdf_session=cookie-token")
+                `shouldBe` Left "Conflicting auth credentials found"
+
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
