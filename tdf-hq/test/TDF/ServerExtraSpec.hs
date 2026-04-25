@@ -3359,7 +3359,7 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
-          Nothing
+          (Just "Devuelve con estuche y fuente.")
           Nothing
           Nothing
           Nothing
@@ -3380,7 +3380,41 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without contact details to be rejected, got " <> show value)
 
-    it "requires rental terms on public QR links so anonymous paid custody records do not omit the agreed conditions" $ do
+    it "requires checkout terms on public QR loan links so anonymous custody records always capture the agreement" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Equipo completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coTermsAndConditions"
+        Right value ->
+          expectationFailure ("Expected public QR loan checkout without terms to be rejected, got " <> show value)
+
+    it "requires checkout terms on public QR rental links so anonymous paid custody records do not omit the agreed conditions" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
@@ -3410,7 +3444,7 @@ spec = do
       case result of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Public QR rental checkout requires coTermsAndConditions"
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coTermsAndConditions"
         Right value ->
           expectationFailure ("Expected public QR rental checkout without terms to be rejected, got " <> show value)
 
@@ -3508,7 +3542,7 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
-          Nothing
+          (Just "Devuelve con estuche y fuente.")
           (Just "ops@example.com")
           Nothing
           Nothing
@@ -3542,7 +3576,7 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
-          Nothing
+          (Just "Devuelve con estuche y fuente.")
           (Just "ops@example.com")
           Nothing
           Nothing
@@ -3576,7 +3610,7 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
-          Nothing
+          (Just "Devuelve con estuche y fuente.")
           (Just "ops@example.com")
           Nothing
           Nothing
@@ -3610,7 +3644,7 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
-          Nothing
+          (Just "Devuelve con estuche y fuente.")
           (Just "ops@example.com")
           Nothing
           Nothing
