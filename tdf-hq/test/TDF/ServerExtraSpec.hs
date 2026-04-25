@@ -1859,6 +1859,32 @@ spec = do
           , coPaymentOutstanding = Just "150.00"
           }
 
+    it "preserves omitted paymentOutstanding as missing so the backend does not silently convert unknown balances into settled ones" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err ->
+          expectationFailure ("Expected checkout without paymentOutstanding to stay valid, got: " <> show err)
+        Right normalized ->
+          ncrPaymentOutstandingCents normalized `shouldBe` Nothing
+
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
       normalizeAssetCheckinFields (AssetCheckinRequest (Just "  Returned OK  ") (Just "  Cables verified  ") (Just "inventory/checkin.jpg"))

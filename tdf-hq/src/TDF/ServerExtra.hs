@@ -863,8 +863,6 @@ normalizeCheckoutRequest req = do
     paymentAmountCents
     paymentCurrency
     paymentOutstandingCents
-  let normalizedPaymentOutstandingCents =
-        normalizeCheckoutOutstandingCents paymentAmountCents paymentOutstandingCents
   validateCheckoutDispositionFields targetKind disposition (coDueAt req)
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
@@ -883,7 +881,7 @@ normalizeCheckoutRequest req = do
     , ncrPaymentReference = paymentReference
     , ncrPaymentAmountCents = paymentAmountCents
     , ncrPaymentCurrency = paymentCurrency
-    , ncrPaymentOutstandingCents = normalizedPaymentOutstandingCents
+    , ncrPaymentOutstandingCents = paymentOutstandingCents
     , ncrDueAt = coDueAt req
     , ncrConditionOut = conditionOut
     , ncrPhotoOutUrl = photoOutUrl
@@ -1246,10 +1244,6 @@ validateCheckinPayload Nothing Nothing Nothing =
   Left err400 { errBody = "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl" }
 validateCheckinPayload _ _ _ =
   Right ()
-
-normalizeCheckoutOutstandingCents :: Maybe Int -> Maybe Int -> Maybe Int
-normalizeCheckoutOutstandingCents (Just _) Nothing = Just 0
-normalizeCheckoutOutstandingCents _ outstanding = outstanding
 
 checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
 checkoutDispositionSupportsPaymentDetails Rental = True
