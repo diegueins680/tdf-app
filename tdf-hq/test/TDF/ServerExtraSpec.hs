@@ -2039,6 +2039,91 @@ spec = do
         Right value ->
           expectationFailure ("Expected oversized merged check-in notes to be rejected, got " <> show value)
 
+  describe "getAssetH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000906"
+        checkoutIdText = "00000000-0000-0000-0000-000000000911"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000912"
+
+    it "rejects assets with multiple active checkouts so detail views do not silently report an arbitrary current holder" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second get asset checkout fixture key" >> fail "unreachable"
+      result <- runInventoryGetHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        existingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "loading asset details"
+        Right value ->
+          expectationFailure ("Expected ambiguous asset detail lookup to fail, got " <> show value)
+
   describe "checkoutHistoryH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000907"
 
@@ -4691,6 +4776,22 @@ runInventoryPatchHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (patchAssetHandlerFor inventoryUser rawId req) env)
 
+runInventoryGetHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetDTO)
+runInventoryGetHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory get tests"
+            }
+    liftIO $ runExceptT (runReaderT (getAssetHandlerFor inventoryUser rawId) env)
+
 runInventoryCheckoutHistoryHandler
   :: SqlPersistT IO ()
   -> Text
@@ -4968,6 +5069,22 @@ patchAssetHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           patchAsset
+
+getAssetHandlerFor :: AuthedUser -> Text -> InventoryTestM AssetDTO
+getAssetHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          getAsset
 
 checkoutHistoryHandlerFor :: AuthedUser -> Text -> InventoryTestM [AssetCheckoutDTO]
 checkoutHistoryHandlerFor user =
