@@ -41,6 +41,7 @@ import {
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
+  getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -243,6 +244,7 @@ export default function BookingsPage() {
   const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
   const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const [manualServiceFallbackOpen, setManualServiceFallbackOpen] = useState(false);
   const defaultServiceName = serviceTypes[0]?.name ?? '';
   const formatServiceLabel = useCallback(
     (svc: ServiceType) => {
@@ -371,6 +373,14 @@ export default function BookingsPage() {
       }),
     [mode, serviceCatalogReady, serviceLocked, serviceTypes.length],
   );
+  const serviceFallbackEntryState = useMemo(
+    () =>
+      getBookingServiceFallbackEntryState({
+        fallbackTemplatesActive: showQuickTemplateField && serviceFieldState.mode === 'manual',
+        manualEntryRequested: manualServiceFallbackOpen,
+      }),
+    [manualServiceFallbackOpen, serviceFieldState.mode, showQuickTemplateField],
+  );
   const serviceFieldHelperText =
     serviceFieldState.mode === 'manual'
       ? serviceType.trim()
@@ -411,6 +421,8 @@ export default function BookingsPage() {
   const handleCloseBookingDialog = useCallback(() => {
     setDialogOpen(false);
     setShowOptionalDetails(false);
+    setManualServiceFallbackOpen(false);
+    setTemplate('');
   }, []);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
@@ -461,7 +473,9 @@ useEffect(() => {
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.notes) setNotes(parsed.notes);
       setStatus('Tentative');
+      setTemplate('');
       setServiceType('Trial lesson');
+      setManualServiceFallbackOpen(true);
       setDialogOpen(true);
       setAutoAssignMessage('Datos precargados desde la última acción.');
       setPrefillNotice(true);
@@ -493,6 +507,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
+    setTemplate('');
     setServiceType(initialService);
     setEngineerName('');
     setCustomerName('');
@@ -500,6 +515,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     const defaults = defaultRoomsForService(initialService);
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
+    setManualServiceFallbackOpen(false);
     openDialogForRange(start, end);
   };
 
@@ -510,6 +526,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
+    setTemplate('');
     setServiceType(initialService);
     setEngineerName('');
     setCustomerName('');
@@ -517,6 +534,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     const defaults = defaultRoomsForService(initialService);
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
+    setManualServiceFallbackOpen(false);
     openDialogForRange(
       info.start,
       info.end ?? DateTime.fromJSDate(info.start).plus({ minutes: defaultDuration }).toJSDate(),
@@ -533,7 +551,9 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEndInput('');
     setTitle('Bloque de estudio');
     setNotes('');
+    setTemplate('');
     setServiceType('');
+    setManualServiceFallbackOpen(false);
     setAssignedRoomIds([]);
     setEngineerName('');
     setEngineerPartyId(null);
@@ -599,9 +619,11 @@ const openDialogForRange = (start: Date, end: Date) => {
     onSuccess: () => {
       setDialogOpen(false);
       setShowOptionalDetails(false);
+      setManualServiceFallbackOpen(false);
       setFormError(null);
       setTitle('Bloque de estudio');
       setNotes('');
+      setTemplate('');
       setServiceType('');
       setStatus('Confirmed');
       setEditingId(null);
@@ -627,9 +649,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       void qc.invalidateQueries({ queryKey: ['bookings'] });
       setDialogOpen(false);
       setShowOptionalDetails(false);
+      setManualServiceFallbackOpen(false);
       setEditingId(null);
       setMode('create');
       setFormError(null);
+      setTemplate('');
       setPrefillNotice(false);
       setAutoAssignMessage('');
     },
@@ -717,12 +741,14 @@ const openDialogForRange = (start: Date, end: Date) => {
           ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
           : booking.customerName ?? booking.partyDisplayName ?? '';
       setCustomerName(customerLabel);
+      setTemplate('');
       setServiceType(booking.serviceType ?? '');
       setServiceLocked(Boolean(booking.courseSlug));
       setStatus(booking.status ?? 'Confirmed');
       setStartInput(formatForInput(new Date(booking.startsAt)));
       setEndInput(formatForInput(new Date(booking.endsAt)));
       setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
+      setManualServiceFallbackOpen(false);
       const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
       const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
       setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
@@ -1143,6 +1169,12 @@ const openDialogForRange = (start: Date, end: Date) => {
                 onChange={(e) => {
                   const val = String(e.target.value);
                   setTemplate(val);
+                  if (val === '') {
+                    setAutoAssignMessage('');
+                    setManualServiceFallbackOpen(true);
+                    return;
+                  }
+                  setManualServiceFallbackOpen(false);
                   const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
                     rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
                     recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
@@ -1163,7 +1195,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     }
                   }
                 }}
-                helperText="Aparece cuando no hay catálogo de servicios; precarga servicio, salas y notas."
+                helperText={serviceFallbackEntryState.templateHelperText}
                 fullWidth
               >
                 <MenuItem value="">Sin plantilla</MenuItem>
@@ -1173,7 +1205,20 @@ const openDialogForRange = (start: Date, end: Date) => {
                 <MenuItem value="curso">Curso/bloque</MenuItem>
               </TextField>
             )}
-            {serviceFieldState.mode === 'manual' ? (
+            {serviceFallbackEntryState.showManualEntryToggle && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  setTemplate('');
+                  setManualServiceFallbackOpen(true);
+                }}
+                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+              >
+                {serviceFallbackEntryState.manualEntryToggleLabel}
+              </Button>
+            )}
+            {serviceFieldState.mode === 'manual' && serviceFallbackEntryState.showManualEntryField ? (
               <TextField
                 label="Servicio"
                 value={serviceType}

@@ -7,6 +7,7 @@ import {
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
+  getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
@@ -141,6 +142,36 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
       mode: 'manual',
+    });
+  });
+
+  it('keeps the no-catalog fallback focused on one service-entry path at a time', () => {
+    expect(getBookingServiceFallbackEntryState({
+      fallbackTemplatesActive: false,
+      manualEntryRequested: false,
+    })).toEqual({
+      showManualEntryField: true,
+      showManualEntryToggle: false,
+      templateHelperText: '',
+    });
+
+    expect(getBookingServiceFallbackEntryState({
+      fallbackTemplatesActive: true,
+      manualEntryRequested: false,
+    })).toEqual({
+      manualEntryToggleLabel: 'Escribir servicio manualmente',
+      showManualEntryField: false,
+      showManualEntryToggle: true,
+      templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
+    });
+
+    expect(getBookingServiceFallbackEntryState({
+      fallbackTemplatesActive: true,
+      manualEntryRequested: true,
+    })).toEqual({
+      showManualEntryField: true,
+      showManualEntryToggle: false,
+      templateHelperText: 'La plantilla sigue disponible si quieres volver a precargar servicio, salas y notas.',
     });
   });
 

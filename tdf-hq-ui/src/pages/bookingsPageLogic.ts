@@ -19,6 +19,13 @@ interface BookingServiceFieldState {
   mode: 'catalog' | 'manual';
 }
 
+interface BookingServiceFallbackEntryState {
+  manualEntryToggleLabel?: string;
+  showManualEntryField: boolean;
+  showManualEntryToggle: boolean;
+  templateHelperText: string;
+}
+
 interface BookingEngineerFieldState {
   helperText: string;
   label: string;
@@ -209,6 +216,37 @@ export const getBookingServiceFieldState = ({
   return {
     helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
     mode: 'manual',
+  };
+};
+
+export const getBookingServiceFallbackEntryState = ({
+  fallbackTemplatesActive,
+  manualEntryRequested,
+}: {
+  fallbackTemplatesActive: boolean;
+  manualEntryRequested: boolean;
+}): BookingServiceFallbackEntryState => {
+  if (!fallbackTemplatesActive) {
+    return {
+      showManualEntryField: true,
+      showManualEntryToggle: false,
+      templateHelperText: '',
+    };
+  }
+
+  if (manualEntryRequested) {
+    return {
+      showManualEntryField: true,
+      showManualEntryToggle: false,
+      templateHelperText: 'La plantilla sigue disponible si quieres volver a precargar servicio, salas y notas.',
+    };
+  }
+
+  return {
+    manualEntryToggleLabel: 'Escribir servicio manualmente',
+    showManualEntryField: false,
+    showManualEntryToggle: true,
+    templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
   };
 };
 
