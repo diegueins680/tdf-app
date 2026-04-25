@@ -20,7 +20,7 @@ module TDF.ServerProposals
   , validateTemplateKey
   ) where
 
-import           Control.Monad              (unless)
+import           Control.Monad              (unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
@@ -176,9 +176,10 @@ proposalsServer user =
                 ]
               sentUpdate = sentAtUpdate (ME.proposalSentAt proposal) statusUpdate now
               updates' = updates ++ maybeToList sentUpdate
-              finalUpdates =
-                if null updates' then [] else updates' ++ [ME.ProposalUpdatedAt =. now]
-          unless (null finalUpdates) (withPool $ update key finalUpdates)
+          when (null updates') $
+            throwError err400 { errBody = "Proposal update must include at least one field" }
+          let finalUpdates = updates' ++ [ME.ProposalUpdatedAt =. now]
+          withPool $ update key finalUpdates
           updated <- withPool $ getJustEntity key
           mLatest <- withPool $ selectFirst
             [ ME.ProposalVersionProposalId ==. key ]

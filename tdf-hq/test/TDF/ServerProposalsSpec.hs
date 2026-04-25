@@ -6,18 +6,22 @@ module TDF.ServerProposalsSpec (spec) where
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
-import Control.Monad.Trans.Reader (ReaderT, runReaderT)
+import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
+import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Database.Persist (insertKey)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Test.Hspec
+import Web.PathPieces (fromPathPiece)
 
-import TDF.API.Proposals (ProposalVersionDTO, ProposalVersionSummaryDTO, ProposalsAPI)
+import TDF.API.Proposals (ProposalDTO, ProposalUpdate (..), ProposalVersionDTO, ProposalVersionSummaryDTO, ProposalsAPI)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.Models (RoleEnum (..))
+import qualified TDF.ModelsExtra as ME
 import TDF.ServerProposals (proposalsServer)
 
 type ProposalTestM = ReaderT Env (ExceptT ServerError IO)
@@ -55,6 +59,24 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected missing proposal version lookup to fail, got: " <> show versionDto)
 
+  it "rejects empty proposal patch payloads instead of treating them as silent no-op updates" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440001"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        updateProposalHandlerFor
+          (mkUser [Admin])
+          proposalIdText
+          (ProposalUpdate Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "Proposal update must include at least one field"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected empty proposal patch to fail, got: " <> show proposalDto)
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser
@@ -75,6 +97,11 @@ runProposalTest action =
             }
     liftIO $ runExceptT (runReaderT action env)
 
+runProposalSql :: SqlPersistT IO a -> ProposalTestM a
+runProposalSql action = do
+  env <- ask
+  liftIO $ runSqlPool action (envPool env)
+
 listVersionsHandlerFor :: AuthedUser -> Text -> ProposalTestM [ProposalVersionSummaryDTO]
 listVersionsHandlerFor user rawId =
   case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
@@ -88,6 +115,19 @@ listVersionsHandlerFor user rawId =
           :<|> _proposalPdf ->
             listVersions
 
+updateProposalHandlerFor :: AuthedUser -> Text -> ProposalUpdate -> ProposalTestM ProposalDTO
+updateProposalHandlerFor user rawId payload =
+  case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
+    _listProposals :<|> _createProposal :<|> proposalRoutes ->
+      case proposalRoutes rawId of
+        _getProposal
+          :<|> updateProposal
+          :<|> _listVersions
+          :<|> _createVersion
+          :<|> _getVersion
+          :<|> _proposalPdf ->
+            updateProposal payload
+
 getVersionHandlerFor :: AuthedUser -> Text -> Int -> ProposalTestM ProposalVersionDTO
 getVersionHandlerFor user rawId versionNumber =
   case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
@@ -100,6 +140,29 @@ getVersionHandlerFor user rawId versionNumber =
           :<|> getVersion
           :<|> _proposalPdf ->
             getVersion versionNumber
+
+seedProposal :: Text -> ProposalTestM ()
+seedProposal rawId = do
+  proposalKey <- case (fromPathPiece rawId :: Maybe ME.ProposalId) of
+    Just key -> pure key
+    Nothing -> error ("invalid proposal fixture key: " <> show rawId)
+  let fixtureTime = UTCTime (fromGregorian 2026 4 24) (secondsToDiffTime 0)
+  runProposalSql $
+    insertKey proposalKey ME.Proposal
+      { ME.proposalTitle = "Studio proposal"
+      , ME.proposalServiceKind = Nothing
+      , ME.proposalClientPartyId = Nothing
+      , ME.proposalContactName = Just "Ops"
+      , ME.proposalContactEmail = Just "ops@example.com"
+      , ME.proposalContactPhone = Just "+593991234567"
+      , ME.proposalPipelineCardId = Nothing
+      , ME.proposalStatus = "draft"
+      , ME.proposalNotes = Just "Initial draft"
+      , ME.proposalCreatedAt = fixtureTime
+      , ME.proposalUpdatedAt = fixtureTime
+      , ME.proposalLastGeneratedAt = Nothing
+      , ME.proposalSentAt = Nothing
+      }
 
 initializeProposalSchema :: SqlPersistT IO ()
 initializeProposalSchema = do
