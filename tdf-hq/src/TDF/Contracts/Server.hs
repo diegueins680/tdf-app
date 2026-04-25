@@ -207,19 +207,29 @@ validateContractSendPayload _ =
 
 validateContractPayload :: A.Value -> Either ServerError (Text, A.Value)
 validateContractPayload (A.Object payloadObj) =
-  case KM.lookup "kind" payloadObj of
-    Nothing ->
+  case reservedPayloadKey of
+    Just reservedKey ->
       Left err400
-        { errBody = "Contract payload must include a kind field"
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Contract payload must not include server-managed field: " <> reservedKey))
         }
-    Just (A.String rawKind) ->
-      case normalizeContractKind rawKind of
-        Left err -> Left err
-        Right kindText ->
-          Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
-    Just _ ->
-      invalidKind
+    Nothing ->
+      case KM.lookup "kind" payloadObj of
+        Nothing ->
+          Left err400
+            { errBody = "Contract payload must include a kind field"
+            }
+        Just (A.String rawKind) ->
+          case normalizeContractKind rawKind of
+            Left err -> Left err
+            Right kindText ->
+              Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
+        Just _ ->
+          invalidKind
   where
+    reservedPayloadKey =
+      case filter (`KM.member` payloadObj) ["id", "created_at"] of
+        [] -> Nothing
+        (key:_) -> Just (K.toText key)
     invalidKind =
       Left err400
         { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"

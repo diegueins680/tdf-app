@@ -5328,6 +5328,20 @@ main = hspec $ do
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
 
+        it "rejects server-managed envelope keys inside contract payloads so create requests cannot over-post stored metadata" $ do
+            let assertInvalid payload expected = case validateContractPayload payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected reserved-key contract payload to be rejected, got: " <> show value)
+            assertInvalid
+                (A.object ["kind" .= ("generic" :: Text), "id" .= ("550e8400-e29b-41d4-a716-446655440000" :: Text)])
+                "Contract payload must not include server-managed field: id"
+            assertInvalid
+                (A.object ["kind" .= ("generic" :: Text), "created_at" .= ("2026-01-01T00:00:00Z" :: Text)])
+                "Contract payload must not include server-managed field: created_at"
+
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $
             validateContractSendPayload (A.object ["email" .= (" Sales@Example.com " :: Text)])
