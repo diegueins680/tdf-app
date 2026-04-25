@@ -149,7 +149,7 @@ proposalsServer user =
       proposalKey <- parseKey @ME.Proposal rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
-        Nothing -> throwError err404
+        Nothing -> throwError proposalNotFound
         Just (Entity key proposal) -> do
           now <- liftIO getCurrentTime
           titleUpdate <- either throwError pure (traverse validateProposalTitle puTitle)

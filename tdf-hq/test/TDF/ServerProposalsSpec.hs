@@ -77,6 +77,22 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected empty proposal patch to fail, got: " <> show proposalDto)
 
+  it "rejects missing proposals before attempting a patch so clients get the same explicit 404 as other proposal reads" $ do
+    result <-
+      runProposalTest $
+        updateProposalHandlerFor
+          (mkUser [Admin])
+          "550e8400-e29b-41d4-a716-446655440000"
+          (ProposalUpdate (Just "Updated title") Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 404
+        BL8.unpack (errBody err) `shouldContain` "Proposal not found"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected missing proposal patch to fail, got: " <> show proposalDto)
+
   it "rejects control characters in proposal contact names before mutating persisted records" $ do
     let proposalIdText = "550e8400-e29b-41d4-a716-446655440002"
     result <-
