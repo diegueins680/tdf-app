@@ -200,6 +200,8 @@ import TDF.Server
     , validatePublicBookingFullName
     , validatePublicBookingNotes
     , validatePublicBookingServiceType
+    , validateRequiredBookingTitle
+    , validateOptionalBookingTitleUpdate
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
@@ -5786,6 +5788,33 @@ spec = describe "TDF.Server helpers" $ do
             decodeUpdateBookingRequest
                 "{\"ubTitle\":\"Updated title\",\"ubStatus\":\"Planned\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+    describe "booking title validation" $ do
+        it "trims meaningful create and update titles before persistence" $ do
+            validateRequiredBookingTitle "  Sesion de mezcla  "
+                `shouldBe` Right "Sesion de mezcla"
+            validateOptionalBookingTitleUpdate (Just "  Seguimiento final  ")
+                `shouldBe` Right (Just "Seguimiento final")
+            validateOptionalBookingTitleUpdate Nothing
+                `shouldBe` Right Nothing
+
+        it "rejects blank, oversized, or control-character booking titles instead of silently ignoring updates" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid booking title to be rejected, got: " <> show value)
+            assertInvalid "title is required" (validateRequiredBookingTitle "   ")
+            assertInvalid "title is required" (validateOptionalBookingTitleUpdate (Just "   "))
+            assertInvalid
+                "title must be 160 characters or fewer"
+                (validateRequiredBookingTitle (T.replicate 161 "a"))
+            assertInvalid
+                "title must not contain control characters"
+                (validateOptionalBookingTitleUpdate (Just "Sesion\nmezcla"))
 
     describe "validatePublicBookingDurationMinutes" $ do
         it "defaults omitted durations to one hour and preserves explicit durations inside the public window" $ do

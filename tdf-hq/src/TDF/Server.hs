@@ -4225,6 +4225,25 @@ validatePublicBookingServiceType rawServiceType =
       | otherwise ->
           Right serviceTypeVal
 
+validateRequiredBookingTitle :: Text -> Either ServerError Text
+validateRequiredBookingTitle rawTitle =
+  let titleVal = T.strip rawTitle
+  in if T.null titleVal
+       then Left err400 { errBody = "title is required" }
+       else if T.length titleVal > bookingTitleMaxLength
+         then Left err400 { errBody = "title must be 160 characters or fewer" }
+         else if T.any isControl titleVal
+           then Left err400 { errBody = "title must not contain control characters" }
+           else Right titleVal
+
+validateOptionalBookingTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalBookingTitleUpdate Nothing = Right Nothing
+validateOptionalBookingTitleUpdate (Just rawTitle) =
+  Just <$> validateRequiredBookingTitle rawTitle
+
+bookingTitleMaxLength :: Int
+bookingTitleMaxLength = 160
+
 validatePublicBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validatePublicBookingNotes Nothing = Right Nothing
 validatePublicBookingNotes (Just rawNotes) =
@@ -6158,6 +6177,7 @@ createBooking user req = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
 
+  titleClean <- either throwError pure (validateRequiredBookingTitle (cbTitle req))
   status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
   either throwError pure $
     validateBookingTimeRange (cbStartsAt req) (cbEndsAt req)
@@ -6188,7 +6208,7 @@ createBooking user req = do
           <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
 
   let bookingRecord = Booking
-        { bookingTitle          = cbTitle req
+        { bookingTitle          = titleClean
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = partyKey
         , bookingServiceType    = serviceTypeClean
@@ -6222,6 +6242,7 @@ updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
 updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   Env pool _ <- ask
+  titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   requestedEngineerId <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
@@ -6238,14 +6259,10 @@ updateBooking user bookingIdI req = do
             case traverse parseBookingStatus (ubStatus req) of
               Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
               Right requestedStatus -> do
-                let applyText fallback Nothing = fallback
-                    applyText fallback (Just val) =
-                      let trimmed = T.strip val
-                      in if T.null trimmed then fallback else trimmed
-                    applyMaybeText fallback Nothing = fallback
+                let applyMaybeText fallback Nothing = fallback
                     applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
                     updated = current
-                      { bookingTitle       = applyText (bookingTitle current) (ubTitle req)
+                      { bookingTitle       = fromMaybe (bookingTitle current) titleUpdate
                       , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
                       , bookingNotes       = applyMaybeText (bookingNotes current) (ubNotes req)
                       , bookingStatus      = fromMaybe (bookingStatus current) requestedStatus
