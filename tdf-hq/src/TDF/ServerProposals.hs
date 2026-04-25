@@ -15,6 +15,7 @@ module TDF.ServerProposals
   , validateOptionalProposalContactPhone
   , validateOptionalProposalClientPartyId
   , validateProposalContentSource
+  , validateProposalTitle
   , validateProposalStatus
   , validateProposalVersionNumber
   , validateTemplateKey
@@ -105,7 +106,7 @@ proposalsServer user =
 
     createProposalH ProposalCreate{..} = do
       ensureCRM
-      title <- requireText "title" pcTitle
+      title <- either throwError pure (validateProposalTitle pcTitle)
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
@@ -150,7 +151,7 @@ proposalsServer user =
         Nothing -> throwError err404
         Just (Entity key proposal) -> do
           now <- liftIO getCurrentTime
-          titleUpdate <- traverse (requireText "title") puTitle
+          titleUpdate <- either throwError pure (traverse validateProposalTitle puTitle)
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
           contactEmailUpdate <- either throwError pure
             (traverse validateOptionalProposalContactEmail puContactEmail)
@@ -362,11 +363,21 @@ normalizeText raw =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-requireText :: MonadError ServerError m => Text -> Text -> m Text
-requireText label raw =
-  case normalizeText raw of
-    Nothing -> throwError err400 { errBody = encodeUtf8Lazy (label <> " required") }
-    Just val -> pure val
+maxProposalTitleChars :: Int
+maxProposalTitleChars = 160
+
+validateProposalTitle :: Text -> Either ServerError Text
+validateProposalTitle rawTitle
+  | T.null title =
+      Left err400 { errBody = "title is required" }
+  | T.length title > maxProposalTitleChars =
+      Left err400 { errBody = "title must be 160 characters or fewer" }
+  | T.any isControl title =
+      Left err400 { errBody = "title must not contain control characters" }
+  | otherwise =
+      Right title
+  where
+    title = T.strip rawTitle
 
 validateProposalStatus :: Maybe Text -> Either ServerError Text
 validateProposalStatus Nothing = Right "draft"

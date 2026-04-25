@@ -148,6 +148,7 @@ import TDF.ServerProposals
       validateOptionalProposalContactPhone,
       validateOptionalProposalStatus,
       validateProposalContentSource,
+      validateProposalTitle,
       validateProposalStatus,
       validateProposalVersionNumber,
       validateTemplateKey )
@@ -4837,6 +4838,22 @@ main = hspec $ do
                             rpStreamUrl persisted `shouldBe` "https://radio.example.com/live"
                             rpStationName persisted `shouldBe` Just "Radio Uno"
                             rpStationId persisted `shouldBe` Just "station-uno"
+
+    describe "validateProposalTitle" $ do
+        it "trims valid proposal titles before CRM persistence" $
+            validateProposalTitle "  TDF Live Sessions Proposal  "
+                `shouldBe` Right "TDF Live Sessions Proposal"
+
+        it "rejects blank, oversized, or control-character proposal titles before they reach storage or PDF generation" $ do
+            let assertInvalid raw expected = case validateProposalTitle raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal title to be rejected, got: " <> show value)
+            assertInvalid "   " "title is required"
+            assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
+            assertInvalid "Launch\nBcc: ops@example.com" "title must not contain control characters"
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do
