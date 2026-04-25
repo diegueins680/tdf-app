@@ -1146,6 +1146,9 @@ validateCheckoutFinancials _ _ _ _ (Just _) Nothing _ =
   Left err400 { errBody = "paymentAmount requires paymentCurrency" }
 validateCheckoutFinancials _ _ _ _ Nothing _ (Just _) =
   Left err400 { errBody = "paymentOutstanding requires paymentAmount" }
+validateCheckoutFinancials _ _ (Just installments) _ _ _ Nothing
+  | installments > 1 =
+      Left err400 { errBody = "paymentInstallments greater than 1 requires paymentOutstanding" }
 validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
   | outstandingCents > amountCents =
       Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }

@@ -1565,6 +1565,13 @@ spec = do
         "paymentCurrency requires paymentAmount"
         baseRequest { coPaymentCurrency = Just "USD" }
       assertInvalid
+        "paymentInstallments greater than 1 requires paymentOutstanding"
+        baseRequest
+          { coPaymentInstallments = Just 3
+          , coPaymentAmount = Just "100.00"
+          , coPaymentCurrency = Just "USD"
+          }
+      assertInvalid
         "paymentOutstanding requires paymentAmount"
         baseRequest { coPaymentOutstanding = Just "10.00" }
       assertInvalid
