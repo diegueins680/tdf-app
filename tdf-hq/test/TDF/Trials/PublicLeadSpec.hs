@@ -2,7 +2,7 @@
 
 module TDF.Trials.PublicLeadSpec (spec) where
 
-import Control.Exception (try)
+import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.Aeson as A
@@ -15,6 +15,7 @@ import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, 
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent, ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
+import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
@@ -51,6 +52,7 @@ import TDF.Trials.Server
   , createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
+  , trialsServer
   , validateAvailabilityIdInput
   , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
@@ -236,6 +238,21 @@ spec = do
       assertRejected (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing) "notes must not contain control characters"
       assertRejected (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing) "notes must be 1-2000 characters"
       assertRejected (mkTrial (Just "Ada") Nothing Nothing Nothing) "Correo requerido"
+
+  describe "public trial request handler" $ do
+    it "returns invalid public trial input as a 400 response instead of an uncaught exception" $ do
+      result <- runPublicTrialRequestHandler
+        (TrialRequestIn Nothing 7 [validSlot] Nothing (Just "Ada Lovelace") Nothing Nothing)
+      case result of
+        Left ex ->
+          expectationFailure
+            ("Expected invalid public trial request to return a ServerError, got exception: " <> show ex)
+        Right (Left err) -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Correo requerido"
+        Right (Right value) ->
+          expectationFailure
+            ("Expected invalid public trial request to be rejected, got " <> show value)
 
   describe "validateOptionalTrialRequestStatusFilter" $ do
     it "treats omitted or blank filters as absent and canonicalizes supported values" $ do
@@ -1904,6 +1921,21 @@ adminUser =
       , auRoles = roles
       , auModules = modulesForRoles roles
       }
+
+runPublicTrialRequestHandler
+  :: TrialRequestIn
+  -> IO (Either SomeException (Either ServerError TrialRequestOut))
+runPublicTrialRequestHandler req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeTrialsSchema pool
+    let handler =
+          case trialsServer pool of
+            publicServer :<|> _privateServer ->
+              case publicServer of
+                _signupH :<|> _interestH :<|> trialRequestH :<|> _subjectsH :<|> _trialSlotsH ->
+                  trialRequestH req
+    liftIO $ try (runHandler handler)
 
 privateQueueHandler :: Maybe Int -> Maybe Text -> SqlPersistT IO [TrialQueueItem]
 privateQueueHandler =

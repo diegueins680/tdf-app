@@ -2051,7 +2051,12 @@ trialsServer pool =
   in hoistServerWithContext trialsProxy ctxProxy nt server
   where
     nt :: AppM a -> Handler a
-    nt x = liftIO (runSqlPool x pool)
+    nt x = do
+      result <- liftIO (runTrialsAction x)
+      either throwError pure result
+
+    runTrialsAction :: AppM a -> IO (Either ServerError a)
+    runTrialsAction action = try (runSqlPool action pool)
 
     authedPrivateServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
     authedPrivateServer user = privateTrialsServer user
