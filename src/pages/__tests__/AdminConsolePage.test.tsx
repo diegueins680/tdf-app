@@ -2832,10 +2832,13 @@ describe('AdminConsolePage', () => {
     });
 
     expect(
-      screen.getByText(
+      screen.getByText('Opcional'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
         /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
     ).toHaveAttribute('aria-expanded', 'false');
@@ -2852,10 +2855,13 @@ describe('AdminConsolePage', () => {
 
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
     expect(
-      screen.getByText(
+      screen.getByText('Opcional'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
         /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       screen.getByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
@@ -2895,6 +2901,12 @@ describe('AdminConsolePage', () => {
     const actionButton = screen.getByRole('button', { name: `Ver detalles de ${longModuleTitle}` });
     expect(actionButton).toHaveAttribute('title', `Ver detalles de ${longModuleTitle}`);
     expect(actionButton).toHaveTextContent('Ver detalles');
+    expect(screen.getByText('Opcional')).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Ver 1 módulo adicional$/i })).not.toBeInTheDocument();
     await user.click(actionButton);
 

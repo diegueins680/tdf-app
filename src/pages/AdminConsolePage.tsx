@@ -1323,6 +1323,7 @@ export default function AdminConsolePage() {
   const standaloneAdditionalModulesHideLabel = singleAdditionalModule
     ? 'Ocultar módulo adicional'
     : 'Ocultar módulos adicionales';
+  const showStandaloneAdditionalModulesOptionalChip = singleAdditionalModule != null;
   const firstRunAdditionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
@@ -1914,10 +1915,17 @@ export default function AdminConsolePage() {
               alignItems={{ xs: 'flex-start', sm: 'center' }}
             >
               <Box>
-                <Typography variant="h6">{standaloneAdditionalModulesTitle}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {standaloneAdditionalModulesDescription}
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                  <Typography variant="h6">{standaloneAdditionalModulesTitle}</Typography>
+                  {showStandaloneAdditionalModulesOptionalChip && (
+                    <Chip label="Opcional" size="small" variant="outlined" />
+                  )}
+                </Stack>
+                {!showStandaloneAdditionalModulesOptionalChip && (
+                  <Typography variant="body2" color="text.secondary">
+                    {standaloneAdditionalModulesDescription}
+                  </Typography>
+                )}
               </Box>
               <Button
                 size="small"
