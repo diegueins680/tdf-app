@@ -2650,6 +2650,41 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Temporarily unavailable/i)).not.toBeInTheDocument();
   });
 
+  it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'api-tokens',
+          title: 'Tokens API',
+          body: [
+            'Los tokens de servicio deben administrarse desde un flujo dedicado.',
+            'El acceso quedará separado de usuarios humanos para integraciones internas.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Tokens API/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens API')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Los tokens de servicio deben administrarse desde un flujo dedicado\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/El acceso quedará separado de usuarios humanos para integraciones internas\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
