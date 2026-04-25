@@ -505,6 +505,98 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('summarizes one shared booking once and restores the booking column when sessions diverge again', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 161,
+        title: 'Grabación',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Grabación',
+        customerName: 'Ada Sessions',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 162,
+        title: 'Edición',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Edición',
+        customerName: 'Ada Sessions',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo booking: Ada Sessions. La columna volverá cuando esta vista mezcle bookings distintos.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo booking: Ada Sessions.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Ada Sessions')).toBe(1);
+        expect(hasTableHeader(container, 'Booking')).toBe(false);
+        expect(text).toContain('Grabación');
+        expect(text).toContain('Edición');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 161,
+        title: 'Grabación',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Grabación',
+        customerName: 'Ada Sessions',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 162,
+        title: 'Edición',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        customerName: 'Grace Sessions',
+        serviceType: 'Edición',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando un solo booking:');
+        expect(hasTableHeader(secondContainer, 'Booking')).toBe(true);
+        expect(text).toContain('Ada Sessions');
+        expect(text).toContain('Grace Sessions');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
   it('summarizes one shared engineer once and restores the engineer column when sessions diverge again', async () => {
     listBookingsMock.mockResolvedValue([
       {

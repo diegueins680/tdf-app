@@ -241,6 +241,10 @@ interface OrderRow {
   status: string;
 }
 
+function getOrderRowBookingSummary(row: Pick<OrderRow, 'bookingPrimary' | 'bookingSecondary'>) {
+  return row.bookingSecondary ? `${row.bookingPrimary} · ${row.bookingSecondary}` : row.bookingPrimary;
+}
+
 export default function OrdersPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -337,6 +341,11 @@ export default function OrdersPage() {
     [rows],
   );
   const showServiceColumn = sharedServiceSummary === '';
+  const sharedBookingSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => getOrderRowBookingSummary(row))),
+    [rows],
+  );
+  const showBookingColumn = sharedBookingSummary === '';
   const sharedEngineerSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.engineers)),
     [rows],
@@ -361,6 +370,11 @@ export default function OrdersPage() {
           value: sharedServiceSummary,
         },
         {
+          pluralLabel: 'bookings',
+          singularLabel: 'un solo booking',
+          value: sharedBookingSummary,
+        },
+        {
           pluralLabel: 'ingenieros',
           singularLabel: 'un solo ingeniero',
           value: sharedEngineerSummary,
@@ -376,10 +390,11 @@ export default function OrdersPage() {
           value: sharedStatusSummary,
         },
       ]),
-    [sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary, sharedStatusSummary],
+    [sharedBookingSummary, sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary, sharedStatusSummary],
   );
-  const visibleTableColumnCount = 2
+  const visibleTableColumnCount = 1
     + (showServiceColumn ? 1 : 0)
+    + (showBookingColumn ? 1 : 0)
     + (showEngineerColumn ? 1 : 0)
     + (showRoomsColumn ? 1 : 0)
     + (showStatusColumn ? 1 : 0)
@@ -578,6 +593,7 @@ export default function OrdersPage() {
           <>
             {(combinedSharedContextSummary
               || sharedServiceSummary
+              || sharedBookingSummary
               || sharedEngineerSummary
               || sharedRoomsSummary
               || sharedStatusSummary) && (
@@ -591,6 +607,11 @@ export default function OrdersPage() {
                     {sharedServiceSummary && (
                       <Typography variant="caption" color="text.secondary">
                         {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                      </Typography>
+                    )}
+                    {sharedBookingSummary && (
+                      <Typography variant="caption" color="text.secondary">
+                        {`Mostrando un solo booking: ${sharedBookingSummary}. La columna volverá cuando esta vista mezcle bookings distintos.`}
                       </Typography>
                     )}
                     {sharedEngineerSummary && (
@@ -618,7 +639,7 @@ export default function OrdersPage() {
                   <TableRow>
                     <TableCell>Horario</TableCell>
                     {showServiceColumn && <TableCell>Servicio</TableCell>}
-                    <TableCell>Booking</TableCell>
+                    {showBookingColumn && <TableCell>Booking</TableCell>}
                     {showEngineerColumn && <TableCell>Ingeniero</TableCell>}
                     {showRoomsColumn && <TableCell>Salas</TableCell>}
                     {showStatusColumn && <TableCell>Estado</TableCell>}
@@ -654,12 +675,14 @@ export default function OrdersPage() {
                         </Typography>
                       </TableCell>
                       {showServiceColumn && <TableCell>{row.service}</TableCell>}
-                      <TableCell sx={{ minWidth: 220 }}>
-                        <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
-                        {row.bookingSecondary && (
-                          <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
-                        )}
-                      </TableCell>
+                      {showBookingColumn && (
+                        <TableCell sx={{ minWidth: 220 }}>
+                          <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
+                          {row.bookingSecondary && (
+                            <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
+                          )}
+                        </TableCell>
+                      )}
                       {showEngineerColumn && <TableCell>{row.engineers}</TableCell>}
                       {showRoomsColumn && <TableCell>{row.rooms}</TableCell>}
                       {showStatusColumn && <TableCell>{renderStatus(row.status ?? '')}</TableCell>}
