@@ -282,7 +282,10 @@ function normalizeAdminConsoleSectionKey(value: string) {
 
 function normalizeBuiltInAdminConsoleSectionKey(value: string) {
   return normalizeAdminConsoleSectionKey(value)
-    .replace(/\b(?:and|y|draft|fallback|planned|placeholder|preview|stub)\b/g, ' ')
+    .replace(
+      /\b(?:and|y|draft|fallback|planned|placeholder|preview|stub|module|modules|modulo|modulos|section|sections|seccion|secciones|page|pages|pagina|paginas|screen|screens|pantalla|pantallas|view|views|vista|vistas|card|cards|tarjeta|tarjetas)\b/g,
+      ' ',
+    )
     .replace(/\s+/g, ' ')
     .trim();
 }

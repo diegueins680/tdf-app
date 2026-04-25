@@ -809,6 +809,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps wrapper-labeled built-in admin titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-health-section',
+          title: 'Service health section',
+          body: ['Verify API readiness and latency before opening admin access changes.'],
+        },
+        {
+          cardId: 'fallback-users-roles-module',
+          title: 'Users & roles module',
+          body: ['Check which teammates can still open each admin workflow.'],
+        },
+        {
+          cardId: 'fallback-auditoria-reciente-pantalla',
+          title: 'Auditoría reciente pantalla',
+          body: ['Sigue los cambios críticos del workspace desde un solo historial.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service health section')).not.toBeInTheDocument();
+    expect(screen.queryByText('Users & roles module')).not.toBeInTheDocument();
+    expect(screen.queryByText('Auditoría reciente pantalla')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Verify API readiness and latency before opening admin access changes\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Check which teammates can still open each admin workflow\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Sigue los cambios críticos del workspace desde un solo historial\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps user-permission fallback titles out of first-run optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
