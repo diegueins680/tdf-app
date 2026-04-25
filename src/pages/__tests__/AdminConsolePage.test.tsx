@@ -144,10 +144,10 @@ describe('AdminConsolePage', () => {
         /Aquí aparecerán los cambios del sistema para confirmar quién hizo qué y cuándo\./i,
       ),
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
     expect(
-      screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
-    ).toBeInTheDocument();
+      screen.getByTestId('admin-first-run-audit-status'),
+    ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
     expect(
       screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i),
     ).not.toBeInTheDocument();
@@ -416,10 +416,10 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByRole('link', { name: /3\. Auditoría reciente/i }),
       ).toBeInTheDocument();
-      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
       expect(
-        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
-      ).toBeInTheDocument();
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
     });
 
     expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');

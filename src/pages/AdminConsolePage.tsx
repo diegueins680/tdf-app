@@ -1037,6 +1037,19 @@ function renderSectionLoading(label: string) {
   );
 }
 
+function renderFirstRunSectionStatus(label: string, testId: string) {
+  return (
+    <Box sx={{ px: 2, pb: 2 }}>
+      <Chip
+        data-testid={testId}
+        label={label}
+        size="small"
+        variant="outlined"
+      />
+    </Box>
+  );
+}
+
 export default function AdminConsolePage() {
   const qc = useQueryClient();
   const [rotationWarning, setRotationWarning] = useState(false);
@@ -1689,13 +1702,15 @@ export default function AdminConsolePage() {
                 </Stack>
               </Box>
             ) : !usersError ? (
-              <Box sx={{ px: 2, pb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {showGettingStartedGuidance
-                    ? FIRST_RUN_USERS_EMPTY_STATE
-                    : 'Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles.'}
-                </Typography>
-              </Box>
+              showGettingStartedGuidance
+                ? renderFirstRunSectionStatus(FIRST_RUN_USERS_EMPTY_STATE, 'admin-first-run-users-status')
+                : (
+                  <Box sx={{ px: 2, pb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Todavía no hay usuarios administrables. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles.
+                    </Typography>
+                  </Box>
+                )
             ) : null}
           </Paper>
 
@@ -1790,13 +1805,15 @@ export default function AdminConsolePage() {
                 </Stack>
               </Box>
             ) : !auditQuery.isError ? (
-              <Box sx={{ px: 2, pb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {showGettingStartedGuidance
-                    ? FIRST_RUN_AUDIT_EMPTY_STATE
-                    : 'Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.'}
-                </Typography>
-              </Box>
+              showGettingStartedGuidance
+                ? renderFirstRunSectionStatus(FIRST_RUN_AUDIT_EMPTY_STATE, 'admin-first-run-audit-status')
+                : (
+                  <Box sx={{ px: 2, pb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Todavía no hay eventos de auditoría. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo.
+                    </Typography>
+                  </Box>
+                )
             ) : null}
           </Paper>
         </>
