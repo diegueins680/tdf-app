@@ -1505,6 +1505,76 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the search hint scoped to visible rows while inactive users stay collapsed', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        partyName: 'Ada Lovelace',
+        username: 'ada-admin',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Ops',
+        username: 'linus-ops',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 102,
+              partyId: 10,
+              partyName: 'Grace Hopper',
+              username: 'grace-ops',
+              primaryEmail: 'grace@example.com',
+              primaryPhone: null,
+              whatsapp: null,
+              active: false,
+              roles: ['Manager'],
+              modules: ['crm'],
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getCheckboxByLabelText(container, 'Incluir inactivos').checked).toBe(false);
+        expect(container.textContent).not.toContain('Buscar usuarios');
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre o usuario');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps collapsed inactive profile links out of the visible-row guidance', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
       buildUser({

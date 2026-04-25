@@ -635,10 +635,6 @@ export default function AdminUsersPage() {
     () => dedupeAdminUsers(usersQuery.data ?? []),
     [usersQuery.data],
   );
-  const searchInputPlaceholder = useMemo(
-    () => buildAdminUsersSearchPlaceholder(users),
-    [users],
-  );
 
   const handleRefresh = () => {
     void qc.invalidateQueries({ queryKey: ['admin', 'users'] });
@@ -695,6 +691,10 @@ export default function AdminUsersPage() {
   const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
     ? activeVisibleUsers
     : visibleUsers;
+  const searchInputPlaceholder = useMemo(
+    () => buildAdminUsersSearchPlaceholder(usersInCurrentSummary),
+    [usersInCurrentSummary],
+  );
   const currentSummaryPendingProfileCount = usersInCurrentSummary.filter(
     (user) => !hasLinkedAdminUserProfile(user),
   ).length;
