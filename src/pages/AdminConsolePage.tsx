@@ -248,7 +248,7 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
-const ADMIN_USER_ROLE_COLUMN_HEADER = 'Roles (editar)';
+const ADMIN_USER_ROLE_COLUMN_HEADER = 'Roles';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
@@ -761,6 +761,7 @@ function buildAdminUsersSectionDescription({
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
 }) {
+  const editHint = 'Haz clic en un rol para editarlo desde esta misma vista.';
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -771,7 +772,9 @@ function buildAdminUsersSectionDescription({
     hiddenColumnLabels.push('estado');
   }
 
-  return buildCompactHiddenColumnsDescription(hiddenColumnLabels);
+  const compactViewHint = buildCompactHiddenColumnsDescription(hiddenColumnLabels);
+
+  return compactViewHint ? `${editHint} ${compactViewHint}` : editHint;
 }
 
 function buildAuditSectionDescription({
@@ -1069,16 +1072,12 @@ export default function AdminConsolePage() {
     hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
   const showFirstRunRefreshAction = showGettingStartedGuidance && showHeaderRefreshAction;
   const showHeaderActions = showHeaderRefreshAction && !showGettingStartedGuidance;
-  const usersSectionDescription = showGettingStartedGuidance
+  const usersSectionDescription = showGettingStartedGuidance || users.length === 0
     ? null
-    : (
-      showUsersTable
-        ? buildAdminUsersSectionDescription({
-          showLastAccessColumn: showUsersLastAccessColumn,
-          showStatusColumn: showUsersStatusColumn,
-        })
-        : null
-    );
+    : buildAdminUsersSectionDescription({
+      showLastAccessColumn: showUsersLastAccessColumn,
+      showStatusColumn: showUsersStatusColumn,
+    });
   const auditSectionDescription = showGettingStartedGuidance
     ? null
     : (
