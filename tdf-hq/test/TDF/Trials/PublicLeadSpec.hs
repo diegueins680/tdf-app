@@ -240,6 +240,16 @@ spec = do
       assertRejected (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing) "notes must be 1-2000 characters"
       assertRejected (mkTrial (Just "Ada") Nothing Nothing Nothing) "Correo requerido"
 
+    it "rejects malformed preferred slots before the handler reaches scheduling logic" $ do
+      let overlappingSlot = PreferredSlot (addUTCTime 1800 slotStart) (addUTCTime 5400 slotStart)
+          payload = TrialRequestIn Nothing 7 [validSlot, overlappingSlot] Nothing (Just "Ada") (Just "ada@example.com") Nothing
+      case validatePublicTrialRequestInput payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Preferred slots must be distinct non-overlapping windows"
+        Right value ->
+          expectationFailure ("Expected malformed public trial preferred slots to be rejected, got " <> show value)
+
   describe "public trial request handler" $ do
     it "returns invalid public trial input as a 400 response instead of an uncaught exception" $ do
       result <- runPublicTrialRequestHandler

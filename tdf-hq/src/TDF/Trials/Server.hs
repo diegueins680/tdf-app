@@ -473,11 +473,12 @@ validatePublicTrialRequestInput :: TrialRequestIn -> Either ServerError TrialReq
 validatePublicTrialRequestInput (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
   validatePublicTrialPartyId rawPartyId
   subjectIdVal <- validatePublicSubjectIdInput rawSubjectId
+  preferredVal <- validatePreferredSlots preferredSlots
   fullNameVal <- validateOptionalPublicTextField "fullName" 160 rawFullName
   notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
   emailVal <- validateRequiredEmail rawEmail
   phoneVal <- validateOptionalPhone rawPhone
-  Right (TrialRequestIn Nothing subjectIdVal preferredSlots notesVal fullNameVal (Just emailVal) phoneVal)
+  Right (TrialRequestIn Nothing subjectIdVal preferredVal notesVal fullNameVal (Just emailVal) phoneVal)
 
 validateOptionalPublicTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPublicTextField fieldName maxChars rawValue =
