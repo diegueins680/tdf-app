@@ -17,7 +17,8 @@ import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
-import TDF.API.Proposals (ProposalDTO, ProposalUpdate (..), ProposalVersionDTO, ProposalVersionSummaryDTO, ProposalsAPI)
+import TDF.API.Proposals (ProposalCreate (..), ProposalDTO, ProposalUpdate (..), ProposalVersionDTO,
+                          ProposalVersionSummaryDTO, ProposalsAPI)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.Models (RoleEnum (..))
@@ -172,6 +173,35 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
               ("Expected blank pipelineCardId patch to fail, got: " <> show proposalDto)
         persistedPipelineCardId `shouldBe` Just Nothing
 
+  it "rejects blank pipelineCardId on proposal creation instead of silently dropping the malformed identifier" $ do
+    result <-
+      runProposalTest $
+        createProposalHandlerFor
+          (mkUser [Admin])
+          (ProposalCreate
+            { pcTitle = "Studio proposal"
+            , pcStatus = Nothing
+            , pcServiceKind = Nothing
+            , pcClientPartyId = Nothing
+            , pcContactName = Just "Ops"
+            , pcContactEmail = Just "ops@example.com"
+            , pcContactPhone = Just "+593991234567"
+            , pcPipelineCardId = Just "   "
+            , pcNotes = Nothing
+            , pcLatex = Just "\\section{Hello}"
+            , pcTemplateKey = Nothing
+            , pcVersionNotes = Nothing
+            })
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err)
+          `shouldContain` "pipelineCardId must be omitted or a valid identifier"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected blank pipelineCardId create to fail, got: " <> show proposalDto)
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser
@@ -214,6 +244,12 @@ listVersionsHandlerFor user rawId =
           :<|> _getVersion
           :<|> _proposalPdf ->
             listVersions
+
+createProposalHandlerFor :: AuthedUser -> ProposalCreate -> ProposalTestM ProposalDTO
+createProposalHandlerFor user payload =
+  case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
+    _listProposals :<|> createProposal :<|> _proposalRoutes ->
+      createProposal payload
 
 updateProposalHandlerFor :: AuthedUser -> Text -> ProposalUpdate -> ProposalTestM ProposalDTO
 updateProposalHandlerFor user rawId payload =
