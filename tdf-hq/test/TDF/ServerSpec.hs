@@ -4013,6 +4013,28 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected internship-only signup fields to be rejected, got: " <> show value)
 
+        it "rejects control characters in internship free-text fields before signup can persist ambiguous intern profile metadata" $ do
+            let assertInvalid expectedMessage skills areas =
+                    case
+                        validateSignupInternshipFields
+                            [Customer, Fan, Intern]
+                            Nothing
+                            Nothing
+                            Nothing
+                            skills
+                            areas
+                    of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected internship control characters to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "internshipSkills must not contain control characters" (Just "Stage\NULplotting") Nothing
+            assertInvalid "internshipAreas must not contain control characters" Nothing (Just "Eventos\nLogistica\NUL")
+
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers" $ do
             parsePasswordChangeAuthToken " Bearer session-token " `shouldBe` Right "session-token"

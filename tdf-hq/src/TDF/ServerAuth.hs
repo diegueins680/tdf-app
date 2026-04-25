@@ -261,6 +261,8 @@ validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
   | Intern `elem` rolesVal =
       validateSignupInternshipRequiredHours requiredHours
         *> validateSignupInternshipDateRange startAt endAt
+        *> validateSignupInternshipTextField "internshipSkills" skills
+        *> validateSignupInternshipTextField "internshipAreas" areas
   | otherwise =
       let fieldList = T.intercalate ", " providedFields
           msg = "Internship fields require requesting the Intern role: " <> fieldList
@@ -276,6 +278,20 @@ validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
         ]
     present fieldName isProvided =
       if isProvided then Just fieldName else Nothing
+
+validateSignupInternshipTextField :: Text -> Maybe Text -> Either ServerError ()
+validateSignupInternshipTextField fieldName rawValue =
+  case cleanOptional rawValue of
+    Nothing -> Right ()
+    Just cleanValue
+      | T.any isControl cleanValue ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+            }
+      | otherwise ->
+          Right ()
 
 validateSignupInternshipDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
 validateSignupInternshipDateRange (Just startAt) (Just endAt)
