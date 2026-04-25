@@ -9,6 +9,7 @@ module TDF.Server.SocialEventsHandlers
   , validateRsvpStatus
   , validateInvitationToPartyId
   , validateInvitationStatusInput
+  , validateInvitationStatusUpdateInput
   , normalizeInvitationStatus
   , normalizeArtistGenres
   , parseInvitationIdsEither
@@ -1223,21 +1224,27 @@ socialEventsServer user = eventsServer
         Just inv -> do
           let dto = iudInvitation
           when (eventInvitationEventId inv /= eventKey) $ throwError err400 { errBody = "Invitation does not belong to this event" }
-          statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
+          mStatusVal <- either throwError pure (validateInvitationStatusUpdateInput (invitationStatus dto))
           let messageVal = applyNullableTextUpdate iudMessageUpdate (eventInvitationMessage inv)
+              statusUpdates =
+                maybe [] (\statusVal -> [EventInvitationStatus =. Just statusVal]) mStatusVal
+              responseStatus = mStatusVal <|> eventInvitationStatus inv
           toPartyVal <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
-          liftIO $ runSqlPool (update invitationKey
-            [ EventInvitationStatus =. Just statusVal
-            , EventInvitationMessage =. messageVal
-            , EventInvitationToPartyId =. Just toPartyVal
-            , EventInvitationUpdatedAt =. now
-            ]) envPool
+          liftIO $ runSqlPool
+            (update invitationKey
+              ( statusUpdates <>
+                [ EventInvitationMessage =. messageVal
+                , EventInvitationToPartyId =. Just toPartyVal
+                , EventInvitationUpdatedAt =. now
+                ]
+              ))
+            envPool
           pure InvitationDTO
             { invitationId = Just (renderKeyText invitationKey)
             , invitationEventId = Just (T.strip eventIdStr)
             , invitationFromPartyId = eventInvitationFromPartyId inv
             , invitationToPartyId = toPartyVal
-            , invitationStatus = Just statusVal
+            , invitationStatus = responseStatus
             , invitationMessage = messageVal
             , invitationCreatedAt = Just (eventInvitationCreatedAt inv)
             , invitationUpdatedAt = Just now
@@ -2215,6 +2222,17 @@ validateInvitationStatusInput (Just rawStatus) =
           Left err400
             { errBody = "invitationStatus must be one of: pending, accepted, declined"
             }
+
+validateInvitationStatusUpdateInput :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateInvitationStatusUpdateInput Nothing = Right Nothing
+validateInvitationStatusUpdateInput (Just rawStatus) =
+  case cleanMaybeText (Just rawStatus) of
+    Nothing ->
+      Left err400
+        { errBody = "invitationStatus must be one of: pending, accepted, declined"
+        }
+    Just _ ->
+      Just <$> validateInvitationStatusInput (Just rawStatus)
 
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
 validateEventArtistIds artists = do

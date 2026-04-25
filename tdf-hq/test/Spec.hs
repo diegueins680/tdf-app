@@ -235,6 +235,7 @@ import TDF.Server.SocialEventsHandlers (
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
     validateInvitationStatusInput,
+    validateInvitationStatusUpdateInput,
     validateEventArtistIds,
     validateRsvpStatus,
     validateTicketCheckInLookup,
@@ -3157,6 +3158,21 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "pending, accepted, declined"
                 Right value ->
                     expectationFailure ("Expected invalid invitation status to be rejected, got " <> show value)
+
+    describe "validateInvitationStatusUpdateInput" $ do
+        it "preserves the current invitation status when an update omits the field" $ do
+            validateInvitationStatusUpdateInput Nothing `shouldBe` Right Nothing
+
+        it "canonicalizes explicit update statuses and rejects blank updates that would silently reset state" $ do
+            validateInvitationStatusUpdateInput (Just " Accepted ")
+                `shouldBe` Right (Just "accepted")
+            case validateInvitationStatusUpdateInput (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "pending, accepted, declined"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank invitation update status to be rejected, got " <> show value)
 
     describe "validateInvitationToPartyId" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do
