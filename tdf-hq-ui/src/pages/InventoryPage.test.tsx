@@ -1183,6 +1183,67 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('summarizes one shared current custody once and hides the duplicated table column until custodians diverge', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        category: 'Micrófono',
+        status: 'Booked',
+        location: 'Sala A',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        category: 'Interfaz',
+        status: 'Booked',
+        location: 'Sala B',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(container.querySelector('[data-testid="inventory-shared-checkout-summary"]')?.textContent).toContain(
+          'Mostrando una sola tenencia actual: Grace Hopper',
+        );
+        expect(text).toContain('Alquiler');
+        expect(text).toContain('Salida:');
+        expect(text).toContain('Retorno pactado:');
+        expect(text).toContain('grace@example.com');
+        expect(text).toContain(
+          'La columna volverá cuando esta vista mezcle custodias distintas.',
+        );
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
+        expect(countOccurrencesIgnoringCase(text, 'Grace Hopper')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'grace@example.com')).toBe(1);
+        expect(getRowTextByAssetName(container, 'Prestado Uno')).not.toContain('Grace Hopper');
+        expect(getRowTextByAssetName(container, 'Prestado Dos')).not.toContain('Grace Hopper');
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('matches the table guidance to check-in only rows so first-time admins do not look for missing check-out controls', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({

@@ -217,6 +217,53 @@ function buildCurrentCheckoutContactSummary({
     .join(' · ');
 }
 
+function buildCurrentCheckoutSummary(asset: AssetDTO, roomMap: Map<string, RoomDTO>) {
+  const paymentSummary = formatCheckoutPaymentSummary(
+    asset.currentCheckoutPaymentType,
+    asset.currentCheckoutPaymentInstallments,
+    asset.currentCheckoutPaymentAmountCents,
+    asset.currentCheckoutPaymentCurrency,
+    asset.currentCheckoutPaymentOutstandingCents,
+  );
+  const checkoutContextSummary = buildCurrentCheckoutContextSummary({
+    disposition: asset.currentCheckoutDisposition,
+    checkedOutAt: asset.currentCheckoutAt,
+    dueAt: asset.currentCheckoutDueAt,
+    paymentSummary,
+  });
+  const checkoutContactSummary = buildCurrentCheckoutContactSummary({
+    holderEmail: asset.currentCheckoutHolderEmail,
+    holderPhone: asset.currentCheckoutHolderPhone,
+  });
+
+  return [
+    normalizeInventoryField(asset.currentCheckoutTarget) ? getCurrentTargetSummary(asset, roomMap) : '',
+    checkoutContextSummary,
+    checkoutContactSummary,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function getSharedInventoryCheckoutSummary(assets: readonly AssetDTO[], roomMap: Map<string, RoomDTO>) {
+  if (assets.length < 2) return '';
+
+  const normalizedSummaries = assets
+    .map((asset) => normalizeInventoryField(buildCurrentCheckoutSummary(asset, roomMap)))
+    .filter((summary): summary is string => summary != null);
+
+  if (normalizedSummaries.length !== assets.length) return '';
+
+  const [firstSummary] = normalizedSummaries;
+  const firstComparableSummary = normalizeInventoryComparisonValue(firstSummary);
+
+  return normalizedSummaries.every(
+    (summary) => normalizeInventoryComparisonValue(summary) === firstComparableSummary,
+  )
+    ? (firstSummary ?? '')
+    : '';
+}
+
 function assetMatchesInventorySearch(asset: AssetDTO, query: string, roomMap: Map<string, RoomDTO>) {
   if (query === '') return true;
 
@@ -246,6 +293,9 @@ const INVENTORY_NO_MOVEMENT_GUIDANCE =
   'En esta vista no hay movimientos disponibles por ahora.';
 const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
+const INVENTORY_SHARED_CHECKOUT_SUMMARY_PREFIX = 'Mostrando una sola tenencia actual: ';
+const INVENTORY_SHARED_CHECKOUT_SUMMARY_SUFFIX =
+  'La columna volverá cuando esta vista mezcle custodias distintas.';
 const INVENTORY_SINGLE_SEARCH_RESULT_TITLE = 'Resultado único';
 const INVENTORY_SINGLE_SEARCH_RESULT_GUIDANCE =
   'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen.';
@@ -650,6 +700,10 @@ export default function InventoryPage() {
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedConditionSummary = useMemo(() => getSharedInventoryConditionSummary(grouped), [grouped]);
   const sharedLocationSummary = useMemo(() => getSharedInventoryLocationSummary(grouped), [grouped]);
+  const sharedCheckoutSummary = useMemo(
+    () => getSharedInventoryCheckoutSummary(grouped, roomMap),
+    [grouped, roomMap],
+  );
   const sharedColumnSummary = useMemo(
     () => getSharedInventoryColumnSummary({
       status: sharedStatusSummary,
@@ -661,14 +715,15 @@ export default function InventoryPage() {
   );
   const showStatusColumn = sharedStatusSummary === '';
   const showLocationColumn = sharedLocationSummary === '' && grouped.some((asset) => normalizeInventoryField(asset.location) != null);
-  const showCurrentCheckoutColumns = grouped.some((asset) => {
+  const hasAnyCurrentCheckoutContext = grouped.some((asset) => {
     const movementState = getInventoryMovementState(asset.status);
     return movementState.canCheckin
       || normalizeInventoryField(asset.currentCheckoutTarget) != null
       || Boolean(asset.currentCheckoutAt);
   });
+  const showCurrentCheckoutColumn = hasAnyCurrentCheckoutContext && sharedCheckoutSummary === '';
   const showLocationSetupGuidance = grouped.length > 1 && sharedLocationSummary === '' && !showLocationColumn;
-  const showCheckoutContextGuidance = grouped.length > 1 && !showCurrentCheckoutColumns;
+  const showCheckoutContextGuidance = grouped.length > 1 && !hasAnyCurrentCheckoutContext;
   const showMovementGuidance = grouped.length > 1;
   const visibleMovementActions = grouped.reduce(
     (summary, asset) => {
@@ -838,6 +893,15 @@ export default function InventoryPage() {
                   {tableGuidance}
                 </Typography>
               )}
+              {sharedCheckoutSummary && (
+                <Typography
+                  variant="caption"
+                  color="rgba(226,232,240,0.68)"
+                  data-testid="inventory-shared-checkout-summary"
+                >
+                  {`${INVENTORY_SHARED_CHECKOUT_SUMMARY_PREFIX}${sharedCheckoutSummary}. ${INVENTORY_SHARED_CHECKOUT_SUMMARY_SUFFIX}`}
+                </Typography>
+              )}
               {sharedConditionSummary && !sharedColumnSummary && (
                 <Typography variant="caption" color="rgba(226,232,240,0.68)">
                   {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
@@ -848,7 +912,7 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableCell>Equipo</TableCell>
                     {showStatusColumn && <TableCell>Estado</TableCell>}
-                    {showCurrentCheckoutColumns && <TableCell>Tenencia actual</TableCell>}
+                    {showCurrentCheckoutColumn && <TableCell>Tenencia actual</TableCell>}
                     {showLocationColumn && <TableCell>Ubicación</TableCell>}
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
@@ -904,7 +968,7 @@ export default function InventoryPage() {
                           </Stack>
                         </TableCell>
                         {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}
-                        {showCurrentCheckoutColumns && (
+                        {showCurrentCheckoutColumn && (
                           <TableCell>
                             {hasCurrentCheckoutContext ? (
                               <Stack spacing={0.25}>
