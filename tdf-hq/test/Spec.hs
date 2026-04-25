@@ -2026,6 +2026,17 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected missing SRI script path to fail, got: " <> show value)
 
+        it "rejects blank SRI_INVOICE_SCRIPT instead of falling through to default discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "   ")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must not be blank"
+                    Right value ->
+                        expectationFailure
+                            ("Expected blank SRI script path to fail, got: " <> show value)
+
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
                 hClose handle

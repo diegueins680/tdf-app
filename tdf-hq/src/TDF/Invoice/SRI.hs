@@ -143,8 +143,11 @@ validateSriScriptResult dto =
 resolveScriptPath :: IO (Either Text FilePath)
 resolveScriptPath = do
   envPath <- lookupEnv "SRI_INVOICE_SCRIPT"
-  case envPath >>= nonEmptyPath of
-    Just scriptPath -> validateConfiguredScriptPath scriptPath
+  case envPath of
+    Just rawPath ->
+      case nonEmptyPath rawPath of
+        Just scriptPath -> validateConfiguredScriptPath scriptPath
+        Nothing -> pure (Left blankConfiguredScriptMessage)
     Nothing -> do
       mDefaultPath <-
         firstExisting ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
@@ -177,6 +180,10 @@ invalidConfiguredScriptMessage :: FilePath -> Text
 invalidConfiguredScriptMessage scriptPath =
   "SRI_INVOICE_SCRIPT must point to a .mjs, .js, or .cjs Node script: "
     <> T.pack scriptPath
+
+blankConfiguredScriptMessage :: Text
+blankConfiguredScriptMessage =
+  "SRI_INVOICE_SCRIPT must not be blank; unset it to use the default script discovery."
 
 missingDefaultScriptMessage :: Text
 missingDefaultScriptMessage =
