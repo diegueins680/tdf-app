@@ -270,7 +270,7 @@ describe('LabelAssetsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un asset por ahora. Usa prestamo/devolucion o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.',
+          'Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.',
         );
         expect(countLabelsByText(container, 'Buscar assets')).toBe(0);
         expect(countLabelsByText(container, 'Categoría')).toBe(0);
@@ -286,7 +286,7 @@ describe('LabelAssetsPage', () => {
     }
   });
 
-  it('renders one movement action per asset and picks the relevant action from status', async () => {
+  it('shows movement actions only for statuses that support the next inventory step', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
       buildAsset({
@@ -298,6 +298,11 @@ describe('LabelAssetsPage', () => {
         assetId: 'asset-3',
         name: 'Microfono Beta',
         status: 'OutForMaintenance',
+      }),
+      buildAsset({
+        assetId: 'asset-4',
+        name: 'Teclado Vintage',
+        status: 'Retired',
       }),
     ]);
 
@@ -314,13 +319,16 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).toContain('Sintetizador Uno');
       expect(container.textContent).toContain('Bateria Roja');
       expect(container.textContent).toContain('Microfono Beta');
-      expect(movementButtons).toHaveLength(3);
+      expect(container.textContent).toContain('Teclado Vintage');
+      expect(movementButtons).toHaveLength(2);
       expect(container.querySelector('button[aria-label="Abrir prestamo de Sintetizador Uno"]')).not.toBeNull();
       expect(container.querySelector('button[aria-label="Abrir devolucion de Sintetizador Uno"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Abrir devolucion de Bateria Roja"]')).not.toBeNull();
       expect(container.querySelector('button[aria-label="Abrir prestamo de Bateria Roja"]')).toBeNull();
-      expect(container.querySelector('button[aria-label="Abrir prestamo de Microfono Beta"]')).not.toBeNull();
       expect(container.querySelector('button[aria-label="Abrir devolucion de Microfono Beta"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Abrir prestamo de Microfono Beta"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Abrir devolucion de Teclado Vintage"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Abrir prestamo de Teclado Vintage"]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-out de "]')).toBeNull();
       expect(container.querySelector('button[aria-label^="Abrir check-in de "]')).toBeNull();
     });
@@ -344,7 +352,7 @@ describe('LabelAssetsPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.',
+        'Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.',
       );
       expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
       expect(container.querySelector('button[aria-label="Editar activo Sintetizador Uno"]')).toBeNull();

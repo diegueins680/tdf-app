@@ -152,7 +152,16 @@ const STATUS_OPTIONS = [
   { value: 'Retired', label: 'Retirados' },
 ];
 const SINGLE_ASSET_SETUP_GUIDANCE =
-  'Solo hay un asset por ahora. Usa prestamo/devolucion o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.';
+  'Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.';
+
+function getAssetMovementState(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  return {
+    canCheckout: normalizedStatus === 'active',
+    canCheckin: normalizedStatus === 'booked',
+  };
+}
 
 export default function LabelAssetsPage() {
   const qc = useQueryClient();
@@ -599,8 +608,10 @@ export default function LabelAssetsPage() {
   };
 
   const renderMovementAction = (asset: AssetDTO) => {
-    const isBooked = asset.status.toLowerCase() === 'booked';
-    return isBooked ? (
+    const movementState = getAssetMovementState(asset.status);
+
+    if (movementState.canCheckin) {
+      return (
       <Tooltip title="Registrar devolucion">
         <IconButton
           size="small"
@@ -610,7 +621,11 @@ export default function LabelAssetsPage() {
           <HowToRegIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-    ) : (
+      );
+    }
+
+    if (movementState.canCheckout) {
+      return (
       <Tooltip title="Registrar prestamo">
         <IconButton
           size="small"
@@ -620,7 +635,10 @@ export default function LabelAssetsPage() {
           <ExitToAppIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-    );
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -847,7 +865,7 @@ export default function LabelAssetsPage() {
             >
               {showSingleAssetSetupGuidance
                 ? SINGLE_ASSET_SETUP_GUIDANCE
-                : 'Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.'}
+                : 'Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.'}
             </Typography>
           )}
           {showFilteredEmptyState ? (
