@@ -5,6 +5,7 @@ import {
   Paper,
   TextField,
   Button,
+  Box,
   Table,
   TableHead,
   TableRow,
@@ -15,16 +16,19 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  IconButton,
   InputAdornment,
   Chip,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
+  Tooltip,
 } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
@@ -34,6 +38,20 @@ const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
 const isLeadStatus = (value: string): value is LeadStatus =>
   STATUS_OPTIONS.some((status) => status === value);
+
+const normalizeLeadFieldValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const getLeadContactSummary = (lead: Pick<PartyDTO, 'primaryEmail' | 'primaryPhone'>) => {
+  const contactParts = [
+    normalizeLeadFieldValue(lead.primaryEmail),
+    normalizeLeadFieldValue(lead.primaryPhone),
+  ].filter((value): value is string => value != null);
+
+  return contactParts.length > 0 ? contactParts.join(' · ') : 'Falta correo y teléfono';
+};
 
 interface LeadCreateDialogProps {
   open: boolean;
@@ -218,10 +236,11 @@ export default function LeadsPage() {
     queryFn: () => Parties.list(),
   });
 
+  const trimmedSearch = search.trim();
+  const allLeads = useMemo(() => (data ?? []).filter((party) => !party.isOrg), [data]);
   const leads = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (data ?? [])
-      .filter((p) => !p.isOrg)
+    const term = trimmedSearch.toLowerCase();
+    return allLeads
       .filter((p) => {
         if (!term) return true;
         return (
@@ -231,7 +250,24 @@ export default function LeadsPage() {
           (p.primaryPhone?.toLowerCase().includes(term) ?? false)
         );
       });
-  }, [data, search]);
+  }, [allLeads, trimmedSearch]);
+
+  const hasLeads = allLeads.length > 0;
+  const showInitialLoadingState = isLoading && data == null;
+  const showSearchField = !showInitialLoadingState && (allLeads.length > 1 || trimmedSearch !== '');
+  const showClearSearchAction = showSearchField && trimmedSearch !== '';
+  const showSearchEmptyState = !isLoading && hasLeads && leads.length === 0 && trimmedSearch !== '';
+  const showSingleLeadSummary = !isLoading && leads.length === 1;
+  const singleLead = showSingleLeadSummary ? (leads[0] ?? null) : null;
+  const singleLeadSummaryTitle = trimmedSearch === ''
+    ? 'Primer lead registrado'
+    : `1 coincidencia para "${trimmedSearch}"`;
+  const singleLeadSummaryDescription = trimmedSearch === ''
+    ? 'Revísalo aquí sin tabla ni buscador. Cuando llegue el segundo, volverá la vista comparativa para revisar contacto y seguimiento lado a lado.'
+    : 'La búsqueda dejó un solo lead visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar leads en la tabla.';
+  const tableGuidance = trimmedSearch === ''
+    ? 'Haz clic en el nombre para revisar relaciones. Notas / Estado concentra estado, fuente y siguiente paso en una sola columna. Usa Editar solo cuando necesites actualizarlo.'
+    : `Mostrando ${leads.length} de ${allLeads.length} leads para "${trimmedSearch}".`;
 
   return (
     <Stack gap={3}>
@@ -248,79 +284,171 @@ export default function LeadsPage() {
       </Stack>
 
       <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
-        <TextField
-          label="Buscar leads"
-          placeholder="Buscar por nombre, correo, teléfono o nota"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          fullWidth
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Paper>
-
-      <Paper sx={{ p: 2, borderRadius: 3, boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
-        {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
-        {isLoading ? (
-          <Typography>Cargando...</Typography>
-        ) : leads.length === 0 ? (
-          <Typography color="text.secondary">No hay leads aún.</Typography>
-        ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Lead</TableCell>
-                <TableCell>Correo</TableCell>
-                <TableCell>Teléfono</TableCell>
-                <TableCell>Notas / Estado</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {leads.map((l) => (
-                <TableRow key={l.partyId} hover>
-                  <TableCell>
-                    <Stack spacing={0.5}>
-                      <Button
-                        variant="text"
-                        onClick={(event) => {
-                          setRelatedParty(l);
-                          setRelatedAnchor(event.currentTarget);
-                        }}
-                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+        <Stack spacing={2}>
+          {showSearchField && (
+            <TextField
+              label="Buscar leads"
+              aria-label="Buscar leads"
+              placeholder="Buscar por nombre, correo, teléfono o nota"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              fullWidth
+              inputProps={{ 'aria-label': 'Buscar leads' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: showClearSearchAction ? (
+                  <InputAdornment position="end">
+                    <Tooltip title="Limpiar búsqueda">
+                      <IconButton
+                        size="small"
+                        aria-label="Limpiar búsqueda"
+                        onClick={() => setSearch('')}
                       >
-                        <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                          {l.displayName}
-                        </Typography>
-                      </Button>
-                      {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{l.primaryEmail ?? '—'}</TableCell>
-                  <TableCell>{l.primaryPhone ?? '—'}</TableCell>
-                  <TableCell>{l.notes ?? '—'}</TableCell>
-                  <TableCell align="right">
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ) : null,
+              }}
+            />
+          )}
+
+          {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
+          {showInitialLoadingState ? (
+            <Alert severity="info" variant="outlined">
+              Cargando leads… El buscador y la tabla aparecerán cuando termine esta primera carga.
+            </Alert>
+          ) : !isLoading && !isError && !hasLeads ? (
+            <Alert severity="info" variant="outlined">
+              Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar.
+            </Alert>
+          ) : showSearchEmptyState ? (
+            <Alert severity="info" variant="outlined">
+              {`No hay leads que coincidan con "${trimmedSearch}". Limpia o ajusta la búsqueda desde el campo de arriba para volver a la lista completa.`}
+            </Alert>
+          ) : showSingleLeadSummary && singleLead ? (
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                p: 2,
+                bgcolor: 'background.default',
+              }}
+            >
+              <Stack spacing={2}>
+                <Stack spacing={0.75}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {singleLeadSummaryTitle}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {singleLeadSummaryDescription}
+                  </Typography>
+                </Stack>
+
+                <Stack spacing={1}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                     <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      onClick={() => {
-                        setSelected(l);
-                        setEditOpen(true);
+                      variant="text"
+                      onClick={(event) => {
+                        setRelatedParty(singleLead);
+                        setRelatedAnchor(event.currentTarget);
                       }}
+                      sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
                     >
-                      Editar
+                      <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                        {singleLead.displayName}
+                      </Typography>
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+                    {singleLead.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
+                  </Stack>
+
+                  <Typography variant="body2">
+                    Contacto: {getLeadContactSummary(singleLead)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {normalizeLeadFieldValue(singleLead.notes)
+                      ? `Contexto: ${singleLead.notes?.trim()}`
+                      : 'Todavía no hay contexto registrado. Usa Editar lead para agregar estado, fuente o siguiente paso.'}
+                  </Typography>
+                </Stack>
+
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={() => {
+                    setSelected(singleLead);
+                    setEditOpen(true);
+                  }}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Editar lead
+                </Button>
+              </Stack>
+            </Box>
+          ) : (
+            <>
+              {!isLoading && leads.length > 1 && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                  {tableGuidance}
+                </Typography>
+              )}
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Lead</TableCell>
+                    <TableCell>Correo</TableCell>
+                    <TableCell>Teléfono</TableCell>
+                    <TableCell>Notas / Estado</TableCell>
+                    <TableCell align="right">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {leads.map((l) => (
+                    <TableRow key={l.partyId} hover>
+                      <TableCell>
+                        <Stack spacing={0.5}>
+                          <Button
+                            variant="text"
+                            onClick={(event) => {
+                              setRelatedParty(l);
+                              setRelatedAnchor(event.currentTarget);
+                            }}
+                            sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                          >
+                            <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                              {l.displayName}
+                            </Typography>
+                          </Button>
+                          {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{l.primaryEmail ?? '—'}</TableCell>
+                      <TableCell>{l.primaryPhone ?? '—'}</TableCell>
+                      <TableCell>{l.notes ?? '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => {
+                            setSelected(l);
+                            setEditOpen(true);
+                          }}
+                        >
+                          Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          )}
+        </Stack>
       </Paper>
 
       <LeadCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} />
