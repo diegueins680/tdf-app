@@ -2738,12 +2738,16 @@ export default function CourseRegistrationsAdminPage() {
     || showGroupedDossierContextActions
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
+  const groupedDossierContextActionsExpandedLabel = formatDossierContextActionsLabel({
+    showInlineEmptyFollowUpAction,
+    showInlineEmptyNotesAction,
+  });
   const groupedDossierContextActionsLabel = hasPrimaryDossierAction
     ? optionalDossierContextActionsFallbackLabel
-    : formatDossierContextActionsLabel({
-      showInlineEmptyFollowUpAction,
-      showInlineEmptyNotesAction,
-    });
+    : groupedDossierContextActionsExpandedLabel;
+  const groupedDossierContextActionsAccessibleLabel = groupedDossierContextActionsLabel === optionalDossierContextActionsFallbackLabel
+    ? groupedDossierContextActionsExpandedLabel
+    : groupedDossierContextActionsLabel;
   const hasReceipts = receipts.length > 0;
   const activeRegistrationKnownStatus = activeRegistrationStatus
     ? normalizeKnownRegistrationStatus(activeRegistrationStatus)
@@ -4321,8 +4325,10 @@ export default function CourseRegistrationsAdminPage() {
                         <Button
                           variant="outlined"
                           endIcon={<ArrowDropDownIcon />}
+                          aria-label={groupedDossierContextActionsAccessibleLabel}
                           aria-haspopup="menu"
                           aria-expanded={Boolean(dossierContextMenuAnchor)}
+                          title={groupedDossierContextActionsAccessibleLabel}
                           onClick={(event) => setDossierContextMenuAnchor(event.currentTarget)}
                         >
                           {groupedDossierContextActionsLabel}

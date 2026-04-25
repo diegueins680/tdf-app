@@ -3837,6 +3837,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyHint = document.body.querySelector<HTMLElement>(
         '[data-testid="course-registration-empty-email-history-hint"]',
       );
+      const compactAction = getButtonByText(actions ?? document.body, compactOptionalDossierContextActionsLabel);
 
       expect(actions).toBeTruthy();
       expect(countButtonsByText(actions!, 'Marcar pagado')).toBe(1);
@@ -3845,6 +3846,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(actions!, 'Más contexto')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(actions!, 'Agregar seguimiento')).toBe(0);
+      expect(compactAction.getAttribute('aria-label')).toBe(optionalDossierContextActionsLabel);
+      expect(compactAction.getAttribute('title')).toBe(optionalDossierContextActionsLabel);
       expect(actions?.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(actions?.textContent).not.toContain(showSystemEmailsLabel);
       expect(emptyHint).toBeNull();
