@@ -7769,6 +7769,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps shared created dates visible in default local search without repeating row date chrome', async () => {
+    const sharedCreatedAt = '2030-03-04T03:04:05.000Z';
+    const sharedCreatedAtLabel = formatTimestampForDisplay(sharedCreatedAt, '-');
+
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crCreatedAt: sharedCreatedAt,
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crCreatedAt: sharedCreatedAt,
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crCreatedAt: `2030-03-${String(index + 10).padStart(2, '0')}T03:04:05.000Z`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).toContain('Nina Garcia');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')?.textContent?.trim()).toBe(
+        `Misma fecha de registro: ${sharedCreatedAtLabel}.`,
+      );
+      expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('uses registration ids as the busy-list search fallback when rows lack contact identity', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
@@ -7892,6 +7947,8 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('summarizes shared internal notes once after local search narrows a mixed list', async () => {
+    const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
+
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -7939,7 +7996,11 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(2);
-      expect(hasExactText(container, 'Notas internas en todas las inscripciones visibles.')).toBe(true);
+      expect(hasExactText(
+        container,
+        `Misma fecha de registro: ${sharedCreatedAtLabel}. Notas internas en todas las inscripciones visibles.`,
+      )).toBe(true);
+      expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
       expect(hasExactText(container, 'Cohorte: Beatmaking 101 (beatmaking-101) · Notas internas')).toBe(false);
       expect(hasExactText(container, 'Cohorte: Mixing Bootcamp (mixing-bootcamp) · Notas internas')).toBe(false);

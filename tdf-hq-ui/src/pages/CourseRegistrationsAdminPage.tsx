@@ -1881,7 +1881,6 @@ export default function CourseRegistrationsAdminPage() {
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [searchedRegistrations]);
   const sharedVisibleCreatedAtSummary = sharedVisibleCreatedAtLabel
-    && hasCustomFilters
     && localSearchNarrowsRegistrations
     ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
     : '';
