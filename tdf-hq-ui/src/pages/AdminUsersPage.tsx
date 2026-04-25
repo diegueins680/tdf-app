@@ -483,6 +483,8 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   let hasNameIdentity = false;
   let hasDistinctUsername = false;
   let hasContact = false;
+  let hasActiveUsers = false;
+  let hasInactiveUsers = false;
   const roleSummaries: string[] = [];
   const moduleSummaries: string[] = [];
 
@@ -497,6 +499,11 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
       hasDistinctUsername = true;
     }
     if (getVisibleUserContactSummary(user)) hasContact = true;
+    if (user.active) {
+      hasActiveUsers = true;
+    } else {
+      hasInactiveUsers = true;
+    }
 
     roleSummaries.push(rolesSummary);
     moduleSummaries.push(modulesSummary);
@@ -521,6 +528,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
   if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
   if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  if (hasActiveUsers && hasInactiveUsers) terms.push(terms.length === 0 ? 'Estado' : 'estado');
 
   return formatSearchPlaceholderTerms(terms);
 };

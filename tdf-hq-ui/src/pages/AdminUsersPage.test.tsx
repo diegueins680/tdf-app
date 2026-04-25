@@ -1569,7 +1569,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol, módulo o estado');
       });
     } finally {
       await cleanup();
@@ -3598,6 +3598,8 @@ describe('AdminUsersPage', () => {
       });
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario o contacto');
+
       await changeInputValue(searchInput, 'activo');
 
       await waitForExpectation(() => {
