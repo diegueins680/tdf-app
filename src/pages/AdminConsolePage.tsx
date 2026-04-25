@@ -1281,6 +1281,17 @@ export default function AdminConsolePage() {
       : showFirstRunDemoAction
         ? firstRunDemoActionCopy.description
         : firstRunServiceGateCopy;
+  const firstRunRefreshActionCopy = hasFirstRunDataError
+    ? {
+      label: 'Reintentar carga inicial',
+      ariaLabel: 'Reintentar carga de usuarios y auditoría',
+      title: 'Reintentar carga de usuarios y auditoría',
+    }
+    : {
+      label: 'Revisar estado del servicio',
+      ariaLabel: 'Volver a comprobar API y base de datos',
+      title: 'Volver a comprobar API y base de datos',
+    };
   const demoSeedActionCopy = {
     successMessage: 'Datos de demostración preparados correctamente.',
   } as const;
@@ -1442,8 +1453,10 @@ export default function AdminConsolePage() {
                     startIcon={<RefreshIcon />}
                     onClick={handleRefreshPanel}
                     disabled={isRefreshingPanel}
+                    aria-label={firstRunRefreshActionCopy.ariaLabel}
+                    title={firstRunRefreshActionCopy.title}
                   >
-                    {isRefreshingPanel ? 'Actualizando panel…' : 'Actualizar panel'}
+                    {isRefreshingPanel ? 'Actualizando panel…' : firstRunRefreshActionCopy.label}
                   </Button>
                 )}
                 {showFirstRunDemoAction && (

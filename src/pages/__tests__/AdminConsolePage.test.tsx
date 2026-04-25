@@ -253,7 +253,7 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByText(/Todo listo: API y base de datos responden correctamente\./i),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Revisar estado del servicio/i })).toBeInTheDocument();
     expect(
       screen.getByText(
         /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
@@ -314,14 +314,14 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Sin conexión')).toBeInTheDocument();
-      expect(screen.getAllByRole('button', { name: /Actualizar panel/i })).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: /Revisar estado del servicio/i })).toHaveLength(1);
     });
 
     expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
     const gettingStartedAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
     expect(gettingStartedAlert).not.toBeNull();
     expect(
-      within(gettingStartedAlert as HTMLElement).getByRole('button', { name: /Actualizar panel/i }),
+      within(gettingStartedAlert as HTMLElement).getByRole('button', { name: /Revisar estado del servicio/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -340,7 +340,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Usuarios no disponibles')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Reintentar carga inicial/i })).toBeInTheDocument();
       expect(
         screen.getByText(
           /Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo\./i,
