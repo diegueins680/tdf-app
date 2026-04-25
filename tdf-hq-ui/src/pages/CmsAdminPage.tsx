@@ -512,6 +512,10 @@ export default function CmsAdminPage() {
   const visibleVersionRows = showSingleLiveVersionSummary ? [] : filteredVersions;
   const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
   const showHistoryStatusFilter = historyStatuses.length > 1 || statusFilter !== 'all';
+  const showHistoryMinVersionFilter = versions.length > 2 || minVersionFilter != null;
+  const showVersionToolbarControls =
+    versionListUiState.showToolbarFilters
+    && (showHistoryStatusFilter || showHistoryMinVersionFilter || versionListUiState.showToolbarReset);
   const versionCountLabel = useMemo(() => {
     const totalVersions = versions.length;
     const visibleVersions = filteredVersions.length;
@@ -1034,7 +1038,7 @@ export default function CmsAdminPage() {
                 </Typography>
               )}
             </Stack>
-            {versionListUiState.showToolbarFilters && (
+            {showVersionToolbarControls && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                 {showHistoryStatusFilter && (
                   <TextField
@@ -1054,14 +1058,16 @@ export default function CmsAdminPage() {
                     <MenuItem value="archived">Archivados</MenuItem>
                   </TextField>
                 )}
-                <TextField
-                  size="small"
-                  type="number"
-                  label="Versión mínima"
-                  value={minVersionFilter ?? ''}
-                  onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
-                  sx={{ width: 150 }}
-                />
+                {showHistoryMinVersionFilter && (
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Versión mínima"
+                    value={minVersionFilter ?? ''}
+                    onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
+                    sx={{ width: 150 }}
+                  />
+                )}
                 {versionListUiState.showToolbarReset && (
                   <Button
                     size="small"

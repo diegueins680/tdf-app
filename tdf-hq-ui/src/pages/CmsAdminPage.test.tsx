@@ -1021,7 +1021,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the history status filter when every saved version already shares the same status', async () => {
+  it('keeps a two-version history focused on the rows when every saved version already shares the same status', async () => {
     listMock.mockResolvedValue([
       buildContent(),
       buildContent({
@@ -1038,6 +1038,36 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('2 versiones');
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('shows the minimum-version filter once the history is long enough to narrow meaningfully', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-01T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('3 versiones');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(1);
     });
