@@ -248,8 +248,6 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
-const SINGLE_ADMIN_USER_INLINE_EDIT_HINT =
-  'Primer usuario administrable. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa.';
 const MULTI_ADMIN_USER_INLINE_EDIT_HINT =
   'Haz clic sobre un rol para editarlo desde esta misma vista.';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
@@ -1079,16 +1077,12 @@ export default function AdminConsolePage() {
   const usersSectionDescription = showGettingStartedGuidance
     ? null
     : (
-      singleAdminUser
-        ? SINGLE_ADMIN_USER_INLINE_EDIT_HINT
-        : (
-          showUsersTable
-            ? buildAdminUsersSectionDescription({
-              showLastAccessColumn: showUsersLastAccessColumn,
-              showStatusColumn: showUsersStatusColumn,
-            })
-            : null
-        )
+      showUsersTable
+        ? buildAdminUsersSectionDescription({
+          showLastAccessColumn: showUsersLastAccessColumn,
+          showStatusColumn: showUsersStatusColumn,
+        })
+        : null
     );
   const auditSectionDescription = showGettingStartedGuidance
     ? null
@@ -1533,6 +1527,9 @@ export default function AdminConsolePage() {
                     ) : null}
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Roles
+                    </Typography>
                     <Button
                       size="small"
                       onClick={() => setEditingUser(singleAdminUser)}

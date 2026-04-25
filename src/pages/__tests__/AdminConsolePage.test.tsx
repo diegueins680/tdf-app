@@ -2916,13 +2916,9 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
-        ),
-      ).toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
+      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
@@ -2935,6 +2931,11 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByText(/^Último acceso:/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Estado: Activo')).not.toBeInTheDocument();
       expect(screen.queryByText(/Revisa esta cuenta aquí/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(
+          /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+        ),
+      ).not.toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
@@ -3005,13 +3006,15 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
     });
+
+    expect(
+      screen.queryByText(
+        /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+      ),
+    ).not.toBeInTheDocument();
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
@@ -3055,13 +3058,15 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
     });
+
+    expect(
+      screen.queryByText(
+        /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the single-user last access only when that timestamp exists', async () => {
@@ -3076,13 +3081,15 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });
+
+    expect(
+      screen.queryByText(
+        /Primer usuario administrable\. Usa el botón del rol para ajustar accesos; cuando exista una segunda cuenta, volverá la tabla comparativa\./i,
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('uses one shared inline edit hint and keeps comparison-table role buttons text-only', async () => {
