@@ -1455,21 +1455,23 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await within(getFirstRunAlert()).findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(
+      await within(getFirstRunAlert()).findByRole('button', { name: /Ocultar módulo opcional/i }),
+    ).toBeInTheDocument();
     expect(
       within(getFirstRunAlert()).getByText(
-        /Revísalos aquí solo si ya necesitas ese flujo extra, sin salir del recorrido inicial\./i,
+        /Revísalo aquí solo si ya necesitas este flujo extra, sin salir del recorrido inicial\./i,
       ),
     ).toBeInTheDocument();
-    expect(await within(getFirstRunAlert()).findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(await within(getFirstRunAlert()).findAllByText('Tokens de servicio')).toHaveLength(1);
     expect(
       within(getFirstRunAlert()).getByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
-    expect(within(getFirstRunAlert()).getByRole('button', { name: /Ocultar módulos adicionales/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /Ocultar módulos adicionales/i })).toHaveLength(1);
+    expect(within(getFirstRunAlert()).getByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Ocultar módulo opcional/i })).toHaveLength(1);
 
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
@@ -1515,8 +1517,8 @@ describe('AdminConsolePage', () => {
 
     await user.click(actionButton);
 
-    expect(await within(firstRunAlert).findByText('Módulos opcionales')).toBeInTheDocument();
-    expect(await within(firstRunAlert).findByText(longModuleTitle)).toBeInTheDocument();
+    expect(await within(firstRunAlert).findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
+    expect(await within(firstRunAlert).findAllByText(longModuleTitle)).toHaveLength(1);
     expect(
       within(firstRunAlert).getByText(/Revisa credenciales técnicas y responsables sin salir del recorrido inicial\./i),
     ).toBeInTheDocument();
@@ -1548,19 +1550,16 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
-    expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
 
     act(() => {
       queryClient.setQueryData(['admin', 'console'], { status: 'preview', cards: [] });
     });
 
     await waitFor(() => {
-      expect(screen.queryByText('Módulos opcionales')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Ocultar módulo opcional/i })).not.toBeInTheDocument();
       expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: /Ocultar módulos adicionales/i }),
-      ).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
@@ -1595,7 +1594,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
 
     act(() => {
@@ -1671,7 +1670,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
     expect(
       screen.getAllByText(
@@ -1727,7 +1726,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
     expect(screen.queryByText('Credenciales compartidas')).not.toBeInTheDocument();
     expect(
@@ -1784,7 +1783,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
     expect(screen.queryByText('Credenciales compartidas')).not.toBeInTheDocument();
     expect(
@@ -1839,7 +1838,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
     expect(
       screen.getByText(
@@ -1898,7 +1897,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
     expect(screen.queryByText('Credenciales compartidas')).not.toBeInTheDocument();
     expect(
@@ -1953,7 +1952,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText('Tokens de servicio')).toHaveLength(1);
     expect(screen.queryByText('Tokens de servicio:')).not.toBeInTheDocument();
     expect(
@@ -2010,7 +2009,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(
       screen.getAllByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.?/i,
@@ -2687,7 +2686,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(
       screen.getByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
@@ -2736,7 +2735,7 @@ describe('AdminConsolePage', () => {
       ),
     );
 
-    expect(await screen.findByText('Módulos opcionales')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Ocultar módulo opcional/i })).toBeInTheDocument();
     expect(screen.getAllByText(/^Tokens de servicio$/i)).toHaveLength(1);
     expect(
       screen.getByText(
@@ -2815,14 +2814,20 @@ describe('AdminConsolePage', () => {
 
     await user.click(screen.getByRole('button', { name: /Ver Tokens de servicio/i }));
 
-    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Tarjeta auxiliar del panel\. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría\./i,
+      ),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Ocultar módulos adicionales/i }),
+      screen.getByRole('button', { name: /Ocultar módulo adicional/i }),
     ).toHaveAttribute('aria-expanded', 'true');
   });
 

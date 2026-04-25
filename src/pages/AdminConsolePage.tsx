@@ -866,6 +866,10 @@ function formatStandaloneAdditionalModulesActionCopy(cards: readonly Pick<AdminC
   return buildAdditionalModulesActionCopy({ cards, optionalPrefix: false });
 }
 
+function getSingleAdditionalModule(cards: readonly AdminConsoleCard[]) {
+  return cards.length === 1 ? (cards[0] ?? null) : null;
+}
+
 const STATUS_META: Record<AdminUserStatus, { label: string; color: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   ACTIVE: { label: 'Activo', color: 'success' },
   INVITED: { label: 'Invitado', color: 'info' },
@@ -878,13 +882,17 @@ function renderAdditionalModuleCardsGrid({
   isPending,
   id,
   sx,
+  hideSingleCardHeader,
 }: {
   cards: readonly AdminConsoleCard[];
   isFetching: boolean;
   isPending: boolean;
   id?: string;
   sx?: SxProps<Theme>;
+  hideSingleCardHeader?: boolean;
 }) {
+  const singleCard = hideSingleCardHeader ? getSingleAdditionalModule(cards) : null;
+
   return (
     <Box id={id} sx={sx}>
       {isFetching && !isPending && (
@@ -900,7 +908,7 @@ function renderAdditionalModuleCardsGrid({
         {cards.map((card) => (
           <Grid item xs={12} md={4} key={card.cardId}>
             <Card variant="outlined">
-              <CardHeader title={card.title} />
+              {singleCard == null && <CardHeader title={card.title} />}
               <CardContent>
                 {card.body.map((paragraph, idx) => (
                   <Typography
@@ -1110,6 +1118,23 @@ export default function AdminConsolePage() {
     && shouldShowAdditionalModuleCards;
   const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
   const standaloneAdditionalModulesActionCopy = formatStandaloneAdditionalModulesActionCopy(consoleCards);
+  const singleAdditionalModule = getSingleAdditionalModule(consoleCards);
+  const firstRunAdditionalModulesTitle = singleAdditionalModule?.title ?? 'Módulos opcionales';
+  const firstRunAdditionalModulesDescription = singleAdditionalModule
+    ? 'Revísalo aquí solo si ya necesitas este flujo extra, sin salir del recorrido inicial.'
+    : 'Revísalos aquí solo si ya necesitas ese flujo extra, sin salir del recorrido inicial.';
+  const firstRunAdditionalModulesHideLabel = singleAdditionalModule
+    ? 'Ocultar módulo opcional'
+    : 'Ocultar módulos adicionales';
+  const standaloneAdditionalModulesTitle = showStandaloneAdditionalModules && singleAdditionalModule
+    ? singleAdditionalModule.title
+    : 'Módulos adicionales';
+  const standaloneAdditionalModulesDescription = showStandaloneAdditionalModules && singleAdditionalModule
+    ? 'Tarjeta auxiliar del panel. Ábrela solo cuando ya confirmaste salud, usuarios y auditoría.'
+    : 'Tarjetas auxiliares del panel. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría.';
+  const standaloneAdditionalModulesHideLabel = singleAdditionalModule
+    ? 'Ocultar módulo adicional'
+    : 'Ocultar módulos adicionales';
   const firstRunAdditionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
@@ -1302,9 +1327,9 @@ export default function AdminConsolePage() {
                   alignItems={{ xs: 'flex-start', sm: 'center' }}
                 >
                   <Box>
-                    <Typography variant="subtitle2">Módulos opcionales</Typography>
+                    <Typography variant="subtitle2">{firstRunAdditionalModulesTitle}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      Revísalos aquí solo si ya necesitas ese flujo extra, sin salir del recorrido inicial.
+                      {firstRunAdditionalModulesDescription}
                     </Typography>
                   </Box>
                   <Button
@@ -1314,7 +1339,7 @@ export default function AdminConsolePage() {
                     aria-controls="admin-additional-modules-list"
                     aria-expanded="true"
                   >
-                    Ocultar módulos adicionales
+                    {firstRunAdditionalModulesHideLabel}
                   </Button>
                 </Stack>
                 {renderAdditionalModuleCardsGrid({
@@ -1322,6 +1347,7 @@ export default function AdminConsolePage() {
                   isFetching: consoleQuery.isFetching,
                   isPending: consoleQuery.isPending,
                   id: 'admin-additional-modules-list',
+                  hideSingleCardHeader: true,
                 })}
               </Stack>
             )}
@@ -1681,9 +1707,9 @@ export default function AdminConsolePage() {
               alignItems={{ xs: 'flex-start', sm: 'center' }}
             >
               <Box>
-                <Typography variant="h6">Módulos adicionales</Typography>
+                <Typography variant="h6">{standaloneAdditionalModulesTitle}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Tarjetas auxiliares del panel. Ábrelas solo cuando ya confirmaste salud, usuarios y auditoría.
+                  {standaloneAdditionalModulesDescription}
                 </Typography>
               </Box>
               <Button
@@ -1696,7 +1722,7 @@ export default function AdminConsolePage() {
                 title={showStandaloneAdditionalModules ? undefined : standaloneAdditionalModulesActionCopy.title}
               >
                 {showStandaloneAdditionalModules
-                  ? 'Ocultar módulos adicionales'
+                  ? standaloneAdditionalModulesHideLabel
                   : standaloneAdditionalModulesActionCopy.label}
               </Button>
             </Stack>
@@ -1707,6 +1733,7 @@ export default function AdminConsolePage() {
             isPending: consoleQuery.isPending,
             id: 'admin-additional-modules-list',
             sx: { px: 2, pb: 2 },
+            hideSingleCardHeader: true,
           })}
         </Paper>
       )}
