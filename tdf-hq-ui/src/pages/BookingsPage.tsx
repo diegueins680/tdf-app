@@ -387,6 +387,7 @@ export default function BookingsPage() {
         ? `${serviceFieldState.helperText} ${describeServiceDefaults(serviceType)}`
         : serviceFieldState.helperText
       : describeServiceDefaults(serviceType);
+  const showTemplateSelector = showQuickTemplateField && serviceFallbackEntryState.showTemplateField;
   const engineerFieldState = useMemo(
     () => getBookingEngineerFieldState({
       engineerCount: engineerOptions.length,
@@ -1170,7 +1171,7 @@ const openDialogForRange = (start: Date, end: Date) => {
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-            {showQuickTemplateField && (
+            {showTemplateSelector && (
               <TextField
                 select
                 label="Plantilla de respaldo"
@@ -1225,6 +1226,21 @@ const openDialogForRange = (start: Date, end: Date) => {
                 sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
               >
                 {serviceFallbackEntryState.manualEntryToggleLabel}
+              </Button>
+            )}
+            {serviceFallbackEntryState.templateReturnActionLabel && (
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => {
+                  setTemplate('');
+                  setServiceType('');
+                  setAutoAssignMessage('');
+                  setManualServiceFallbackOpen(false);
+                }}
+                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+              >
+                {serviceFallbackEntryState.templateReturnActionLabel}
               </Button>
             )}
             {serviceFieldState.mode === 'manual' && serviceFallbackEntryState.showManualEntryField ? (

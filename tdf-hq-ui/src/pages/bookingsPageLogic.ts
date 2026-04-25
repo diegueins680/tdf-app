@@ -24,6 +24,8 @@ interface BookingServiceFallbackEntryState {
   manualEntryToggleLabel?: string;
   showManualEntryField: boolean;
   showManualEntryToggle: boolean;
+  showTemplateField: boolean;
+  templateReturnActionLabel?: string;
   templateHelperText: string;
 }
 
@@ -235,6 +237,7 @@ export const getBookingServiceFallbackEntryState = ({
     return {
       showManualEntryField: true,
       showManualEntryToggle: false,
+      showTemplateField: false,
       templateHelperText: '',
     };
   }
@@ -243,7 +246,9 @@ export const getBookingServiceFallbackEntryState = ({
     return {
       showManualEntryField: true,
       showManualEntryToggle: false,
-      templateHelperText: 'La plantilla sigue disponible si quieres volver a precargar servicio, salas y notas.',
+      showTemplateField: false,
+      templateReturnActionLabel: 'Volver a plantillas',
+      templateHelperText: '',
     };
   }
 
@@ -251,6 +256,7 @@ export const getBookingServiceFallbackEntryState = ({
     manualEntryToggleLabel: 'Escribir servicio manualmente',
     showManualEntryField: false,
     showManualEntryToggle: true,
+    showTemplateField: true,
     templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
   };
 };

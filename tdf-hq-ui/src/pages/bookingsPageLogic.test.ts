@@ -156,6 +156,7 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       showManualEntryField: true,
       showManualEntryToggle: false,
+      showTemplateField: false,
       templateHelperText: '',
     });
 
@@ -166,6 +167,7 @@ describe('bookingsPageLogic', () => {
       manualEntryToggleLabel: 'Escribir servicio manualmente',
       showManualEntryField: false,
       showManualEntryToggle: true,
+      showTemplateField: true,
       templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
     });
 
@@ -175,7 +177,9 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       showManualEntryField: true,
       showManualEntryToggle: false,
-      templateHelperText: 'La plantilla sigue disponible si quieres volver a precargar servicio, salas y notas.',
+      showTemplateField: false,
+      templateReturnActionLabel: 'Volver a plantillas',
+      templateHelperText: '',
     });
   });
 
