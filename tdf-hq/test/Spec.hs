@@ -2543,6 +2543,8 @@ main = hspec $ do
                 `shouldBe` Right (Just "https://tdf.example.com/curso/produccion")
             validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me/593991234567")
                 `shouldBe` Right (Just "https://wa.me/593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://api.whatsapp.com:443/send?phone=593991234567")
+                `shouldBe` Right (Just "https://api.whatsapp.com:443/send?phone=593991234567")
 
         it "rejects non-HTTPS course URLs instead of persisting insecure or broken public links" $ do
             let assertInvalid fieldName rawValue =
@@ -2561,6 +2563,16 @@ main = hspec $ do
             assertInvalid "locationMapUrl" "/curso/produccion"
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"
             assertInvalid "landingUrl" "https://tdf.example.com/curso\NULpreview"
+
+        it "rejects WhatsApp CTA URLs on non-default HTTPS ports so public course links stay canonical" $
+            case validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me:8443/593991234567") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
+                Right value ->
+                    expectationFailure ("Expected non-default WhatsApp CTA port to be rejected, got " <> show value)
 
         it "drops stale persisted public course URLs before metadata serialization" $ do
             sanitizeStoredCoursePublicUrl "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")

@@ -4429,7 +4429,7 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
             then
               Left err400
                 { errBody =
-                    "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com"
+                    "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
                 }
             else Right (Just urlVal)
         else
@@ -4441,7 +4441,12 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
 
 isAllowedWhatsAppCtaUrl :: Text -> Bool
 isAllowedWhatsAppCtaUrl rawUrl =
-  maybe False (`elem` allowedHosts) (extractHttpUrlHost rawUrl)
+  case extractHttpUrlAuthorityParts rawUrl of
+    Just (host, portSuffix) ->
+      host `elem` allowedHosts
+        && (T.null portSuffix || portSuffix == ":443")
+    Nothing ->
+      False
   where
     allowedHosts =
       [ "wa.me"
@@ -4449,13 +4454,13 @@ isAllowedWhatsAppCtaUrl rawUrl =
       , "web.whatsapp.com"
       ]
 
-extractHttpUrlHost :: Text -> Maybe Text
-extractHttpUrlHost rawUrl = do
+extractHttpUrlAuthorityParts :: Text -> Maybe (Text, Text)
+extractHttpUrlAuthorityParts rawUrl = do
   withoutScheme <-
     T.stripPrefix "https://" lowerUrl <|> T.stripPrefix "http://" lowerUrl
   let authority = T.takeWhile (`notElem` ("/?#" :: String)) withoutScheme
-      host = T.takeWhile (/= ':') authority
-  if T.null host then Nothing else Just host
+      (host, portSuffix) = T.breakOn ":" authority
+  if T.null host then Nothing else Just (host, portSuffix)
   where
     lowerUrl = T.toLower (T.strip rawUrl)
 
