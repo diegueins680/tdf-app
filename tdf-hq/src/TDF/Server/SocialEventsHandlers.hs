@@ -45,6 +45,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
   , validateTicketCheckInTicketStatus
+  , validateOptionalTicketBuyerPartyId
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCurrencyInput
   , isImageUpload
@@ -1444,7 +1445,8 @@ socialEventsServer user = eventsServer
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
       let manager = isEventManager currentPartyId eventVal
-          requestedBuyer = cleanMaybeText mBuyerPartyId
+      requestedBuyer <- either throwError pure
+        (validateOptionalTicketBuyerPartyId "buyerPartyId" mBuyerPartyId)
       buyerFilters <-
         if manager
           then pure $ maybe [] (\buyer -> [EventTicketOrderBuyerPartyId ==. Just buyer]) requestedBuyer
@@ -1479,7 +1481,8 @@ socialEventsServer user = eventsServer
       when (not (isTicketTierSaleOpen now tier)) $ throwError err400 { errBody = "Ticket sales are closed for this tier" }
 
       let manager = isEventManager currentPartyId eventVal
-          requestedBuyer = cleanMaybeText ticketPurchaseBuyerPartyId
+      requestedBuyer <- either throwError pure
+        (validateOptionalTicketBuyerPartyId "ticketPurchaseBuyerPartyId" ticketPurchaseBuyerPartyId)
       buyerParty <- case requestedBuyer of
         Nothing -> pure (Just currentPartyId)
         Just buyer
@@ -2289,6 +2292,20 @@ validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
       Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Nothing, Nothing) ->
       Left err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
+
+validateOptionalTicketBuyerPartyId :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateOptionalTicketBuyerPartyId fieldName mPartyId =
+  case cleanMaybeText mPartyId of
+    Nothing -> Right Nothing
+    Just rawPartyId ->
+      case normalizePositivePartyIdText rawPartyId of
+        Nothing ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
+            }
+        Just normalized -> Right (Just normalized)
 
 validateTicketPurchaseBuyerEmail :: Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateTicketPurchaseBuyerEmail rawEmail =

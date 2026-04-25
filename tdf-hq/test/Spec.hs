@@ -232,6 +232,7 @@ import TDF.Server.SocialEventsHandlers (
     validateTicketCheckInLookup,
     validateTicketCheckInOrderStatus,
     validateTicketCheckInTicketStatus,
+    validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerEmail,
     validateTicketTierCurrencyInput,
     validateEventCurrencyInput,
@@ -4017,6 +4018,28 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
                 Right _ -> expectationFailure "Expected non-positive follower query param to be rejected"
+
+    describe "validateOptionalTicketBuyerPartyId" $ do
+        it "treats omitted or blank buyer ids as absent and canonicalizes positive ids" $ do
+            validateOptionalTicketBuyerPartyId "buyerPartyId" Nothing
+                `shouldBe` Right Nothing
+            validateOptionalTicketBuyerPartyId "buyerPartyId" (Just "   ")
+                `shouldBe` Right Nothing
+            validateOptionalTicketBuyerPartyId "buyerPartyId" (Just " 0042 ")
+                `shouldBe` Right (Just "42")
+
+        it "rejects malformed buyer ids before ticket order filters or writes become ambiguous" $ do
+            let assertInvalid field raw expected =
+                    case validateOptionalTicketBuyerPartyId field (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid optional ticket buyer id to be rejected, got " <> show value)
+            assertInvalid "buyerPartyId" "buyer-42" "buyerPartyId must be a positive integer"
+            assertInvalid "buyerPartyId" "0" "buyerPartyId must be a positive integer"
+            assertInvalid "ticketPurchaseBuyerPartyId" "-7" "ticketPurchaseBuyerPartyId must be a positive integer"
 
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do
