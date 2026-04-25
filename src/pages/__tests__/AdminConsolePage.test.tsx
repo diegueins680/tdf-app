@@ -3092,7 +3092,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('uses one shared inline edit hint and keeps comparison-table role buttons text-only', async () => {
+  it('labels the roles column as editable and keeps compact guidance focused on hidden columns', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser(),
       buildAdminUser({
@@ -3111,10 +3111,13 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Haz clic sobre un rol para editarlo desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles \(editar\)$/i })).toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Editar aquí')).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles y edición$/i })).not.toBeInTheDocument();
@@ -3158,9 +3161,13 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Haz clic sobre un rol para editarlo desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles \(editar\)$/i })).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
@@ -3188,9 +3195,12 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i)).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
+      ).not.toBeInTheDocument();
       expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Clic para editar/i)).not.toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Roles \(editar\)$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /Último acceso/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('Invitado')).toBeInTheDocument();
