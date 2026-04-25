@@ -2247,6 +2247,87 @@ spec = do
         Right value ->
           expectationFailure ("Expected contradictory asset status patch to fail, got " <> show value)
 
+    it "rejects assets with multiple active checkouts so metadata edits do not proceed against an ambiguous custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid multi-checkout patch asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000917" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first multi-checkout patch fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000918" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second multi-checkout patch fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        existingAssetId
+        (AssetUpdate (Just "Roland Juno-106 MKII") Nothing Nothing Nothing Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "patching asset metadata"
+        Right value ->
+          expectationFailure ("Expected ambiguous asset patch to fail, got " <> show value)
+
     it "still allows booked status no-ops on legacy rows so unrelated asset edits stay unblocked" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

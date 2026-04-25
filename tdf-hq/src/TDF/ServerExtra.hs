@@ -275,17 +275,31 @@ inventoryServer user =
           Nothing -> pure (Right Nothing)
           Just entity -> do
             locationResult <- validateAssetLocationReference locationKey
-            mActiveCheckout <- selectFirst
+            activeCheckouts <- selectList
               [ AssetCheckoutAssetId ==. assetKey
               , AssetCheckoutReturnedAt ==. Nothing
               ]
-              [Desc AssetCheckoutCheckedOutAt]
-            let activeCheckoutStatus =
-                  assetStatusForCheckoutDisposition . assetCheckoutDisposition . entityVal <$> mActiveCheckout
-            case locationResult *> validateAssetPatchStatusInvariant
-              (assetStatus (entityVal entity))
-              statusValue
-              activeCheckoutStatus of
+              [ Desc AssetCheckoutCheckedOutAt
+              , LimitTo 2
+              ]
+            let activeCheckoutStatusResult =
+                  case activeCheckouts of
+                    [] ->
+                      Right Nothing
+                    [checkoutEnt] ->
+                      Right
+                        (Just (assetStatusForCheckoutDisposition (assetCheckoutDisposition (entityVal checkoutEnt))))
+                    _ ->
+                      Left err409
+                        { errBody = "Asset has multiple active checkouts; resolve the inventory state before patching asset metadata"
+                        }
+            case do
+              activeCheckoutStatus <- activeCheckoutStatusResult
+              locationResult
+              validateAssetPatchStatusInvariant
+                (assetStatus (entityVal entity))
+                statusValue
+                activeCheckoutStatus of
               Left err ->
                 pure (Left err)
               Right () -> do
