@@ -576,9 +576,9 @@ spec = do
       assertRejected (-3)
 
   describe "validateTeacherSubjectIdsInput" $ do
-    it "accepts explicit clears and removes duplicate positive ids without changing intent" $ do
+    it "accepts explicit clears and distinct positive ids without rewriting the requested subject set" $ do
       validateTeacherSubjectIdsInput [] `shouldBe` Right []
-      validateTeacherSubjectIdsInput [7, 3, 7, 5, 3] `shouldBe` Right [7, 3, 5]
+      validateTeacherSubjectIdsInput [7, 3, 5] `shouldBe` Right [7, 3, 5]
 
     it "rejects non-positive ids instead of silently treating them as a subject clear or partial update" $ do
       let assertRejected rawSubjectIds =
@@ -590,6 +590,14 @@ spec = do
                 expectationFailure ("Expected invalid subject ids to be rejected, got " <> show value)
       assertRejected [0]
       assertRejected [4, -1]
+
+    it "rejects duplicate ids instead of silently collapsing an ambiguous teacher subject update" $
+      case validateTeacherSubjectIdsInput [7, 3, 7] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "subjectIds must not contain duplicates"
+        Right value ->
+          expectationFailure ("Expected duplicate subject ids to be rejected, got " <> show value)
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $

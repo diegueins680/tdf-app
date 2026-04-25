@@ -547,15 +547,10 @@ validateTeacherSubjectIdsInput :: [Int] -> Either ServerError [Int]
 validateTeacherSubjectIdsInput rawSubjectIds
   | any (<= 0) rawSubjectIds =
       Left err400 { errBody = "subjectIds must contain only positive integers" }
+  | length rawSubjectIds /= Set.size (Set.fromList rawSubjectIds) =
+      Left err400 { errBody = "subjectIds must not contain duplicates" }
   | otherwise =
-      Right (dedupeSubjectIds rawSubjectIds)
-  where
-    dedupeSubjectIds = go Set.empty
-
-    go _ [] = []
-    go seen (subjectIdInt:rest)
-      | subjectIdInt `Set.member` seen = go seen rest
-      | otherwise = subjectIdInt : go (Set.insert subjectIdInt seen) rest
+      Right rawSubjectIds
 
 validateTrialAssignInput :: Int -> TrialAssignIn -> Either ServerError (Int, TrialAssignIn)
 validateTrialAssignInput requestIdInt input@TrialAssignIn{..}
@@ -1834,21 +1829,21 @@ privateTrialsServer user@AuthedUser{..} =
     teacherSubjectsUpdateH :: Int -> TeacherSubjectsUpdate -> AppM TeacherDTO
     teacherSubjectsUpdateH teacherId TeacherSubjectsUpdate{..} = do
       ensureSchoolAccess
-      subjectIdsDistinct <- either (liftIO . throwIO) pure (validateTeacherSubjectIdsInput subjectIds)
+      validatedSubjectIds <- either (liftIO . throwIO) pure (validateTeacherSubjectIdsInput subjectIds)
       let teacherKey = intKey teacherId :: PartyId
       ensureTeacherOrStaff teacherKey
       mTeacher <- get teacherKey
       case mTeacher of
         Nothing -> liftIO $ throwIO err404
         Just party -> do
-          subjectEntities <- if null subjectIdsDistinct
+          subjectEntities <- if null validatedSubjectIds
             then pure []
             else selectList
-              ( [SubjectId <-. map intKey subjectIdsDistinct]
+              ( [SubjectId <-. map intKey validatedSubjectIds]
                 ++ if isSchoolStaff then [] else [SubjectActive ==. True]
               )
               []
-          when (not (null subjectIdsDistinct) && length subjectEntities /= length subjectIdsDistinct) $
+          when (not (null validatedSubjectIds) && length subjectEntities /= length validatedSubjectIds) $
             liftIO $ throwIO err404 { errBody = "Una o más materias no existen." }
 
           existingLinks <- selectList [TeacherSubjectTeacherId ==. teacherKey] []
