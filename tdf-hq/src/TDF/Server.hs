@@ -2279,7 +2279,7 @@ validateConfiguredCalendarRedirectUri rawRedirect =
 validateOptionalCalendarIdQuery :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCalendarIdQuery Nothing = Right Nothing
 validateOptionalCalendarIdQuery (Just rawCalendarId) =
-  Just <$> validateCalendarQueryText "calendarId" rawCalendarId
+  Just <$> either (Left . calendarQueryError) Right (CalAPI.normalizeCalendarId rawCalendarId)
 
 validateCalendarEventListQuery
   :: Maybe Text

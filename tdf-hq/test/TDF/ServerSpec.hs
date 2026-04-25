@@ -3650,6 +3650,9 @@ spec = describe "TDF.Server helpers" $ do
                 "calendarId must not contain control characters"
                 (validateCalendarEventListQuery (Just "pri\nmary") Nothing Nothing Nothing)
             assertInvalid
+                "calendarId must not contain whitespace"
+                (validateCalendarEventListQuery (Just "team calendar") Nothing Nothing Nothing)
+            assertInvalid
                 "status must not be blank"
                 (validateCalendarEventListQuery Nothing Nothing Nothing (Just "   "))
             assertInvalid

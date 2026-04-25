@@ -2,13 +2,14 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module TDF.API.Calendar where
 
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl)
+import           Data.Char (isControl, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -25,6 +26,21 @@ requiredNonBlank fieldName raw =
        else if T.any isControl trimmed
          then fail (fieldName <> " must not contain control characters")
          else pure trimmed
+
+normalizeCalendarId :: Text -> Either Text Text
+normalizeCalendarId raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then Left "calendarId must not be blank"
+       else if T.any isControl trimmed
+         then Left "calendarId must not contain control characters"
+         else if T.any isSpace trimmed
+           then Left "calendarId must not contain whitespace"
+           else Right trimmed
+
+requiredCalendarId :: Text -> Parser Text
+requiredCalendarId raw =
+  either (fail . T.unpack) pure (normalizeCalendarId raw)
 
 optionalNonBlank :: Maybe Text -> Maybe Text
 optionalNonBlank raw =
@@ -49,7 +65,7 @@ instance FromJSON TokenExchangeIn where
     TokenExchangeIn
       <$> requiredNonBlank "code" rawCode
       <*> pure (optionalNonBlank rawRedirectUri)
-      <*> requiredNonBlank "calendarId" rawCalendarId
+      <*> requiredCalendarId rawCalendarId
 
 data CalendarConfigDTO = CalendarConfigDTO
   { configId   :: Int
@@ -73,7 +89,7 @@ instance FromJSON SyncRequest where
         fail "to must be on or after from"
       _ ->
         SyncRequest
-          <$> requiredNonBlank "calendarId" rawCalendarId
+          <$> requiredCalendarId rawCalendarId
           <*> pure rawFrom
           <*> pure rawTo
 
