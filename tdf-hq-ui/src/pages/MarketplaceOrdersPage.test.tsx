@@ -31,6 +31,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 const { default: MarketplaceOrdersPage } = await import('./MarketplaceOrdersPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+const normalizeText = (value: string | null | undefined) => (value ?? '').replace(/\s+/g, ' ').trim();
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
@@ -121,7 +122,7 @@ const renderPage = async (container: HTMLElement) => {
 
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((element) => {
-    const text = (element.textContent ?? '').replace('*', '').trim();
+    const text = normalizeText((element.textContent ?? '').replace('*', ''));
     return text === labelText;
   }).length;
 
@@ -190,6 +191,59 @@ const clickButtonByAriaLabel = async (root: ParentNode, ariaLabel: string) => {
 
   await act(async () => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
+const clickCheckboxByLabel = async (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText(element.textContent) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement)) {
+    throw new Error(`Checkbox label not found: ${labelText}`);
+  }
+
+  const input = label.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error(`Checkbox input not found for label: ${labelText}`);
+  }
+
+  await act(async () => {
+    input.click();
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
+const selectOptionByLabel = async (root: ParentNode, labelText: string, optionText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText((element.textContent ?? '').replace('*', '')) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement) || !label.id) {
+    throw new Error(`Select label not found: ${labelText}`);
+  }
+
+  const trigger = document.body.querySelector<HTMLElement>(`[role="combobox"][aria-labelledby*="${label.id}"]`);
+  if (!(trigger instanceof HTMLElement)) {
+    throw new Error(`Select trigger not found for label: ${labelText}`);
+  }
+
+  await act(async () => {
+    trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+
+  const option = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]')).find(
+    (element) => normalizeText(element.textContent) === optionText,
+  );
+  if (!(option instanceof HTMLElement)) {
+    throw new Error(`Select option not found: ${optionText}`);
+  }
+
+  await act(async () => {
+    option.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
     await flushPromises();
   });
 };
@@ -450,6 +504,80 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Desde')).toBe(1);
         expect(countLabelsByText(container, 'Hasta')).toBe(1);
         expect(container.textContent).toContain('Solo con pago registrado');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('drops the duplicate paid-only control once the list is already filtered to paid orders', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+      moPaidAt: null,
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+    const approvedOrder = buildOrder({
+      moOrderId: 'order-3',
+      moCartId: 'cart-3',
+      moBuyerName: 'Katherine Johnson',
+      moBuyerEmail: 'katherine@example.com',
+      moStatus: 'approved',
+      moPaymentProvider: 'datafast',
+      moPaidAt: '2030-01-03T12:30:00.000Z',
+      moCreatedAt: '2030-01-03T12:00:00.000Z',
+      moUpdatedAt: '2030-01-03T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(
+        params?.status === 'paid'
+          ? [paidOrder]
+          : [pendingOrder, paidOrder, approvedOrder],
+      ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).not.toBeNull();
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Ocultar fechas y pago')).not.toBeNull();
+        expect(container.textContent).toContain('Solo con pago registrado');
+      });
+
+      await clickCheckboxByLabel(container, 'Solo con pago registrado');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Con pago');
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(queryActionByText(container, 'Ocultar fechas')).not.toBeNull();
+        expect(queryActionByText(container, 'Ocultar fechas y pago')).toBeNull();
+        expect(container.textContent).not.toContain('Solo con pago registrado');
+        expect(container.textContent).not.toContain('Con pago');
+        expect(container.textContent).toContain('Estado: Pagado');
       });
     } finally {
       await cleanup();

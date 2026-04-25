@@ -189,6 +189,14 @@ export default function MarketplaceOrdersPage() {
     }
   }, [statusInput, paidAtInput]);
 
+  const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
+  const activePaidOnlyFilter = paidOnly && !statusFilterImpliesPaid;
+
+  useEffect(() => {
+    if (!statusFilterImpliesPaid || !paidOnly) return;
+    setPaidOnly(false);
+  }, [paidOnly, statusFilterImpliesPaid]);
+
   const normalizedProviderFilter = normalizeProviderFilterValue(providerFilter);
 
   const baseContextOrders = useMemo(() => {
@@ -198,7 +206,7 @@ export default function MarketplaceOrdersPage() {
     const fromDt = fromDate ? DateTime.fromISO(fromDate) : null;
     const toDt = toDate ? DateTime.fromISO(toDate).endOf('day') : null;
     return sortedOrders.filter((order) => {
-      if (paidOnly && !order.moPaidAt) return false;
+      if (activePaidOnlyFilter && !order.moPaidAt) return false;
       const created = DateTime.fromISO(order.moCreatedAt);
       if (fromDt && created < fromDt) return false;
       if (toDt && created > toDt) return false;
@@ -218,7 +226,7 @@ export default function MarketplaceOrdersPage() {
         && termDigits.length >= MIN_PHONE_SEARCH_DIGITS
         && normalizeBuyerPhoneDigits(order.moBuyerPhone).includes(termDigits);
     });
-  }, [sortedOrders, search, fromDate, toDate, paidOnly]);
+  }, [sortedOrders, search, fromDate, toDate, activePaidOnlyFilter]);
 
   const statusContextOrders = useMemo(() => {
     if (normalizedProviderFilter === 'all') return baseContextOrders;
@@ -319,10 +327,19 @@ export default function MarketplaceOrdersPage() {
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
 
   const filtersDirty =
-    statusFilter !== 'all' || providerFilter !== 'all' || search.trim() !== '' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
+    statusFilter !== 'all'
+    || providerFilter !== 'all'
+    || search.trim() !== ''
+    || Boolean(fromDate)
+    || Boolean(toDate)
+    || activePaidOnlyFilter;
   const hasSearchInput = search.trim() !== '';
   const hasNonSearchFiltersActive =
-    statusFilter !== 'all' || providerFilter !== 'all' || Boolean(fromDate) || Boolean(toDate) || paidOnly;
+    statusFilter !== 'all'
+    || providerFilter !== 'all'
+    || Boolean(fromDate)
+    || Boolean(toDate)
+    || activePaidOnlyFilter;
   const showSearchWithExtraFilters = hasSearchInput && hasNonSearchFiltersActive;
   const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
   const filtersActiveCount =
@@ -331,7 +348,7 @@ export default function MarketplaceOrdersPage() {
     (search.trim() ? 1 : 0) +
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
-    (paidOnly ? 1 : 0);
+    (activePaidOnlyFilter ? 1 : 0);
   const visiblePaidCount = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const visiblePendingCount = Math.max(filtered.length - visiblePaidCount, 0);
   const showVisibleOrderBreakdown = visiblePaidCount > 0 && visiblePendingCount > 0;
@@ -364,12 +381,14 @@ export default function MarketplaceOrdersPage() {
   const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
-  const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || paidOnly;
+  const showPaidOnlyAdvancedFilter = !statusFilterImpliesPaid;
+  const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || activePaidOnlyFilter;
+  const advancedFiltersButtonSubject = showPaidOnlyAdvancedFilter ? 'fechas y pago' : 'fechas';
   const advancedFiltersButtonLabel = showAdvancedFilters
-    ? 'Ocultar fechas y pago'
+    ? `Ocultar ${advancedFiltersButtonSubject}`
     : hasAdvancedFiltersActive
-      ? 'Editar fechas y pago'
-      : 'Mostrar fechas y pago';
+      ? `Editar ${advancedFiltersButtonSubject}`
+      : `Mostrar ${advancedFiltersButtonSubject}`;
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && !hasSearchInput && (orders.length > 1 || filtersDirty));
   const showPermissionNotice =
@@ -383,6 +402,9 @@ export default function MarketplaceOrdersPage() {
     ? 'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.'
     : 'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.';
   const clearFiltersActionLabel = showSearchWithExtraFilters ? 'Limpiar otros filtros' : 'Limpiar filtros';
+  const paidOrdersRecoveryMessage = activePaidOnlyFilter
+    ? 'Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca "Solo con pago".'
+    : 'Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros para volver a incluirlas.';
 
   const exportCsv = () => {
     if (filtered.length === 0) return;
@@ -419,7 +441,7 @@ export default function MarketplaceOrdersPage() {
     const params = url.searchParams;
     params.set('status', statusFilter);
     params.set('provider', providerFilter);
-    params.set('paidOnly', paidOnly ? '1' : '0');
+    params.set('paidOnly', activePaidOnlyFilter ? '1' : '0');
     if (search.trim()) params.set('q', search.trim());
     else params.delete('q');
     if (fromDate) params.set('from', fromDate);
@@ -768,12 +790,14 @@ export default function MarketplaceOrdersPage() {
                     inputProps={{ min: fromDate }}
                   />
                 </Grid>
-                <Grid item xs={12} md={12} lg={3}>
-                  <FormControlLabel
-                    control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
-                    label="Solo con pago registrado"
-                  />
-                </Grid>
+                {showPaidOnlyAdvancedFilter && (
+                  <Grid item xs={12} md={12} lg={3}>
+                    <FormControlLabel
+                      control={<Checkbox checked={paidOnly} onChange={(e) => setPaidOnly(e.target.checked)} />}
+                      label="Solo con pago registrado"
+                    />
+                  </Grid>
+                )}
               </>
             )}
           </Grid>
@@ -829,7 +853,7 @@ export default function MarketplaceOrdersPage() {
                   )}
                   {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
                   {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
-                  {paidOnly && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
+                  {activePaidOnlyFilter && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
                   <Button onClick={clearFilters} variant="text">
                     {clearFiltersActionLabel}
                   </Button>
@@ -843,7 +867,7 @@ export default function MarketplaceOrdersPage() {
           </Stack>
           {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
             <Alert severity="info" sx={{ mb: 2 }}>
-              Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca &quot;Solo con pago&quot;.
+              {paidOrdersRecoveryMessage}
             </Alert>
           )}
         </>
