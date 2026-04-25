@@ -246,6 +246,9 @@ const INVENTORY_NO_MOVEMENT_GUIDANCE =
   'En esta vista no hay movimientos disponibles por ahora.';
 const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
+const INVENTORY_SINGLE_SEARCH_RESULT_TITLE = 'Resultado único';
+const INVENTORY_SINGLE_SEARCH_RESULT_GUIDANCE =
+  'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen; al limpiar la búsqueda volverá la tabla completa.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
 const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
 const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
@@ -262,6 +265,147 @@ function getInventoryMovementGuidance({
   if (canCheckout) return INVENTORY_CHECKOUT_ONLY_GUIDANCE;
   if (canCheckin) return INVENTORY_CHECKIN_ONLY_GUIDANCE;
   return INVENTORY_NO_MOVEMENT_GUIDANCE;
+}
+
+function InventoryAssetSummaryCard({
+  title,
+  description,
+  asset,
+  roomMap,
+  onOpenCheckout,
+  onOpenCheckin,
+  onOpenSecondaryActions,
+}: {
+  title: string;
+  description: string;
+  asset: AssetDTO;
+  roomMap: Map<string, RoomDTO>;
+  onOpenCheckout: (asset: AssetDTO) => void;
+  onOpenCheckin: (asset: AssetDTO) => void;
+  onOpenSecondaryActions: (event: MouseEvent<HTMLButtonElement>, asset: AssetDTO) => void;
+}) {
+  const assetLocation = normalizeInventoryField(asset.location);
+  const assetCondition = normalizeInventoryField(asset.condition);
+  const movementState = getInventoryMovementState(asset.status);
+  const paymentSummary = formatCheckoutPaymentSummary(
+    asset.currentCheckoutPaymentType,
+    asset.currentCheckoutPaymentInstallments,
+    asset.currentCheckoutPaymentAmountCents,
+    asset.currentCheckoutPaymentCurrency,
+    asset.currentCheckoutPaymentOutstandingCents,
+  );
+  const checkoutContextSummary = buildCurrentCheckoutContextSummary({
+    disposition: asset.currentCheckoutDisposition,
+    checkedOutAt: asset.currentCheckoutAt,
+    dueAt: asset.currentCheckoutDueAt,
+    paymentSummary,
+  });
+  const checkoutContactSummary = buildCurrentCheckoutContactSummary({
+    holderEmail: asset.currentCheckoutHolderEmail,
+    holderPhone: asset.currentCheckoutHolderPhone,
+  });
+  const showCheckoutSummary = Boolean(
+    normalizeInventoryField(asset.currentCheckoutTarget)
+    || checkoutContextSummary
+    || checkoutContactSummary,
+  );
+  const showNoMovementGuidance = !movementState.canCheckout && !movementState.canCheckin;
+
+  return (
+    <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <CardContent>
+        <Stack spacing={2}>
+          <Stack spacing={0.75}>
+            <Typography variant="h6" fontWeight={700}>
+              {title}
+            </Typography>
+            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+              {description}
+            </Typography>
+          </Stack>
+          <Stack spacing={0.5}>
+            <Typography variant="body1" fontWeight={700}>
+              {asset.name}
+            </Typography>
+            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+              Categoría: {asset.category}
+            </Typography>
+            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+              Estado: {getInventoryStatusLabel(asset.status)}
+            </Typography>
+            {assetLocation && (
+              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                Ubicación: {assetLocation}
+              </Typography>
+            )}
+            {assetCondition && (
+              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                Condición: {assetCondition}
+              </Typography>
+            )}
+            {showCheckoutSummary && (
+              <>
+                {normalizeInventoryField(asset.currentCheckoutTarget) && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                    Tenencia actual: {getCurrentTargetSummary(asset, roomMap)}
+                  </Typography>
+                )}
+                {checkoutContextSummary && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                    Contexto: {checkoutContextSummary}
+                  </Typography>
+                )}
+                {checkoutContactSummary && (
+                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                    Contacto: {checkoutContactSummary}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+            {movementState.canCheckout && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<ExitToAppIcon />}
+                onClick={() => onOpenCheckout(asset)}
+                aria-label={`Abrir check-out de ${asset.name}`}
+              >
+                Registrar check-out
+              </Button>
+            )}
+            {movementState.canCheckin && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<HowToRegIcon />}
+                onClick={() => onOpenCheckin(asset)}
+                aria-label={`Abrir check-in de ${asset.name}`}
+              >
+                Registrar check-in
+              </Button>
+            )}
+            {showNoMovementGuidance && (
+              <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                {INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE}
+              </Typography>
+            )}
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<QrCodeIcon />}
+              onClick={(event) => onOpenSecondaryActions(event, asset)}
+              aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
+              sx={{ textTransform: 'none' }}
+            >
+              {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function InventoryPage() {
@@ -488,41 +632,12 @@ export default function InventoryPage() {
   const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && assets.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
+  const filteredSingleAsset = showInventorySearch && normalizedInventorySearch !== '' && grouped.length === 1
+    ? (grouped[0] ?? null)
+    : null;
+  const showFilteredSingleAssetSummary =
+    !assetsQuery.isLoading && !assetsQuery.error && filteredSingleAsset != null;
   const showFilteredEmptyState = showInventorySearch && normalizedInventorySearch !== '' && grouped.length === 0;
-  const singleAssetLocation = singleAsset ? normalizeInventoryField(singleAsset.location) : null;
-  const singleAssetCondition = singleAsset ? normalizeInventoryField(singleAsset.condition) : null;
-  const singleAssetMovementState = singleAsset ? getInventoryMovementState(singleAsset.status) : null;
-  const singleAssetPaymentSummary = singleAsset
-    ? formatCheckoutPaymentSummary(
-        singleAsset.currentCheckoutPaymentType,
-        singleAsset.currentCheckoutPaymentInstallments,
-        singleAsset.currentCheckoutPaymentAmountCents,
-        singleAsset.currentCheckoutPaymentCurrency,
-        singleAsset.currentCheckoutPaymentOutstandingCents,
-      )
-    : '';
-  const singleAssetCheckoutContextSummary = singleAsset
-    ? buildCurrentCheckoutContextSummary({
-        disposition: singleAsset.currentCheckoutDisposition,
-        checkedOutAt: singleAsset.currentCheckoutAt,
-        dueAt: singleAsset.currentCheckoutDueAt,
-        paymentSummary: singleAssetPaymentSummary,
-      })
-    : '';
-  const singleAssetCheckoutContactSummary = singleAsset
-    ? buildCurrentCheckoutContactSummary({
-        holderEmail: singleAsset.currentCheckoutHolderEmail,
-        holderPhone: singleAsset.currentCheckoutHolderPhone,
-      })
-    : '';
-  const showSingleAssetCheckoutSummary = Boolean(
-    singleAsset
-    && (
-      normalizeInventoryField(singleAsset.currentCheckoutTarget)
-      || singleAssetCheckoutContextSummary
-      || singleAssetCheckoutContactSummary
-    ),
-  );
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedConditionSummary = useMemo(() => getSharedInventoryConditionSummary(grouped), [grouped]);
@@ -535,12 +650,6 @@ export default function InventoryPage() {
       condition: sharedConditionSummary,
     }),
     [sharedCategorySummary, sharedConditionSummary, sharedLocationSummary, sharedStatusSummary],
-  );
-  const showSingleAssetNoMovementGuidance = Boolean(
-    showSingleAssetSummary
-    && singleAssetMovementState
-    && !singleAssetMovementState.canCheckout
-    && !singleAssetMovementState.canCheckin,
   );
   const showStatusColumn = sharedStatusSummary === '';
   const showLocationColumn = sharedLocationSummary === '' && grouped.some((asset) => normalizeInventoryField(asset.location) != null);
@@ -652,100 +761,25 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       ) : showSingleAssetSummary && singleAsset ? (
-        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <CardContent>
-            <Stack spacing={2}>
-              <Stack spacing={0.75}>
-                <Typography variant="h6" fontWeight={700}>
-                  Primer equipo registrado
-                </Typography>
-                <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Revisa estado, ubicación y el siguiente movimiento desde este resumen. Cuando exista el segundo
-                  equipo, volverá la tabla operativa.
-                </Typography>
-              </Stack>
-              <Stack spacing={0.5}>
-                <Typography variant="body1" fontWeight={700}>
-                  {singleAsset.name}
-                </Typography>
-                <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Categoría: {singleAsset.category}
-                </Typography>
-                <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                  Estado: {getInventoryStatusLabel(singleAsset.status)}
-                </Typography>
-                {singleAssetLocation && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                    Ubicación: {singleAssetLocation}
-                  </Typography>
-                )}
-                {singleAssetCondition && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                    Condición: {singleAssetCondition}
-                  </Typography>
-                )}
-                {showSingleAssetCheckoutSummary && (
-                  <>
-                    {normalizeInventoryField(singleAsset.currentCheckoutTarget) && (
-                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Tenencia actual: {getCurrentTargetSummary(singleAsset, roomMap)}
-                      </Typography>
-                    )}
-                    {singleAssetCheckoutContextSummary && (
-                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Contexto: {singleAssetCheckoutContextSummary}
-                      </Typography>
-                    )}
-                    {singleAssetCheckoutContactSummary && (
-                      <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                        Contacto: {singleAssetCheckoutContactSummary}
-                      </Typography>
-                    )}
-                  </>
-                )}
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                {singleAssetMovementState?.canCheckout && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<ExitToAppIcon />}
-                    onClick={() => openCheckout(singleAsset)}
-                    aria-label={`Abrir check-out de ${singleAsset.name}`}
-                  >
-                    Registrar check-out
-                  </Button>
-                )}
-                {singleAssetMovementState?.canCheckin && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<HowToRegIcon />}
-                    onClick={() => openCheckin(singleAsset)}
-                    aria-label={`Abrir check-in de ${singleAsset.name}`}
-                  >
-                    Registrar check-in
-                  </Button>
-                )}
-                {showSingleAssetNoMovementGuidance && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.68)">
-                    {INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE}
-                  </Typography>
-                )}
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<QrCodeIcon />}
-                  onClick={(event) => openActionsMenu(event, singleAsset)}
-                  aria-label={`Abrir QR, enlace e historial de ${singleAsset.name}`}
-                  sx={{ textTransform: 'none' }}
-                >
-                  {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
-                </Button>
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
+        <InventoryAssetSummaryCard
+          title="Primer equipo registrado"
+          description="Revisa estado, ubicación y el siguiente movimiento desde este resumen. Cuando exista el segundo equipo, volverá la tabla operativa."
+          asset={singleAsset}
+          roomMap={roomMap}
+          onOpenCheckout={openCheckout}
+          onOpenCheckin={openCheckin}
+          onOpenSecondaryActions={openActionsMenu}
+        />
+      ) : showFilteredSingleAssetSummary && filteredSingleAsset ? (
+        <InventoryAssetSummaryCard
+          title={INVENTORY_SINGLE_SEARCH_RESULT_TITLE}
+          description={INVENTORY_SINGLE_SEARCH_RESULT_GUIDANCE}
+          asset={filteredSingleAsset}
+          roomMap={roomMap}
+          onOpenCheckout={openCheckout}
+          onOpenCheckin={openCheckin}
+          onOpenSecondaryActions={openActionsMenu}
+        />
       ) : showFilteredEmptyState ? (
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>

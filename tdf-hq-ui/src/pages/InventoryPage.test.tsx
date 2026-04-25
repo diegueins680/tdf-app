@@ -540,7 +540,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('filters the busy inventory view with one search field and a no-results reset path', async () => {
+  it('collapses a single filtered inventory match into the focused summary card before falling back to the empty-search reset path', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
         assetId: 'asset-1',
@@ -586,13 +586,17 @@ describe('InventoryPage', () => {
       await setInputValue(searchInput!, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('table')).toBeNull();
         expect(container.textContent).toContain('Mostrando 1 de 3 equipos.');
+        expect(container.textContent).toContain('Resultado único');
+        expect(container.textContent).toContain(
+          'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen; al limpiar la búsqueda volverá la tabla completa.',
+        );
         expect(container.textContent).toContain('Apollo Twin');
         expect(container.textContent).not.toContain('Neumann U87');
         expect(container.textContent).not.toContain('Genelec 8040');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
         expect(container.querySelector('[aria-label="Abrir check-in de Apollo Twin"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir QR, enlace e historial de Apollo Twin"]')).not.toBeNull();
       });
 
       await setInputValue(searchInput!, 'zzzz');
