@@ -792,6 +792,11 @@ validatePublicQrUploadContext
   :: AssetStatus
   -> Maybe (Entity AssetCheckout)
   -> Either ServerError ()
+validatePublicQrUploadContext Booked Nothing =
+  Left err409
+    { errBody =
+        "Asset status is booked but no active checkout exists; resolve the inventory state before public QR proof upload"
+    }
 validatePublicQrUploadContext assetState Nothing =
   validateAssetCheckoutStatus assetState
 validatePublicQrUploadContext assetState (Just checkoutEnt@(Entity _ checkoutRecord))

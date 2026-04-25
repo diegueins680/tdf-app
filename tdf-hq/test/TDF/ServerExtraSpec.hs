@@ -693,6 +693,15 @@ spec = do
         Right value ->
           expectationFailure ("Expected retired public QR upload context to be rejected, got " <> show value)
 
+    it "rejects booked assets without an active checkout so public proof uploads do not mask broken custody state as a new checkout conflict" $
+      case validatePublicQrUploadContext Booked Nothing of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "public QR proof upload"
+        Right value ->
+          expectationFailure ("Expected booked public QR upload state without an open checkout to be rejected, got " <> show value)
+
     it "rejects uploads when the asset status contradicts an active public checkout" $
       case validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Loan)) of
         Left err -> do
