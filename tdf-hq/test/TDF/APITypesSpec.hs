@@ -862,9 +862,9 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "MarketplaceCheckoutReq FromJSON" $ do
-        it "accepts canonical marketplace checkout payloads" $
+        it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $
             case decodeMarketplaceCheckout
-                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\"}"
+                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593991234567   \"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical marketplace checkout payload to decode, got: " <> err)
@@ -876,6 +876,20 @@ spec = do
         it "rejects unexpected checkout keys so malformed public checkout bodies fail explicitly" $ do
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects blank or malformed buyer identity fields before marketplace handlers run" $ do
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"   \",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada\\u0000Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"not-an-email\"}"
                 `shouldSatisfy` isLeft
 
     describe "MarketplaceCartItemUpdate FromJSON" $ do

@@ -6,7 +6,7 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isControl, isDigit, toLower)
+import           Data.Char    (isAsciiLower, isControl, isDigit, isSpace, toLower)
 import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
@@ -391,8 +391,83 @@ data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   } deriving (Show, Generic)
 
 instance FromJSON MarketplaceCheckoutReq where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
+    buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
+    let buyerPhone = normalizeMarketplaceOptionalField (mcrBuyerPhone payload)
+    pure payload
+      { mcrBuyerName = buyerName
+      , mcrBuyerEmail = buyerEmail
+      , mcrBuyerPhone = buyerPhone
+      }
 instance ToJSON MarketplaceCheckoutReq
+
+normalizeMarketplaceBuyerNameField :: Text -> Parser Text
+normalizeMarketplaceBuyerNameField rawName
+  | T.null trimmed =
+      fail "mcrBuyerName is required"
+  | T.length trimmed > 160 =
+      fail "mcrBuyerName must be 160 characters or fewer"
+  | T.any isControl trimmed =
+      fail "mcrBuyerName must not contain control characters"
+  | otherwise =
+      pure trimmed
+  where
+    trimmed = T.strip rawName
+
+normalizeMarketplaceBuyerEmailField :: Text -> Parser Text
+normalizeMarketplaceBuyerEmailField rawEmail
+  | T.null normalized =
+      fail "mcrBuyerEmail is required"
+  | isValidMarketplaceBuyerEmail normalized =
+      pure normalized
+  | otherwise =
+      fail "mcrBuyerEmail must be a valid email address"
+  where
+    normalized = T.toLower (T.strip rawEmail)
+
+normalizeMarketplaceOptionalField :: Maybe Text -> Maybe Text
+normalizeMarketplaceOptionalField Nothing = Nothing
+normalizeMarketplaceOptionalField (Just rawValue) =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed then Nothing else Just trimmed
+
+isValidMarketplaceBuyerEmail :: Text -> Bool
+isValidMarketplaceBuyerEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      T.length candidate <= 254
+        && isValidMarketplaceEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && T.isInfixOf "." domain
+        && all isValidMarketplaceEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+isValidMarketplaceEmailLocalPart :: Text -> Bool
+isValidMarketplaceEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= 64
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (T.isInfixOf ".." localPart)
+    && T.all isValidMarketplaceEmailLocalChar localPart
+
+isValidMarketplaceEmailLocalChar :: Char -> Bool
+isValidMarketplaceEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidMarketplaceEmailDomainLabel :: Text -> Bool
+isValidMarketplaceEmailDomainLabel label =
+  not (T.null label)
+    && T.length label <= 63
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidMarketplaceEmailDomainChar label
+
+isValidMarketplaceEmailDomainChar :: Char -> Bool
+isValidMarketplaceEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 data MarketplaceOrderItemDTO = MarketplaceOrderItemDTO
   { moiListingId         :: Text
