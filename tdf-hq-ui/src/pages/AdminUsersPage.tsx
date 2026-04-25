@@ -207,7 +207,7 @@ const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => 
 
 const buildExpandedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
   if (users.length !== 1) {
-    return 'Ocultar';
+    return `Ocultar ${formatInactiveUserCountLabel(users.length)}`;
   }
 
   return `Ocultar inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
@@ -768,7 +768,7 @@ export default function AdminUsersPage() {
     [inactiveVisibleUsers],
   );
   const showInactiveUsersGroupLabel = showInactiveUsersList
-    && !(shouldCollapseInactiveUsers && visibleInactiveUsersCount === 1);
+    && !shouldCollapseInactiveUsers;
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
