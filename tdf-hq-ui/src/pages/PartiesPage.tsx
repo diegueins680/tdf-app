@@ -68,6 +68,18 @@ const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagra
   return contactParts.length > 0 ? contactParts.join(' · ') : 'Falta correo e Instagram';
 };
 
+const getSingleContactPrimaryActionLabel = ({
+  canManageRoles,
+  party,
+}: {
+  canManageRoles: boolean;
+  party: Pick<PartyDTO, 'hasUserAccount' | 'primaryEmail'>;
+}) => {
+  if (!hasPartyPrimaryEmail(party)) return 'Completar contacto';
+  if (!party.hasUserAccount) return 'Editar o crear usuario';
+  return canManageRoles ? 'Editar o revisar acceso' : 'Editar contacto';
+};
+
 const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;
 const hasPartyPrimaryEmail = (party?: Pick<PartyDTO, 'primaryEmail'> | null) =>
   normalizePartyContactValue(party?.primaryEmail) != null;
@@ -401,6 +413,9 @@ export default function PartiesPage() {
   const singleContactSummaryDescription = trimmedSearch === ''
     ? 'Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el buscador y la tabla para comparar contactos.'
     : 'La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.';
+  const singleContactPrimaryActionLabel = singleContact == null
+    ? 'Acciones'
+    : getSingleContactPrimaryActionLabel({ canManageRoles, party: singleContact });
   const baseTableGuidanceText = 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
   const tableGuidanceText = [
     baseTableGuidanceText,
@@ -551,9 +566,10 @@ export default function PartiesPage() {
               <Stack direction="row" spacing={1}>
                 <Button
                   variant="outlined"
+                  aria-label={`Abrir acciones para ${singleContact.displayName}`}
                   onClick={(event) => openActionsMenu(event, singleContact)}
                 >
-                  {`Acciones de ${singleContact.displayName}`}
+                  {singleContactPrimaryActionLabel}
                 </Button>
               </Stack>
             </Stack>
