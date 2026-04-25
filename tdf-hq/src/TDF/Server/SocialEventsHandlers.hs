@@ -45,6 +45,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketCheckInLookup
   , validateTicketCheckInOrderStatus
   , validateTicketCheckInTicketStatus
+  , findTicketForCheckIn
   , validateOptionalTicketBuyerPartyId
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCurrencyInput
@@ -79,7 +80,7 @@ import           Servant.Multipart (FileData(..))
 -- Pull in full Persistent surface so TH-generated field constructors
 -- (EventRsvpEventId, SocialEventStartTime, etc.) are available.
 import           Database.Persist
-import           Database.Persist.Sql (ConnectionPool, SqlBackend, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 
 import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser(..))
@@ -1671,20 +1672,11 @@ socialEventsServer user = eventsServer
       _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
 
       ticketLookup <- either throwError pure (validateTicketCheckInLookup TicketCheckInRequestDTO{..})
-      ticketEntity <- case ticketLookup of
-        TicketCheckInLookupById rawTicketId -> do
-          ticketKey <- parseKeyOr400 "ticket" rawTicketId
-          mTicket <- liftIO $ runSqlPool (getEntity ticketKey) envPool
-          maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
-        TicketCheckInLookupByCode codeVal -> do
-          mTicket <- liftIO $ runSqlPool
-            (selectFirst [EventTicketEventId ==. eventKey, EventTicketCode ==. codeVal] [])
-            envPool
-          maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+      mTicket <- liftIO $ runSqlPool (findTicketForCheckIn eventKey ticketLookup) envPool
+      ticketEntity <- maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
 
       let ticketKey = entityKey ticketEntity
           ticketVal = entityVal ticketEntity
-      when (eventTicketEventId ticketVal /= eventKey) $ throwError err400 { errBody = "Ticket does not belong to this event" }
       orderRef <- liftIO $ runSqlPool (get (eventTicketOrderRefId ticketVal)) envPool
       orderStatus <- either throwError pure
         (validateTicketCheckInOrderStatus (eventTicketOrderStatus <$> orderRef))
@@ -2274,6 +2266,15 @@ validateTicketCheckInTicketStatus rawStatus =
   case parseTicketStatus rawStatus of
     Just statusVal -> Right statusVal
     Nothing -> Left err500 { errBody = "Stored ticket status is invalid" }
+
+findTicketForCheckIn :: SocialEventId -> TicketCheckInLookup -> SqlPersistT IO (Maybe (Entity EventTicket))
+findTicketForCheckIn eventKey ticketLookup =
+  case ticketLookup of
+    TicketCheckInLookupById rawTicketId -> do
+      let ticketKey = toSqlKey (read (T.unpack rawTicketId) :: Int64)
+      selectFirst [EventTicketId ==. ticketKey, EventTicketEventId ==. eventKey] []
+    TicketCheckInLookupByCode codeVal ->
+      selectFirst [EventTicketEventId ==. eventKey, EventTicketCode ==. codeVal] []
 
 validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
 validateTicketCheckInLookup TicketCheckInRequestDTO{..} =

@@ -6,7 +6,7 @@ module Main (main) where
 import Control.Exception (IOException, bracket)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Aeson (eitherDecode, (.=))
@@ -16,7 +16,7 @@ import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity (..), Key, insert_, insertKey, selectList)
+import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Network.Wai (defaultRequest)
@@ -95,7 +95,14 @@ import TDF.DTO.SocialSyncDTO
       SocialSyncPostDTO (..),
       SocialSyncPostIn (..),
       maxSocialSyncIngestPosts )
-import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
+import TDF.Models.SocialEventsModels
+    ( EventFinanceEntry (..),
+      EventInvitationId,
+      EventTicket (..),
+      EventTicketOrder (..),
+      EventTicketTier (..),
+      SocialEvent (..),
+      SocialEventId )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
@@ -232,6 +239,7 @@ import TDF.Server.SocialEventsHandlers (
     validateTicketCheckInLookup,
     validateTicketCheckInOrderStatus,
     validateTicketCheckInTicketStatus,
+    findTicketForCheckIn,
     validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerEmail,
     validateTicketTierCurrencyInput,
@@ -323,6 +331,78 @@ clearRagEnv =
         , "RAG_REFRESH_HOURS"
         , "RAG_EMBED_BATCH_SIZE"
         ]
+
+initializeTicketCheckInSchema :: SqlPersistT IO ()
+initializeTicketCheckInSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE social_event (\
+        \id INTEGER PRIMARY KEY,\
+        \organizer_party_id VARCHAR NULL,\
+        \title VARCHAR NOT NULL,\
+        \description VARCHAR NULL,\
+        \venue_id INTEGER NULL,\
+        \start_time TIMESTAMP NOT NULL,\
+        \end_time TIMESTAMP NOT NULL,\
+        \price_cents INTEGER NULL,\
+        \capacity INTEGER NULL,\
+        \metadata VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket_tier (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \code VARCHAR NOT NULL,\
+        \name VARCHAR NOT NULL,\
+        \description VARCHAR NULL,\
+        \price_cents INTEGER NOT NULL,\
+        \currency VARCHAR NOT NULL,\
+        \quantity_total INTEGER NOT NULL,\
+        \quantity_sold INTEGER NOT NULL,\
+        \sales_start TIMESTAMP NULL,\
+        \sales_end TIMESTAMP NULL,\
+        \is_active BOOLEAN NOT NULL,\
+        \position INTEGER NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket_order (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \tier_id INTEGER NOT NULL,\
+        \buyer_party_id VARCHAR NULL,\
+        \buyer_name VARCHAR NULL,\
+        \buyer_email VARCHAR NULL,\
+        \quantity INTEGER NOT NULL,\
+        \amount_cents INTEGER NOT NULL,\
+        \currency VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \metadata VARCHAR NULL,\
+        \purchased_at TIMESTAMP NOT NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \tier_ref_id INTEGER NOT NULL,\
+        \order_ref_id INTEGER NOT NULL,\
+        \holder_name VARCHAR NULL,\
+        \holder_email VARCHAR NULL,\
+        \code VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \checked_in_at TIMESTAMP NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
 
 sampleSriScriptRequest :: Sri.SriScriptRequest
 sampleSriScriptRequest =
@@ -4243,6 +4323,104 @@ main = hspec $ do
                                 ("Expected invalid ticket check-in state to be rejected, got " <> show value)
             assertInvariant ""
             assertInvariant "unknown"
+
+    describe "findTicketForCheckIn" $ do
+        it "keeps numeric ticket-id lookup scoped to the requested event" $ do
+            result <- runStdoutLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeTicketCheckInSchema pool
+                liftIO $ runSqlPool (do
+                    let now = UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 0)
+                    firstEventId <-
+                        insert
+                            SocialEvent
+                                { socialEventOrganizerPartyId = Just "1"
+                                , socialEventTitle = "First Event"
+                                , socialEventDescription = Nothing
+                                , socialEventVenueId = Nothing
+                                , socialEventStartTime = now
+                                , socialEventEndTime = addUTCTime 3600 now
+                                , socialEventPriceCents = Nothing
+                                , socialEventCapacity = Nothing
+                                , socialEventMetadata = Nothing
+                                , socialEventCreatedAt = now
+                                , socialEventUpdatedAt = now
+                                }
+                    secondEventId <-
+                        insert
+                            SocialEvent
+                                { socialEventOrganizerPartyId = Just "2"
+                                , socialEventTitle = "Second Event"
+                                , socialEventDescription = Nothing
+                                , socialEventVenueId = Nothing
+                                , socialEventStartTime = now
+                                , socialEventEndTime = addUTCTime 5400 now
+                                , socialEventPriceCents = Nothing
+                                , socialEventCapacity = Nothing
+                                , socialEventMetadata = Nothing
+                                , socialEventCreatedAt = now
+                                , socialEventUpdatedAt = now
+                                }
+                    tierId <-
+                        insert
+                            EventTicketTier
+                                { eventTicketTierEventId = secondEventId
+                                , eventTicketTierCode = "GEN"
+                                , eventTicketTierName = "General"
+                                , eventTicketTierDescription = Nothing
+                                , eventTicketTierPriceCents = 1500
+                                , eventTicketTierCurrency = "USD"
+                                , eventTicketTierQuantityTotal = 10
+                                , eventTicketTierQuantitySold = 1
+                                , eventTicketTierSalesStart = Nothing
+                                , eventTicketTierSalesEnd = Nothing
+                                , eventTicketTierIsActive = True
+                                , eventTicketTierPosition = Nothing
+                                , eventTicketTierCreatedAt = now
+                                , eventTicketTierUpdatedAt = now
+                                }
+                    orderId <-
+                        insert
+                            EventTicketOrder
+                                { eventTicketOrderEventId = secondEventId
+                                , eventTicketOrderTierId = tierId
+                                , eventTicketOrderBuyerPartyId = Just "2"
+                                , eventTicketOrderBuyerName = Just "Ada"
+                                , eventTicketOrderBuyerEmail = Just "ada@example.com"
+                                , eventTicketOrderQuantity = 1
+                                , eventTicketOrderAmountCents = 1500
+                                , eventTicketOrderCurrency = "USD"
+                                , eventTicketOrderStatus = "paid"
+                                , eventTicketOrderMetadata = Nothing
+                                , eventTicketOrderPurchasedAt = now
+                                , eventTicketOrderCreatedAt = now
+                                , eventTicketOrderUpdatedAt = now
+                                }
+                    ticketId <-
+                        insert
+                            EventTicket
+                                { eventTicketEventId = secondEventId
+                                , eventTicketTierRefId = tierId
+                                , eventTicketOrderRefId = orderId
+                                , eventTicketHolderName = Just "Ada"
+                                , eventTicketHolderEmail = Just "ada@example.com"
+                                , eventTicketCode = "TDF-AB12CD34EF56"
+                                , eventTicketStatus = "issued"
+                                , eventTicketCheckedInAt = Nothing
+                                , eventTicketCreatedAt = now
+                                , eventTicketUpdatedAt = now
+                                }
+                    scopedMiss <- findTicketForCheckIn firstEventId (TicketCheckInLookupById (Data.Text.pack (show (fromSqlKey ticketId))))
+                    scopedHit <- findTicketForCheckIn secondEventId (TicketCheckInLookupById (Data.Text.pack (show (fromSqlKey ticketId))))
+                    pure (scopedMiss, scopedHit)) pool
+
+            case result of
+                (Nothing, Just (Entity foundId foundTicket)) -> do
+                    fromSqlKey foundId `shouldSatisfy` (> 0)
+                    eventTicketCode foundTicket `shouldBe` "TDF-AB12CD34EF56"
+                other ->
+                    expectationFailure
+                        ("Expected cross-event ticket-id lookup to miss and same-event lookup to hit, got " <> show other)
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
