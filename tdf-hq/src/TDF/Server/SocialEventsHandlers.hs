@@ -57,7 +57,7 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum, isAscii, isAsciiUpper, isHexDigit)
+import           Data.Char (isAlphaNum, isAscii, isAsciiUpper, isControl, isHexDigit)
 import           Data.Int (Int64)
 import           Data.List (foldl', sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
@@ -2479,6 +2479,8 @@ validateVenueCreateUpdateFields
 validateVenueCreateUpdateFields rawName mLat mLng mCapacity
   | T.null (T.strip rawName) =
       Left err400 { errBody = "venue name is required" }
+  | T.any isControl rawName =
+      Left err400 { errBody = "venue name must not contain control characters" }
   | maybe False (< 0) mCapacity =
       Left err400 { errBody = "venue capacity must be >= 0" }
   | otherwise =

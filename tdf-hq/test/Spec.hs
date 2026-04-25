@@ -3880,6 +3880,9 @@ main = hspec $ do
                 (validateVenueCreateUpdateFields "   " Nothing Nothing Nothing)
                 "venue name is required"
             assertInvalid
+                (validateVenueCreateUpdateFields "Teatro\nTDF" Nothing Nothing Nothing)
+                "venue name must not contain control characters"
+            assertInvalid
                 (validateVenueCreateUpdateFields "Teatro TDF" (Just (-0.18)) Nothing Nothing)
                 "venue latitude and longitude must be provided together"
             assertInvalid
