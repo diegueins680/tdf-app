@@ -26,6 +26,7 @@ import {
   Stack,
   ButtonBase,
 } from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
@@ -79,7 +80,7 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 };
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
-const EDITABLE_ROLES_LABEL = 'Roles editables';
+const ROLES_COLUMN_LABEL = 'Roles';
 const EMPTY_ROLES_LABEL = 'Sin roles';
 const INLINE_ROLE_CHIP_LIMIT = 3;
 
@@ -224,7 +225,7 @@ const buildPendingRoleChangesSummary = (
   return `${actions.length === 1 ? 'Cambio pendiente' : 'Cambios pendientes'}: ${actions.join(' · ')}.`;
 };
 
-const buildCompactRoleButtonTitle = ({
+const buildRoleButtonTitle = ({
   roles,
   user,
   showIdentityDisambiguator,
@@ -234,12 +235,8 @@ const buildCompactRoleButtonTitle = ({
   showIdentityDisambiguator: boolean;
 }) => {
   const normalizedRoles = normalizeRoleSelection(roles);
-
-  if (normalizedRoles.length <= INLINE_ROLE_CHIP_LIMIT) {
-    return undefined;
-  }
-
-  return `${buildEditRolesLabel(user, showIdentityDisambiguator)}. Roles actuales: ${normalizedRoles.join(', ')}.`;
+  const rolesSummary = normalizedRoles.length === 0 ? EMPTY_ROLES_LABEL : normalizedRoles.join(', ');
+  return `${buildEditRolesLabel(user, showIdentityDisambiguator)}. Roles actuales: ${rolesSummary}.`;
 };
 
 const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
@@ -302,6 +299,20 @@ const buildRoleManagementSummary = ({
   if (hiddenColumnSummaries.length === 0) return '';
   return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
 };
+
+const renderRoleEditButtonContents = (roles: readonly RoleValue[]) => (
+  <Box display="inline-flex" alignItems="center" gap={0.75} flexWrap="wrap">
+    <Box display="flex" gap={0.5} flexWrap="wrap">
+      {renderInlineRoleChips(roles)}
+    </Box>
+    <EditOutlinedIcon
+      data-testid="role-edit-affordance-icon"
+      fontSize="inherit"
+      aria-hidden="true"
+      sx={{ color: 'text.secondary', fontSize: '1rem' }}
+    />
+  </Box>
+);
 
 export default function UserRoleManagement() {
   const [users, setUsers] = useState<NormalizedUser[]>([]);
@@ -475,7 +486,7 @@ export default function UserRoleManagement() {
                     )}
                     <Stack spacing={0.25} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                       <Typography variant="caption" color="text.secondary">
-                        {EDITABLE_ROLES_LABEL}
+                        {ROLES_COLUMN_LABEL}
                       </Typography>
                       <ButtonBase
                         onClick={() => handleEditClick(singleUser)}
@@ -483,7 +494,7 @@ export default function UserRoleManagement() {
                           singleUser,
                           userIdsRequiringIdentityDisambiguator.has(singleUser.id),
                         )}
-                        title={buildCompactRoleButtonTitle({
+                        title={buildRoleButtonTitle({
                           roles: singleUser.roles,
                           user: singleUser,
                           showIdentityDisambiguator: userIdsRequiringIdentityDisambiguator.has(singleUser.id),
@@ -496,9 +507,7 @@ export default function UserRoleManagement() {
                           textAlign: 'left',
                         }}
                       >
-                        <Box display="flex" gap={0.5} flexWrap="wrap">
-                          {renderInlineRoleChips(singleUser.roles)}
-                        </Box>
+                        {renderRoleEditButtonContents(singleUser.roles)}
                       </ButtonBase>
                     </Stack>
                   </Stack>
@@ -513,7 +522,7 @@ export default function UserRoleManagement() {
                     <TableCell>Usuario</TableCell>
                     {showContactColumn && <TableCell>Contacto</TableCell>}
                     {showStatusColumn && <TableCell>Estado</TableCell>}
-                    <TableCell>{EDITABLE_ROLES_LABEL}</TableCell>
+                    <TableCell>{ROLES_COLUMN_LABEL}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -559,7 +568,7 @@ export default function UserRoleManagement() {
                           <ButtonBase
                             onClick={() => handleEditClick(user)}
                             aria-label={buildEditRolesLabel(user, showIdentityDisambiguator)}
-                            title={buildCompactRoleButtonTitle({
+                            title={buildRoleButtonTitle({
                               roles: user.roles,
                               user,
                               showIdentityDisambiguator,
@@ -572,9 +581,7 @@ export default function UserRoleManagement() {
                               textAlign: 'left',
                             }}
                           >
-                            <Box display="flex" gap={0.5} flexWrap="wrap">
-                              {renderInlineRoleChips(user.roles)}
-                            </Box>
+                            {renderRoleEditButtonContents(user.roles)}
                           </ButtonBase>
                         </TableCell>
                       </TableRow>
