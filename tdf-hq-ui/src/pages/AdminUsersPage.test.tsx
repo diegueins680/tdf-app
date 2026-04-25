@@ -2700,7 +2700,8 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.textContent).not.toContain(
@@ -3389,11 +3390,12 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Buscar también en inactivos')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
@@ -3968,7 +3970,8 @@ describe('AdminUsersPage', () => {
         );
         expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
@@ -4024,7 +4027,8 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).toContain('Limpiar búsqueda');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();

@@ -321,6 +321,7 @@ const ADMIN_USERS_EMPTY_STATE =
 const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
+const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en inactivos';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
@@ -1059,7 +1060,7 @@ export default function AdminUsersPage() {
                       variant="outlined"
                       onClick={() => setIncludeInactive(true)}
                     >
-                      {ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION}
+                      {ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION}
                     </Button>
                   )}
                   <Button
