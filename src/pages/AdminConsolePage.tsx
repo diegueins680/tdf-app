@@ -226,6 +226,10 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'no disponible',
 ] as const;
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
+  'revisa el estado del sistema ajusta permisos y valida cambios recientes desde un solo lugar',
+  'review system status adjust permissions and validate recent changes from one place',
+  'sigue este recorrido para ubicar cada bloque sin repetir revisiones vacias',
+  'follow this walkthrough to find each block without repeating empty reviews',
   'valida el estado del servicio antes de cambiar permisos o repetir una accion',
   'check whether the api and database are ready before changing permissions',
   'la asignacion de roles se administra desde la pantalla de parties',

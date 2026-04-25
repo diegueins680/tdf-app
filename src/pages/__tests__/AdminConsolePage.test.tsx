@@ -453,6 +453,38 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps fallback cards that only repeat the admin console intro out of first-run extras', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'workspace-ops',
+          title: 'Operaciones del espacio',
+          body: [
+            'Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getAllByText(
+          /Revisa el estado del sistema, ajusta permisos y valida cambios recientes desde un solo lugar\./i,
+        ),
+      ).toHaveLength(1);
+    });
+
+    expect(screen.queryByText('Operaciones del espacio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Opcional: ver Operaciones del espacio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run checklist focused when the preview renames user management to roles and permissions', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
