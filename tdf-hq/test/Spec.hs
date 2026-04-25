@@ -184,6 +184,7 @@ import TDF.ServerLiveSessions
       LiveSessionMusicianLookup (..),
       resolveLiveSessionMusicianLookup,
       sanitizeLiveSessionRiderFileName,
+      validateLiveSessionReferencedPartyEmail,
       validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import TDF.Server.SocialSync
@@ -6240,6 +6241,36 @@ main = hspec $ do
                 `shouldBe` LookupLiveSessionMusicianByEmail "player@example.com"
             resolveLiveSessionMusicianLookup Nothing `shouldBe` CreateLiveSessionMusician
             resolveLiveSessionMusicianLookup (Just "   ") `shouldBe` CreateLiveSessionMusician
+
+    describe "validateLiveSessionReferencedPartyEmail" $ do
+        it "accepts omitted or matching emails for referenced musicians without turning intake rows into party updates" $ do
+            validateLiveSessionReferencedPartyEmail
+                (Just " Artist@Example.com ")
+                Nothing
+                `shouldBe` Right (Just "artist@example.com")
+            validateLiveSessionReferencedPartyEmail
+                (Just " Artist@Example.com ")
+                (Just "artist@example.com")
+                `shouldBe` Right (Just "artist@example.com")
+
+        it "rejects mismatched or newly introduced emails for referenced musicians so intake payloads cannot rewrite party identity data" $ do
+            let assertInvalid existingEmail suppliedEmail = do
+                    case validateLiveSessionReferencedPartyEmail existingEmail suppliedEmail of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "must match the existing party email"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected referenced musician email mismatch to be rejected, got "
+                                    <> show value
+                                )
+
+            assertInvalid
+                (Just "artist@example.com")
+                (Just "other@example.com")
+            assertInvalid
+                Nothing
+                (Just "artist@example.com")
 
     describe "validateLiveSessionTermsAcceptance" $ do
         it "requires explicit accepted terms before live-session intake persistence" $ do

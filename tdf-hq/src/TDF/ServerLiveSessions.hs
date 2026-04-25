@@ -9,6 +9,7 @@ module TDF.ServerLiveSessions
   , buildLiveSessionUsernameCollisionCandidate
   , resolveLiveSessionMusicianLookup
   , sanitizeLiveSessionRiderFileName
+  , validateLiveSessionReferencedPartyEmail
   , validateLiveSessionTermsAcceptance
   ) where
 
@@ -140,13 +141,19 @@ liveSessionsServer user = intakeHandler
     ensureMusician now LiveSessionMusicianPayload{..} = do
       let mEmail = T.strip <$> lsmEmail
           trimmedName = T.strip lsmName
-      partyKey <- case lsmPartyId of
+      (partyKey, accountEmail) <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
           existingParty <- withPool $ get key
           case existingParty of
             Nothing -> throwError err400 { errBody = "Referenced party not found" }
-            Just _  -> pure key
+            Just party -> do
+              referencedPartyEmail <-
+                either throwError pure $
+                  validateLiveSessionReferencedPartyEmail
+                    (M.partyPrimaryEmail party)
+                    mEmail
+              pure (key, referencedPartyEmail)
         Nothing -> do
           found <- case resolveLiveSessionMusicianLookup mEmail of
             LookupLiveSessionMusicianByEmail email ->
@@ -154,9 +161,10 @@ liveSessionsServer user = intakeHandler
             CreateLiveSessionMusician ->
               pure Nothing
           case found of
-            Just ent -> pure (entityKey ent)
-            Nothing -> withPool $
-              insert Party
+            Just ent ->
+              pure (entityKey ent, M.partyPrimaryEmail (entityVal ent))
+            Nothing -> withPool $ do
+              key <- insert Party
                 { partyLegalName        = Nothing
                 , partyDisplayName      = if T.null trimmedName then "Músico Live Session" else trimmedName
                 , partyIsOrg            = False
@@ -169,13 +177,12 @@ liveSessionsServer user = intakeHandler
                 , partyNotes            = Just (fromMaybe "" lsmInstrument)
                 , partyCreatedAt        = now
                 }
+              pure (key, mEmail)
 
       when (partyKey == toSqlKey 0) $
         throwError err400 { errBody = "Invalid party reference" }
-      when (not (maybe True T.null mEmail)) $
-        withPool $ update partyKey [M.PartyPrimaryEmail =. mEmail]
       withPool $ ensureArtistRole partyKey
-      withPool $ ensureUserAccount partyKey mEmail
+      withPool $ ensureUserAccount partyKey accountEmail
       pure partyKey
 
     ensureArtistRole :: PartyId -> SqlPersistT IO ()
@@ -266,6 +273,32 @@ resolveLiveSessionMusicianLookup rawEmail =
   case T.toLower . T.strip <$> rawEmail of
     Just email | not (T.null email) -> LookupLiveSessionMusicianByEmail email
     _ -> CreateLiveSessionMusician
+
+validateLiveSessionReferencedPartyEmail
+  :: Maybe Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateLiveSessionReferencedPartyEmail rawExistingEmail rawSuppliedEmail =
+  case suppliedEmail of
+    Nothing ->
+      Right existingEmail
+    Just supplied
+      | existingEmail == Just supplied ->
+          Right existingEmail
+      | otherwise ->
+          Left err400
+            { errBody =
+                "Referenced musician email must match the existing party email"
+            }
+  where
+    existingEmail = normalizeReferencedPartyEmail rawExistingEmail
+    suppliedEmail = normalizeReferencedPartyEmail rawSuppliedEmail
+
+normalizeReferencedPartyEmail :: Maybe Text -> Maybe Text
+normalizeReferencedPartyEmail rawEmail =
+  case T.toLower . T.strip <$> rawEmail of
+    Just email | not (T.null email) -> Just email
+    _ -> Nothing
 
 validateLiveSessionTermsAcceptance :: Bool -> Maybe Text -> Either ServerError Text
 validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
