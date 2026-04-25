@@ -60,6 +60,8 @@ import TDF.ServerAdmin (
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
     validateAdminPassword,
+    validateDropdownOptionValue,
+    validateDropdownOptionLabel,
     normalizeBrainEntryTags,
   )
 
@@ -205,6 +207,28 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Password must not be empty" "   "
             assertInvalid "Password must be at least 8 characters" "short"
             assertInvalid "Password must not contain control characters" "Long\nPass123"
+
+    describe "dropdown option validation" $ do
+        it "trims valid dropdown option values and labels before persistence" $ do
+            validateDropdownOptionValue "  open  " `shouldBe` Right "open"
+            validateDropdownOptionLabel (Just "  Open for booking  ")
+                `shouldBe` Right (Just "Open for booking")
+            validateDropdownOptionLabel (Just "   ") `shouldBe` Right Nothing
+
+        it "rejects control-character dropdown option writes instead of storing ambiguous admin metadata" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid dropdown option field, got " <> show value)
+            assertInvalid "Value is required" (validateDropdownOptionValue "   ")
+            assertInvalid
+                "Value must not contain control characters"
+                (validateDropdownOptionValue "open\nnow")
+            assertInvalid
+                "Label must not contain control characters"
+                (validateDropdownOptionLabel (Just "Open\nnow"))
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $

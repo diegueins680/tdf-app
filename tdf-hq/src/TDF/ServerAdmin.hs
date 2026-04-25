@@ -24,6 +24,8 @@ module TDF.ServerAdmin
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   , validateAdminPassword
+  , validateDropdownOptionValue
+  , validateDropdownOptionLabel
   , normalizeBrainEntryTags
   ) where
 
@@ -639,11 +641,9 @@ adminServer user =
     createOption rawCategory DropdownOptionCreate{..} = do
       ensureModule ModuleAdmin user
       let categoryKey = normaliseCategory rawCategory
-          valueTxt    = T.strip docValue
-      when (T.null valueTxt) $
-        throwError err400 { errBody = "Value is required" }
-      let labelValue    = normaliseText docLabel
-          sortOrderValue = docSortOrder
+      valueTxt <- either throwError pure (validateDropdownOptionValue docValue)
+      labelValue <- either throwError pure (validateDropdownOptionLabel docLabel)
+      let sortOrderValue = docSortOrder
           activeValue    = fromMaybe True docActive
       conflict <- withPool $ selectFirst
         [ ME.DropdownOptionCategory ==. categoryKey
@@ -669,9 +669,7 @@ adminServer user =
     updateOption rawCategory rawId DropdownOptionUpdate{..} = do
       ensureModule ModuleAdmin user
       let categoryKey = normaliseCategory rawCategory
-          valueUpdate = fmap T.strip douValue
-      when (maybe False T.null valueUpdate) $
-        throwError err400 { errBody = "Value must not be empty" }
+      valueUpdate <- either throwError pure (traverse validateDropdownOptionValue douValue)
       optionId <- parseKey rawId
       mOption <- withPool $ getEntity optionId
       case mOption of
@@ -690,7 +688,8 @@ adminServer user =
                     []
                   when (isJust conflict) $
                     throwError err409 { errBody = "Option already exists for category" }
-              let labelUpdate = fmap normaliseText douLabel
+              labelUpdate <- either throwError pure (traverse validateDropdownOptionLabel douLabel)
+              let
                   sortOrderUpdate = douSortOrder
                   activeUpdate = douActive
               now <- liftIO getCurrentTime
@@ -1042,6 +1041,29 @@ normaliseText Nothing = Nothing
 normaliseText (Just txt) =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just trimmed
+
+validateDropdownOptionValue :: Text -> Either ServerError Text
+validateDropdownOptionValue rawValue
+  | T.null value =
+      Left err400 { errBody = "Value is required" }
+  | T.any isControl value =
+      Left err400 { errBody = "Value must not contain control characters" }
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
+
+validateDropdownOptionLabel :: Maybe Text -> Either ServerError (Maybe Text)
+validateDropdownOptionLabel Nothing = Right Nothing
+validateDropdownOptionLabel (Just rawLabel)
+  | T.null label =
+      Right Nothing
+  | T.any isControl label =
+      Left err400 { errBody = "Label must not contain control characters" }
+  | otherwise =
+      Right (Just label)
+  where
+    label = T.strip rawLabel
 
 ensureModule
   :: (MonadError ServerError m)
