@@ -749,7 +749,14 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const showReviewInactiveSearchEmptyAction = showSearchEmptyState && !includeInactive;
+  const hasConfirmedNoInactiveUsers =
+    includeInactive
+    && hasUsers
+    && !hasActiveSearch
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === 0;
   const showInactiveFilterAction = !showSearchEmptyState
+    && !hasConfirmedNoInactiveUsers
     && (hasMultipleUsers || (includeInactive && hasUsers));
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
@@ -788,12 +795,7 @@ export default function AdminUsersPage() {
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
-  const showNoInactiveScopeSummary =
-    includeInactive
-    && hasMultipleUsers
-    && !hasActiveSearch
-    && visibleUsers.length > 0
-    && visibleInactiveUsersCount === 0;
+  const showNoInactiveScopeSummary = hasConfirmedNoInactiveUsers;
   const usersErrorMessage = usersQuery.error instanceof Error ? usersQuery.error.message : '';
   const inactiveFilterLabel = includeInactive
     ? INACTIVE_FILTER_ACTIVE_LABEL

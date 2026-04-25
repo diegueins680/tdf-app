@@ -2383,6 +2383,46 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('confirms when the lone-user inactive check finds nothing instead of leaving a duplicate inactive filter open', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-admin',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+      });
+
+      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. No hay usuarios inactivos en esta vista.',
+        );
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps non-default lone-user access in the header instead of adding row copy', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
