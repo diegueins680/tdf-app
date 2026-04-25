@@ -738,6 +738,21 @@ function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
   return normalizeRoleList(roles);
 }
 
+function sortRoleOptionsForEditor(selectedRoles: readonly RoleKey[]) {
+  const selectedRoleSet = new Set(normalizeRoleSelection(selectedRoles));
+
+  return [...ROLE_OPTIONS].sort((left, right) => {
+    const leftSelected = selectedRoleSet.has(left.value);
+    const rightSelected = selectedRoleSet.has(right.value);
+
+    if (leftSelected === rightSelected) {
+      return 0;
+    }
+
+    return leftSelected ? -1 : 1;
+  });
+}
+
 function hasRoleSelectionChanged(currentRoles?: readonly RoleKey[] | null, nextRoles?: readonly RoleKey[] | null) {
   const normalizedCurrentRoles = normalizeRoleSelection(currentRoles);
   const normalizedNextRoles = normalizeRoleSelection(nextRoles);
@@ -1290,6 +1305,10 @@ export default function AdminConsolePage() {
       .map((group) => formatRoleGroupLabel(group))
       .join(' · ');
   }, [hasPendingRoleChanges, selectedRoles]);
+  const roleOptionsForEditor = useMemo(
+    () => sortRoleOptionsForEditor(selectedRoles),
+    [selectedRoles],
+  );
   const isRefreshingPanel =
     healthQuery.isFetching
     || auditQuery.isFetching
@@ -1885,7 +1904,7 @@ export default function AdminConsolePage() {
                 title: selectedRoleControlTitle,
               }}
             >
-              {ROLE_OPTIONS.map((option) => (
+              {roleOptionsForEditor.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   <Checkbox checked={selectedRoles.includes(option.value)} />
                   <ListItemText primary={option.label} />
