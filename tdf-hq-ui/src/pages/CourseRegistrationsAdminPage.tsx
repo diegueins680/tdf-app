@@ -1755,6 +1755,9 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
     ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
     : '';
+  const localSearchSingleResultActionHint = localSearchNarrowsRegistrations && searchedRegistrations.length === 1
+    ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
+    : '';
   const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
@@ -1763,6 +1766,7 @@ export default function CourseRegistrationsAdminPage() {
           formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount),
           singleVisibleMissingContactSummary,
           hiddenLocalSearchMatchSummary,
+          localSearchSingleResultActionHint.trim(),
         ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
           ? buildFullLocalSearchMatchHint(loadedRegistrationCount)

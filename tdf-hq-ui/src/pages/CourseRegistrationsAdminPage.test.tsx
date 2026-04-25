@@ -7082,7 +7082,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
+      expect(container.textContent).toContain('Abre el expediente desde el nombre;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
