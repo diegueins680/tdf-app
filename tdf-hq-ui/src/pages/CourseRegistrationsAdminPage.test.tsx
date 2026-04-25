@@ -4159,6 +4159,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps cancelled dossiers focused by hiding empty payment-evidence prompts', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration({ crStatus: 'cancelled' }),
+        crdReceipts: [],
+        crdCanMarkPaid: false,
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Cancelado');
+      expect(document.body.textContent).not.toContain('Comprobantes de pago');
+      expect(document.body.textContent).not.toContain(emptyReceiptEvidenceAlertMessage);
+      expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('switches the first-receipt section guidance from empty-state copy to direct form guidance once the composer is open', async () => {
     const firstReceiptComposerHelpText =
       'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';

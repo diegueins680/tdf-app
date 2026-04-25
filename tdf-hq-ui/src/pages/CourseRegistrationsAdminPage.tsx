@@ -2776,6 +2776,12 @@ export default function CourseRegistrationsAdminPage() {
   const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
     ? emptyReceiptEvidenceAlertMessage
     : emptyReceiptAlertMessage;
+  const showReceiptsSection = !(
+    activeRegistrationKnownStatus === 'cancelled'
+    && !hasReceipts
+    && !showReceiptComposer
+    && !isMarkPaidIntent
+  );
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
     && !hasSavedNotes;
@@ -4462,13 +4468,13 @@ export default function CourseRegistrationsAdminPage() {
 
               {prioritizePaymentSection ? (
                 <>
-                  {receiptsSection}
+                  {showReceiptsSection && receiptsSection}
                   {showNotesSection && notesSection}
                 </>
               ) : (
                 <>
                   {showNotesSection && notesSection}
-                  {receiptsSection}
+                  {showReceiptsSection && receiptsSection}
                 </>
               )}
 
