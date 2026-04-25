@@ -3004,9 +3004,12 @@ validatePaymentMethod rawMethod
 
 validatePaymentCurrency :: Text -> Either ServerError Text
 validatePaymentCurrency rawCurrency =
-  let normalized = T.toUpper (T.strip rawCurrency)
+  let trimmed = T.strip rawCurrency
+      normalized = T.toUpper trimmed
   in if T.any isControl rawCurrency
        then Left err400 { errBody = "currency must not contain control characters" }
+     else if T.null trimmed
+       then Left err400 { errBody = "currency is required" }
      else if normalized == "USD"
        then Right normalized
        else Left err400 { errBody = "Only USD manual payments are currently supported" }

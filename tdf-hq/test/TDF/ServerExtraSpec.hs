@@ -4306,14 +4306,14 @@ spec = do
       validatePaymentCurrency "USD" `shouldBe` Right "USD"
       validatePaymentCurrency " usd " `shouldBe` Right "USD"
 
-    it "rejects blank, unsupported, or control-bearing payment currencies instead of silently coercing them to USD" $ do
+    it "rejects blank, unsupported, or control-bearing payment currencies before manual payment writes become ambiguous" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
               BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid payment currency error, got " <> show value)
-      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "   ")
+      assertInvalid "currency is required" (validatePaymentCurrency "   ")
       assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "EUR")
       assertInvalid "currency must not contain control characters" (validatePaymentCurrency "USD\n")
 
