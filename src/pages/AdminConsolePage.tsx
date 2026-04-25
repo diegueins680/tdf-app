@@ -890,9 +890,11 @@ function formatCompactAdditionalModuleActionTitle(title: string) {
 function buildAdditionalModulesActionCopy({
   cards,
   optionalPrefix,
+  avoidSingleTitleRepeat = false,
 }: {
   cards: readonly Pick<AdminConsoleCard, 'title'>[];
   optionalPrefix: boolean;
+  avoidSingleTitleRepeat?: boolean;
 }) {
   const count = cards.length;
   const prefix = optionalPrefix ? 'Opcional: ver' : 'Ver';
@@ -903,6 +905,15 @@ function buildAdditionalModulesActionCopy({
 
   if (count === 1) {
     const title = cards[0]?.title?.trim() ?? '';
+
+    if (avoidSingleTitleRepeat && title) {
+      return {
+        label: 'Ver detalles',
+        title: `Ver detalles de ${title}`,
+        ariaLabel: `Ver detalles de ${title}`,
+      };
+    }
+
     const shouldCollapseTitle = shouldCollapseSingleAdditionalModuleActionTitle(title);
     const summary = title
       ? (
@@ -927,7 +938,11 @@ function formatFirstRunAdditionalModulesActionCopy(cards: readonly Pick<AdminCon
 }
 
 function formatStandaloneAdditionalModulesActionCopy(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
-  return buildAdditionalModulesActionCopy({ cards, optionalPrefix: false });
+  return buildAdditionalModulesActionCopy({
+    cards,
+    optionalPrefix: false,
+    avoidSingleTitleRepeat: true,
+  });
 }
 
 function getSingleAdditionalModule(cards: readonly AdminConsoleCard[]) {

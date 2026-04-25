@@ -2827,7 +2827,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Ver Tokens de servicio/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Ver 1 módulo adicional/i })).not.toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     });
@@ -2838,8 +2838,11 @@ describe('AdminConsolePage', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Ver Tokens de servicio/i }),
+      screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
     ).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
+    ).toHaveTextContent('Ver detalles');
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -2847,7 +2850,7 @@ describe('AdminConsolePage', () => {
       ),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /Ver Tokens de servicio/i }));
+    await user.click(screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }));
 
     expect(await screen.findAllByText('Tokens de servicio')).toHaveLength(1);
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
@@ -2869,7 +2872,6 @@ describe('AdminConsolePage', () => {
   it('keeps a single long standalone module title compact until the admin expands it', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
-    const compactActionLabel = 'Ver Configuración operativa para...';
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
@@ -2890,12 +2892,12 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Módulos adicionales')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: `Ver ${longModuleTitle}` })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `Ver detalles de ${longModuleTitle}` })).toBeInTheDocument();
     });
 
-    const actionButton = screen.getByRole('button', { name: `Ver ${longModuleTitle}` });
-    expect(actionButton).toHaveAttribute('title', `Ver ${longModuleTitle}`);
-    expect(actionButton).toHaveTextContent(compactActionLabel);
+    const actionButton = screen.getByRole('button', { name: `Ver detalles de ${longModuleTitle}` });
+    expect(actionButton).toHaveAttribute('title', `Ver detalles de ${longModuleTitle}`);
+    expect(actionButton).toHaveTextContent('Ver detalles');
     expect(screen.queryByRole('button', { name: /^Ver 1 módulo adicional$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(longModuleTitle)).not.toBeInTheDocument();
 
