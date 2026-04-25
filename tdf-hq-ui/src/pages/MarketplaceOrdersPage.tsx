@@ -183,12 +183,6 @@ export default function MarketplaceOrdersPage() {
     setPaidAtInput(formatInputDate(selectedOrder.moPaidAt));
   }, [selectedOrder]);
 
-  useEffect(() => {
-    if (statusInput === 'paid' && !paidAtInput) {
-      setPaidAtInput(DateTime.now().toFormat("yyyy-LL-dd'T'HH:mm"));
-    }
-  }, [statusInput, paidAtInput]);
-
   const statusFilterImpliesPaid = statusFilter !== 'all' && isPaidOrderStatus(statusFilter);
   const activePaidOnlyFilter = paidOnly && !statusFilterImpliesPaid;
 
@@ -588,6 +582,7 @@ export default function MarketplaceOrdersPage() {
   const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
   const warnMissingProvider = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
+  const showCombinedPaidRequirementsWarning = warnMissingProvider && warnMissingPaidAt;
   const blockSave =
     isPaidOrderStatus(effectiveStatus) && (warnMissingProvider || warnMissingPaidAt);
   const selectedPaidAtInput = selectedOrder ? formatInputDate(selectedOrder.moPaidAt) : '';
@@ -1228,15 +1223,23 @@ export default function MarketplaceOrdersPage() {
                             InputLabelProps={{ shrink: true }}
                           />
                         )}
-                        {warnMissingProvider && (
+                        {showCombinedPaidRequirementsWarning ? (
                           <Alert severity="warning" variant="outlined">
-                            No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
+                            Completa el método de pago y la fecha del cobro para dejar la orden como pagada.
                           </Alert>
-                        )}
-                        {warnMissingPaidAt && (
-                          <Alert severity="warning" variant="outlined">
-                            Agrega la fecha y hora del cobro si marcas la orden como pagada.
-                          </Alert>
+                        ) : (
+                          <>
+                            {warnMissingProvider && (
+                              <Alert severity="warning" variant="outlined">
+                                No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
+                              </Alert>
+                            )}
+                            {warnMissingPaidAt && (
+                              <Alert severity="warning" variant="outlined">
+                                Agrega la fecha y hora del cobro si marcas la orden como pagada.
+                              </Alert>
+                            )}
+                          </>
                         )}
                         {statusHint && (
                           <Alert severity="info" variant="outlined">

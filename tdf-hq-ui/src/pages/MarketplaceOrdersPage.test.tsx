@@ -1666,6 +1666,56 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('collapses paid-state setup blockers into one warning when method and date are both still missing', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: null,
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).not.toContain(
+          'Completa el método de pago y la fecha del cobro para dejar la orden como pagada.',
+        );
+      });
+
+      await selectOptionByLabel(document.body, 'Nuevo estado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'Completa el método de pago y la fecha del cobro para dejar la orden como pagada.',
+        );
+        expect(document.body.textContent).not.toContain(
+          'No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.',
+        );
+        expect(document.body.textContent).not.toContain(
+          'Agrega la fecha y hora del cobro si marcas la orden como pagada.',
+        );
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps save disabled until the order editor has a real change', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
