@@ -587,37 +587,42 @@ describe('InventoryPage', () => {
 
       await waitForExpectation(() => {
         expect(container.querySelector('table')).toBeNull();
-        expect(container.textContent).toContain('Mostrando 1 de 3 equipos.');
+        expect(container.textContent).not.toContain('Mostrando 1 de 3 equipos.');
         expect(container.textContent).toContain('Resultado único');
         expect(container.textContent).toContain(
-          'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen; al limpiar la búsqueda volverá la tabla completa.',
+          'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen.',
         );
         expect(container.textContent).toContain('Apollo Twin');
         expect(container.textContent).not.toContain('Neumann U87');
         expect(container.textContent).not.toContain('Genelec 8040');
         expect(container.querySelector('[aria-label="Abrir check-in de Apollo Twin"]')).not.toBeNull();
         expect(container.querySelector('[aria-label="Abrir QR, enlace e historial de Apollo Twin"]')).not.toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toHaveLength(1);
       });
 
       await setInputValue(searchInput!, 'zzzz');
 
       await waitForExpectation(() => {
         expect(container.querySelector('table')).toBeNull();
-        expect(container.textContent).toContain('Mostrando 0 de 3 equipos.');
+        expect(container.textContent).not.toContain('Mostrando 0 de 3 equipos.');
         expect(container.textContent).toContain('Sin coincidencias');
         expect(container.textContent).toContain(
           'No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de arriba para volver a la vista completa.',
         );
         expect(
           Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
           ),
         ).toBe(true);
       });
 
       await act(async () => {
         const clearButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
-          (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+          (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
         );
         clearButton?.click();
         await flushPromises();
@@ -632,6 +637,65 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Apollo Twin');
         expect(container.textContent).toContain('Genelec 8040');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the lighter clear-search chrome only while a filtered inventory table still has multiple matches', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Genelec 8040',
+        category: 'Monitor',
+        location: 'Bodega',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'sala');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Mostrando 2 de 3 equipos.');
+        expect(container.textContent).not.toContain('Resultado único');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
       });
     } finally {
       await cleanup();
@@ -678,7 +742,7 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Sin coincidencias');
         expect(
           Array.from(container.querySelectorAll('button')).filter(
-            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
           ),
         ).toHaveLength(1);
         expect(

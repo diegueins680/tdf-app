@@ -248,11 +248,13 @@ const INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE =
   'En este estado no hay check-out ni check-in disponibles. Usa QR e historial si necesitas revisar el registro.';
 const INVENTORY_SINGLE_SEARCH_RESULT_TITLE = 'Resultado único';
 const INVENTORY_SINGLE_SEARCH_RESULT_GUIDANCE =
-  'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen; al limpiar la búsqueda volverá la tabla completa.';
+  'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
 const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
 const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
 const INVENTORY_HISTORY_OPEN_ACTION_LABEL = 'Historial abierto aquí abajo';
+const INVENTORY_CLEAR_SEARCH_ACTION_LABEL = 'Limpiar búsqueda';
+const INVENTORY_RESET_SEARCH_ACTION_LABEL = 'Volver a la tabla completa';
 
 function getInventoryMovementGuidance({
   canCheckout,
@@ -639,6 +641,11 @@ export default function InventoryPage() {
   const showFilteredSingleAssetSummary =
     !assetsQuery.isLoading && !assetsQuery.error && filteredSingleAsset != null;
   const showFilteredEmptyState = showInventorySearch && hasActiveInventorySearch && grouped.length === 0;
+  const showSearchFallbackState = showFilteredSingleAssetSummary || showFilteredEmptyState;
+  const showFilteredResultsCount = hasActiveInventorySearch && !showSearchFallbackState;
+  const searchResetActionLabel = showSearchFallbackState
+    ? INVENTORY_RESET_SEARCH_ACTION_LABEL
+    : INVENTORY_CLEAR_SEARCH_ACTION_LABEL;
   const sharedStatusSummary = useMemo(() => getSharedInventoryStatusSummary(grouped), [grouped]);
   const sharedCategorySummary = useMemo(() => getSharedInventoryCategorySummary(grouped), [grouped]);
   const sharedConditionSummary = useMemo(() => getSharedInventoryConditionSummary(grouped), [grouped]);
@@ -723,11 +730,11 @@ export default function InventoryPage() {
             />
             {hasActiveInventorySearch && (
               <Button size="small" variant="text" onClick={() => setInventorySearch('')} sx={{ alignSelf: 'flex-start' }}>
-                Limpiar búsqueda
+                {searchResetActionLabel}
               </Button>
             )}
           </Stack>
-          {hasActiveInventorySearch && (
+          {showFilteredResultsCount && (
             <Typography variant="caption" color="rgba(226,232,240,0.68)">
               {`Mostrando ${grouped.length} de ${assets.length} equipos.`}
             </Typography>
