@@ -676,6 +676,7 @@ export default function AdminUsersPage() {
     && includeInactive
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === visibleUsers.length;
+  const showInactiveOnlyScopeSummary = hasMultipleUsers && showOnlyInactiveUsers;
   const showInactiveUsersGroup =
     includeInactive
     && visibleInactiveUsersCount > 0
@@ -769,7 +770,8 @@ export default function AdminUsersPage() {
     [inactiveVisibleUsers],
   );
   const showInactiveUsersGroupLabel = showInactiveUsersList
-    && !shouldCollapseInactiveUsers;
+    && !shouldCollapseInactiveUsers
+    && !showInactiveOnlyScopeSummary;
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
@@ -798,6 +800,9 @@ export default function AdminUsersPage() {
     : INCLUDE_INACTIVE_FILTER_LABEL;
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos en esta vista.'
+    : '';
+  const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary
+    ? 'Vista actual: solo usuarios inactivos.'
     : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
@@ -874,10 +879,11 @@ export default function AdminUsersPage() {
       visibleUsersSummary,
       activeScopeSummary,
       inactiveScopeSummary,
+      inactiveOnlyScopeSummary,
     ]
       .filter(Boolean)
       .join(' '),
-    [activeScopeSummary, inactiveScopeSummary, visibleUsersSummary],
+    [activeScopeSummary, inactiveOnlyScopeSummary, inactiveScopeSummary, visibleUsersSummary],
   );
   const generalIntro = hasCurrentSummaryWhatsAppAction
     ? hasCurrentSummaryLinkedProfile

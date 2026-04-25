@@ -1737,7 +1737,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('shows an all-inactive included roster directly instead of hiding every row behind a toggle', async () => {
+  it('summarizes an all-inactive included roster once in the header instead of repeating an inactive section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -1789,9 +1789,10 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
-        expect(
-          buttonText(container.querySelector('[data-testid="admin-users-inactive-group-label"]')!),
-        ).toBe('2 usuarios inactivos');
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios inactivos.',
+        );
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Ver 2 usuarios inactivos"]')).toBeNull();
         expect(getRowByUserId(container, 201).textContent).not.toContain('Inactivo');
