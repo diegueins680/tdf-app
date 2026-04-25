@@ -185,7 +185,10 @@ data VenueDTO = VenueDTO
   , venueUpdatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON VenueDTO
-instance FromJSON VenueDTO
+instance FromJSON VenueDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data VenueContactUpdateDTO = VenueContactUpdateDTO
   { vcuPhone    :: NullableFieldUpdate Text

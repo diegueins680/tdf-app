@@ -1313,6 +1313,24 @@ spec = do
                     :: Either String SocialEvents.EventDTO)
                 `shouldSatisfy` isLeft
 
+    describe "social venue request FromJSON" $ do
+        it "accepts canonical venue create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
+            case (eitherDecode
+                "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250}"
+                    :: Either String SocialEvents.VenueDTO) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical venue create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.venueName payload `shouldBe` "Teatro TDF"
+                    SocialEvents.venueCity payload `shouldBe` Just "Quito"
+                    SocialEvents.venueCapacity payload `shouldBe` Just 250
+
+            (eitherDecode
+                "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250,\"venuePhoneNumber\":\"+593991234567\"}"
+                    :: Either String SocialEvents.VenueDTO)
+                `shouldSatisfy` isLeft
+
     describe "social event ticket request FromJSON" $ do
         it "rejects unexpected artist follow keys before handler fallback validation" $ do
             case decodeArtistFollowRequest "{\"followerPartyId\":\"42\"}" of
