@@ -3589,6 +3589,9 @@ spec = do
       assertInvalid
         "Public QR rental checkout requires coPaymentCurrency"
         baseRequest { coPaymentCurrency = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentOutstanding"
+        baseRequest { coPaymentOutstanding = Nothing }
 
     it "rejects malformed holder contact on public QR links before creating unusable custody rows" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

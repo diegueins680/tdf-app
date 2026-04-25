@@ -932,6 +932,8 @@ validatePublicQrCheckoutRequest normalized
       Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
   | ncrDisposition normalized == Rental && isNothing (ncrPaymentCurrency normalized) =
       Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentOutstandingCents normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
   | isNothing (ncrConditionOut normalized) =
@@ -956,6 +958,9 @@ validatePublicQrCheckoutRequestFields req
   | isRentalDisposition (coDisposition req)
       && isNothing (normalizeOptionalTextField (coPaymentCurrency req)) =
       Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  | isRentalDisposition (coDisposition req)
+      && isNothing (normalizeOptionalTextField (coPaymentOutstanding req)) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
   | otherwise =
       Right ()
   where
