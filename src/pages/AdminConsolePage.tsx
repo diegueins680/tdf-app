@@ -1523,7 +1523,7 @@ export default function AdminConsolePage() {
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
                     <Typography variant="caption" color="text.secondary">
-                      Roles
+                      {ADMIN_USER_ROLE_COLUMN_HEADER}
                     </Typography>
                     <Button
                       size="small"

@@ -220,7 +220,7 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles \(editar\)$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
@@ -2902,7 +2902,7 @@ describe('AdminConsolePage', () => {
       screen.queryByText(/Haz clic sobre un rol para editarlo desde esta misma vista\./i),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles \(editar\)$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
@@ -2918,7 +2918,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Roles \(editar\)$/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
@@ -2939,7 +2939,7 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles \(editar\)$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
   });
@@ -3006,7 +3006,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Roles \(editar\)$/i)).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
     });
 
@@ -3017,7 +3017,7 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles \(editar\)$/i })).not.toBeInTheDocument();
   });
 
   it('merges duplicate admin user records so one row keeps the complete role summary', async () => {
@@ -3043,7 +3043,7 @@ describe('AdminConsolePage', () => {
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles \(editar\)$/i })).not.toBeInTheDocument();
   });
 
   it('shows the single-user status only when that account needs attention', async () => {
@@ -3058,7 +3058,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Roles \(editar\)$/i)).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
     });
 
@@ -3081,7 +3081,7 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/^Roles$/i)).toBeInTheDocument();
+      expect(screen.getByText(/^Roles \(editar\)$/i)).toBeInTheDocument();
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });
 
