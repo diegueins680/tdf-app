@@ -1444,6 +1444,33 @@ spec = do
         Right value ->
           value `seq` expectationFailure "Expected amount-less payment reference to be rejected"
 
+    it "rejects payment types without amounts so checkout payment summaries cannot imply money that was never captured" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentType requires paymentAmount"
+        Right value ->
+          value `seq` expectationFailure "Expected payment type without amount to be rejected"
+
     it "rejects payment metadata for non-commercial dispositions so loans and repairs cannot carry sale-only fields" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
