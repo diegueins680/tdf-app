@@ -1221,6 +1221,8 @@ validateCheckoutFinancials _ _ _ _ Nothing _ (Just _) =
 validateCheckoutFinancials _ _ (Just installments) _ _ _ Nothing
   | installments > 1 =
       Left err400 { errBody = "paymentInstallments greater than 1 requires paymentOutstanding" }
+validateCheckoutFinancials Rental _ _ _ (Just _) _ Nothing =
+  Left err400 { errBody = "rental checkout requires paymentOutstanding" }
 validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
   | outstandingCents > amountCents =
       Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }

@@ -1881,7 +1881,7 @@ spec = do
           , coPaymentOutstanding = Just "150.00"
           }
 
-    it "preserves omitted paymentOutstanding as missing so the backend does not silently convert unknown balances into settled ones" $
+    it "rejects rentals without paymentOutstanding so paid custody records cannot leave settlement status implicit" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
           (Just "party")
@@ -1902,10 +1902,45 @@ spec = do
           Nothing
           Nothing
           Nothing) of
-        Left err ->
-          expectationFailure ("Expected checkout without paymentOutstanding to stay valid, got: " <> show err)
-        Right normalized ->
-          ncrPaymentOutstandingCents normalized `shouldBe` Nothing
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "rental checkout requires paymentOutstanding"
+        Right value ->
+          value `seq` expectationFailure "Expected rental checkout without paymentOutstanding to be rejected"
+
+    it "rejects authenticated rental checkout writes without paymentOutstanding before they hit the database" $ do
+      let existingAssetId = "00000000-0000-0000-0000-000000000900"
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "rental checkout requires paymentOutstanding"
+        Right value ->
+          expectationFailure ("Expected rental checkout without paymentOutstanding to be rejected, got " <> show value)
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
