@@ -6136,8 +6136,7 @@ createPublicBooking PublicBookingReq{..} = do
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =
-        engineerNameClean
-          <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
+        resolveBookingEngineerName engineerNameClean mEngineerParty
   let bookingRecord = Booking
         { bookingTitle          = buildTitle serviceTypeClean fullNameClean
         , bookingServiceOrderId = Nothing
@@ -6204,8 +6203,7 @@ createBooking user req = do
   resourceKeys <- liftIO $ flip runSqlPool pool $
     resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
   let resolvedEngineerName =
-        engineerNameClean
-          <|> (M.partyDisplayName . entityVal <$> mEngineerParty)
+        resolveBookingEngineerName engineerNameClean mEngineerParty
 
   let bookingRecord = Booking
         { bookingTitle          = titleClean
@@ -6252,6 +6250,10 @@ updateBooking user bookingIdI req = do
     case mBooking of
       Nothing -> pure (Left err404)
       Just (Entity _ current) -> do
+        currentEngineerParty <-
+          case bookingEngineerPartyId current of
+            Nothing -> pure Nothing
+            Just engineerKey -> getEntity engineerKey
         requestedEngineerRef <- resolveOptionalBookingEngineerReference requestedEngineerId
         case requestedEngineerRef of
           Left refErr -> pure (Left refErr)
@@ -6261,6 +6263,10 @@ updateBooking user bookingIdI req = do
               Right requestedStatus -> do
                 let applyMaybeText fallback Nothing = fallback
                     applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
+                    engineerNameFallback =
+                      maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
+                    effectiveEngineerParty =
+                      requestedEngineerParty <|> currentEngineerParty
                     updated = current
                       { bookingTitle       = fromMaybe (bookingTitle current) titleUpdate
                       , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
@@ -6273,7 +6279,8 @@ updateBooking user bookingIdI req = do
                             (bookingEngineerPartyId current)
                             (Just . entityKey)
                             requestedEngineerParty
-                      , bookingEngineerName    = maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
+                      , bookingEngineerName =
+                          resolveBookingEngineerName engineerNameFallback effectiveEngineerParty
                       }
                 case validateBookingTimeRange (bookingStartsAt updated) (bookingEndsAt updated) of
                   Left bookingErr -> pure (Left bookingErr)
@@ -7093,6 +7100,12 @@ validateEngineer svc mEngineerId mEngineerName
   | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
+
+resolveBookingEngineerName :: Maybe Text -> Maybe (Entity Party) -> Maybe Text
+resolveBookingEngineerName fallbackName mEngineerParty =
+  case normalizeOptionalInput . Just . M.partyDisplayName . entityVal =<< mEngineerParty of
+    Just displayName -> Just displayName
+    Nothing -> fallbackName
 
 notifyEngineerIfNeeded :: BookingDTO -> AppM ()
 notifyEngineerIfNeeded BookingDTO{engineerPartyId = Nothing, engineerName = Nothing} = pure ()

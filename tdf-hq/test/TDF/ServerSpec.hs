@@ -109,6 +109,7 @@ import TDF.Server
     , parseCourseFollowUpType
     , parseCourseRegistrationStatus
     , parseDirectionParam
+    , resolveBookingEngineerName
     , resolveOptionalBookingEngineerReference
     , resolveOptionalBookingPartyReference
     , resolveInstagramBackfillTarget
@@ -1590,6 +1591,31 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected non-engineer reference to be rejected, got: " <> show value)
             assertInvalid customerResult
             assertInvalid inactiveResult
+
+    describe "resolveBookingEngineerName" $ do
+        it "prefers the linked engineer party display name over caller-supplied fallback text" $ do
+            let engineerParty =
+                    Entity
+                        (toSqlKey 42)
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = "Active Engineer"
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Just "engineer@example.com"
+                            , partyPrimaryPhone = Nothing
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
+                            }
+            resolveBookingEngineerName (Just "Manual Override") (Just engineerParty)
+                `shouldBe` Just "Active Engineer"
+
+        it "keeps the fallback when no linked engineer party is present" $ do
+            resolveBookingEngineerName (Just "Alex") Nothing `shouldBe` Just "Alex"
+            resolveBookingEngineerName Nothing Nothing `shouldBe` Nothing
 
     describe "resolveOptionalProposalClientPartyReference" $ do
         it "preserves omitted refs and resolves existing proposal client parties" $ do
