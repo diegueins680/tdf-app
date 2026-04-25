@@ -1797,7 +1797,7 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceCountSummary = showTinyDefaultCountInCurrentView
     ? visibleRegistrationsSummary
     : '';
-  const combinedSingleChoiceContextSummary = [
+  const combinedSingleChoicePassiveContextSummary = [
     combinedSingleChoiceSourceSummary,
     combinedSingleChoiceLimitSummary,
     combinedSingleChoiceCountSummary,
@@ -1951,6 +1951,14 @@ export default function CourseRegistrationsAdminPage() {
       : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),
     singleVisibleMissingContactSummary,
   ].filter(Boolean).join(' ');
+  const showInlineCurrentViewDossierHint = Boolean(combinedSingleChoiceSummary)
+    && showFilterOnboardingCopy
+    && loadedRegistrationCount > 1
+    && (!showLocalSearchControl || hasLocalSearch);
+  const combinedSingleChoiceContextSummary = [
+    combinedSingleChoicePassiveContextSummary,
+    showInlineCurrentViewDossierHint ? dossierScopeHint : '',
+  ].filter(Boolean).join(' ');
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const hasSharedListContextSummary = Boolean(
     combinedSharedListContextSummary
@@ -1975,7 +1983,8 @@ export default function CourseRegistrationsAdminPage() {
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
     && !hasUsedFilterControl
-    && !showBusyListSearchOnboarding;
+    && !showBusyListSearchOnboarding
+    && !showInlineCurrentViewDossierHint;
   const showFirstRunFilterHelper = showFilterOnboardingCopy
     && !showSingleResultWithoutHiddenLimit
     && !showBusyListSearchOnboarding;

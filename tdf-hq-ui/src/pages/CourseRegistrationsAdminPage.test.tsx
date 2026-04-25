@@ -828,9 +828,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierScopeHint,
-      );
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
+
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(contextSummary?.textContent).toContain(dossierScopeHint);
       expect(countOccurrences(
         container,
         dossierScopeHint,
@@ -866,9 +867,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierScopeHint,
-      );
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(countOccurrences(container, dossierScopeHint)).toBe(1);
     });
 
@@ -902,9 +901,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierScopeHint,
-      );
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(countOccurrences(container, dossierScopeHint)).toBe(1);
     });
 
@@ -938,11 +935,20 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
-      expect(container.textContent).toContain(
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+      const contextSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-choice-context"]',
+      );
+
+      expect(currentViewSummary?.textContent).toContain('Vista actual');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Pendiente de pago');
+      expect(contextSummary?.textContent).toContain(dossierScopeHint);
+      expect(currentViewSummary?.textContent).toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
     });
 
     await act(async () => {
@@ -952,10 +958,18 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+      const contextSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-choice-context"]',
+      );
+
       expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
-      expect(container.textContent).not.toContain(
+      expect(currentViewSummary?.textContent).toContain('Vista actual');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Pendiente de pago');
+      expect(contextSummary?.textContent).not.toContain(dossierScopeHint);
+      expect(currentViewSummary?.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
     });
@@ -1395,9 +1409,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        recordDossierScopeHint,
-      );
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
+
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(contextSummary?.textContent).toContain(recordDossierScopeHint);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(hasExactText(container, 'Registro #101')).toBe(true);
       expect(hasExactText(container, 'Registro #102')).toBe(true);
@@ -1449,9 +1464,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const intro = container.querySelector('[data-testid="course-registration-page-intro"]');
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
-      expect(intro?.textContent?.trim()).toBe(mixedIdentityDossierScopeHint);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(contextSummary?.textContent).toContain(mixedIdentityDossierScopeHint);
       expect(countOccurrences(container, mixedIdentityDossierScopeHint)).toBe(1);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(contactDossierScopeHint);
@@ -6588,7 +6604,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
       expect(container.textContent).toContain('Vista actual');
-      expect(contextSummary?.textContent?.trim()).toBe('Límite actual: hasta 50 inscripciones.');
+      expect(contextSummary?.textContent).toContain('Límite actual: hasta 50 inscripciones.');
       expect(container.querySelectorAll('[data-testid="course-registration-single-choice-context"]')).toHaveLength(1);
       expect(countOccurrences(container, 'Fuente visible: landing.')).toBe(0);
       expect(countOccurrences(container, 'Límite actual: hasta 50 inscripciones.')).toBe(1);
@@ -6642,10 +6658,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
+
       expect(container.textContent).not.toContain('Total: 2');
-      expect(
-        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
-      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      expect(contextSummary?.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(contextSummary?.textContent).toContain(dossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
@@ -6675,9 +6692,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(
-        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
-      ).toBe('Mostrando 2 inscripciones en esta vista.');
+      const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
+
+      expect(contextSummary?.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(contextSummary?.textContent).toContain(dossierScopeHint);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Ada Lovelace"]')).toHaveLength(1);
       expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Grace Hopper"]')).toHaveLength(1);
@@ -9854,8 +9872,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(
-        container.querySelector('[data-testid="course-registration-single-choice-context"]')?.textContent?.trim(),
-      ).toBe('Mostrando 2 inscripciones en esta vista.');
+        container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]')?.textContent,
+      ).toContain('Mostrando 2 inscripciones en esta vista.');
+      expect(
+        container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]')?.textContent,
+      ).toContain(dossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
     });
