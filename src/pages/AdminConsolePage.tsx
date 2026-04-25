@@ -257,7 +257,7 @@ const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
-const ADMIN_USER_ROLE_EDITABLE_COLUMN_HEADER = 'Roles editables';
+const ADMIN_USER_ROLES_COLUMN_HEADER = 'Roles';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
@@ -844,6 +844,7 @@ function buildAdminUsersSectionDescription({
   showStatusColumn: boolean;
   isSingleUserSummary?: boolean;
 }) {
+  const editHint = 'Selecciona el rol actual para editar permisos desde esta misma vista.';
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -857,11 +858,10 @@ function buildAdminUsersSectionDescription({
   const compactViewHint = buildCompactHiddenColumnsDescription(hiddenColumnLabels);
 
   if (isSingleUserSummary) {
-    const editHint = 'Selecciona el rol actual para editar permisos desde esta misma vista.';
     return compactViewHint ? `${editHint} ${compactViewHint}` : editHint;
   }
 
-  return compactViewHint;
+  return compactViewHint ? `${editHint} ${compactViewHint}` : editHint;
 }
 
 function buildAuditSectionDescription({
@@ -1577,7 +1577,7 @@ export default function AdminConsolePage() {
                   <TableHead>
                     <TableRow>
                       <TableCell>Usuario</TableCell>
-                      <TableCell>{ADMIN_USER_ROLE_EDITABLE_COLUMN_HEADER}</TableCell>
+                      <TableCell>{ADMIN_USER_ROLES_COLUMN_HEADER}</TableCell>
                       {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
                       {showUsersStatusColumn && <TableCell>Estado</TableCell>}
                     </TableRow>
