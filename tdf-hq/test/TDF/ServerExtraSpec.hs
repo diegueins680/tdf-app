@@ -1473,6 +1473,9 @@ spec = do
       assertInvalid
         "targetParty must be 160 characters or fewer"
         (validateCheckoutTargets TargetParty (Just (T.replicate 161 "a")) Nothing Nothing)
+      assertInvalid
+        "targetParty must contain at least one letter or digit"
+        (validateCheckoutTargets TargetParty (Just " ---(  )--- ") Nothing Nothing)
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just "Crew") (Just roomId) Nothing)
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetRoom (Just "Crew") (Just roomId) Nothing)

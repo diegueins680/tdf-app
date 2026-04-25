@@ -178,6 +178,8 @@ validateCheckoutTargetParty mTargetParty =
           Left err400 { errBody = "targetParty must be 160 characters or fewer" }
       | T.any isControl targetParty ->
           Left err400 { errBody = "targetParty must not contain control characters" }
+      | not (T.any isAlphaNum targetParty) ->
+          Left err400 { errBody = "targetParty must contain at least one letter or digit" }
       | otherwise ->
           Right (Just targetParty)
 
