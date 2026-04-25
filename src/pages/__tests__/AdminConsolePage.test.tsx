@@ -127,13 +127,16 @@ describe('AdminConsolePage', () => {
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
-      ),
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Cargar datos de ejemplo \(opcional\)/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
+      ),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         /Aquí aparecerán los usuarios administrables\. Cuando exista el primero, podrás editar sus roles desde esta misma vista\./i,
@@ -400,12 +403,10 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
-          /Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
-        ),
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+        screen.getByRole('button', { name: /Cargar datos de ejemplo \(opcional\)/i }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole('link', { name: /1\. Estado del servicio/i }),
@@ -421,6 +422,12 @@ describe('AdminConsolePage', () => {
         screen.getByTestId('admin-first-run-audit-status'),
       ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
     });
+
+    expect(
+      screen.queryByText(
+        /Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
+      ),
+    ).not.toBeInTheDocument();
 
     expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');
     expect(screen.getByRole('link', { name: /2\. Usuarios y roles/i })).toHaveAttribute('href', '#admin-users-and-roles');

@@ -1315,8 +1315,8 @@ export default function AdminConsolePage() {
     || consoleQuery.isFetching
     || usersQuery.isFetching;
   const firstRunDemoActionCopy = {
-    description: 'Opcional: carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
-    buttonLabel: 'Cargar datos de ejemplo',
+    description: 'Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
+    buttonLabel: 'Cargar datos de ejemplo (opcional)',
     pendingLabel: 'Cargando ejemplo…',
   } as const;
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
@@ -1328,7 +1328,7 @@ export default function AdminConsolePage() {
     : hasFirstRunDataError
       ? firstRunDataGateCopy
       : showFirstRunDemoAction
-        ? firstRunDemoActionCopy.description
+        ? null
         : firstRunServiceGateCopy;
   const firstRunRefreshActionCopy = hasFirstRunDataError
     ? {
