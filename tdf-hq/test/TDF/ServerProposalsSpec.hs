@@ -10,7 +10,7 @@ import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (insertKey)
+import Database.Persist (get, insertKey)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
@@ -77,6 +77,45 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected empty proposal patch to fail, got: " <> show proposalDto)
 
+  it "rejects control characters in proposal contact names before mutating persisted records" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440002"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        rejected <-
+          captureProposalError $
+            updateProposalHandlerFor
+              (mkUser [Admin])
+              proposalIdText
+              (ProposalUpdate
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                (Just (Just "Ops\nBcc"))
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+              )
+        persistedContactName <-
+          runProposalSql $
+            fmap (fmap ME.proposalContactName) (get (fixtureProposalKey proposalIdText))
+        pure (rejected, persistedContactName)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected contact-name rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedContactName) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` "contactName must not contain control characters"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected invalid contactName patch to fail, got: " <> show proposalDto)
+        persistedContactName `shouldBe` Just (Just "Ops")
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser
@@ -101,6 +140,11 @@ runProposalSql :: SqlPersistT IO a -> ProposalTestM a
 runProposalSql action = do
   env <- ask
   liftIO $ runSqlPool action (envPool env)
+
+captureProposalError :: ProposalTestM a -> ProposalTestM (Either ServerError a)
+captureProposalError action = do
+  env <- ask
+  liftIO $ runExceptT (runReaderT action env)
 
 listVersionsHandlerFor :: AuthedUser -> Text -> ProposalTestM [ProposalVersionSummaryDTO]
 listVersionsHandlerFor user rawId =
@@ -143,9 +187,7 @@ getVersionHandlerFor user rawId versionNumber =
 
 seedProposal :: Text -> ProposalTestM ()
 seedProposal rawId = do
-  proposalKey <- case (fromPathPiece rawId :: Maybe ME.ProposalId) of
-    Just key -> pure key
-    Nothing -> error ("invalid proposal fixture key: " <> show rawId)
+  let proposalKey = fixtureProposalKey rawId
   let fixtureTime = UTCTime (fromGregorian 2026 4 24) (secondsToDiffTime 0)
   runProposalSql $
     insertKey proposalKey ME.Proposal
@@ -163,6 +205,12 @@ seedProposal rawId = do
       , ME.proposalLastGeneratedAt = Nothing
       , ME.proposalSentAt = Nothing
       }
+
+fixtureProposalKey :: Text -> ME.ProposalId
+fixtureProposalKey rawId =
+  case (fromPathPiece rawId :: Maybe ME.ProposalId) of
+    Just key -> key
+    Nothing -> error ("invalid proposal fixture key: " <> show rawId)
 
 initializeProposalSchema :: SqlPersistT IO ()
 initializeProposalSchema = do

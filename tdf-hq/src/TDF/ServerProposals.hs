@@ -109,6 +109,7 @@ proposalsServer user =
       title <- either throwError pure (validateProposalTitle pcTitle)
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
+      contactName <- either throwError pure (validateOptionalProposalContactName pcContactName)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
       contactPhone <- either throwError pure (validateOptionalProposalContactPhone pcContactPhone)
       clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
@@ -120,7 +121,7 @@ proposalsServer user =
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
             , ME.proposalClientPartyId  = clientPartyKey
-            , ME.proposalContactName    = normalizeOptionalText pcContactName
+            , ME.proposalContactName    = contactName
             , ME.proposalContactEmail   = contactEmail
             , ME.proposalContactPhone   = contactPhone
             , ME.proposalPipelineCardId = pipelineCardKey
@@ -153,6 +154,8 @@ proposalsServer user =
           now <- liftIO getCurrentTime
           titleUpdate <- either throwError pure (traverse validateProposalTitle puTitle)
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
+          contactNameUpdate <- either throwError pure
+            (traverse validateOptionalProposalContactName puContactName)
           contactEmailUpdate <- either throwError pure
             (traverse validateOptionalProposalContactEmail puContactEmail)
           contactPhoneUpdate <- either throwError pure
@@ -169,7 +172,7 @@ proposalsServer user =
                 , fmap (ME.ProposalStatus =.) statusUpdate
                 , fmap (ME.ProposalServiceKind =.) puServiceKind
                 , fmap (ME.ProposalClientPartyId =.) clientPartyIdUpdate
-                , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
+                , fmap (ME.ProposalContactName =.) contactNameUpdate
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) contactPhoneUpdate
                 , fmap (ME.ProposalPipelineCardId =.) pipelineCardUpdate
@@ -397,6 +400,17 @@ validateProposalVersionNumber rawVersion
   | rawVersion < 1 =
       Left err400 { errBody = "version must be a positive integer" }
   | otherwise = Right rawVersion
+
+validateOptionalProposalContactName :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalContactName Nothing = Right Nothing
+validateOptionalProposalContactName (Just rawName) =
+  case normalizeOptionalText (Just rawName) of
+    Nothing -> Right Nothing
+    Just contactName
+      | T.any isControl contactName ->
+          Left err400 { errBody = "contactName must not contain control characters" }
+      | otherwise ->
+          Right (Just contactName)
 
 validateOptionalProposalContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalProposalContactEmail Nothing = Right Nothing
