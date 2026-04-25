@@ -159,22 +159,25 @@ function joinInventorySummaryParts(parts: readonly string[]) {
   return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
 }
 
-function getSharedInventoryColumnSummary({
+function getSharedInventoryViewSummary({
   status,
   category,
   location,
   condition,
+  checkout,
 }: {
   status: string;
   category: string;
   location: string;
   condition: string;
+  checkout: string;
 }) {
   const sharedParts = [
     status ? `estado ${status}` : '',
     category ? `categoría ${category}` : '',
     location ? `ubicación ${location}` : '',
     condition ? `condición ${condition}` : '',
+    checkout ? `tenencia actual ${checkout}` : '',
   ].filter(Boolean);
 
   if (sharedParts.length < 2) return '';
@@ -706,14 +709,15 @@ export default function InventoryPage() {
     () => getSharedInventoryCheckoutSummary(grouped, roomMap),
     [grouped, roomMap],
   );
-  const sharedColumnSummary = useMemo(
-    () => getSharedInventoryColumnSummary({
+  const sharedViewSummary = useMemo(
+    () => getSharedInventoryViewSummary({
       status: sharedStatusSummary,
       category: sharedCategorySummary,
       location: sharedLocationSummary,
       condition: sharedConditionSummary,
+      checkout: sharedCheckoutSummary,
     }),
-    [sharedCategorySummary, sharedConditionSummary, sharedLocationSummary, sharedStatusSummary],
+    [sharedCategorySummary, sharedCheckoutSummary, sharedConditionSummary, sharedLocationSummary, sharedStatusSummary],
   );
   const showStatusColumn = sharedStatusSummary === '';
   const showLocationColumn = sharedLocationSummary === '' && grouped.some((asset) => normalizeInventoryField(asset.location) != null);
@@ -867,13 +871,13 @@ export default function InventoryPage() {
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1.5}>
-              {sharedColumnSummary ? (
+              {sharedViewSummary ? (
                 <Typography
                   variant="caption"
                   color="rgba(226,232,240,0.68)"
                   data-testid="inventory-shared-columns-summary"
                 >
-                  {sharedColumnSummary}
+                  {sharedViewSummary}
                 </Typography>
               ) : (
                 <>
@@ -899,7 +903,7 @@ export default function InventoryPage() {
                   {tableGuidance}
                 </Typography>
               )}
-              {sharedCheckoutSummary && (
+              {sharedCheckoutSummary && !sharedViewSummary && (
                 <Typography
                   variant="caption"
                   color="rgba(226,232,240,0.68)"
@@ -908,7 +912,7 @@ export default function InventoryPage() {
                   {`${INVENTORY_SHARED_CHECKOUT_SUMMARY_PREFIX}${sharedCheckoutSummary}. ${INVENTORY_SHARED_CHECKOUT_SUMMARY_SUFFIX}`}
                 </Typography>
               )}
-              {sharedConditionSummary && !sharedColumnSummary && (
+              {sharedConditionSummary && !sharedViewSummary && (
                 <Typography variant="caption" color="rgba(226,232,240,0.68)">
                   {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
                 </Typography>

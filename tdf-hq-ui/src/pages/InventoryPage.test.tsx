@@ -1186,7 +1186,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('summarizes one shared current custody once and hides the duplicated table column until custodians diverge', async () => {
+  it('combines shared custody and status into one helper line so busy inventory views explain hidden columns once', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
         assetId: 'asset-1',
@@ -1221,17 +1221,21 @@ describe('InventoryPage', () => {
     try {
       await waitForExpectation(() => {
         const text = container.textContent ?? '';
-        expect(container.querySelector('[data-testid="inventory-shared-checkout-summary"]')?.textContent).toContain(
-          'Mostrando una sola tenencia actual: Grace Hopper',
-        );
-        expect(text).toContain('Alquiler');
-        expect(text).toContain('Salida:');
-        expect(text).toContain('Retorno pactado:');
-        expect(text).toContain('grace@example.com');
-        expect(text).toContain(
-          'La columna volverá cuando esta vista mezcle custodias distintas.',
-        );
+        const sharedSummary = container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent ?? '';
+        expect(sharedSummary).toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(sharedSummary).toContain('estado Prestado');
+        expect(sharedSummary).toContain('condición Excelente');
+        expect(sharedSummary).toContain('tenencia actual Grace Hopper');
+        expect(sharedSummary).toContain('Alquiler');
+        expect(sharedSummary).toContain('Salida:');
+        expect(sharedSummary).toContain('Retorno pactado:');
+        expect(sharedSummary).toContain('grace@example.com');
+        expect(sharedSummary).toContain('Volverán cuando esta vista mezcle valores distintos.');
+        expect(container.querySelector('[data-testid="inventory-shared-checkout-summary"]')).toBeNull();
+        expect(text).not.toContain('Mostrando una sola tenencia actual:');
+        expect(text).not.toContain('Mostrando un solo estado:');
         expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
         expect(countOccurrencesIgnoringCase(text, 'Grace Hopper')).toBe(1);
         expect(countOccurrencesIgnoringCase(text, 'grace@example.com')).toBe(1);
         expect(getRowTextByAssetName(container, 'Prestado Uno')).not.toContain('Grace Hopper');
