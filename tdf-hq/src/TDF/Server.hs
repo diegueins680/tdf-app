@@ -1948,7 +1948,14 @@ validateDriveUploadName fieldName uploadName
         { errBody =
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
         }
+  | T.any isPathSeparator uploadName =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain path separators"))
+        }
   | otherwise = Right uploadName
+  where
+    isPathSeparator ch = ch == '/' || ch == '\\'
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken = validateDriveAccessTokenWith err400
