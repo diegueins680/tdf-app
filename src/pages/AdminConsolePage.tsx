@@ -602,6 +602,10 @@ function formatEditableRoleList(roles?: readonly RoleKey[] | null) {
 function formatInlineEditableRoleList(roles?: readonly RoleKey[] | null) {
   const normalizedRoles = normalizeRoleSelection(roles);
 
+  if (normalizedRoles.length === 0) {
+    return 'Asignar roles';
+  }
+
   if (normalizedRoles.length <= INLINE_ROLE_SUMMARY_LIMIT) {
     return formatEditableRoleList(normalizedRoles);
   }

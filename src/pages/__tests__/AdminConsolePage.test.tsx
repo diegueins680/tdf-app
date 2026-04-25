@@ -3465,7 +3465,7 @@ describe('AdminConsolePage', () => {
     expect(rolesSelect).not.toHaveTextContent('Engineer, Teacher, Reception');
   });
 
-  it('labels empty role assignments explicitly instead of showing a dash in the edit flow', async () => {
+  it('turns empty role assignments into an explicit action while keeping the edit flow accurate', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([
       buildAdminUser({
@@ -3478,7 +3478,9 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Sin roles');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Asignar roles');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Sin roles');
+      expect(screen.queryByText(/^Sin roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
     });
 
@@ -3494,7 +3496,8 @@ describe('AdminConsolePage', () => {
       throw new Error('Roles select not found');
     }
 
-    expect(rolesSelect).toHaveTextContent('Sin roles');
+    expect(rolesSelect).toHaveTextContent('Asignar roles');
+    expect(rolesSelect).toHaveAttribute('title', 'Sin roles');
     expect(rolesSelect).not.toHaveTextContent('—');
     expect(screen.queryByText(/Roles actuales: —\./i)).not.toBeInTheDocument();
   });
