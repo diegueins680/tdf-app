@@ -132,6 +132,46 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
               ("Expected invalid contactName patch to fail, got: " <> show proposalDto)
         persistedContactName `shouldBe` Just (Just "Ops")
 
+  it "rejects blank pipelineCardId patches so identifier clears must be explicit nulls" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440003"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        rejected <-
+          captureProposalError $
+            updateProposalHandlerFor
+              (mkUser [Admin])
+              proposalIdText
+              (ProposalUpdate
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                (Just (Just "   "))
+                Nothing
+              )
+        persistedPipelineCardId <-
+          runProposalSql $
+            fmap (fmap ME.proposalPipelineCardId) (get (fixtureProposalKey proposalIdText))
+        pure (rejected, persistedPipelineCardId)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected pipelineCardId rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedPipelineCardId) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "pipelineCardId must be null to clear or a valid identifier"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected blank pipelineCardId patch to fail, got: " <> show proposalDto)
+        persistedPipelineCardId `shouldBe` Just Nothing
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser

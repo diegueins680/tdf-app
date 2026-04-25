@@ -492,7 +492,15 @@ resolveOptionalProposalPipelineCardReferenceUpdate Nothing =
   pure (Right Nothing)
 resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing) =
   pure (Right (Just Nothing))
-resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId)) = do
+resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId))
+  | T.null (T.strip rawPipelineCardId) =
+      pure
+        (Left err400
+          { errBody =
+              encodeUtf8Lazy
+                "pipelineCardId must be null to clear or a valid identifier"
+          })
+  | otherwise = do
   resolved <- resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId)
   pure (fmap Just resolved)
 
