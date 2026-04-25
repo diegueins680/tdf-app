@@ -120,28 +120,29 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 (validateAdminEmailSubject "Launch\NULHidden")
 
     describe "validateAdminEmailCtaUrl" $ do
-        it "trims valid http(s) CTA URLs and treats blanks as omitted" $ do
+        it "trims valid public https CTA URLs and treats blanks as omitted" $ do
             validateAdminEmailCtaUrl Nothing `shouldBe` Right Nothing
             validateAdminEmailCtaUrl (Just "   ") `shouldBe` Right Nothing
             validateAdminEmailCtaUrl (Just " https://example.com/course?utm=admin ")
                 `shouldBe` Right (Just "https://example.com/course?utm=admin")
 
-        it "rejects unsafe or ambiguous CTA URLs before email rendering" $ do
+        it "rejects insecure or ambiguous CTA URLs before email rendering" $ do
             let assertInvalid expectedMessage result = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL8.unpack (errBody err) `shouldContain` expectedMessage
                     Right value ->
                         expectationFailure ("Expected invalid admin CTA URL, got " <> show value)
-            assertInvalid "http(s)" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
+            assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
+            assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "http://example.com/course"))
             assertInvalid "include a host" (validateAdminEmailCtaUrl (Just "https:///course"))
             assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "\nhttps://example.com/course"))
             assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example.com:70000/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://example.com:70000/course"))
 
     describe "normalizeAdminUsername" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do

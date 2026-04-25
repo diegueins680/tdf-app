@@ -119,7 +119,7 @@ import TDF.RagStore
       validateEmbeddingModelDimensions,
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
-import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
+import TDF.ServerAdmin (parseSocialErrorsChannel, validateAdminEmailCtaUrl, validateSocialErrorsLimit)
 import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
 import TDF.ServerInternships
     ( parseKey,
@@ -5937,6 +5937,25 @@ main = hspec $ do
                             expectationFailure ("Expected invalid social errors limit to be rejected, got " <> show value)
             assertRejected 0
             assertRejected 201
+
+    describe "validateAdminEmailCtaUrl" $ do
+        it "accepts blank values or canonical public https URLs for email CTA links" $ do
+            validateAdminEmailCtaUrl Nothing `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just "   ") `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just "  https://example.com/launch?utm_source=hq  ")
+                `shouldBe` Right (Just "https://example.com/launch?utm_source=hq")
+
+        it "rejects insecure or non-public CTA URLs instead of sending ambiguous email links" $ do
+            let assertRejected rawUrl expectedMessage =
+                    case validateAdminEmailCtaUrl (Just rawUrl) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid CTA URL to be rejected, got " <> show value)
+            assertRejected "http://example.com/launch" "CTA URL must be an absolute https URL"
+            assertRejected "https://example.com@evil.test/launch" "CTA URL must not include user info"
+            assertRejected "https://localhost/launch" "CTA URL must be an absolute public https URL"
 
     describe "AdminEmailBroadcastRequest" $ do
         it "rejects unknown JSON fields so typos cannot silently change send behavior" $ do

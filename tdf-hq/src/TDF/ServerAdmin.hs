@@ -1204,25 +1204,21 @@ validateAdminEmailCtaUrl (Just rawUrl)
       Left err400 { errBody = "CTA URL must be 2048 characters or fewer" }
   | T.any isSpace url =
       Left err400 { errBody = "CTA URL must not contain whitespace" }
-  | Nothing <- mRemainder =
-      Left err400 { errBody = "CTA URL must be http(s)" }
+  | not ("https://" `T.isPrefixOf` lowerUrl) =
+      Left err400 { errBody = "CTA URL must be an absolute https URL" }
   | T.null authority =
       Left err400 { errBody = "CTA URL must include a host" }
   | T.any (== '@') authority =
       Left err400 { errBody = "CTA URL must not include user info" }
   | not (TrialsServer.isValidHttpUrl url) =
-      Left err400 { errBody = "CTA URL must be an absolute public http(s) URL" }
+      Left err400 { errBody = "CTA URL must be an absolute public https URL" }
   | otherwise =
       Right (Just url)
   where
     url = T.strip rawUrl
     lowerUrl = T.toLower url
-    mRemainder
-      | "https://" `T.isPrefixOf` lowerUrl = Just (T.drop 8 url)
-      | "http://" `T.isPrefixOf` lowerUrl = Just (T.drop 7 url)
-      | otherwise = Nothing
     authority =
-      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+      T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 url)
 
 validateAdminEmailBroadcastLimit :: Maybe Int -> Either ServerError (Maybe Int)
 validateAdminEmailBroadcastLimit Nothing = Right Nothing
