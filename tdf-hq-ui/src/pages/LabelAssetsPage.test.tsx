@@ -270,7 +270,7 @@ describe('LabelAssetsPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.',
+          'Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o QR, historial y mas desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.',
         );
         expect(countLabelsByText(container, 'Buscar assets')).toBe(0);
         expect(countLabelsByText(container, 'Categoría')).toBe(0);
@@ -352,16 +352,20 @@ describe('LabelAssetsPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.',
+        'Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. QR, historial y mas concentra editar, ver QR, historial y eliminar en una sola entrada por fila.',
       );
-      expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(2);
+      expect(hasTableHeader(container, 'Movimiento y mas')).toBe(true);
+      expect(hasTableHeader(container, 'Acciones')).toBe(false);
+      expect(container.querySelectorAll('button[aria-label^="Abrir QR, historial y mas para "]')).toHaveLength(2);
+      expect(countButtonsByText(container, 'QR, historial y mas')).toBe(2);
+      expect(queryButtonByText(container, 'Acciones')).toBeNull();
       expect(container.querySelector('button[aria-label="Editar activo Sintetizador Uno"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Abrir QR de Sintetizador Uno"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Eliminar activo Sintetizador Uno"]')).toBeNull();
       expect(queryButtonByText(container, 'Historial')).toBeNull();
     });
 
-    await clickElement(getElementByAriaLabel(container, 'Abrir acciones para Sintetizador Uno'));
+    await clickElement(getElementByAriaLabel(container, 'Abrir QR, historial y mas para Sintetizador Uno'));
 
     await waitForExpectation(() => {
       expect(getMenuItemByText(document.body, 'Editar')).toBeTruthy();
@@ -385,7 +389,7 @@ describe('LabelAssetsPage', () => {
       expect(container.textContent).not.toContain('Historial · Sintetizador Uno');
     });
 
-    await clickElement(getElementByAriaLabel(container, 'Abrir acciones para Sintetizador Uno'));
+    await clickElement(getElementByAriaLabel(container, 'Abrir QR, historial y mas para Sintetizador Uno'));
 
     await waitForExpectation(() => {
       expect(getMenuItemByText(document.body, 'Historial')).toBeTruthy();

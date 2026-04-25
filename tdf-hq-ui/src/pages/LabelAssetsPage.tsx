@@ -151,8 +151,11 @@ const STATUS_OPTIONS = [
   { value: 'OutForMaintenance', label: 'Mantenimiento' },
   { value: 'Retired', label: 'Retirados' },
 ];
+const SECONDARY_ASSET_ACTIONS_LABEL = 'QR, historial y mas';
 const SINGLE_ASSET_SETUP_GUIDANCE =
-  'Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o Acciones desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.';
+  `Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o ${SECONDARY_ASSET_ACTIONS_LABEL} desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.`;
+const MULTI_ASSET_ACTIONS_GUIDANCE =
+  `Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. ${SECONDARY_ASSET_ACTIONS_LABEL} concentra editar, ver QR, historial y eliminar en una sola entrada por fila.`;
 
 function getAssetMovementState(status: string) {
   const normalizedStatus = status.trim().toLowerCase();
@@ -865,7 +868,7 @@ export default function LabelAssetsPage() {
             >
               {showSingleAssetSetupGuidance
                 ? SINGLE_ASSET_SETUP_GUIDANCE
-                : 'Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. Abre Acciones para editar, ver el QR, revisar el historial o eliminar el asset.'}
+                : MULTI_ASSET_ACTIONS_GUIDANCE}
             </Typography>
           )}
           {showFilteredEmptyState ? (
@@ -895,7 +898,7 @@ export default function LabelAssetsPage() {
                   {showCategoryColumn && <TableCell>Categoría</TableCell>}
                   {showStatusColumn && <TableCell>Estado</TableCell>}
                   {showLocationColumn && <TableCell>Ubicación</TableCell>}
-                  <TableCell align="right">Acciones</TableCell>
+                  <TableCell align="right">Movimiento y mas</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -947,11 +950,11 @@ export default function LabelAssetsPage() {
                           <Button
                             size="small"
                             onClick={(event) => openActionsMenu(event, asset)}
-                            aria-label={`Abrir acciones para ${asset.name}`}
+                            aria-label={`Abrir ${SECONDARY_ASSET_ACTIONS_LABEL} para ${asset.name}`}
                             aria-haspopup="menu"
                             aria-expanded={actionsMenuTarget?.asset.assetId === asset.assetId ? 'true' : undefined}
                           >
-                            Acciones
+                            {SECONDARY_ASSET_ACTIONS_LABEL}
                           </Button>
                         </Stack>
                       </TableCell>
