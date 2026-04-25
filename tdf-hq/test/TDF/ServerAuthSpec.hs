@@ -52,6 +52,10 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
     validatePasswordResetToken "  550e8400-e29b-41d4-a716-446655440000  "
       `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
 
+  it "canonicalizes uppercase UUID reset tokens before confirmation" $
+    validatePasswordResetToken "550E8400-E29B-41D4-A716-446655440000"
+      `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
+
   it "rejects blank reset tokens instead of querying the database with empty input" $
     case validatePasswordResetToken "   " of
       Left err -> do
@@ -73,9 +77,16 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
           case validatePasswordResetToken rawToken of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain`
-                "Token must not contain whitespace or control characters"
+              BL8.unpack (errBody err) `shouldContain` "Token must not contain whitespace or control characters"
             Right value ->
               expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)
     assertRejected "550e8400 e29b-41d4-a716-446655440000"
     assertRejected "550e8400-e29b-41d4-a716-\n446655440000"
+
+  it "rejects non-UUID reset tokens before the confirm flow performs a database lookup" $
+    case validatePasswordResetToken "not-a-real-reset-token" of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "Token format is invalid"
+      Right value ->
+        expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)

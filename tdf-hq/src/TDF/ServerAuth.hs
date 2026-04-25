@@ -55,7 +55,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (Day, UTCTime, getCurrentTime)
-import Data.UUID (toText)
+import Data.UUID (fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
@@ -635,7 +635,13 @@ validatePasswordResetToken rawToken
             BL.fromStrict
               (TE.encodeUtf8 "Token must not contain whitespace or control characters")
         }
-  | otherwise = Right token
+  | otherwise =
+      case fromText token of
+        Nothing ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 "Token format is invalid")
+            }
+        Just parsed -> Right (toText parsed)
   where
     token = T.strip rawToken
 
