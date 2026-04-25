@@ -6737,6 +6737,17 @@ validateRequiredCmsField fieldName rawValue =
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " requerido"))
         }
 
+validateOptionalCmsTitle :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalCmsTitle rawTitle =
+  case cleanOptional rawTitle of
+    Nothing -> Right Nothing
+    Just title
+      | T.length title > 160 ->
+          Left err400 { errBody = "title must be 160 characters or fewer" }
+      | T.any isControl title ->
+          Left err400 { errBody = "title must not contain control characters" }
+      | otherwise -> Right (Just title)
+
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
 validateCmsContentStatus Nothing = Right "draft"
 validateCmsContentStatus (Just rawStatus) =
@@ -10677,6 +10688,7 @@ cmsAdminServer user =
       statusVal <- either throwError pure (validateCmsContentStatus cciStatus)
       slug <- either throwError pure (validateRequiredCmsSlug cciSlug)
       locale <- either throwError pure (validateRequiredCmsLocale cciLocale)
+      title <- either throwError pure (validateOptionalCmsTitle cciTitle)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug
@@ -10690,7 +10702,7 @@ cmsAdminServer user =
         , CMS.cmsContentLocale = locale
         , CMS.cmsContentVersion = nextVersion
         , CMS.cmsContentStatus = statusVal
-        , CMS.cmsContentTitle = cciTitle
+        , CMS.cmsContentTitle = title
         , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
         , CMS.cmsContentCreatedBy = Just (auPartyId user)
         , CMS.cmsContentCreatedAt = now

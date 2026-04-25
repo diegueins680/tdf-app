@@ -207,6 +207,7 @@ import TDF.Server
     , validateRequiredCmsField
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
+    , validateOptionalCmsTitle
     , validateCmsContentPathId
     , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
@@ -2416,6 +2417,28 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure ("Expected blank CMS field to be rejected, got: " <> show value)
             assertInvalid "slug" "   "
             assertInvalid "locale" "\n\t"
+
+    describe "validateOptionalCmsTitle" $ do
+        it "trims CMS titles and treats blank optional titles as absent" $ do
+            validateOptionalCmsTitle Nothing `shouldBe` Right Nothing
+            validateOptionalCmsTitle (Just "  Hero  ") `shouldBe` Right (Just "Hero")
+            validateOptionalCmsTitle (Just "   ") `shouldBe` Right Nothing
+
+        it "rejects malformed CMS titles before admin create persists ambiguous metadata" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right titleVal ->
+                            expectationFailure
+                                ("Expected invalid CMS title, got: " <> show titleVal)
+            assertInvalid
+                "title must be 160 characters or fewer"
+                (validateOptionalCmsTitle (Just (T.replicate 161 "a")))
+            assertInvalid
+                "title must not contain control characters"
+                (validateOptionalCmsTitle (Just "Hero\nDraft"))
 
     describe "validateRequiredCmsSlug" $ do
         it "canonicalizes CMS slugs before public lookup and admin create handlers use them" $ do
