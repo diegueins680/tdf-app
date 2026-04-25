@@ -8092,16 +8092,18 @@ adsPublicServer = adsInquiryPublic :<|> adsAssistPublic
 
 validateAdsInquiry :: AdsInquiry -> Either ServerError AdsInquiry
 validateAdsInquiry AdsInquiry{..} = do
+  nameClean <- validateOptionalCourseRegistrationTextField "name" 160 aiName
   emailClean <- validateCourseRegistrationEmail aiEmail
   phoneClean <- validateAdsInquiryPhone aiPhone
   validateAdsInquiryContactChannels emailClean phoneClean
+  courseClean <- validateOptionalCourseRegistrationTextField "course" 160 aiCourse
   channelClean <- validateAdsInquiryChannel aiChannel
   messageClean <- validateAdsInquiryMessage aiMessage
   pure AdsInquiry
-    { aiName = normalizeOptionalInput aiName
+    { aiName = nameClean
     , aiEmail = emailClean
     , aiPhone = phoneClean
-    , aiCourse = normalizeOptionalInput aiCourse
+    , aiCourse = courseClean
     , aiMessage = messageClean
     , aiChannel = channelClean
     }
