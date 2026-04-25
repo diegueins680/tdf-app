@@ -6707,10 +6707,10 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureAdminConsoleView" $ do
         it "rejects duplicate card ids or malformed status before serving fallback discovery" $ do
-            let mkCard cardIdValue =
+            let mkCard cardIdValue titleValue =
                     Future.AdminConsoleCard
                         { Future.cardId = cardIdValue
-                        , Future.title = "Gestión de usuarios"
+                        , Future.title = titleValue
                         , Future.body = ["Roles y permisos"]
                         }
                 mkView statusValue cardsValue =
@@ -6719,7 +6719,11 @@ spec = describe "TDF.Server helpers" $ do
                         , Future.cards = cardsValue
                         }
                 validView =
-                    mkView "preview" [mkCard "user-management", mkCard "api-tokens"]
+                    mkView
+                        "preview"
+                        [ mkCard "user-management" "Gestión de usuarios"
+                        , mkCard "api-tokens" "Tokens API"
+                        ]
                 assertInvalid view =
                     case validateFutureAdminConsoleView view of
                         Left serverErr -> do
@@ -6738,14 +6742,28 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected valid admin console view, got: " <> show serverErr)
 
-            assertInvalid (mkView "planned" [mkCard "user-management"])
+            assertInvalid (mkView "planned" [mkCard "user-management" "Gestión de usuarios"])
             assertInvalid (mkView "preview" [])
-            assertInvalid (mkView "preview" [mkCard "user-management"])
+            assertInvalid (mkView "preview" [mkCard "user-management" "Gestión de usuarios"])
             assertInvalid
-                (mkView "preview" [mkCard "user-management", mkCard "user-management"])
+                (mkView
+                    "preview"
+                    [ mkCard "user-management" "Gestión de usuarios"
+                    , mkCard "user-management" "Tokens API"
+                    ])
             assertInvalid
-                (mkView "preview" [mkCard "api-tokens", mkCard "user-management"])
-            assertInvalid (mkView "preview" [mkCard "User Management"])
+                (mkView
+                    "preview"
+                    [ mkCard "api-tokens" "Tokens API"
+                    , mkCard "user-management" "Gestión de usuarios"
+                    ])
+            assertInvalid (mkView "preview" [mkCard "User Management" "Gestión de usuarios"])
+            assertInvalid
+                (mkView
+                    "preview"
+                    [ mkCard "user-management" "Gestión de usuarios"
+                    , mkCard "api-tokens" "gestión de usuarios"
+                    ])
 
     describe "futureServer" $ do
         it "requires literal Admin before serving fallback discovery stubs" $ do

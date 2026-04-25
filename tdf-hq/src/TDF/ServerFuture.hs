@@ -9,6 +9,7 @@ import           Data.Char
   , generalCategory
   , isControl
   )
+import           Data.List            (nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Servant
@@ -162,8 +163,14 @@ validateFutureAdminConsoleView view
   | otherwise = do
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
       if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
+           || hasDuplicateFutureAdminConsoleTitles validatedCards
         then invalidFutureAdminConsoleMetadata
         else Right view { cards = validatedCards }
+
+hasDuplicateFutureAdminConsoleTitles :: [AdminConsoleCard] -> Bool
+hasDuplicateFutureAdminConsoleTitles cardsValue =
+  let normalizedTitles = map (T.toCaseFold . title) cardsValue
+  in length normalizedTitles /= length (nub normalizedTitles)
 
 invalidCardText :: Int -> Text -> Bool
 invalidCardText maxLength value =
