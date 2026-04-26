@@ -4,6 +4,7 @@
 module TDF.Contracts.Server
   ( server
   , decodeStoredContract
+  , decodeStoredContractFor
   , validateContractId
   , validateContractPayload
   , validateContractSendPayload
@@ -134,13 +135,21 @@ loadContract cid = do
     then pure (Right Nothing)
     else do
       bytes <- BL.readFile path
-      pure (Just <$> decodeStoredContract bytes)
+      pure (Just <$> decodeStoredContractFor cid bytes)
 
 decodeStoredContract :: BL.ByteString -> Either Text StoredContract
 decodeStoredContract bytes =
   case A.eitherDecode bytes of
     Left _ -> Left "Stored contract payload is unreadable"
     Right stored -> validateStoredContract stored
+
+decodeStoredContractFor :: Text -> BL.ByteString -> Either Text StoredContract
+decodeStoredContractFor rawExpectedId bytes = do
+  expectedId <- validateStoredContractId rawExpectedId
+  stored <- decodeStoredContract bytes
+  if scId stored == expectedId
+    then Right stored
+    else Left "Stored contract id does not match requested contract id"
 
 validateStoredContract :: StoredContract -> Either Text StoredContract
 validateStoredContract stored@StoredContract{..} = do

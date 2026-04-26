@@ -127,7 +127,12 @@ import TDF.RagStore
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
 import TDF.ServerAdmin (parseSocialErrorsChannel, validateAdminEmailCtaUrl, validateSocialErrorsLimit)
-import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
+import TDF.Contracts.Server
+    ( decodeStoredContract,
+      decodeStoredContractFor,
+      validateContractId,
+      validateContractPayload,
+      validateContractSendPayload )
 import TDF.ServerInternships
     ( parseKey,
       validateInternProjectDateRange,
@@ -5600,6 +5605,15 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
                 Right _ ->
                     expectationFailure "Expected stored contract with invalid id to be rejected"
+
+        it "rejects stored contracts whose envelope id does not match the requested route id" $
+            case decodeStoredContractFor
+                "550e8400-e29b-41d4-a716-446655440000"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440001\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored contract id does not match requested contract id"
+                Right _ ->
+                    expectationFailure "Expected stored contract id mismatch to be rejected"
 
         it "rejects stored contracts whose top-level kind disagrees with payload.kind" $
             case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"nda\",\"payload\":{\"kind\":\"msa\",\"amountCents\":25000},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
