@@ -6716,6 +6716,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkCard "user-management" "Gestión\x200B de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles\x202E"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles\x2029seguros"])
+            assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", "roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" [])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", " "])
 

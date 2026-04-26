@@ -151,6 +151,7 @@ validateFutureAdminConsoleCard card
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
+  | hasDuplicateFutureAdminConsoleBodyLines card = invalidFutureAdminConsoleMetadata
   | otherwise = Right card
 
 expectedFutureAdminConsoleTitle :: Text -> Text
@@ -179,6 +180,11 @@ hasDuplicateFutureAdminConsoleTitles :: [AdminConsoleCard] -> Bool
 hasDuplicateFutureAdminConsoleTitles cardsValue =
   let normalizedTitles = map (T.toCaseFold . title) cardsValue
   in length normalizedTitles /= length (nub normalizedTitles)
+
+hasDuplicateFutureAdminConsoleBodyLines :: AdminConsoleCard -> Bool
+hasDuplicateFutureAdminConsoleBodyLines card =
+  let normalizedBodyLines = map T.toCaseFold (body card)
+  in length normalizedBodyLines /= length (nub normalizedBodyLines)
 
 invalidCardText :: Int -> Text -> Bool
 invalidCardText maxLength value =
