@@ -499,6 +499,8 @@ spec = do
       assertRejected "https://224.0.0.1/folder"
       assertRejected "http://localhost/folder"
       assertRejected "http://127.0.0.1/folder"
+      assertRejected "https://[2001:4860:4860::8888]/folder"
+      assertRejected "https://[:::]/folder"
       assertRejected "https://[::1]/folder"
       assertRejected "https://example.com:70000/folder"
 

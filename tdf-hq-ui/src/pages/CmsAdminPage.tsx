@@ -21,6 +21,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
 import ApiErrorNotice from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
@@ -44,6 +45,7 @@ type SamplePayload = {
 } & Record<string, unknown>;
 const schemaHints: Record<string, string[]> = {
   'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
+  'records-sessions': ['playlistUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].sortOrder'],
   'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
   'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
 };
@@ -53,6 +55,20 @@ const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
     heroSubtitle: 'Explora los releases recientes del sello.',
+    locale: 'es',
+  },
+  'records-sessions': {
+    playlistUrl: 'https://www.youtube.com/playlist?list=...',
+    videos: [
+      {
+        title: 'Artista - TDF Live Sessions E01',
+        guests: 'Artista',
+        url: 'https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID',
+        duration: '12:34',
+        description: 'Sesión en vivo para TDF Live Sessions.',
+        sortOrder: 1,
+      },
+    ],
     locale: 'es',
   },
   'fan-hub': {
@@ -66,9 +82,41 @@ const samplePayloads: Record<string, SamplePayload> = {
     locale: 'es',
   },
 };
+
+const getSchemaHints = (slug: string): string[] | undefined => {
+  if (slug.startsWith('records-session-')) {
+    return ['title', 'url/youtubeId', 'guests', 'duration', 'description', 'sortOrder'];
+  }
+  if (slug.startsWith('records-release-')) {
+    return ['title', 'artist', 'releasedOn', 'description/blurb', 'cover', 'links[]'];
+  }
+  if (slug.startsWith('records-recording-')) {
+    return ['title', 'image', 'description', 'artist', 'recordedAt', 'vibe'];
+  }
+  return schemaHints[slug];
+};
+
+const getSamplePayload = (slug: string): SamplePayload | undefined => {
+  if (samplePayloads[slug]) return samplePayloads[slug];
+  if (slug.startsWith('records-session-')) {
+    return {
+      title: 'Artista - TDF Live Sessions E01',
+      guests: 'Artista',
+      url: 'https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID',
+      duration: '12:34',
+      description: 'Sesión en vivo para TDF Live Sessions.',
+      sortOrder: 1,
+      locale: 'es',
+    };
+  }
+  return undefined;
+};
+
 const livePathForSlug = (slug: string) => {
   switch (slug) {
     case 'records-public':
+      return '/records';
+    case 'records-sessions':
       return '/records';
     case 'fan-hub':
       return '/fans';
@@ -141,7 +189,11 @@ const formatCmsStatusLabel = (value: string) => {
 
 export default function CmsAdminPage() {
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const querySlug = searchParams.get('slug')?.trim() ?? '';
+  const queryLocale = searchParams.get('locale')?.trim() ?? '';
   const [slugFilter, setSlugFilter] = useState<string>(() => {
+    if (querySlug) return querySlug;
     if (typeof window === 'undefined') return 'records-public';
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -152,6 +204,7 @@ export default function CmsAdminPage() {
     }
   });
   const [localeFilter, setLocaleFilter] = useState<string>(() => {
+    if (queryLocale) return queryLocale;
     if (typeof window === 'undefined') return 'es';
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -186,6 +239,15 @@ export default function CmsAdminPage() {
     status === 'published'
       ? 'Publicará esta versión al guardar y actualizará la página en vivo.'
       : 'Guardará esta versión como borrador sin cambiar la página en vivo.';
+
+  useEffect(() => {
+    if (querySlug && querySlug !== slugFilter) {
+      setSlugFilter(querySlug);
+    }
+    if (queryLocale && queryLocale !== localeFilter) {
+      setLocaleFilter(queryLocale);
+    }
+  }, [localeFilter, queryLocale, querySlug, slugFilter]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -274,7 +336,10 @@ export default function CmsAdminPage() {
     () => versions.find((v) => v.ccdId === editingFromId)?.ccdVersion ?? null,
     [editingFromId, versions],
   );
-  const liveContent = liveQuery.data;
+  const liveContent =
+    liveQuery.data && normalizeCmsStatus(liveQuery.data.ccdStatus) !== 'missing'
+      ? liveQuery.data
+      : null;
 
   useEffect(() => {
     setShowLivePayload(false);
@@ -532,7 +597,7 @@ export default function CmsAdminPage() {
       ? `Base: v${editingVersion} · ID ${editingFromId}`
       : `Base: ID ${editingFromId}`
     : null;
-  const samplePayload = samplePayloads[normalizedSlugFilter];
+  const samplePayload = getSamplePayload(normalizedSlugFilter);
   const samplePayloadPreview = useMemo(
     () => (samplePayload ? JSON.stringify(samplePayload, null, 2) : ''),
     [samplePayload],
@@ -546,10 +611,11 @@ export default function CmsAdminPage() {
   const liveLookupFailed = liveQuery.isError;
   const liveLookupPending = liveQuery.isLoading || liveQuery.isFetching;
   const liveLookupUnresolved = liveLookupPending || liveLookupFailed;
+  const schemaHint = getSchemaHints(normalizedSlugFilter);
   const payloadHelperText = payloadError
     ? `Error: ${payloadError}`
-    : schemaHints[normalizedSlugFilter]
-      ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
+    : schemaHint
+      ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHint.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
   const hasSamplePayload = Boolean(samplePayload);
   const hasCustomNewPayloadDraft = !liveContent && payload.trim() !== '{}';

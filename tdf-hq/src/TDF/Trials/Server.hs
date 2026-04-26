@@ -731,12 +731,9 @@ isValidHttpUrl rawUrl
     validateAuthority rawAuthority
       | T.null rawAuthority = False
       | T.any (== '@') rawAuthority = False
+      -- Public lead drive links should be DNS-backed URLs, not IP literals.
       | "[" `T.isPrefixOf` rawAuthority =
-          let (hostPart, rest) = T.breakOn "]" rawAuthority
-              host = T.drop 1 hostPart
-          in not (T.null rest)
-               && validateBracketedHost host
-               && validatePortSuffix (T.drop 1 rest)
+          False
       | T.count ":" rawAuthority > 1 = False
       | otherwise =
           let (host, portSuffix) = T.breakOn ":" rawAuthority
@@ -752,12 +749,6 @@ isValidHttpUrl rawUrl
         && not (looksLikeInvalidIpv4 normalizedHost)
         && not (requiresExplicitPublicHostname normalizedHost)
         && not (isPrivateHost normalizedHost)
-
-    validateBracketedHost host =
-      not (T.null host)
-        && T.any (== ':') host
-        && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
-        && not (isPrivateHost (T.toLower host))
 
     validatePortSuffix suffix
       | T.null suffix = True

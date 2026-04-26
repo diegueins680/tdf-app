@@ -10,7 +10,7 @@ import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHa
 import           Database.Persist
 import           Database.Persist.Sql
 import           Data.Maybe             (catMaybes, fromMaybe)
-import           Data.Aeson             (decode, FromJSON)
+import           Data.Aeson             (Value, decode, object, (.=), FromJSON)
 import qualified Data.ByteString.Lazy  as BL
 import           Data.Text              (Text)
 import qualified Data.Text             as T
@@ -27,6 +27,7 @@ import qualified TDF.ModelsExtra       as ME
 import qualified TDF.Trials.Models     as Trials
 import           TDF.Pipelines          (canonicalStage, defaultStage)
 import           TDF.Config             (resolveAppBase)
+import qualified TDF.CMS.Models        as CMS
 
 -- Seed data from Diego's YAML (normalized)
 seedAll :: SqlPersistT IO ()
@@ -213,6 +214,7 @@ seedAll = do
   seedInventoryAssets
   seedMarketplaceListings
   seedProductionCourse now
+  seedRecordsCmsContent now
   seedHolgerSession now
   seedAcademy now
 
@@ -333,6 +335,97 @@ seedProductionCourse now = do
       , Trials.courseSyllabusItemTopics = topics
       , Trials.courseSyllabusItemOrder = Just idx
       }
+
+data CmsSeed = CmsSeed
+  { cmsSeedSlug    :: Text
+  , cmsSeedLocale  :: Text
+  , cmsSeedTitle   :: Text
+  , cmsSeedPayload :: Value
+  }
+
+seedRecordsCmsContent :: UTCTime -> SqlPersistT IO ()
+seedRecordsCmsContent now =
+  mapM_ (ensurePublishedCmsSeed now)
+    [ CmsSeed
+        { cmsSeedSlug = "records-sessions"
+        , cmsSeedLocale = "es"
+        , cmsSeedTitle = "TDF Live Sessions"
+        , cmsSeedPayload =
+            object
+              [ "playlistUrl" .= ("https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+              , "videos" .=
+                  [ object
+                      [ "title" .= ("Holger Quiñonez - TDF Live Sessions E05" :: Text)
+                      , "guests" .= ("Holger Quiñonez" :: Text)
+                      , "youtubeId" .= ("9387ent0ELc" :: Text)
+                      , "url" .= ("https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+                      , "duration" .= ("05:56" :: Text)
+                      , "description" .= ("Sesión en vivo de Holger Quiñonez para TDF Live Sessions." :: Text)
+                      , "sortOrder" .= (1 :: Int)
+                      ]
+                  , object
+                      [ "title" .= ("Categal - TDF Live Sessions E04" :: Text)
+                      , "guests" .= ("Categal" :: Text)
+                      , "youtubeId" .= ("5SpnEELSNqw" :: Text)
+                      , "url" .= ("https://www.youtube.com/watch?v=5SpnEELSNqw&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+                      , "duration" .= ("18:47" :: Text)
+                      , "description" .= ("Sesión en vivo de Categal para TDF Live Sessions." :: Text)
+                      , "sortOrder" .= (2 :: Int)
+                      ]
+                  , object
+                      [ "title" .= ("Los Morrison - TDF Live Sessions E03" :: Text)
+                      , "guests" .= ("Los Morrison" :: Text)
+                      , "youtubeId" .= ("97PnHRn8IGs" :: Text)
+                      , "url" .= ("https://www.youtube.com/watch?v=97PnHRn8IGs&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+                      , "duration" .= ("33:19" :: Text)
+                      , "description" .= ("Sesión en vivo de Los Morrison para TDF Live Sessions." :: Text)
+                      , "sortOrder" .= (3 :: Int)
+                      ]
+                  , object
+                      [ "title" .= ("Barrelshots - TDF Live Sessions E02" :: Text)
+                      , "guests" .= ("Barrelshots" :: Text)
+                      , "youtubeId" .= ("e24-id_Ix8s" :: Text)
+                      , "url" .= ("https://www.youtube.com/watch?v=e24-id_Ix8s&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+                      , "duration" .= ("11:36" :: Text)
+                      , "description" .= ("Sesión en vivo de Barrelshots para TDF Live Sessions." :: Text)
+                      , "sortOrder" .= (4 :: Int)
+                      ]
+                  , object
+                      [ "title" .= ("Machaka - TDF Live Sessions E01" :: Text)
+                      , "guests" .= ("Machaka" :: Text)
+                      , "youtubeId" .= ("z7RpdrL4P4A" :: Text)
+                      , "url" .= ("https://www.youtube.com/watch?v=z7RpdrL4P4A&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP" :: Text)
+                      , "duration" .= ("14:58" :: Text)
+                      , "description" .= ("Sesión en vivo de Machaka para TDF Live Sessions." :: Text)
+                      , "sortOrder" .= (5 :: Int)
+                      ]
+                  ]
+              ]
+        }
+    ]
+
+ensurePublishedCmsSeed :: UTCTime -> CmsSeed -> SqlPersistT IO ()
+ensurePublishedCmsSeed now CmsSeed{..} = do
+  mExisting <- selectFirst
+    [ CMS.CmsContentSlug ==. cmsSeedSlug
+    , CMS.CmsContentLocale ==. cmsSeedLocale
+    ]
+    []
+  case mExisting of
+    Just _ -> pure ()
+    Nothing ->
+      insert_ CMS.CmsContent
+        { CMS.cmsContentSlug = cmsSeedSlug
+        , CMS.cmsContentLocale = cmsSeedLocale
+        , CMS.cmsContentVersion = 1
+        , CMS.cmsContentStatus = "published"
+        , CMS.cmsContentTitle = Just cmsSeedTitle
+        , CMS.cmsContentPayload = Just (CMS.AesonValue cmsSeedPayload)
+        , CMS.cmsContentCreatedBy = Nothing
+        , CMS.cmsContentCreatedAt = now
+        , CMS.cmsContentUpdatedAt = now
+        , CMS.cmsContentPublishedAt = Just now
+        }
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do

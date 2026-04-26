@@ -28,6 +28,7 @@ export interface SessionVideo {
   youtubeId: string;
   duration: string;
   description: string;
+  url?: string;
 }
 
 export const recordings: Recording[] = [
@@ -88,26 +89,4 @@ export const releases: Release[] = [
   },
 ];
 
-export const sessionVideos: SessionVideo[] = [
-  {
-    title: 'TDF Sessions #21 · Sofía Márquez',
-    guests: 'Sofía Márquez + TDF House Band',
-    youtubeId: 'Bey4XXJAqS8',
-    duration: '14:32',
-    description: 'Set íntimo con cuerdas y voz en vivo, grabado en una sola toma.',
-  },
-  {
-    title: 'TDF Sessions #20 · La Bruma',
-    guests: 'La Bruma',
-    youtubeId: 'ktvTqknDobU',
-    duration: '12:48',
-    description: 'Brass y percusión en el domo con mezcla en consola analógica.',
-  },
-  {
-    title: 'TDF Sessions #19 · Beat Tape Live',
-    guests: 'TDF House Band',
-    youtubeId: 'Zi_XLOBDo_Y',
-    duration: '09:17',
-    description: 'MPC meets Prophet: beats, texturas y un bajo Moog que vibra.',
-  },
-];
+export const sessionVideos: SessionVideo[] = [];

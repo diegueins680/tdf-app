@@ -1,5 +1,6 @@
 export const DEFAULT_CMS_SLUGS = [
   'records-public',
+  'records-sessions',
   'fan-hub',
   'course-production',
 ] as const;

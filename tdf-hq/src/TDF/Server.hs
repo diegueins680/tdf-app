@@ -10712,18 +10712,28 @@ cmsAdminServer user =
           [Desc CMS.CmsContentVersion]
         pure $ maybe 1 ((+1) . CMS.cmsContentVersion . entityVal) mLatest
       let publishedAt = if statusVal == "published" then Just now else Nothing
-      cid <- runDB $ insert CMS.CmsContent
-        { CMS.cmsContentSlug = slug
-        , CMS.cmsContentLocale = locale
-        , CMS.cmsContentVersion = nextVersion
-        , CMS.cmsContentStatus = statusVal
-        , CMS.cmsContentTitle = title
-        , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
-        , CMS.cmsContentCreatedBy = Just (auPartyId user)
-        , CMS.cmsContentCreatedAt = now
-        , CMS.cmsContentUpdatedAt = now
-        , CMS.cmsContentPublishedAt = publishedAt
-        }
+      cid <- runDB $ do
+        when (statusVal == "published") $
+          updateWhere
+            [ CMS.CmsContentSlug ==. slug
+            , CMS.CmsContentLocale ==. locale
+            , CMS.CmsContentStatus ==. "published"
+            ]
+            [ CMS.CmsContentStatus =. "archived"
+            , CMS.CmsContentUpdatedAt =. now
+            ]
+        insert CMS.CmsContent
+          { CMS.cmsContentSlug = slug
+          , CMS.cmsContentLocale = locale
+          , CMS.cmsContentVersion = nextVersion
+          , CMS.cmsContentStatus = statusVal
+          , CMS.cmsContentTitle = title
+          , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
+          , CMS.cmsContentCreatedBy = Just (auPartyId user)
+          , CMS.cmsContentCreatedAt = now
+          , CMS.cmsContentUpdatedAt = now
+          , CMS.cmsContentPublishedAt = publishedAt
+          }
       ent <- runDB $ getJustEntity cid
       pure (toCmsDTO ent)
 

@@ -27,9 +27,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
-import { recordings as defaultRecordings, releases as defaultReleases, sessionVideos as defaultSessions } from '../constants/recordsContent';
+import { recordings as defaultRecordings, releases as defaultReleases } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
-import { useCmsContents } from '../hooks/useCmsContent';
+import { useCmsContent, useCmsContents } from '../hooks/useCmsContent';
 import { Bookings } from '../api/bookings';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
@@ -39,6 +39,7 @@ import { Engineers } from '../api/engineers';
 import { setTransientApiToken, useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
+import { extractYoutubeVideoId } from '../utils/media';
 import EditIcon from '@mui/icons-material/Edit';
 
 const BOOKING_ZONE = 'America/Bogota';
@@ -77,6 +78,15 @@ const toNonEmptyText = (value: unknown): string | null => {
   if (!text) return null;
   const trimmed = text.trim();
   return trimmed.length > 0 ? trimmed : null;
+};
+
+const toFiniteNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
@@ -622,17 +632,51 @@ const GradientCard = ({
 
 type RecordingItem = typeof defaultRecordings[number];
 type ReleaseItem = (typeof defaultReleases)[number] & { primaryUrl?: string };
-type SessionItem = (typeof defaultSessions)[number] & { url?: string };
+interface SessionItem {
+  title: string;
+  guests: string;
+  youtubeId: string;
+  embedUrl: string;
+  duration: string;
+  description: string;
+  url: string;
+  sortOrder: number;
+}
 
 const defaultReleaseItems: ReleaseItem[] = defaultReleases.map((release) => ({
   ...release,
   primaryUrl: release.links?.[0]?.url,
 }));
 
-const defaultSessionItems: SessionItem[] = defaultSessions.map((session) => ({
-  ...session,
-  url: `https://www.youtube.com/watch?v=${session.youtubeId}`,
-}));
+const mapCmsSessionPayload = (
+  payload: unknown,
+  fallbackTitle: string | null,
+  fallbackSortOrder: number,
+): SessionItem | null => {
+  const data = toObject(payload);
+  if (!data) return null;
+  const explicitId =
+    toNonEmptyText(data['youtubeId']) ??
+    toNonEmptyText(data['youtubeID']) ??
+    toNonEmptyText(data['id']);
+  const url = toNonEmptyText(data['url']) ?? toNonEmptyText(data['youtubeUrl']);
+  const youtubeId = explicitId ?? extractYoutubeVideoId(url);
+  if (!youtubeId) return null;
+  const sessionUrl = url ?? `https://www.youtube.com/watch?v=${youtubeId}`;
+  return {
+    youtubeId,
+    embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
+    title: toNonEmptyText(data['title']) ?? fallbackTitle ?? 'Sesión en vivo TDF',
+    duration: toText(data['duration']) ?? '',
+    guests: toText(data['guests']) ?? toText(data['artist']) ?? '',
+    description: toText(data['description']) ?? '',
+    url: sessionUrl,
+    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
+  };
+};
+
+const sortSessions = (items: SessionItem[]): SessionItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   <Grid container spacing={3}>
@@ -786,7 +830,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
             <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
               <Box
                 component="iframe"
-                src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                src={video.embedUrl}
                 title={video.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -832,6 +876,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
 );
 
 export default function RecordsPublicPage() {
+  const sessionsCollectionQuery = useCmsContent('records-sessions', 'es');
   const sessionsQuery = useCmsContents('records-session-', 'es');
   const releasesQuery = useCmsContents('records-release-', 'es');
   const recordingsQuery = useCmsContents('records-recording-', 'es');
@@ -860,30 +905,34 @@ export default function RecordsPublicPage() {
     };
   }, [bookingToken, session]);
 
+  const collectionSessions: SessionItem[] = useMemo(() => {
+    const payload = sessionsCollectionQuery.data?.ccdPayload;
+    const payloadObject = toObject(payload);
+    const rawVideos = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payloadObject?.['videos'])
+        ? payloadObject['videos']
+        : [];
+    return sortSessions(
+      rawVideos
+        .map((item, index) => mapCmsSessionPayload(item, null, index + 1))
+        .filter((item): item is SessionItem => item != null),
+    );
+  }, [sessionsCollectionQuery.data]);
+
   const sessions: SessionItem[] = useMemo(() => {
+    if (collectionSessions.length > 0) return collectionSessions;
     const mapped =
       sessionsQuery.data
         ?.map((entry): SessionItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const youtubeId =
-            toNonEmptyText(payload['youtubeId']) ??
-            toNonEmptyText(payload['youtubeID']) ??
-            toNonEmptyText(payload['id']);
-          if (!youtubeId) return null;
-          const url = toNonEmptyText(payload['url']) ?? `https://www.youtube.com/watch?v=${youtubeId}`;
-          return {
-            youtubeId,
-            title: toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle) ?? 'Sesión en vivo TDF',
-            duration: toText(payload['duration']) ?? '',
-            guests: toText(payload['guests']) ?? '',
-            description: toText(payload['description']) ?? '',
-            url,
-          };
+          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
+          return mapCmsSessionPayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999);
         })
         .filter((item): item is SessionItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultSessionItems;
-  }, [sessionsQuery.data]);
+    return sortSessions(mapped);
+  }, [collectionSessions, sessionsQuery.data]);
+  const sessionsLoading = sessionsCollectionQuery.isLoading || (collectionSessions.length === 0 && sessionsQuery.isLoading);
+  const sessionsError = sessionsCollectionQuery.isError && sessionsQuery.isError;
 
   const [firstDefaultRelease] = defaultReleaseItems;
   const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
@@ -1140,10 +1189,10 @@ export default function RecordsPublicPage() {
               title="Sesiones en vivo TDF"
               actions={
                 canMaintainCms ? (
-                  <Tooltip title="Editar sesiones (CMS records-session-*)">
+                  <Tooltip title="Editar sesiones (CMS records-sessions)">
                     <IconButton
                       component={RouterLink}
-                      to="/configuracion/cms?slug=records-session-"
+                      to="/configuracion/cms?slug=records-sessions"
                       aria-label="Editar sesiones en vivo TDF en CMS"
                       size="small"
                       sx={{ color: 'rgba(229,231,235,0.9)' }}
@@ -1156,7 +1205,7 @@ export default function RecordsPublicPage() {
             >
               <Stack spacing={1}>
                 {sessions.slice(0, 2).map((video) => {
-                  const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
+                  const sessionHref = video.url;
                   return (
                     <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
                       <Chip label="Sesión" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
@@ -1177,7 +1226,7 @@ export default function RecordsPublicPage() {
               </Stack>
               {canMaintainCms && (
                 <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con los slugs `records-session-*`.
+                  Edita este bloque desde Configuración → CMS con el slug `records-sessions`.
                 </Typography>
               )}
             </GradientCard>
@@ -1326,7 +1375,7 @@ export default function RecordsPublicPage() {
               canMaintainCms && (
                 <Button
                   component={RouterLink}
-                  to="/configuracion/cms?slug=records-session-"
+                  to="/configuracion/cms?slug=records-sessions"
                   size="small"
                   variant="outlined"
                   startIcon={<EditIcon />}
@@ -1342,11 +1391,38 @@ export default function RecordsPublicPage() {
             </Typography>
             {canMaintainCms && (
               <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Inserta el ID de YouTube en los slugs `records-session-*` para embeber cada sesión aquí.
+                Mantén el arreglo `videos[]` desde el slug `records-sessions`; también se aceptan slugs legacy `records-session-*`.
               </Typography>
             )}
           </Stack>
-          <SessionsGrid items={sessions} />
+          {sessionsLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando sesiones desde CMS…</Typography>
+            </Stack>
+          ) : sessionsError ? (
+            <Alert severity="warning">No pudimos cargar las sesiones publicadas desde el CMS.</Alert>
+          ) : sessions.length > 0 ? (
+            <SessionsGrid items={sessions} />
+          ) : (
+            <Alert
+              severity={canMaintainCms ? 'info' : 'warning'}
+              action={
+                canMaintainCms ? (
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms?slug=records-sessions"
+                    size="small"
+                    color="inherit"
+                  >
+                    Abrir CMS
+                  </Button>
+                ) : undefined
+              }
+            >
+              No hay sesiones publicadas en CMS todavía.
+            </Alert>
+          )}
         </Box>
 
         {canMaintainCms && (
@@ -1365,7 +1441,7 @@ export default function RecordsPublicPage() {
             }
           >
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Usa el panel en Configuración → CMS con los slugs `records-release-*`, `records-session-*` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
+              Usa el panel en Configuración → CMS con los slugs `records-release-*`, `records-sessions` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
             </Typography>
           </GradientCard>
         )}
