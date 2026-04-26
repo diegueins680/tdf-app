@@ -144,6 +144,8 @@ spec = do
       assertRejected "user.@example.com"
       assertRejected "user..name@example.com"
       assertRejected "user()@example.com"
+      assertRejected (pack (replicate 65 'a') <> "@example.com")
+      assertRejected ("user@" <> pack (replicate 64 'b') <> ".com")
 
     it "rejects the reserved anonymous-interest fallback email for real parties" $ do
       result <- tryCreateOrFetchParty

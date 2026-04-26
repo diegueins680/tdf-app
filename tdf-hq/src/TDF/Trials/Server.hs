@@ -91,10 +91,14 @@ maxPublicEmailChars = 254
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxPublicEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
     && T.all isValidEmailLocalChar localPart
+
+maxPublicEmailLocalPartChars :: Int
+maxPublicEmailLocalPartChars = 64
 
 isValidEmailLocalChar :: Char -> Bool
 isValidEmailLocalChar c =
@@ -103,9 +107,13 @@ isValidEmailLocalChar c =
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= maxPublicEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidEmailDomainChar label
+
+maxPublicEmailDomainLabelChars :: Int
+maxPublicEmailDomainLabelChars = 63
 
 isValidEmailDomainChar :: Char -> Bool
 isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
