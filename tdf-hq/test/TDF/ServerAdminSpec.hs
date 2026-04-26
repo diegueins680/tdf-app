@@ -207,6 +207,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Password must not be empty" "   "
             assertInvalid "Password must be at least 8 characters" "short"
             assertInvalid "Password must not contain control characters" "Long\nPass123"
+            assertInvalid "Password must not contain control characters" "\nTempPass123!"
+            assertInvalid "Password must not contain control characters" "TempPass123!\t"
 
     describe "dropdown option validation" $ do
         it "trims valid dropdown option values and labels before persistence" $ do

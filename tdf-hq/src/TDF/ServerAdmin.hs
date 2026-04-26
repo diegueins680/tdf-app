@@ -1456,12 +1456,12 @@ validateOptionalAdminUsername (Just raw) =
 
 validateAdminPassword :: Text -> Either ServerError Text
 validateAdminPassword rawPassword
+  | T.any isControl rawPassword =
+      Left err400 { errBody = "Password must not contain control characters" }
   | T.null trimmed =
       Left err400 { errBody = "Password must not be empty" }
   | T.length trimmed < 8 =
       Left err400 { errBody = "Password must be at least 8 characters" }
-  | T.any isControl trimmed =
-      Left err400 { errBody = "Password must not contain control characters" }
   | otherwise =
       Right trimmed
   where
