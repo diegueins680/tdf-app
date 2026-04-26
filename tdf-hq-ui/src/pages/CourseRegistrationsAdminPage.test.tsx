@@ -5773,6 +5773,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Actualizar seguimiento')).toBeTruthy();
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
+      expect(hasExactText(document.body, 'En edición')).toBe(true);
+      expect(() =>
+        getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia'),
+      ).toThrow();
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (el) => (el.textContent ?? '').trim() === 'Editar seguimiento',
+        ),
+      ).toBe(false);
     });
 
     await cleanup();
@@ -5949,6 +5958,15 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Actualizar comprobante')).toBeTruthy();
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasExactText(document.body, 'En edición')).toBe(true);
+      expect(() =>
+        getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf'),
+      ).toThrow();
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (el) => (el.textContent ?? '').trim() === 'Editar comprobante',
+        ),
+      ).toBe(false);
     });
 
     await cleanup();

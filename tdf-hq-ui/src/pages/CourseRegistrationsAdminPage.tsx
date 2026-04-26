@@ -3202,6 +3202,7 @@ export default function CourseRegistrationsAdminPage() {
                     const receiptCreatedLabel = sharedReceiptCreatedLabel
                       ? ''
                       : formatOptionalDate(receipt.crrCreatedAt);
+                    const isReceiptBeingEdited = receiptForm.editingId === receipt.crrId;
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
@@ -3240,15 +3241,21 @@ export default function CourseRegistrationsAdminPage() {
                                 </Typography>
                               )}
                             </Box>
-                            <IconButton
-                              size="small"
-                              title="Opciones del comprobante"
-                              aria-label={`Abrir acciones para comprobante ${receiptLabel}`}
-                              aria-haspopup="menu"
-                              onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
-                            >
-                              <MoreVertIcon fontSize="small" />
-                            </IconButton>
+                            {isReceiptBeingEdited ? (
+                              <Typography variant="body2" color="text.secondary">
+                                En edición
+                              </Typography>
+                            ) : (
+                              <IconButton
+                                size="small"
+                                title="Opciones del comprobante"
+                                aria-label={`Abrir acciones para comprobante ${receiptLabel}`}
+                                aria-haspopup="menu"
+                                onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
+                              >
+                                <MoreVertIcon fontSize="small" />
+                              </IconButton>
+                            )}
                           </Stack>
                           {receipt.crrNotes && (
                             <Typography variant="body2" color="text.secondary">
@@ -4697,6 +4704,7 @@ export default function CourseRegistrationsAdminPage() {
                                 : formatOptionalDate(entry.crfCreatedAt);
                               const followUpAttachmentLabel =
                                 entry.crfAttachmentName?.trim() || `Adjunto de ${followUpActionLabel}`;
+                              const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
@@ -4717,15 +4725,21 @@ export default function CourseRegistrationsAdminPage() {
                                           />
                                         )}
                                       </Stack>
-                                      <IconButton
-                                        size="small"
-                                        title="Opciones del seguimiento"
-                                        aria-label={`Abrir acciones para seguimiento ${followUpActionLabel}`}
-                                        aria-haspopup="menu"
-                                        onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
-                                      >
-                                        <MoreVertIcon fontSize="small" />
-                                      </IconButton>
+                                      {isFollowUpBeingEdited ? (
+                                        <Typography variant="body2" color="text.secondary">
+                                          En edición
+                                        </Typography>
+                                      ) : (
+                                        <IconButton
+                                          size="small"
+                                          title="Opciones del seguimiento"
+                                          aria-label={`Abrir acciones para seguimiento ${followUpActionLabel}`}
+                                          aria-haspopup="menu"
+                                          onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
+                                        >
+                                          <MoreVertIcon fontSize="small" />
+                                        </IconButton>
+                                      )}
                                     </Stack>
                                     {followUpSubject && (
                                       <Typography variant="subtitle2">{followUpSubject}</Typography>
