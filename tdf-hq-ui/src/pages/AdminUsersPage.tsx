@@ -198,19 +198,11 @@ const buildPendingProfileSummary = (count: number) => (
 );
 
 const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
-  if (users.length !== 1) {
-    return `Ver ${formatInactiveUserCountLabel(users.length)}`;
-  }
-
-  return `Ver inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
+  return `Ver ${formatInactiveUserCountLabel(users.length)}`;
 };
 
 const buildExpandedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
-  if (users.length !== 1) {
-    return `Ocultar ${formatInactiveUserCountLabel(users.length)}`;
-  }
-
-  return `Ocultar inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
+  return `Ocultar ${formatInactiveUserCountLabel(users.length)}`;
 };
 
 const buildCollapsedInactiveUsersSummary = (count: number) => (

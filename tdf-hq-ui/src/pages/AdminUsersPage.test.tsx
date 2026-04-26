@@ -1475,9 +1475,10 @@ describe('AdminUsersPage', () => {
         const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
         expect(showInactiveListButton.getAttribute('aria-label')).toBe('Ver 1 usuario inactivo');
-        expect(buttonText(showInactiveListButton)).toBe('Ver inactivo: Grace Hopper');
-        expect(hasExactText(container, 'Ver inactivo: Grace Hopper')).toBe(true);
-        expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(false);
+        expect(buttonText(showInactiveListButton)).toBe('Ver 1 usuario inactivo');
+        expect(hasExactText(container, 'Ver inactivo: Grace Hopper')).toBe(false);
+        expect(hasExactText(container, 'Ver 1 usuario inactivo')).toBe(true);
+        expect(container.textContent).not.toContain('Grace Hopper');
       });
 
       await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
@@ -1488,9 +1489,9 @@ describe('AdminUsersPage', () => {
         const hideInactiveListButton = getButtonsByText(container, 'Ocultar 1 usuario inactivo')[0]!;
         expect(hideInactiveListButton.getAttribute('aria-expanded')).toBe('true');
         expect(hideInactiveListButton.getAttribute('aria-label')).toBe('Ocultar 1 usuario inactivo');
-        expect(buttonText(hideInactiveListButton)).toBe('Ocultar inactivo: Grace Hopper');
-        expect(hasExactText(container, 'Ocultar 1 usuario inactivo')).toBe(false);
-        expect(hasExactText(container, 'Ocultar inactivo: Grace Hopper')).toBe(true);
+        expect(buttonText(hideInactiveListButton)).toBe('Ocultar 1 usuario inactivo');
+        expect(hasExactText(container, 'Ocultar 1 usuario inactivo')).toBe(true);
+        expect(hasExactText(container, 'Ocultar inactivo: Grace Hopper')).toBe(false);
         expect(hasExactText(container, 'Ocultar')).toBe(false);
         expect(hasExactText(container, 'Ocultar lista')).toBe(false);
       });
@@ -2442,7 +2443,8 @@ describe('AdminUsersPage', () => {
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(
           buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),
-        ).toBe('Ver inactivo: Ada Inactiva');
+        ).toBe('Ver 1 usuario inactivo');
+        expect(container.textContent).not.toContain('Ada Inactiva');
       });
     } finally {
       await cleanup();
