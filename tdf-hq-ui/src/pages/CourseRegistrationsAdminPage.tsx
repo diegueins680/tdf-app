@@ -2260,6 +2260,9 @@ export default function CourseRegistrationsAdminPage() {
       label: initialEmptyStateFormActionLabel,
       to: `/inscripcion/${encodeURIComponent(firstRunCohort.value)}`,
       ariaLabel: `Abrir formulario público de ${firstRunCohort.firstRunLabel}`,
+      title: `Abrir formulario público de ${firstRunCohort.firstRunLabel} en una pestaña nueva`,
+      target: '_blank',
+      rel: 'noreferrer',
     }
     : {
       label: hasMultipleAvailableCohorts
@@ -2269,6 +2272,11 @@ export default function CourseRegistrationsAdminPage() {
       ariaLabel: hasMultipleAvailableCohorts
         ? initialEmptyStateMultiCohortActionAriaLabel
         : initialEmptyStateConfigActionAriaLabel,
+      title: hasMultipleAvailableCohorts
+        ? initialEmptyStateMultiCohortActionAriaLabel
+        : initialEmptyStateConfigActionAriaLabel,
+      target: undefined,
+      rel: undefined,
     };
 
   const resetReceiptComposer = (open = false) => {
@@ -3426,7 +3434,9 @@ export default function CourseRegistrationsAdminPage() {
               component={RouterLink}
               to={initialEmptyStateAction.to}
               aria-label={initialEmptyStateAction.ariaLabel}
-              title={initialEmptyStateAction.ariaLabel}
+              title={initialEmptyStateAction.title}
+              target={initialEmptyStateAction.target}
+              rel={initialEmptyStateAction.rel}
             >
               {initialEmptyStateAction.label}
             </Button>

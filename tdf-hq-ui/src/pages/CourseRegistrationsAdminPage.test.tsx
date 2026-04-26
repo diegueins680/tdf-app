@@ -9630,7 +9630,9 @@ describe('CourseRegistrationsAdminPage', () => {
         formAction?.textContent?.trim(),
       ).toBe(initialEmptyStateFormActionLabel);
       expect(formAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
-      expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
+      expect(formAction?.getAttribute('target')).toBe('_blank');
+      expect(formAction?.getAttribute('rel')).toBe('noreferrer');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
