@@ -1557,12 +1557,9 @@ describe('AdminUsersPage', () => {
       await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
 
       await waitForExpectation(() => {
-        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre o usuario');
-        expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
-        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
-        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Buscar usuarios');
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
       });
 
       await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
@@ -1570,6 +1567,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
         expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol, módulo o estado');
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -2031,8 +2029,11 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
-        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Buscar usuarios');
       });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
       await changeInputValue(searchInput, 'grace');
@@ -2998,7 +2999,7 @@ describe('AdminUsersPage', () => {
       await clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
 
       await waitForExpectation(() => {
-        expect(searchInput.value).toBe('');
+        expect(getInputByLabelText(container, 'Buscar usuarios').value).toBe('');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
@@ -3595,10 +3596,13 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Buscar usuarios');
       });
 
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario o contacto');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o estado');
 
       await changeInputValue(searchInput, 'activo');
 
@@ -4162,7 +4166,7 @@ describe('AdminUsersPage', () => {
       await clickButton(getButtonsByText(container, 'Limpiar búsqueda')[0]!);
 
       await waitForExpectation(() => {
-        expect(searchInput.value).toBe('');
+        expect(getInputByLabelText(container, 'Buscar usuarios').value).toBe('');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();

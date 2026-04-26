@@ -678,7 +678,6 @@ export default function AdminUsersPage() {
   const singleVisibleUser = showSingleUserGuidance ? (visibleUsers[0] ?? null) : null;
   const singleVisibleUserReadiness = singleVisibleUser ? getUserContactReadiness(singleVisibleUser) : null;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
-  const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
@@ -705,6 +704,7 @@ export default function AdminUsersPage() {
   const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
     ? activeVisibleUsers
     : visibleUsers;
+  const showSearchField = usersInCurrentSummary.length >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const searchInputPlaceholder = useMemo(
     () => buildAdminUsersSearchPlaceholder(usersInCurrentSummary),
     [usersInCurrentSummary],
