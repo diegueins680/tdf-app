@@ -3646,8 +3646,6 @@ metaWebhookVerifyTokenCandidates channel cfg =
   case channel of
     MetaInstagram ->
       [ instagramVerifyToken cfg
-      , instagramMessagingToken cfg
-      , instagramAppToken cfg
       ]
     MetaFacebook ->
       [ facebookMessagingToken cfg

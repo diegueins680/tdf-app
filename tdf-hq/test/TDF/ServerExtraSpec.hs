@@ -4815,6 +4815,51 @@ spec = do
           expectationFailure
             ("Expected Instagram verify token to be rejected, got " <> T.unpack challenge)
 
+    it "keeps Instagram webhook verification scoped to the explicit verify token" $ do
+      cfg <- Config.loadConfig
+      let configured =
+            cfg
+              { instagramVerifyToken = Just "ig-secret"
+              , instagramMessagingToken = Just "ig-msg-secret"
+              , instagramAppToken = Just "ig-app-secret"
+              }
+          env =
+            Env
+              { envPool = error "verifyMetaWebhook test does not use the database pool"
+              , envConfig = configured
+              }
+          verify :: Text -> Either ServerError Text
+          verify token =
+            runReaderT
+              (verifyMetaWebhook
+                MetaInstagram
+                (Just "subscribe")
+                (Just token)
+                (Just "challenge-123"))
+              env
+      metaWebhookVerifyTokenCandidates MetaInstagram configured
+        `shouldBe` [Just "ig-secret"]
+      case verify "ig-secret" of
+        Left err ->
+          expectationFailure
+            ("Expected Instagram verify token to be accepted, got " <> show (errHTTPCode err))
+        Right challenge ->
+          challenge `shouldBe` "challenge-123"
+      case verify "ig-msg-secret" of
+        Left err -> do
+          errHTTPCode err `shouldBe` 403
+          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for instagram"
+        Right challenge ->
+          expectationFailure
+            ("Expected Instagram messaging token to be rejected, got " <> T.unpack challenge)
+      case verify "ig-app-secret" of
+        Left err -> do
+          errHTTPCode err `shouldBe` 403
+          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for instagram"
+        Right challenge ->
+          expectationFailure
+            ("Expected Instagram app token to be rejected, got " <> T.unpack challenge)
+
     it "rejects incomplete or ambiguous Meta webhook verification handshakes" $ do
       let assertInvalid expectedCode expectedMessage result =
             case result of
