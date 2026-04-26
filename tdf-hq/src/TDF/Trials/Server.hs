@@ -1207,6 +1207,7 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
           ensureTeacherSelection teacherKey
+          ensureTeacherSubject teacherKey (trialRequestSubjectId req)
           update rid
             [ TrialRequestAssignedTeacherId =. Just teacherKey
             , TrialRequestAssignedAt        =. Just now
@@ -1227,6 +1228,7 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
           ensureTeacherSelection teacherK
+          ensureTeacherSubject teacherK (trialRequestSubjectId req)
           ensureSchedulableRoom roomK
           ensureRoomAllowed (trialRequestSubjectId req) roomK
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid

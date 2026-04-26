@@ -1301,6 +1301,32 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-teacher parties to be rejected for trial assignment"
 
+    it "rejects assigning a teacher who is not linked to the trial subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        subjectKey <- insert (Subject "Piano" True)
+        otherSubjectKey <- insert (Subject "Voice" True)
+        _ <- insert Trials.TeacherSubject
+          { Trials.teacherSubjectTeacherId = teacherPartyId
+          , Trials.teacherSubjectSubjectId = otherSubjectKey
+          , Trials.teacherSubjectLevelMin = Nothing
+          , Trials.teacherSubjectLevelMax = Nothing
+          }
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateAssignHandler
+          (fromIntegral (fromSqlKey requestKey))
+          (TrialAssignIn (fromIntegral (fromSqlKey teacherPartyId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "No estás asignado a esta materia."
+        Right _ ->
+          expectationFailure "Expected teachers outside the subject roster to be rejected for trial assignment"
+
     it "rejects scheduling a trial with a missing teacher id instead of creating an orphan assignment" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
@@ -1348,6 +1374,37 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
         Right _ ->
           expectationFailure "Expected non-teacher parties to be rejected for trial scheduling"
+
+    it "rejects scheduling a trial with a teacher who is not linked to the requested subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        otherSubjectKey <- insert (Subject "Voice" True)
+        _ <- insert Trials.TeacherSubject
+          { Trials.teacherSubjectTeacherId = teacherPartyId
+          , Trials.teacherSubjectSubjectId = otherSubjectKey
+          , Trials.teacherSubjectLevelMin = Nothing
+          , Trials.teacherSubjectLevelMax = Nothing
+          }
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "No estás asignado a esta materia."
+        Right _ ->
+          expectationFailure "Expected teachers outside the subject roster to be rejected for trial scheduling"
 
     it "rejects scheduling a trial with an inactive teacher role instead of using stale authorization" $ do
       result <- try $ runTrialsInMemory $ do
