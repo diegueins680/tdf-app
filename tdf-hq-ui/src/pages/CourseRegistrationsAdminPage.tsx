@@ -267,7 +267,7 @@ const getResetViewLabel = ({
   if (hasCustomLimit) return 'Restablecer límite';
   if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todas las cohortes';
   if (!hasSlugFilter && hasStatusFilter) return 'Mostrar todos los estados';
-  if (hasSlugFilter && hasStatusFilter) return 'Ampliar vista';
+  if (hasSlugFilter && hasStatusFilter) return 'Restablecer vista';
   return 'Restablecer vista';
 };
 
@@ -3651,7 +3651,7 @@ export default function CourseRegistrationsAdminPage() {
                             {statusFilterLabels[status]}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            La vista filtrada ya incluye este estado; usa "{resetViewLabel}" si necesitas volver a ampliar la lista.
+                            La vista filtrada ya incluye este estado; usa "{resetViewLabel}" para volver a ver toda la lista.
                           </Typography>
                         </Stack>
                       ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (

@@ -1220,12 +1220,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
       expect(activeStatusSummary?.textContent).toContain(
-        'La vista filtrada ya incluye este estado; usa "Ampliar vista" si necesitas volver a ampliar la lista.',
+        'La vista filtrada ya incluye este estado; usa "Restablecer vista" para volver a ver toda la lista.',
       );
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
-      expect(getButtonByText(container, 'Ampliar vista')).toBeTruthy();
-      expect(countButtonsByText(container, 'Ampliar vista')).toBe(1);
+      expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });
 
@@ -8496,7 +8496,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(getButtonByText(container, 'Ampliar vista')).toBeTruthy();
+      expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
       expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
       expect(container.textContent).toContain('Estado filtrado');
     });
@@ -8517,7 +8517,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
       expect(container.textContent).toContain('Estado filtrado');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(countButtonsByText(container, 'Ampliar vista')).toBe(0);
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -8531,7 +8531,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(getButtonByText(container, 'Ampliar vista')).toBeTruthy();
+      expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -8748,7 +8748,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(getButtonByText(container, 'Ampliar vista')).toBeTruthy();
+      expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
       expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
     });
 
@@ -8771,7 +8771,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(filterUtilities).not.toBeNull();
       expect(filterUtilities?.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
       expect(filterUtilities?.textContent).not.toContain('(beatmaking-101)');
-      expect(countButtonsByText(container, 'Ampliar vista')).toBe(0);
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
