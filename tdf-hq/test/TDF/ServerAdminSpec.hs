@@ -48,6 +48,7 @@ import TDF.ServerAdmin (
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
     normalizeAdminEmailBodyLines,
+    validateAdminEmailBodyLines,
     normalizeAdminUsername,
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
@@ -88,6 +89,25 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "trims lines and drops blanks" $
             normalizeAdminEmailBodyLines ["  Hola  ", "", "   ", " Link: https://example.com  "]
                 `shouldBe` ["Hola", "Link: https://example.com"]
+
+    describe "validateAdminEmailBodyLines" $ do
+        it "returns normalized non-empty body lines for broadcast rendering" $
+            validateAdminEmailBodyLines ["  Hola  ", "", " Linea 2  "]
+                `shouldBe` Right ["Hola", "Linea 2"]
+
+        it "rejects empty or control-character broadcast body lines before SMTP work" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin email body lines, got " <> show value)
+            assertInvalid
+                "At least one non-empty body line is required"
+                (validateAdminEmailBodyLines ["   ", ""])
+            assertInvalid
+                "Body lines must not contain control characters"
+                (validateAdminEmailBodyLines ["Hola\nBcc: ops@example.com"])
 
     describe "validateAdminEmailSubject" $ do
         it "trims valid single-line subjects before they are used as email headers" $

@@ -11,6 +11,7 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminUsername
   , normalizeAdminEmailBodyLines
+  , validateAdminEmailBodyLines
   , parseSocialErrorsChannel
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
@@ -927,11 +928,9 @@ adminServer user =
     registeredUserEmailBroadcastHandler AdminEmailBroadcastRequest{..} = do
       ensureStrictAdmin user
       subject <- either throwError pure (validateAdminEmailSubject aebrSubject)
-      let bodyLines = normalizeAdminEmailBodyLines aebrBodyLines
-          dryRun = fromMaybe False aebrDryRun
+      bodyLines <- either throwError pure (validateAdminEmailBodyLines aebrBodyLines)
+      let dryRun = fromMaybe False aebrDryRun
           includeInactive = fromMaybe False aebrIncludeInactive
-      when (null bodyLines) $
-        throwError err400 { errBody = "At least one non-empty body line is required" }
       limitValue <- either throwError pure (validateAdminEmailBroadcastLimit aebrLimit)
       cfg <- asks envConfig
       let emailSvc = EmailSvc.mkEmailService cfg
@@ -1380,6 +1379,17 @@ buildSendResponse sendResult (Entity msgKey msg) =
 normalizeAdminEmailBodyLines :: [Text] -> [Text]
 normalizeAdminEmailBodyLines =
   filter (not . T.null) . map T.strip
+
+validateAdminEmailBodyLines :: [Text] -> Either ServerError [Text]
+validateAdminEmailBodyLines rawLines
+  | null bodyLines =
+      Left err400 { errBody = "At least one non-empty body line is required" }
+  | any (T.any isControl) bodyLines =
+      Left err400 { errBody = "Body lines must not contain control characters" }
+  | otherwise =
+      Right bodyLines
+  where
+    bodyLines = normalizeAdminEmailBodyLines rawLines
 
 normalizeAdminEmailAddress :: Text -> Maybe Text
 normalizeAdminEmailAddress raw =
