@@ -7233,6 +7233,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain(
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
       expect(container.textContent).toContain(dossierOnlyScopeHint);
@@ -8132,8 +8135,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchInput.getAttribute('placeholder')).toBe('Registro');
       expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
       expect(container.textContent).toContain(
-        'Busca dentro de las 9 inscripciones cargadas sin cambiar filtros. Abre el expediente desde el registro; el estado abre acciones rápidas.',
+        'Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el registro; el estado abre acciones rápidas.',
       );
+      expect(container.textContent).not.toContain('sin cambiar filtros');
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');
     });
@@ -8821,6 +8825,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain(
         'Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
       expect(container.textContent).not.toContain('No hay coincidencias para');

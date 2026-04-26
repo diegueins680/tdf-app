@@ -2035,7 +2035,7 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchHelperText = !localSearchKey
     && hideBusyListPassiveCurrentViewPanel
     && baseLocalSearchHelperText
-    ? `${combinedSingleChoiceSummary}. ${baseLocalSearchHelperText}`
+    ? `${combinedSingleChoiceSummary}. ${baseLocalSearchHelperText.replace(' sin cambiar filtros.', '.')}`
     : baseLocalSearchHelperText;
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
