@@ -1297,17 +1297,38 @@ const dedupeCourseRegistrationReceipts = (receipts: readonly CourseRegistrationR
   return [...receiptsById.values()];
 };
 
-const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
-  const seenFollowUpIds = new Set<number>();
+const mergeCourseRegistrationFollowUpRecords = (
+  primary: CourseRegistrationFollowUpDTO,
+  fallback: CourseRegistrationFollowUpDTO,
+): CourseRegistrationFollowUpDTO => ({
+  ...primary,
+  crfRegistrationId: preferPositiveId(primary.crfRegistrationId, fallback.crfRegistrationId) ?? primary.crfRegistrationId,
+  crfPartyId: preferPositiveId(primary.crfPartyId, fallback.crfPartyId),
+  crfEntryType: preferNonEmptyText(primary.crfEntryType, fallback.crfEntryType) ?? primary.crfEntryType,
+  crfSubject: preferNonEmptyText(primary.crfSubject, fallback.crfSubject),
+  crfNotes: preferNonEmptyText(primary.crfNotes, fallback.crfNotes) ?? primary.crfNotes,
+  crfAttachmentUrl: preferNonEmptyText(primary.crfAttachmentUrl, fallback.crfAttachmentUrl),
+  crfAttachmentName: preferNonEmptyText(primary.crfAttachmentName, fallback.crfAttachmentName),
+  crfNextFollowUpAt: preferNonEmptyText(primary.crfNextFollowUpAt, fallback.crfNextFollowUpAt),
+  crfCreatedBy: preferPositiveId(primary.crfCreatedBy, fallback.crfCreatedBy),
+  crfCreatedAt: preferNonEmptyText(primary.crfCreatedAt, fallback.crfCreatedAt) ?? primary.crfCreatedAt,
+  crfUpdatedAt: preferNonEmptyText(primary.crfUpdatedAt, fallback.crfUpdatedAt) ?? primary.crfUpdatedAt,
+});
 
-  return followUps.filter((entry) => {
-    if (seenFollowUpIds.has(entry.crfId)) {
-      return false;
+const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
+  const followUpsById = new Map<number, CourseRegistrationFollowUpDTO>();
+
+  followUps.forEach((entry) => {
+    const existingEntry = followUpsById.get(entry.crfId);
+    if (!existingEntry) {
+      followUpsById.set(entry.crfId, entry);
+      return;
     }
 
-    seenFollowUpIds.add(entry.crfId);
-    return true;
+    followUpsById.set(entry.crfId, mergeCourseRegistrationFollowUpRecords(existingEntry, entry));
   });
+
+  return [...followUpsById.values()];
 };
 
 const mergeCourseEmailEventRecords = (

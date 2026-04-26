@@ -6288,6 +6288,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('merges duplicate follow-up records before falling back to generic action labels', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [
+          buildFollowUp({
+            crfSubject: '   ',
+            crfNotes: '   ',
+            crfAttachmentUrl: null,
+            crfAttachmentName: null,
+          }),
+          buildFollowUp({
+            crfSubject: 'Confirmó transferencia',
+            crfNotes: 'Pidió confirmación final.',
+            crfAttachmentUrl: 'https://example.com/evidencia.png',
+            crfAttachmentName: 'evidencia.png',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).not.toContain('2 entradas');
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+      expect(document.body.textContent).toContain('Pidió confirmación final.');
+      expect(document.body.textContent).toContain('evidencia.png');
+      expect(
+        document.body.querySelectorAll('button[aria-label="Abrir acciones para seguimiento Confirmó transferencia"]'),
+      ).toHaveLength(1);
+      expect(
+        document.body.querySelector('button[aria-label^="Abrir acciones para seguimiento Llamada del"]'),
+      ).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps image receipt previews uncropped so admins can inspect proof before opening the file', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({

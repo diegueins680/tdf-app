@@ -16,6 +16,7 @@ import Data.Int (Int64)
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time.Clock (getCurrentTime)
 import Database.Persist (upsert, (=.))
 import Database.Persist.Sql (
     Single (..),
@@ -68,7 +69,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
-import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
+import TDF.Seed (seedAll, seedRecordsCmsContent, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.Trials.Models (migrateTrials)
 
@@ -142,6 +143,9 @@ runBootServer = do
             runSqlPool (runAllMigrations cfg) pool
           else
             putStrLn "RUN_MIGRATIONS disabled (using pre-initialized schema)."
+        now <- getCurrentTime
+        putStrLn "Ensuring public CMS defaults..."
+        runSqlPool (seedRecordsCmsContent now) pool
         when (seedDatabase cfg) $ do
           putStrLn "Seeding initial data..."
           runSqlPool seedAll pool
