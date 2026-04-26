@@ -4302,6 +4302,17 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected ambiguous ticket check-in payload to be rejected, got " <> show value)
 
+            case validateTicketCheckInLookup
+                TicketCheckInRequestDTO
+                    { ticketCheckInTicketId = Just "42"
+                    , ticketCheckInTicketCode = Just "   "
+                    } of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode"
+                Right value ->
+                    expectationFailure ("Expected blank secondary ticket check-in lookup to be rejected, got " <> show value)
+
         it "rejects non-numeric or non-positive ticket ids before lookup" $ do
             let assertInvalid rawTicketId =
                     case validateTicketCheckInLookup
@@ -4314,6 +4325,7 @@ main = hspec $ do
                             BL.unpack (errBody err) `shouldContain` "ticketCheckInTicketId must be a positive integer"
                         Right value ->
                             expectationFailure ("Expected invalid ticket id to be rejected, got " <> show value)
+            assertInvalid "   "
             assertInvalid "0"
             assertInvalid "-7"
             assertInvalid "ticket-42"

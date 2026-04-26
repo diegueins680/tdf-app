@@ -2296,7 +2296,9 @@ findTicketForCheckIn eventKey ticketLookup =
 
 validateTicketCheckInLookup :: TicketCheckInRequestDTO -> Either ServerError TicketCheckInLookup
 validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
-  case (cleanMaybeText ticketCheckInTicketId, cleanMaybeText ticketCheckInTicketCode) of
+  case (ticketCheckInTicketId, ticketCheckInTicketCode) of
+    (Just _, Just _) ->
+      Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Just rawTicketId, Nothing) ->
       case normalizePositiveIdentifierText rawTicketId of
         Just normalizedTicketId -> Right (TicketCheckInLookupById normalizedTicketId)
@@ -2307,8 +2309,6 @@ validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
         Just codeVal -> Right (TicketCheckInLookupByCode codeVal)
         Nothing ->
           Left err400 { errBody = "ticketCheckInTicketCode must be a generated ticket code" }
-    (Just _, Just _) ->
-      Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Nothing, Nothing) ->
       Left err400 { errBody = "Provide ticketCheckInTicketId or ticketCheckInTicketCode" }
 
