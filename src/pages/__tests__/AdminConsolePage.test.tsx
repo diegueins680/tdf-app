@@ -294,7 +294,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('link', { name: /1\. Estado del servicio/i })).toHaveAttribute('href', '#admin-service-health');
+    expect(screen.queryByRole('link', { name: /1\. Estado del servicio/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /2\. Usuarios y roles/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /3\. Auditoría reciente/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Usuarios y roles')).not.toBeInTheDocument();

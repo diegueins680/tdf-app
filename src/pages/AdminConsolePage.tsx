@@ -1290,6 +1290,7 @@ export default function AdminConsolePage() {
   const gettingStartedSections = showFirstRunServiceHealthGate
     ? GETTING_STARTED_ADMIN_SECTIONS.slice(0, 1)
     : GETTING_STARTED_ADMIN_SECTIONS;
+  const showGettingStartedSectionLinks = gettingStartedSections.length > 1;
   const firstRunServiceNeedsRefresh =
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
   const showHeaderRefreshAction =
@@ -1511,19 +1512,21 @@ export default function AdminConsolePage() {
                 Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
               </Typography>
             </Box>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-              {gettingStartedSections.map((section) => (
-                <Chip
-                  key={section.targetId}
-                  component="a"
-                  clickable
-                  color="info"
-                  variant="outlined"
-                  label={section.label}
-                  href={`#${section.targetId}`}
-                />
-              ))}
-            </Stack>
+            {showGettingStartedSectionLinks && (
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {gettingStartedSections.map((section) => (
+                  <Chip
+                    key={section.targetId}
+                    component="a"
+                    clickable
+                    color="info"
+                    variant="outlined"
+                    label={section.label}
+                    href={`#${section.targetId}`}
+                  />
+                ))}
+              </Stack>
+            )}
             {showFirstRunAdditionalModulesShowAction && (
               <Button
                 size="small"
