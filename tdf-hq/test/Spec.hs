@@ -2621,6 +2621,23 @@ main = hspec $ do
                     worReason payload `shouldBe` Just "stop"
                     worSendMessage payload `shouldBe` Just True
 
+        it "normalizes optional consent and opt-out text during JSON decoding" $ do
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"name\":\"  Ada  \",\"consent\":true,\"source\":\"   \",\"sendMessage\":false}" of
+                Left err ->
+                    expectationFailure ("Expected padded consent payload to decode, got: " <> err)
+                Right payload -> do
+                    wcrName payload `shouldBe` Just "Ada"
+                    wcrSource payload `shouldBe` Nothing
+
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"reason\":\"   \",\"sendMessage\":false}" of
+                Left err ->
+                    expectationFailure ("Expected blank opt-out payload to decode, got: " <> err)
+                Right payload -> do
+                    worReason payload `shouldBe` Nothing
+                    worSendMessage payload `shouldBe` Just False
+
         it "rejects unknown consent or opt-out keys so typoed public requests fail explicitly" $ do
             isLeft
                 ( eitherDecode

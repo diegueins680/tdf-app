@@ -193,10 +193,15 @@ data WhatsAppConsentRequest = WhatsAppConsentRequest
   } deriving (Show, Generic)
 
 instance FromJSON WhatsAppConsentRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    req <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } raw
+    pure req
+      { wcrName = normalizeOptionalRequestText (wcrName req)
+      , wcrSource = normalizeOptionalRequestText (wcrSource req)
+      }
 
 data WhatsAppOptOutRequest = WhatsAppOptOutRequest
   { worPhone       :: Text
@@ -205,10 +210,20 @@ data WhatsAppOptOutRequest = WhatsAppOptOutRequest
   } deriving (Show, Generic)
 
 instance FromJSON WhatsAppOptOutRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    req <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } raw
+    pure req
+      { worReason = normalizeOptionalRequestText (worReason req)
+      }
+
+normalizeOptionalRequestText :: Maybe Text -> Maybe Text
+normalizeOptionalRequestText rawValue =
+  case T.strip <$> rawValue of
+    Just value | not (T.null value) -> Just value
+    _ -> Nothing
 
 data WhatsAppConsentStatus = WhatsAppConsentStatus
   { wcsPhone       :: Text
