@@ -61,13 +61,15 @@ const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambio
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
   `Todavía no hay inscripciones. Hay ${count} formularios públicos listos; revisa cursos para compartir uno.`;
-const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
+const initialEmptyStateConfigActionLabel = 'Configurar formulario';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
+const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
@@ -2213,7 +2215,9 @@ export default function CourseRegistrationsAdminPage() {
         ? initialEmptyStateMultiCohortActionLabel
         : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
-      ariaLabel: undefined,
+      ariaLabel: hasMultipleAvailableCohorts
+        ? initialEmptyStateMultiCohortActionAriaLabel
+        : initialEmptyStateConfigActionAriaLabel,
     };
 
   const resetReceiptComposer = (open = false) => {

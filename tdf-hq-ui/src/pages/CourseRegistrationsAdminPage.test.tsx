@@ -236,9 +236,11 @@ const initialEmptyStateMultiCohortMessage =
   'Todavía no hay inscripciones. Hay 2 formularios públicos listos; revisa cursos para compartir uno.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
-const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
+const initialEmptyStateConfigActionLabel = 'Configurar formulario';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
@@ -6552,6 +6554,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateConfigActionLabel);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.getAttribute('aria-label'),
+      ).toBe(initialEmptyStateConfigActionAriaLabel);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
     });
 
@@ -9791,6 +9796,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateConfigActionLabel);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.getAttribute('aria-label'),
+      ).toBe(initialEmptyStateConfigActionAriaLabel);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.getAttribute('title'),
+      ).toBe(initialEmptyStateConfigActionAriaLabel);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
@@ -9817,18 +9828,18 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
       expect(emptyState?.textContent).not.toContain('Beatmaking 101');
       expect(emptyState?.textContent).not.toContain('Mixing Bootcamp');
-      expect(emptyState?.textContent).not.toContain('Elige qué formulario público compartir');
+      expect(emptyState?.textContent).not.toContain(initialEmptyStateMultiCohortActionAriaLabel);
       expect(emptyState?.textContent).not.toContain('Elige en Configuración de cursos');
       expect(emptyState?.textContent).not.toContain('Elegir curso');
       expect(emptyState?.textContent).not.toContain('Elegir en cursos');
-      expect(emptyState?.textContent).not.toContain('Elegir formulario');
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
-      expect(countOccurrences(emptyState!, 'formulario')).toBe(1);
+      expect(countOccurrences(emptyState!, 'formulario')).toBe(2);
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
-      expect(
-        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
+      expect(configAction?.getAttribute('title')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
