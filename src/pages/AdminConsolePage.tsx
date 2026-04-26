@@ -688,6 +688,10 @@ function buildAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
   return normalizeRoleSelection(roles).length === 0 ? 'Asignar roles' : 'Editar roles';
 }
 
+function buildCompactAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
+  return normalizeRoleSelection(roles).length === 0 ? 'Asignar' : 'Editar';
+}
+
 function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
   const identity = summarizeAdminUserIdentity(user);
 
@@ -1746,7 +1750,7 @@ export default function AdminConsolePage() {
                                   textTransform: 'none',
                                 }}
                               >
-                                {buildAdminUserRoleActionLabel(user.roles)}
+                                {buildCompactAdminUserRoleActionLabel(user.roles)}
                               </Button>
                             </Stack>
                           </TableCell>
