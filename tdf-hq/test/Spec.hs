@@ -7011,6 +7011,18 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected conflicting musician aliases to be rejected, got: " <> show payload)
 
+        it "rejects null canonical aliases paired with legacy values instead of falling back silently" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"email\":null,\"lsmEmail\":\"player@example.com\",\"isExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Conflicting fields: email and lsmEmail must match when both are provided"
+                Right payload ->
+                    expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
+
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

@@ -13,7 +13,7 @@ module TDF.API.LiveSessions
   , resolveLiveSessionSetlistSortOrders
   ) where
 
-import           Data.Aeson               (FromJSON(..), Object, Value, eitherDecodeStrict', withObject, (.:?))
+import           Data.Aeson               (FromJSON(..), Object, Value(..), eitherDecodeStrict', withObject)
 import qualified Data.Aeson.Key           as AesonKey
 import qualified Data.Aeson.KeyMap        as AesonKeyMap
 import           Data.Aeson.Types         (Parser)
@@ -37,10 +37,16 @@ import           Servant.Multipart        ( FileData
                                           , fdInputName
                                           )
 import           TDF.WhatsApp.History     (normalizeWhatsAppPhone)
+
 type LiveSessionsAPI =
   "live-sessions" :>
     ( "intake" :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
     )
+
+data AliasedField a
+  = AliasedFieldMissing
+  | AliasedFieldNull
+  | AliasedFieldValue a
 
 data LiveSessionMusicianPayload = LiveSessionMusicianPayload
   { lsmPartyId    :: Maybe Int
@@ -441,15 +447,17 @@ parseAliasedRequiredField
   -> Text
   -> Parser a
 parseAliasedRequiredField obj canonicalField legacyField = do
-  canonicalValue <- obj .:? AesonKey.fromText canonicalField
-  legacyValue <- obj .:? AesonKey.fromText legacyField
+  canonicalValue <- parseAliasedField obj canonicalField
+  legacyValue <- parseAliasedField obj legacyField
   case (canonicalValue, legacyValue) of
-    (Just canonical, Just legacy)
+    (AliasedFieldValue canonical, AliasedFieldValue legacy)
       | canonical == legacy -> pure canonical
       | otherwise -> fail conflictingMessage
-    (Just canonical, Nothing) -> pure canonical
-    (Nothing, Just legacy) -> pure legacy
-    (Nothing, Nothing) -> fail missingMessage
+    (AliasedFieldValue canonical, AliasedFieldMissing) -> pure canonical
+    (AliasedFieldMissing, AliasedFieldValue legacy) -> pure legacy
+    (AliasedFieldValue _, AliasedFieldNull) -> fail conflictingMessage
+    (AliasedFieldNull, AliasedFieldValue _) -> fail conflictingMessage
+    _ -> fail missingMessage
   where
     conflictingMessage =
       "Conflicting fields: "
@@ -466,15 +474,17 @@ parseAliasedOptionalField
   -> Text
   -> Parser (Maybe a)
 parseAliasedOptionalField obj canonicalField legacyField = do
-  canonicalValue <- obj .:? AesonKey.fromText canonicalField
-  legacyValue <- obj .:? AesonKey.fromText legacyField
+  canonicalValue <- parseAliasedField obj canonicalField
+  legacyValue <- parseAliasedField obj legacyField
   case (canonicalValue, legacyValue) of
-    (Just canonical, Just legacy)
+    (AliasedFieldValue canonical, AliasedFieldValue legacy)
       | canonical == legacy -> pure (Just canonical)
       | otherwise -> fail conflictingMessage
-    (Just canonical, Nothing) -> pure (Just canonical)
-    (Nothing, Just legacy) -> pure (Just legacy)
-    (Nothing, Nothing) -> pure Nothing
+    (AliasedFieldValue canonical, AliasedFieldMissing) -> pure (Just canonical)
+    (AliasedFieldMissing, AliasedFieldValue legacy) -> pure (Just legacy)
+    (AliasedFieldValue _, AliasedFieldNull) -> fail conflictingMessage
+    (AliasedFieldNull, AliasedFieldValue _) -> fail conflictingMessage
+    _ -> pure Nothing
   where
     conflictingMessage =
       "Conflicting fields: "
@@ -482,3 +492,14 @@ parseAliasedOptionalField obj canonicalField legacyField = do
         <> " and "
         <> T.unpack legacyField
         <> " must match when both are provided"
+
+parseAliasedField
+  :: FromJSON a
+  => Object
+  -> Text
+  -> Parser (AliasedField a)
+parseAliasedField obj fieldName =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+    Nothing -> pure AliasedFieldMissing
+    Just Null -> pure AliasedFieldNull
+    Just value -> AliasedFieldValue <$> parseJSON value
