@@ -257,6 +257,53 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('keeps an initial inventory load failure attached to one retry path', async () => {
+    listAssetsMock
+      .mockRejectedValueOnce(new Error('inventory unavailable'))
+      .mockResolvedValueOnce([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar inventario.');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Reintentar inventario',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toHaveLength(0);
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Primeros pasos');
+      });
+
+      const initialCallCount = listAssetsMock.mock.calls.length;
+
+      await act(async () => {
+        const retryButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Reintentar inventario',
+        );
+        retryButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(container.textContent).toContain('Primeros pasos');
+        expect(container.textContent).not.toContain('Reintentar inventario');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the one-row inventory table with a first-asset summary card and plain-language actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

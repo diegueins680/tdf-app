@@ -689,6 +689,7 @@ export default function InventoryPage() {
   );
   const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
   const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && assets.length === 0;
+  const showInitialInventoryErrorState = Boolean(assetsQuery.error) && assets.length === 0;
   const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
   const filteredSingleAsset = showInventorySearch && hasActiveInventorySearch && grouped.length === 1
     ? (grouped[0] ?? null)
@@ -749,7 +750,7 @@ export default function InventoryPage() {
   ]
     .filter(Boolean)
     .join(' ');
-  const showHeaderRefreshAction = !showFirstAssetEmptyState && !hasActiveInventorySearch;
+  const showHeaderRefreshAction = !showFirstAssetEmptyState && !showInitialInventoryErrorState && !hasActiveInventorySearch;
   const historyAlreadyOpenFromMenu = Boolean(
     actionsMenuTarget && historyViewMode === 'panel' && selected?.assetId === actionsMenuTarget.asset.assetId,
   );
@@ -776,7 +777,18 @@ export default function InventoryPage() {
 
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
       {assetsQuery.isLoading && <Typography>Cargando inventario…</Typography>}
-      {assetsQuery.error && <Alert severity="error">No se pudo cargar inventario.</Alert>}
+      {assetsQuery.error && (
+        <Alert
+          severity="error"
+          action={showInitialInventoryErrorState ? (
+            <Button color="inherit" size="small" onClick={handleRefreshAssets}>
+              Reintentar inventario
+            </Button>
+          ) : undefined}
+        >
+          No se pudo cargar inventario.
+        </Alert>
+      )}
       {showInventorySearch && (
         <Stack spacing={0.75} mb={2}>
           <TextField
@@ -807,7 +819,7 @@ export default function InventoryPage() {
         </Stack>
       )}
 
-      {showFirstAssetEmptyState ? (
+      {!showInitialInventoryErrorState && (showFirstAssetEmptyState ? (
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1}>
@@ -1047,7 +1059,7 @@ export default function InventoryPage() {
             </Stack>
           </CardContent>
         </Card>
-      )}
+      ))}
 
       <CheckoutDialog
         open={dialogOpen === 'checkout'}
