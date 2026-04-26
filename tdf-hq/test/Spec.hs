@@ -4048,6 +4048,39 @@ main = hspec $ do
                 Right _ ->
                     expectationFailure "Expected duplicate image file field to be rejected"
 
+        it "rejects path-like or control-character image names before storage sanitizes them" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected unsafe event image upload name to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image name must not contain path separators"
+                (mkEventImageMultipart
+                    [("name", "posters/final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded image name must not contain control characters"
+                (mkEventImageMultipart
+                    [("name", "poster\nfinal.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain path separators"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "posters/final.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain control characters"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster\nfinal.png"])
+
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
                 { emuTicketUrl = FieldMissing

@@ -21,6 +21,7 @@ module TDF.API.SocialEventsAPI
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Char (isControl)
 import Servant
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -33,6 +34,7 @@ import Servant.Multipart
   , MultipartForm
   , Tmp
   , fdInputName
+  , fdFileName
   )
 
 import TDF.DTO.SocialEventsDTO
@@ -75,6 +77,8 @@ instance FromMultipart Tmp EventImageUploadForm where
     rejectUnexpectedParts multipart
     file <- lookupSingleFile "file" multipart
     mName <- lookupOptionalInput "name" multipart
+    mapM_ (validateUploadName "Uploaded image name") mName
+    validateUploadName "Uploaded browser file name" (fdFileName file)
     pure EventImageUploadForm
       { eiuFile = file
       , eiuName = mName
@@ -110,6 +114,16 @@ instance FromMultipart Tmp EventImageUploadForm where
           [] -> Left ("Missing file field: " <> T.unpack name)
           [file] -> Right file
           _ -> Left ("Duplicate file field: " <> T.unpack name)
+
+      validateUploadName label rawName
+        | T.null (T.strip rawName) = Right ()
+        | T.any isControl rawName =
+            Left (label <> " must not contain control characters")
+        | T.any isPathSeparator rawName =
+            Left (label <> " must not contain path separators")
+        | otherwise = Right ()
+
+      isPathSeparator ch = ch == '/' || ch == '\\'
 
 data EventImageUploadDTO = EventImageUploadDTO
   { eiuEventId   :: Text

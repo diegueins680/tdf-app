@@ -24,6 +24,7 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
+import { PUBLIC_BASE } from '../config/appConfig';
 
 type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
 
@@ -56,10 +57,24 @@ interface QuoteLine {
   amountCents: number;
 }
 
-const DOMO_IMAGE_URL = 'https://static.wixstatic.com/media/f190ea_ef16226d21554287a1d1e0c66e8cf6af~mv2.jpg';
+const DOMO_IMAGE_URL = `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-hero-cozy.jpg`;
 const TAX_RATE = 0.12;
 const CURRENCY = 'USD';
 const MAX_QUOTE_GUESTS = 220;
+const DOMO_GALLERY_IMAGES = [
+  {
+    src: `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-terrace-evening.jpg`,
+    alt: 'Domo del Pululahua con terraza limpia, jardines iluminados y sala exterior',
+  },
+  {
+    src: `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-entry-lanterns.jpg`,
+    alt: 'Entrada iluminada del Domo del Pululahua con faroles y vegetacion',
+  },
+  {
+    src: `${PUBLIC_BASE}/assets/tdf-ui/domo-pululahua-garden-evening.jpg`,
+    alt: 'Jardin iluminado y camino de piedra hacia el Domo del Pululahua',
+  },
+] as const;
 const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
   wedding: {
     label: 'Boda',
@@ -271,7 +286,7 @@ export default function DomoVenuePage() {
           alignItems: 'flex-end',
           backgroundImage: `linear-gradient(90deg, rgba(4,8,12,0.82), rgba(4,8,12,0.52), rgba(4,8,12,0.22)), url(${DOMO_IMAGE_URL})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: { xs: '56% center', md: 'center' },
           color: '#fff',
           px: { xs: 2, md: 6 },
           py: { xs: 7, md: 9 },
@@ -332,6 +347,67 @@ export default function DomoVenuePage() {
               </Card>
             </Grid>
           ))}
+        </Grid>
+      </Box>
+
+      <Box sx={{ px: { xs: 2, md: 6 }, py: { xs: 4, md: 7 }, bgcolor: '#10151d', color: '#fff' }}>
+        <Grid container spacing={3} alignItems="stretch">
+          <Grid item xs={12} md={4}>
+            <Stack spacing={2} sx={{ maxWidth: 440, height: '100%', justifyContent: 'center' }}>
+              <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', letterSpacing: 0 }}>
+                Ambientacion
+              </Typography>
+              <Typography variant="h4" fontWeight={900}>
+                Un lugar preparado para recibir bien.
+              </Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.78)' }}>
+                Terraza limpia, jardines cuidados, luz calida y mobiliario sobrio para que cada evento se sienta privado, elegante y cercano al paisaje.
+              </Typography>
+            </Stack>
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Grid container spacing={2} sx={{ height: '100%' }}>
+              <Grid item xs={12} sm={7}>
+                <Stack spacing={2} sx={{ height: '100%' }}>
+                  {[DOMO_GALLERY_IMAGES[0], DOMO_GALLERY_IMAGES[2]].map((image) => (
+                    <Box
+                      key={image.src}
+                      component="img"
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                      sx={{
+                        width: '100%',
+                        flex: 1,
+                        minHeight: { xs: 220, md: 248 },
+                        aspectRatio: '16 / 9',
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        display: 'block',
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={5}>
+                <Box
+                  component="img"
+                  src={DOMO_GALLERY_IMAGES[1].src}
+                  alt={DOMO_GALLERY_IMAGES[1].alt}
+                  loading="lazy"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    minHeight: { xs: 420, sm: 520 },
+                    aspectRatio: { xs: '4 / 5', sm: 'auto' },
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    display: 'block',
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
         </Grid>
       </Box>
 
@@ -465,7 +541,9 @@ export default function DomoVenuePage() {
                     variant="contained"
                     size="large"
                     startIcon={<EventAvailableIcon />}
-                    onClick={submitBooking}
+                    onClick={() => {
+                      void submitBooking();
+                    }}
                     disabled={submitting}
                     sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, textTransform: 'none' }}
                   >
