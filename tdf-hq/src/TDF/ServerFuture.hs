@@ -128,11 +128,35 @@ requireFutureAdminAccess user =
 
 validateFutureStubMetadata :: Text -> Text -> Either ServerError (Text, Text)
 validateFutureStubMetadata rawArea rawEndpoint = do
+  catalog <- validateFutureStubCatalog allowedFutureStubMetadata
+  validateFutureStubMetadataIn catalog rawArea rawEndpoint
+
+validateFutureStubMetadataIn
+  :: [(Text, Text)]
+  -> Text
+  -> Text
+  -> Either ServerError (Text, Text)
+validateFutureStubMetadataIn catalog rawArea rawEndpoint = do
   area <- validateFutureStubArea rawArea
   endpoint <- validateFutureStubEndpoint rawEndpoint
-  if (area, endpoint) `elem` allowedFutureStubMetadata
+  if (area, endpoint) `elem` catalog
     then pure (area, endpoint)
     else invalidFutureStubMetadata
+
+validateFutureStubCatalog :: [(Text, Text)] -> Either ServerError [(Text, Text)]
+validateFutureStubCatalog catalog = do
+  normalized <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubCatalogEntry catalog
+  if null normalized || length normalized /= length (nub normalized)
+    then invalidFutureStubCatalog
+    else Right normalized
+
+validateFutureStubCatalogEntry :: (Text, Text) -> Either ServerError (Text, Text)
+validateFutureStubCatalogEntry (area, endpoint) = do
+  areaClean <- validateFutureStubArea area
+  endpointClean <- validateFutureStubEndpoint endpoint
+  pure (areaClean, endpointClean)
 
 validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
 validateFutureStubResponse response =
@@ -267,6 +291,10 @@ validFutureStubSlugChar ch =
 invalidFutureStubMetadata :: Either ServerError a
 invalidFutureStubMetadata =
   Left err500 { errBody = "Invalid future stub metadata" }
+
+invalidFutureStubCatalog :: Either ServerError a
+invalidFutureStubCatalog =
+  Left err500 { errBody = "Invalid future stub catalog" }
 
 invalidFutureAdminConsoleMetadata :: Either ServerError a
 invalidFutureAdminConsoleMetadata =

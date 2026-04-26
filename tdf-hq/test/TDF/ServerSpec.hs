@@ -287,10 +287,12 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
 import TDF.ServerFuture
-    ( futureServer
+    ( allowedFutureStubMetadata
+    , futureServer
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleView
+    , validateFutureStubCatalog
     , validateFutureStubMetadata
     , validateFutureStubResponse
     )
@@ -6672,6 +6674,30 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
+
+    describe "validateFutureStubCatalog" $ do
+        it "rejects duplicate or malformed fallback discovery catalog entries" $ do
+            case validateFutureStubCatalog allowedFutureStubMetadata of
+                Right catalog ->
+                    catalog `shouldSatisfy` (not . null)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected production future stub catalog to be valid, got: " <> show serverErr)
+
+            let assertInvalid catalog =
+                    case validateFutureStubCatalog catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid future stub catalog, got: " <> show value)
+
+            assertInvalid []
+            assertInvalid [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
+            assertInvalid [(" crm", "parties/list-columns")]
+            assertInvalid [("crm", "parties/list columns")]
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
