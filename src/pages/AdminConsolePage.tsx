@@ -926,12 +926,14 @@ function buildAdminUsersSectionDescription({
   showLastAccessColumn,
   showStatusColumn,
   isSingleUserSummary,
+  primaryRoleActionLabel = 'Editar roles',
 }: {
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
   isSingleUserSummary?: boolean;
+  primaryRoleActionLabel?: string;
 }) {
-  const editHint = 'Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista.';
+  const editHint = `Revisa los roles actuales y usa ${primaryRoleActionLabel} para ajustar permisos desde esta misma vista.`;
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -1296,6 +1298,9 @@ export default function AdminConsolePage() {
       showLastAccessColumn: showUsersLastAccessColumn,
       showStatusColumn: showUsersStatusColumn,
       isSingleUserSummary: singleAdminUser != null && !showUsersTable,
+      primaryRoleActionLabel: singleAdminUser != null && !showUsersTable
+        ? buildAdminUserRoleActionLabel(singleAdminUser.roles)
+        : 'Editar roles',
     });
   const auditSectionDescription = showGettingStartedGuidance
     ? null
@@ -1798,7 +1803,7 @@ export default function AdminConsolePage() {
                         textTransform: 'none',
                       }}
                     >
-                      Editar roles
+                      {buildAdminUserRoleActionLabel(singleAdminUser.roles)}
                     </Button>
                     {singleAdminUserLastAccess && (
                       <Typography variant="body2" color="text.secondary">
