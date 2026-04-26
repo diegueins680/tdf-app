@@ -6635,6 +6635,17 @@ spec = describe "TDF.Server helpers" $ do
                         expectationFailure
                             ("Expected admin discovery access to be rejected, got: " <> show value)
 
+        it "rejects Admin sessions missing the matching admin module grant" $ do
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            case validateFutureAdminAccess malformedAdmin of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Admin module access required"
+                Right value ->
+                    expectationFailure
+                        ("Expected malformed Admin access to be rejected, got: " <> show value)
+
     describe "validateFutureStubMetadata" $ do
         it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
             case validateFutureStubMetadata "crm" "parties/list-columns" of

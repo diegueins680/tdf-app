@@ -15,7 +15,12 @@ import qualified Data.Text            as T
 import           Servant
 
 import           TDF.API.Future
-import           TDF.Auth             (AuthedUser, hasStrictAdminAccess)
+import           TDF.Auth
+  ( AuthedUser
+  , ModuleAccess(ModuleAdmin)
+  , hasModuleAccess
+  , hasStrictAdminAccess
+  )
 
 -- | Shared helper to quickly craft stub responses.
 stub
@@ -113,8 +118,9 @@ adminConsoleCards =
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
 validateFutureAdminAccess user
-  | hasStrictAdminAccess user = Right ()
-  | otherwise = Left err403 { errBody = "Admin role required" }
+  | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | hasModuleAccess ModuleAdmin user = Right ()
+  | otherwise = Left err403 { errBody = "Admin module access required" }
 
 requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
 requireFutureAdminAccess user =
