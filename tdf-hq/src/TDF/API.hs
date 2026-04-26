@@ -616,10 +616,17 @@ data CmsContentIn = CmsContentIn
   , cciPayload :: Maybe Value
   } deriving (Show, Generic)
 instance FromJSON CmsContentIn where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    withObject "CmsContentIn" rejectNullPayload raw
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } raw
+    where
+      rejectNullPayload obj =
+        case AesonKeyMap.lookup (AesonKey.fromText "payload") obj of
+          Just Null -> fail "payload must be omitted instead of null"
+          _ -> pure ()
 
 data CmsContentDTO = CmsContentDTO
   { ccdId        :: Int

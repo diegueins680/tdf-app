@@ -209,6 +209,7 @@ import TDF.Server
     , validateRequiredCmsLocale
     , validateRequiredCmsSlug
     , validateOptionalCmsTitle
+    , validateOptionalCmsPayload
     , validateCmsContentPathId
     , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
@@ -2446,6 +2447,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "title must not contain control characters"
                 (validateOptionalCmsTitle (Just "Hero\nDraft"))
+
+    describe "validateOptionalCmsPayload" $ do
+        it "allows omitted and structured payloads but rejects JSON null as ambiguous CMS content" $ do
+            validateOptionalCmsPayload Nothing `shouldBe` Right Nothing
+            validateOptionalCmsPayload (Just (object ["headline" .= ("Hola" :: Text)]))
+                `shouldBe` Right (Just (object ["headline" .= ("Hola" :: Text)]))
+            case validateOptionalCmsPayload (Just A.Null) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "payload must be omitted instead of JSON null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null CMS payload to be rejected, got: " <> show payload)
 
     describe "validateRequiredCmsSlug" $ do
         it "canonicalizes CMS slugs before public lookup and admin create handlers use them" $ do

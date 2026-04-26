@@ -6772,6 +6772,12 @@ validateCmsContentStatus (Just rawStatus) =
     Just "archived" -> Right "archived"
     _ -> Left err400 { errBody = "status must be one of: draft, published, archived" }
 
+validateOptionalCmsPayload :: Maybe Value -> Either ServerError (Maybe Value)
+validateOptionalCmsPayload Nothing = Right Nothing
+validateOptionalCmsPayload (Just Null) =
+  Left err400 { errBody = "payload must be omitted instead of JSON null" }
+validateOptionalCmsPayload payload = Right payload
+
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
   | value < 0 =
@@ -10704,6 +10710,7 @@ cmsAdminServer user =
       slug <- either throwError pure (validateRequiredCmsSlug cciSlug)
       locale <- either throwError pure (validateRequiredCmsLocale cciLocale)
       title <- either throwError pure (validateOptionalCmsTitle cciTitle)
+      payload <- either throwError pure (validateOptionalCmsPayload cciPayload)
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentSlug ==. slug
@@ -10728,7 +10735,7 @@ cmsAdminServer user =
           , CMS.cmsContentVersion = nextVersion
           , CMS.cmsContentStatus = statusVal
           , CMS.cmsContentTitle = title
-          , CMS.cmsContentPayload = fmap CMS.AesonValue cciPayload
+          , CMS.cmsContentPayload = fmap CMS.AesonValue payload
           , CMS.cmsContentCreatedBy = Just (auPartyId user)
           , CMS.cmsContentCreatedAt = now
           , CMS.cmsContentUpdatedAt = now

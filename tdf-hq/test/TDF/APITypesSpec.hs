@@ -395,6 +395,14 @@ spec = do
                 "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null payloads so omitted payloads and fallback misses stay distinguishable" $
+            case decodeCmsContent "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":null}" of
+                Left err ->
+                    err `shouldContain` "payload must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected explicit null CMS payload to be rejected, got: " <> show value)
+
     describe "CourseRegistrationFollowUp payload FromJSON" $ do
         it "accepts canonical follow-up create and update payloads" $ do
             case decodeFollowUpCreate
