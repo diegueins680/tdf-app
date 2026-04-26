@@ -649,6 +649,18 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   return strippedCourseNoun || strippedTitle || trimmedTitle;
 };
 
+const stripFirstRunCohortDescriptorSuffix = (title: string) => {
+  const trimmedTitle = title.trim();
+  const strippedTitle = trimmedTitle
+    .replace(
+      /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+inscripci[oó]n|de\s+registro)|p[aá]gina\s+(?:de\s+inscripci[oó]n|de\s+registro)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|public\s+form|course\s+form|(?:course\s+)?(?:registration|enrollment)(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
+      '',
+    )
+    .trim();
+
+  return strippedTitle || trimmedTitle;
+};
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
@@ -661,7 +673,9 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
   if (!title) return slug;
-  return stripTrailingCohortSlug(stripFirstRunCohortDescriptorPrefix(title), slug);
+  return stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
+  );
 };
 
 const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
