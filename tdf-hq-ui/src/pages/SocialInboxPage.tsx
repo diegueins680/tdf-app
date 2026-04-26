@@ -492,6 +492,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
   const hasReplyDraft = replyDraft.trim().length > 0;
+  const showSendAction = !hasDeliveredReply || hasReplyDraft || sendLoading;
 
   const extractProviderMessageId = (payload: unknown): string | null => {
     if (!payload || typeof payload !== 'object') return null;
@@ -1013,26 +1014,28 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
           </Stack>
         )}
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Tooltip
-          title={
-            reviewMode
-              ? 'Click to send from app UI. Keep this on screen before switching to native client.'
-              : 'Enviar respuesta'
-          }
-        >
-          <span>
-            <Button
-              onClick={() => void handleSend()}
-              variant="contained"
-              startIcon={<SendIcon />}
-              disabled={!canSend}
-            >
-              {sendLoading ? (reviewMode ? 'Sending…' : 'Enviando…') : reviewMode ? 'Send message' : 'Enviar'}
-            </Button>
-          </span>
-        </Tooltip>
-      </DialogActions>
+      {showSendAction && (
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Tooltip
+            title={
+              reviewMode
+                ? 'Click to send from app UI. Keep this on screen before switching to native client.'
+                : 'Enviar respuesta'
+            }
+          >
+            <span>
+              <Button
+                onClick={() => void handleSend()}
+                variant="contained"
+                startIcon={<SendIcon />}
+                disabled={!canSend}
+              >
+                {sendLoading ? (reviewMode ? 'Sending…' : 'Enviando…') : reviewMode ? 'Send message' : 'Enviar'}
+              </Button>
+            </span>
+          </Tooltip>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };

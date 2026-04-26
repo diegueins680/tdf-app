@@ -720,7 +720,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('treats an already delivered reply as proof instead of preloading it as a duplicate send draft', async () => {
+  it('treats an already delivered reply as proof instead of preloading duplicate send controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderDialog(container, {
@@ -733,12 +733,8 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
-      const sendButton = Array.from(document.body.querySelectorAll('button')).find(
-        (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
-      );
       expect(followUpInput.value).toBe('');
-      expect(sendButton).toBeInstanceOf(HTMLButtonElement);
-      expect((sendButton as HTMLButtonElement).disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(0);
       expect(countButtonsByText(document.body, 'Copy')).toBe(0);
       expect(countButtonsByText(document.body, 'Clear')).toBe(0);
       expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
@@ -752,6 +748,21 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
+    });
+
+    await act(async () => {
+      setTextControlValue(getTextControlByLabel(document.body, 'Follow-up message'), 'One more note.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
+      );
+      expect(sendButton).toBeInstanceOf(HTMLButtonElement);
+      expect((sendButton as HTMLButtonElement).disabled).toBe(false);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
     });
 
     await cleanup();
