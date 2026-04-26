@@ -680,6 +680,20 @@ validateTeacherClassesFilters rawTeacherId rawSubjectId mFrom mTo = do
   (subjectId, fromTs, toTs) <- validateAvailabilityListFilters rawSubjectId mFrom mTo
   Right (teacherId, subjectId, fromTs, toTs)
 
+validateCommissionListFilters
+  :: Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Int
+  -> Either ServerError (Maybe UTCTime, Maybe UTCTime, Maybe Int)
+validateCommissionListFilters mFrom mTo rawTeacherId = do
+  teacherId <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+  case (mFrom, mTo) of
+    (Just fromTs, Just toTs)
+      | fromTs > toTs ->
+          Left err400 { errBody = "from must be on or before to" }
+    _ -> pure ()
+  Right (mFrom, mTo, teacherId)
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
@@ -1767,10 +1781,12 @@ privateTrialsServer user@AuthedUser{..} =
     commissionsH :: Maybe UTCTime -> Maybe UTCTime -> Maybe Int -> AppM [CommissionDTO]
     commissionsH mFrom mTo mTeacher = do
       ensureSchoolStaffAccess
+      (fromFilter, toFilter, teacherFilter) <-
+        either (liftIO . throwIO) pure (validateCommissionListFilters mFrom mTo mTeacher)
       let baseFilters = catMaybes
-            [ (CommissionRecognizedAt >=.) <$> mFrom
-            , (CommissionRecognizedAt <=.) <$> mTo
-            , (CommissionTeacherId ==.) . intKey <$> mTeacher
+            [ (CommissionRecognizedAt >=.) <$> fromFilter
+            , (CommissionRecognizedAt <=.) <$> toFilter
+            , (CommissionTeacherId ==.) . intKey <$> teacherFilter
             ]
       entities <- selectList baseFilters [Desc CommissionRecognizedAt]
       pure [ CommissionDTO

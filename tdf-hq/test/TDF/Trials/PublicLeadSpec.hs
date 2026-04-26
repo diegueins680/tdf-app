@@ -38,6 +38,7 @@ import TDF.Trials.DTO
 import TDF.Trials.API
   ( AttendIn (..)
   , ClassSessionIn (..)
+  , CommissionDTO
   , ClassSessionOut
   , InterestIn (..)
   , PackageDTO
@@ -1202,6 +1203,30 @@ spec = do
       assertRejected 0
       assertRejected (-3)
 
+  describe "private commission filtering" $ do
+    it "rejects non-positive teacher filters before querying commissions" $ do
+      let assertRejected rawTeacherId = do
+            result <- try $ runTrialsInMemory $
+              privateCommissionsHandler Nothing Nothing (Just rawTeacherId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "teacherId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid commission filters to be rejected"
+      assertRejected 0
+      assertRejected (-3)
+
+    it "rejects inverted commission windows instead of silently returning no rows" $ do
+      result <- try $ runTrialsInMemory $
+        privateCommissionsHandler (Just slotEnd) (Just slotStart) Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right _ ->
+          expectationFailure "Expected inverted commission window to be rejected"
+
   describe "private trial availability upserts" $ do
     it "rejects non-positive availability ids before querying for deletion targets" $ do
       let assertRejected rawAvailabilityId = do
@@ -2186,6 +2211,18 @@ privatePackagesHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> packagesH :<|> _ =
         privateTrialsServer adminUser
   in packagesH
+
+privateCommissionsHandler
+  :: Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Int
+  -> SqlPersistT IO [CommissionDTO]
+privateCommissionsHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> commissionsH :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ =
+          privateTrialsServer adminUser
+  in commissionsH
 
 privatePurchaseHandler :: PurchaseIn -> SqlPersistT IO PurchaseOut
 privatePurchaseHandler =
