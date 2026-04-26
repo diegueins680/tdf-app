@@ -8382,6 +8382,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the single visible identity type after local search narrows a mixed busy list', async () => {
+    const mixedBusySearchHint =
+      'Abre el expediente desde el dato principal de cada fila; el estado abre acciones rápidas.';
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: '   ',
+        crEmail: 'contacto@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: null,
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      ...buildRegistrations(6, (index) => ({
+        crId: 201 + index,
+        crPartyId: 31 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain(mixedBusySearchHint);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'contacto@example.com');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
+      expect(container.textContent).toContain(contactDossierOnlyScopeHint);
+      expect(container.textContent).not.toContain(mixedBusySearchHint);
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
     const pendingRegistrations = buildRegistrations(9);
     const initialRegistrations = [

@@ -1769,8 +1769,12 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
     ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
     : '';
+  const localSearchSingleResultTargetLabel =
+    localSearchNarrowsRegistrations && searchedRegistrations.length === 1
+      ? registrationIdentityTargetLabel(searchedRegistrations)
+      : dossierIdentityTargetLabel;
   const localSearchSingleResultActionHint = localSearchNarrowsRegistrations && searchedRegistrations.length === 1
-    ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
+    ? ` ${buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)}`
     : '';
   const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
