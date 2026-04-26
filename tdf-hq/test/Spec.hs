@@ -2180,6 +2180,33 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected invalid SRI payment mode to fail, got: " <> show value)
 
+        it "rejects malformed SRI customer tax ids before invoking the script" $ do
+            let withRuc rawRuc =
+                    sampleSriScriptRequest
+                        { Sri.customer =
+                            (Sri.customer sampleSriScriptRequest) { Sri.ruc = rawRuc }
+                        }
+                assertInvalid expected rawRuc =
+                    case Sri.validateSriScriptRequest (withRuc rawRuc) of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI customer RUC to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid "customer.ruc must contain ASCII digits only" "1790012345A01"
+            assertInvalid "customer.ruc must contain 10 or 13 digits" "179001234"
+
+            case Sri.validateSriScriptRequest (withRuc " 1710034065 ") of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid cedula-style SRI customer id to pass, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.ruc (Sri.customer validated) `shouldBe` "1710034065"
+
         it "requires explicit SRI IVA codes for tax rates the runner cannot infer" $ do
             let unsupportedTaxLine =
                     sampleSriScriptLine { Sri.taxBps = Just 1200 }

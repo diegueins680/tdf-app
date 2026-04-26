@@ -168,7 +168,7 @@ validateSriScriptRequest request = do
 
 validateCustomer :: SriScriptCustomer -> Either Text SriScriptCustomer
 validateCustomer value = do
-  rucValue <- validateRequiredTextField "customer.ruc" (ruc value)
+  rucValue <- validateCustomerRuc (ruc value)
   legalNameValue <- validateRequiredTextField "customer.legalName" (legalName value)
   emailValue <- validateOptionalTextField "customer.email" (email value)
   phoneValue <- validateOptionalTextField "customer.phone" (phone value)
@@ -178,6 +178,15 @@ validateCustomer value = do
     , email = emailValue
     , phone = phoneValue
     }
+
+validateCustomerRuc :: Text -> Either Text Text
+validateCustomerRuc raw = do
+  value <- validateRequiredTextField "customer.ruc" raw
+  if not (T.all isAsciiDigit value)
+    then Left (fieldMessage "customer.ruc" "must contain ASCII digits only")
+    else if T.length value == 10 || T.length value == 13
+      then Right value
+      else Left (fieldMessage "customer.ruc" "must contain 10 or 13 digits")
 
 validateLines :: [SriScriptLine] -> Either Text [SriScriptLine]
 validateLines [] =
@@ -275,6 +284,9 @@ validateOptionalSecretField fieldName (Just raw)
 
 isInvalidTextChar :: Char -> Bool
 isInvalidTextChar ch = ch == '\DEL' || ch < ' '
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 fieldMessage :: Text -> Text -> Text
 fieldMessage fieldName message =
