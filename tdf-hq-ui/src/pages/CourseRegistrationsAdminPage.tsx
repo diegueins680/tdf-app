@@ -3211,10 +3211,10 @@ export default function CourseRegistrationsAdminPage() {
                               component="img"
                               src={receipt.crrFileUrl}
                               alt={receiptLabel}
+                              style={{ objectFit: 'contain' }}
                               sx={{
                                 width: '100%',
                                 maxHeight: 220,
-                                objectFit: 'cover',
                                 borderRadius: 1.5,
                                 bgcolor: 'grey.100',
                               }}

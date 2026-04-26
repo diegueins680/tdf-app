@@ -6222,6 +6222,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps image receipt previews uncropped so admins can inspect proof before opening the file', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt({
+            crrFileUrl: 'https://example.com/transferencia.png',
+            crrFileName: 'transferencia.png',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const imagePreview = document.body.querySelector<HTMLImageElement>('img[alt="transferencia.png"]');
+      expect(imagePreview).not.toBeNull();
+      expect(imagePreview?.getAttribute('src')).toBe('https://example.com/transferencia.png');
+      expect(imagePreview?.style.objectFit).toBe('contain');
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante transferencia.png')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('merges duplicate receipt records before falling back to generic receipt labels', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
