@@ -407,11 +407,9 @@ initializeTicketCheckInSchema = do
         \)"
         []
 
-sampleSriScriptRequest :: Sri.SriScriptRequest
-sampleSriScriptRequest =
-    Sri.SriScriptRequest
-        (Sri.SriScriptCustomer "1790012345001" "TDF Test Customer" Nothing Nothing)
-        [ Sri.SriScriptLine
+sampleSriScriptLine :: Sri.SriScriptLine
+sampleSriScriptLine =
+    Sri.SriScriptLine
             (Just "SRV-001")
             Nothing
             "Studio session"
@@ -420,7 +418,12 @@ sampleSriScriptRequest =
             (Just 1500)
             Nothing
             Nothing
-        ]
+
+sampleSriScriptRequest :: Sri.SriScriptRequest
+sampleSriScriptRequest =
+    Sri.SriScriptRequest
+        (Sri.SriScriptCustomer "1790012345001" "TDF Test Customer" Nothing Nothing)
+        [sampleSriScriptLine]
         "001"
         "001"
         "cash"
@@ -2092,6 +2095,57 @@ main = hspec $ do
                     <> "\"legalName\":\"Cliente Demo\","
                     <> "\"country\":\"EC\"}}"
                 )
+
+        it "rejects malformed SRI requests before script discovery masks payload errors" $
+            withEnvOverrides
+                [ ( "SRI_INVOICE_SCRIPT"
+                  , Just "/tmp/tdf-hq-missing-sri-script-never-created.mjs"
+                  )
+                ]
+                $ do
+                    result <-
+                        Sri.runSriInvoiceScript
+                            sampleSriScriptRequest { Sri.paymentMode = "wire" }
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err
+                                `shouldContain` "paymentMode must be one of: cash, debit, credit"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid SRI payment mode to fail, got: " <> show value)
+
+        it "requires explicit SRI IVA codes for tax rates the runner cannot infer" $ do
+            let unsupportedTaxLine =
+                    sampleSriScriptLine { Sri.taxBps = Just 1200 }
+                explicitIvaLine =
+                    unsupportedTaxLine { Sri.sriIvaCode = Just "2" }
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [unsupportedTaxLine] } of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "taxBps must be 0, 500, or 1500 unless sriIvaCode is provided"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsupported inferred SRI tax rate to fail, got: "
+                            <> show value
+                        )
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [explicitIvaLine] } of
+                Left err ->
+                    expectationFailure
+                        ( "Expected explicit SRI IVA code to allow custom tax bps, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    case Sri.lines validated of
+                        [line] -> do
+                            Sri.taxBps line `shouldBe` Just 1200
+                            Sri.sriIvaCode line `shouldBe` Just "2"
+                        linesValue ->
+                            expectationFailure
+                                ( "Expected one validated SRI line, got: "
+                                    <> show linesValue
+                                )
 
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
