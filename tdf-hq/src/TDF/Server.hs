@@ -7932,7 +7932,7 @@ toSriScriptRequest customer req =
   Sri.SriScriptRequest
     { Sri.customer = customer
     , Sri.lines = map toSriLine (gsiLineItems req)
-    , Sri.establishment = "1"
+    , Sri.establishment = "001"
     , Sri.emissionPoint = "100"
     , Sri.paymentMode = "cash"
     , Sri.signAndSend = fromMaybe True (gsiIssueSri req)

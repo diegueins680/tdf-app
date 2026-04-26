@@ -240,7 +240,10 @@ validateNumericField :: Text -> Text -> Either Text Text
 validateNumericField fieldName raw = do
   value <- validateRequiredTextField fieldName raw
   if T.all isDigit value
-    then Right value
+    then
+      if T.length value == 3
+        then Right value
+        else Left (fieldMessage fieldName "must contain exactly 3 digits")
     else Left (fieldMessage fieldName "must contain digits only")
 
 validateRequiredTextField :: Text -> Text -> Either Text Text

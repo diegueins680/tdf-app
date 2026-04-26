@@ -2184,6 +2184,36 @@ main = hspec $ do
                                     <> show linesValue
                                 )
 
+        it "requires three-digit SRI establishment and emission point codes before script discovery" $ do
+            let assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI point code to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "establishment must contain exactly 3 digits"
+                sampleSriScriptRequest { Sri.establishment = "1" }
+            assertInvalid
+                "emissionPoint must contain exactly 3 digits"
+                sampleSriScriptRequest { Sri.emissionPoint = "0100" }
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest
+                    { Sri.establishment = " 001 "
+                    , Sri.emissionPoint = " 002 "
+                    } of
+                Left err ->
+                    expectationFailure
+                        ( "Expected fixed-width SRI point codes to validate, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated -> do
+                    Sri.establishment validated `shouldBe` "001"
+                    Sri.emissionPoint validated `shouldBe` "002"
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
