@@ -425,7 +425,9 @@ validateOptionalProposalContactEmail (Just rawEmail) =
     Nothing -> Right Nothing
     Just emailVal ->
       let normalized = T.toLower emailVal
-      in if isValidProposalEmail normalized
+      in if T.length normalized > maxProposalContactEmailLength
+           then Left err400 { errBody = "contactEmail must be 254 characters or fewer" }
+           else if isValidProposalEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
 

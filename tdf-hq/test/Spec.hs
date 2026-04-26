@@ -5247,7 +5247,17 @@ main = hspec $ do
             assertInvalid "sales()@example.com"
             assertInvalid (Data.Text.replicate 65 "a" <> "@example.com")
             assertInvalid ("sales@" <> Data.Text.replicate 64 "a" <> ".com")
-            assertInvalid (Data.Text.replicate 245 "a" <> "@example.com")
+
+        it "rejects oversized proposal contact emails with an explicit length error" $
+            case validateOptionalProposalContactEmail
+                    (Just (Data.Text.replicate 245 "a" <> "@example.com")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "contactEmail must be 254 characters or fewer"
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized proposal contact email to be rejected, got " <> show value)
 
     describe "validateOptionalProposalContactPhone" $ do
         it "normalizes valid proposal contact phones and treats blanks as unset" $ do
