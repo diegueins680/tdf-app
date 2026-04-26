@@ -128,6 +128,8 @@ validateFallbackConnUrl envName raw
     validateAuthority scheme
       | T.any isSpace value =
           Left (envName <> " must not contain whitespace")
+      | T.any isControl value =
+          Left (envName <> " must not contain control characters")
       | "#" `T.isInfixOf` value =
           Left (envName <> " must not include a fragment")
       | otherwise =
