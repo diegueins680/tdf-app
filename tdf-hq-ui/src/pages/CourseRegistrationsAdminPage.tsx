@@ -521,6 +521,18 @@ const eventTypeLabel = (eventType: string) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
 
+const getSharedEmailEventTypeLabel = (
+  events: readonly Pick<CourseEmailEventDTO, 'ceEventType'>[],
+) => {
+  if (events.length < 2) return '';
+
+  const labels = events.map((entry) => eventTypeLabel(entry.ceEventType).trim());
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
 const getFollowUpTypeOptions = (entryType: string) => {
   const normalizedEntryType = entryType.trim().toLowerCase();
   if (
@@ -2743,6 +2755,7 @@ export default function CourseRegistrationsAdminPage() {
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
+  const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -4422,6 +4435,11 @@ export default function CourseRegistrationsAdminPage() {
                           Correos registrados: {sharedEmailEventCreatedLabel}
                         </Typography>
                       )}
+                      {sharedEmailEventTypeLabel && (
+                        <Typography variant="body2" color="text.secondary">
+                          Tipo de correo: {sharedEmailEventTypeLabel}
+                        </Typography>
+                      )}
 
                       {emailEventsQuery.isLoading && (
                         <Stack direction="row" spacing={1} alignItems="center">
@@ -4461,7 +4479,9 @@ export default function CourseRegistrationsAdminPage() {
                               <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
                                   <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
-                                  <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                  {!sharedEmailEventTypeLabel && (
+                                    <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                  )}
                                   {emailEventCreatedLabel && (
                                     <Typography variant="caption" color="text.secondary">
                                       {emailEventCreatedLabel}
