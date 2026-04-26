@@ -21,7 +21,7 @@ module TDF.API.SocialEventsAPI
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Char (isControl)
+import Data.Char (isControl, isSpace)
 import Servant
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -36,6 +36,7 @@ import Servant.Multipart
   , fdInputName
   , fdFileName
   )
+import System.FilePath (takeExtension)
 
 import TDF.DTO.SocialEventsDTO
   ( EventDTO
@@ -121,9 +122,20 @@ instance FromMultipart Tmp EventImageUploadForm where
             Left (label <> " must not contain control characters")
         | T.any isPathSeparator rawName =
             Left (label <> " must not contain path separators")
+        | not (hasNonEmptyUploadBaseName rawName) =
+            Left (label <> " must include a non-empty base name")
         | otherwise = Right ()
 
       isPathSeparator ch = ch == '/' || ch == '\\'
+
+      hasNonEmptyUploadBaseName rawName =
+        let trimmed = T.strip rawName
+            ext = T.pack (takeExtension (T.unpack trimmed))
+            baseName =
+              if T.null ext
+                then trimmed
+                else T.dropEnd (T.length ext) trimmed
+        in T.any (\ch -> ch /= '.' && not (isSpace ch)) baseName
 
 data EventImageUploadDTO = EventImageUploadDTO
   { eiuEventId   :: Text

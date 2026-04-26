@@ -4080,6 +4080,16 @@ main = hspec $ do
                 (mkEventImageMultipart
                     []
                     [mkEventImageFile "file" "poster\nfinal.png"])
+            assertInvalid
+                "Uploaded image name must include a non-empty base name"
+                (mkEventImageMultipart
+                    [("name", ".png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must include a non-empty base name"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" ".png"])
 
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
