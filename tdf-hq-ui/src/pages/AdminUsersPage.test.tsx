@@ -2141,8 +2141,8 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
-          'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.',
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible. 2 usuarios en esta vista. 2 pendientes de contacto. Vista actual: solo usuarios activos.',
         );
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
@@ -2191,8 +2191,8 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
-          'Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.',
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible. 2 usuarios en esta vista. 2 pendientes de WhatsApp. Vista actual: solo usuarios activos.',
         );
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.',

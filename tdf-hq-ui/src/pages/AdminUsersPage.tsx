@@ -748,7 +748,12 @@ export default function AdminUsersPage() {
     && (showMixedContactStateGuidance || currentSummaryAllNeedContact || currentSummaryAllNeedWhatsApp);
   const showCurrentSummaryContactState =
     usersInCurrentSummary.length > 1
-    && (currentSummaryWithWhatsAppCount > 0 || currentSummaryHasMixedPendingContactStates)
+    && (
+      currentSummaryWithWhatsAppCount > 0
+      || currentSummaryHasMixedPendingContactStates
+      || currentSummaryAllNeedContact
+      || currentSummaryAllNeedWhatsApp
+    )
     && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
   const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
