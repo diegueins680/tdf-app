@@ -6682,7 +6682,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkResponse "crm" "parties/export" "planned" False)
 
     describe "validateFutureAdminConsoleCard" $ do
-        it "rejects malformed admin console cards before serving fallback discovery metadata" $ do
+        it "rejects malformed or mislabeled admin console cards before serving fallback discovery metadata" $ do
             let mkCard cardIdValue titleValue bodyValue =
                     Future.AdminConsoleCard
                         { Future.cardId = cardIdValue
@@ -6709,6 +6709,7 @@ spec = describe "TDF.Server helpers" $ do
 
             assertInvalid (mkCard "User Management" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "unknown-card" "Gestión de usuarios" ["Roles"])
+            assertInvalid (mkCard "api-tokens" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" " Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión\nusuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión\x2028usuarios" ["Roles"])

@@ -146,10 +146,18 @@ validateFutureAdminConsoleCard card
   | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
   | cardId card `notElem` allowedFutureAdminConsoleCardIds =
       invalidFutureAdminConsoleMetadata
+  | title card /= expectedFutureAdminConsoleTitle (cardId card) =
+      invalidFutureAdminConsoleMetadata
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
   | otherwise = Right card
+
+expectedFutureAdminConsoleTitle :: Text -> Text
+expectedFutureAdminConsoleTitle cardIdValue
+  | cardIdValue == "user-management" = "Gestión de usuarios"
+  | cardIdValue == "api-tokens" = "Tokens API"
+  | otherwise = ""
 
 allowedFutureAdminConsoleCardIds :: [Text]
 allowedFutureAdminConsoleCardIds =
