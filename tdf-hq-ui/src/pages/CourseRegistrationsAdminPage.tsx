@@ -1751,7 +1751,7 @@ export default function CourseRegistrationsAdminPage() {
     return statusLabelsByKey.size === 1 && onlyStatus ? registrationStatusLabel(onlyStatus) : '';
   }, [searchedRegistrations]);
   const sharedVisibleSourceSummary = hasNamedVisibleSource
-    ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
+    ? `Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0

@@ -2321,6 +2321,48 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a source-only summary concise instead of repeating source details on mixed rows', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'instagram_story' }),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+        crSource: 'Instagram story',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'cancelled',
+        crSource: 'instagram-story',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countOccurrences(container, 'Fuente visible: Instagram story.')).toBe(1);
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram story.');
+      expect(container.textContent).not.toContain('Fuente: Instagram story');
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+      expect(container.textContent).toContain('Katherine Johnson');
+    });
+
+    await cleanup();
+  });
+
   it('normalizes shared source casing before deciding whether to repeat row source details', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
