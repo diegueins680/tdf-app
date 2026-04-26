@@ -1336,13 +1336,14 @@ export default function SocialInboxPage() {
   const hasAnyInboundMessage = filterCounts.all > 0;
   const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const showChannelErrorOnlyState = allChannelsLoaded && hasChannelLoadErrors && filterCounts.all === 0;
-  const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
+  const showReviewSetupOnlyState = reviewMode && !activeAsset && !hasAnyInboundMessage && !hasChannelLoadErrors;
+  const showInboxLoadingState = !allChannelsLoaded && !hasAnyInboundMessage && !hasChannelLoadErrors;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const showReviewMessageProofGuidance = reviewMode && Boolean(activeAsset) && hasAnyInboundMessage;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
-  const showManualRefresh = !reviewMode && !showUnifiedEmptyState;
+  const showManualRefresh = !reviewMode && !showUnifiedEmptyState && !showInboxLoadingState;
   const showHeaderControls = showLimitControl || showManualRefresh;
   const activeFilterLabel = getFilterLabel(displayFilter, reviewMode);
   const showStatusFilterEmptyState =
@@ -1518,6 +1519,17 @@ export default function SocialInboxPage() {
                   ? reviewSelectedAssetEmptyStateMessage
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
                 : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
+            </Typography>
+          </Stack>
+        </Alert>
+      ) : showInboxLoadingState ? (
+        <Alert severity="info" variant="outlined">
+          <Stack direction="row" spacing={1.25} alignItems="center">
+            <CircularProgress size={18} />
+            <Typography variant="body2">
+              {reviewMode
+                ? 'Loading inbound messages. Filters and channel panels will appear after messages load.'
+                : 'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.'}
             </Typography>
           </Stack>
         </Alert>

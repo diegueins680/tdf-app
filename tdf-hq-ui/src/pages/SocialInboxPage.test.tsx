@@ -372,6 +372,30 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps initial inbox loading out of empty filter and channel chrome', async () => {
+    const pendingMessages = new Promise<SocialMessage[]>(() => undefined);
+    listInstagramMessagesMock.mockReturnValue(pendingMessages);
+    listFacebookMessagesMock.mockReturnValue(pendingMessages);
+    listWhatsAppMessagesMock.mockReturnValue(pendingMessages);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.',
+      );
+      expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+      expect(container.textContent).not.toContain('Filtro');
+      expect(container.textContent).not.toContain('Sin mensajes para este filtro.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps the manual refresh action in the normal inbox where auto-refresh is off', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
