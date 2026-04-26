@@ -9701,6 +9701,28 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips course-enrollment descriptor prefixes from first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Inscripciones del curso - Beatmaking 101' }]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Inscripciones del curso - Beatmaking 101');
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Inscripciones del curso');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Beatmaking 101');
+    });
+
+    await cleanup();
+  });
+
   it('waits for cohort context before showing first-run empty-state actions', async () => {
     listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
     listRegistrationsMock.mockResolvedValue([]);
