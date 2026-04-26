@@ -395,7 +395,7 @@ instance FromJSON MarketplaceCheckoutReq where
     payload <- genericParseJSON strictObjectOptions value
     buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
     buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
-    let buyerPhone = normalizeMarketplaceOptionalField (mcrBuyerPhone payload)
+    buyerPhone <- normalizeMarketplaceOptionalPhoneField (mcrBuyerPhone payload)
     pure payload
       { mcrBuyerName = buyerName
       , mcrBuyerEmail = buyerEmail
@@ -432,6 +432,42 @@ normalizeMarketplaceOptionalField Nothing = Nothing
 normalizeMarketplaceOptionalField (Just rawValue) =
   let trimmed = T.strip rawValue
   in if T.null trimmed then Nothing else Just trimmed
+
+normalizeMarketplaceOptionalPhoneField :: Maybe Text -> Parser (Maybe Text)
+normalizeMarketplaceOptionalPhoneField rawPhone =
+  case normalizeMarketplaceOptionalField rawPhone of
+    Nothing -> pure Nothing
+    Just phone ->
+      case normalizeMarketplacePhone phone of
+        Just phoneVal -> pure (Just phoneVal)
+        Nothing -> fail "mcrBuyerPhone must be a valid phone number"
+
+normalizeMarketplacePhone :: Text -> Maybe Text
+normalizeMarketplacePhone raw =
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isDigit trimmed
+      digitCount = T.length onlyDigits
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isDigit trimmed
+      allowedPhoneChar ch =
+        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits
+        || digitCount < 8
+        || digitCount > 15
+        || hasInvalidChars
+        || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
 
 isValidMarketplaceBuyerEmail :: Text -> Bool
 isValidMarketplaceBuyerEmail candidate =

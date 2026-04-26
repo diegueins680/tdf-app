@@ -864,7 +864,7 @@ spec = do
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $
             case decodeMarketplaceCheckout
-                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593991234567   \"}"
+                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593 99 123 4567   \"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical marketplace checkout payload to decode, got: " <> err)
@@ -890,6 +890,12 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"not-an-email\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"call me at 099 123 4567\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+1234567890123456\"}"
                 `shouldSatisfy` isLeft
 
     describe "MarketplaceCartItemUpdate FromJSON" $ do
