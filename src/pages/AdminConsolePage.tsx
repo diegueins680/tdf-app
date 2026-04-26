@@ -674,6 +674,20 @@ function formatInlineEditableRoleList(roles?: readonly RoleKey[] | null) {
   return `${visibleRoles} +${hiddenRoleCount} ${hiddenRoleCount === 1 ? 'rol' : 'roles'}`;
 }
 
+function formatInlineAdminUserRoleSummary(roles?: readonly RoleKey[] | null) {
+  const normalizedRoles = normalizeRoleSelection(roles);
+
+  if (normalizedRoles.length === 0) {
+    return 'Sin roles';
+  }
+
+  return formatInlineEditableRoleList(normalizedRoles);
+}
+
+function buildAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
+  return normalizeRoleSelection(roles).length === 0 ? 'Asignar roles' : 'Editar roles';
+}
+
 function getAdminUserVisibleIdentityKey(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
   const identity = summarizeAdminUserIdentity(user);
 
@@ -917,7 +931,7 @@ function buildAdminUsersSectionDescription({
   showStatusColumn: boolean;
   isSingleUserSummary?: boolean;
 }) {
-  const editHint = 'Selecciona el rol actual para editar permisos desde esta misma vista.';
+  const editHint = 'Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista.';
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -1707,20 +1721,29 @@ export default function AdminConsolePage() {
                             </Stack>
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="small"
-                              onClick={() => setEditingUser(user)}
-                              aria-label={editRoleLabel}
-                              title={editRoleTitle}
-                              sx={{
-                                px: 0,
-                                minWidth: 0,
-                                justifyContent: 'flex-start',
-                                textTransform: 'none',
-                              }}
-                            >
-                              {formatInlineEditableRoleList(user.roles)}
-                            </Button>
+                            <Stack spacing={0.5} alignItems="flex-start">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                title={formatEditableRoleList(user.roles)}
+                              >
+                                {formatInlineAdminUserRoleSummary(user.roles)}
+                              </Typography>
+                              <Button
+                                size="small"
+                                onClick={() => setEditingUser(user)}
+                                aria-label={editRoleLabel}
+                                title={editRoleTitle}
+                                sx={{
+                                  px: 0,
+                                  minWidth: 0,
+                                  justifyContent: 'flex-start',
+                                  textTransform: 'none',
+                                }}
+                              >
+                                {buildAdminUserRoleActionLabel(user.roles)}
+                              </Button>
+                            </Stack>
                           </TableCell>
                           {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
                           {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}

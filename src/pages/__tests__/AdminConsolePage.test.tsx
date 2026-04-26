@@ -3068,12 +3068,13 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Usuario: ada')).toBeInTheDocument();
       expect(
-        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
+        screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
       ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar roles');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
       expect(screen.queryByText('Party #9')).not.toBeInTheDocument();
@@ -3162,7 +3163,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
+        screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
@@ -3198,7 +3199,8 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin, Manager');
+      expect(screen.getByText('Admin, Manager')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar roles');
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });
 
@@ -3219,7 +3221,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
+        screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(screen.getByText('Estado: Invitado')).toBeInTheDocument();
     });
@@ -3244,7 +3246,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
+        screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(screen.getByText(/^Último acceso:/i)).toBeInTheDocument();
     });
@@ -3275,7 +3277,7 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Selecciona el rol actual para editar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(
@@ -3290,15 +3292,17 @@ describe('AdminConsolePage', () => {
       expect(screen.queryByRole('columnheader', { name: /^Permisos$/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin');
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar roles');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toHaveAttribute('aria-describedby');
-      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Manager');
+      expect(screen.getByText('Manager')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveTextContent('Editar roles');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).toHaveAttribute('title', 'Editar roles de Grace Hopper. Roles actuales: Manager');
       expect(screen.getByRole('button', { name: 'Editar roles de Grace Hopper' })).not.toHaveAttribute('aria-describedby');
       expect(screen.queryByTestId('EditOutlinedIcon')).not.toBeInTheDocument();
       expect(screen.queryByText(/^Editar$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/^Editar roles$/i)).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Editar roles de /i })).toHaveLength(2);
       expect(screen.queryByText(/^Activo$/i)).not.toBeInTheDocument();
     });
   });
@@ -3327,7 +3331,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Selecciona el rol actual para editar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
@@ -3361,7 +3365,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Selecciona el rol actual para editar permisos desde esta misma vista\./i),
+        screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
@@ -3462,7 +3466,8 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Admin, Manager');
+      expect(screen.getByText('Admin, Manager')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar roles');
       expect(screen.queryByText('Editar roles: Admin, Manager')).not.toBeInTheDocument();
       expect(screen.queryByText('Editar roles: Manager, Admin, Manager')).not.toBeInTheDocument();
     });
@@ -3501,9 +3506,10 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       const roleButton = screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' });
 
-      expect(roleButton).toHaveTextContent('Admin, Manager +3 roles');
+      expect(roleButton).toHaveTextContent('Editar roles');
       expect(roleButton).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin, Manager, Engineer, Teacher, Reception');
-      expect(roleButton).not.toHaveTextContent('Engineer, Teacher, Reception');
+      expect(screen.getByText('Admin, Manager +3 roles')).toBeInTheDocument();
+      expect(screen.queryByText('Engineer, Teacher, Reception')).not.toBeInTheDocument();
     });
 
     expect(
@@ -3541,9 +3547,9 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
 
     await waitFor(() => {
+      expect(screen.getByText('Sin roles')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Asignar roles');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Sin roles');
-      expect(screen.queryByText(/^Sin roles$/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
     });
 
