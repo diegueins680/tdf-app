@@ -1120,6 +1120,7 @@ export default function AdminUsersPage() {
                     hidePendingStateChip={hideSingleRowPendingState}
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                     showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
+                    showExplicitWhatsAppAction={showSingleUserGuidance || showSingleSearchResultGuidance}
                   />
                 ))}
                 {showInactiveUsersGroup ? (
@@ -1170,6 +1171,7 @@ export default function AdminUsersPage() {
                             hidePendingStateChip={hideSingleRowPendingState}
                             hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                             showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
+                            showExplicitWhatsAppAction={showSingleUserGuidance || showSingleSearchResultGuidance}
                           />
                         ))}
                       </Stack>
@@ -1200,6 +1202,7 @@ function UserRow({
   hidePendingStateChip,
   hidePendingProfileLabel,
   showIdentityDisambiguator,
+  showExplicitWhatsAppAction,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
@@ -1210,6 +1213,7 @@ function UserRow({
   hidePendingStateChip: boolean;
   hidePendingProfileLabel: boolean;
   showIdentityDisambiguator: boolean;
+  showExplicitWhatsAppAction: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const visibleContactSummary = getVisibleUserContactSummary(user);
@@ -1303,20 +1307,33 @@ function UserRow({
       )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         {hasWhatsAppChannel ? (
-          <Tooltip title={whatsappActionLabel}>
-            <IconButton
+          showExplicitWhatsAppAction ? (
+            <Button
               size="small"
+              variant="outlined"
               color="primary"
               aria-label={whatsappActionLabel}
+              startIcon={<WhatsAppIcon fontSize="small" />}
               onClick={onOpenCommunications}
-              sx={{
-                border: '1px solid',
-                borderColor: 'primary.main',
-              }}
             >
-              <WhatsAppIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+              WhatsApp
+            </Button>
+          ) : (
+            <Tooltip title={whatsappActionLabel}>
+              <IconButton
+                size="small"
+                color="primary"
+                aria-label={whatsappActionLabel}
+                onClick={onOpenCommunications}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'primary.main',
+                }}
+              >
+                <WhatsAppIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )
         ) : !hidePendingStateChip ? (
           <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
         ) : null}

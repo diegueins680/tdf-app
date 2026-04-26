@@ -767,6 +767,10 @@ describe('AdminUsersPage', () => {
         expect(row.textContent?.match(/999000111/g) ?? []).toHaveLength(1);
         expect(row.textContent).not.toContain('+593 999 000 111');
         expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(1);
+        expect(buttonText(getButtonsByText(row, 'WhatsApp')[0]!)).toBe('WhatsApp');
+        expect(getButtonsByText(row, 'WhatsApp')[0]!.getAttribute('aria-label')).toBe(
+          'Abrir WhatsApp para 999000111',
+        );
         expect(row.textContent).not.toContain('WhatsApp pendiente');
         expect(row.textContent).not.toContain('Contacto pendiente');
       });
@@ -3126,6 +3130,10 @@ describe('AdminUsersPage', () => {
         expect(resultRow.textContent).not.toContain('Roles:');
         expect(resultRow.textContent).not.toContain('Módulos:');
         expect(getButtonsByText(resultRow, 'WhatsApp')).toHaveLength(1);
+        expect(buttonText(getButtonsByText(resultRow, 'WhatsApp')[0]!)).toBe('WhatsApp');
+        expect(getButtonsByText(resultRow, 'WhatsApp')[0]!.getAttribute('aria-label')).toBe(
+          'Abrir WhatsApp para Grace Hopper (Usuario: grace-ops)',
+        );
       });
     } finally {
       await cleanup();
