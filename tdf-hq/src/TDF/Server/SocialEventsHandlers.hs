@@ -31,6 +31,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceSource
   , normalizeFinanceEntryStatus
   , validateFinanceEntryCurrencyInput
+  , validateOptionalBudgetLineIdInput
   , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
   , resolveExistingPartyIdText
@@ -2874,14 +2875,26 @@ artistGenresFromRowsAndFallback genreRows fallbackGenres =
 
 resolveBudgetLineKey :: ConnectionPool -> SocialEventId -> Maybe T.Text -> AppM (Maybe EventBudgetLineId)
 resolveBudgetLineKey _ _ Nothing = pure Nothing
-resolveBudgetLineKey _ _ (Just raw) | T.null (T.strip raw) = pure Nothing
-resolveBudgetLineKey pool eventKey (Just raw) = do
-  lineKey <- parseKeyOr400 "budget line" raw
-  mLine <- liftIO $ runSqlPool (get lineKey) pool
-  lineRec <- maybe (throwError err404 { errBody = "Budget line not found" }) pure mLine
-  when (eventBudgetLineEventId lineRec /= eventKey) $
-    throwError err400 { errBody = "Budget line does not belong to this event" }
-  pure (Just lineKey)
+resolveBudgetLineKey pool eventKey rawInput = do
+  normalizedBudgetLineId <- either throwError pure (validateOptionalBudgetLineIdInput rawInput)
+  case normalizedBudgetLineId of
+    Nothing -> pure Nothing
+    Just raw -> do
+      lineKey <- parseKeyOr400 "budget line" raw
+      mLine <- liftIO $ runSqlPool (get lineKey) pool
+      lineRec <- maybe (throwError err404 { errBody = "Budget line not found" }) pure mLine
+      when (eventBudgetLineEventId lineRec /= eventKey) $
+        throwError err400 { errBody = "Budget line does not belong to this event" }
+      pure (Just lineKey)
+
+validateOptionalBudgetLineIdInput :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateOptionalBudgetLineIdInput Nothing = Right Nothing
+validateOptionalBudgetLineIdInput (Just raw)
+  | T.null stripped = Left err400
+      { errBody = "budgetLineId must be omitted or null when no budget line should be linked" }
+  | otherwise = Right (Just stripped)
+  where
+    stripped = T.strip raw
 
 eventCurrencyFromEvent :: SocialEvent -> T.Text
 eventCurrencyFromEvent eventRec =

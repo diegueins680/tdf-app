@@ -213,6 +213,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeFinanceEntryStatus,
     normalizeFinanceSource,
     validateFinanceEntryCurrencyInput,
+    validateOptionalBudgetLineIdInput,
     normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizeMomentCaption,
@@ -5821,6 +5822,18 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid inherited event currency to be rejected, got " <> show value)
+
+        it "rejects blank finance budget line ids instead of silently clearing the relationship" $ do
+            validateOptionalBudgetLineIdInput Nothing `shouldBe` Right Nothing
+            validateOptionalBudgetLineIdInput (Just "  42  ") `shouldBe` Right (Just "42")
+            case validateOptionalBudgetLineIdInput (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "budgetLineId must be omitted or null when no budget line should be linked"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank budgetLineId to be rejected, got " <> show value)
 
         it "validates ticket tier currencies before ticket tiers can persist opaque codes" $ do
             validateTicketTierCurrencyInput "eur" " usd " `shouldBe` Right "USD"
