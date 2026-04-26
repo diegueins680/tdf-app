@@ -226,6 +226,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             expectationFailure ("Expected invalid admin password to be rejected, got " <> show value)
             assertInvalid "Password must not be empty" "   "
             assertInvalid "Password must be at least 8 characters" "short"
+            assertInvalid "Password must be 72 bytes or fewer" (T.replicate 73 "a")
             assertInvalid "Password must not contain control characters" "Long\nPass123"
             assertInvalid "Password must not contain control characters" "\nTempPass123!"
             assertInvalid "Password must not contain control characters" "TempPass123!\t"

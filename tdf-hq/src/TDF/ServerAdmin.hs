@@ -46,6 +46,7 @@ import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (diffUTCTime, getCurrentTime)
 import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
@@ -1472,10 +1473,15 @@ validateAdminPassword rawPassword
       Left err400 { errBody = "Password must not be empty" }
   | T.length trimmed < 8 =
       Left err400 { errBody = "Password must be at least 8 characters" }
+  | BS.length (TE.encodeUtf8 trimmed) > maxAdminPasswordBytes =
+      Left err400 { errBody = "Password must be 72 bytes or fewer" }
   | otherwise =
       Right trimmed
   where
     trimmed = T.strip rawPassword
+
+maxAdminPasswordBytes :: Int
+maxAdminPasswordBytes = 72
 
 isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
