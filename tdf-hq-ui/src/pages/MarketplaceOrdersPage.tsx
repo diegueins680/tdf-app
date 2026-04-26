@@ -615,6 +615,11 @@ export default function MarketplaceOrdersPage() {
     return null;
   })();
   const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus);
+  const selectedBuyerEmail = selectedOrder ? normalizeEmailValue(selectedOrder.moBuyerEmail) : '';
+  const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
+  const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
+  const selectedPaypalOrderId = selectedOrder?.moPaypalOrderId?.trim() ?? '';
+  const showSelectedContactEmptyState = Boolean(selectedOrder && !selectedBuyerEmail && !selectedBuyerPhone);
 
   return (
     <Box p={2}>
@@ -1150,15 +1155,26 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="body2">
                           <strong>Comprador:</strong> {selectedOrder.moBuyerName}
                         </Typography>
-                        <Typography variant="body2">
-                          <strong>Email:</strong> {selectedOrder.moBuyerEmail}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Teléfono:</strong> {selectedOrder.moBuyerPhone ?? '—'}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Carrito:</strong> {selectedOrder.moCartId ?? '—'}
-                        </Typography>
+                        {selectedBuyerEmail && (
+                          <Typography variant="body2">
+                            <strong>Email:</strong> {selectedBuyerEmail}
+                          </Typography>
+                        )}
+                        {selectedBuyerPhone && (
+                          <Typography variant="body2">
+                            <strong>Teléfono:</strong> {selectedBuyerPhone}
+                          </Typography>
+                        )}
+                        {showSelectedContactEmptyState && (
+                          <Typography variant="body2" color="text.secondary">
+                            Sin email ni teléfono registrado.
+                          </Typography>
+                        )}
+                        {selectedCartId && (
+                          <Typography variant="body2">
+                            <strong>Carrito:</strong> {selectedCartId}
+                          </Typography>
+                        )}
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="body2">
                             <strong>Estado:</strong>
@@ -1176,9 +1192,9 @@ export default function MarketplaceOrdersPage() {
                         <Typography variant="body2">
                           <strong>Pago:</strong> {formatPaymentProvider(selectedOrder.moPaymentProvider)}
                         </Typography>
-                        {selectedOrder.moPaypalOrderId && (
+                        {selectedPaypalOrderId && (
                           <Typography variant="caption" color="text.secondary">
-                            PayPal order: {selectedOrder.moPaypalOrderId}
+                            PayPal order: {selectedPaypalOrderId}
                           </Typography>
                         )}
                       </Stack>

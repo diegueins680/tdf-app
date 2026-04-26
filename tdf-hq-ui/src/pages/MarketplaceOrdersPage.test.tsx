@@ -1430,6 +1430,53 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('omits empty optional identifiers from sparse order details', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-sparse',
+        moCartId: null,
+        moBuyerName: 'Sparse Buyer',
+        moBuyerEmail: '',
+        moBuyerPhone: null,
+        moPaypalOrderId: '   ',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Comprador: Sparse Buyer');
+        expect(document.body.textContent).toContain('Sin email ni teléfono registrado.');
+        expect(document.body.textContent).not.toContain('Email:');
+        expect(document.body.textContent).not.toContain('Teléfono:');
+        expect(document.body.textContent).not.toContain('Carrito:');
+        expect(document.body.textContent).not.toContain('PayPal order:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('humanizes payment provider labels in the order detail and copied summary', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
