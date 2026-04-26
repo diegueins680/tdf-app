@@ -4493,7 +4493,7 @@ main = hspec $ do
                     { ticketCheckInTicketId = Just " 0042 "
                     , ticketCheckInTicketCode = Nothing
                     }
-                `shouldBe` Right (TicketCheckInLookupById "42")
+                `shouldBe` Right (TicketCheckInLookupById 42)
             validateTicketCheckInLookup
                 TicketCheckInRequestDTO
                     { ticketCheckInTicketId = Nothing
@@ -4683,8 +4683,8 @@ main = hspec $ do
                                 , eventTicketCreatedAt = now
                                 , eventTicketUpdatedAt = now
                                 }
-                    scopedMiss <- findTicketForCheckIn firstEventId (TicketCheckInLookupById (Data.Text.pack (show (fromSqlKey ticketId))))
-                    scopedHit <- findTicketForCheckIn secondEventId (TicketCheckInLookupById (Data.Text.pack (show (fromSqlKey ticketId))))
+                    scopedMiss <- findTicketForCheckIn firstEventId (TicketCheckInLookupById (fromSqlKey ticketId))
+                    scopedHit <- findTicketForCheckIn secondEventId (TicketCheckInLookupById (fromSqlKey ticketId))
                     pure (scopedMiss, scopedHit)) pool
 
             case result of

@@ -127,7 +127,7 @@ import qualified TDF.Models.SocialEventsModels as SM
 type AppM = ReaderT Env Handler
 
 data TicketCheckInLookup
-  = TicketCheckInLookupById T.Text
+  = TicketCheckInLookupById Int64
   | TicketCheckInLookupByCode T.Text
   deriving (Show, Eq)
 
@@ -2173,8 +2173,12 @@ resolveExistingPartyIdText pool fieldName rawPartyId =
 
 normalizePositiveIdentifierText :: T.Text -> Maybe T.Text
 normalizePositiveIdentifierText rawIdentifier =
-  case readMaybe (T.unpack (T.strip rawIdentifier)) :: Maybe Int64 of
-    Just identifier | identifier > 0 -> Just (T.pack (show identifier))
+  T.pack . show <$> normalizePositiveIdentifier rawIdentifier
+
+normalizePositiveIdentifier :: T.Text -> Maybe Int64
+normalizePositiveIdentifier rawIdentifier =
+  case readMaybe (T.unpack (T.strip rawIdentifier)) of
+    Just identifier | identifier > 0 -> Just identifier
     _ -> Nothing
 
 parseFollowerQueryParamEither :: Maybe T.Text -> Either ServerError T.Text
@@ -2289,9 +2293,8 @@ validateTicketCheckInTicketStatus rawStatus =
 findTicketForCheckIn :: SocialEventId -> TicketCheckInLookup -> SqlPersistT IO (Maybe (Entity EventTicket))
 findTicketForCheckIn eventKey ticketLookup =
   case ticketLookup of
-    TicketCheckInLookupById rawTicketId -> do
-      let ticketKey = toSqlKey (read (T.unpack rawTicketId) :: Int64)
-      selectFirst [EventTicketId ==. ticketKey, EventTicketEventId ==. eventKey] []
+    TicketCheckInLookupById ticketId ->
+      selectFirst [EventTicketId ==. toSqlKey ticketId, EventTicketEventId ==. eventKey] []
     TicketCheckInLookupByCode codeVal ->
       selectFirst [EventTicketEventId ==. eventKey, EventTicketCode ==. codeVal] []
 
@@ -2301,8 +2304,8 @@ validateTicketCheckInLookup TicketCheckInRequestDTO{..} =
     (Just _, Just _) ->
       Left err400 { errBody = "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode" }
     (Just rawTicketId, Nothing) ->
-      case normalizePositiveIdentifierText rawTicketId of
-        Just normalizedTicketId -> Right (TicketCheckInLookupById normalizedTicketId)
+      case normalizePositiveIdentifier rawTicketId of
+        Just ticketId -> Right (TicketCheckInLookupById ticketId)
         Nothing ->
           Left err400 { errBody = "ticketCheckInTicketId must be a positive integer" }
     (Nothing, Just rawCode) ->
