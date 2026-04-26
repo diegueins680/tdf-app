@@ -271,11 +271,13 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
         [scheme, value]
           | T.toLower scheme == "bearer" -> do
               authToken <- validateAuthToken value
-              case mCookieHeader >>= eitherToMaybe . lookupCookie sessionCookieName of
-                Just cookieToken
+              case maybe (Right Nothing) (lookupCookieIfPresent sessionCookieName) mCookieHeader of
+                Left err -> Left err
+                Right (Just cookieToken)
                   | cookieToken /= authToken ->
                       Left "Conflicting auth credentials found"
-                _ -> Right authToken
+                _ ->
+                    Right authToken
         _ -> Left "Invalid Authorization header"
     Nothing ->
       maybe
@@ -283,23 +285,28 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
         (lookupCookie sessionCookieName)
         mCookieHeader
 
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe = either (const Nothing) Just
+lookupCookieIfPresent :: Text -> Text -> Either Text (Maybe Text)
+lookupCookieIfPresent cookieName rawHeader =
+  case matchingCookieValues cookieName rawHeader of
+    []      -> Right Nothing
+    [value] -> Just <$> validateAuthToken value
+    _       -> Left "Multiple session cookies found"
 
 lookupCookie :: Text -> Text -> Either Text Text
 lookupCookie cookieName rawHeader =
-  let pairs = map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
-      matchingValues = do
-        (namePart, valuePart) <- pairs
-        let name = T.strip namePart
-            value = T.strip valuePart
-        guard (name == cookieName)
-        pure value
-  in case matchingValues of
-       [] -> Left "Missing or invalid auth token"
-       [value] ->
-         validateAuthToken value
-       _ -> Left "Multiple session cookies found"
+  case matchingCookieValues cookieName rawHeader of
+    [] -> Left "Missing or invalid auth token"
+    [value] ->
+      validateAuthToken value
+    _ -> Left "Multiple session cookies found"
+
+matchingCookieValues :: Text -> Text -> [Text]
+matchingCookieValues cookieName rawHeader = do
+  (namePart, valuePart) <- map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
+  let name = T.strip namePart
+      value = T.strip valuePart
+  guard (name == cookieName)
+  pure value
   where
     breakOnEquals chunk =
       let (name, rest) = T.breakOn "=" chunk
