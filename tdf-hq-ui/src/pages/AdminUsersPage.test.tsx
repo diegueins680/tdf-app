@@ -1306,6 +1306,64 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps baseline Admin access off mixed rows so non-default access stands out', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: ['Admin'],
+        modules: ['admin'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Manager',
+        username: 'grace-manager',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Ops',
+        username: 'linus-ops',
+        primaryEmail: 'linus@example.com',
+        primaryPhone: '+593999000333',
+        roles: ['Admin'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. Vista actual: solo usuarios activos.',
+        );
+        expect(container.textContent).not.toContain('Roles: Admin · Módulos: admin');
+        expect(container.textContent).not.toContain('Acceso compartido en esta vista');
+
+        const defaultAdminRow = getRowByUserId(container, 101);
+        expect(defaultAdminRow.textContent).not.toContain('Roles:');
+        expect(defaultAdminRow.textContent).not.toContain('Módulos:');
+
+        const managerRow = getRowByUserId(container, 102);
+        expect(hasExactText(managerRow, 'Roles: Manager · Módulos: crm')).toBe(true);
+
+        const inventoryRow = getRowByUserId(container, 103);
+        expect(inventoryRow.textContent).not.toContain('Roles: Admin');
+        expect(hasExactText(inventoryRow, 'Módulos: inventory')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits the baseline shared Admin role when module differences are the only useful access signal', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

@@ -415,8 +415,12 @@ const buildUserAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
-  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
-  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
+  const showRolesSummary = Boolean(rolesSummary)
+    && !isSameAccessSummary(rolesSummary, sharedRolesSummary)
+    && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+  const showModulesSummary = Boolean(modulesSummary)
+    && !isSameAccessSummary(modulesSummary, sharedModulesSummary)
+    && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
 
   return formatAccessSummaryParts({
     rolesSummary: showRolesSummary ? rolesSummary : '',
@@ -437,8 +441,16 @@ const buildUserRowAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
-  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
-  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
+  if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
+    return '';
+  }
+
+  const showRolesSummary = Boolean(rolesSummary)
+    && !isSameAccessSummary(rolesSummary, sharedRolesSummary)
+    && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+  const showModulesSummary = Boolean(modulesSummary)
+    && !isSameAccessSummary(modulesSummary, sharedModulesSummary)
+    && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
   const compactRolesSummary = formatCompactAccessValues(roles, 'rol', 'roles');
   const compactModulesSummary = formatCompactAccessValues(modules, 'módulo', 'módulos');
 
