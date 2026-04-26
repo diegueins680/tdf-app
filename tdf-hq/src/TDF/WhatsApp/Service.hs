@@ -21,7 +21,12 @@ import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
 import qualified TDF.Config as Config
 import TDF.Leads.Model (ensureLead, lookupCourseIdBySlug)
-import TDF.WhatsApp.Client (SendTextResult (..), sendText)
+import TDF.WhatsApp.Client
+  ( SendTextResult (..)
+  , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppPhoneNumberId
+  , sendText
+  )
 
 data WhatsAppConfig = WhatsAppConfig
   { waToken       :: Text
@@ -46,8 +51,10 @@ mkWhatsAppService = do
 
 loadWhatsAppConfig :: IO WhatsAppConfig
 loadWhatsAppConfig = do
-  tok <- fmap (maybe "" T.pack) (lookupEnv "WA_TOKEN")
-  pid <- fmap (maybe "" T.pack) (lookupEnv "WA_PHONE_ID")
+  tok <- requireValidOptionalCredential normalizeWhatsAppAccessToken
+    =<< lookupFirstNonEmptyEnv ["WA_TOKEN", "WHATSAPP_TOKEN"]
+  pid <- requireValidOptionalCredential normalizeWhatsAppPhoneNumberId
+    =<< lookupFirstNonEmptyEnv ["WA_PHONE_ID", "WHATSAPP_PHONE_NUMBER_ID"]
   ver <- fmap (fmap T.pack) (lookupEnv "WA_VERIFY_TOKEN")
   mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
@@ -67,6 +74,12 @@ loadWhatsAppConfig = do
         , waApiVersion  = version
         }
   pure cfg
+
+requireValidOptionalCredential :: (Text -> Either String Text) -> Maybe String -> IO Text
+requireValidOptionalCredential normalizeCredential mRaw =
+  case mRaw of
+    Nothing -> pure ""
+    Just raw -> either fail pure (normalizeCredential (T.pack raw))
 
 lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
 lookupFirstNonEmptyEnv [] = pure Nothing

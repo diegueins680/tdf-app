@@ -335,6 +335,14 @@ clearRagEnv =
         , "RAG_EMBED_BATCH_SIZE"
         ]
 
+clearWhatsAppProviderCredentialEnv :: [(String, Maybe String)]
+clearWhatsAppProviderCredentialEnv =
+    [ ("WA_TOKEN", Nothing)
+    , ("WHATSAPP_TOKEN", Nothing)
+    , ("WA_PHONE_ID", Nothing)
+    , ("WHATSAPP_PHONE_NUMBER_ID", Nothing)
+    ]
+
 initializeTicketCheckInSchema :: SqlPersistT IO ()
 initializeTicketCheckInSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -1218,13 +1226,14 @@ main = hspec $ do
 
         it "normalizes WhatsApp enrollment fallback config before minting public links" $
             withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
                 [ ("COURSE_EDITION_SLUG", Just "  ")
                 , ("COURSE_DEFAULT_SLUG", Just " Produccion-Musical-MAY-2026 ")
                 , ("COURSE_REG_URL", Just "  ")
                 , ("HQ_APP_URL", Just " https://hq.example.com/app/ ")
                 , ("WA_GRAPH_API_VERSION", Just "  ")
                 , ("WHATSAPP_API_VERSION", Just " v21.0 ")
-                ]
+                ])
                 $ do
                     cfg <- WhatsAppService.loadWhatsAppConfig
                     WhatsAppService.courseSlug cfg `shouldBe` "produccion-musical-may-2026"
@@ -1232,22 +1241,50 @@ main = hspec $ do
                     WhatsAppService.appBaseUrl cfg `shouldBe` "https://hq.example.com/app/"
                     WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
 
+        it "discovers canonical WhatsApp provider credential aliases before enrollment sends" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_TOKEN", Just " token_123 ")
+                , ("WHATSAPP_PHONE_NUMBER_ID", Just " 1234567890 ")
+                ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waToken cfg `shouldBe` "token_123"
+                    WhatsAppService.waPhoneId cfg `shouldBe` "1234567890"
+
+        it "rejects malformed WhatsApp provider credentials before enrollment sends" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token value") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp access token"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do
             withEnvOverrides
-                [ ("COURSE_REG_URL", Just "javascript:alert(1)") ]
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "javascript:alert(1)") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                     "COURSE_REG_URL must be an absolute http(s) URL"
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides
-                [ ("HQ_APP_URL", Just "https://hq.example.com/app copy") ]
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("HQ_APP_URL", Just "https://hq.example.com/app copy") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                     "HQ_APP_URL must be an absolute http(s) URL"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed WhatsApp API versions before building Graph request paths" $ do
             let assertInvalid overrides =
-                    withEnvOverrides overrides $
+                    withEnvOverrides (clearWhatsAppProviderCredentialEnv ++ overrides) $
                         WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                             "WhatsApp API version must look like v20.0"
                                 `isInfixOf` show (err :: IOException)
