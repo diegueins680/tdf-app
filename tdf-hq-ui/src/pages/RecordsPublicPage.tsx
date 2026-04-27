@@ -27,7 +27,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
-import { recordings as defaultRecordings, releases as defaultReleases } from '../constants/recordsContent';
+import { recordings as defaultRecordings } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent, useCmsContents } from '../hooks/useCmsContent';
 import { Bookings } from '../api/bookings';
@@ -631,7 +631,23 @@ const GradientCard = ({
 );
 
 type RecordingItem = typeof defaultRecordings[number];
-type ReleaseItem = (typeof defaultReleases)[number] & { primaryUrl?: string };
+interface ReleaseLink {
+  platform: string;
+  url: string;
+  accent: string;
+}
+
+interface ReleaseItem {
+  title: string;
+  artist: string;
+  blurb: string;
+  cover: string;
+  releasedOn: string;
+  links: ReleaseLink[];
+  primaryUrl?: string;
+  duration?: string;
+  sortOrder: number;
+}
 interface SessionItem {
   title: string;
   guests: string;
@@ -642,11 +658,6 @@ interface SessionItem {
   url: string;
   sortOrder: number;
 }
-
-const defaultReleaseItems: ReleaseItem[] = defaultReleases.map((release) => ({
-  ...release,
-  primaryUrl: release.links?.[0]?.url,
-}));
 
 const mapCmsSessionPayload = (
   payload: unknown,
@@ -676,6 +687,79 @@ const mapCmsSessionPayload = (
 };
 
 const sortSessions = (items: SessionItem[]): SessionItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+
+const formatDurationMs = (value: unknown): string | null => {
+  const ms = toFiniteNumber(value);
+  if (ms == null || ms < 0) return null;
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+const withSpotifyLink = (links: ReleaseLink[], url: string | null): ReleaseLink[] => {
+  if (!url) return links;
+  if (links.some((link) => link.url === url || link.platform.toLowerCase() === 'spotify')) return links;
+  return [{ platform: 'Spotify', url, accent: '#1db954' }, ...links];
+};
+
+const mapCmsReleasePayload = (
+  payload: unknown,
+  fallbackTitle: string | null,
+  fallbackSortOrder: number,
+  fallbackCover: string,
+): ReleaseItem | null => {
+  const data = toObject(payload);
+  if (!data) return null;
+  const linksRaw = Array.isArray(data['links']) ? data['links'] : [];
+  const mappedLinks: ReleaseLink[] = linksRaw.flatMap((item) => {
+    const link = toObject(item);
+    if (!link) return [];
+    const url = toNonEmptyText(link['url']);
+    if (!url) return [];
+    return [{
+      platform: toNonEmptyText(link['platform']) ?? 'Enlace',
+      url,
+      accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
+    }];
+  });
+  const title = toNonEmptyText(data['title']) ?? toNonEmptyText(data['name']) ?? fallbackTitle;
+  if (!title) return null;
+  const spotifyUrl =
+    toNonEmptyText(data['spotifyUrl']) ??
+    toNonEmptyText(data['url']) ??
+    toNonEmptyText(data['trackUrl']);
+  const links = withSpotifyLink(mappedLinks, spotifyUrl);
+  return {
+    title,
+    artist: toNonEmptyText(data['artist']) ?? toNonEmptyText(data['subtitle']) ?? 'TDF Records',
+    releasedOn:
+      toText(data['releasedOn']) ??
+      toText(data['date']) ??
+      toText(data['releaseDate']) ??
+      formatDurationMs(data['durationMs']) ??
+      toText(data['duration']) ??
+      '',
+    duration: toText(data['duration']) ?? formatDurationMs(data['durationMs']) ?? undefined,
+    blurb:
+      toText(data['description']) ??
+      toText(data['blurb']) ??
+      toText(data['album']) ??
+      '',
+    cover:
+      toNonEmptyText(data['cover']) ??
+      toNonEmptyText(data['image']) ??
+      toNonEmptyText(data['coverUrl']) ??
+      toNonEmptyText(data['artworkUrl']) ??
+      fallbackCover,
+    links,
+    primaryUrl: spotifyUrl ?? links[0]?.url,
+    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
+  };
+};
+
+const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
@@ -729,8 +813,9 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
   <Grid container spacing={3}>
     {items.map((release) => {
       const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
+      const releaseMeta = release.duration ?? release.releasedOn;
       return (
-        <Grid item xs={12} md={6} key={release.title}>
+        <Grid item xs={12} md={6} key={`${release.sortOrder}-${release.title}`}>
           <Card
             sx={{
               display: 'flex',
@@ -746,7 +831,9 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
               sx={{
                 width: { xs: '100%', sm: 200 },
                 minHeight: 200,
-                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`,
+                background: release.cover
+                  ? `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`
+                  : 'linear-gradient(135deg, rgba(29,185,84,0.28), rgba(59,130,246,0.2))',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 borderRight: { sm: '1px solid rgba(255,255,255,0.06)' },
@@ -754,10 +841,12 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
             />
             <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label="Lanzamiento" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  {release.releasedOn}
-                </Typography>
+                <Chip label="Canción" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                {releaseMeta && (
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {releaseMeta}
+                  </Typography>
+                )}
               </Stack>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 {releaseHref ? (
@@ -777,9 +866,11 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                 {release.artist}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {release.blurb}
-              </Typography>
+              {release.blurb && (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {release.blurb}
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {release.links.map((link) => (
                   <Button
@@ -878,7 +969,8 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
 export default function RecordsPublicPage() {
   const sessionsCollectionQuery = useCmsContent('records-sessions', 'es');
   const sessionsQuery = useCmsContents('records-session-', 'es');
-  const releasesQuery = useCmsContents('records-release-', 'es');
+  const releasesCollectionQuery = useCmsContent('records-releases', 'es');
+  const legacyReleasesQuery = useCmsContents('records-release-', 'es');
   const recordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
   const envVars = import.meta.env as Record<string, string | undefined>;
@@ -934,42 +1026,48 @@ export default function RecordsPublicPage() {
   const sessionsLoading = sessionsCollectionQuery.isLoading || (collectionSessions.length === 0 && sessionsQuery.isLoading);
   const sessionsError = sessionsCollectionQuery.isError && sessionsQuery.isError;
 
-  const [firstDefaultRelease] = defaultReleaseItems;
-  const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
+  const collectionReleases: ReleaseItem[] = useMemo(() => {
+    const payload = releasesCollectionQuery.data?.ccdPayload;
+    const payloadObject = toObject(payload);
+    const collectionCover =
+      toNonEmptyText(payloadObject?.['cover']) ??
+      toNonEmptyText(payloadObject?.['playlistCover']) ??
+      toNonEmptyText(payloadObject?.['image']) ??
+      '';
+    const rawItems = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payloadObject?.['tracks'])
+        ? payloadObject['tracks']
+        : Array.isArray(payloadObject?.['songs'])
+          ? payloadObject['songs']
+          : Array.isArray(payloadObject?.['releases'])
+            ? payloadObject['releases']
+            : [];
+    return sortReleases(
+      rawItems
+        .map((item, index) => mapCmsReleasePayload(item, null, index + 1, collectionCover))
+        .filter((item): item is ReleaseItem => item != null),
+    );
+  }, [releasesCollectionQuery.data]);
 
-  const releases: ReleaseItem[] = useMemo(() => {
+  const legacyReleases: ReleaseItem[] = useMemo(() => {
     const mapped =
-      releasesQuery.data
+      legacyReleasesQuery.data
         ?.map((entry): ReleaseItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const linksRaw = Array.isArray(payload['links']) ? payload['links'] : [];
-          const links: ReleaseItem['links'] = linksRaw.flatMap((item) => {
-            const link = toObject(item);
-            if (!link) return [];
-            const url = toNonEmptyText(link['url']);
-            if (!url) return [];
-            return [{
-              platform: toNonEmptyText(link['platform']) ?? 'Enlace',
-              url,
-              accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
-            }];
-          });
-          const title = toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle);
-          if (!title) return null;
-          return {
-            title,
-            artist: toNonEmptyText(payload['artist']) ?? 'TDF House Band',
-            releasedOn: toText(payload['releasedOn']) ?? toText(payload['date']) ?? '',
-            blurb: toText(payload['description']) ?? toText(payload['blurb']) ?? '',
-            cover: toNonEmptyText(payload['cover']) ?? toNonEmptyText(payload['image']) ?? defaultReleaseCover,
-            links,
-            primaryUrl: toNonEmptyText(payload['url']) ?? links[0]?.url,
-          };
+          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
+          return mapCmsReleasePayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999, '');
         })
         .filter((item): item is ReleaseItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultReleaseItems;
-  }, [releasesQuery.data, defaultReleaseCover]);
+    return sortReleases(mapped);
+  }, [legacyReleasesQuery.data]);
+
+  const releases: ReleaseItem[] = useMemo(
+    () => (collectionReleases.length > 0 ? collectionReleases : legacyReleases),
+    [collectionReleases, legacyReleases],
+  );
+  const releasesLoading =
+    releasesCollectionQuery.isLoading || (collectionReleases.length === 0 && legacyReleasesQuery.isLoading);
+  const releasesError = releasesCollectionQuery.isError && legacyReleasesQuery.isError;
 
   const recordings: RecordingItem[] = useMemo(() => {
     const mapped =
@@ -1005,7 +1103,7 @@ export default function RecordsPublicPage() {
   const recordingsIntro =
     'Una selección de grabaciones recientes para mostrar el ambiente, el sonido y la energía del estudio.';
   const releasesIntro =
-    'Explora los lanzamientos más recientes de TDF Records y salta directo a la plataforma que prefieras.';
+    'Escucha canciones del playlist RELEASES by TDF y salta directo a Spotify.';
   const sessionsIntro =
     'Sesiones en vivo, tomas especiales y performances para descubrir el catálogo en movimiento.';
 
@@ -1235,11 +1333,11 @@ export default function RecordsPublicPage() {
               actions={
                 canMaintainCms ? (
                   <Stack direction="row" spacing={0.5}>
-                    <Tooltip title="Editar lanzamientos (CMS records-release-*)">
+                    <Tooltip title="Editar canciones (CMS records-releases)">
                       <IconButton
                         component={RouterLink}
-                        to="/configuracion/cms?slug=records-release-"
-                        aria-label="Editar lanzamientos en CMS"
+                        to="/configuracion/cms?slug=records-releases"
+                        aria-label="Editar canciones en CMS"
                         size="small"
                         sx={{ color: 'rgba(229,231,235,0.9)' }}
                       >
@@ -1262,10 +1360,10 @@ export default function RecordsPublicPage() {
               }
             >
               <Stack spacing={1}>
-                {releases.map((release) => {
+                {releases.slice(0, 4).map((release) => {
                   const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
                   return (
-                    <Typography key={release.title} variant="body2" sx={{ fontWeight: 700 }}>
+                    <Typography key={`${release.sortOrder}-${release.title}`} variant="body2" sx={{ fontWeight: 700 }}>
                       {releaseHref ? (
                         <MuiLink
                           href={releaseHref}
@@ -1283,10 +1381,15 @@ export default function RecordsPublicPage() {
                     </Typography>
                   );
                 })}
+                {releases.length === 0 && (
+                  <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
+                    Publica canciones en CMS para activar este resumen.
+                  </Typography>
+                )}
               </Stack>
               {canMaintainCms && (
                 <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con los slugs `records-release-*`.
+                  Edita este bloque desde Configuración → CMS con el slug `records-releases`.
                 </Typography>
               )}
             </GradientCard>
@@ -1335,7 +1438,7 @@ export default function RecordsPublicPage() {
                 <Stack direction="row" spacing={1}>
                   <Button
                     component={RouterLink}
-                    to="/configuracion/cms?slug=records-release-"
+                    to="/configuracion/cms?slug=records-releases"
                     size="small"
                     variant="outlined"
                     startIcon={<EditIcon />}
@@ -1360,11 +1463,38 @@ export default function RecordsPublicPage() {
             </Typography>
             {canMaintainCms && (
               <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Gestiona los enlaces y el contenido desde Configuración → CMS o desde el módulo de lanzamientos.
+                Mantén el arreglo `tracks[]` desde el slug `records-releases`; también se aceptan slugs legacy `records-release-*`.
               </Typography>
             )}
           </Stack>
-          <ReleasesGrid items={releases} />
+          {releasesLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando canciones desde CMS…</Typography>
+            </Stack>
+          ) : releasesError ? (
+            <Alert severity="warning">No pudimos cargar las canciones publicadas desde el CMS.</Alert>
+          ) : releases.length > 0 ? (
+            <ReleasesGrid items={releases} />
+          ) : (
+            <Alert
+              severity={canMaintainCms ? 'info' : 'warning'}
+              action={
+                canMaintainCms ? (
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms?slug=records-releases"
+                    size="small"
+                    color="inherit"
+                  >
+                    Abrir CMS
+                  </Button>
+                ) : undefined
+              }
+            >
+              No hay canciones publicadas en CMS todavía.
+            </Alert>
+          )}
         </Box>
 
         <Box sx={{ mb: 6 }}>
@@ -1441,7 +1571,7 @@ export default function RecordsPublicPage() {
             }
           >
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Usa el panel en Configuración → CMS con los slugs `records-release-*`, `records-sessions` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
+              Usa el panel en Configuración → CMS con los slugs `records-releases`, `records-sessions` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
             </Typography>
           </GradientCard>
         )}

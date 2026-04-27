@@ -45,6 +45,7 @@ type SamplePayload = {
 } & Record<string, unknown>;
 const schemaHints: Record<string, string[]> = {
   'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
+  'records-releases': ['playlistUrl', 'tracks[]', 'tracks[].title', 'tracks[].artist', 'tracks[].url/spotifyUrl', 'tracks[].sortOrder'],
   'records-sessions': ['playlistUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].sortOrder'],
   'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
   'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
@@ -55,6 +56,20 @@ const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
     heroSubtitle: 'Explora los releases recientes del sello.',
+    locale: 'es',
+  },
+  'records-releases': {
+    playlistName: 'RELEASES by TDF',
+    playlistUrl: 'https://open.spotify.com/playlist/4FSMAk7z9GFk4pUH9Uffbt',
+    tracks: [
+      {
+        title: 'Canción',
+        artist: 'Artista',
+        spotifyUrl: 'https://open.spotify.com/track/TRACK_ID',
+        duration: '03:30',
+        sortOrder: 1,
+      },
+    ],
     locale: 'es',
   },
   'records-sessions': {
@@ -115,6 +130,8 @@ const getSamplePayload = (slug: string): SamplePayload | undefined => {
 const livePathForSlug = (slug: string) => {
   switch (slug) {
     case 'records-public':
+      return '/records';
+    case 'records-releases':
       return '/records';
     case 'records-sessions':
       return '/records';
