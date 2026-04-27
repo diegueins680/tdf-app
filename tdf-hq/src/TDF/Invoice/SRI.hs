@@ -13,7 +13,7 @@ module TDF.Invoice.SRI
 import           Prelude hiding (lines)
 
 import           Control.Monad (when)
-import           Data.Char (isDigit)
+import           Data.Char (isControl, isDigit)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -297,9 +297,9 @@ resolveScriptPath = do
   envPath <- lookupEnv "SRI_INVOICE_SCRIPT"
   case envPath of
     Just rawPath ->
-      case nonEmptyPath rawPath of
-        Just scriptPath -> validateConfiguredScriptPath scriptPath
-        Nothing -> pure (Left blankConfiguredScriptMessage)
+      case normalizeConfiguredScriptPath rawPath of
+        Right scriptPath -> validateConfiguredScriptPath scriptPath
+        Left err -> pure (Left err)
     Nothing -> do
       mDefaultPath <-
         firstExisting ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
@@ -341,10 +341,18 @@ missingDefaultScriptMessage :: Text
 missingDefaultScriptMessage =
   "Could not find scripts/generate-sri-invoice.mjs. Set SRI_INVOICE_SCRIPT to enable SRI emission."
 
-nonEmptyPath :: String -> Maybe FilePath
-nonEmptyPath raw =
+normalizeConfiguredScriptPath :: String -> Either Text FilePath
+normalizeConfiguredScriptPath raw =
   let trimmed = T.unpack (T.strip (T.pack raw))
-  in if null trimmed then Nothing else Just trimmed
+  in if null trimmed
+       then Left blankConfiguredScriptMessage
+       else if any isControl trimmed
+         then Left invalidConfiguredScriptControlMessage
+         else Right trimmed
+
+invalidConfiguredScriptControlMessage :: Text
+invalidConfiguredScriptControlMessage =
+  "SRI_INVOICE_SCRIPT must not contain control characters."
 
 firstExisting :: [FilePath] -> IO (Maybe FilePath)
 firstExisting [] = pure Nothing
