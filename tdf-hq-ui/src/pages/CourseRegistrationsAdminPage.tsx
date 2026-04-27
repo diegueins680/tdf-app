@@ -2206,16 +2206,10 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
-  const singleAvailableCohortHelperText = actionableStatusFilters.length === 0
-    ? 'Cohorte única por ahora.'
-    : showAdvancedLimitControl
-      ? 'Cohorte única por ahora. Usa Estado o Ajustar límite para cambiar la vista.'
-      : 'Cohorte única por ahora. Usa Estado para cambiar la vista.';
+  const singleAvailableCohortHelperText = 'Cohorte única por ahora.';
   const singleVisibleStatusHelperText = showCohortFilterUnavailableSummary
     ? ''
-    : showAdvancedLimitControl
-      ? 'Estado único en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
-      : 'Estado único en esta vista. Usa cohorte para cambiar la vista.';
+    : 'Estado único en esta vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
     hasVisibleRegistrations,
