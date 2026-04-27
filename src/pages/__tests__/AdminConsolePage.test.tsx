@@ -355,6 +355,32 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('keeps first-run guidance focused when only optional admin preview modules fail', async () => {
+    mockConsolePreview.mockRejectedValue(new Error('Vista dinámica no disponible'));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(/No se pudo cargar el panel dinámico\. Mostrando la consola base\./i),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Revisar estado del servicio/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Reintentar carga inicial/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Actualizar panel/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 

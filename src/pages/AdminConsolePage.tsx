@@ -1302,6 +1302,10 @@ export default function AdminConsolePage() {
     || auditQuery.isError
     || consoleQuery.isError
     || usersQuery.isError;
+  const hasRequiredFirstRunError =
+    healthQuery.isError
+    || auditQuery.isError
+    || usersQuery.isError;
   const shouldShowHealthLoadingState = healthQuery.isPending && healthQuery.data == null;
   const showCompactHealthyServiceSummary =
     healthQuery.data != null
@@ -1333,7 +1337,8 @@ export default function AdminConsolePage() {
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
   const showHeaderRefreshAction =
     hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
-  const showFirstRunRefreshAction = showGettingStartedGuidance && showHeaderRefreshAction;
+  const showFirstRunRefreshAction =
+    showGettingStartedGuidance && (hasRequiredFirstRunError || firstRunServiceNeedsRefresh);
   const showHeaderActions = showHeaderRefreshAction && !showGettingStartedGuidance;
   const usersSectionDescription = showGettingStartedGuidance || users.length === 0
     ? null
