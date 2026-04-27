@@ -2192,7 +2192,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showFilteredEmptyState
     && !showDefaultEmptyLocalSearchFocus
     && !showSingleResultWithOnlyPassiveFilterContext
-    && (!regsQuery.isError || hasCustomFilters);
+    && (!regsQuery.isError || hasVisibleRegistrations);
   const showRegistrationResultsPanel = !showInitialRegistrationLoading
     && !showInitialFilterGuidance
     && !showInitialCohortResolutionState
@@ -3998,10 +3998,19 @@ export default function CourseRegistrationsAdminPage() {
           {regsQuery.isError && (
             <Alert
               severity="error"
-              action={showRegistrationErrorInlineRetry ? (
-                <Button color="inherit" size="small" onClick={handleRefresh}>
-                  {registrationErrorRetryLabel}
-                </Button>
+              action={showRegistrationErrorInlineRetry || hasCustomFilters ? (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {showRegistrationErrorInlineRetry && (
+                    <Button color="inherit" size="small" onClick={handleRefresh}>
+                      {registrationErrorRetryLabel}
+                    </Button>
+                  )}
+                  {hasCustomFilters && (
+                    <Button color="inherit" size="small" onClick={handleResetFilters}>
+                      {resetViewLabel}
+                    </Button>
+                  )}
+                </Stack>
               ) : undefined}
             >
               No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}

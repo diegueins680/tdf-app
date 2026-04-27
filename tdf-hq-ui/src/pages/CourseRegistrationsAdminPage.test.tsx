@@ -9472,6 +9472,51 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps filtered registration errors focused on retry and one reset path', async () => {
+    listRegistrationsMock.mockRejectedValue(new Error('Backend unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?slug=beatmaking-101&status=paid&limit=50',
+    );
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('No se pudieron cargar las inscripciones: Backend unavailable');
+      expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(1);
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales');
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Restablecer vista'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
+    });
+
+    await cleanup();
+  });
+
   it('keeps cohort retry inside the failed cohort filter when registrations already loaded', async () => {
     listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
 
