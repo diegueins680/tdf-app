@@ -1162,11 +1162,15 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   }
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
   if (noteKeys.size > 1 || (noteKeys.size === 1 && hasRowsWithoutNotes)) terms.push('nota');
-  if (acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext)) {
+  const hasVariableAcquisitionContext =
+    acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext);
+  const hasVariableSource =
+    sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource);
+  if (hasVariableAcquisitionContext) {
     terms.push(terms.length === 0 ? 'Origen' : 'origen');
   }
   if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
-  if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
+  if (hasVariableSource && !hasVariableAcquisitionContext) terms.push('fuente');
   if (cohortKeys.size > 1) terms.push('curso');
 
   return formatLocalSearchPlaceholder(terms);

@@ -8455,6 +8455,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('collapses source and campaign search prompts into one origin hint without losing matches', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Camila Vega',
+        crEmail: 'camila@example.com',
+        crSource: 'instagram_story',
+        crHowHeard: 'TikTok orgánico',
+        crUtmCampaign: 'curso_abril',
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto u origen');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('origen o fuente');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'instagram story');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Camila Vega');
+      expect(container.textContent).toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'curso abril');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Camila Vega');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas. Coincide con origen o campaña.');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps shared campaign context out of the busy-list search placeholder', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
