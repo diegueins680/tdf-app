@@ -1277,7 +1277,28 @@ main = hspec $ do
                 (clearWhatsAppProviderCredentialEnv ++
                 [ ("COURSE_REG_URL", Just "javascript:alert(1)") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
-                    "COURSE_REG_URL must be an absolute http(s) URL"
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "http://enroll.example.com/course") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "https://localhost/course") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "https://enroll.example.com/course?preview=1") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL without query or fragment"
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides

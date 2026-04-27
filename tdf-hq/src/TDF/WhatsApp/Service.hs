@@ -96,8 +96,14 @@ nonEmptyString raw =
 
 normalizeWhatsAppRegistrationUrl :: Maybe String -> Either String (Maybe Text)
 normalizeWhatsAppRegistrationUrl Nothing = Right Nothing
-normalizeWhatsAppRegistrationUrl (Just rawUrl) =
-  Config.normalizeConfiguredBaseUrl "COURSE_REG_URL" rawUrl
+normalizeWhatsAppRegistrationUrl (Just rawUrl)
+  | T.null trimmed = Right Nothing
+  | T.any (`elem` ("?#" :: String)) trimmed =
+      Left "COURSE_REG_URL must be an absolute https URL without query or fragment"
+  | otherwise =
+      Config.normalizeConfiguredHttpsUrl "COURSE_REG_URL" rawUrl
+  where
+    trimmed = T.strip (T.pack rawUrl)
 
 normalizeWhatsAppAppBaseUrl :: Maybe String -> Either String Text
 normalizeWhatsAppAppBaseUrl Nothing = Right "http://localhost:5173"
