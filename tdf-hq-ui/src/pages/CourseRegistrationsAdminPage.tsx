@@ -2816,6 +2816,9 @@ export default function CourseRegistrationsAdminPage() {
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
+  const sharedEmailEventSummary = sharedEmailEventCreatedLabel && sharedEmailEventTypeLabel
+    ? `Resumen: ${sharedEmailEventTypeLabel} · ${sharedEmailEventCreatedLabel}`
+    : '';
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -4501,15 +4504,23 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       </Stack>
-                      {sharedEmailEventCreatedLabel && (
+                      {sharedEmailEventSummary ? (
                         <Typography variant="body2" color="text.secondary">
-                          Correos registrados: {sharedEmailEventCreatedLabel}
+                          {sharedEmailEventSummary}
                         </Typography>
-                      )}
-                      {sharedEmailEventTypeLabel && (
-                        <Typography variant="body2" color="text.secondary">
-                          Tipo de correo: {sharedEmailEventTypeLabel}
-                        </Typography>
+                      ) : (
+                        <>
+                          {sharedEmailEventCreatedLabel && (
+                            <Typography variant="body2" color="text.secondary">
+                              Correos registrados: {sharedEmailEventCreatedLabel}
+                            </Typography>
+                          )}
+                          {sharedEmailEventTypeLabel && (
+                            <Typography variant="body2" color="text.secondary">
+                              Tipo de correo: {sharedEmailEventTypeLabel}
+                            </Typography>
+                          )}
+                        </>
                       )}
 
                       {emailEventsQuery.isLoading && (
