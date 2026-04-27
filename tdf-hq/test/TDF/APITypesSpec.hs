@@ -1398,6 +1398,24 @@ spec = do
                 `shouldSatisfy` isLeft
 
         it "accepts canonical ticket purchase and status update payloads" $ do
+            case decodeTicketTier (BL8.concat
+                [ "{\"ticketTierCode\":\"general\""
+                , ",\"ticketTierName\":\"General\""
+                , ",\"ticketTierPriceCents\":1200"
+                , ",\"ticketTierCurrency\":\"USD\""
+                , ",\"ticketTierQuantityTotal\":100"
+                , ",\"ticketTierQuantitySold\":0"
+                , ",\"ticketTierActive\":true}"
+                ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket tier payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketTierCode payload `shouldBe` "general"
+                    SocialEvents.ticketTierName payload `shouldBe` "General"
+                    SocialEvents.ticketTierQuantitySold payload `shouldBe` 0
+
             case decodeTicketPurchase (BL8.concat
                 [ "{\"ticketPurchaseTierId\":\"42\""
                 , ",\"ticketPurchaseQuantity\":2"
@@ -1423,6 +1441,9 @@ spec = do
                     SocialEvents.ticketOrderStatus payload `shouldBe` "paid"
 
         it "rejects unexpected ticket keys instead of silently ignoring over-posted fields" $ do
+            decodeTicketTier
+                "{\"ticketTierCode\":\"general\",\"ticketTierName\":\"General\",\"ticketTierPriceCents\":1200,\"ticketTierCurrency\":\"USD\",\"ticketTierQuantityTotal\":100,\"ticketTierQuantitySold\":0,\"ticketTierActive\":true,\"ticketTierPrice\":12}"
+                `shouldSatisfy` isLeft
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"status\":\"paid\"}"
                 `shouldSatisfy` isLeft
@@ -1605,6 +1626,8 @@ spec = do
     decodeArtistFollowRequest = eitherDecode
     decodeRsvpCreate :: BL8.ByteString -> Either String SocialEvents.RsvpCreateDTO
     decodeRsvpCreate = eitherDecode
+    decodeTicketTier :: BL8.ByteString -> Either String SocialEvents.TicketTierDTO
+    decodeTicketTier = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO

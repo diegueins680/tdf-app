@@ -523,7 +523,10 @@ data TicketTierDTO = TicketTierDTO
   , ticketTierPosition      :: Maybe Int
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketTierDTO
-instance FromJSON TicketTierDTO
+instance FromJSON TicketTierDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data TicketPurchaseRequestDTO = TicketPurchaseRequestDTO
   { ticketPurchaseTierId    :: Text
