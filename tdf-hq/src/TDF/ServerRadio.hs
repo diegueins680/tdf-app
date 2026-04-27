@@ -569,16 +569,25 @@ resolveRadioNowPlayingFetchResult
   -> Either ServerError RadioNowPlayingResult
 resolveRadioNowPlayingFetchResult (Left _) =
   Left err502 { errBody = "Unable to fetch now-playing metadata" }
-resolveRadioNowPlayingFetchResult (Right title) =
-  let cleaned = normalizeNonEmptyText title
-      (artist, track) = maybe (Nothing, Nothing) splitStreamTitle cleaned
-  in Right (RadioNowPlayingResult cleaned artist track)
+resolveRadioNowPlayingFetchResult (Right title) = do
+  cleaned <- validateRadioNowPlayingTitle title
+  let (artist, track) = maybe (Nothing, Nothing) splitStreamTitle cleaned
+  Right (RadioNowPlayingResult cleaned artist track)
 
-normalizeNonEmptyText :: Maybe Text -> Maybe Text
-normalizeNonEmptyText mTxt =
+validateRadioNowPlayingTitle :: Maybe Text -> Either ServerError (Maybe Text)
+validateRadioNowPlayingTitle mTxt =
   case fmap T.strip mTxt of
-    Just txt | not (T.null txt) -> Just txt
-    _                           -> Nothing
+    Just txt | T.null txt -> Right Nothing
+    Just txt
+      | T.length txt > maxRadioNowPlayingTitleChars ->
+          Left err502 { errBody = "Now-playing metadata title must be 512 characters or fewer" }
+      | T.any isControl txt ->
+          Left err502 { errBody = "Now-playing metadata title must not contain control characters" }
+      | otherwise -> Right (Just txt)
+    _ -> Right Nothing
+
+maxRadioNowPlayingTitleChars :: Int
+maxRadioNowPlayingTitleChars = 512
 
 splitStreamTitle :: Text -> (Maybe Text, Maybe Text)
 splitStreamTitle title =

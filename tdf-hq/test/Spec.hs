@@ -5222,6 +5222,22 @@ main = hspec $ do
                     expectationFailure
                         ("Expected now-playing title metadata to parse, got " <> show err)
 
+        it "rejects malformed stream titles instead of returning hidden control metadata" $ do
+            let assertInvalid rawTitle expectedMessage =
+                    case resolveRadioNowPlayingFetchResult (Right (Just rawTitle)) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed now-playing metadata to fail, got " <> show value)
+            assertInvalid
+                "Los Nin\nTarika"
+                "Now-playing metadata title must not contain control characters"
+            assertInvalid
+                (Data.Text.replicate 513 "a")
+                "Now-playing metadata title must be 512 characters or fewer"
+
     describe "radio request JSON contracts" $ do
         it "accepts canonical radio request payloads used by current handlers" $ do
             case eitherDecode "{\"rirSources\":[\"https://radio.example.com/catalog.csv\"],\"rirLimit\":25}" of
