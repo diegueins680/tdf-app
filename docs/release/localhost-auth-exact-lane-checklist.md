@@ -13,19 +13,29 @@ Do not switch simulator, app path, bundle id, backend lane, or test plan.
 - Step 3: `xcrun simctl launch 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B com.tdfrecords.app`
 - Baseline smoke evidence anchor: `/Users/diegosaa/.openclaw/orgs/tdf-label/evidence/ios-six-category-smoke-20260426-2055`
 
+## Pre-rerun gate
+
+Before any smoke rerun, record one of these exactly:
+
+- Platform rerun-ready handoff cited: `[timestamp + report path + exact line summary]`
+- If no fresh rerun-ready handoff exists: `[first exact blocker]`
+
+If the handoff is missing or the chosen localhost proof path fails, stop and publish the blocker instead of broadening scope.
+
 ## Allowed localhost proof paths
 
-Use exactly one of these and record the exact command used:
+Use exactly one of these frozen commands and record it verbatim:
 
-1. `make seed` on the running backend
-2. local `stack run` with `config/default.env`
+1. `cd /Users/diegosaa/GitHub/tdf-app/tdf-hq && make seed`
+2. `cd /Users/diegosaa/GitHub/tdf-app/tdf-hq && set -a && source config/default.env && set +a && stack run`
 
 ## Same-run proof capture
 
 Fill these before any smoke rerun:
 
-- Proof path used: `[make seed on running backend | stack run with config/default.env]`
-- Exact command: `[paste exact command]`
+- Platform handoff cited: `[timestamp + report path + exact line summary | first exact blocker]`
+- Proof path used: `[make seed | stack run]`
+- Exact command: `[paste exact command verbatim]`
 - Localhost auth evidence path: `[path to screenshot/log/output]`
 - Proof result: `[success | first exact blocker]`
 
