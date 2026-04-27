@@ -611,9 +611,9 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
-      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
     });
 
@@ -624,6 +624,8 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
       expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(false);
     });
 
@@ -4667,8 +4669,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
-      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
-      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(getButtonByText(document.body, 'Ocultar enlace existente')).toBeTruthy();
       expect(getButtonByText(document.body, 'Ocultar enlace existente').getAttribute('aria-expanded')).toBe('true');
     });
@@ -4827,8 +4829,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
-      expect(hasLabel(document.body, 'Nombre visible')).toBe(true);
-      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(true);
+      expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
+      expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
     });
 
     await cleanup();

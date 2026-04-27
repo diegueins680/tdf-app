@@ -2904,7 +2904,6 @@ export default function CourseRegistrationsAdminPage() {
   const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
   const showReceiptMetadataFields = (
     receiptForm.editingId != null
-    || showReceiptUrlField
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
