@@ -21,6 +21,7 @@ module TDF.ServerAuth
   , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
+  , selectUniquePasswordResetCredential
   , signupEmailExists
   , validateAuthPassword
   , validatePasswordResetToken
@@ -701,12 +702,12 @@ resolvePasswordResetDelivery rawEmail = do
         \ WHERE user_credential.active = ? \
         \   AND lower(trim(party.primary_email)) = lower(?) \
         \ ORDER BY user_credential.id ASC \
-        \ LIMIT 1"
+        \ LIMIT 2"
   if T.null emailQuery
     then pure Nothing
     else do
       creds <- rawSql query [PersistBool True, PersistText emailQuery]
-      case listToMaybe creds of
+      case selectUniquePasswordResetCredential creds of
         Nothing -> pure Nothing
         Just cred@(Entity _ credential) -> do
           mParty <- get (userCredentialPartyId credential)
@@ -721,6 +722,10 @@ resolvePasswordResetDelivery rawEmail = do
               )
                 <$> mRecipientEmail
             )
+
+selectUniquePasswordResetCredential :: [Entity UserCredential] -> Maybe (Entity UserCredential)
+selectUniquePasswordResetCredential [credential] = Just credential
+selectUniquePasswordResetCredential _ = Nothing
 
 normalizeAuthEmailAddress :: Text -> Maybe Text
 normalizeAuthEmailAddress raw =

@@ -3,16 +3,25 @@
 module TDF.ServerAuthSpec (spec) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
 import qualified Data.Text as T
+import Database.Persist (Entity (..), Key)
+import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.ServerAuth (normalizeAuthEmailAddress, validatePasswordResetToken)
+import TDF.Models (UserCredential (..))
+import TDF.ServerAuth
+  ( normalizeAuthEmailAddress
+  , selectUniquePasswordResetCredential
+  , validatePasswordResetToken
+  )
 
 spec :: Spec
 spec = do
   authEmailSpec
   passwordResetTokenSpec
+  passwordResetDeliverySpec
 
 authEmailSpec :: Spec
 authEmailSpec = describe "normalizeAuthEmailAddress" $ do
@@ -90,3 +99,35 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
         BL8.unpack (errBody err) `shouldContain` "Token format is invalid"
       Right value ->
         expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)
+
+passwordResetDeliverySpec :: Spec
+passwordResetDeliverySpec = describe "selectUniquePasswordResetCredential" $ do
+  it "allows exactly one password reset credential candidate" $
+    selectedCredentialKey [credentialEntity 11 101]
+      `shouldBe` Just (toSqlKey 11)
+
+  it "rejects missing or ambiguous password reset credential candidates instead of picking the first match" $ do
+    selectedCredentialKey []
+      `shouldBe` Nothing
+    selectedCredentialKey
+      [ credentialEntity 11 101
+      , credentialEntity 12 102
+      ]
+      `shouldBe` Nothing
+
+credentialEntity :: Int64 -> Int64 -> Entity UserCredential
+credentialEntity credentialId partyId =
+  Entity
+    (toSqlKey credentialId)
+    UserCredential
+      { userCredentialPartyId = toSqlKey partyId
+      , userCredentialUsername = "reset@example.com"
+      , userCredentialPasswordHash = "hash"
+      , userCredentialActive = True
+      }
+
+credentialEntityKey :: Entity UserCredential -> Key UserCredential
+credentialEntityKey (Entity key _) = key
+
+selectedCredentialKey :: [Entity UserCredential] -> Maybe (Key UserCredential)
+selectedCredentialKey = fmap credentialEntityKey . selectUniquePasswordResetCredential
