@@ -3533,7 +3533,7 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.google.com/download/file-123?ResourceKey=existing"
 
-        it "does not let blank upstream resource-key params suppress known Drive resource keys" $
+        it "does not let ambiguous upstream resource-key params suppress known Drive resource keys" $ do
             resolveDrivePublicUrl
                 "file-123"
                 (Just "https://drive.google.com/download/file-123?resourcekey=&alt=media")
@@ -3541,6 +3541,38 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=rk%20bad&alt=media")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=one&resourcekey=two")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=rk-good&resourcekey")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=&alt=media")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?alt=media"
 
         it "ignores malformed upload resource keys before trying metadata fallbacks" $ do
             resolveDrivePublicUrl

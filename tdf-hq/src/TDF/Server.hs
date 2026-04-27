@@ -10956,7 +10956,7 @@ sanitizeDriveWebContentLink expectedFileId mWebContentLink = do
       && TrialsServer.isValidHttpUrl url
       && isGoogleDriveDownloadHost url
       && extractDriveContentFileId url == Just expectedFileId
-    then Just url
+    then Just (normalizeDriveResourceKeyParams url)
     else Nothing
 
 extractDriveContentFileId :: Text -> Maybe Text
@@ -11055,26 +11055,49 @@ appendDriveResourceKey mResourceKey url =
   case cleanOptional mResourceKey of
     Nothing -> url
     Just resourceKey
-      | hasNonBlankQueryParam "resourcekey" url -> url
+      | hasSingleValidResourceKeyParam url -> url
       | otherwise ->
-          appendQueryParam "resourcekey" resourceKey (dropBlankQueryParam "resourcekey" url)
+          appendQueryParam "resourcekey" resourceKey (dropNamedQueryParam "resourcekey" url)
 
-hasNonBlankQueryParam :: Text -> Text -> Bool
-hasNonBlankQueryParam paramName url =
-  any (isNonBlankQueryParam paramName) params
+normalizeDriveResourceKeyParams :: Text -> Text
+normalizeDriveResourceKeyParams url
+  | null resourceKeyParams = url
+  | hasSingleValidResourceKeyParam url = url
+  | otherwise = dropNamedQueryParam "resourcekey" url
   where
-    (withoutFragment, _) = T.breakOn "#" url
-    queryWithMarker = snd (T.breakOn "?" withoutFragment)
-    query = T.drop 1 queryWithMarker
-    params = filter (not . T.null) (T.splitOn "&" query)
+    resourceKeyParams =
+      filter (isNamedQueryParam "resourcekey") (queryParams url)
 
-dropBlankQueryParam :: Text -> Text -> Text
-dropBlankQueryParam paramName url =
+hasSingleValidResourceKeyParam :: Text -> Bool
+hasSingleValidResourceKeyParam url =
+  case [ rawParam
+       | rawParam <- queryParams url
+       , isNamedQueryParam "resourcekey" rawParam
+       ] of
+    [rawParam] ->
+      maybe False isValidDriveResourceKey (queryParamValue rawParam)
+    _ -> False
+
+isValidDriveResourceKey :: Text -> Bool
+isValidDriveResourceKey rawValue =
+  let value = T.strip rawValue
+  in not (T.null value)
+      && T.length value <= 256
+      && T.all isDriveFolderIdChar value
+
+queryParamValue :: Text -> Maybe Text
+queryParamValue rawParam =
+  case T.breakOn "=" rawParam of
+    (_, "") -> Nothing
+    (_, rawValueWithEquals) -> Just (T.drop 1 rawValueWithEquals)
+
+dropNamedQueryParam :: Text -> Text -> Text
+dropNamedQueryParam paramName url =
   case T.breakOn "?" withoutFragment of
     (_, "") -> url
     (base, queryWithMarker) ->
       let params = filter (not . T.null) (T.splitOn "&" (T.drop 1 queryWithMarker))
-          filtered = filter (not . isBlankNamedParam) params
+          filtered = filter (not . isNamedQueryParam paramName) params
           rebuilt =
             if null filtered
               then base
@@ -11082,21 +11105,11 @@ dropBlankQueryParam paramName url =
       in rebuilt <> fragment
   where
     (withoutFragment, fragment) = T.breakOn "#" url
-    isBlankNamedParam rawParam =
-      isNamedQueryParam paramName rawParam && not (isNonBlankQueryParam paramName rawParam)
 
 isNamedQueryParam :: Text -> Text -> Bool
 isNamedQueryParam paramName rawParam =
   let rawName = fst (T.breakOn "=" rawParam)
   in T.toLower rawName == T.toLower paramName
-
-isNonBlankQueryParam :: Text -> Text -> Bool
-isNonBlankQueryParam paramName rawParam =
-  let (_rawName, rawValueWithEquals) = T.breakOn "=" rawParam
-      rawValue = T.drop 1 rawValueWithEquals
-  in isNamedQueryParam paramName rawParam
-      && not (T.null rawValueWithEquals)
-      && not (T.null (T.strip rawValue))
 
 appendQueryParam :: Text -> Text -> Text -> Text
 appendQueryParam paramName paramValue url =
