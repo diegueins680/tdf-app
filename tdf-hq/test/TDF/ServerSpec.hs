@@ -2451,7 +2451,7 @@ spec = describe "TDF.Server helpers" $ do
                 (validateOptionalCmsTitle (Just "Hero\nDraft"))
 
     describe "validateOptionalCmsPayload" $ do
-        it "allows omitted and structured payloads but rejects JSON null as ambiguous CMS content" $ do
+        it "allows omitted and object payloads but rejects JSON null as ambiguous CMS content" $ do
             validateOptionalCmsPayload Nothing `shouldBe` Right Nothing
             validateOptionalCmsPayload (Just (object ["headline" .= ("Hola" :: Text)]))
                 `shouldBe` Right (Just (object ["headline" .= ("Hola" :: Text)]))
@@ -2463,6 +2463,20 @@ spec = describe "TDF.Server helpers" $ do
                 Right payload ->
                     expectationFailure
                         ("Expected explicit null CMS payload to be rejected, got: " <> show payload)
+
+        it "rejects scalar CMS payloads before publishing fallback-like content shapes" $ do
+            let assertInvalid payload =
+                    case validateOptionalCmsPayload (Just payload) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "payload must be a JSON object when present"
+                        Right value ->
+                            expectationFailure
+                                ("Expected scalar CMS payload to be rejected, got: " <> show value)
+            assertInvalid (A.String "legacy text")
+            assertInvalid (A.Bool True)
+            assertInvalid (A.Number 1)
 
     describe "validateRequiredCmsSlug" $ do
         it "canonicalizes CMS slugs before public lookup and admin create handlers use them" $ do

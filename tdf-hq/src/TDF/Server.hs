@@ -6776,7 +6776,9 @@ validateOptionalCmsPayload :: Maybe Value -> Either ServerError (Maybe Value)
 validateOptionalCmsPayload Nothing = Right Nothing
 validateOptionalCmsPayload (Just Null) =
   Left err400 { errBody = "payload must be omitted instead of JSON null" }
-validateOptionalCmsPayload payload = Right payload
+validateOptionalCmsPayload payload@(Just (Object _)) = Right payload
+validateOptionalCmsPayload (Just _) =
+  Left err400 { errBody = "payload must be a JSON object when present" }
 
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
