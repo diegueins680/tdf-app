@@ -8,7 +8,8 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, forM_, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
-import Data.Aeson (FromJSON, Value, decode, object, (.=))
+import Data.Aeson (FromJSON, Value, decode, object, withObject, (.:), (.=))
+import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe)
@@ -378,6 +379,7 @@ seedRecordsCmsContent now =
             , cmsSeedPayload =
                 object
                     [ "playlistName" .= ("RELEASES by TDF" :: Text)
+                    , "seedVersion" .= (2 :: Int)
                     , "playlistUrl" .= recordsReleasesPlaylistUrl
                     , "cover" .= recordsReleasesCover
                     , "playlistCover" .= recordsReleasesCover
@@ -450,77 +452,77 @@ seedRecordsCmsContent now =
 
     recordsReleaseTracks :: [Value]
     recordsReleaseTracks =
-        [ spotifyTrack 1 "You Dont Know" "Rizlo" "30952jHviNHyvoK3eEorNL" 147840
-        , spotifyTrack 2 "MYLOBA" "JOSSEFINA, Machaka" "0i0iq0pUAh121udqZqPBwV" 226667
-        , spotifyTrack 3 "Chapa Urbano" "Quimika Soul, Skankafe" "7DItzZJ9WybzqIogJlFEEZ" 234666
-        , spotifyTrack 4 "Akuba" "Skankafe, Ali G T Kadjal" "5hIOAt1SfyBdg6FEyH76fQ" 240487
-        , spotifyTrack 5 "Shadowboxing" "HNO" "2wyXTmJfLY9wQW6epTbl9c" 174545
-        , spotifyTrack 6 "Parverso" "HNO" "13enVmpdDijFCOhhQ1dDj7" 263169
-        , spotifyTrack 7 "DMT" "Skankafe" "1CZYNHMlrxZg1Cxp8mlYDJ" 245500
-        , spotifyTrack 8 "Dubkuba - Akuba Dub" "Skankafe" "7xay41OfiKO1H5zuRbSVYe" 226000
-        , spotifyTrack 9 "Soltar" "Quimika Soul, Paula García" "0vAzXcWC5Ydovb922U3VI2" 194000
-        , spotifyTrack 10 "Escamas de Plasma" "Llama Este Pez" "70BHut1QVhq82Cd4BJRUjv" 191055
-        , spotifyTrack 11 "Danza de Llamas Electricas" "Llama Este Pez" "4Aeu8EgNebXMCgItaQgmRX" 924482
-        , spotifyTrack 12 "Algas y Cables" "Llama Este Pez" "49hsoYIJE92C8FMTWBxqBA" 160098
-        , spotifyTrack 13 "Pecera de Neon" "Llama Este Pez" "0klbrDUIJq0UxdNcKcTMHk" 706683
-        , spotifyTrack 14 "Blanks on Whichever" "Ruz" "0uUtPZpEC9aE0gARu3UmuY" 196527
-        , spotifyTrack 15 "Full Up (Never Come Back Down)" "Ruz" "3gBXFvuNyS8gwxXcNUHfqL" 198750
-        , spotifyTrack 16 "Todo Es El Río" "Ruz" "6mKnzQuxfyjifArXE80fAr" 310000
-        , spotifyTrack 17 "Chicha" "Ruz" "7pUwtokDaVRUkohzkSJz2v" 215625
-        , spotifyTrack 18 "I'm Not Ready to Go" "Ruz" "41RjtcNASM7Wd75fpO1EQs" 131291
-        , spotifyTrack 19 "Gestowap" "Ruz" "71jkA9GpqhhrwloBpxnmoa" 202492
-        , spotifyTrack 20 "The Stars Don’t Have To Align" "Ruz" "3lsn6EW5WDWkc6EBvZK6qn" 199137
-        , spotifyTrack 21 "Wanabelem" "Ruz" "2EnRhHlIIoGhMyq9CygQiH" 70603
-        , spotifyTrack 22 "Tribal Anthem" "Ruz" "73RYZ5msy79FhATkjo5FdJ" 165000
-        , spotifyTrack 23 "When You Know Me You'll Be Calling Out" "Ruz" "61WXfNarokjluJHLMsKmuH" 195498
-        , spotifyTrack 24 "Truer Than Another One" "Ruz" "1goSpdddNCO7uAFUyTFEdP" 184794
-        , spotifyTrack 25 "I'm Here" "Ruz" "6bqQ9mYHHm3GdvqiUEDX5e" 205406
-        , spotifyTrack 26 "I'm a Lover" "Ruz" "52qhoxlfUqLvygUT7ZqwhU" 173857
-        , spotifyTrack 27 "Calculations Don't Make You What You Are" "Ruz" "1muWzwdQ7NvKLm15rlgfrg" 189375
-        , spotifyTrack 28 "Give Me All of You" "Ruz" "3MyYgs8Wgx7UJj6dHYva3n" 151107
-        , spotifyTrack 29 "Luz Al Sur" "La Gente Naranja" "115GBVzpqUijnLYz6TNa7j" 194426
-        , spotifyTrack 30 "Misil" "La Gente Naranja" "7qmR64PrOEZr66JVXtY3Jm" 186773
-        , spotifyTrack 31 "Rosa en Mi Jardin" "La Gente Naranja" "5fBaFpC0CjZbRb1Bcb7bzD" 266826
-        , spotifyTrack 32 "Elevador" "La Gente Naranja" "2yX7F94Gh0Q1UCwNVb3Sum" 205600
-        , spotifyTrack 33 "Visión Platónica" "La Gente Naranja" "6SjUhXo9BoCojLdnT5KCCD" 265800
-        , spotifyTrack 34 "Un Día Más Sin Tí" "La Gente Naranja" "4wvjeDmhuOA2sH2EucJ4iG" 218280
-        , spotifyTrack 35 "Lo Inexplicable" "La Gente Naranja" "3nkTKhi7tz4qF0ZZcLLoUu" 244773
-        , spotifyTrack 36 "Diamante" "La Gente Naranja" "717FCgZKEyVzbqCuzUYeRA" 276466
-        , spotifyTrack 37 "Botellas Vacías" "La Gente Naranja" "0k6kiJWRC1ogXQVuDTsIH6" 223106
-        , spotifyTrack 38 "Ghetto Booty" "La Gente Naranja" "4Tw7ZLWcewEODuVl4mPIPd" 246493
-        , spotifyTrack 39 "Zapping" "Skankafe" "1nFJyBAJegQyyCpjYFzr6h" 25704
-        , spotifyTrack 40 "La TV" "Skankafe, Xavier Muller Teclados" "6HWZ0r7LhZf6eEDOL9xdU3" 219083
-        , spotifyTrack 41 "Hit Del Diario" "Skankafe" "3dacpvWHs6vIp1E6KZ5RTO" 147779
-        , spotifyTrack 42 "Grillete Con Esposas" "Skankafe" "3WISYfVvFerhMatowZa4fk" 163196
-        , spotifyTrack 43 "Pose" "Skankafe" "0L709u9MSdCTWlOCrvG4Ae" 202219
-        , spotifyTrack 44 "Sancho" "Skankafe" "0k7nhafdMX83t6LP2OYH0Z" 283436
-        , spotifyTrack 45 "Chancho en Feria" "Skankafe" "5Txabd0AqbBGEYMeV8E9ao" 143002
-        , spotifyTrack 46 "Muerte en Un 222 X 3" "Skankafe" "6ylSkDDXNqPe6XVx11lsK3" 131618
-        , spotifyTrack 47 "Tú No Man" "Skankafe" "3pjfoaqvUHVlDW6aLXl17H" 168891
-        , spotifyTrack 48 "Lo Monótono" "Skankafe, Holger Quiñonez" "2TOJMwgPGJFTImmpDdEj67" 160495
-        , spotifyTrack 49 "Vicente" "Skankafe, Xavier Muller Teclados" "1TtCSfhObueW7Bu8SVYzaS" 166384
-        , spotifyTrack 50 "Pirotécnicos Juegos )" "HNO, Lil Weed (Per-versos)" "7B0YEcOuANKOamQtNFJ4UP" 195813
-        , spotifyTrack 51 "NEW BEGINNING" "Juano Ledesma, Diego Saa" "51ehdjbxjK8fx97NfbZmQl" 365009
-        , spotifyTrack 52 "FARAONES" "Double OG" "5kR3SFiBF5a0XwaDAtIUHS" 295813
-        , spotifyTrack 53 "Rain (HNO & Kapuly)" "HNO" "1hSQg3MkSbrMOfKkHEpwuK" 204405
-        , spotifyTrack 54 "A veces" "Skankafe" "7HXrVPZphrFL4TaDWNWTIH" 215665
-        , spotifyTrack 55 "Now" "Juano Ledesma" "5PJlf7UEb0fTtVtjESBzus" 468829
-        , spotifyTrack 56 "Yo, Vos y Dios" "Skankafe" "0Fcx8EhZbitStrQUnmMLzt" 329379
-        , spotifyTrack 57 "Cerdicornio" "Juano Ledesma, Diego Saa, Alejandro Soria, Fabro" "4irFDRIK80lGNpOXWtfVet" 354098
-        , spotifyTrack 58 "FARAONES" "Double OG" "2zOhoAbgL62OUa6U4gAMeT" 200930
-        , spotifyTrack 59 "Kamikaze" "OSPINA" "5cwv3eclu8Z7WevferI2KJ" 157714
-        , spotifyTrack 60 "Lune Vocale" "Diego Saa, Juano Ledesma" "2wL60aCIrgsf3GmEHvh9vJ" 503999
-        , spotifyTrack 61 "Shinobi" "FABRO, Juano Ledesma" "0veaB6o3uvC0dibDfFnFVS" 435692
-        , spotifyTrack 62 "Moment" "MELANIA" "1IYBR9v75SuErg5Yr3l8i1" 332083
-        , spotifyTrack 63 "Tripfásico" "Diego Saa" "52vhHwMHBR6tMTcTjt9N4k" 286500
-        , spotifyTrack 64 "No Van a Parar" "R de Nexo" "7gbSbZM1XG3KHUOdDHutgm" 184000
-        , spotifyTrack 65 "King Mota" "El Bloque" "2R2vAnOubJWDuWLBdogIkj" 248000
-        , spotifyTrack 66 "Esencia Eterna" "Arkabuz" "6862eD7dxnm3AAH8jj0CrZ" 218325
-        , spotifyTrack 67 "El Sobreviviente" "Lucas Napolitano" "2zXjR6tcBpyCkYyL3iIVbM" 245624
+        [ spotifyTrack 1 "You Dont Know" "Rizlo" "30952jHviNHyvoK3eEorNL" 147840 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02d2530aefcbc69e94cc72c38f"
+        , spotifyTrack 2 "MYLOBA" "JOSSEFINA, Machaka" "0i0iq0pUAh121udqZqPBwV" 226667 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02a1686e00c0c4e8e72f95724e"
+        , spotifyTrack 3 "Chapa Urbano" "Quimika Soul, Skankafe" "7DItzZJ9WybzqIogJlFEEZ" 234666 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02c81a8164519b116b00f90ed3"
+        , spotifyTrack 4 "Akuba" "Skankafe, Ali G T Kadjal" "5hIOAt1SfyBdg6FEyH76fQ" 240487 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e022ec7501d7fee169b7a0eec0d"
+        , spotifyTrack 5 "Shadowboxing" "HNO" "2wyXTmJfLY9wQW6epTbl9c" 174545 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02829d5f2b1294e2e4f3889233"
+        , spotifyTrack 6 "Parverso" "HNO" "13enVmpdDijFCOhhQ1dDj7" 263169 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02271b47e2551aebbb99118d99"
+        , spotifyTrack 7 "DMT" "Skankafe" "1CZYNHMlrxZg1Cxp8mlYDJ" 245500 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02b3cce40fae5ff753d292ba33"
+        , spotifyTrack 8 "Dubkuba - Akuba Dub" "Skankafe" "7xay41OfiKO1H5zuRbSVYe" 226000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e023ca3c2f8ad4a04fe80c1dda9"
+        , spotifyTrack 9 "Soltar" "Quimika Soul, Paula García" "0vAzXcWC5Ydovb922U3VI2" 194000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02c2f603d48669a546c0da8e78"
+        , spotifyTrack 10 "Escamas de Plasma" "Llama Este Pez" "70BHut1QVhq82Cd4BJRUjv" 191055 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02733bfce6a96465a3dbd5e89a"
+        , spotifyTrack 11 "Danza de Llamas Electricas" "Llama Este Pez" "4Aeu8EgNebXMCgItaQgmRX" 924482 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02733bfce6a96465a3dbd5e89a"
+        , spotifyTrack 12 "Algas y Cables" "Llama Este Pez" "49hsoYIJE92C8FMTWBxqBA" 160098 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02733bfce6a96465a3dbd5e89a"
+        , spotifyTrack 13 "Pecera de Neon" "Llama Este Pez" "0klbrDUIJq0UxdNcKcTMHk" 706683 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02733bfce6a96465a3dbd5e89a"
+        , spotifyTrack 14 "Blanks on Whichever" "Ruz" "0uUtPZpEC9aE0gARu3UmuY" 196527 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 15 "Full Up (Never Come Back Down)" "Ruz" "3gBXFvuNyS8gwxXcNUHfqL" 198750 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 16 "Todo Es El Río" "Ruz" "6mKnzQuxfyjifArXE80fAr" 310000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 17 "Chicha" "Ruz" "7pUwtokDaVRUkohzkSJz2v" 215625 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 18 "I'm Not Ready to Go" "Ruz" "41RjtcNASM7Wd75fpO1EQs" 131291 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 19 "Gestowap" "Ruz" "71jkA9GpqhhrwloBpxnmoa" 202492 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 20 "The Stars Don’t Have To Align" "Ruz" "3lsn6EW5WDWkc6EBvZK6qn" 199137 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 21 "Wanabelem" "Ruz" "2EnRhHlIIoGhMyq9CygQiH" 70603 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 22 "Tribal Anthem" "Ruz" "73RYZ5msy79FhATkjo5FdJ" 165000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 23 "When You Know Me You'll Be Calling Out" "Ruz" "61WXfNarokjluJHLMsKmuH" 195498 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 24 "Truer Than Another One" "Ruz" "1goSpdddNCO7uAFUyTFEdP" 184794 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 25 "I'm Here" "Ruz" "6bqQ9mYHHm3GdvqiUEDX5e" 205406 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 26 "I'm a Lover" "Ruz" "52qhoxlfUqLvygUT7ZqwhU" 173857 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 27 "Calculations Don't Make You What You Are" "Ruz" "1muWzwdQ7NvKLm15rlgfrg" 189375 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 28 "Give Me All of You" "Ruz" "3MyYgs8Wgx7UJj6dHYva3n" 151107 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02aab9fe081c840fc4816105a1"
+        , spotifyTrack 29 "Luz Al Sur" "La Gente Naranja" "115GBVzpqUijnLYz6TNa7j" 194426 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 30 "Misil" "La Gente Naranja" "7qmR64PrOEZr66JVXtY3Jm" 186773 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 31 "Rosa en Mi Jardin" "La Gente Naranja" "5fBaFpC0CjZbRb1Bcb7bzD" 266826 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 32 "Elevador" "La Gente Naranja" "2yX7F94Gh0Q1UCwNVb3Sum" 205600 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 33 "Visión Platónica" "La Gente Naranja" "6SjUhXo9BoCojLdnT5KCCD" 265800 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 34 "Un Día Más Sin Tí" "La Gente Naranja" "4wvjeDmhuOA2sH2EucJ4iG" 218280 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 35 "Lo Inexplicable" "La Gente Naranja" "3nkTKhi7tz4qF0ZZcLLoUu" 244773 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 36 "Diamante" "La Gente Naranja" "717FCgZKEyVzbqCuzUYeRA" 276466 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 37 "Botellas Vacías" "La Gente Naranja" "0k6kiJWRC1ogXQVuDTsIH6" 223106 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 38 "Ghetto Booty" "La Gente Naranja" "4Tw7ZLWcewEODuVl4mPIPd" 246493 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02440f425cec2171c66f367f89"
+        , spotifyTrack 39 "Zapping" "Skankafe" "1nFJyBAJegQyyCpjYFzr6h" 25704 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 40 "La TV" "Skankafe, Xavier Muller Teclados" "6HWZ0r7LhZf6eEDOL9xdU3" 219083 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 41 "Hit Del Diario" "Skankafe" "3dacpvWHs6vIp1E6KZ5RTO" 147779 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 42 "Grillete Con Esposas" "Skankafe" "3WISYfVvFerhMatowZa4fk" 163196 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 43 "Pose" "Skankafe" "0L709u9MSdCTWlOCrvG4Ae" 202219 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 44 "Sancho" "Skankafe" "0k7nhafdMX83t6LP2OYH0Z" 283436 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 45 "Chancho en Feria" "Skankafe" "5Txabd0AqbBGEYMeV8E9ao" 143002 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 46 "Muerte en Un 222 X 3" "Skankafe" "6ylSkDDXNqPe6XVx11lsK3" 131618 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 47 "Tú No Man" "Skankafe" "3pjfoaqvUHVlDW6aLXl17H" 168891 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 48 "Lo Monótono" "Skankafe, Holger Quiñonez" "2TOJMwgPGJFTImmpDdEj67" 160495 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 49 "Vicente" "Skankafe, Xavier Muller Teclados" "1TtCSfhObueW7Bu8SVYzaS" 166384 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02cbc5759516aa0250d63ee3ac"
+        , spotifyTrack 50 "Pirotécnicos Juegos )" "HNO, Lil Weed (Per-versos)" "7B0YEcOuANKOamQtNFJ4UP" 195813 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02ccfec7751f8d86f0e28fe7e3"
+        , spotifyTrack 51 "NEW BEGINNING" "Juano Ledesma, Diego Saa" "51ehdjbxjK8fx97NfbZmQl" 365009 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02658eea38098075ce0e740049"
+        , spotifyTrack 52 "FARAONES" "Double OG" "5kR3SFiBF5a0XwaDAtIUHS" 295813 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0200785ba832fbc9bf34d891d4"
+        , spotifyTrack 53 "Rain (HNO & Kapuly)" "HNO" "1hSQg3MkSbrMOfKkHEpwuK" 204405 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e02b5f148c8aa40f79b54681401"
+        , spotifyTrack 54 "A veces" "Skankafe" "7HXrVPZphrFL4TaDWNWTIH" 215665 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0277e6cce24f8c46c2bd994dea"
+        , spotifyTrack 55 "Now" "Juano Ledesma" "5PJlf7UEb0fTtVtjESBzus" 468829 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0243c844df8b9fa67ca9f314de"
+        , spotifyTrack 56 "Yo, Vos y Dios" "Skankafe" "0Fcx8EhZbitStrQUnmMLzt" 329379 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0233452cba4ede725a9ee8c8da"
+        , spotifyTrack 57 "Cerdicornio" "Juano Ledesma, Diego Saa, Alejandro Soria, Fabro" "4irFDRIK80lGNpOXWtfVet" 354098 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02f9def41db12d8eccfdcb6d9a"
+        , spotifyTrack 58 "FARAONES" "Double OG" "2zOhoAbgL62OUa6U4gAMeT" 200930 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024e218942ea21f82c2a6c6de8"
+        , spotifyTrack 59 "Kamikaze" "OSPINA" "5cwv3eclu8Z7WevferI2KJ" 157714 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02805bd6cfce0f8933c1865084"
+        , spotifyTrack 60 "Lune Vocale" "Diego Saa, Juano Ledesma" "2wL60aCIrgsf3GmEHvh9vJ" 503999 "https://image-cdn-fa.spotifycdn.com/image/ab67616d00001e0246503952d9ca883fe06b1f21"
+        , spotifyTrack 61 "Shinobi" "FABRO, Juano Ledesma" "0veaB6o3uvC0dibDfFnFVS" 435692 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02076a522203cbf720a14939f5"
+        , spotifyTrack 62 "Moment" "MELANIA" "1IYBR9v75SuErg5Yr3l8i1" 332083 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02c781a951f77c2b7c529f0f1a"
+        , spotifyTrack 63 "Tripfásico" "Diego Saa" "52vhHwMHBR6tMTcTjt9N4k" 286500 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02705de9807e5ea5305e62b1e9"
+        , spotifyTrack 64 "No Van a Parar" "R de Nexo" "7gbSbZM1XG3KHUOdDHutgm" 184000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e0211d4efcd9f804118c05b053a"
+        , spotifyTrack 65 "King Mota" "El Bloque" "2R2vAnOubJWDuWLBdogIkj" 248000 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e02e72e2e98a63a18507cbe5d5c"
+        , spotifyTrack 66 "Esencia Eterna" "Arkabuz" "6862eD7dxnm3AAH8jj0CrZ" 218325 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e024b66b791cde520a4dcb60bf4"
+        , spotifyTrack 67 "El Sobreviviente" "Lucas Napolitano" "2zXjR6tcBpyCkYyL3iIVbM" 245624 "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e026fb7b42c808fb536e541e7e5"
         ]
 
-    spotifyTrack :: Int -> Text -> Text -> Text -> Int -> Value
-    spotifyTrack sortOrder title artist trackId durationMs =
+    spotifyTrack :: Int -> Text -> Text -> Text -> Int -> Text -> Value
+    spotifyTrack sortOrder title artist trackId durationMs coverUrl =
         let spotifyUrl = "https://open.spotify.com/track/" <> trackId
          in object
                 [ "title" .= title
@@ -529,7 +531,7 @@ seedRecordsCmsContent now =
                 , "duration" .= formatSpotifyDuration durationMs
                 , "spotifyUrl" .= spotifyUrl
                 , "url" .= spotifyUrl
-                , "cover" .= recordsReleasesCover
+                , "cover" .= coverUrl
                 , "sortOrder" .= sortOrder
                 , "links"
                     .= [ object
@@ -557,7 +559,16 @@ ensurePublishedCmsSeed now CmsSeed{..} = do
             ]
             []
     case mExisting of
-        Just _ -> pure ()
+        Just (Entity cid existing) ->
+            when (shouldRefreshCmsSeed existing) $
+                update
+                    cid
+                    [ CMS.CmsContentStatus =. "published"
+                    , CMS.CmsContentTitle =. Just cmsSeedTitle
+                    , CMS.CmsContentPayload =. Just (CMS.AesonValue cmsSeedPayload)
+                    , CMS.CmsContentUpdatedAt =. now
+                    , CMS.CmsContentPublishedAt =. Just now
+                    ]
         Nothing ->
             insert_
                 CMS.CmsContent
@@ -572,6 +583,18 @@ ensurePublishedCmsSeed now CmsSeed{..} = do
                     , CMS.cmsContentUpdatedAt = now
                     , CMS.cmsContentPublishedAt = Just now
                     }
+  where
+    shouldRefreshCmsSeed existing =
+        case cmsSeedPayloadVersion cmsSeedPayload of
+            Nothing -> False
+            Just nextVersion ->
+                cmsSeedPayloadVersion
+                    (maybe (object []) CMS.unAesonValue (CMS.cmsContentPayload existing))
+                    /= Just nextVersion
+
+cmsSeedPayloadVersion :: Value -> Maybe Int
+cmsSeedPayloadVersion =
+    parseMaybe (withObject "CmsSeedPayload" (.: "seedVersion"))
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do
