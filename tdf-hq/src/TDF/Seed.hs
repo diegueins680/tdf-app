@@ -379,7 +379,7 @@ seedRecordsCmsContent now =
             , cmsSeedPayload =
                 object
                     [ "playlistName" .= ("RELEASES by TDF" :: Text)
-                    , "seedVersion" .= (2 :: Int)
+                    , "seedVersion" .= (3 :: Int)
                     , "playlistUrl" .= recordsReleasesPlaylistUrl
                     , "cover" .= recordsReleasesCover
                     , "playlistCover" .= recordsReleasesCover
@@ -534,13 +534,39 @@ seedRecordsCmsContent now =
                 , "cover" .= coverUrl
                 , "sortOrder" .= sortOrder
                 , "links"
-                    .= [ object
-                            [ "platform" .= ("Spotify" :: Text)
-                            , "url" .= spotifyUrl
-                            , "accent" .= ("#1db954" :: Text)
-                            ]
-                       ]
+                    .= catMaybes
+                        [ Just $
+                            object
+                                [ "platform" .= ("Spotify" :: Text)
+                                , "url" .= spotifyUrl
+                                , "accent" .= ("#1db954" :: Text)
+                                ]
+                        , fmap youtubeLink (trackYoutubeId sortOrder)
+                        ]
                 ]
+
+    trackYoutubeId :: Int -> Maybe Text
+    trackYoutubeId sortOrder =
+        Map.lookup
+            sortOrder
+            ( Map.fromList
+                [ (2, "MfWzJm-kIV0")
+                , (3, "_mZt3FN_ZLo")
+                , (4, "7j4zau8JVcU")
+                , (5, "LtNll90DdRU")
+                , (6, "M5We2bMW4Ck")
+                , (7, "v3rW0cybrCA")
+                , (8, "kWhKDv8O2qQ")
+                ]
+            )
+
+    youtubeLink :: Text -> Value
+    youtubeLink videoId =
+        object
+            [ "platform" .= ("YouTube" :: Text)
+            , "url" .= ("https://www.youtube.com/watch?v=" <> videoId)
+            , "accent" .= ("#ff0033" :: Text)
+            ]
 
     formatSpotifyDuration :: Int -> Text
     formatSpotifyDuration durationMs =

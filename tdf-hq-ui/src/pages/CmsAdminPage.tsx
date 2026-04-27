@@ -45,7 +45,7 @@ type SamplePayload = {
 } & Record<string, unknown>;
 const schemaHints: Record<string, string[]> = {
   'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
-  'records-releases': ['playlistUrl', 'tracks[]', 'tracks[].title', 'tracks[].artist', 'tracks[].url/spotifyUrl', 'tracks[].sortOrder'],
+  'records-releases': ['playlistUrl', 'tracks[]', 'tracks[].title', 'tracks[].artist', 'tracks[].url/spotifyUrl', 'tracks[].links[]', 'tracks[].sortOrder'],
   'records-sessions': ['playlistUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].sortOrder'],
   'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
   'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
@@ -67,6 +67,10 @@ const samplePayloads: Record<string, SamplePayload> = {
         artist: 'Artista',
         spotifyUrl: 'https://open.spotify.com/track/TRACK_ID',
         duration: '03:30',
+        links: [
+          { platform: 'Spotify', url: 'https://open.spotify.com/track/TRACK_ID', accent: '#1db954' },
+          { platform: 'YouTube', url: 'https://www.youtube.com/watch?v=VIDEO_ID', accent: '#ff0033' },
+        ],
         sortOrder: 1,
       },
     ],
