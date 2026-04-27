@@ -1915,13 +1915,22 @@ export default function CourseRegistrationsAdminPage() {
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
     && !standaloneSingleChoiceInlineSourceSummary;
+  const activeStatusFilterIsOnlyStatusOption = hasStatusFilter
+    && actionableStatusFilters.length === 1
+    && actionableStatusFilters[0] === status;
   const showActiveStatusFilterSummary = hasVisibleRegistrations
     && hasStatusFilter
-    && (hasEffectiveSlugFilter || hasCustomLimit || loadedRegistrationCount === 1);
+    && (
+      hasEffectiveSlugFilter
+      || hasCustomLimit
+      || loadedRegistrationCount === 1
+      || activeStatusFilterIsOnlyStatusOption
+    );
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
     && !statusAlreadyVisibleInFilterStrip
+    && !showActiveStatusFilterSummary
     && !showSingleCustomStatusSummary;
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
