@@ -2148,7 +2148,13 @@ resolveDriveClientCreds
   rawDriveClientId
   rawDriveClientSecret
   rawGoogleClientId
-  rawGoogleClientSecret =
+  rawGoogleClientSecret = do
+  mDriveClientId <- validateOptionalDriveClientCredential "DRIVE_CLIENT_ID" rawDriveClientId
+  mDriveClientSecret <-
+    validateOptionalDriveClientCredential "DRIVE_CLIENT_SECRET" rawDriveClientSecret
+  mGoogleClientId <- validateOptionalDriveClientCredential "GOOGLE_CLIENT_ID" rawGoogleClientId
+  mGoogleClientSecret <-
+    validateOptionalDriveClientCredential "GOOGLE_CLIENT_SECRET" rawGoogleClientSecret
   case (mDriveClientId, mDriveClientSecret) of
     (Just cid, Just secret) -> Right (cid, secret)
     (Just _, Nothing) -> Left partialDriveCredsError
@@ -2160,11 +2166,6 @@ resolveDriveClientCreds
         (Nothing, Just _) -> Left partialGoogleCredsError
         (Nothing, Nothing) -> Left missingDriveCredsError
   where
-    mDriveClientId = cleanOptional rawDriveClientId
-    mDriveClientSecret = cleanOptional rawDriveClientSecret
-    mGoogleClientId = cleanOptional rawGoogleClientId
-    mGoogleClientSecret = cleanOptional rawGoogleClientSecret
-
     partialDriveCredsError =
       err503
         { errBody =
@@ -2183,6 +2184,19 @@ resolveDriveClientCreds
             "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
             "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
         }
+
+validateOptionalDriveClientCredential :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalDriveClientCredential envName rawCredential =
+  case cleanOptional rawCredential of
+    Nothing -> Right Nothing
+    Just credential
+      | T.any (\ch -> isControl ch || isSpace ch) credential ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must not contain control characters or whitespace"
+            }
+      | otherwise -> Right (Just credential)
 
 refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
 refreshDriveAccessToken manager cid secret rt = do

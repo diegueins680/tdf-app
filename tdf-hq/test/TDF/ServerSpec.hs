@@ -3438,6 +3438,34 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "google-client")
                     (Just "google-secret")
 
+        it "rejects malformed Drive credentials before falling back to generic Google aliases" $ do
+            let assertInvalid result expectedMessage =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Drive credentials to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                ( resolveDriveClientCreds
+                    (Just "drive client")
+                    (Just "drive-secret")
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_ID must not contain control characters or whitespace"
+            assertInvalid
+                ( resolveDriveClientCreds
+                    Nothing
+                    Nothing
+                    (Just "google-client")
+                    (Just "google\nsecret")
+                )
+                "GOOGLE_CLIENT_SECRET must not contain control characters or whitespace"
+
     describe "DriveApiResp FromJSON" $ do
         it "normalizes valid Google Drive file ids from upload responses" $ do
             let rawResponse =
