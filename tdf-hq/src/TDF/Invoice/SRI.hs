@@ -6,6 +6,7 @@ module TDF.Invoice.SRI
   , SriScriptLine(..)
   , SriScriptRequest(..)
   , decodeSriScriptOutput
+  , formatSriScriptFailure
   , validateSriScriptRequest
   , runSriInvoiceScript
   ) where
@@ -90,8 +91,28 @@ runSriInvoiceScript payload = do
                 ExitSuccess ->
                   pure (decodeSriScriptOutput stdoutTxt)
                 ExitFailure _ ->
-                  let trimmedErr = T.strip (T.pack stderrTxt)
-                  in pure (Left (if T.null trimmedErr then "SRI invoice script failed" else trimmedErr))
+                  pure (Left (formatSriScriptFailure stderrTxt))
+
+formatSriScriptFailure :: String -> Text
+formatSriScriptFailure stderrTxt =
+  let sanitized = T.strip (T.map sanitizeFailureChar (T.pack stderrTxt))
+  in if T.null sanitized
+       then "SRI invoice script failed"
+       else limitSriScriptFailure sanitized
+  where
+    sanitizeFailureChar ch
+      | ch == '\n' || ch == '\t' = ch
+      | ch == '\DEL' || ch < ' ' = ' '
+      | otherwise = ch
+
+limitSriScriptFailure :: Text -> Text
+limitSriScriptFailure message
+  | T.length message <= maxSriScriptFailureChars = message
+  | otherwise =
+      T.take maxSriScriptFailureChars message <> "\n[SRI script stderr truncated]"
+
+maxSriScriptFailureChars :: Int
+maxSriScriptFailureChars = 2000
 
 decodeSriScriptOutput :: String -> Either Text SriIssueResultDTO
 decodeSriScriptOutput stdoutTxt =

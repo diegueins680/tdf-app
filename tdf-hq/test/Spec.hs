@@ -2367,6 +2367,15 @@ main = hspec $ do
                                 expectationFailure
                                     ("Expected missing Node runner to fail, got: " <> show value)
 
+        it "bounds and sanitizes failed SRI runner stderr before returning backend errors" $ do
+            let formatted =
+                    Sri.formatSriScriptFailure
+                        ("fatal\NULdetail\n" <> replicate 2100 'x')
+            Data.Text.unpack formatted `shouldContain` "fatal detail"
+            Data.Text.unpack formatted `shouldContain` "[SRI script stderr truncated]"
+            formatted `shouldSatisfy` (not . Data.Text.any (\ch -> ch == '\NUL' || ch == '\DEL'))
+            Data.Text.length formatted `shouldSatisfy` (<= 2040)
+
     describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides
