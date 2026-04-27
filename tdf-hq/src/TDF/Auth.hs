@@ -327,7 +327,12 @@ authTokenMaxLength :: Int
 authTokenMaxLength = 512
 
 invalidAuthTokenChar :: Char -> Bool
-invalidAuthTokenChar ch = isSpace ch || isControl ch
+invalidAuthTokenChar ch =
+  isSpace ch
+    || isControl ch
+    || ch < '!'
+    || ch > '~'
+    || ch `elem` ['"', ';', ',', '\\']
 
 sessionCookieHeader :: AppConfig -> Text -> Text
 sessionCookieHeader cfg token =

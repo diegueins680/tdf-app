@@ -2574,6 +2574,23 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "tdf_session=cookie token")
                 `shouldBe` Left "Missing or invalid auth token"
 
+        it "rejects non cookie-safe auth token characters before database lookup" $ do
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer token;admin")
+                Nothing
+                `shouldBe` Left "Missing or invalid auth token"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                Nothing
+                (Just "tdf_session=token,admin")
+                `shouldBe` Left "Missing or invalid auth token"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer token\233")
+                Nothing
+                `shouldBe` Left "Missing or invalid auth token"
+
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
