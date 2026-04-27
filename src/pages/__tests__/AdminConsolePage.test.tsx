@@ -2667,6 +2667,16 @@ describe('AdminConsolePage', () => {
           title: 'Integraciones',
           body: ['Temporarily unavailable. Permission required.'],
         },
+        {
+          cardId: 'admin-role-required',
+          title: 'Credenciales admin',
+          body: ['Requires admin role before this module can be opened.'],
+        },
+        {
+          cardId: 'restricted-admin-access',
+          title: 'Acceso restringido',
+          body: ['Requiere permisos de administrador para abrir esta sección.'],
+        },
       ],
     });
 
@@ -2683,12 +2693,20 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Tokens de servicio|Integraciones/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /Tokens de servicio|Integraciones|Credenciales admin|Acceso restringido/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales admin')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso restringido')).not.toBeInTheDocument();
     expect(screen.queryByText(/No tienes permisos suficientes/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Temporarily unavailable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Requires admin role/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Requiere permisos de administrador/i)).not.toBeInTheDocument();
   });
 
   it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
