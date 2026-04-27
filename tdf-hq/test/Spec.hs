@@ -198,6 +198,7 @@ import TDF.ServerLiveSessions
       resolveLiveSessionMusicianLookup,
       sanitizeLiveSessionRiderFileName,
       validateLiveSessionReferencedPartyEmail,
+      validateLiveSessionRiderFileSize,
       validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import TDF.Server.SocialSync
@@ -6968,6 +6969,26 @@ main = hspec $ do
             sanitizeLiveSessionRiderFileName "..." `shouldBe` "rider"
             sanitizeLiveSessionRiderFileName "___" `shouldBe` "rider"
             sanitizeLiveSessionRiderFileName "???" `shouldBe` "rider"
+
+    describe "validateLiveSessionRiderFileSize" $ do
+        it "rejects empty, invalid, or oversized rider uploads before writing them" $ do
+            validateLiveSessionRiderFileSize 1 `shouldBe` Right ()
+            validateLiveSessionRiderFileSize (10 * 1024 * 1024) `shouldBe` Right ()
+
+            let assertInvalid size expectedMessage =
+                    case validateLiveSessionRiderFileSize size of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session rider size, got "
+                                    <> show value
+                                )
+
+            assertInvalid (-1) "rider file size is invalid"
+            assertInvalid 0 "rider file must not be empty"
+            assertInvalid (10 * 1024 * 1024 + 1) "rider file must be 10 MB or smaller"
 
     describe "resolveLiveSessionSetlistSortOrders" $ do
         let mkSong title sortOrder =

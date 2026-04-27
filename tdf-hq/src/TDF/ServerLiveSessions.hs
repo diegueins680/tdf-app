@@ -10,6 +10,7 @@ module TDF.ServerLiveSessions
   , resolveLiveSessionMusicianLookup
   , sanitizeLiveSessionRiderFileName
   , validateLiveSessionReferencedPartyEmail
+  , validateLiveSessionRiderFileSize
   , validateLiveSessionTermsAcceptance
   ) where
 
@@ -30,7 +31,7 @@ import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
-import           System.Directory           (createDirectoryIfMissing)
+import           System.Directory           (createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
 
@@ -46,6 +47,9 @@ liveSessionUsernameCollisionBudget = 60
 
 liveSessionTermsVersionMaxLength :: Int
 liveSessionTermsVersionMaxLength = 160
+
+maxLiveSessionRiderBytes :: Integer
+maxLiveSessionRiderBytes = 10 * 1024 * 1024
 
 data LiveSessionMusicianLookup
   = LookupLiveSessionMusicianByEmail Text
@@ -73,7 +77,7 @@ liveSessionsServer user = intakeHandler
             (lsiTermsVersion payload)
 
       now <- liftIO getCurrentTime
-      riderPath <- liftIO $ traverse storeRiderFile (lsiRider payload)
+      riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
 
       partyKeys <- mapM (ensureMusician now) (lsiMusicians payload)
       resolvedSongOrders <-
@@ -242,6 +246,12 @@ liveSessionsServer user = intakeHandler
     randomPassword :: IO Text
     randomPassword = toText <$> nextRandom
 
+    validateAndStoreRiderFile :: FileData Tmp -> m Text
+    validateAndStoreRiderFile file@FileData{..} = do
+      size <- liftIO (getFileSize fdPayload)
+      either throwError pure (validateLiveSessionRiderFileSize size)
+      liftIO (storeRiderFile file)
+
     storeRiderFile :: FileData Tmp -> IO Text
     storeRiderFile FileData{..} = do
       let safeName = sanitizeLiveSessionRiderFileName fdFileName
@@ -251,6 +261,17 @@ liveSessionsServer user = intakeHandler
       createDirectoryIfMissing True destDir
       BL.readFile fdPayload >>= BL.writeFile destPath
       pure (T.pack destPath)
+
+validateLiveSessionRiderFileSize :: Integer -> Either ServerError ()
+validateLiveSessionRiderFileSize size
+  | size < 0 =
+      Left err400 { errBody = "rider file size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "rider file must not be empty" }
+  | size > maxLiveSessionRiderBytes =
+      Left err400 { errBody = "rider file must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 buildLiveSessionUsernameCollisionCandidate :: Text -> Text -> Text
 buildLiveSessionUsernameCollisionCandidate base suffix =
