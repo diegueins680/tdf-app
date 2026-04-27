@@ -20,6 +20,7 @@ module TDF.ServerAdmin
   , validateAdminLogsLimit
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
+  , validateAdminWhatsAppMessageBody
   , validateAdminEmailSubject
   , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
@@ -850,10 +851,8 @@ adminServer user =
     userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
       ensureStrictAdmin user
       userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
-      let body = T.strip awsrMessage
+      body <- either throwError pure (validateAdminWhatsAppMessageBody awsrMessage)
       mode <- either throwError pure (validateAdminWhatsAppSendMode awsrMode awsrReplyToMessageId)
-      when (T.null body) $
-        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
       mContext <- withPool (loadUserCommunicationContext userIdValid)
       (_, partyEnt) <- maybe (throwError err404) pure mContext
       let partyKey = entityKey partyEnt
@@ -903,8 +902,9 @@ adminServer user =
         (throwError err400 { errBody = "El mensaje original no tiene contenido de texto" })
         pure
         (cleanMaybeText (ME.whatsAppMessageText msg))
-      let resendBody = fromMaybe originalBody (cleanMaybeText awrrMessage)
-          phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+      resendBody <- either throwError pure $
+        validateAdminWhatsAppMessageBody (fromMaybe originalBody (cleanMaybeText awrrMessage))
+      let phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
       targetPhone <- maybe (throwError err400 { errBody = "No se pudo determinar el número destino" }) pure phone
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
@@ -1196,6 +1196,26 @@ validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
       | otherwise -> Right "notify"
     _ ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+
+validateAdminWhatsAppMessageBody :: Text -> Either ServerError Text
+validateAdminWhatsAppMessageBody rawBody
+  | T.null body =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
+  | T.length body > adminWhatsAppMessageMaxLength =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje demasiado largo (max 4096 caracteres)") }
+  | T.any isUnsupportedWhatsAppMessageControl body =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje no debe contener caracteres de control no soportados") }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+adminWhatsAppMessageMaxLength :: Int
+adminWhatsAppMessageMaxLength = 4096
+
+isUnsupportedWhatsAppMessageControl :: Char -> Bool
+isUnsupportedWhatsAppMessageControl ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject

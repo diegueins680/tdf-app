@@ -54,6 +54,7 @@ import TDF.ServerAdmin (
     validateSocialUnholdLookup,
     validateSocialUnholdNote,
     validateAdminWhatsAppSendMode,
+    validateAdminWhatsAppMessageBody,
     validateAdminEmailSubject,
     validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
@@ -465,6 +466,28 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
             assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
             assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))
+
+    describe "validateAdminWhatsAppMessageBody" $ do
+        it "trims admin WhatsApp text while preserving multiline formatting" $ do
+            validateAdminWhatsAppMessageBody "  Hola\nseguimos\tpor aqui  "
+                `shouldBe` Right "Hola\nseguimos\tpor aqui"
+            validateAdminWhatsAppMessageBody (T.replicate 4096 "a")
+                `shouldBe` Right (T.replicate 4096 "a")
+
+        it "rejects blank, oversized, or unsupported-control messages before WhatsApp dispatch" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid WhatsApp message body, got " <> show value)
+            assertInvalid "Mensaje vac" (validateAdminWhatsAppMessageBody "   ")
+            assertInvalid
+                "max 4096 caracteres"
+                (validateAdminWhatsAppMessageBody (T.replicate 4097 "a"))
+            assertInvalid
+                "caracteres de control no soportados"
+                (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\NUL'))
 
     describe "validateUserCommunicationHistoryLimit" $ do
         it "defaults omitted limits and accepts explicit values inside the supported history window" $ do
