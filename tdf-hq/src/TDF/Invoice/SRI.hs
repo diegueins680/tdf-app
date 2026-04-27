@@ -126,7 +126,8 @@ validateSriScriptResult dto =
           authorizationNumber <-
             validateRequiredIssuedField "authorizationNumber" (sirAuthorizationNumber result)
           invoiceNumber <-
-            validateRequiredIssuedField "invoiceNumber" (sirInvoiceNumber result)
+            validateIssuedInvoiceNumber
+              =<< validateRequiredIssuedField "invoiceNumber" (sirInvoiceNumber result)
           Right result
             { sirAuthorizationNumber = Just authorizationNumber
             , sirInvoiceNumber = Just invoiceNumber
@@ -147,6 +148,25 @@ validateSriScriptResult dto =
                 )
           | otherwise ->
               Right value
+
+    validateIssuedInvoiceNumber value =
+      if isSriInvoiceNumber value
+        then Right value
+        else
+          Left
+            "SRI script JSON output invoiceNumber must use SRI format ###-###-#########"
+
+    isSriInvoiceNumber value =
+      case T.splitOn "-" value of
+        [establishmentCode, emissionCode, sequential]
+          | T.length establishmentCode == 3
+          , T.length emissionCode == 3
+          , T.length sequential == 9 ->
+              T.all isAsciiDigit establishmentCode
+                && T.all isAsciiDigit emissionCode
+                && T.all isAsciiDigit sequential
+        _ ->
+          False
 
 validateSriScriptRequest :: SriScriptRequest -> Either Text SriScriptRequest
 validateSriScriptRequest request = do

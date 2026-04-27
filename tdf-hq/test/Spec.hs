@@ -2129,6 +2129,12 @@ main = hspec $ do
                 ( "{\"ok\":true,\"status\":\"issued\","
                     <> "\"authorizationNumber\":\"123\",\"invoiceNumber\":\"  \"}"
                 )
+            assertInvalid
+                "invoiceNumber must use SRI format ###-###-#########"
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"INV-2026-1\"}"
+                )
             let completeIssued =
                     "{\"ok\":true,\"status\":\"issued\","
                         <> "\"authorizationNumber\":\" 123 \","
