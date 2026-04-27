@@ -3653,6 +3653,34 @@ describe('AdminConsolePage', () => {
     expectToAppearBefore(receptionOption, adminOption);
   });
 
+  it('keeps newly selected roles below the original role set while the editor stays open', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser({ roles: ['Teacher', 'Reception'] })]);
+
+    renderPage();
+
+    const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
+    await user.click(editButton);
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    await user.click(rolesSelect);
+    await user.click(getMenuItemByText('Admin'));
+
+    const teacherOption = getMenuItemByText('Teacher');
+    const receptionOption = getMenuItemByText('Reception');
+    const adminOption = getMenuItemByText('Admin');
+
+    expectToAppearBefore(teacherOption, adminOption);
+    expectToAppearBefore(receptionOption, adminOption);
+    expect(
+      await screen.findByText(/Cambio pendiente: agregar Admin\./i),
+    ).toBeInTheDocument();
+  });
+
   it('keeps the role dialog free of equivalent-navigation warnings until the admin makes a change', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser({ roles: ['Admin', 'Manager'] })]);

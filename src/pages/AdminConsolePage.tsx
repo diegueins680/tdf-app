@@ -852,18 +852,18 @@ function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
   return normalizeRoleList(roles);
 }
 
-function sortRoleOptionsForEditor(selectedRoles: readonly RoleKey[]) {
-  const selectedRoleSet = new Set(normalizeRoleSelection(selectedRoles));
+function sortRoleOptionsForEditor(pinnedRoles: readonly RoleKey[]) {
+  const pinnedRoleSet = new Set(normalizeRoleSelection(pinnedRoles));
 
   return [...ROLE_OPTIONS].sort((left, right) => {
-    const leftSelected = selectedRoleSet.has(left.value);
-    const rightSelected = selectedRoleSet.has(right.value);
+    const leftPinned = pinnedRoleSet.has(left.value);
+    const rightPinned = pinnedRoleSet.has(right.value);
 
-    if (leftSelected === rightSelected) {
+    if (leftPinned === rightPinned) {
       return 0;
     }
 
-    return leftSelected ? -1 : 1;
+    return leftPinned ? -1 : 1;
   });
 }
 
@@ -1439,9 +1439,13 @@ export default function AdminConsolePage() {
       .map((group) => formatRoleGroupLabel(group))
       .join(' · ');
   }, [hasPendingRoleChanges, selectedRoles]);
+  const currentRolesForEditor = useMemo(
+    () => (editingUser ? normalizeRoleSelection(editingUser.roles) : []),
+    [editingUser],
+  );
   const roleOptionsForEditor = useMemo(
-    () => sortRoleOptionsForEditor(selectedRoles),
-    [selectedRoles],
+    () => sortRoleOptionsForEditor(currentRolesForEditor),
+    [currentRolesForEditor],
   );
   const isRefreshingPanel =
     healthQuery.isFetching
