@@ -3673,11 +3673,12 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
-      expect(screen.getByText(/Entidad:\s*user · 101/i)).toBeInTheDocument();
+      expect(screen.getByText(/Entidad:\s*Usuario · 101/i)).toBeInTheDocument();
       expect(screen.getByText(/Actor:\s*Usuario #101/i)).toBeInTheDocument();
       expect(screen.getByText(/Detalle:\s*Admin -> Admin, Manager/i)).toBeInTheDocument();
     });
     expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
+    expect(screen.getByText(/Entidad:\s*Usuario · 101/i)).toHaveAttribute('title', 'user · 101');
     expect(screen.queryByText(/Acción:\s*roles\.updated/i)).not.toBeInTheDocument();
 
     expect(
@@ -3739,10 +3740,11 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(screen.getByText(/Acción:\s*Package created/i)).toBeInTheDocument();
-      expect(screen.getByText(/Entidad:\s*package · PKG-1/i)).toBeInTheDocument();
+      expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toBeInTheDocument();
     });
 
     expect(screen.getByText(/Acción:\s*Package created/i)).toHaveAttribute('title', 'package.created');
+    expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toHaveAttribute('title', 'package · PKG-1');
     expect(screen.queryByText(/Acción:\s*package\.created/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Actor:\s*Sistema/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Detalle:/i)).not.toBeInTheDocument();
@@ -3883,6 +3885,41 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/^Sistema$/i)).not.toBeInTheDocument();
+  });
+
+  it('shows user-facing audit entity labels while preserving raw entity details', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: null,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: 777,
+        entity: 'user',
+        entityId: 'USR-1',
+        action: 'roles.updated',
+        diff: 'Admin -> Manager',
+        createdAt: '2026-04-09T16:00:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Usuario · USR-1')).toHaveAttribute('title', 'user · USR-1');
+      expect(screen.getByText('Paquete · PKG-1')).toHaveAttribute('title', 'package · PKG-1');
+    });
+
+    expect(screen.queryByText('user · USR-1')).not.toBeInTheDocument();
+    expect(screen.queryByText('package · PKG-1')).not.toBeInTheDocument();
   });
 
   it('shows audit actor and detail columns again as soon as one event needs them', async () => {

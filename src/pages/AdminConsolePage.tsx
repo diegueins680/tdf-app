@@ -262,6 +262,22 @@ const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
 };
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  booking: 'Reserva',
+  bookings: 'Reservas',
+  invoice: 'Factura',
+  invoices: 'Facturas',
+  package: 'Paquete',
+  packages: 'Paquetes',
+  party: 'Contacto',
+  parties: 'Contactos',
+  room: 'Sala',
+  rooms: 'Salas',
+  session: 'Sesión',
+  sessions: 'Sesiones',
+  user: 'Usuario',
+  users: 'Usuarios',
+};
 
 function invalidateAdminPanelQueries(queryClient: QueryClient) {
   ADMIN_REFRESH_QUERY_KEYS.forEach((queryKey) => {
@@ -774,6 +790,28 @@ function getAuditActionTitle(action: string) {
   const formattedAction = formatAuditAction(action);
 
   return formattedAction === action ? undefined : action;
+}
+
+function formatAuditEntity(entity: string) {
+  const trimmedEntity = entity.trim();
+
+  return AUDIT_ENTITY_LABELS[trimmedEntity.toLowerCase()] ?? trimmedEntity;
+}
+
+function formatAuditEntityReference(entry: Pick<AuditLogEntry, 'entity' | 'entityId'>) {
+  const formattedEntity = formatAuditEntity(entry.entity);
+  const entityId = entry.entityId.trim();
+
+  return entityId === '' ? formattedEntity : `${formattedEntity} · ${entityId}`;
+}
+
+function getAuditEntityReferenceTitle(entry: Pick<AuditLogEntry, 'entity' | 'entityId'>) {
+  const rawEntity = entry.entity.trim();
+  const rawEntityId = entry.entityId.trim();
+  const rawReference = rawEntityId === '' ? rawEntity : `${rawEntity} · ${rawEntityId}`;
+  const formattedReference = formatAuditEntityReference(entry);
+
+  return rawReference === formattedReference ? undefined : rawReference;
 }
 
 function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
@@ -1870,7 +1908,11 @@ export default function AdminConsolePage() {
                     {audits.map((entry: AuditLogEntry, index: number) => (
                       <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
                         <TableCell>{formatDate(entry.createdAt)}</TableCell>
-                        <TableCell>{entry.entity} · {entry.entityId}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" title={getAuditEntityReferenceTitle(entry)}>
+                            {formatAuditEntityReference(entry)}
+                          </Typography>
+                        </TableCell>
                         <TableCell>
                           <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
                             {formatAuditAction(entry.action)}
@@ -1912,8 +1954,12 @@ export default function AdminConsolePage() {
                     <Typography variant="body2" color="text.secondary">
                       <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {singleAuditEntry.entity} · {singleAuditEntry.entityId}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      title={getAuditEntityReferenceTitle(singleAuditEntry)}
+                    >
+                      <Box component="span" sx={{ fontWeight: 600 }}>Entidad:</Box> {formatAuditEntityReference(singleAuditEntry)}
                     </Typography>
                     {singleAuditHasActor && (
                       <Typography variant="body2" color="text.secondary">
