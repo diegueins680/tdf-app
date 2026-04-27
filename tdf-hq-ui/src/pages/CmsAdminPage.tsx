@@ -45,6 +45,7 @@ type SamplePayload = {
 } & Record<string, unknown>;
 const schemaHints: Record<string, string[]> = {
   'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
+  'records-recordings': ['channelUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].duration', 'videos[].sortOrder'],
   'records-releases': ['playlistUrl', 'tracks[]', 'tracks[].title', 'tracks[].artist', 'tracks[].url/spotifyUrl', 'tracks[].links[]', 'tracks[].sortOrder'],
   'records-sessions': ['playlistUrl', 'videos[]', 'videos[].title', 'videos[].url/youtubeId', 'videos[].sortOrder'],
   'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
@@ -71,6 +72,21 @@ const samplePayloads: Record<string, SamplePayload> = {
           { platform: 'Spotify', url: 'https://open.spotify.com/track/TRACK_ID', accent: '#1db954' },
           { platform: 'YouTube', url: 'https://www.youtube.com/watch?v=VIDEO_ID', accent: '#ff0033' },
         ],
+        sortOrder: 1,
+      },
+    ],
+    locale: 'es',
+  },
+  'records-recordings': {
+    channelUrl: 'https://www.youtube.com/@tdf.records',
+    videos: [
+      {
+        title: 'DJ Set @ TDF Sessions',
+        artist: 'TDF Records',
+        url: 'https://www.youtube.com/watch?v=VIDEO_ID',
+        duration: '44:14',
+        vibe: 'TDF Sessions',
+        description: 'Video reciente del canal TDF Records.',
         sortOrder: 1,
       },
     ],
@@ -134,6 +150,8 @@ const getSamplePayload = (slug: string): SamplePayload | undefined => {
 const livePathForSlug = (slug: string) => {
   switch (slug) {
     case 'records-public':
+      return '/records';
+    case 'records-recordings':
       return '/records';
     case 'records-releases':
       return '/records';

@@ -387,6 +387,18 @@ seedRecordsCmsContent now =
                     ]
             }
         , CmsSeed
+            { cmsSeedSlug = "records-recordings"
+            , cmsSeedLocale = "es"
+            , cmsSeedTitle = "Videos recientes TDF Records"
+            , cmsSeedPayload =
+                object
+                    [ "channelName" .= ("TDF Records" :: Text)
+                    , "channelUrl" .= ("https://www.youtube.com/@tdf.records" :: Text)
+                    , "seedVersion" .= (1 :: Int)
+                    , "videos" .= recordsRecordingVideos
+                    ]
+            }
+        , CmsSeed
             { cmsSeedSlug = "records-sessions"
             , cmsSeedLocale = "es"
             , cmsSeedTitle = "TDF Live Sessions"
@@ -449,6 +461,29 @@ seedRecordsCmsContent now =
 
     recordsReleasesCover :: Text
     recordsReleasesCover = "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da844452c00a761b4307854c4c9a"
+
+    recordsRecordingVideos :: [Value]
+    recordsRecordingVideos =
+        [ recordingVideo 1 "Federico Molinari @ TDF Electro Sessions" "Federico Molinari" "f2BabxM1Pjc" "44:14" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 2 "Just One Nite @ TDF Electro Sessions" "Just One Nite" "rRkAeNB0R14" "56:21" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 3 "Morex DJ Set @ TDF Electro Sessions" "Morex" "wZQAlIqllQY" "1:02:21" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 4 "Diego Saá @ TDF Electro Sessions" "Diego Saá" "YDODXZ4lyRk" "48:09" "TDF Electro Sessions" "Live set publicado en el canal TDF Records."
+        , recordingVideo 5 "Everaldo Vasco @ TDF Sessions" "Everaldo Vasco" "1hKWOram3aw" "1:26:18" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 6 "COHEMA @ TDF Sessions" "COHEMA" "xqeey8SrH8M" "1:00:00" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        ]
+
+    recordingVideo :: Int -> Text -> Text -> Text -> Text -> Text -> Text -> Value
+    recordingVideo sortOrder title artist youtubeId duration vibe description =
+        object
+            [ "title" .= title
+            , "artist" .= artist
+            , "youtubeId" .= youtubeId
+            , "url" .= ("https://www.youtube.com/watch?v=" <> youtubeId)
+            , "duration" .= duration
+            , "vibe" .= vibe
+            , "description" .= description
+            , "sortOrder" .= sortOrder
+            ]
 
     recordsReleaseTracks :: [Value]
     recordsReleaseTracks =

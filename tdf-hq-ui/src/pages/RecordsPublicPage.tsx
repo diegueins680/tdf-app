@@ -27,7 +27,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
-import { recordings as defaultRecordings } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent, useCmsContents } from '../hooks/useCmsContent';
 import { Bookings } from '../api/bookings';
@@ -41,6 +40,7 @@ import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { extractYoutubeVideoId } from '../utils/media';
 import EditIcon from '@mui/icons-material/Edit';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 
 const BOOKING_ZONE = 'America/Bogota';
 const DEFAULT_DURATION = 120;
@@ -630,7 +630,18 @@ const GradientCard = ({
   </Box>
 );
 
-type RecordingItem = typeof defaultRecordings[number];
+interface RecordingItem {
+  title: string;
+  artist: string;
+  description: string;
+  image: string;
+  recordedAt: string;
+  vibe: string;
+  youtubeId?: string;
+  url?: string;
+  duration?: string;
+  sortOrder: number;
+}
 interface ReleaseLink {
   platform: string;
   url: string;
@@ -687,6 +698,52 @@ const mapCmsSessionPayload = (
 };
 
 const sortSessions = (items: SessionItem[]): SessionItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+
+const youtubeThumbnail = (youtubeId: string): string =>
+  `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+
+const mapCmsRecordingPayload = (
+  payload: unknown,
+  fallbackTitle: string | null,
+  fallbackSortOrder: number,
+): RecordingItem | null => {
+  const data = toObject(payload);
+  if (!data) return null;
+  const explicitId =
+    toNonEmptyText(data['youtubeId']) ??
+    toNonEmptyText(data['youtubeID']) ??
+    toNonEmptyText(data['videoId']) ??
+    toNonEmptyText(data['id']);
+  const url = toNonEmptyText(data['url']) ?? toNonEmptyText(data['youtubeUrl']);
+  const youtubeId = explicitId ?? extractYoutubeVideoId(url);
+  const title = toNonEmptyText(data['title']) ?? toNonEmptyText(data['name']) ?? fallbackTitle;
+  const image =
+    toNonEmptyText(data['image']) ??
+    toNonEmptyText(data['thumbnail']) ??
+    toNonEmptyText(data['thumbnailUrl']) ??
+    (youtubeId ? youtubeThumbnail(youtubeId) : null);
+  if (!title || !image) return null;
+  return {
+    title,
+    artist: toText(data['artist']) ?? toText(data['guests']) ?? toText(data['channel']) ?? '',
+    recordedAt:
+      toText(data['recordedAt']) ??
+      toText(data['date']) ??
+      toText(data['publishedAt']) ??
+      toText(data['duration']) ??
+      '',
+    duration: toText(data['duration']) ?? undefined,
+    vibe: toText(data['vibe']) ?? toText(data['tag']) ?? toText(data['series']) ?? 'Video',
+    description: toText(data['description']) ?? '',
+    image,
+    youtubeId: youtubeId ?? undefined,
+    url: url ?? (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : undefined),
+    sortOrder: toFiniteNumber(data['sortOrder']) ?? toFiniteNumber(data['order']) ?? fallbackSortOrder,
+  };
+};
+
+const sortRecordings = (items: RecordingItem[]): RecordingItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const formatDurationMs = (value: unknown): string | null => {
@@ -765,7 +822,7 @@ const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
   <Grid container spacing={3}>
     {items.map((item) => (
-      <Grid item key={item.title} xs={12} md={4}>
+      <Grid item key={`${item.sortOrder}-${item.title}`} xs={12} md={4}>
         <Card
           sx={{
             height: '100%',
@@ -778,23 +835,51 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
           }}
         >
           <CardMedia
-            component="div"
+            component={item.url ? MuiLink : 'div'}
+            href={item.url}
+            target={item.url ? '_blank' : undefined}
+            rel={item.url ? 'noopener noreferrer' : undefined}
+            underline="none"
             sx={{
               pt: '60%',
               backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${item.image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              display: 'block',
+              position: 'relative',
+              '&::after': item.url
+                ? {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'radial-gradient(circle at center, rgba(15,23,42,0.05), rgba(15,23,42,0.35))',
+                  }
+                : undefined,
             }}
           />
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {item.recordedAt}
-              </Typography>
+              {(item.duration || item.recordedAt) && (
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {item.duration ?? item.recordedAt}
+                </Typography>
+              )}
             </Stack>
             <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.01em' }}>
-              {item.title}
+              {item.url ? (
+                <MuiLink
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  color="inherit"
+                >
+                  {item.title}
+                </MuiLink>
+              ) : (
+                item.title
+              )}
             </Typography>
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {item.artist}
@@ -802,6 +887,22 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {item.description}
             </Typography>
+            {item.url && (
+              <Box sx={{ mt: 'auto' }}>
+                <Button
+                  component={MuiLink}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PlayCircleOutlineIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Ver video
+                </Button>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Grid>
@@ -971,7 +1072,8 @@ export default function RecordsPublicPage() {
   const sessionsQuery = useCmsContents('records-session-', 'es');
   const releasesCollectionQuery = useCmsContent('records-releases', 'es');
   const legacyReleasesQuery = useCmsContents('records-release-', 'es');
-  const recordingsQuery = useCmsContents('records-recording-', 'es');
+  const recordingsCollectionQuery = useCmsContent('records-recordings', 'es');
+  const legacyRecordingsQuery = useCmsContents('records-recording-', 'es');
   const [dialogOpen, setDialogOpen] = useState(false);
   const envVars = import.meta.env as Record<string, string | undefined>;
   const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
@@ -1069,27 +1171,48 @@ export default function RecordsPublicPage() {
     releasesCollectionQuery.isLoading || (collectionReleases.length === 0 && legacyReleasesQuery.isLoading);
   const releasesError = releasesCollectionQuery.isError && legacyReleasesQuery.isError;
 
-  const recordings: RecordingItem[] = useMemo(() => {
+  const sessionVideoIds = useMemo(
+    () => new Set(sessions.map((sessionItem) => sessionItem.youtubeId).filter(Boolean)),
+    [sessions],
+  );
+
+  const collectionRecordings: RecordingItem[] = useMemo(() => {
+    const payload = recordingsCollectionQuery.data?.ccdPayload;
+    const payloadObject = toObject(payload);
+    const rawItems = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payloadObject?.['videos'])
+        ? payloadObject['videos']
+        : Array.isArray(payloadObject?.['recordings'])
+          ? payloadObject['recordings']
+          : Array.isArray(payloadObject?.['items'])
+            ? payloadObject['items']
+            : [];
+    return sortRecordings(
+      rawItems
+        .map((item, index) => mapCmsRecordingPayload(item, null, index + 1))
+        .filter((item): item is RecordingItem => item != null),
+    );
+  }, [recordingsCollectionQuery.data]);
+
+  const legacyRecordings: RecordingItem[] = useMemo(() => {
     const mapped =
-      recordingsQuery.data
+      legacyRecordingsQuery.data
         ?.map((entry): RecordingItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const title = toNonEmptyText(payload['title']);
-          const image = toNonEmptyText(payload['image']);
-          if (!title || !image) return null;
-          return {
-            title,
-            artist: toText(payload['artist']) ?? '',
-            recordedAt: toText(payload['recordedAt']) ?? toText(payload['date']) ?? '',
-            vibe: toText(payload['vibe']) ?? toText(payload['tag']) ?? 'En vivo',
-            description: toText(payload['description']) ?? '',
-            image,
-          };
+          const slugOrder = toFiniteNumber(entry.ccdSlug.split('-').at(-1));
+          return mapCmsRecordingPayload(entry.ccdPayload, toNonEmptyText(entry.ccdTitle), slugOrder ?? 999);
         })
         .filter((item): item is RecordingItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultRecordings;
-  }, [recordingsQuery.data]);
+    return sortRecordings(mapped);
+  }, [legacyRecordingsQuery.data]);
+
+  const recordings: RecordingItem[] = useMemo(() => {
+    const source = collectionRecordings.length > 0 ? collectionRecordings : legacyRecordings;
+    return source.filter((item) => !item.youtubeId || !sessionVideoIds.has(item.youtubeId));
+  }, [collectionRecordings, legacyRecordings, sessionVideoIds]);
+  const recordingsLoading =
+    recordingsCollectionQuery.isLoading || (collectionRecordings.length === 0 && legacyRecordingsQuery.isLoading);
+  const recordingsError = recordingsCollectionQuery.isError && legacyRecordingsQuery.isError;
 
   const heroTitle = 'Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar.';
   const heroEyebrow = canMaintainCms ? 'TDF Records — CMS público' : 'TDF Records · Estudio y lanzamientos';
@@ -1101,7 +1224,7 @@ export default function RecordsPublicPage() {
   const heroCta = hasBookingToken ? 'Reservar sesión' : 'Coordinar por WhatsApp';
   const heroSecondaryCta = 'Ver lanzamientos';
   const recordingsIntro =
-    'Una selección de grabaciones recientes para mostrar el ambiente, el sonido y la energía del estudio.';
+    'Videos recientes del canal TDF Records que muestran el ambiente, el sonido y la energía del estudio.';
   const releasesIntro =
     'Escucha canciones del playlist RELEASES by TDF y salta directo a Spotify.';
   const sessionsIntro =
@@ -1245,14 +1368,14 @@ export default function RecordsPublicPage() {
             sx={{ mt: 6, flexWrap: 'wrap' }}
           >
             <GradientCard
-              title="Fotos del estudio"
+              title="Videos recientes"
               actions={
                 canMaintainCms ? (
-                  <Tooltip title="Editar fotos (CMS records-recording-*)">
+                  <Tooltip title="Editar videos recientes (CMS records-recordings)">
                     <IconButton
                       component={RouterLink}
-                      to="/configuracion/cms?slug=records-recording-"
-                      aria-label="Editar fotos del estudio en CMS"
+                      to="/configuracion/cms?slug=records-recordings"
+                      aria-label="Editar videos recientes en CMS"
                       size="small"
                       sx={{ color: 'rgba(229,231,235,0.9)' }}
                     >
@@ -1264,11 +1387,11 @@ export default function RecordsPublicPage() {
             >
               <Stack spacing={0.75} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
-                  Explora salas, sesiones y momentos detrás de cámaras capturados durante grabaciones recientes.
+                  Explora sesiones, DJ sets y momentos del canal TDF Records sin repetir videos ya destacados.
                 </Typography>
                 {canMaintainCms && (
                   <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                    Edita este bloque desde Configuración → CMS con los slugs `records-recording-*`.
+                    Edita este bloque desde Configuración → CMS con el slug `records-recordings`.
                   </Typography>
                 )}
               </Stack>
@@ -1406,7 +1529,7 @@ export default function RecordsPublicPage() {
               canMaintainCms && (
                 <Button
                   component={RouterLink}
-                  to="/configuracion/cms?slug=records-recording-"
+                  to="/configuracion/cms?slug=records-recordings"
                   size="small"
                   variant="outlined"
                   startIcon={<EditIcon />}
@@ -1422,11 +1545,38 @@ export default function RecordsPublicPage() {
             </Typography>
             {canMaintainCms && (
               <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Edita este grid desde Configuración → CMS con los slugs `records-recording-*`.
+                Mantén el arreglo `videos[]` desde el slug `records-recordings`; también se aceptan slugs legacy `records-recording-*`.
               </Typography>
             )}
           </Stack>
-          <RecordingsGrid items={recordings} />
+          {recordingsLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando videos desde CMS…</Typography>
+            </Stack>
+          ) : recordingsError ? (
+            <Alert severity="warning">No pudimos cargar los videos publicados desde el CMS.</Alert>
+          ) : recordings.length > 0 ? (
+            <RecordingsGrid items={recordings} />
+          ) : (
+            <Alert
+              severity={canMaintainCms ? 'info' : 'warning'}
+              action={
+                canMaintainCms ? (
+                  <Button
+                    component={RouterLink}
+                    to="/configuracion/cms?slug=records-recordings"
+                    size="small"
+                    color="inherit"
+                  >
+                    Abrir CMS
+                  </Button>
+                ) : undefined
+              }
+            >
+              No hay videos recientes publicados en CMS todavía.
+            </Alert>
+          )}
         </Box>
 
         <Box id="releases" sx={{ mb: 6 }}>
@@ -1571,7 +1721,7 @@ export default function RecordsPublicPage() {
             }
           >
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Usa el panel en Configuración → CMS con los slugs `records-releases`, `records-sessions` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
+              Usa el panel en Configuración → CMS con los slugs `records-releases`, `records-sessions` y `records-recordings` para crear borradores, publicar y versionar contenido en es/en.
             </Typography>
           </GradientCard>
         )}
