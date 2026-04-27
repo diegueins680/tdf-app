@@ -280,6 +280,9 @@ validFutureStubSlug :: Text -> Bool
 validFutureStubSlug slug =
   not (T.null slug)
     && T.length slug <= 64
+    && T.head slug /= '-'
+    && T.last slug /= '-'
+    && not ("--" `T.isInfixOf` slug)
     && T.all validFutureStubSlugChar slug
 
 validFutureStubSlugChar :: Char -> Bool

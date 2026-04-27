@@ -6676,8 +6676,13 @@ spec = describe "TDF.Server helpers" $ do
 
             assertInvalid " crm" "parties/list-columns"
             assertInvalid "CRM" "parties/list-columns"
+            assertInvalid "-crm" "parties/list-columns"
+            assertInvalid "crm-" "parties/list-columns"
             assertInvalid "crm" "/parties/list-columns"
             assertInvalid "crm" "parties//list-columns"
+            assertInvalid "crm" "parties/-list-columns"
+            assertInvalid "crm" "parties/list-columns-"
+            assertInvalid "crm" "parties/list--columns"
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
