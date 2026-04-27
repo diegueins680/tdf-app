@@ -178,6 +178,8 @@ validateFutureAdminConsoleCard card
       invalidFutureAdminConsoleMetadata
   | title card /= expectedFutureAdminConsoleTitle (cardId card) =
       invalidFutureAdminConsoleMetadata
+  | body card /= expectedFutureAdminConsoleBody (cardId card) =
+      invalidFutureAdminConsoleMetadata
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
@@ -189,6 +191,18 @@ expectedFutureAdminConsoleTitle cardIdValue
   | cardIdValue == "user-management" = "Gestión de usuarios"
   | cardIdValue == "api-tokens" = "Tokens API"
   | otherwise = ""
+
+expectedFutureAdminConsoleBody :: Text -> [Text]
+expectedFutureAdminConsoleBody cardIdValue
+  | cardIdValue == "user-management" =
+      [ "La asignación de roles se administra desde la pantalla de Parties."
+      , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+      ]
+  | cardIdValue == "api-tokens" =
+      [ "Los tokens de servicio deben administrarse desde un flujo dedicado."
+      , "El acceso quedará separado de usuarios humanos para integraciones internas."
+      ]
+  | otherwise = []
 
 allowedFutureAdminConsoleCardIds :: [Text]
 allowedFutureAdminConsoleCardIds =

@@ -6753,7 +6753,12 @@ spec = describe "TDF.Server helpers" $ do
                         , Future.title = titleValue
                         , Future.body = bodyValue
                         }
-                validCard = mkCard "user-management" "Gestión de usuarios" ["Roles y permisos"]
+                validUserManagementBody =
+                    [ "La asignación de roles se administra desde la pantalla de Parties."
+                    , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+                    ]
+                validCard =
+                    mkCard "user-management" "Gestión de usuarios" validUserManagementBody
                 assertInvalid card =
                     case validateFutureAdminConsoleCard card of
                         Left serverErr -> do
@@ -6780,18 +6785,31 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkCard "user-management" "Gestión\x200B de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles\x202E"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles\x2029seguros"])
+            assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles y permisos"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", "roles"])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" [])
             assertInvalid (mkCard "user-management" "Gestión de usuarios" ["Roles", " "])
 
     describe "validateFutureAdminConsoleView" $ do
         it "rejects duplicate card ids or malformed status before serving fallback discovery" $ do
-            let mkCard cardIdValue titleValue =
+            let mkCard cardIdValue titleValue bodyValue =
                     Future.AdminConsoleCard
                         { Future.cardId = cardIdValue
                         , Future.title = titleValue
-                        , Future.body = ["Roles y permisos"]
+                        , Future.body = bodyValue
                         }
+                userManagementBody =
+                    [ "La asignación de roles se administra desde la pantalla de Parties."
+                    , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+                    ]
+                apiTokensBody =
+                    [ "Los tokens de servicio deben administrarse desde un flujo dedicado."
+                    , "El acceso quedará separado de usuarios humanos para integraciones internas."
+                    ]
+                validUserManagementCard =
+                    mkCard "user-management" "Gestión de usuarios" userManagementBody
+                validApiTokensCard =
+                    mkCard "api-tokens" "Tokens API" apiTokensBody
                 mkView statusValue cardsValue =
                     Future.AdminConsoleView
                         { Future.status = statusValue
@@ -6800,8 +6818,8 @@ spec = describe "TDF.Server helpers" $ do
                 validView =
                     mkView
                         "preview"
-                        [ mkCard "user-management" "Gestión de usuarios"
-                        , mkCard "api-tokens" "Tokens API"
+                        [ validUserManagementCard
+                        , validApiTokensCard
                         ]
                 assertInvalid view =
                     case validateFutureAdminConsoleView view of
@@ -6821,27 +6839,30 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected valid admin console view, got: " <> show serverErr)
 
-            assertInvalid (mkView "planned" [mkCard "user-management" "Gestión de usuarios"])
+            assertInvalid (mkView "planned" [validUserManagementCard])
             assertInvalid (mkView "preview" [])
-            assertInvalid (mkView "preview" [mkCard "user-management" "Gestión de usuarios"])
+            assertInvalid (mkView "preview" [validUserManagementCard])
             assertInvalid
                 (mkView
                     "preview"
-                    [ mkCard "user-management" "Gestión de usuarios"
-                    , mkCard "user-management" "Tokens API"
+                    [ validUserManagementCard
+                    , mkCard "user-management" "Tokens API" apiTokensBody
                     ])
             assertInvalid
                 (mkView
                     "preview"
-                    [ mkCard "api-tokens" "Tokens API"
-                    , mkCard "user-management" "Gestión de usuarios"
+                    [ validApiTokensCard
+                    , validUserManagementCard
                     ])
-            assertInvalid (mkView "preview" [mkCard "User Management" "Gestión de usuarios"])
             assertInvalid
                 (mkView
                     "preview"
-                    [ mkCard "user-management" "Gestión de usuarios"
-                    , mkCard "api-tokens" "gestión de usuarios"
+                    [mkCard "User Management" "Gestión de usuarios" userManagementBody])
+            assertInvalid
+                (mkView
+                    "preview"
+                    [ validUserManagementCard
+                    , mkCard "api-tokens" "gestión de usuarios" apiTokensBody
                     ])
 
     describe "futureServer" $ do
