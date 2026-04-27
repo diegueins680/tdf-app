@@ -3690,6 +3690,14 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
       });
+
+      await changeInputValue(searchInput, 'inactivos');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(container.textContent).not.toContain('No hay coincidencias para "inactivos".');
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+      });
     } finally {
       await cleanup();
     }

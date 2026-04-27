@@ -618,7 +618,10 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
-  const statusSearchValue = normalizeSearchValue(user.active ? 'activo' : 'inactivo');
+  const statusSearchValues = (user.active
+    ? ['activo', 'activa', 'activos', 'activas']
+    : ['inactivo', 'inactiva', 'inactivos', 'inactivas'])
+    .map(normalizeSearchValue);
 
   const searchSpace = [
     user.username,
@@ -633,7 +636,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     .filter(Boolean);
 
   return queryVariants.some((query) => (
-    searchSpace.some((value) => value.includes(query)) || statusSearchValue === query
+    searchSpace.some((value) => value.includes(query)) || statusSearchValues.includes(query)
   ));
 };
 
