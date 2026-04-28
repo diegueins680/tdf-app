@@ -476,6 +476,9 @@ const pendingStatusMenuTargetLabel = (currentStatus: string) =>
     ? 'reabrir la inscripción como pendiente'
     : 'marcarla pendiente';
 
+const shouldUseDirectPendingRecoveryAction = (currentStatus: string) =>
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled';
+
 const eventStatusColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' | 'info' => {
@@ -4245,6 +4248,7 @@ export default function CourseRegistrationsAdminPage() {
                       && !rowSecondaryIdentity
                     );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
+                  const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(reg.crStatus);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
@@ -4333,15 +4337,37 @@ export default function CourseRegistrationsAdminPage() {
                       <Button
                         size="small"
                         variant="text"
-                        color={registrationStatusButtonColor(reg.crStatus)}
-                        endIcon={<ArrowDropDownIcon />}
-                        title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}
-                        aria-label={`Cambiar estado para ${rowActionTarget}`}
-                        aria-haspopup="menu"
+                        color={
+                          useDirectPendingRecoveryAction
+                            ? registrationStatusButtonColor('pending_payment')
+                            : registrationStatusButtonColor(reg.crStatus)
+                        }
+                        endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
+                        title={
+                          useDirectPendingRecoveryAction
+                            ? `Reabrir como pendiente; actual: ${registrationStatusLabel(reg.crStatus)}`
+                            : `Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`
+                        }
+                        aria-label={
+                          useDirectPendingRecoveryAction
+                            ? `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`
+                            : `Cambiar estado para ${rowActionTarget}`
+                        }
+                        aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
                         disabled={isUpdating}
-                        onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
+                        onClick={(event) => {
+                          if (useDirectPendingRecoveryAction) {
+                            handleCloseStatusMenu();
+                            handleQuickStatus(reg, 'pending_payment');
+                            return;
+                          }
+
+                          handleOpenStatusMenu(event.currentTarget, reg);
+                        }}
                       >
-                        {registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
+                        {useDirectPendingRecoveryAction
+                          ? pendingStatusMenuLabel(reg.crStatus)
+                          : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
                       </Button>
                       <Box sx={{ flexGrow: 1 }} />
                     </Box>

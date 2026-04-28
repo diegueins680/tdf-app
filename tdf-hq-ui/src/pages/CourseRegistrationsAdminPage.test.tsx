@@ -2965,17 +2965,18 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').textContent?.trim()).toBe(reopenPendingLabel);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('title')).toBe(
         'Cambiar estado; actual: Pendiente de pago',
       );
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').getAttribute('title')).toBe(
         'Cambiar estado; actual: Pagado',
       );
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').getAttribute('title')).toBe(
-        'Cambiar estado; actual: Cancelado',
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').getAttribute('title')).toBe(
+        'Reabrir como pendiente; actual: Cancelado',
       );
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').getAttribute('aria-haspopup')).toBeNull();
       expect(countOccurrences(container, 'Estado:')).toBe(0);
     });
 
@@ -3209,7 +3210,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cancelado');
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Grace Hopper').textContent?.trim()).toBe(reopenPendingLabel);
       expect(container.textContent).not.toContain('Payment Pending');
       expect(container.textContent).not.toContain('Canceled');
     });
@@ -3400,11 +3401,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').className).toContain('MuiButton-text');
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cancelado');
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').textContent?.trim()).toBe(reopenPendingLabel);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').getAttribute('aria-haspopup')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countOccurrences(container, 'Cambiar estado:')).toBe(0);
       expect(countOccurrences(container, 'Estado:')).toBe(0);
@@ -3457,19 +3459,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson'));
+      clickButton(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson'));
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(reopenPendingLabel);
-      expect(getMenuItemByText(document.body, reopenPendingLabel).getAttribute('aria-label')).toBe(
-        'Reabrir como pendiente para Katherine Johnson',
-      );
-      expect(getMenuItemByText(document.body, reopenPendingLabel).getAttribute('title')).toBe(
-        'Usa esta acción para reabrir la inscripción como pendiente.',
-      );
+      expect(container.textContent).toContain('Estado actualizado para Katherine Johnson.');
+      expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Marcar pendiente');
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
