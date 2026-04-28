@@ -2119,10 +2119,20 @@ export default function CourseRegistrationsAdminPage() {
     && !hasCustomFilters
     && !showAdvancedLimitControl
     && !hasSharedListContextSummary;
+  const hideBusyListPassiveSingleStatusSummary = showBusyListSearchOnboarding
+    && showSingleStatusSummaryBlock
+    && !singleAvailableCohortLabel
+    && !combinedSingleChoiceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !standaloneSingleChoiceInlineSourceSummary
+    && !hasSharedListContextSummary;
   const hiddenBusyListContextSummary = hideBusyListPassiveCurrentViewPanel
     ? combinedSingleChoiceSummary
     : hideBusyListPassiveSingleCohortSummary
       ? singleAvailableCohortLabel
+      : hideBusyListPassiveSingleStatusSummary && singleVisibleStatus
+        ? statusFilterLabels[singleVisibleStatus]
       : '';
   const localSearchHelperText = !localSearchKey
     && hiddenBusyListContextSummary
@@ -2315,7 +2325,8 @@ export default function CourseRegistrationsAdminPage() {
     && !showSingleStatusSummary
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
-  const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch;
+  const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch
+    && !hideBusyListPassiveSingleStatusSummary;
   const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
     && !hideBusyListPassiveSingleCohortSummary;
   const showCohortFilterColumn = showCohortSelect

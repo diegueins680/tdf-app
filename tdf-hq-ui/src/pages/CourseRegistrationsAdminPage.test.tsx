@@ -1923,6 +1923,36 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds passive single-status context into busy-list search instead of rendering another filter block', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
+      crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'mixing-bootcamp',
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).not.toContain('Estado único en esta vista.');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+      );
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(8);
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('absorbs a shared source into the single-cohort summary block instead of adding another summary line', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram' }),
