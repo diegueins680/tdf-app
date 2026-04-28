@@ -254,6 +254,7 @@ import TDF.Server
     , validateCalendarEventListQuery
     , validateCalendarRedirectUri
     , validateConfiguredCalendarRedirectUri
+    , validateGoogleCalendarEventStatus
     , validateConfiguredDriveAccessToken
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
@@ -3919,6 +3920,26 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "from must be on or before to"
                 (validateCalendarEventListQuery Nothing (Just fromTs) (Just toTs) Nothing)
+
+    describe "validateGoogleCalendarEventStatus" $ do
+        it "normalizes only statuses the sync path can persist and report consistently" $ do
+            validateGoogleCalendarEventStatus " CONFIRMED " `shouldBe` Right "confirmed"
+            validateGoogleCalendarEventStatus "tentative" `shouldBe` Right "tentative"
+            validateGoogleCalendarEventStatus "cancelled" `shouldBe` Right "cancelled"
+
+        it "rejects malformed or unknown upstream statuses instead of storing ambiguous rows" $ do
+            let assertInvalid expected rawStatus =
+                    case validateGoogleCalendarEventStatus rawStatus of
+                        Left err -> T.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Google Calendar event status, got: "
+                                    <> show value
+                                )
+            assertInvalid "must not be blank" "   "
+            assertInvalid "must not contain whitespace" "needs action"
+            assertInvalid "must not contain control characters" "con\nfirmed"
+            assertInvalid "must be one of" "archived"
 
     describe "validateDriveTokenRefreshRequest" $ do
         it "normalizes valid Drive refresh tokens before contacting Google" $

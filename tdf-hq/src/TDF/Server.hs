@@ -2442,6 +2442,21 @@ calendarQueryError message =
 calendarEventStatuses :: [Text]
 calendarEventStatuses = ["confirmed", "tentative", "cancelled"]
 
+validateGoogleCalendarEventStatus :: Text -> Either Text Text
+validateGoogleCalendarEventStatus rawStatus
+  | T.null statusVal =
+      Left "Google Calendar event status must not be blank"
+  | T.any isControl statusVal =
+      Left "Google Calendar event status must not contain control characters"
+  | T.any isSpace statusVal =
+      Left "Google Calendar event status must not contain whitespace"
+  | statusVal `elem` calendarEventStatuses =
+      Right statusVal
+  | otherwise =
+      Left "Google Calendar event status must be one of: confirmed, tentative, cancelled"
+  where
+    statusVal = T.toLower (T.strip rawStatus)
+
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =
        calendarAuthUrlH
@@ -2755,7 +2770,11 @@ calendarServer user =
     parseEvent _ val =
       parseMaybe (withObject "GoogleEvent" $ \o -> do
         gid <- o .: "id"
-        status <- o .:? "status" .!= "confirmed"
+        status <-
+          o .:? "status"
+            >>= maybe
+              (pure "confirmed")
+              (either (fail . T.unpack) pure . validateGoogleCalendarEventStatus)
         summary <- o .:? "summary"
         description <- o .:? "description"
         location <- o .:? "location"
