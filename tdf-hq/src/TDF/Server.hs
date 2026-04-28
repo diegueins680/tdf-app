@@ -24,7 +24,17 @@ import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
-import           Data.Char (isControl, isDigit, isAlphaNum, isAsciiLower, isAsciiUpper, isSpace, toLower)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isDigit
+  , isAlphaNum
+  , isAsciiLower
+  , isAsciiUpper
+  , isSpace
+  , toLower
+  )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
 import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
@@ -1137,14 +1147,19 @@ validateOptionalWhatsAppConsentText fieldName maxLength rawValue =
                   TE.encodeUtf8 $
                     fieldName <> " is too long (max " <> T.pack (show maxLength) <> " characters)"
             }
-      | T.any isControl value ->
+      | T.any isUnsupportedWhatsAppConsentTextChar value ->
           Left err400
             { errBody =
                 BL.fromStrict $
                   TE.encodeUtf8 $
-                    fieldName <> " must not contain control characters"
+                    fieldName <> " must not contain control or formatting characters"
             }
       | otherwise -> Right (Just value)
+
+isUnsupportedWhatsAppConsentTextChar :: Char -> Bool
+isUnsupportedWhatsAppConsentTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 maxWhatsAppConsentDisplayNameChars :: Int
 maxWhatsAppConsentDisplayNameChars = 120

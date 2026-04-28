@@ -218,6 +218,9 @@ import TDF.Server
     , validateWhatsAppReplyBody
     , validateWhatsAppReplyExternalId
     , validateWhatsAppReplyTarget
+    , validateWhatsAppConsentDisplayName
+    , validateWhatsAppConsentSource
+    , validateWhatsAppOptOutReason
     , whatsappWebhookServer
     , validatePublicBookingStartAt
     , validateCourseRegistrationId
@@ -5494,6 +5497,46 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "does not match recipient"
                 (validateWhatsAppReplyTarget "+593991234567" (Just "inbound-2") (Just otherRecipientTarget))
+
+    describe "WhatsApp consent text validation" $ do
+        it "normalizes consent names, sources, and opt-out reasons before persistence" $ do
+            validateWhatsAppConsentDisplayName Nothing `shouldBe` Right Nothing
+            validateWhatsAppConsentDisplayName (Just "  Ada Lovelace  ")
+                `shouldBe` Right (Just "Ada Lovelace")
+            validateWhatsAppConsentSource "public" Nothing `shouldBe` Right (Just "public")
+            validateWhatsAppConsentSource "public" (Just "  landing-page  ")
+                `shouldBe` Right (Just "landing-page")
+            validateWhatsAppConsentSource "public" (Just "   ")
+                `shouldBe` Right (Just "public")
+            validateWhatsAppOptOutReason (Just "  no gracias  ")
+                `shouldBe` Right (Just "no gracias")
+
+        it "rejects oversized, control, or formatting characters in stored consent text" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid WhatsApp consent text, got: " <> show value)
+            assertInvalid
+                "name is too long"
+                (validateWhatsAppConsentDisplayName (Just (T.replicate 121 "a")))
+            assertInvalid
+                "source is too long"
+                (validateWhatsAppConsentSource "public" (Just (T.replicate 81 "a")))
+            assertInvalid
+                "reason is too long"
+                (validateWhatsAppOptOutReason (Just (T.replicate 501 "a")))
+            assertInvalid
+                "control or formatting characters"
+                (validateWhatsAppConsentDisplayName (Just ("Ada" <> T.singleton '\x200B')))
+            assertInvalid
+                "control or formatting characters"
+                (validateWhatsAppConsentSource "public" (Just ("landing" <> T.singleton '\x202E')))
+            assertInvalid
+                "control or formatting characters"
+                (validateWhatsAppOptOutReason (Just ("no" <> T.singleton '\x2028' <> "gracias")))
 
     describe "whatsAppConsentStatusFromRow" $ do
         it "omits stored display names from public consent status responses" $ do
