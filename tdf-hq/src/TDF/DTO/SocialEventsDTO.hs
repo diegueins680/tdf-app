@@ -378,7 +378,10 @@ data InvitationDTO = InvitationDTO
   , invitationUpdatedAt  :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON InvitationDTO
-instance FromJSON InvitationDTO
+instance FromJSON InvitationDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data InvitationUpdateDTO = InvitationUpdateDTO
   { iudInvitation    :: InvitationDTO

@@ -79,6 +79,7 @@ import TDF.DTO.SocialEventsDTO
       EventMomentCreateDTO (..),
       EventMomentReactionRequestDTO (..),
       EventUpdateDTO (..),
+      InvitationDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
       TicketCheckInRequestDTO (..),
@@ -4049,6 +4050,16 @@ main = hspec $ do
                 Right parsed ->
                     expectationFailure
                         ("Expected unexpected invitation update keys to be rejected, got " <> show parsed)
+
+        it "rejects unexpected invitation create keys before handlers silently ignore typos" $
+            case eitherDecode
+                "{\"invitationToPartyId\":\"12\",\"invitationStatus\":\"pending\",\"message\":\"typo\"}"
+                :: Either String InvitationDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure
+                        ("Expected unexpected invitation create keys to be rejected, got " <> show parsed)
 
     describe "social event moment request parsing" $ do
         it "accepts canonical moment payloads and rejects unexpected keys before handlers silently ignore them" $ do
