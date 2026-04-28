@@ -235,7 +235,7 @@ const initialEmptyStateConfigMessage =
 const initialEmptyStateMultiCohortMessage =
   'Todavía no hay inscripciones. Hay 2 formularios públicos listos para compartir.';
 const singleCohortInitialEmptyStateMessage =
-  'Todavía no hay inscripciones para Beatmaking 101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
+  'Todavía no hay inscripciones para Beatmaking 101. Abre la página pública cuando estés listo para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir enlace';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -9863,6 +9863,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
       expect(emptyState?.textContent).not.toContain('Beatmaking 101 (beatmaking-101)');
       expect(emptyState?.textContent).not.toContain('Comparte el formulario público');
+      expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
       const formAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
@@ -9917,7 +9918,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Todavía no hay inscripciones para beatmaking-101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.',
+        'Todavía no hay inscripciones para beatmaking-101. Abre la página pública cuando estés listo para recibir la primera.',
       );
       expect(emptyState?.textContent).not.toContain('beatmaking-101 (beatmaking-101)');
       expect(
