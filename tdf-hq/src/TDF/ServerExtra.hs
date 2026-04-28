@@ -2099,6 +2099,7 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
       ensureModule ModuleScheduling user
       roomKey <- parseKey @Room rawId
       nameUpdate <- either throwError pure (normalizeRoomNameUpdate (ruName req))
+      either throwError pure (validateRoomPatchIntent nameUpdate (ruIsBookable req))
       for_ nameUpdate (ensureRoomNameAvailable (Just roomKey))
       let updates = catMaybes
             [ (RoomName =.)       <$> nameUpdate
@@ -2158,6 +2159,12 @@ normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizeRoomNameUpdate Nothing = Right Nothing
 normalizeRoomNameUpdate (Just rawName) =
   Just <$> normalizeRoomName rawName
+
+validateRoomPatchIntent :: Maybe Text -> Maybe Bool -> Either ServerError ()
+validateRoomPatchIntent Nothing Nothing =
+  Left err400 { errBody = "Room patch requires at least one of ruName or ruIsBookable" }
+validateRoomPatchIntent _ _ =
+  Right ()
 
 normalizeRoomNameValue :: Text -> Text
 normalizeRoomNameValue = T.unwords . T.words

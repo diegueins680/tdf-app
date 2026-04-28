@@ -1188,6 +1188,21 @@ spec = do
         Right value ->
           expectationFailure ("Expected canonical duplicate room patch to fail, got " <> show value)
 
+    it "rejects empty room patches instead of silently returning unchanged rooms" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      result <- runRoomPatchHandler
+        (insertKey existingKey (fixtureRoom "Sala A"))
+        existingRoomId
+        (RoomUpdate Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Room patch requires at least one"
+        Right value ->
+          expectationFailure ("Expected empty room patch to fail, got " <> show value)
+
   describe "normalizeBandName" $ do
     it "trims and collapses meaningful CRM band names before they are stored" $ do
       normalizeBandName "  TDF   House \t Band  " `shouldBe` Right "TDF House Band"
