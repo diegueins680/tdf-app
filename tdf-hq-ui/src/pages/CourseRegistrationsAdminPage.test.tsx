@@ -9056,6 +9056,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Busca dentro de este lote sin cambiar los filtros de cohorte o estado.');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
       expect(searchUtilities).toBeNull();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);

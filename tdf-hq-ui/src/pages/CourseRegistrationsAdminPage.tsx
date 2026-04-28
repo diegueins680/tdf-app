@@ -2030,6 +2030,10 @@ export default function CourseRegistrationsAdminPage() {
     showInlineCurrentViewDossierHint ? dossierScopeHint : '',
   ].filter(Boolean).join(' ');
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showBusyListNonNarrowingSearch = showLocalSearchControl
+    && hasLocalSearch
+    && !localSearchNarrowsRegistrations
+    && loadedRegistrationCount > 1;
   const hasSharedListContextSummary = Boolean(
     combinedSharedListContextSummary
     || shouldShowSharedStatusSummary
@@ -2039,7 +2043,10 @@ export default function CourseRegistrationsAdminPage() {
     || sharedVisibleMissingContactSummary
     || sharedVisibleNotesSummary,
   );
-  const hideBusyListPassiveCurrentViewPanel = showBusyListSearchOnboarding
+  const hideBusyListPassiveCurrentViewPanel = (
+    showBusyListSearchOnboarding
+    || showBusyListNonNarrowingSearch
+  )
     && Boolean(combinedSingleChoiceSummary)
     && !hasCustomFilters
     && !showAdvancedLimitControl
