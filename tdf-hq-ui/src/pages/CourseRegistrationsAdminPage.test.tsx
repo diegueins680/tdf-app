@@ -237,7 +237,7 @@ const initialEmptyStateMultiCohortMessage =
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir enlace';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir';
@@ -10604,6 +10604,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Elige en Configuración de cursos');
       expect(emptyState?.textContent).not.toContain('Elegir curso');
       expect(emptyState?.textContent).not.toContain('Elegir en cursos');
+      expect(emptyState?.textContent).not.toContain('Revisar cursos');
       expect(emptyState?.textContent).not.toMatch(/revisa cursos/i);
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');

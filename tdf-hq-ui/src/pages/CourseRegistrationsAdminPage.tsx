@@ -62,7 +62,7 @@ const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
   `Todavía no hay inscripciones. Hay ${count} formularios públicos listos para compartir.`;
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir enlace';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
