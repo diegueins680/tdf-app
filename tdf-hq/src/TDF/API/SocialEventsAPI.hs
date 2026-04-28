@@ -124,7 +124,11 @@ instance FromMultipart Tmp EventImageUploadForm where
             Left (label <> " must not contain path separators")
         | not (hasNonEmptyUploadBaseName rawName) =
             Left (label <> " must include a non-empty base name")
+        | T.length (T.strip rawName) > maxUploadNameLength =
+            Left (label <> " must be 180 characters or fewer")
         | otherwise = Right ()
+
+      maxUploadNameLength = 180 :: Int
 
       isPathSeparator ch = ch == '/' || ch == '\\'
 

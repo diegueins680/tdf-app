@@ -4167,6 +4167,16 @@ main = hspec $ do
                 (mkEventImageMultipart
                     []
                     [mkEventImageFile "file" ".png"])
+            assertInvalid
+                "Uploaded image name must be 180 characters or fewer"
+                (mkEventImageMultipart
+                    [("name", Data.Text.replicate 181 "a" <> ".png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must be 180 characters or fewer"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" (Data.Text.replicate 181 "a" <> ".png")])
 
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
