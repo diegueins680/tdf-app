@@ -7776,6 +7776,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'public_form',
       'formulario-publico',
       'registration_form',
+      'course_signup_page',
+      'enrollment_form',
       null,
     ] as const;
     listRegistrationsMock.mockResolvedValue(
@@ -7799,6 +7801,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Public form');
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
       expect(container.textContent).not.toContain('Fuente: Registration form');
+      expect(container.textContent).not.toContain('Fuente: Course signup page');
+      expect(container.textContent).not.toContain('Fuente: Enrollment form');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente visible: Landing page.');
@@ -7806,20 +7810,22 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Public form.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
       expect(container.textContent).not.toContain('Fuente visible: Registration form.');
+      expect(container.textContent).not.toContain('Fuente visible: Course signup page.');
+      expect(container.textContent).not.toContain('Fuente visible: Enrollment form.');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'course landing page');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'course signup page');
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain('No hay coincidencias para "course landing page" en las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('No hay coincidencias para "course signup page" en las 9 inscripciones cargadas.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
