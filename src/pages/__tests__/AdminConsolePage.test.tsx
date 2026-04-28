@@ -996,6 +996,55 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps generic permission fallback titles from duplicating the built-in users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-permissions',
+          title: 'Permissions',
+          body: ['Review access rules before assigning admin roles.'],
+        },
+        {
+          cardId: 'fallback-permisos',
+          title: 'Permisos',
+          body: ['Revisa reglas de acceso antes de asignar roles administrativos.'],
+        },
+        {
+          cardId: 'fallback-access-permissions',
+          title: 'Access permissions',
+          body: ['Confirm who can open protected workflows before changing access.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Permissions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Permisos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access permissions')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review access rules before assigning admin roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa reglas de acceso antes de asignar roles administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps user-administration fallback titles from duplicating the built-in users workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
