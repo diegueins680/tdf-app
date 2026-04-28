@@ -898,6 +898,60 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('labels the only available WhatsApp action so mixed first-time rosters have one clear next step', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-ready',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Email',
+        username: 'grace-email',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Missing',
+        username: 'linus-missing',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toContain(
+          '1 listo para WhatsApp, 1 pendiente de WhatsApp y 1 pendiente de contacto.',
+        );
+
+        const readyRow = getRowByUserId(container, 101);
+        const readyAction = getButtonsByText(readyRow, 'WhatsApp')[0]!;
+        expect(buttonText(readyAction)).toBe('WhatsApp');
+        expect(readyAction.getAttribute('aria-label')).toBe(
+          'Abrir WhatsApp para Ada Lovelace (Usuario: ada-ready)',
+        );
+
+        expect(container.querySelectorAll('button[aria-label^="Abrir WhatsApp para "]')).toHaveLength(1);
+        expect(getButtonsByText(getRowByUserId(container, 102), 'WhatsApp')).toHaveLength(0);
+        expect(getButtonsByText(getRowByUserId(container, 103), 'WhatsApp')).toHaveLength(0);
+        expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps repeated WhatsApp row actions as compact icons while naming each target clearly', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

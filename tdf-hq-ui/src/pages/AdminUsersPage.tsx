@@ -736,6 +736,7 @@ export default function AdminUsersPage() {
   ).length;
   const currentSummaryPendingWhatsAppCount = currentSummaryMissingWhatsAppCount - currentSummaryMissingContactCount;
   const currentSummaryWithWhatsAppCount = usersInCurrentSummary.length - currentSummaryMissingWhatsAppCount;
+  const showExplicitWhatsAppAction = currentSummaryWithWhatsAppCount === 1;
   const currentSummaryHasMixedPendingContactStates =
     currentSummaryPendingWhatsAppCount > 0 && currentSummaryMissingContactCount > 0;
   const currentSummaryAllNeedContact =
@@ -1132,7 +1133,7 @@ export default function AdminUsersPage() {
                     hidePendingStateChip={hideSingleRowPendingState}
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                     showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
-                    showExplicitWhatsAppAction={showSingleUserGuidance || showSingleSearchResultGuidance}
+                    showExplicitWhatsAppAction={showExplicitWhatsAppAction}
                   />
                 ))}
                 {showInactiveUsersGroup ? (
@@ -1183,7 +1184,7 @@ export default function AdminUsersPage() {
                             hidePendingStateChip={hideSingleRowPendingState}
                             hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                             showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
-                            showExplicitWhatsAppAction={showSingleUserGuidance || showSingleSearchResultGuidance}
+                            showExplicitWhatsAppAction={showExplicitWhatsAppAction}
                           />
                         ))}
                       </Stack>
