@@ -2359,6 +2359,9 @@ main = hspec $ do
             assertInvalid
                 "emissionPoint must contain exactly 3 digits"
                 sampleSriScriptRequest { Sri.emissionPoint = "0100" }
+            assertInvalid
+                "establishment must contain ASCII digits only"
+                sampleSriScriptRequest { Sri.establishment = "\x0660\x0660\x0661" }
             case Sri.validateSriScriptRequest
                 sampleSriScriptRequest
                     { Sri.establishment = " 001 "

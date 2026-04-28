@@ -14,7 +14,7 @@ module TDF.Invoice.SRI
 import           Prelude hiding (lines)
 
 import           Control.Monad (when)
-import           Data.Char (isControl, isDigit)
+import           Data.Char (isControl)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -289,12 +289,12 @@ validatePaymentMode raw = do
 validateNumericField :: Text -> Text -> Either Text Text
 validateNumericField fieldName raw = do
   value <- validateRequiredTextField fieldName raw
-  if T.all isDigit value
+  if T.all isAsciiDigit value
     then
       if T.length value == 3
         then Right value
         else Left (fieldMessage fieldName "must contain exactly 3 digits")
-    else Left (fieldMessage fieldName "must contain digits only")
+    else Left (fieldMessage fieldName "must contain ASCII digits only")
 
 validateRequiredTextField :: Text -> Text -> Either Text Text
 validateRequiredTextField fieldName raw =
