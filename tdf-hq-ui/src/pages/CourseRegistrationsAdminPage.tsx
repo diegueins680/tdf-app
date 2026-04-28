@@ -660,10 +660,10 @@ const firstRunWorkshopDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|signup)(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunProviderFormDescriptorPrefixPattern =
-  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|typeform|tally\s+forms?|jot\s*forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunProviderFormDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|typeform|tally\s+forms?|jot\s*forms?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?)\s*$/i;
 
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();

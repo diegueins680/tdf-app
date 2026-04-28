@@ -10298,7 +10298,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Typeform - Beatmaking 101',
       'Tally form for Beatmaking 101',
       'Jotform - Beatmaking 101',
+      'Microsoft Forms - Beatmaking 101',
       'Beatmaking 101 - Typeform',
+      'Beatmaking 101 - MS Form',
     ];
 
     for (const title of titles) {
@@ -10317,6 +10319,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Typeform');
         expect(emptyState?.textContent).not.toContain('Tally');
         expect(emptyState?.textContent).not.toContain('Jotform');
+        expect(emptyState?.textContent).not.toContain('Microsoft Forms');
+        expect(emptyState?.textContent).not.toContain('MS Form');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
