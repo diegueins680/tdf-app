@@ -236,7 +236,7 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o ->
     GoogleEventsPage
-      <$> o .:? "items" .!= []
+      <$> o .: "items"
       <*> o .:? "nextPageToken"
       <*> o .:? "nextSyncToken"
 

@@ -183,6 +183,7 @@ import TDF.ServerInstagramOAuth
       resolveInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
+      GoogleEventsPage (..),
       resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
@@ -2727,6 +2728,18 @@ main = hspec $ do
                                 ("Expected mismatched Instagram redirectUri to be rejected, got " <> show value)
             assertMismatch "https://tdf-app.pages.dev/oauth/instagram/callback"
             assertMismatch "https://hq.example.com/oauth/instagram/callback"
+
+    describe "Google Calendar event page decoding" $ do
+        it "requires an items array instead of treating malformed pages as empty syncs" $ do
+            (eitherDecode "{\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
+                `shouldSatisfy` isLeft
+            case eitherDecode "{\"items\":[],\"nextSyncToken\":\"cursor-1\"}" of
+                Left err ->
+                    expectationFailure ("Expected empty Google Calendar page to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    parsedItems `shouldBe` []
+                    nextPage `shouldBe` Nothing
+                    nextSync `shouldBe` Just "cursor-1"
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
