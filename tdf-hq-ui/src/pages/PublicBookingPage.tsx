@@ -1280,17 +1280,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           <Stack spacing={2.5}>
             <Stack spacing={0.6}>
               <Typography variant="overline" color="text.secondary">
-                Agenda pública
+                {pageEyebrow}
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography variant="h4" fontWeight={800}>
-                  Reserva un servicio con TDF
+                  {pageTitle}
                 </Typography>
                 {bookingStatusChip}
               </Stack>
               <Typography variant="body1" color="text.secondary">
-                Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no
-                tienes cuenta, crearemos tu acceso automáticamente.
+                {pageDescription}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
@@ -1309,9 +1308,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                 </Alert>
               )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
-                <Chip label="2. Confirmamos por email" size="small" variant="outlined" />
-                <Chip label="3. Coordinamos por WhatsApp si lo dejas" size="small" variant="outlined" />
+                {introChips.map((label) => (
+                  <Chip key={label} label={label} size="small" variant="outlined" />
+                ))}
               </Stack>
               <Card
                 variant="outlined"
@@ -1337,10 +1336,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      <Button size="small" variant="outlined" component={RouterLink} to="/login?redirect=/reservar">
+                      <Button size="small" variant="outlined" component={RouterLink} to={loginPath}>
                         Iniciar sesión
                       </Button>
-                      <Button size="small" variant="text" component={RouterLink} to="/login?signup=1&redirect=/reservar">
+                      <Button size="small" variant="text" component={RouterLink} to={signupPath}>
                         Crear cuenta
                       </Button>
                       {session && (
@@ -1364,22 +1363,22 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <PersonIcon color="primary" fontSize="small" />
                     <Typography variant="subtitle2" color="text.secondary">
-                      Datos de contacto
+                      {contactTitle}
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    Usa un correo válido para recibir la confirmación. Si eres nuevo, crearemos un perfil para ti.
+                    {contactDescription}
                   </Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <EventAvailableIcon color="primary" fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      Bloque tentativo en el calendario.
+                      {calendarNote}
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <AccessTimeIcon color="primary" fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      Duración estándar de 1h (ajústala si necesitas más tiempo).
+                      {durationNote}
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -1503,7 +1502,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                         <>
                           <Grid item xs={12}>
                             <TextField
-                              label="Servicio"
+                              label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
                               select
                               value={form.serviceType}
                               onChange={(e) => {
@@ -1516,9 +1515,15 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               }}
                               fullWidth
                               required
-                              disabled={formDisabled}
+                              disabled={formDisabled || Boolean(presetService)}
                               helperText={
-                                estimatePriceLabel
+                                presetService
+                                  ? `Servicio preseleccionado para este enlace. ${
+                                      estimatePriceLabel
+                                        ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+                                        : `Moneda: ${studioCurrency}`
+                                    }`
+                                  : estimatePriceLabel
                                   ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
                                   : `Moneda: ${studioCurrency}`
                               }
@@ -1805,7 +1810,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                               fullWidth
                               multiline
                               minRows={3}
-                              placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
+                              placeholder={notesPlaceholder}
                               disabled={formDisabled}
                             />
                           </Grid>

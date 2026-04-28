@@ -12,6 +12,7 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'Tienda', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'Reservar', to: '/reservar' },
+  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'Lanzamientos', to: '/records' },
 ] as const;
 
@@ -40,7 +41,11 @@ export default function PublicBranding({
   const isActiveNavItem = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
   const footerPrimaryAction = useMemo<FooterAction>(() => {
-    if (location.pathname.startsWith('/reservar') || location.pathname.startsWith('/domo-del-pululahua')) {
+    if (
+      location.pathname.startsWith('/reservar') ||
+      location.pathname.startsWith('/dj-booth') ||
+      location.pathname.startsWith('/domo-del-pululahua')
+    ) {
       return { label: 'WhatsApp reservas', kind: 'external', value: STUDIO_WHATSAPP_URL };
     }
     if (location.pathname.startsWith('/fans')) {
@@ -57,6 +62,9 @@ export default function PublicBranding({
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: 'Ingresar y autocompletar', kind: 'route', value: contextualLoginPath };
+    }
+    if (location.pathname.startsWith('/dj-booth')) {
+      return { label: 'Reserva general', kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: 'Reservar estudio', kind: 'route', value: '/reservar' };

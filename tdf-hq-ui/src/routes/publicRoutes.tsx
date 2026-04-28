@@ -52,6 +52,8 @@ export function renderPublicRoutes() {
       <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
+      <Route path="/dj-booth" element={<PublicBranding><PublicBookingPage preset="dj-booth" /></PublicBranding>} />
+      <Route path="/reservar/dj-booth" element={<Navigate to="/dj-booth" replace />} />
       <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
       <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />
       <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />

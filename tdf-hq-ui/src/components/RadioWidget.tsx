@@ -137,6 +137,7 @@ const RADIO_COUNTRIES = [
 const HIDDEN_RADIO_PATH_PREFIXES = [
   '/login',
   '/reservar',
+  '/dj-booth',
   '/marketplace',
   '/inscripcion',
   '/whatsapp/consentimiento',
