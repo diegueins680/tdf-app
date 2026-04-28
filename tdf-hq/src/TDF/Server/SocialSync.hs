@@ -19,7 +19,7 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit, isSpace)
+import           Data.Char                  (isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace)
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe)
@@ -317,6 +317,10 @@ validateSocialSyncExternalPostId raw =
        else if T.any isSpace trimmed
          then Left err400
            { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain whitespace")
+           }
+       else if T.any isControl trimmed
+         then Left err400
+           { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain control characters")
            }
        else Right trimmed
 

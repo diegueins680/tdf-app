@@ -3699,6 +3699,9 @@ main = hspec $ do
             assertInvalid "externalPostId must not contain whitespace" "ig media 42"
             assertInvalid "externalPostId must not contain whitespace" "ig-media\n42"
             assertInvalid
+                "externalPostId must not contain control characters"
+                ("ig-media" <> Data.Text.singleton '\NUL' <> "42")
+            assertInvalid
                 "externalPostId must be 256 characters or fewer"
                 (Data.Text.replicate 257 "a")
 
