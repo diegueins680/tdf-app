@@ -118,7 +118,7 @@ validateFallbackConnUrl envName raw
   | "://" `T.isInfixOf` value =
       Left (envName <> " must use postgres:// or postgresql://")
   | otherwise =
-      Right raw
+      Left (envName <> " must use postgres:// or postgresql://")
   where
     value = T.strip (T.pack raw)
     lowerValue = T.toLower value
