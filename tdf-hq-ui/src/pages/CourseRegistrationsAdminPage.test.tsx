@@ -233,19 +233,19 @@ const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Hay 2 formularios públicos listos para compartir.';
+  'Todavía no hay inscripciones. Hay 2 formularios públicos listos; elige cuál compartir primero.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Abre la página pública cuando estés listo para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir enlace';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
-const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir primero';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage =
-  'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
+  'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage =
   'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
@@ -11022,8 +11022,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toMatch(/revisa cursos/i);
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
+      expect(emptyState?.textContent).not.toContain('Elegir enlace');
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
-      expect(countOccurrences(emptyState!, 'formulario')).toBe(1);
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
       expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
