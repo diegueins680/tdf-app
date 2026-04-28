@@ -10503,12 +10503,24 @@ createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName bu
     Right val -> pure (val :: PayPalCreateResponse)
   approval <-
     either throwError pure $
-      validatePayPalApprovalUrl
-        (fmap pplHref . find (\lnk -> pplRel lnk == "approve") $ pcrLinks resObj)
+      resolvePayPalApprovalUrl (pcrLinks resObj)
   ppOrderId <-
     either throwError pure $
       validatePayPalCreateOrderIdField (pcrId resObj)
   pure (ppOrderId, Just approval)
+
+resolvePayPalApprovalUrl :: [PayPalLink] -> Either ServerError Text
+resolvePayPalApprovalUrl links =
+  case [ pplHref lnk
+       | lnk <- links
+       , T.toLower (T.strip (pplRel lnk)) == "approve"
+       ] of
+    [approvalUrl] -> validatePayPalApprovalUrl (Just approvalUrl)
+    [] -> validatePayPalApprovalUrl Nothing
+    _ ->
+      Left err502
+        { errBody = "PayPal response included multiple approval URLs"
+        }
 
 validatePayPalApprovalUrl :: Maybe Text -> Either ServerError Text
 validatePayPalApprovalUrl Nothing =

@@ -95,6 +95,7 @@ import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
     , GoogleToken(..)
+    , PayPalLink(..)
     , PayPalToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
@@ -182,6 +183,7 @@ import TDF.Server
     , validatePayPalCredential
     , validatePayPalAccessTokenField
     , validatePayPalTokenResponse
+    , resolvePayPalApprovalUrl
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -5236,6 +5238,48 @@ spec = describe "TDF.Server helpers" $ do
                     , payPalTokenType = Just "Bearer\nInjected"
                     }
                 "PayPal token response token_type must be Bearer"
+
+    describe "resolvePayPalApprovalUrl" $ do
+        it "requires exactly one PayPal approval link before creating a local order" $ do
+            resolvePayPalApprovalUrl
+                [ PayPalLink
+                    "self"
+                    "https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER-123"
+                , PayPalLink
+                    " Approve "
+                    " https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123 "
+                ]
+                `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123"
+
+        it "rejects missing or duplicate approval links instead of silently choosing one" $ do
+            let assertInvalid expectedMessage links =
+                    case resolvePayPalApprovalUrl links of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right approvalUrl ->
+                            expectationFailure
+                                ( "Expected invalid PayPal approval links to be rejected, got: "
+                                    <> show approvalUrl
+                                )
+            assertInvalid
+                "PayPal response did not include an approval URL"
+                [ PayPalLink
+                    "self"
+                    "https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER-123"
+                ]
+            assertInvalid
+                "PayPal response included multiple approval URLs"
+                [ PayPalLink
+                    "approve"
+                    "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+                , PayPalLink
+                    "approve"
+                    "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-456"
+                ]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [PayPalLink "approve" "https://evil.example/checkoutnow?token=ORDER-123"]
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do
