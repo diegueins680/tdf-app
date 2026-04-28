@@ -237,10 +237,32 @@ spec = do
                 BL8.unpack (errBody err) `shouldContain` expectedMessage
               Right value ->
                 expectationFailure ("Expected malformed public trial request to be rejected, got " <> show value)
-      assertRejected (mkTrial (Just "Ada\nLovelace") Nothing (Just "ada@example.com") Nothing) "fullName must not contain control characters"
-      assertRejected (mkTrial (Just (pack (replicate 161 'a'))) Nothing (Just "ada@example.com") Nothing) "fullName must be 1-160 characters"
-      assertRejected (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing) "notes must not contain control characters"
-      assertRejected (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing) "notes must be 1-2000 characters"
+      assertRejected
+        (mkTrial (Just "Ada\nLovelace") Nothing (Just "ada@example.com") Nothing)
+        "fullName must not contain control characters"
+      assertRejected
+        (mkTrial
+          (Just ("Ada" <> "\x202E" <> "Lovelace"))
+          Nothing
+          (Just "ada@example.com")
+          Nothing)
+        "hidden formatting characters"
+      assertRejected
+        (mkTrial (Just (pack (replicate 161 'a'))) Nothing (Just "ada@example.com") Nothing)
+        "fullName must be 1-160 characters"
+      assertRejected
+        (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing)
+        "notes must not contain control characters"
+      assertRejected
+        (mkTrial
+          (Just "Ada")
+          (Just ("first line" <> "\x2028" <> "second line"))
+          (Just "ada@example.com")
+          Nothing)
+        "hidden formatting characters"
+      assertRejected
+        (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing)
+        "notes must be 1-2000 characters"
       assertRejected (mkTrial (Just "Ada") Nothing Nothing Nothing) "Correo requerido"
 
     it "rejects malformed preferred slots before the handler reaches scheduling logic" $ do
@@ -349,7 +371,12 @@ spec = do
                 expectationFailure "Expected malformed public signup to be rejected"
       assertRejected baseSignup { firstName = "   " } "firstName is required"
       assertRejected baseSignup { lastName = "   " } "lastName is required"
-      assertRejected baseSignup { firstName = "Ada\nLovelace" } "firstName must not contain control characters"
+      assertRejected
+        baseSignup { firstName = "Ada\nLovelace" }
+        "firstName must not contain control characters"
+      assertRejected
+        baseSignup { firstName = "Ada" <> "\x200B" <> "Lovelace" }
+        "hidden formatting characters"
       assertRejected baseSignup { lastName = pack (replicate 121 'a') } "lastName must be 120 characters or fewer"
 
     it "rejects oversized signup emails before persisting unusable contact data" $ do
@@ -434,6 +461,7 @@ spec = do
                 expectationFailure "Expected malformed interestType to be rejected"
       assertRejected (pack (replicate 81 'a')) "interestType must be 1-80 characters"
       assertRejected "workshop\nvip" "interestType must not contain control characters"
+      assertRejected ("workshop" <> "\x202E" <> "vip") "hidden formatting characters"
 
     it "trims interest types and details, and drops blank optional fields" $ do
       case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "  Looking for info  ") (Just "  https://example.com/file  ")) of
@@ -461,6 +489,7 @@ spec = do
                 expectationFailure "Expected malformed details to be rejected"
       assertRejected (pack (replicate 2001 'a')) "details must be 1-2000 characters"
       assertRejected "line one\nline two" "details must not contain control characters"
+      assertRejected ("line one" <> "\x2029" <> "line two") "hidden formatting characters"
 
     it "accepts public drive links with valid explicit ports" $
       case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just "https://example.com:8443/file")) of

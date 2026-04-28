@@ -11,7 +11,15 @@ import           Control.Exception      (SomeException, displayException, throwI
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
@@ -478,7 +486,8 @@ validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
 validatePublicTrialRequestInput :: TrialRequestIn -> Either ServerError TrialRequestIn
-validatePublicTrialRequestInput (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
+validatePublicTrialRequestInput
+  (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
   validatePublicTrialPartyId rawPartyId
   subjectIdVal <- validatePublicSubjectIdInput rawSubjectId
   preferredVal <- validatePreferredSlots preferredSlots
@@ -495,11 +504,21 @@ validateOptionalPublicTextField fieldName maxChars rawValue =
       Right Nothing
     Just value
       | T.length value > maxChars ->
-          Left (badRequestText (fieldName <> " must be 1-" <> T.pack (show maxChars) <> " characters"))
-      | T.any isControl value ->
-          Left (badRequestText (fieldName <> " must not contain control characters"))
+          Left
+            (badRequestText
+              (fieldName <> " must be 1-" <> T.pack (show maxChars) <> " characters"))
+      | T.any invalidPublicTextChar value ->
+          Left (badRequestText (publicTextCharacterMessage fieldName))
       | otherwise ->
           Right (Just value)
+
+invalidPublicTextChar :: Char -> Bool
+invalidPublicTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+publicTextCharacterMessage :: Text -> Text
+publicTextCharacterMessage fieldName =
+  fieldName <> " must not contain control characters or hidden formatting characters"
 
 validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
 validatePublicSignupInput
@@ -541,8 +560,10 @@ validatePublicSignupNamePart fieldName rawName =
        else if T.length nameVal > 120
        then Left err400 { errBody = fieldLabel <> " must be 120 characters or fewer" }
        else
-         if T.any isControl nameVal
-           then Left err400 { errBody = fieldLabel <> " must not contain control characters" }
+         if T.any invalidPublicTextChar nameVal
+           then
+             Left err400
+               { errBody = BL8.pack (T.unpack (publicTextCharacterMessage fieldName)) }
            else Right nameVal
 
 validatePublicSubjectIdInput :: Int -> Either ServerError Int
@@ -848,8 +869,8 @@ validatePublicInterestType rawInterestType =
     Just interestTypeVal
       | T.length interestTypeVal > 80 ->
           Left err400 { errBody = "interestType must be 1-80 characters" }
-      | T.any isControl interestTypeVal ->
-          Left err400 { errBody = "interestType must not contain control characters" }
+      | T.any invalidPublicTextChar interestTypeVal ->
+          Left (badRequestText (publicTextCharacterMessage "interestType"))
       | otherwise ->
           Right interestTypeVal
 
@@ -861,8 +882,8 @@ validatePublicInterestDetails rawDetails =
     Just detailsVal
       | T.length detailsVal > 2000 ->
           Left err400 { errBody = "details must be 1-2000 characters" }
-      | T.any isControl detailsVal ->
-          Left err400 { errBody = "details must not contain control characters" }
+      | T.any invalidPublicTextChar detailsVal ->
+          Left (badRequestText (publicTextCharacterMessage "details"))
       | otherwise ->
           Right (Just detailsVal)
 
