@@ -2315,6 +2315,8 @@ main = hspec $ do
                     sampleSriScriptLine { Sri.taxBps = Just 1200 }
                 explicitIvaLine =
                     unsupportedTaxLine { Sri.sriIvaCode = Just "2" }
+                malformedIvaLine =
+                    unsupportedTaxLine { Sri.sriIvaCode = Just "2A" }
             case Sri.validateSriScriptRequest
                 sampleSriScriptRequest { Sri.lines = [unsupportedTaxLine] } of
                 Left err ->
@@ -2342,6 +2344,16 @@ main = hspec $ do
                                 ( "Expected one validated SRI line, got: "
                                     <> show linesValue
                                 )
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [malformedIvaLine] } of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "sriIvaCode must contain ASCII digits only"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed explicit SRI IVA code to fail, got: "
+                            <> show value
+                        )
 
         it "requires three-digit SRI establishment and emission point codes before script discovery" $ do
             let assertInvalid expected request =

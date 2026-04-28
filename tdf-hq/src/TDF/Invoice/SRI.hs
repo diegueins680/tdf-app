@@ -249,7 +249,7 @@ validateLine (index, value) = do
   taxBpsValue <- validateTaxBps (lineField "taxBps") (taxBps value)
   additionalInfoValue <-
     validateOptionalTextField (lineField "sriAdditionalInfo") (sriAdditionalInfo value)
-  ivaCodeValue <- validateOptionalTextField (lineField "sriIvaCode") (sriIvaCode value)
+  ivaCodeValue <- validateOptionalSriIvaCode (lineField "sriIvaCode") (sriIvaCode value)
   case (taxBpsValue, ivaCodeValue) of
     (Just bps, Nothing)
       | bps `notElem` [0, 500, 1500] ->
@@ -277,6 +277,18 @@ validateTaxBps fieldName (Just value)
   | value < 0 = Left (fieldMessage fieldName "must be zero or greater")
   | value > 10000 = Left (fieldMessage fieldName "must be 10000 or less")
   | otherwise = Right (Just value)
+
+validateOptionalSriIvaCode :: Text -> Maybe Text -> Either Text (Maybe Text)
+validateOptionalSriIvaCode fieldName raw = do
+  mValue <- validateOptionalTextField fieldName raw
+  case mValue of
+    Nothing -> Right Nothing
+    Just value
+      | not (T.all isAsciiDigit value) ->
+          Left (fieldMessage fieldName "must contain ASCII digits only")
+      | T.length value > 4 ->
+          Left (fieldMessage fieldName "must be 4 digits or fewer")
+      | otherwise -> Right (Just value)
 
 validatePaymentMode :: Text -> Either Text Text
 validatePaymentMode raw = do
