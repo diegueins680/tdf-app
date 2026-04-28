@@ -10417,6 +10417,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Matrícula del curso - Beatmaking 101',
       'Beatmaking 101 - matrícula del curso',
+      'Página de matrícula - Beatmaking 101',
+      'Beatmaking 101 - página de matrícula',
     ];
 
     for (const title of titles) {
