@@ -1446,6 +1446,42 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('shows full status history without repeating the latest change in the order summary', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-history',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moStatusHistory: [
+          ['pending', '2030-01-01T12:00:00.000Z'],
+          ['paid', '2030-01-02T12:30:00.000Z'],
+        ],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Historial de estado');
+        expect(document.body.textContent).toContain('Pendiente');
+        expect(document.body.textContent).toContain('Pagado');
+        expect(document.body.textContent).not.toContain('Último cambio:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits empty optional identifiers from sparse order details', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

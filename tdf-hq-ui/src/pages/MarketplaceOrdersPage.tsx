@@ -619,6 +619,10 @@ export default function MarketplaceOrdersPage() {
   const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
   const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
   const selectedPaypalOrderId = selectedOrder?.moPaypalOrderId?.trim() ?? '';
+  const selectedStatusHistory = selectedOrder?.moStatusHistory ?? [];
+  const latestStatusChange = selectedStatusHistory[selectedStatusHistory.length - 1];
+  const showLatestStatusChangeSummary = selectedStatusHistory.length === 1 && Boolean(latestStatusChange);
+  const showStatusHistorySection = selectedStatusHistory.length > 1;
   const showSelectedContactEmptyState = Boolean(selectedOrder && !selectedBuyerEmail && !selectedBuyerPhone);
 
   return (
@@ -1181,9 +1185,9 @@ export default function MarketplaceOrdersPage() {
                           </Typography>
                           <Chip size="small" label={statusLabel(selectedOrder.moStatus)} color={statusColor(selectedOrder.moStatus)} />
                         </Stack>
-                        {selectedOrder.moStatusHistory.length > 0 && (
+                        {showLatestStatusChangeSummary && latestStatusChange && (
                           <Typography variant="body2" color="text.secondary">
-                            Último cambio: {formatDate(selectedOrder.moStatusHistory[selectedOrder.moStatusHistory.length - 1]?.[1])}
+                            Último cambio: {formatDate(latestStatusChange[1])}
                           </Typography>
                         )}
                         <Typography variant="body2">
@@ -1289,11 +1293,11 @@ export default function MarketplaceOrdersPage() {
                 </Stack>
 
                 <Divider />
-                {selectedOrder.moStatusHistory.length > 0 && (
+                {showStatusHistorySection && (
                   <Stack spacing={1}>
                     <Typography variant="h6">Historial de estado</Typography>
                     <Stack spacing={0.5}>
-                      {selectedOrder.moStatusHistory.map(([st, ts], idx) => (
+                      {selectedStatusHistory.map(([st, ts], idx) => (
                         <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
                           {formatDate(ts)} — {statusLabel(st)}
                         </Typography>
