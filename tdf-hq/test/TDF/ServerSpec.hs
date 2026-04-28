@@ -303,7 +303,7 @@ import TDF.ServerFuture
     , validateFutureStubResponse
     )
 import TDF.ServerExtra (validateSocialReplyBody)
-import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
+import TDF.Services.InstagramSync (InstagramMedia(..), buildUserMediaRequestUrl)
 import Test.Hspec
 import Web.PathPieces (fromPathPiece, toPathPiece)
 
@@ -6817,6 +6817,43 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " "access token is required"
             assertInvalid "token with spaces" "must not contain whitespace"
             assertInvalid "token\nInjected: value" "must not contain whitespace"
+
+    describe "Instagram sync media response decoding" $ do
+        it "normalizes canonical media ids and public media links before cron storage" $
+            case ( eitherDecode
+                    "{\"id\":\" ig-media-42 \",\"caption\":\"new post\",\"media_url\":\" https://cdn.example.com/post.jpg?sig=1 \",\"permalink\":\" https://www.instagram.com/p/post42/ \"}"
+                    :: Either String InstagramMedia
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected Instagram media response to decode, got: " <> err)
+                Right media -> do
+                    imId media `shouldBe` "ig-media-42"
+                    imMediaUrl media `shouldBe` Just "https://cdn.example.com/post.jpg?sig=1"
+                    imPermalink media `shouldBe` Just "https://www.instagram.com/p/post42/"
+
+        it "rejects ambiguous media ids and unsafe links before social sync rows are written" $ do
+            let assertInvalid expectedMessage rawPayload =
+                    case (eitherDecode rawPayload :: Either String InstagramMedia) of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right media ->
+                            expectationFailure
+                                ("Expected invalid Instagram media payload to be rejected, got: " <> show media)
+            assertInvalid
+                "Instagram media id is required"
+                "{\"id\":\"   \"}"
+            assertInvalid
+                "Instagram media id must not contain whitespace"
+                "{\"id\":\"ig media 42\"}"
+            assertInvalid
+                "media_url must be an absolute public https URL"
+                "{\"id\":\"ig-media-42\",\"media_url\":\"javascript:alert(1)\"}"
+            assertInvalid
+                "media_url must be an absolute public https URL"
+                "{\"id\":\"ig-media-42\",\"media_url\":\"https://localhost/post.jpg\"}"
+            assertInvalid
+                "permalink must not contain whitespace"
+                "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com/p/post 42/\"}"
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $

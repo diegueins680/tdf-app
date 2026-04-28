@@ -9,7 +9,8 @@ module TDF.Services.InstagramSync
   ) where
 
 import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
-import           Data.Char (isControl, isSpace)
+import           Data.Aeson.Types (Parser)
+import           Data.Char (isControl, isDigit, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -36,13 +37,56 @@ data InstagramMedia = InstagramMedia
 
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o -> do
-    imId <- o .: "id"
+    imId <- validateInstagramMediaId =<< o .: "id"
     imCaption <- o .:? "caption"
-    imMediaUrl <- o .:? "media_url"
-    imPermalink <- o .:? "permalink"
+    imMediaUrl <- traverse (validateInstagramMediaUrl "media_url") =<< o .:? "media_url"
+    imPermalink <- traverse (validateInstagramMediaUrl "permalink") =<< o .:? "permalink"
     tsTxt <- o .:? "timestamp"
     imTimestamp <- traverse iso8601ParseM tsTxt
     pure InstagramMedia{..}
+
+validateInstagramMediaId :: Text -> Parser Text
+validateInstagramMediaId rawMediaId
+  | T.null mediaId =
+      fail "Instagram media id is required"
+  | T.length mediaId > 256 =
+      fail "Instagram media id must be 256 characters or fewer"
+  | T.any (\ch -> isSpace ch || isControl ch) mediaId =
+      fail "Instagram media id must not contain whitespace or control characters"
+  | T.any (`elem` ("/?#" :: String)) mediaId =
+      fail "Instagram media id must not contain path or query delimiters"
+  | otherwise =
+      pure mediaId
+  where
+    mediaId = T.strip rawMediaId
+
+validateInstagramMediaUrl :: Text -> Text -> Parser Text
+validateInstagramMediaUrl fieldName rawUrl
+  | T.null url =
+      fail (T.unpack fieldName <> " must not be blank")
+  | T.length url > 2048 =
+      fail (T.unpack fieldName <> " must be 2048 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) url =
+      fail (T.unpack fieldName <> " must not contain whitespace or control characters")
+  | not ("https://" `T.isPrefixOf` lowerUrl) =
+      fail (T.unpack fieldName <> " must be an absolute public https URL")
+  | T.null authority || T.any (== '@') authority || not (isPublicDnsAuthority authority) =
+      fail (T.unpack fieldName <> " must be an absolute public https URL")
+  | otherwise =
+      pure url
+  where
+    url = T.strip rawUrl
+    lowerUrl = T.toLower url
+    authority = T.takeWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') (T.drop 8 url)
+
+isPublicDnsAuthority :: Text -> Bool
+isPublicDnsAuthority rawAuthority =
+  let host = T.toLower (T.takeWhile (/= ':') rawAuthority)
+  in not (T.null host)
+       && host /= "localhost"
+       && "." `T.isInfixOf` host
+       && not ("[" `T.isPrefixOf` host)
+       && not (T.all (\ch -> isDigit ch || ch == '.') host)
 
 newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 
