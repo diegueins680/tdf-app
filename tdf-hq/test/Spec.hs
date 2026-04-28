@@ -279,6 +279,7 @@ import TDF.Config
       facebookGraphBase,
       facebookMessagingApiBase,
       facebookMessagingPageId,
+      googleClientId,
       instagramGraphBase,
       instagramMessagingApiBase,
       instagramMessagingAccountId,
@@ -1014,6 +1015,38 @@ main = hspec $ do
             assertInvalid "FACEBOOK_PAGE_ID" "---"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "..."
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
+
+        it "normalizes configured Google client ids before Google login audience checks" $ do
+            withEnvOverrides
+                [ ("GOOGLE_CLIENT_ID", Just "  tdf-client-123.apps.googleusercontent.com  ") ]
+                $ do
+                    cfg <- loadConfig
+                    googleClientId cfg `shouldBe` Just "tdf-client-123.apps.googleusercontent.com"
+
+            withEnvOverrides
+                [ ("GOOGLE_CLIENT_ID", Just "   ") ]
+                $ do
+                    cfg <- loadConfig
+                    googleClientId cfg `shouldBe` Nothing
+
+        it "rejects malformed Google client ids before Google login verification fallback" $ do
+            let assertInvalid rawClientId expectedMessage =
+                    withEnvOverrides
+                        [ ("GOOGLE_CLIENT_ID", Just rawClientId) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "tdf client.apps.googleusercontent.com"
+                "GOOGLE_CLIENT_ID must not contain whitespace"
+            assertInvalid
+                "tdf-client.apps.googleusercontent.com/oauth"
+                "GOOGLE_CLIENT_ID must not contain path, query, or fragment characters"
+            assertInvalid
+                "tdf-client\SOHapps.googleusercontent.com"
+                "GOOGLE_CLIENT_ID must not contain control characters"
+            assertInvalid
+                (replicate 513 'a')
+                "GOOGLE_CLIENT_ID must be 512 characters or fewer"
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $
             withEnvOverrides

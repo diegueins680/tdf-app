@@ -455,6 +455,8 @@ loadConfig = do
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
+  googleClientIdVal <-
+    validateConfiguredGoogleClientId googleClientIdEnv
   openAiModelVal <-
     validateConfiguredOpenAiModel openAiModelEnv
   openAiEmbedModelVal <-
@@ -550,7 +552,7 @@ loadConfig = do
     , ragRefreshHours = ragRefreshHoursVal
     , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
-    , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
+    , googleClientId = googleClientIdVal
     , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
     , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
     , facebookGraphBase = fbGraphBase
@@ -885,6 +887,13 @@ validateConfiguredChatKitWorkflowId (Just (envName, rawWorkflowId)) =
     Left msg -> fail msg
     Right workflowId -> pure workflowId
 
+validateConfiguredGoogleClientId :: Maybe String -> IO (Maybe Text)
+validateConfiguredGoogleClientId Nothing = pure Nothing
+validateConfiguredGoogleClientId (Just rawClientId) =
+  case normalizeConfiguredGoogleClientId "GOOGLE_CLIENT_ID" rawClientId of
+    Left msg -> fail msg
+    Right clientId -> pure clientId
+
 validateConfiguredGraphNodeId :: Maybe (String, String) -> IO (Maybe Text)
 validateConfiguredGraphNodeId Nothing = pure Nothing
 validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
@@ -960,6 +969,31 @@ normalizeConfiguredChatKitWorkflowId envName rawWorkflowId
   where
     workflowId = T.strip (T.pack rawWorkflowId)
     isChatKitWorkflowIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
+
+normalizeConfiguredGoogleClientId :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredGoogleClientId envName rawClientId
+  | T.null clientId = Right Nothing
+  | T.length clientId > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any isSpace clientId =
+      Left (envName <> " must not contain whitespace")
+  | T.any isControl clientId =
+      Left (envName <> " must not contain control characters")
+  | T.any (`elem` ("/?#" :: String)) clientId =
+      Left (envName <> " must not contain path, query, or fragment characters")
+  | T.any (not . isGoogleClientIdChar) clientId =
+      Left
+        ( envName
+            <> " must use only ASCII letters, digits, '.', '_' or '-'"
+        )
+  | otherwise = Right (Just clientId)
+  where
+    clientId = T.strip (T.pack rawClientId)
+    isGoogleClientIdChar ch =
       (ch >= 'a' && ch <= 'z')
         || (ch >= 'A' && ch <= 'Z')
         || (ch >= '0' && ch <= '9')
