@@ -663,10 +663,10 @@ const firstRunWorkshopDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|signup)(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunWaitlistDescriptorPrefixPattern =
-  /^(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+lista\s+de\s+espera|lista\s+de\s+espera|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s)|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunWaitlistDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+lista\s+de\s+espera|lista\s+de\s+espera|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s)|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunProviderFormDescriptorPrefixPattern =
   /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
