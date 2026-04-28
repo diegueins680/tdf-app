@@ -11151,7 +11151,7 @@ appendDriveResourceKey mResourceKey url =
   case cleanOptional mResourceKey of
     Nothing -> url
     Just resourceKey
-      | hasSingleValidResourceKeyParam url -> url
+      | singleValidResourceKeyParam url == Just resourceKey -> url
       | otherwise ->
           appendQueryParam "resourcekey" resourceKey (dropNamedQueryParam "resourcekey" url)
 
@@ -11166,13 +11166,20 @@ normalizeDriveResourceKeyParams url
 
 hasSingleValidResourceKeyParam :: Text -> Bool
 hasSingleValidResourceKeyParam url =
+  isJust (singleValidResourceKeyParam url)
+
+singleValidResourceKeyParam :: Text -> Maybe Text
+singleValidResourceKeyParam url =
   case [ rawParam
        | rawParam <- queryParams url
        , isNamedQueryParam "resourcekey" rawParam
        ] of
     [rawParam] ->
-      maybe False isValidDriveResourceKey (queryParamValue rawParam)
-    _ -> False
+      queryParamValue rawParam >>= \value ->
+        if isValidDriveResourceKey value
+          then Just (T.strip value)
+          else Nothing
+    _ -> Nothing
 
 isValidDriveResourceKey :: Text -> Bool
 isValidDriveResourceKey rawValue =

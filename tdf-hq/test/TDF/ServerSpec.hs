@@ -3610,10 +3610,19 @@ spec = describe "TDF.Server helpers" $ do
             resolveDrivePublicUrl
                 "file-123"
                 (Just "https://drive.google.com/download/file-123?ResourceKey=existing")
-                (Just "rk-123")
+                Nothing
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/download/file-123?ResourceKey=existing"
+
+        it "replaces conflicting upstream resource-key params with explicit Drive API resource keys" $
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?ResourceKey=stale")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?resourcekey=rk-123"
 
         it "does not let ambiguous upstream resource-key params suppress known Drive resource keys" $ do
             resolveDrivePublicUrl
