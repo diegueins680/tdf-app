@@ -699,12 +699,13 @@ loadConfig = do
             normalizedFrom <- case normalizeConfiguredEmailAddress rawFromAddr of
               Just email -> pure email
               Nothing -> fail "SMTP_FROM must be a valid email address"
-            let name = maybe "TDF Records" (T.strip . T.pack) mFromName
+            name <- normalizeSmtpFromName mFromName
+            let
                 useTls = maybe True asBool mTls
             portVal <- validatePortEnv "SMTP_PORT" 587 mPort
             pure $
               Just EmailConfig
-                { emailFromName = if T.null name then "TDF Records" else name
+                { emailFromName = name
                 , emailFromAddress = normalizedFrom
                 , smtpHost = hostVal
                 , smtpPort = portVal
@@ -719,6 +720,17 @@ loadConfig = do
 
     normalizeRequiredSmtpValue =
       fmap (T.strip . T.pack) >=> nonEmpty
+
+    normalizeSmtpFromName Nothing = pure "TDF Records"
+    normalizeSmtpFromName (Just rawName) =
+      let name = T.strip (T.pack rawName)
+      in if T.null name
+           then pure "TDF Records"
+           else if T.length name > 120
+             then fail "SMTP_FROM_NAME must be 120 characters or fewer"
+             else if T.any isControl name || T.any (`elem` ['\n', '\r']) name
+               then fail "SMTP_FROM_NAME must not contain control characters"
+               else pure name
 
     normalizeConfiguredEmailAddress rawEmail =
       let normalized = T.toLower (T.strip rawEmail)

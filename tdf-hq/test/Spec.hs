@@ -276,6 +276,7 @@ import TDF.Config
       courseSlugFallback,
       dbConnString,
       emailConfig,
+      emailFromName,
       facebookGraphBase,
       facebookMessagingApiBase,
       facebookMessagingPageId,
@@ -640,6 +641,35 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 2525
+
+        it "normalizes SMTP_FROM_NAME and rejects unsafe email display names" $ do
+            withEnvOverrides
+                [ ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                , ("SMTP_FROM_NAME", Just "  TDF Records HQ  ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    fmap emailFromName (emailConfig cfg) `shouldBe` Just "TDF Records HQ"
+
+            let assertInvalid rawName expectedMessage =
+                    withEnvOverrides
+                        [ ("SMTP_HOST", Just "smtp.example.com")
+                        , ("SMTP_USER", Just "mailer")
+                        , ("SMTP_PASS", Just "secret")
+                        , ("SMTP_FROM", Just "tdf@example.com")
+                        , ("SMTP_FROM_NAME", Just rawName)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "TDF Records\nBcc: ops@example.com"
+                "SMTP_FROM_NAME must not contain control characters"
+            assertInvalid
+                (Data.Text.unpack (Data.Text.replicate 121 "x"))
+                "SMTP_FROM_NAME must be 120 characters or fewer"
 
         it "rejects malformed startup boolean flags instead of silently changing boot behavior" $ do
             withEnvOverrides
