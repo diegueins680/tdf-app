@@ -2606,7 +2606,11 @@ parseOptionalKeyField fieldName (Just raw) =
 validateAssetQrToken :: Text -> Either ServerError Text
 validateAssetQrToken rawToken =
   case UUID.fromText (T.strip rawToken) of
-    Just uuid -> Right (UUID.toText uuid)
+    Just uuid ->
+      let canonicalToken = UUID.toText uuid
+      in if canonicalToken == "00000000-0000-0000-0000-000000000000"
+           then Left err400 { errBody = "Invalid asset QR token" }
+           else Right canonicalToken
     Nothing -> Left err400 { errBody = "Invalid asset QR token" }
 
 normalizeOptionalTextField :: Maybe Text -> Maybe Text

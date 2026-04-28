@@ -2886,6 +2886,15 @@ spec = do
         Right value ->
           expectationFailure ("Expected malformed QR token lookup to fail, got " <> show value)
 
+    it "rejects nil UUID QR tokens before a sentinel value can resolve an asset" $ do
+      result <- runInventoryResolveQrHandler (pure ()) "00000000-0000-0000-0000-000000000000"
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid asset QR token"
+        Right value ->
+          expectationFailure ("Expected nil UUID QR token lookup to fail, got " <> show value)
+
     it "normalizes UUID casing so copied QR links still resolve the intended asset" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
