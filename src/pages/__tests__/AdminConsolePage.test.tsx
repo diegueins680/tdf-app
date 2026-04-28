@@ -3024,6 +3024,65 @@ describe('AdminConsolePage', () => {
     ).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('collapses expanded standalone modules when fallback discovery changes the module set', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    const { queryClient } = renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
+    );
+
+    expect(
+      await screen.findByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(['admin', 'console'], {
+        status: 'preview',
+        cards: [
+          {
+            cardId: 'integrations',
+            title: 'Integraciones',
+            body: [
+              'Revisa conectores pendientes sin salir de la consola.',
+            ],
+          },
+        ],
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+      expect(screen.getByText('Integraciones')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Ver detalles de Integraciones/i }),
+      ).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    expect(screen.queryByRole('button', { name: /Ocultar módulo adicional/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa conectores pendientes sin salir de la consola\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps a single long standalone module title compact until the admin expands it', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';

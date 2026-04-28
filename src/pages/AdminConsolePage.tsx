@@ -1420,14 +1420,16 @@ export default function AdminConsolePage() {
     ? 'Ocultar módulo adicional'
     : 'Ocultar módulos adicionales';
   const showStandaloneAdditionalModulesOptionalChip = singleAdditionalModule != null;
-  const firstRunAdditionalModuleSignature = JSON.stringify(
+  const additionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
+    } else {
+      setShowStandaloneAdditionalModules(false);
     }
-  }, [firstRunAdditionalModuleSignature, showGettingStartedGuidance]);
+  }, [additionalModuleSignature, showGettingStartedGuidance]);
   useEffect(() => {
     if (consoleCards.length === 0) {
       setShowFirstRunAdditionalModules(false);
