@@ -161,6 +161,7 @@ import TDF.ServerExtra (
     validateOptionalPositivePaymentReferenceId,
     normalizeServiceCatalogName,
     normalizeServiceCatalogNameUpdate,
+    validateServiceCatalogId,
     persistMetaInbound,
     validatePaymentMethod,
     parseUTCTimeText,
@@ -5052,6 +5053,18 @@ spec = do
       assertInvalid
         "caracteres de control"
         (normalizeServiceCatalogNameUpdate (Just "Podcast\tLive"))
+
+  describe "validateServiceCatalogId" $ do
+    it "rejects non-positive service catalog ids before admin writes fall through to 404s" $ do
+      validateServiceCatalogId 1 `shouldBe` Right 1
+      let assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "positive integer"
+            Right value ->
+              expectationFailure ("Expected invalid service catalog id error, got " <> show value)
+      assertInvalid (validateServiceCatalogId 0)
+      assertInvalid (validateServiceCatalogId (-7))
 
   describe "validateServiceCatalogCurrency" $ do
     it "defaults omitted values to USD and normalizes supported ISO codes" $ do

@@ -2378,7 +2378,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     updateH rawId ServiceCatalogUpdate{..} = do
       ensureModule ModuleScheduling user
-      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
+      svcId <- either throwError pure (validateServiceCatalogId rawId)
+      let svcKey = toSqlKey svcId :: Key M.ServiceCatalog
       let rateCandidate = join scuRateCents
       currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
       taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
@@ -2418,7 +2419,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     deleteH rawId = do
       ensureModule ModuleScheduling user
-      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
+      svcId <- either throwError pure (validateServiceCatalogId rawId)
+      let svcKey = toSqlKey svcId :: Key M.ServiceCatalog
       found <- withPool $ do
         mSvc <- getEntity svcKey
         case mSvc of
@@ -2444,6 +2446,11 @@ normalizeServiceCatalogName rawName =
          else if T.any isControl trimmed
          then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
          else Right trimmed
+
+validateServiceCatalogId :: Int64 -> Either ServerError Int64
+validateServiceCatalogId rawId
+  | rawId > 0 = Right rawId
+  | otherwise = Left err400 { errBody = "serviceCatalogId must be a positive integer" }
 
 validateServiceCatalogBillingUnit :: Maybe Text -> Either ServerError (Maybe Text)
 validateServiceCatalogBillingUnit Nothing = Right Nothing
