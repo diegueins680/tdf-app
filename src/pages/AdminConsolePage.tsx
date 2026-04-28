@@ -265,6 +265,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 const MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH = 32;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
+const AUDIT_VISIBLE_ENTRY_LIMIT = 5;
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
@@ -1208,6 +1209,7 @@ export default function AdminConsolePage() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [showFirstRunAdditionalModules, setShowFirstRunAdditionalModules] = useState(false);
   const [showStandaloneAdditionalModules, setShowStandaloneAdditionalModules] = useState(false);
+  const [showAllAuditEntries, setShowAllAuditEntries] = useState(false);
 
   const healthQuery = useQuery({
     queryKey: ['admin', 'health'],
@@ -1305,8 +1307,14 @@ export default function AdminConsolePage() {
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
   const showAuditTable = audits.length > 1;
-  const showAuditActorColumn = audits.some((entry) => hasAuditActor(entry.actorId));
-  const showAuditDetailColumn = audits.some((entry) => hasAuditDetail(entry.diff));
+  const visibleAuditEntries = showAllAuditEntries ? audits : audits.slice(0, AUDIT_VISIBLE_ENTRY_LIMIT);
+  const hiddenAuditEntryCount = Math.max(audits.length - visibleAuditEntries.length, 0);
+  const showAuditOverflowAction = showAuditTable && audits.length > AUDIT_VISIBLE_ENTRY_LIMIT;
+  const auditOverflowActionLabel = showAllAuditEntries
+    ? 'Mostrar solo cambios recientes'
+    : `Ver ${hiddenAuditEntryCount} ${hiddenAuditEntryCount === 1 ? 'cambio anterior' : 'cambios anteriores'}`;
+  const showAuditActorColumn = visibleAuditEntries.some((entry) => hasAuditActor(entry.actorId));
+  const showAuditDetailColumn = visibleAuditEntries.some((entry) => hasAuditDetail(entry.diff));
   const isAdminPanelBaselining = consoleQuery.isPending || usersQuery.isLoading || auditQuery.isLoading;
   const hasAdminPanelError =
     healthQuery.isError
@@ -1913,44 +1921,59 @@ export default function AdminConsolePage() {
             {auditQuery.isLoading ? (
               renderSectionLoading('Cargando auditoría…')
             ) : showAuditTable ? (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Fecha</TableCell>
-                      <TableCell>Entidad</TableCell>
-                      <TableCell>Acción</TableCell>
-                      {showAuditActorColumn && <TableCell>Actor</TableCell>}
-                      {showAuditDetailColumn && <TableCell>Detalle</TableCell>}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {audits.map((entry: AuditLogEntry, index: number) => (
-                      <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
-                        <TableCell>{formatDate(entry.createdAt)}</TableCell>
-                        <TableCell>
-                          <Typography variant="body2" title={getAuditEntityReferenceTitle(entry)}>
-                            {formatAuditEntityReference(entry)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
-                            {formatAuditAction(entry.action)}
-                          </Typography>
-                        </TableCell>
-                        {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
-                        {showAuditDetailColumn && (
+              <>
+                <TableContainer id="admin-recent-audit-table">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Fecha</TableCell>
+                        <TableCell>Entidad</TableCell>
+                        <TableCell>Acción</TableCell>
+                        {showAuditActorColumn && <TableCell>Actor</TableCell>}
+                        {showAuditDetailColumn && <TableCell>Detalle</TableCell>}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleAuditEntries.map((entry: AuditLogEntry, index: number) => (
+                        <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
+                          <TableCell>{formatDate(entry.createdAt)}</TableCell>
                           <TableCell>
-                            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
-                              {entry.diff ?? '—'}
+                            <Typography variant="body2" title={getAuditEntityReferenceTitle(entry)}>
+                              {formatAuditEntityReference(entry)}
                             </Typography>
                           </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                          <TableCell>
+                            <Typography variant="body2" title={getAuditActionTitle(entry.action)}>
+                              {formatAuditAction(entry.action)}
+                            </Typography>
+                          </TableCell>
+                          {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
+                          {showAuditDetailColumn && (
+                            <TableCell>
+                              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
+                                {entry.diff ?? '—'}
+                              </Typography>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                {showAuditOverflowAction && (
+                  <Box sx={{ px: 2, pb: 2, pt: 1 }}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setShowAllAuditEntries((current) => !current)}
+                      aria-controls="admin-recent-audit-table"
+                      aria-expanded={showAllAuditEntries}
+                    >
+                      {auditOverflowActionLabel}
+                    </Button>
+                  </Box>
+                )}
+              </>
             ) : singleAuditEntry && !auditQuery.isError ? (
               <Box sx={{ px: 2, pb: 2 }}>
                 <Stack spacing={1.25}>

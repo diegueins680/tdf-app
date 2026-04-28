@@ -4072,6 +4072,58 @@ describe('AdminConsolePage', () => {
     expectToAppearBefore(screen.getByText('Roles actualizados'), screen.getByText('Package created'));
   });
 
+  it('keeps the audit table focused on the five newest events until expanded', async () => {
+    const user = userEvent.setup();
+    mockAuditLogs.mockResolvedValue(
+      Array.from({ length: 7 }, (_, index) => {
+        const auditNumber = index + 1;
+
+        return {
+          auditId: `audit-${auditNumber}`,
+          actorId: auditNumber <= 2 ? 777 : null,
+          entity: 'package',
+          entityId: `PKG-${auditNumber}`,
+          action: `package.synced.${auditNumber}`,
+          diff: auditNumber <= 2 ? `Older detail ${auditNumber}` : null,
+          createdAt: `2026-04-09T1${auditNumber}:00:00.000Z`,
+        };
+      }),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Paquete · PKG-7')).toBeInTheDocument();
+      expect(screen.getByText('Paquete · PKG-3')).toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-2')).not.toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-1')).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver 2 cambios anteriores/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Ver 2 cambios anteriores/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Paquete · PKG-2')).toBeInTheDocument();
+      expect(screen.getByText('Paquete · PKG-1')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
+      expect(screen.getByText('Older detail 2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Mostrar solo cambios recientes/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Mostrar solo cambios recientes/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Paquete · PKG-2')).not.toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-1')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver 2 cambios anteriores/i })).toBeInTheDocument();
+    });
+  });
+
   it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
