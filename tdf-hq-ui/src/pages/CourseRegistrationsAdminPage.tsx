@@ -653,9 +653,16 @@ const firstRunApplicationDescriptorPrefixPattern =
 const firstRunApplicationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page))?|application\s+(?:form|page)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunWorkshopDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|signup)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
+
+const firstRunWorkshopDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|signup)(?:\s+(?:form|page))?)\s*$/i;
+
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
+    .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(
       /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+contacto|de\s+consulta|de\s+inter[eé]s|para\s+el|para)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso|para\s+el|para)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|lead\s+form|(?:course\s+)?signup(?:\s+(?:form|page))?|(?:public\s+)?course\s+page|(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
@@ -674,6 +681,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
 const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
+    .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(
       /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+contacto|de\s+consulta|de\s+inter[eé]s)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|lead\s+form|(?:course\s+)?signup(?:\s+(?:form|page))?|(?:public\s+)?course\s+page|(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
       '',
