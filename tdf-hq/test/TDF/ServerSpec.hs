@@ -7312,6 +7312,30 @@ spec = describe "TDF.Server helpers" $ do
                     map Future.cardId (Future.cards consoleView)
                         `shouldBe` ["user-management", "api-tokens"]
                     Future.cards consoleView `shouldSatisfy` (not . null)
+                    A.toJSON consoleView
+                        `shouldBe` A.object
+                            [ "status" .= ("preview" :: Text)
+                            , "cards" .=
+                                [ A.object
+                                    [ "cardId" .= ("user-management" :: Text)
+                                    , "title" .= ("Gestión de usuarios" :: Text)
+                                    , "body" .=
+                                        ( [ "La asignación de roles se administra desde la pantalla de Parties."
+                                          , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
+                                          ] :: [Text]
+                                        )
+                                    ]
+                                , A.object
+                                    [ "cardId" .= ("api-tokens" :: Text)
+                                    , "title" .= ("Tokens API" :: Text)
+                                    , "body" .=
+                                        ( [ "Los tokens de servicio deben administrarse desde un flujo dedicado."
+                                          , "El acceso quedará separado de usuarios humanos para integraciones internas."
+                                          ] :: [Text]
+                                        )
+                                    ]
+                                ]
+                            ]
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback console access, got: " <> show serverErr)
