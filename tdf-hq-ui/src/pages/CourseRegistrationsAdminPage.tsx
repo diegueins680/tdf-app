@@ -2112,10 +2112,22 @@ export default function CourseRegistrationsAdminPage() {
     && !showAdvancedLimitControl
     && !combinedSingleChoiceContextSummary
     && !hasSharedListContextSummary;
+  const hideBusyListPassiveSingleCohortSummary = showBusyListSearchOnboarding
+    && Boolean(singleAvailableCohortLabel)
+    && !combinedSingleChoiceSummary
+    && actionableStatusFilters.length > 0
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !hasSharedListContextSummary;
+  const hiddenBusyListContextSummary = hideBusyListPassiveCurrentViewPanel
+    ? combinedSingleChoiceSummary
+    : hideBusyListPassiveSingleCohortSummary
+      ? singleAvailableCohortLabel
+      : '';
   const localSearchHelperText = !localSearchKey
-    && hideBusyListPassiveCurrentViewPanel
+    && hiddenBusyListContextSummary
     && baseLocalSearchHelperText
-    ? `${combinedSingleChoiceSummary}. ${baseLocalSearchHelperText.replace(' sin cambiar filtros.', '.')}`
+    ? `${hiddenBusyListContextSummary}. ${baseLocalSearchHelperText.replace(' sin cambiar filtros.', '.')}`
     : baseLocalSearchHelperText;
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
@@ -2304,7 +2316,15 @@ export default function CourseRegistrationsAdminPage() {
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
   const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch;
+  const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
+    && !hideBusyListPassiveSingleCohortSummary;
+  const showCohortFilterColumn = showCohortSelect
+    || showCohortFilterUnavailableSummary
+    || showCohortFilterLoadingSummary
+    || showEmptyCohortFilterSummary
+    || showPassiveSingleCohortSummary;
   const filterGridColumns = showStatusFilterColumn ? 6 : 12;
+  const statusFilterGridColumns = showCohortFilterColumn ? 6 : 12;
   const customStatusFilterGuidance = customStatusFilterUnavailableMessage;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
@@ -3593,8 +3613,9 @@ export default function CourseRegistrationsAdminPage() {
                 </Grid>
               ) : (
                 <>
-                  <Grid item xs={12} md={filterGridColumns}>
-                    {showCohortFilterUnavailableSummary ? (
+                  {showCohortFilterColumn && (
+                    <Grid item xs={12} md={filterGridColumns}>
+                      {showCohortFilterUnavailableSummary ? (
                       <Stack
                         data-testid="course-registration-cohort-filter-unavailable"
                         spacing={0.5}
@@ -3668,7 +3689,7 @@ export default function CourseRegistrationsAdminPage() {
                           {emptyCohortFilterMessage}
                         </Typography>
                       </Stack>
-                    ) : singleAvailableCohortLabel ? (
+                    ) : showPassiveSingleCohortSummary ? (
                       <Stack
                         data-testid="course-registration-single-cohort-summary"
                         spacing={0.5}
@@ -3734,10 +3755,11 @@ export default function CourseRegistrationsAdminPage() {
                           </MenuItem>
                         ))}
                       </TextField>
-                    )}
-                  </Grid>
+                      )}
+                    </Grid>
+                  )}
                   {showStatusFilterColumn && (
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={statusFilterGridColumns}>
                       {showSingleStatusSummaryBlock && singleVisibleStatus ? (
                         <Stack
                           data-testid="course-registration-single-status-summary"

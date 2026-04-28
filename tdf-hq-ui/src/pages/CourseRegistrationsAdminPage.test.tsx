@@ -7333,6 +7333,43 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds a passive single cohort into busy-list search guidance when status filters still matter', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => (
+        index === 8
+          ? {
+            crFullName: 'Nina Simone',
+            crEmail: 'nina@example.com',
+            crStatus: 'paid',
+          }
+          : {}
+      )),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Cohorte única por ahora.');
+      expect(container.textContent).toContain('Beatmaking 101. Busca dentro de las 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain(
+        'Beatmaking 101. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
+      );
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('keeps busy single-choice defaults focused on search instead of a passive current-view panel', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
