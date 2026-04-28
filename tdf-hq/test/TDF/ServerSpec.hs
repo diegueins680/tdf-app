@@ -180,6 +180,7 @@ import TDF.Server
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
     , validateDatafastResultCodeField
+    , validateDatafastSuccessfulPaymentAmountAndCurrency
     , resolvePaypalBaseUrl
     , validatePayPalCredential
     , validatePayPalAccessTokenField
@@ -5077,6 +5078,62 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "000..100"
             assertInvalid "000.100\nInjected"
             assertInvalid (T.replicate 65 "1")
+
+    describe "validateDatafastSuccessfulPaymentAmountAndCurrency" $ do
+        it "requires successful Datafast payment metadata to match the stored order" $ do
+            validateDatafastSuccessfulPaymentAmountAndCurrency
+                2500
+                "usd"
+                (Just "25.00")
+                (Just " USD ")
+                `shouldBe` Right ()
+            validateDatafastSuccessfulPaymentAmountAndCurrency
+                2505
+                "USD"
+                (Just "25.05")
+                (Just "usd")
+                `shouldBe` Right ()
+
+        it "rejects missing, malformed, or mismatched payment metadata before marking an order paid" $ do
+            let assertInvalid expectedCode expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` expectedCode
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right () ->
+                            expectationFailure "Expected invalid Datafast payment metadata to be rejected"
+            assertInvalid
+                502
+                "did not include an amount"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" Nothing (Just "USD"))
+            assertInvalid
+                502
+                "invalid payment amount"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "25.001") (Just "USD"))
+            assertInvalid
+                502
+                "amount does not match"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "24.99") (Just "USD"))
+            assertInvalid
+                502
+                "did not include a currency"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "25.00") Nothing)
+            assertInvalid
+                502
+                "invalid payment currency"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "25.00") (Just "US1"))
+            assertInvalid
+                502
+                "currency does not match"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "25.00") (Just "EUR"))
+            assertInvalid
+                500
+                "Stored marketplace order currency is invalid"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "US1" (Just "25.00") (Just "USD"))
+            assertInvalid
+                500
+                "Stored marketplace order total is invalid"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 0 "USD" (Just "0.00") (Just "USD"))
 
     describe "validateDatafastEntityId" $ do
         it "trims URL-safe Datafast entity ids before gateway requests" $

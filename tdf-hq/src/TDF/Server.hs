@@ -7286,14 +7286,19 @@ validateReceiptCurrency (Just rawCurrency) =
 validateCurrencyCode :: Maybe Text -> Either ServerError Text
 validateCurrencyCode Nothing = Right "USD"
 validateCurrencyCode (Just rawCurrency) =
+  case normalizeCurrencyCodeText rawCurrency of
+    Just currency -> Right currency
+    Nothing -> Left err400 { errBody = "currency must be a 3-letter ISO code" }
+
+normalizeCurrencyCodeText :: Text -> Maybe Text
+normalizeCurrencyCodeText rawCurrency =
   case normalizeOptionalInput (Just rawCurrency) of
-    Nothing ->
-      Left err400 { errBody = "currency must be a 3-letter ISO code" }
+    Nothing -> Nothing
     Just currency ->
       let normalized = T.toUpper currency
       in if T.length normalized == 3 && T.all isAsciiUpper normalized
-           then Right normalized
-           else Left err400 { errBody = "currency must be a 3-letter ISO code" }
+           then Just normalized
+           else Nothing
 
 validateServiceAdSlotMinutes :: Maybe Int -> Either ServerError Int
 validateServiceAdSlotMinutes Nothing = Right 60
@@ -9566,7 +9571,14 @@ confirmDatafastPayment mOrderId mResourcePath = do
   code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
   let success = isDfPaymentSuccess code
       pending = isDfPaymentPending code
-      nextStatus
+  when success $
+    either throwError pure $
+      validateDatafastSuccessfulPaymentAmountAndCurrency
+        (ME.marketplaceOrderTotalUsdCents order)
+        (ME.marketplaceOrderCurrency order)
+        (dfpAmount statusResp)
+        (dfpCurrency statusResp)
+  let nextStatus
         | success = "paid"
         | pending = "datafast_pending"
         | otherwise = "datafast_failed"
@@ -9906,6 +9918,79 @@ invalidDatafastResultCode =
     { errBody =
         "Datafast returned an invalid result code"
     }
+
+validateDatafastSuccessfulPaymentAmountAndCurrency
+  :: Int
+  -> Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError ()
+validateDatafastSuccessfulPaymentAmountAndCurrency expectedCents storedCurrency mAmount mCurrency = do
+  when (expectedCents <= 0) $
+    Left err500 { errBody = "Stored marketplace order total is invalid" }
+  expectedCurrency <- validateStoredMarketplaceOrderCurrency storedCurrency
+  paidCents <- validateDatafastPaymentAmountField mAmount
+  paidCurrency <- validateDatafastPaymentCurrencyField mCurrency
+  unless (paidCents == expectedCents) $
+    Left err502 { errBody = "Datafast payment amount does not match this order" }
+  unless (paidCurrency == expectedCurrency) $
+    Left err502 { errBody = "Datafast payment currency does not match this order" }
+
+validateStoredMarketplaceOrderCurrency :: Text -> Either ServerError Text
+validateStoredMarketplaceOrderCurrency rawCurrency =
+  case normalizeCurrencyCodeText rawCurrency of
+    Just currency -> Right currency
+    Nothing -> Left err500 { errBody = "Stored marketplace order currency is invalid" }
+
+validateDatafastPaymentAmountField :: Maybe Text -> Either ServerError Int
+validateDatafastPaymentAmountField Nothing =
+  Left err502 { errBody = "Datafast payment response did not include an amount" }
+validateDatafastPaymentAmountField (Just rawAmount) =
+  case parseDatafastAmountCents rawAmount of
+    Just cents -> Right cents
+    Nothing -> Left err502 { errBody = "Datafast returned an invalid payment amount" }
+
+validateDatafastPaymentCurrencyField :: Maybe Text -> Either ServerError Text
+validateDatafastPaymentCurrencyField Nothing =
+  Left err502 { errBody = "Datafast payment response did not include a currency" }
+validateDatafastPaymentCurrencyField (Just rawCurrency) =
+  case normalizeCurrencyCodeText rawCurrency of
+    Just currency -> Right currency
+    Nothing -> Left err502 { errBody = "Datafast returned an invalid payment currency" }
+
+parseDatafastAmountCents :: Text -> Maybe Int
+parseDatafastAmountCents rawAmount =
+  case T.splitOn "." amount of
+    [whole] -> parseParts whole "0"
+    [whole, fraction] -> parseParts whole fraction
+    _ -> Nothing
+  where
+    amount = T.strip rawAmount
+
+    parseParts whole fraction
+      | T.null whole = Nothing
+      | T.null fraction = Nothing
+      | T.length fraction > 2 = Nothing
+      | otherwise = do
+          wholeValue <- parseDecimalDigits whole
+          fractionValue <- parseDecimalDigits (T.take 2 (fraction <> "00"))
+          let cents = wholeValue * 100 + fractionValue
+          if cents <= fromIntegral (maxBound :: Int)
+            then Just (fromIntegral cents)
+            else Nothing
+
+parseDecimalDigits :: Text -> Maybe Integer
+parseDecimalDigits rawDigits =
+  if T.null rawDigits
+    then Nothing
+    else T.foldl' step (Just 0) rawDigits
+  where
+    step Nothing _ = Nothing
+    step (Just acc) ch
+      | isDigit ch =
+          Just (acc * 10 + fromIntegral (fromEnum ch - fromEnum '0'))
+      | otherwise =
+          Nothing
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
