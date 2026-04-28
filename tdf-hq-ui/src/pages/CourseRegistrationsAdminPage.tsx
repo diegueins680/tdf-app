@@ -3421,7 +3421,7 @@ export default function CourseRegistrationsAdminPage() {
                               <Typography variant="body2" color="text.secondary">
                                 En edición
                               </Typography>
-                            ) : (
+                            ) : !showReceiptComposer ? (
                               <IconButton
                                 size="small"
                                 title="Opciones del comprobante"
@@ -3431,7 +3431,7 @@ export default function CourseRegistrationsAdminPage() {
                               >
                                 <MoreVertIcon fontSize="small" />
                               </IconButton>
-                            )}
+                            ) : null}
                           </Stack>
                           {receipt.crrNotes && (
                             <Typography variant="body2" color="text.secondary">

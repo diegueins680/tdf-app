@@ -4619,7 +4619,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await page.cleanup();
   });
 
-  it('keeps saved receipts easy to scan by showing section guidance only when the receipt form is active', async () => {
+  it('keeps saved receipts easy to scan while the receipt form owns the active actions', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
         crdRegistration: buildRegistration(),
@@ -4662,6 +4662,22 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).not.toBeNull();
       expect(document.body.textContent).toContain(receiptComposerHelpText);
+      expect(() =>
+        getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf'),
+      ).toThrow();
+      expect(document.body.textContent).not.toContain(editingReceiptComposerHelpText);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar comprobante'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.querySelector('[data-testid="course-registration-receipt-composer-pane"]')).toBeNull();
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(receiptComposerHelpText);
     });
 
     await act(async () => {
