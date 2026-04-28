@@ -1488,10 +1488,15 @@ spec = do
             Right value ->
               expectationFailure ("Expected contradictory checkout target to be rejected, got " <> show value)
       assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty Nothing Nothing Nothing)
-      assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
+      assertInvalid
+        "targetParty required for party checkout"
+        (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
       assertInvalid
         "targetParty must not contain control characters"
         (validateCheckoutTargets TargetParty (Just "Crew\nA") Nothing Nothing)
+      assertInvalid
+        "targetParty must not contain control characters or hidden formatting characters"
+        (validateCheckoutTargets TargetParty (Just ("Crew" <> "\x202E" <> "A")) Nothing Nothing)
       assertInvalid
         "targetParty must be 160 characters or fewer"
         (validateCheckoutTargets TargetParty (Just (T.replicate 161 "a")) Nothing Nothing)

@@ -20,7 +20,18 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace, ord)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  , ord
+  )
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -176,12 +187,19 @@ validateCheckoutTargetParty mTargetParty =
     Just targetParty
       | T.length targetParty > 160 ->
           Left err400 { errBody = "targetParty must be 160 characters or fewer" }
-      | T.any isControl targetParty ->
-          Left err400 { errBody = "targetParty must not contain control characters" }
+      | T.any isUnsafeCheckoutTargetPartyChar targetParty ->
+          Left err400
+            { errBody =
+                "targetParty must not contain control characters or hidden formatting characters"
+            }
       | not (T.any isAlphaNum targetParty) ->
           Left err400 { errBody = "targetParty must contain at least one letter or digit" }
       | otherwise ->
           Right (Just targetParty)
+
+isUnsafeCheckoutTargetPartyChar :: Char -> Bool
+isUnsafeCheckoutTargetPartyChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 inventoryServer
   :: ( MonadReader Env m
