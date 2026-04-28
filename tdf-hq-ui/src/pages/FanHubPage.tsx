@@ -821,6 +821,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     to="/reservar"
                     clickable
                   />
+                  <Chip
+                    label="DJ Booth"
+                    component={RouterLink}
+                    to="/dj-booth"
+                    clickable
+                    variant="outlined"
+                  />
                   {canManageReleases && (
                     <Chip
                       label="Editar CMS"
@@ -988,6 +995,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <Button component={RouterLink} to="/reservar" variant="contained" color="secondary" size="small">
                         Abrir reservas
                       </Button>
+                      <Button component={RouterLink} to="/dj-booth" variant="outlined" color="secondary" size="small">
+                        DJ Booth
+                      </Button>
                       <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
                         Radio y en vivo
                       </Button>
@@ -1019,6 +1029,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/reservar" variant="contained" size="small">
                         Reservar ahora
+                      </Button>
+                      <Button component={RouterLink} to="/dj-booth" variant="outlined" size="small">
+                        DJ Booth
                       </Button>
                       <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
                         Sesión en vivo

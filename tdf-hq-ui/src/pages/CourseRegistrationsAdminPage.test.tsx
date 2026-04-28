@@ -204,7 +204,7 @@ const markPaidEmptyFollowUpHelperText =
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
-  'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
+  'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
@@ -5162,7 +5162,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(document.body, 'Primer seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
-      expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento opcional')).toBe(0);
       expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
     });
@@ -5483,8 +5483,7 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
         ),
       ).toBe(false);
-      expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
     });
 
@@ -5495,6 +5494,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar seguimiento')).toBeTruthy();
       expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(false);
     });
 

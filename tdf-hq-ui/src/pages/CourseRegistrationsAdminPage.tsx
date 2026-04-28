@@ -93,8 +93,8 @@ const systemEmailHistoryHelperText = 'Historial persistente de correos del siste
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const markPaidEmptyFollowUpHelperText = 'Agrega seguimiento solo si necesitas dejar contexto manual aparte del comprobante o del cambio de estado.';
-const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
-const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
+const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
+const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
@@ -3040,6 +3040,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
   const canSubmitFollowUp = Boolean(trimToNull(followUpForm.notes));
+  const showFollowUpSaveAction = canSubmitFollowUp || followUpForm.editingId != null;
   const showCompactMarkPaidFollowUpState = selectedDossier?.intent === 'markPaid'
     && followUps.length === 0
     && !showFollowUpComposer;
@@ -4861,13 +4862,15 @@ export default function CourseRegistrationsAdminPage() {
                                 </Stack>
                               </Collapse>
                               <Stack direction="row" spacing={1}>
-                                <Button
-                                  variant="contained"
-                                  onClick={handleSubmitFollowUp}
-                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
-                                >
-                                  {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
-                                </Button>
+                                {showFollowUpSaveAction && (
+                                  <Button
+                                    variant="contained"
+                                    onClick={handleSubmitFollowUp}
+                                    disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
+                                  >
+                                    {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
+                                  </Button>
+                                )}
                                 <Button variant="text" onClick={resetFollowUpComposer}>
                                   {followUpForm.editingId == null ? 'Cancelar seguimiento' : 'Cancelar edición de seguimiento'}
                                 </Button>

@@ -499,10 +499,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
-    if (presetService?.name) {
-      appliedServiceQuery.current = true;
-      return;
-    }
+    if (presetService?.name) return;
     if (!services.length) return;
     const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
