@@ -231,7 +231,10 @@ validateContractPayload (A.Object payloadObj) =
           case normalizeContractKind rawKind of
             Left err -> Left err
             Right kindText ->
-              Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
+              let normalizedPayload = A.Object (KM.insert "kind" (A.String kindText) payloadObj)
+              in do
+                validateContractPayloadForPdf normalizedPayload
+                Right (kindText, normalizedPayload)
         Just _ ->
           invalidKind
   where
@@ -247,6 +250,25 @@ validateContractPayload _ =
   Left err400
     { errBody = "Contract payload must be a JSON object"
     }
+
+validateContractPayloadForPdf :: A.Value -> Either ServerError ()
+validateContractPayloadForPdf payload
+  | containsLatexVerbatimTerminator payload =
+      Left err400
+        { errBody = "Contract payload text must not include the LaTeX verbatim terminator"
+        }
+  | otherwise =
+      Right ()
+
+containsLatexVerbatimTerminator :: A.Value -> Bool
+containsLatexVerbatimTerminator (A.String value) =
+  "\\end{verbatim}" `T.isInfixOf` value
+containsLatexVerbatimTerminator (A.Object payloadObj) =
+  any containsLatexVerbatimTerminator (KM.elems payloadObj)
+containsLatexVerbatimTerminator (A.Array payloadValues) =
+  any containsLatexVerbatimTerminator payloadValues
+containsLatexVerbatimTerminator _ =
+  False
 
 normalizeContractEmail :: Text -> Maybe Text
 normalizeContractEmail rawEmail =

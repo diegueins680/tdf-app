@@ -5912,6 +5912,24 @@ main = hspec $ do
                 (A.object ["kind" .= ("generic" :: Text), "created_at" .= ("2026-01-01T00:00:00Z" :: Text)])
                 "Contract payload must not include server-managed field: created_at"
 
+        it "rejects payload text that would break out of contract PDF verbatim rendering" $
+            case validateContractPayload
+                (A.object
+                    [ "kind" .= ("generic" :: Text)
+                    , "sections" .=
+                        [ A.object
+                            [ "body" .= ("line one\n\\end{verbatim}\n\\input{/tmp/private}" :: Text)
+                            ]
+                        ]
+                    ]
+                ) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
+                Right value ->
+                    expectationFailure ("Expected unsafe contract payload text to be rejected, got: " <> show value)
+
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $
             validateContractSendPayload (A.object ["email" .= (" Sales@Example.com " :: Text)])
