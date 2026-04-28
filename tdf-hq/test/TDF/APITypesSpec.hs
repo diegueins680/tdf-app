@@ -903,6 +903,9 @@ spec = do
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"call me at 099 123 4567\"}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"099\\n1234567\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+1234567890123456\"}"
                 `shouldSatisfy` isLeft
 

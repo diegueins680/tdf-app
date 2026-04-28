@@ -451,7 +451,7 @@ normalizeMarketplacePhone raw =
       plusIndex = T.findIndex (== '+') trimmed
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
