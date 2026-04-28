@@ -97,7 +97,8 @@ import TDF.DTO.SocialSyncDTO
       SocialSyncPostIn (..),
       maxSocialSyncIngestPosts )
 import TDF.Models.SocialEventsModels
-    ( EventFinanceEntry (..),
+    ( EventBudgetLine (..),
+      EventFinanceEntry (..),
       EventInvitationId,
       EventTicket (..),
       EventTicketOrder (..),
@@ -233,6 +234,7 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentMediaType,
     normalizeMomentReaction,
     normalizePositivePartyIdText,
+    validateStoredBudgetLineDimensions,
     validateStoredFinanceEntryDimensions,
     parseEventStatusQueryParamEither,
     parseEventTypeQueryParamEither,
@@ -6325,6 +6327,37 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored finance entry currency is invalid"
                 Right value ->
                     expectationFailure ("Expected invalid stored finance currency to be rejected, got " <> show value)
+
+    describe "stored budget line invariants" $ do
+        let budgetTimestamp = UTCTime (fromGregorian 2026 1 1) 0
+            validStoredBudgetLine =
+                EventBudgetLine
+                    { eventBudgetLineEventId = toSqlKey 1
+                    , eventBudgetLineCode = "TICKET-SALES"
+                    , eventBudgetLineName = "Ticket sales"
+                    , eventBudgetLineLineType = "income"
+                    , eventBudgetLineCategory = "tickets"
+                    , eventBudgetLinePlannedCents = 250000
+                    , eventBudgetLineNotes = Nothing
+                    , eventBudgetLineCreatedAt = budgetTimestamp
+                    , eventBudgetLineUpdatedAt = budgetTimestamp
+                    }
+
+        it "accepts persisted budget lines whose summary dimensions are already canonical" $
+            validateStoredBudgetLineDimensions validStoredBudgetLine
+                `shouldBe` Right (250000, "income")
+
+        it "rejects invalid persisted budget line dimensions instead of treating them as expense fallbacks" $ do
+            case validateStoredBudgetLineDimensions validStoredBudgetLine { eventBudgetLineLineType = "misc" } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored budget line type is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored budget line type to be rejected, got " <> show value)
+            case validateStoredBudgetLineDimensions validStoredBudgetLine { eventBudgetLinePlannedCents = -1 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored budget line planned cents is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored budget cents to be rejected, got " <> show value)
 
     describe "event list query validation" $ do
         it "accepts blank filters and canonicalizes supported event type and status values" $ do

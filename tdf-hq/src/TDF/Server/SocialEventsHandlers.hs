@@ -32,6 +32,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeFinanceEntryStatus
   , validateFinanceEntryCurrencyInput
   , validateOptionalBudgetLineIdInput
+  , validateStoredBudgetLineDimensions
   , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
   , resolveExistingPartyIdText
@@ -1931,20 +1932,22 @@ socialEventsServer user = eventsServer
         (selectList [EventFinanceEntryEventId ==. eventKey] [])
         envPool
       ticketOrders <- liftIO $ runSqlPool (selectList [EventTicketOrderEventId ==. eventKey] []) envPool
+      normalizedBudgetRows <- either (throwError . financeInvariantServerError) pure
+        (traverse storedBudgetLineSummaryFields budgetRows)
       normalizedFinanceRows <- either (throwError . financeInvariantServerError) pure
         (traverse storedFinanceEntrySummaryFields allFinanceRows)
 
       let plannedIncomeCents =
             sum
-              [ eventBudgetLinePlannedCents lineRec
-              | Entity _ lineRec <- budgetRows
-              , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "income"
+              [ plannedCents
+              | (plannedCents, lineTypeVal) <- normalizedBudgetRows
+              , lineTypeVal == "income"
               ]
           plannedExpenseCents =
             sum
-              [ eventBudgetLinePlannedCents lineRec
-              | Entity _ lineRec <- budgetRows
-              , normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec)) == "expense"
+              [ plannedCents
+              | (plannedCents, lineTypeVal) <- normalizedBudgetRows
+              , lineTypeVal == "expense"
               ]
           entryAmount (amountCents, _, _, _) = amountCents
           entryDirection (_, directionVal, _, _) = directionVal
@@ -2600,6 +2603,14 @@ validateBudgetLineTypeInput raw =
     Just lineTypeVal -> Right lineTypeVal
     Nothing -> Left err400 { errBody = "budget line type must be income or expense" }
 
+validateStoredBudgetLineDimensions :: EventBudgetLine -> Either T.Text (Int, T.Text)
+validateStoredBudgetLineDimensions line = do
+  lineTypeVal <- maybe (Left "Stored budget line type is invalid") Right
+    (parseBudgetLineType (eventBudgetLineLineType line))
+  if eventBudgetLinePlannedCents line < 0
+    then Left "Stored budget line planned cents is invalid"
+    else Right (eventBudgetLinePlannedCents line, lineTypeVal)
+
 normalizeBudgetLineCode :: T.Text -> T.Text
 normalizeBudgetLineCode raw =
   let upper = T.toUpper (T.strip raw)
@@ -3239,6 +3250,10 @@ storedFinanceEntrySummaryFields :: Entity EventFinanceEntry -> Either T.Text (In
 storedFinanceEntrySummaryFields (Entity _ entryRec) = do
   (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
   pure (eventFinanceEntryAmountCents entryRec, directionVal, sourceVal, statusVal)
+
+storedBudgetLineSummaryFields :: Entity EventBudgetLine -> Either T.Text (Int, T.Text)
+storedBudgetLineSummaryFields (Entity _ lineRec) =
+  validateStoredBudgetLineDimensions lineRec
 
 ticketOrderAccountingEntries :: SocialEventId -> Entity EventTicketOrder -> [EventFinanceEntryDTO]
 ticketOrderAccountingEntries eventKey (Entity orderKey orderRec) =
