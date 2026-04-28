@@ -5499,8 +5499,11 @@ spec = describe "TDF.Server helpers" $ do
                 "Mensaje demasiado largo"
                 (validateWhatsAppReplyBody (T.replicate 4097 "a"))
             assertInvalid
-                "caracteres de control no soportados"
+                "caracteres de control o formato no soportados"
                 (validateWhatsAppReplyBody ("hola" <> T.singleton '\NUL'))
+            assertInvalid
+                "caracteres de control o formato no soportados"
+                (validateWhatsAppReplyBody ("hola" <> T.singleton '\x202E' <> "odnum"))
 
     describe "validateWhatsAppReplyExternalId" $ do
         it "requires provided reply targets to be explicit non-blank identifiers" $ do
