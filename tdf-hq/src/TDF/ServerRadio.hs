@@ -130,6 +130,18 @@ resolveRadioTransmissionEnvBase label _ (Just rawValue)
             BL.fromStrict . TE.encodeUtf8 $
               label <> " is configured but blank"
         }
+  | T.any isSpace cleaned =
+      Left err500
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              label <> " must not contain whitespace"
+        }
+  | T.any isControl cleaned =
+      Left err500
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              label <> " must not contain control characters"
+        }
   | otherwise =
       Right cleaned
   where

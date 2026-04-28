@@ -5223,6 +5223,31 @@ main = hspec $ do
             assertBlank "RADIO_INGEST_BASE" "\t\n"
             assertBlank "RADIO_WHIP_BASE" ""
 
+        it "rejects malformed transmission env vars as server config errors" $ do
+            let assertInvalid label rawValue expectedMessage =
+                    case
+                        resolveRadioTransmissionEnvBase
+                            label
+                            "https://fallback.example.com"
+                            (Just rawValue)
+                    of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (label <> expectedMessage)
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid radio base env to be rejected, got " <> show value)
+            assertInvalid
+                "RADIO_PUBLIC_BASE"
+                "https://radio.example.com/live stream"
+                " must not contain whitespace"
+            assertInvalid
+                "RADIO_WHIP_BASE"
+                "https://radio.example.com/whip\NUL"
+                " must not contain control characters"
+
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
             validateRadioTransmissionIngestBase "  RTMPS://stream.example.com/live/  "
