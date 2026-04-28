@@ -1874,6 +1874,32 @@ main = hspec $ do
             expectInvalidHost "postgresql://flyuser:flypass@[db.fly.internal]:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@[2001:::1]:5432/tdf_hq"
 
+        it "rejects DATABASE_URL fallback values with malformed host labels" $ do
+            let expectInvalidHost raw =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just raw)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL must include a valid PostgreSQL host"
+                                `isInfixOf` show (err :: IOException)
+            expectInvalidHost "postgresql://flyuser:flypass@db..internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@bad_host.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@-db.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@999.999.999.999:5432/tdf_hq"
+
         it "rejects DATABASE_URL fallback values without an explicit database name" $ do
             let expectMissingDatabase raw =
                     withEnvOverrides

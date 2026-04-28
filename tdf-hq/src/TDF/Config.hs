@@ -165,7 +165,56 @@ validateFallbackConnUrl envName raw
           let (host, suffix) = T.breakOn ":" hostPort
           in if T.null host
                then Left (envName <> " must include a PostgreSQL host")
+               else if not (isValidConnectionHost host)
+                 then Left (envName <> " must include a valid PostgreSQL host")
                else validateConnectionPortSuffix suffix
+
+    isValidConnectionHost :: Text -> Bool
+    isValidConnectionHost rawHost =
+      let host = T.toLower rawHost
+      in T.length host <= 253
+        && not (T.isPrefixOf "." host)
+        && not (T.isSuffixOf "." host)
+        && not (isAmbiguousNumericConnectionHost host)
+        && all isValidConnectionHostLabel (T.splitOn "." host)
+
+    isValidConnectionHostLabel :: Text -> Bool
+    isValidConnectionHostLabel label =
+      not (T.null label)
+        && T.length label <= 63
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all isConnectionHostChar label
+
+    isConnectionHostChar :: Char -> Bool
+    isConnectionHostChar ch =
+      (ch >= 'a' && ch <= 'z') || isDigit ch || ch == '-'
+
+    isAmbiguousNumericConnectionHost :: Text -> Bool
+    isAmbiguousNumericConnectionHost host =
+      T.all (\ch -> isDigit ch || ch == '.') host
+        && isNothing (parseIpv4Octets host)
+
+    parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+    parseIpv4Octets host =
+      case T.splitOn "." host of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet :: Text -> Maybe Int
+    parseOctet octet
+      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
+      | otherwise = do
+          octetNumber <- readMaybe (T.unpack octet)
+          if octetNumber >= (0 :: Int) && octetNumber <= 255
+            then Just octetNumber
+            else Nothing
 
     isValidBracketedConnectionHost :: Text -> Bool
     isValidBracketedConnectionHost host =
