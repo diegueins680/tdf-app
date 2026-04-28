@@ -679,6 +679,53 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps authorization fallback cards out of first-run optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-authorization',
+          title: 'Authorization',
+          body: [
+            'Review authorization rules before editing admin access.',
+          ],
+        },
+        {
+          cardId: 'fallback-autorizaciones',
+          title: 'Autorizaciones',
+          body: [
+            'Revisa autorizaciones del equipo antes de editar accesos administrativos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Authorization')).not.toBeInTheDocument();
+    expect(screen.queryByText('Autorizaciones')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review authorization rules before editing admin access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa autorizaciones del equipo antes de editar accesos administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run checklist focused when a built-in access-control duplicate arrives under a custom preview id', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
