@@ -308,6 +308,30 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
+  it('keeps optional preview errors hidden while first-run service health is blocked', async () => {
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
+    mockConsolePreview.mockRejectedValue(new Error('Vista dinámica no disponible'));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/No se pudo cargar el panel dinámico/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vista dinámica no disponible/i)).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run refresh action inside onboarding guidance when the health check fails', async () => {
     mockHealthFetch.mockRejectedValue(new Error('Sin conexión'));
 

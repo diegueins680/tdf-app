@@ -1364,6 +1364,7 @@ export default function AdminConsolePage() {
   const showGettingStartedSectionLinks = gettingStartedSections.length > 1;
   const firstRunServiceNeedsRefresh =
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
+  const showConsoleError = consoleError && !showFirstRunServiceHealthGate;
   const showHeaderRefreshAction =
     hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
   const showFirstRunRefreshAction =
@@ -1696,7 +1697,7 @@ export default function AdminConsolePage() {
         </Alert>
       )}
 
-      {consoleError && (
+      {showConsoleError && (
         <Alert severity="warning">
           No se pudo cargar el panel dinámico. Mostrando la consola base. Detalle: {consoleError}
         </Alert>
