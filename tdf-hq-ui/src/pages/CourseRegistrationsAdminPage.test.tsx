@@ -3393,6 +3393,12 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).toContain('Cancelar inscripción');
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel).getAttribute('aria-label')).toBe(
+        'Registrar pago para Ada Lovelace',
+      );
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción').getAttribute('aria-label')).toBe(
+        'Cancelar inscripción para Ada Lovelace',
+      );
       expect(document.body.textContent).not.toContain('Marcar pendiente');
       expect(
         Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
@@ -3410,6 +3416,12 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Marcar pendiente');
       expect(document.body.textContent).toContain('Cancelar inscripción');
+      expect(getMenuItemByText(document.body, 'Marcar pendiente').getAttribute('aria-label')).toBe(
+        'Marcar pendiente para Grace Hopper',
+      );
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción').getAttribute('aria-label')).toBe(
+        'Cancelar inscripción para Grace Hopper',
+      );
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Estado actual:');
     });
@@ -3422,6 +3434,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(reopenPendingLabel);
+      expect(getMenuItemByText(document.body, reopenPendingLabel).getAttribute('aria-label')).toBe(
+        'Reabrir como pendiente para Katherine Johnson',
+      );
       expect(getMenuItemByText(document.body, reopenPendingLabel).getAttribute('title')).toBe(
         'Usa esta acción para reabrir la inscripción como pendiente.',
       );

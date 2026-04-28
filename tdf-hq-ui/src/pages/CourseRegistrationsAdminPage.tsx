@@ -3048,6 +3048,7 @@ export default function CourseRegistrationsAdminPage() {
       : followUpComposerHelpText;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
+  const statusMenuActionTargetLabel = statusMenuReg ? getActionTargetLabelForRegistration(statusMenuReg) : '';
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
   const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
@@ -4344,6 +4345,7 @@ export default function CourseRegistrationsAdminPage() {
       >
         {statusMenuReg && canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
+            aria-label={`${openPaymentWorkflowLabel} para ${statusMenuActionTargetLabel}`}
             onClick={() => {
               handleCloseStatusMenu();
               handleOpenDossier(statusMenuReg, 'markPaid');
@@ -4354,6 +4356,7 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
           <MenuItem
+            aria-label={`${pendingStatusMenuLabel(statusMenuReg.crStatus)} para ${statusMenuActionTargetLabel}`}
             title={`Usa esta acción para ${pendingStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
             onClick={() => {
               handleCloseStatusMenu();
@@ -4365,6 +4368,7 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'cancelled') && (
           <MenuItem
+            aria-label={`Cancelar inscripción para ${statusMenuActionTargetLabel}`}
             onClick={() => {
               handleCloseStatusMenu();
               handleQuickStatus(statusMenuReg, 'cancelled');
