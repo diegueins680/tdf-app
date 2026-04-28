@@ -9,6 +9,7 @@ describe('getSocialEventsOverviewUiState', () => {
     })).toEqual({
       emptyEventsMessage:
         'No hay eventos sociales por venir. Usa Crear evento para registrar el primero; el calendario aparecera cuando exista al menos un evento.',
+      showFilters: false,
       showCalendar: false,
     });
   });
@@ -21,6 +22,7 @@ describe('getSocialEventsOverviewUiState', () => {
     })).toEqual({
       emptyEventsMessage:
         'No hay eventos por venir para este filtro. Ajusta ciudad, tipo o estado para ampliar la busqueda.',
+      showFilters: true,
       showCalendar: false,
     });
   });
@@ -32,6 +34,7 @@ describe('getSocialEventsOverviewUiState', () => {
       filtersActive: false,
     })).toEqual({
       emptyEventsMessage: null,
+      showFilters: true,
       showCalendar: true,
     });
   });

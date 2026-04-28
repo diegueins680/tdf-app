@@ -648,7 +648,7 @@ export default function SocialEventsPage() {
         return [createdEvent, ...withoutCreated];
       });
       void qc.invalidateQueries({ queryKey: ['social-events'] });
-      setFeedback({ kind: 'success', message: 'Evento creado y agregado al Event Calendar.' });
+      setFeedback({ kind: 'success', message: 'Evento creado y agregado al calendario.' });
     },
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
@@ -1105,43 +1105,47 @@ export default function SocialEventsPage() {
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          <TextField
-            label="Filtrar por ciudad"
-            size="small"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            sx={{ minWidth: 220 }}
-          />
-          <TextField
-            select
-            label="Tipo"
-            size="small"
-            value={eventTypeFilter}
-            onChange={(e) => setEventTypeFilter(e.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="party">Party</MenuItem>
-            <MenuItem value="concert">Concert</MenuItem>
-            <MenuItem value="festival">Festival</MenuItem>
-            <MenuItem value="showcase">Showcase</MenuItem>
-          </TextField>
-          <TextField
-            select
-            label="Estado"
-            size="small"
-            value={eventStatusFilter}
-            onChange={(e) => setEventStatusFilter(e.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="planning">Planning</MenuItem>
-            <MenuItem value="announced">Announced</MenuItem>
-            <MenuItem value="on_sale">On Sale</MenuItem>
-            <MenuItem value="live">Live</MenuItem>
-            <MenuItem value="completed">Completed</MenuItem>
-            <MenuItem value="cancelled">Cancelled</MenuItem>
-          </TextField>
+          {eventOverviewUiState.showFilters && (
+            <>
+              <TextField
+                label="Filtrar por ciudad"
+                size="small"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                sx={{ minWidth: 220 }}
+              />
+              <TextField
+                select
+                label="Tipo"
+                size="small"
+                value={eventTypeFilter}
+                onChange={(e) => setEventTypeFilter(e.target.value)}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="party">Party</MenuItem>
+                <MenuItem value="concert">Concert</MenuItem>
+                <MenuItem value="festival">Festival</MenuItem>
+                <MenuItem value="showcase">Showcase</MenuItem>
+              </TextField>
+              <TextField
+                select
+                label="Estado"
+                size="small"
+                value={eventStatusFilter}
+                onChange={(e) => setEventStatusFilter(e.target.value)}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="planning">Planning</MenuItem>
+                <MenuItem value="announced">Announced</MenuItem>
+                <MenuItem value="on_sale">On Sale</MenuItem>
+                <MenuItem value="live">Live</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
+              </TextField>
+            </>
+          )}
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -1153,7 +1157,7 @@ export default function SocialEventsPage() {
           >
             Refrescar
           </Button>
-          {!hasSession && (
+          {!hasSession && eventOverviewUiState.showFilters && (
             <Alert severity="info" sx={{ m: 0, py: 0.5 }}>
               Inicia sesión para RSVP, invitaciones, tickets y gestión financiera.
             </Alert>
@@ -1163,9 +1167,9 @@ export default function SocialEventsPage() {
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={700}>Create Event</Typography>
+                <Typography variant="h6" fontWeight={700}>Crear evento</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Any logged in user can create events. Once created, events appear in the Event Calendar section.
+                  Crea el primer evento aqui; cuando exista al menos uno, apareceran los filtros y el calendario.
                 </Typography>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                   <TextField
@@ -1305,7 +1309,7 @@ export default function SocialEventsPage() {
           <CardContent>
             <Stack spacing={1.5}>
               <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
-                <Typography variant="h6" fontWeight={700}>Event Calendar</Typography>
+                <Typography variant="h6" fontWeight={700}>Calendario de eventos</Typography>
                 <Chip size="small" label={`${events.length} evento${events.length === 1 ? '' : 's'}`} />
               </Stack>
               <Grid container spacing={2}>
