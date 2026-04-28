@@ -10305,10 +10305,13 @@ instance FromJSON PayPalCreateResponse where
 
 data PayPalToken = PayPalToken
   { payPalAccessToken :: Maybe Text
+  , payPalTokenType :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON PayPalToken where
   parseJSON = withObject "PayPalToken" $ \o ->
-    PayPalToken <$> o .:? "access_token"
+    PayPalToken
+      <$> o .:? "access_token"
+      <*> o .:? "token_type"
 
 data PayPalCaptureOutcome = PayPalCaptureOutcome
   { pcoStatus :: Text
@@ -10383,7 +10386,13 @@ paypalAccessToken manager cid sec baseUrl = do
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear token PayPal: " <> err) }
     Right tok -> pure tok
   either throwError pure $
-    validatePayPalAccessTokenField (payPalAccessToken token)
+    validatePayPalTokenResponse token
+
+validatePayPalTokenResponse :: PayPalToken -> Either ServerError Text
+validatePayPalTokenResponse PayPalToken{..} = do
+  accessToken <- validatePayPalAccessTokenField payPalAccessToken
+  validatePayPalTokenTypeField payPalTokenType
+  pure accessToken
 
 validatePayPalAccessTokenField :: Maybe Text -> Either ServerError Text
 validatePayPalAccessTokenField Nothing =
@@ -10400,6 +10409,16 @@ validatePayPalAccessTokenField (Just rawToken) =
             }
       | otherwise ->
           Right token
+
+validatePayPalTokenTypeField :: Maybe Text -> Either ServerError ()
+validatePayPalTokenTypeField mRawTokenType =
+  case normalizeOptionalInput mRawTokenType of
+    Just tokenType | T.toLower tokenType == "bearer" ->
+      Right ()
+    _ ->
+      Left err502
+        { errBody = "PayPal token response token_type must be Bearer"
+        }
 
 createPaypalOrderRemote
   :: Manager

@@ -95,6 +95,7 @@ import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
     , GoogleToken(..)
+    , PayPalToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
     , SessionInputLookup(..)
@@ -180,6 +181,7 @@ import TDF.Server
     , resolvePaypalBaseUrl
     , validatePayPalCredential
     , validatePayPalAccessTokenField
+    , validatePayPalTokenResponse
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -5166,6 +5168,44 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "token with spaces")
                 "PayPal token response access token must not contain control characters"
+
+    describe "validatePayPalTokenResponse" $ do
+        it "requires Bearer PayPal token responses before payment request headers are built" $ do
+            validatePayPalTokenResponse
+                PayPalToken
+                    { payPalAccessToken = Just " access-token_123 "
+                    , payPalTokenType = Just " bearer "
+                    }
+                `shouldBe` Right "access-token_123"
+
+            let assertInvalid tokenResponse expectedMessage =
+                    case validatePayPalTokenResponse tokenResponse of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right accessToken ->
+                            expectationFailure
+                                ( "Expected invalid PayPal token response to be rejected, got: "
+                                    <> show accessToken
+                                )
+            assertInvalid
+                PayPalToken
+                    { payPalAccessToken = Just "access-token"
+                    , payPalTokenType = Nothing
+                    }
+                "PayPal token response token_type must be Bearer"
+            assertInvalid
+                PayPalToken
+                    { payPalAccessToken = Just "access-token"
+                    , payPalTokenType = Just "Basic"
+                    }
+                "PayPal token response token_type must be Bearer"
+            assertInvalid
+                PayPalToken
+                    { payPalAccessToken = Just "access-token"
+                    , payPalTokenType = Just "Bearer\nInjected"
+                    }
+                "PayPal token response token_type must be Bearer"
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do
