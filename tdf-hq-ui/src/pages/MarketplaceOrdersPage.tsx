@@ -178,7 +178,7 @@ export default function MarketplaceOrdersPage() {
 
   useEffect(() => {
     if (!selectedOrder) return;
-    setStatusInput(selectedOrder.moStatus);
+    setStatusInput('');
     setPaymentProviderInput(selectedOrder.moPaymentProvider ?? '');
     setPaidAtInput(formatInputDate(selectedOrder.moPaidAt));
   }, [selectedOrder]);
@@ -578,7 +578,7 @@ export default function MarketplaceOrdersPage() {
     return window.confirm(`¿Confirmas cambiar el estado a "${nextStatus}"?`);
   };
 
-  const effectiveStatus = (statusInput ?? selectedOrder?.moStatus ?? '').trim();
+  const effectiveStatus = (statusInput.trim() || selectedOrder?.moStatus || '').trim();
   const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
   const warnMissingProvider = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
@@ -1205,11 +1205,13 @@ export default function MarketplaceOrdersPage() {
                     <CardContent>
                       <Stack spacing={2}>
                         <FormControl fullWidth>
-                          <InputLabel id="status-input-label">Nuevo estado</InputLabel>
+                          <InputLabel id="status-input-label" shrink>Nuevo estado</InputLabel>
                           <Select
                             labelId="status-input-label"
                             label="Nuevo estado"
                             value={statusInput}
+                            displayEmpty
+                            renderValue={(value) => (value ? statusLabel(String(value)) : 'Sin cambios')}
                             onChange={(e) => setStatusInput(e.target.value)}
                           >
                             <MenuItem value="">

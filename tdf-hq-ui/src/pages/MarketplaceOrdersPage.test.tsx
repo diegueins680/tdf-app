@@ -248,6 +248,22 @@ const selectOptionByLabel = async (root: ParentNode, labelText: string, optionTe
   });
 };
 
+const getSelectTriggerByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText((element.textContent ?? '').replace('*', '')) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement) || !label.id) {
+    throw new Error(`Select label not found: ${labelText}`);
+  }
+
+  const trigger = document.body.querySelector<HTMLElement>(`[role="combobox"][aria-labelledby*="${label.id}"]`);
+  if (!(trigger instanceof HTMLElement)) {
+    throw new Error(`Select trigger not found for label: ${labelText}`);
+  }
+
+  return trigger;
+};
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const explicitOpenAction = queryActionByText(root, 'Abrir orden');
   if (explicitOpenAction instanceof HTMLElement) {
@@ -1798,6 +1814,42 @@ describe('MarketplaceOrdersPage', () => {
         const saveButton = queryActionByText(document.body, 'Guardar cambios');
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the current order status as context instead of preselecting it as a new change', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: 'paypal',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Estado:');
+        expect(document.body.textContent).toContain('Pendiente');
+        expect(normalizeText(getSelectTriggerByLabel(document.body, 'Nuevo estado').textContent)).toBe('Sin cambios');
+
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
       });
     } finally {
       await cleanup();
