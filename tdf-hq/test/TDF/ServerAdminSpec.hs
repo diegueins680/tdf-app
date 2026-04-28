@@ -55,6 +55,7 @@ import TDF.ServerAdmin (
     validateSocialUnholdNote,
     validateAdminWhatsAppSendMode,
     validateAdminWhatsAppMessageBody,
+    resolveAdminWhatsAppSendPhone,
     validateAdminEmailSubject,
     validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
@@ -488,6 +489,41 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "caracteres de control no soportados"
                 (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\NUL'))
+
+    describe "resolveAdminWhatsAppSendPhone" $ do
+        it "routes replies to the referenced message phone instead of the first party fallback" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                replyTarget =
+                    (seedWhatsAppAdminMessage now "wa-incoming-reply" "incoming")
+                        { ME.whatsAppMessageSenderId = "+593999000222"
+                        , ME.whatsAppMessagePhoneE164 = Just "+593999000222"
+                        }
+                replyTargetWithBadStoredPhone =
+                    replyTarget { ME.whatsAppMessagePhoneE164 = Just "not-a-phone" }
+                partyPhones = ["+593999000111", "+593999000222"]
+
+            resolveAdminWhatsAppSendPhone "notify" partyPhones Nothing
+                `shouldBe` Right "+593999000111"
+            resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTarget)
+                `shouldBe` Right "+593999000222"
+            resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTargetWithBadStoredPhone)
+                `shouldBe` Right "+593999000222"
+
+        it "rejects reply targets without a resolvable WhatsApp phone" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                replyTarget =
+                    (seedWhatsAppAdminMessage now "wa-incoming-no-phone" "incoming")
+                        { ME.whatsAppMessageSenderId = "not-a-phone"
+                        , ME.whatsAppMessagePhoneE164 = Nothing
+                        }
+
+            case resolveAdminWhatsAppSendPhone "reply" ["+593999000111"] (Just replyTarget) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "mensaje de referencia"
+                Right phone ->
+                    expectationFailure ("Expected invalid reply phone to be rejected, got " <> show phone)
 
     describe "validateUserCommunicationHistoryLimit" $ do
         it "defaults omitted limits and accepts explicit values inside the supported history window" $ do

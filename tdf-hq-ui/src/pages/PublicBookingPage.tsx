@@ -27,7 +27,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
@@ -38,7 +38,7 @@ import { Services } from '../api/services';
 import { Rooms } from '../api/rooms';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
-import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { defaultServiceTypes, mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 
@@ -54,6 +54,8 @@ interface FormState {
   engineerName: string;
   resourceLabels: string[];
 }
+
+export type PublicBookingPreset = 'dj-booth';
 
 type BookingWithAliases = BookingDTO & {
   pbStartsAt?: string;
@@ -77,6 +79,45 @@ const QUICK_SLOT_STEP_MINUTES = 30;
 const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+const DJ_BOOTH_SERVICE_LABEL = 'Práctica en DJ Booth';
+
+const PUBLIC_BOOKING_PRESETS: Record<
+  PublicBookingPreset,
+  {
+    path: string;
+    serviceTokens: string[];
+    fallbackServiceName: string;
+    eyebrow: string;
+    title: string;
+    description: string;
+    introChips: string[];
+    contactTitle: string;
+    contactDescription: string;
+    calendarNote: string;
+    durationNote: string;
+    notesPlaceholder: string;
+  }
+> = {
+  'dj-booth': {
+    path: '/dj-booth',
+    serviceTokens: [DJ_BOOTH_SERVICE_LABEL, 'dj booth', 'dj-booth', 'dj practice', 'practica dj booth'],
+    fallbackServiceName: DJ_BOOTH_SERVICE_LABEL,
+    eyebrow: 'DJ Booth',
+    title: 'Reserva práctica en DJ Booth',
+    description:
+      'Agenda horas de práctica o alquiler del DJ Booth. Este enlace usa el servicio Práctica en DJ Booth para asignar el booth automáticamente.',
+    introChips: [
+      '1. Elige horario para DJ Booth',
+      '2. Reservamos por horas',
+      '3. Confirmamos por email o WhatsApp',
+    ],
+    contactTitle: 'Datos para reservar tu booth',
+    contactDescription: 'Usa un correo válido para recibir la confirmación de tu práctica en DJ Booth.',
+    calendarNote: 'Bloque tentativo para el DJ Booth.',
+    durationNote: 'Reserva por horas de práctica (30 min mínimo).',
+    notesPlaceholder: 'Cuéntanos si traes USB/controlador, estilo musical o cualquier requerimiento para practicar.',
+  },
+};
 
 const zoneLabel = (zone: string) => {
   try {
@@ -114,6 +155,32 @@ const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType 
     return svcToken.includes(token) || token.includes(svcToken);
   });
   return partial ?? null;
+};
+
+const resolvePresetService = (
+  presetConfig: (typeof PUBLIC_BOOKING_PRESETS)[PublicBookingPreset],
+  list: ServiceType[],
+): ServiceType => {
+  for (const token of presetConfig.serviceTokens) {
+    const match = resolveServiceFromToken(token, list);
+    if (match) return match;
+  }
+  const fallback =
+    defaultServiceTypes.find((svc) => svc.name === presetConfig.fallbackServiceName) ??
+    defaultServiceTypes.find((svc) => resolveServiceFromToken(presetConfig.fallbackServiceName, [svc]));
+  return (
+    fallback ?? {
+      id: 'dj-practice',
+      name: presetConfig.fallbackServiceName,
+      priceCents: 15 * 100,
+      currency: 'USD',
+      billingUnit: 'hora',
+      kind: 'Rehearsal',
+      pricingModel: 'Hourly',
+      taxBps: 1200,
+      active: true,
+    }
+  );
 };
 
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
@@ -243,7 +310,13 @@ const toFriendlyBookingError = (error: unknown): string => {
   return message;
 };
 
-export default function PublicBookingPage() {
+interface PublicBookingPageProps {
+  preset?: PublicBookingPreset;
+}
+
+export default function PublicBookingPage({ preset }: PublicBookingPageProps = {}) {
+  const location = useLocation();
+  const presetConfig = preset ? PUBLIC_BOOKING_PRESETS[preset] : null;
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: Meta.health,
@@ -264,10 +337,19 @@ export default function PublicBookingPage() {
     () => (roomsQuery.data ?? []).filter((room) => room.roomId.trim() !== '' && room.rName.trim() !== ''),
     [roomsQuery.data],
   );
-  const services = useMemo<ServiceType[]>(() => {
+  const baseServices = useMemo<ServiceType[]>(() => {
     const merged = mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
     return merged.filter((svc) => svc.priceCents != null);
   }, [serviceCatalogQuery.data]);
+  const presetService = useMemo(
+    () => (presetConfig ? resolvePresetService(presetConfig, baseServices) : null),
+    [baseServices, presetConfig],
+  );
+  const services = useMemo<ServiceType[]>(() => {
+    if (!presetService) return baseServices;
+    const exists = baseServices.some((svc) => svc.name === presetService.name);
+    return exists ? baseServices : [presetService, ...baseServices];
+  }, [baseServices, presetService]);
   const roomOptions = useMemo<string[]>(() => {
     const apiRooms = publicRooms.map((r) => r.rName).filter(Boolean);
     const unique = Array.from(new Set(apiRooms));
@@ -288,7 +370,10 @@ export default function PublicBookingPage() {
     });
     return lookup;
   }, [publicRooms]);
-  const defaultService = services[0]?.name ?? 'Reserva';
+  const defaultService = presetService?.name ?? services[0]?.name ?? 'Reserva';
+  const publicRoutePath = presetConfig?.path ?? '/reservar';
+  const loginPath = `/login?redirect=${encodeURIComponent(publicRoutePath)}`;
+  const signupPath = `/login?signup=1&redirect=${encodeURIComponent(publicRoutePath)}`;
   const { session, logout } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
@@ -332,6 +417,24 @@ export default function PublicBookingPage() {
     }
     return 'Puedes dejar la solicitud ahora mismo. Confirmaremos disponibilidad y recursos contigo por correo o WhatsApp antes de bloquear la sesión.';
   }, [requiresManualConfirmation, usingFallbackRooms, usingFallbackServices]);
+  const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
+  const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
+  const pageDescription =
+    presetConfig?.description ??
+    'Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no tienes cuenta, crearemos tu acceso automáticamente.';
+  const introChips = presetConfig?.introChips ?? [
+    '1. Agenda sin crear cuenta',
+    '2. Confirmamos por email',
+    '3. Coordinamos por WhatsApp si lo dejas',
+  ];
+  const contactTitle = presetConfig?.contactTitle ?? 'Datos de contacto';
+  const contactDescription =
+    presetConfig?.contactDescription ??
+    'Usa un correo válido para recibir la confirmación. Si eres nuevo, crearemos un perfil para ti.';
+  const calendarNote = presetConfig?.calendarNote ?? 'Bloque tentativo en el calendario.';
+  const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const notesPlaceholder =
+    presetConfig?.notesPlaceholder ?? 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)';
   const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -351,13 +454,21 @@ export default function PublicBookingPage() {
   useEffect(() => {
     if (!services.length) return;
     setForm((prev) => {
+      if (presetService?.name) {
+        if (prev.serviceType === presetService.name) return prev;
+        return {
+          ...prev,
+          serviceType: presetService.name,
+          resourceLabels: defaultRoomsForService(presetService.name, roomOptions),
+        };
+      }
       const serviceStillValid = services.some((svc) => svc.name === prev.serviceType);
       if (serviceStillValid) return prev;
       const nextService = services[0]?.name ?? prev.serviceType;
       if (!nextService || nextService === prev.serviceType) return prev;
       return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService, roomOptions) };
     });
-  }, [services, roomOptions]);
+  }, [presetService?.name, services, roomOptions]);
 
   useEffect(() => {
     if (appliedStoredProfile.current) return;
@@ -370,7 +481,8 @@ export default function PublicBookingPage() {
       const allowedServices = new Set(services.map((s) => s.name));
       const storedService = stored.serviceType ?? defaultService;
       const nextService =
-        services.length === 0 || allowedServices.has(storedService) ? storedService : defaultService;
+        presetService?.name ??
+        (services.length === 0 || allowedServices.has(storedService) ? storedService : defaultService);
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
@@ -383,13 +495,16 @@ export default function PublicBookingPage() {
     } catch {
       // ignore parsing issues
     }
-  }, [defaultService, services, roomOptions]);
+  }, [defaultService, presetService?.name, services, roomOptions]);
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
+    if (presetService?.name) {
+      appliedServiceQuery.current = true;
+      return;
+    }
     if (!services.length) return;
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
     if (!rawToken) return;
     const match = resolveServiceFromToken(rawToken, services);
@@ -400,7 +515,7 @@ export default function PublicBookingPage() {
       serviceType: match.name,
       resourceLabels: defaultRoomsForService(match.name, roomOptions),
     }));
-  }, [roomOptions, services]);
+  }, [location.search, presetService?.name, roomOptions, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -776,7 +891,7 @@ export default function PublicBookingPage() {
         (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
       const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
       const lines = [
-        'Reserva TDF',
+        presetConfig ? `Reserva TDF - ${presetConfig.eyebrow}` : 'Reserva TDF',
         `Servicio: ${booking?.serviceType ?? form.serviceType}`,
         `Inicio: ${startLabel}`,
         `Duración: ${duration} min`,
@@ -790,7 +905,7 @@ export default function PublicBookingPage() {
       }
       return lines.join('\n');
     },
-    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, selectedPrice, suggestedRooms, userTimeZone],
+    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, presetConfig, selectedPrice, suggestedRooms, userTimeZone],
   );
 
   const copySummary = useCallback(
@@ -1041,7 +1156,7 @@ export default function PublicBookingPage() {
             <Stack spacing={2.5}>
               <Stack spacing={0.6}>
                 <Typography variant="overline" color="text.secondary">
-                  Agenda pública
+                  {pageEyebrow}
                 </Typography>
                 <Typography variant="h4" fontWeight={800}>
                   Reserva enviada

@@ -21,6 +21,7 @@ module TDF.ServerAdmin
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
   , validateAdminWhatsAppMessageBody
+  , resolveAdminWhatsAppSendPhone
   , validateAdminEmailSubject
   , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
@@ -858,7 +859,6 @@ adminServer user =
       let partyKey = entityKey partyEnt
           partyVal = entityVal partyEnt
           candidatePhones = resolvePartyPhones partyVal
-      phone <- maybe (throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }) pure (listToMaybe candidatePhones)
       replyTarget <- case (mode, awsrReplyToMessageId) of
         ("reply", Just replyId) -> do
           let msgKey = toSqlKey replyId :: ME.WhatsAppMessageId
@@ -870,6 +870,8 @@ adminServer user =
                 then pure (Just msgEnt)
                 else throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El mensaje no pertenece a este usuario") }
         _ -> pure Nothing
+      phone <- either throwError pure $
+        resolveAdminWhatsAppSendPhone mode candidatePhones (entityVal <$> replyTarget)
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv phone body
@@ -1216,6 +1218,23 @@ adminWhatsAppMessageMaxLength = 4096
 isUnsupportedWhatsAppMessageControl :: Char -> Bool
 isUnsupportedWhatsAppMessageControl ch =
   isControl ch && ch `notElem` ("\n\r\t" :: String)
+
+resolveAdminWhatsAppSendPhone :: Text -> [Text] -> Maybe ME.WhatsAppMessage -> Either ServerError Text
+resolveAdminWhatsAppSendPhone "reply" _ (Just msg) =
+  case storedPhone <|> senderPhone of
+    Just phone -> Right phone
+    Nothing ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino del mensaje de referencia") }
+  where
+    storedPhone = cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
+    senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+resolveAdminWhatsAppSendPhone "reply" _ Nothing =
+  Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje de referencia requerido para responder") }
+resolveAdminWhatsAppSendPhone _ candidatePhones _ =
+  maybe
+    (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") })
+    Right
+    (listToMaybe candidatePhones)
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject
