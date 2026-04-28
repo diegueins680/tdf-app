@@ -53,6 +53,7 @@ import TDF.Config (
     seedDatabase,
   )
 import TDF.Cors (corsPolicy)
+import qualified TDF.CMS.Models as CMS
 import TDF.Cron (
     startCoursePaymentReminderJob,
     startInstagramSyncJob,
@@ -230,6 +231,7 @@ runAllMigrations cfg = do
   dropLegacyPartyColumns
   runMigration migrateAll
   runMigration migrateExtra
+  runMigration CMS.migrateCMS
   ensureBrainTagsArray
   runMigration migrateSocialEvents
   runMigration migrateTrials
