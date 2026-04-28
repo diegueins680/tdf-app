@@ -6,7 +6,7 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isAsciiLower, isControl, isDigit, isSpace, toLower)
+import           Data.Char    (isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace, toLower)
 import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
@@ -372,10 +372,14 @@ instance ToJSON MarketplaceCartItemUpdate
 
 normalizeMarketplaceCartListingId :: Text -> Either String Text
 normalizeMarketplaceCartListingId rawListingId =
-  let listingId = T.strip rawListingId
-  in if isPositiveDecimalId listingId
-       then Right listingId
-       else Left "mciuListingId must be a positive decimal id"
+  normalizeMarketplacePositiveDecimalId "mciuListingId" rawListingId
+
+normalizeMarketplacePositiveDecimalId :: Text -> Text -> Either String Text
+normalizeMarketplacePositiveDecimalId fieldName rawValue =
+  let normalized = T.strip rawValue
+  in if isPositiveDecimalId normalized
+       then Right normalized
+       else Left (T.unpack fieldName <> " must be a positive decimal id")
   where
     isPositiveDecimalId candidate =
       not (T.null candidate)
@@ -602,7 +606,39 @@ data PaypalCaptureReq = PaypalCaptureReq
 
 instance ToJSON PaypalCaptureReq
 instance FromJSON PaypalCaptureReq where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    orderId <-
+      either fail pure $
+        normalizeMarketplacePositiveDecimalId
+          "pcCaptureOrderId"
+          (pcCaptureOrderId payload)
+    paypalId <-
+      either fail pure $
+        normalizePayPalCapturePaypalId (pcCapturePaypalId payload)
+    pure payload
+      { pcCaptureOrderId = orderId
+      , pcCapturePaypalId = paypalId
+      }
+
+normalizePayPalCapturePaypalId :: Text -> Either String Text
+normalizePayPalCapturePaypalId rawPaypalId =
+  let paypalId = T.strip rawPaypalId
+  in if isValidPayPalCapturePaypalId paypalId
+       then Right paypalId
+       else
+         Left
+           "pcCapturePaypalId must contain only ASCII letters, digits, hyphen, or underscore"
+
+isValidPayPalCapturePaypalId :: Text -> Bool
+isValidPayPalCapturePaypalId paypalId =
+  not (T.null paypalId)
+    && T.length paypalId <= 128
+    && T.all isPayPalCapturePaypalIdChar paypalId
+
+isPayPalCapturePaypalIdChar :: Char -> Bool
+isPayPalCapturePaypalIdChar c =
+  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text

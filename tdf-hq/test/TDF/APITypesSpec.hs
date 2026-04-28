@@ -988,9 +988,9 @@ spec = do
             decodeMarketplaceOrderUpdate "{}" `shouldSatisfy` isLeft
 
     describe "PaypalCaptureReq FromJSON" $ do
-        it "accepts canonical PayPal capture payloads" $
+        it "accepts canonical PayPal capture payloads and trims identifiers" $
             case decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                "{\"pcCaptureOrderId\":\" 42 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}"
              of
                 Left err ->
                     expectationFailure ("Expected PayPal capture payload to decode, got: " <> err)
@@ -1001,6 +1001,23 @@ spec = do
         it "rejects unexpected capture keys before payment handler validation runs" $
             decodePaypalCapture
                 "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed capture identifiers before payment handler fallback validation" $ do
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"   \",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"0\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"../42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
                 `shouldSatisfy` isLeft
 
     describe "LabelTrack write payload FromJSON" $ do
