@@ -172,7 +172,7 @@ export const getBookingCalendarStatusState = ({
   if (hasActiveFilter) {
     return {
       clearFilterActionLabel: 'Ver toda la agenda',
-      message: 'No hay sesiones para este filtro. Selecciona un horario en el calendario para crear una sesión nueva.',
+      message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
       severity: 'info',
     };
   }
