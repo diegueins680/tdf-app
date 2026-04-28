@@ -175,7 +175,10 @@ import TDF.ServerFeedback
       validateFeedbackConsent,
       validateFeedbackSeverity,
       validateOptionalFeedbackContactEmail )
-import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
+import TDF.ServerInstagramOAuth
+    ( FacebookAccessToken (..),
+      instagramOAuthServer,
+      resolveInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
       resolveDrivePublicUrl,
@@ -2603,6 +2606,40 @@ main = hspec $ do
     describe "resolveInstagramRedirectUri" $ do
         let loadInstagramConfig =
                 withEnvOverrides [("HQ_APP_URL", Just "https://hq.example.com/admin")] loadConfig
+
+        it "normalizes Facebook OAuth token responses before Instagram token fallback handling" $ do
+            case eitherDecode "{\"access_token\":\" token-123 \",\"token_type\":\" Bearer \",\"expires_in\":3600}" of
+                Left err ->
+                    expectationFailure ("Expected valid Facebook token response to decode, got: " <> err)
+                Right decodedToken -> do
+                    fatAccessToken decodedToken `shouldBe` "token-123"
+                    fatTokenType decodedToken `shouldBe` "bearer"
+                    fatExpiresIn decodedToken `shouldBe` Just 3600
+            case eitherDecode "{\"access_token\":\"token-123\"}" of
+                Left err ->
+                    expectationFailure ("Expected token_type fallback response to decode, got: " <> err)
+                Right decodedToken ->
+                    fatTokenType decodedToken `shouldBe` "bearer"
+
+        it "rejects malformed Facebook OAuth token responses before ambiguous fallback use" $ do
+            let assertInvalid rawPayload expectedMessage =
+                    case (eitherDecode rawPayload :: Either String FacebookAccessToken) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right decodedToken ->
+                            expectationFailure ("Expected malformed Facebook token response to fail, got: " <> show decodedToken)
+            assertInvalid
+                "{\"access_token\":\"   \",\"token_type\":\"bearer\"}"
+                "Facebook access_token must not be blank"
+            assertInvalid
+                "{\"access_token\":\"token with spaces\",\"token_type\":\"bearer\"}"
+                "Facebook access_token must not contain whitespace or control characters"
+            assertInvalid
+                "{\"access_token\":\"token-123\",\"token_type\":\"Basic\"}"
+                "Facebook token_type must be Bearer"
+            assertInvalid
+                "{\"access_token\":\"token-123\",\"expires_in\":0}"
+                "Facebook expires_in must be positive"
 
         it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
             cfg <- loadInstagramConfig

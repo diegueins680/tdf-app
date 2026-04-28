@@ -6,6 +6,7 @@
 
 module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
+  , FacebookAccessToken(..)
   , resolveInstagramRedirectUri
   ) where
 
@@ -15,9 +16,11 @@ import           Control.Monad.Except       (MonadError, catchError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Aeson                 (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson.Types           (Parser)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import           Data.Char                  (isControl, isSpace)
 import           Data.List                  (find)
 import           Data.Maybe                 (fromMaybe, listToMaybe)
 import           Data.Text                  (Text)
@@ -51,10 +54,37 @@ data FacebookAccessToken = FacebookAccessToken
   } deriving (Show, Generic)
 
 instance FromJSON FacebookAccessToken where
-  parseJSON = withObject "FacebookAccessToken" $ \o ->
-    FacebookAccessToken <$> o .: "access_token"
-                       <*> o .:? "token_type" .!= "bearer"
-                       <*> o .:? "expires_in"
+  parseJSON = withObject "FacebookAccessToken" $ \o -> do
+    accessToken <- normalizeFacebookAccessToken =<< o .: "access_token"
+    tokenType <- normalizeFacebookTokenType =<< o .:? "token_type"
+    expiresIn <- traverse validateFacebookExpiresIn =<< o .:? "expires_in"
+    pure FacebookAccessToken
+      { fatAccessToken = accessToken
+      , fatTokenType = tokenType
+      , fatExpiresIn = expiresIn
+      }
+
+normalizeFacebookAccessToken :: Text -> Parser Text
+normalizeFacebookAccessToken rawToken =
+  let tokenValue = T.strip rawToken
+  in if T.null tokenValue
+       then fail "Facebook access_token must not be blank"
+       else if T.any (\ch -> isSpace ch || isControl ch) tokenValue
+         then fail "Facebook access_token must not contain whitespace or control characters"
+         else pure tokenValue
+
+normalizeFacebookTokenType :: Maybe Text -> Parser Text
+normalizeFacebookTokenType Nothing = pure "bearer"
+normalizeFacebookTokenType (Just rawTokenType) =
+  let tokenType = T.toLower (T.strip rawTokenType)
+  in if tokenType == "bearer"
+       then pure tokenType
+       else fail "Facebook token_type must be Bearer"
+
+validateFacebookExpiresIn :: Int -> Parser Int
+validateFacebookExpiresIn expiresIn
+  | expiresIn > 0 = pure expiresIn
+  | otherwise = fail "Facebook expires_in must be positive"
 
 data FacebookUser = FacebookUser
   { fuId   :: Text
