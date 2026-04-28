@@ -51,6 +51,9 @@ liveSessionTermsVersionMaxLength = 160
 maxLiveSessionRiderBytes :: Integer
 maxLiveSessionRiderBytes = 10 * 1024 * 1024
 
+liveSessionRiderFileNameMaxLength :: Int
+liveSessionRiderFileNameMaxLength = 160
+
 data LiveSessionMusicianLookup
   = LookupLiveSessionMusicianByEmail Text
   | CreateLiveSessionMusician
@@ -358,10 +361,11 @@ sanitizeLiveSessionRiderFileName rawName =
       baseName = T.pack (takeFileName (T.unpack trimmed))
       cleaned = T.map normalizeRiderFileNameChar baseName
       stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+      bounded = T.take liveSessionRiderFileNameMaxLength stripped
   in
-    if T.null stripped || not (T.any isStableRiderFileNameChar stripped)
+    if T.null bounded || not (T.any isStableRiderFileNameChar bounded)
       then "rider"
-      else stripped
+      else bounded
   where
     isStableRiderFileNameChar ch = isAscii ch && isAlphaNum ch
 

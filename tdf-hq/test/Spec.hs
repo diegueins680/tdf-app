@@ -7203,6 +7203,11 @@ main = hspec $ do
             sanitizeLiveSessionRiderFileName "___" `shouldBe` "rider"
             sanitizeLiveSessionRiderFileName "???" `shouldBe` "rider"
 
+        it "bounds sanitized rider upload names before filesystem writes" $ do
+            let sanitized = sanitizeLiveSessionRiderFileName (Data.Text.replicate 220 "a" <> ".pdf")
+            Data.Text.length sanitized `shouldBe` 160
+            sanitized `shouldBe` Data.Text.replicate 160 "a"
+
     describe "validateLiveSessionRiderFileSize" $ do
         it "rejects empty, invalid, or oversized rider uploads before writing them" $ do
             validateLiveSessionRiderFileSize 1 `shouldBe` Right ()
