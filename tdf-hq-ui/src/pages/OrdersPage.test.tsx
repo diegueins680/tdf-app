@@ -318,6 +318,56 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('summarizes missing resource columns once instead of rendering repeated placeholders', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 121,
+        title: 'Voz principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Grabación',
+        customerName: 'Ada Sessions',
+        resources: [],
+      } satisfies BookingDTO,
+      {
+        bookingId: 122,
+        title: 'Master final',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mastering',
+        customerName: 'Grace Sessions',
+        resources: [],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+
+        expect(text).toContain(
+          'Sin ingeniero ni sala asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos recursos.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Sin ingeniero ni sala asignados en esta vista.')).toBe(1);
+        expect(hasTableHeader(container, 'Servicio')).toBe(true);
+        expect(hasTableHeader(container, 'Booking')).toBe(true);
+        expect(hasTableHeader(container, 'Ingeniero')).toBe(false);
+        expect(hasTableHeader(container, 'Salas')).toBe(false);
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(text).toContain('Voz principal');
+        expect(text).toContain('Master final');
+        expect(text).not.toContain('—');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the session title as booking context in the first-session summary before falling back to a generic id', async () => {
     listBookingsMock.mockResolvedValue([
       {

@@ -168,6 +168,31 @@ const hasDisplayValue = (value: string) => {
   return trimmed !== '' && trimmed !== '—';
 };
 
+const areAllDisplayValuesMissing = (values: readonly string[]) =>
+  values.length > 0 && values.every((value) => !hasDisplayValue(value));
+
+const buildMissingResourceContextSummary = ({
+  engineersMissing,
+  roomsMissing,
+}: {
+  engineersMissing: boolean;
+  roomsMissing: boolean;
+}) => {
+  if (engineersMissing && roomsMissing) {
+    return 'Sin ingeniero ni sala asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos recursos.';
+  }
+
+  if (engineersMissing) {
+    return 'Sin ingeniero asignado en esta vista. La columna volverá cuando alguna sesión tenga ingeniero.';
+  }
+
+  if (roomsMissing) {
+    return 'Sin sala asignada en esta vista. La columna volverá cuando alguna sesión tenga sala.';
+  }
+
+  return '';
+};
+
 function getDistinctSessionTitle(title: string | null | undefined, service: string) {
   const trimmedTitle = title?.trim() ?? '';
   if (!trimmedTitle || trimmedTitle === '—') return '';
@@ -350,17 +375,32 @@ export default function OrdersPage() {
     () => getSharedSummaryValue(rows.map((row) => row.engineers)),
     [rows],
   );
-  const showEngineerColumn = sharedEngineerSummary === '';
+  const allEngineersMissing = useMemo(
+    () => areAllDisplayValuesMissing(rows.map((row) => row.engineers)),
+    [rows],
+  );
+  const showEngineerColumn = !allEngineersMissing && sharedEngineerSummary === '';
   const sharedRoomsSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.rooms)),
     [rows],
   );
-  const showRoomsColumn = sharedRoomsSummary === '';
+  const allRoomsMissing = useMemo(
+    () => areAllDisplayValuesMissing(rows.map((row) => row.rooms)),
+    [rows],
+  );
+  const showRoomsColumn = !allRoomsMissing && sharedRoomsSummary === '';
   const sharedStatusSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => getStatusPresentation(row.status).label)),
     [rows],
   );
   const showStatusColumn = sharedStatusSummary === '';
+  const missingResourceContextSummary = useMemo(
+    () => buildMissingResourceContextSummary({
+      engineersMissing: allEngineersMissing,
+      roomsMissing: allRoomsMissing,
+    }),
+    [allEngineersMissing, allRoomsMissing],
+  );
   const combinedSharedContextSummary = useMemo(
     () =>
       buildCombinedSharedContextSummary([
@@ -391,6 +431,14 @@ export default function OrdersPage() {
         },
       ]),
     [sharedBookingSummary, sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary, sharedStatusSummary],
+  );
+  const hasSharedContextSummary = Boolean(
+    combinedSharedContextSummary
+      || sharedServiceSummary
+      || sharedBookingSummary
+      || sharedEngineerSummary
+      || sharedRoomsSummary
+      || sharedStatusSummary,
   );
   const visibleTableColumnCount = 1
     + (showServiceColumn ? 1 : 0)
@@ -591,46 +639,47 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {(combinedSharedContextSummary
-              || sharedServiceSummary
-              || sharedBookingSummary
-              || sharedEngineerSummary
-              || sharedRoomsSummary
-              || sharedStatusSummary) && (
+            {(missingResourceContextSummary || hasSharedContextSummary) && (
               <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
-                {combinedSharedContextSummary ? (
+                {missingResourceContextSummary && (
                   <Typography variant="caption" color="text.secondary">
-                    {combinedSharedContextSummary}
+                    {missingResourceContextSummary}
                   </Typography>
-                ) : (
-                  <>
-                    {sharedServiceSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
-                      </Typography>
-                    )}
-                    {sharedBookingSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {`Mostrando un solo booking: ${sharedBookingSummary}. La columna volverá cuando esta vista mezcle bookings distintos.`}
-                      </Typography>
-                    )}
-                    {sharedEngineerSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {`Mostrando un solo ingeniero: ${sharedEngineerSummary}. La columna volverá cuando esta vista mezcle ingenieros distintos.`}
-                      </Typography>
-                    )}
-                    {sharedRoomsSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
-                      </Typography>
-                    )}
-                    {sharedStatusSummary && (
-                      <Typography variant="caption" color="text.secondary">
-                        {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
-                      </Typography>
-                    )}
-                  </>
                 )}
+                {hasSharedContextSummary
+                  ? combinedSharedContextSummary ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {combinedSharedContextSummary}
+                    </Typography>
+                  ) : (
+                    <>
+                      {sharedServiceSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                        </Typography>
+                      )}
+                      {sharedBookingSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo booking: ${sharedBookingSummary}. La columna volverá cuando esta vista mezcle bookings distintos.`}
+                        </Typography>
+                      )}
+                      {sharedEngineerSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo ingeniero: ${sharedEngineerSummary}. La columna volverá cuando esta vista mezcle ingenieros distintos.`}
+                        </Typography>
+                      )}
+                      {sharedRoomsSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
+                        </Typography>
+                      )}
+                      {sharedStatusSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+                        </Typography>
+                      )}
+                    </>
+                  ) : null}
               </Stack>
             )}
             <TableContainer>
