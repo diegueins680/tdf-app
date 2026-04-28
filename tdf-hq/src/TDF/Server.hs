@@ -1915,9 +1915,14 @@ validateProvidedDriveAccessToken fieldName (Just rawToken) =
 
 resolveDriveUploadFolderId :: Maybe Text -> Maybe Text -> Either ServerError (Maybe Text)
 resolveDriveUploadFolderId mProvidedFolderId mFallbackFolderId =
-  case cleanOptional mProvidedFolderId of
-    Just provided ->
-      Just <$> validateDriveUploadFolderId err400 "folderId" provided
+  case mProvidedFolderId of
+    Just providedRaw -> do
+      let provided = T.strip providedRaw
+      if T.null provided
+        then
+          Left err400
+            { errBody = "folderId must not be blank" }
+        else Just <$> validateDriveUploadFolderId err400 "folderId" provided
     Nothing ->
       traverse
         (validateDriveUploadFolderId err500 "DRIVE_UPLOAD_FOLDER_ID")
@@ -1946,8 +1951,14 @@ isDriveFolderIdChar ch =
 
 resolveDriveUploadName :: Maybe Text -> Text -> Either ServerError Text
 resolveDriveUploadName mProvidedName rawFileName =
-  case cleanOptional mProvidedName of
-    Just provided -> validateDriveUploadName "name" provided
+  case mProvidedName of
+    Just providedRaw -> do
+      let provided = T.strip providedRaw
+      if T.null provided
+        then
+          Left err400
+            { errBody = "name must not be blank" }
+        else validateDriveUploadName "name" provided
     Nothing ->
       maybe
         (Right "upload")

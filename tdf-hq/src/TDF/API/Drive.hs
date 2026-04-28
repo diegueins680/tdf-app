@@ -47,11 +47,14 @@ instance FromMultipart Tmp DriveUploadForm where
       }
     where
       optionalText name mp =
-        fmap (>>= normalizeInputText) (lookupSingleInput name mp)
-
-      normalizeInputText (Input _ value) =
-        let trimmed = T.strip value
-        in if T.null trimmed then Nothing else Just trimmed
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just (Input _ value)) ->
+            let trimmed = T.strip value
+            in if T.null trimmed
+                then Left (T.unpack name <> " must not be blank")
+                else Right (Just trimmed)
 
       optionalAccessToken name mp =
         case lookupSingleInput name mp of

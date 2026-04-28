@@ -3250,7 +3250,7 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Nothing
 
     describe "DriveUploadForm FromMultipart" $ do
-        it "normalizes optional upload fields so blank names and folders do not suppress fallbacks" $ do
+        it "trims optional upload fields before handler fallback resolution" $ do
             case fromMultipart
                 (mkDriveMultipart
                     [ ("folderId", "  folder-123  ")
@@ -3267,20 +3267,22 @@ spec = describe "TDF.Server helpers" $ do
                     duName payload `shouldBe` Just "Contract.pdf"
                     duAccessToken payload `shouldBe` Just "token-123"
 
-            case fromMultipart
-                (mkDriveMultipart
-                    [ ("folderId", "   ")
-                    , ("name", "   ")
-                    ]
-                    [mkDriveUploadFile "fallback.pdf"]
-                ) :: Either String DriveUploadForm of
-                Left err ->
-                    expectationFailure
-                        ("Expected blank Drive upload fields to parse as absent, got: " <> err)
-                Right payload -> do
-                    duFolderId payload `shouldBe` Nothing
-                    duName payload `shouldBe` Nothing
-                    duAccessToken payload `shouldBe` Nothing
+        it "rejects blank upload overrides instead of silently using fallback folder or filename" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String DriveUploadForm of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected malformed Drive upload multipart, got file: "
+                                    <> T.unpack (fdFileName (duFile payload))
+                                )
+            assertInvalid
+                "folderId must not be blank"
+                (mkDriveMultipart [("folderId", "   ")] [mkDriveUploadFile "fallback.pdf"])
+            assertInvalid
+                "name must not be blank"
+                (mkDriveMultipart [("name", "   ")] [mkDriveUploadFile "fallback.pdf"])
 
         it "rejects blank access tokens instead of silently using configured Drive credentials" $
             case fromMultipart
@@ -3334,12 +3336,19 @@ spec = describe "TDF.Server helpers" $ do
         it "prefers valid request folder ids and uses the configured fallback only when omitted" $ do
             resolveDriveUploadFolderId (Just " folder_123-A ") (Just "env-folder")
                 `shouldBe` Right (Just "folder_123-A")
-            resolveDriveUploadFolderId (Just "   ") (Just " env-folder_1 ")
+            resolveDriveUploadFolderId Nothing (Just " env-folder_1 ")
                 `shouldBe` Right (Just "env-folder_1")
             resolveDriveUploadFolderId Nothing Nothing
                 `shouldBe` Right Nothing
 
         it "rejects malformed request folder ids instead of silently falling back" $ do
+            case resolveDriveUploadFolderId (Just "   ") (Just "env-folder") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "folderId must not be blank"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank Drive upload folderId to be rejected, got " <> show value)
             case resolveDriveUploadFolderId (Just "bad folder") (Just "env-folder") of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -3360,12 +3369,12 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
 
     describe "resolveDriveUploadName" $ do
-        it "prefers safe request names and falls back deterministically for blank upload names" $ do
+        it "prefers safe request names and falls back deterministically when omitted" $ do
             resolveDriveUploadName (Just " Contract.pdf ") "browser-name.pdf"
                 `shouldBe` Right "Contract.pdf"
             resolveDriveUploadName Nothing " browser-name.pdf "
                 `shouldBe` Right "browser-name.pdf"
-            resolveDriveUploadName (Just "   ") "   "
+            resolveDriveUploadName Nothing "   "
                 `shouldBe` Right "upload"
 
         it "rejects unsafe Drive upload names before calling Google" $ do
@@ -3379,6 +3388,9 @@ spec = describe "TDF.Server helpers" $ do
                                 ( "Expected invalid Drive upload name to be rejected, got: "
                                     <> show value
                                 )
+            assertInvalid
+                "name must not be blank"
+                (resolveDriveUploadName (Just "   ") "safe.pdf")
             assertInvalid
                 "name must not contain control characters"
                 (resolveDriveUploadName (Just "Bad\nName.pdf") "safe.pdf")
