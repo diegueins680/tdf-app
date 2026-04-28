@@ -30,13 +30,13 @@ import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char                  (isControl, isSpace)
 import           Data.List                  (foldl')
-import           Data.Maybe                 (listToMaybe, maybeToList)
+import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Database.Persist           (Entity(..), getBy, selectList, upsert, (==.), (=.))
+import           Database.Persist           (Entity(..), SelectOpt(LimitTo), getBy, selectList, upsert, (==.), (=.))
 import           Database.Persist.Sql       (SqlPersistT, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
@@ -161,8 +161,11 @@ lookupUsernameFromToken token = do
                   [ UserCredentialPartyId ==. apiTokenPartyId tok
                   , UserCredentialActive ==. True
                   ]
-                  []
-              pure (userCredentialUsername . entityVal <$> listToMaybe creds)
+                  [LimitTo 2]
+              pure $
+                case creds of
+                  [Entity _ cred] -> Just (userCredentialUsername cred)
+                  _               -> Nothing
     Nothing -> pure Nothing
 
 resolveUsernameFromLabel :: Text -> Maybe Text

@@ -2645,6 +2645,55 @@ spec = describe "TDF.Server helpers" $ do
             sessionUsername `shouldBe` Just "user@example.com"
             resetUsername `shouldBe` Nothing
 
+    describe "lookupUsernameFromToken" $
+        it "uses the unlabeled-token credential fallback only when exactly one active credential exists" $ do
+            (singleUsername, ambiguousUsername) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let insertTestParty displayName email =
+                        insert Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = displayName
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Just email
+                            , partyPrimaryPhone = Nothing
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = now
+                            }
+                    insertCredential partyId username =
+                        insert UserCredential
+                            { userCredentialPartyId = partyId
+                            , userCredentialUsername = username
+                            , userCredentialPasswordHash = "hash"
+                            , userCredentialActive = True
+                            }
+                    insertUnlabeledToken partyId token =
+                        insert ApiToken
+                            { apiTokenToken = token
+                            , apiTokenPartyId = partyId
+                            , apiTokenLabel = Nothing
+                            , apiTokenActive = True
+                            }
+                singlePartyId <- insertTestParty "Single Login User" "single@example.com"
+                _ <- insertCredential singlePartyId "single@example.com"
+                _ <- insertUnlabeledToken singlePartyId "single-token"
+
+                ambiguousPartyId <-
+                    insertTestParty "Ambiguous Login User" "ambiguous@example.com"
+                _ <- insertCredential ambiguousPartyId "first@example.com"
+                _ <- insertCredential ambiguousPartyId "second@example.com"
+                _ <- insertUnlabeledToken ambiguousPartyId "ambiguous-token"
+
+                (,)
+                    <$> lookupUsernameFromToken "single-token"
+                    <*> lookupUsernameFromToken "ambiguous-token"
+
+            singleUsername `shouldBe` Just "single@example.com"
+            ambiguousUsername `shouldBe` Nothing
+
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do
             validateRequestedSignupRoles (Just [Student, Fan, Customer, Vendor, Student])
