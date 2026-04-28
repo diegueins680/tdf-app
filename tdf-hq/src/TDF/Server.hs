@@ -234,11 +234,20 @@ data GoogleEventsPage = GoogleEventsPage
   , nextSyncToken :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GoogleEventsPage where
-  parseJSON = withObject "GoogleEventsPage" $ \o ->
-    GoogleEventsPage
-      <$> o .: "items"
-      <*> o .:? "nextPageToken"
-      <*> o .:? "nextSyncToken"
+  parseJSON = withObject "GoogleEventsPage" $ \o -> do
+    parsedItems <- o .: "items"
+    nextPage <- o .:? "nextPageToken" >>= traverse (parseGoogleCursorField "nextPageToken")
+    nextSync <- o .:? "nextSyncToken" >>= traverse (parseGoogleCursorField "nextSyncToken")
+    when (isJust nextPage && isJust nextSync) $
+      fail "Google Calendar page must not include both nextPageToken and nextSyncToken"
+    pure GoogleEventsPage
+      { items = parsedItems
+      , nextPageToken = nextPage
+      , nextSyncToken = nextSync
+      }
+
+parseGoogleCursorField :: Text -> Text -> Parser Text
+parseGoogleCursorField = parseGoogleTokenField
 
 data ParsedEvent = ParsedEvent
   { peGoogleId   :: Text

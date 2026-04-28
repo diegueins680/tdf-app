@@ -2743,6 +2743,22 @@ main = hspec $ do
                     nextPage `shouldBe` Nothing
                     nextSync `shouldBe` Just "cursor-1"
 
+        it "rejects malformed or ambiguous Google Calendar cursors before sync fallback handling" $ do
+            case eitherDecode "{\"items\":[],\"nextPageToken\":\" page-cursor \",\"nextSyncToken\":null}" of
+                Left err ->
+                    expectationFailure ("Expected valid Google Calendar page cursor to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    parsedItems `shouldBe` []
+                    nextPage `shouldBe` Just "page-cursor"
+                    nextSync `shouldBe` Nothing
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected "{\"items\":[],\"nextPageToken\":\"   \"}"
+            assertRejected "{\"items\":[],\"nextSyncToken\":\"sync cursor\"}"
+            assertRejected "{\"items\":[],\"nextPageToken\":\"page-cursor\",\"nextSyncToken\":\"sync-cursor\"}"
+
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
             case eitherDecode
