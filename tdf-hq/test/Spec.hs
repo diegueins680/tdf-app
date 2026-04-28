@@ -2182,7 +2182,9 @@ main = hspec $ do
                 "{\"ok\":true,\"status\":\"autorizado\\nextra\"}"
 
         it "requires issued SRI results to carry confirmed document identifiers" $ do
-            let assertInvalid expected raw =
+            let validSriAuthorizationNumber =
+                    "3003202601179321509200120011000000000163200767814"
+                assertInvalid expected raw =
                     case Sri.decodeSriScriptOutput raw of
                         Left err ->
                             Data.Text.unpack err `shouldContain` expected
@@ -2203,17 +2205,29 @@ main = hspec $ do
             assertInvalid
                 "invoiceNumber is required when status is issued"
                 ( "{\"ok\":true,\"status\":\"issued\","
-                    <> "\"authorizationNumber\":\"123\",\"invoiceNumber\":\"  \"}"
+                    <> "\"authorizationNumber\":\""
+                    <> validSriAuthorizationNumber
+                    <> "\",\"invoiceNumber\":\"  \"}"
+                )
+            assertInvalid
+                "authorizationNumber must contain exactly 49 ASCII digits"
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\"}"
                 )
             assertInvalid
                 "invoiceNumber must use SRI format ###-###-#########"
                 ( "{\"ok\":true,\"status\":\"issued\","
-                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"authorizationNumber\":\""
+                    <> validSriAuthorizationNumber
+                    <> "\","
                     <> "\"invoiceNumber\":\"INV-2026-1\"}"
                 )
             let completeIssued =
                     "{\"ok\":true,\"status\":\"issued\","
-                        <> "\"authorizationNumber\":\" 123 \","
+                        <> "\"authorizationNumber\":\" "
+                        <> validSriAuthorizationNumber
+                        <> " \","
                         <> "\"invoiceNumber\":\" 001-100-000000001 \"}"
             case Sri.decodeSriScriptOutput completeIssued of
                 Left err ->
@@ -2222,7 +2236,8 @@ main = hspec $ do
                             <> Data.Text.unpack err
                         )
                 Right result -> do
-                    DTO.sirAuthorizationNumber result `shouldBe` Just "123"
+                    DTO.sirAuthorizationNumber result
+                        `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
 
         it "rejects negative SRI totals before invoice results are trusted" $

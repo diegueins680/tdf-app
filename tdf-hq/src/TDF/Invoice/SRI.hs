@@ -145,7 +145,8 @@ validateSriScriptResult dto =
           Left "SRI script JSON output ok must be true when status is issued"
       | otherwise = do
           authorizationNumber <-
-            validateRequiredIssuedField "authorizationNumber" (sirAuthorizationNumber result)
+            validateSriAuthorizationNumber
+              =<< validateRequiredIssuedField "authorizationNumber" (sirAuthorizationNumber result)
           invoiceNumber <-
             validateIssuedInvoiceNumber
               =<< validateRequiredIssuedField "invoiceNumber" (sirInvoiceNumber result)
@@ -176,6 +177,13 @@ validateSriScriptResult dto =
         else
           Left
             "SRI script JSON output invoiceNumber must use SRI format ###-###-#########"
+
+    validateSriAuthorizationNumber value =
+      if T.length value == 49 && T.all isAsciiDigit value
+        then Right value
+        else
+          Left
+            "SRI script JSON output authorizationNumber must contain exactly 49 ASCII digits"
 
     isSriInvoiceNumber value =
       case T.splitOn "-" value of
