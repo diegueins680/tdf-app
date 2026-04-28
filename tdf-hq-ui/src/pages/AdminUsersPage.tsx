@@ -709,6 +709,10 @@ export default function AdminUsersPage() {
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
     [showInactiveUsersGroup, visibleUsers],
   );
+  const inactiveVisibleUsersSignature = useMemo(
+    () => inactiveVisibleUsers.map((user) => `${user.userId}:${user.active}`).join('|'),
+    [inactiveVisibleUsers],
+  );
   const shouldCollapseInactiveUsers =
     showInactiveUsersGroup && !hasActiveSearch && activeVisibleUsers.length > 0;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
@@ -822,6 +826,9 @@ export default function AdminUsersPage() {
       setShowInactiveUsers(false);
     }
   }, [hasActiveSearch, showInactiveUsersGroup]);
+  useEffect(() => {
+    setShowInactiveUsers((current) => (current ? false : current));
+  }, [inactiveVisibleUsersSignature]);
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';

@@ -66,6 +66,7 @@ const renderPage = async (container: HTMLElement) => {
   });
 
   return {
+    queryClient: qc,
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -2827,6 +2828,102 @@ describe('AdminUsersPage', () => {
         expect(hasExactText(container, 'Ocultar 2 usuarios inactivos')).toBe(true);
         expect(hasExactText(container, 'Ocultar')).toBe(false);
         expect(hasExactText(container, 'Ocultar lista')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses expanded inactive users when the included roster changes', async () => {
+    const activeUsers = [
+      buildUser({
+        userId: 201,
+        partyId: 21,
+        partyName: 'Ada Active',
+        username: 'ada-active',
+      }),
+      buildUser({
+        userId: 202,
+        partyId: 22,
+        partyName: 'Bruno Active',
+        username: 'bruno-active',
+      }),
+    ];
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            ...activeUsers,
+            buildUser({
+              userId: 203,
+              partyId: 23,
+              partyName: 'Carla Inactive',
+              username: 'carla-inactive',
+              active: false,
+            }),
+            buildUser({
+              userId: 204,
+              partyId: 24,
+              partyName: 'Zed Inactive',
+              username: 'zed-inactive',
+              active: false,
+            }),
+          ]
+        : activeUsers,
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup, queryClient } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
+        expect(getCheckboxByLabelText(container, 'Incluir inactivos').checked).toBe(false);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(1);
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
+        expect(getButtonsByText(container, 'Ocultar 2 usuarios inactivos')).toHaveLength(1);
+      });
+
+      await act(async () => {
+        queryClient.setQueryData(['admin', 'users', true], [
+          ...activeUsers,
+          buildUser({
+            userId: 205,
+            partyId: 25,
+            partyName: 'Diana Inactive',
+            username: 'diana-inactive',
+            active: false,
+          }),
+          buildUser({
+            userId: 206,
+            partyId: 26,
+            partyName: 'Elena Inactive',
+            username: 'elena-inactive',
+            active: false,
+          }),
+        ]);
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202]);
+        expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Ocultar 2 usuarios inactivos')).toHaveLength(0);
+        expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-user-row-205"]')).toBeNull();
+        expect(container.querySelector('[data-testid="admin-user-row-206"]')).toBeNull();
       });
     } finally {
       await cleanup();
