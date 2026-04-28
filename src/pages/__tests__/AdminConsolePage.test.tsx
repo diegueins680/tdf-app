@@ -772,6 +772,49 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Recent audit')).not.toBeInTheDocument();
   });
 
+  it('keeps activity-log fallback titles from duplicating recent audit', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-activity-log',
+          title: 'Activity log',
+          body: ['Review administrative activity before repeating access changes.'],
+        },
+        {
+          cardId: 'fallback-registro-actividad',
+          title: 'Registro de actividad',
+          body: ['Revisa cambios administrativos recientes antes de repetir acciones.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Activity log')).not.toBeInTheDocument();
+    expect(screen.queryByText('Registro de actividad')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review administrative activity before repeating access changes\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa cambios administrativos recientes antes de repetir acciones\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps system-status fallback cards out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
