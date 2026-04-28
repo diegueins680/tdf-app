@@ -2921,8 +2921,13 @@ export default function CourseRegistrationsAdminPage() {
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
   const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
   const sharedEmailEventSummary = sharedEmailEventCreatedLabel && sharedEmailEventTypeLabel
-    ? `Resumen: ${sharedEmailEventTypeLabel} · ${sharedEmailEventCreatedLabel}`
+    ? `Resumen: ${[
+      sharedEmailEventTypeLabel,
+      sharedEmailEventStatusLabel,
+      sharedEmailEventCreatedLabel,
+    ].filter(Boolean).join(' · ')}`
     : '';
+  const sharedEmailEventStatusIsInSummary = Boolean(sharedEmailEventSummary && sharedEmailEventStatusLabel);
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
@@ -4658,7 +4663,7 @@ export default function CourseRegistrationsAdminPage() {
                           )}
                         </>
                       )}
-                      {sharedEmailEventStatusLabel && (
+                      {sharedEmailEventStatusLabel && !sharedEmailEventStatusIsInSummary && (
                         <Typography variant="body2" color="text.secondary">
                           Estado de correos: {sharedEmailEventStatusLabel}
                         </Typography>
@@ -4697,22 +4702,27 @@ export default function CourseRegistrationsAdminPage() {
                         <Stack spacing={1}>
                           {emailEvents.map((entry) => {
                             const emailEventCreatedLabel = sharedEmailEventCreatedLabel ? '' : formatDate(entry.ceCreatedAt);
+                            const showEmailEventMetadata = !sharedEmailEventStatusLabel
+                              || !sharedEmailEventTypeLabel
+                              || Boolean(emailEventCreatedLabel);
 
                             return (
                               <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
-                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                                  {!sharedEmailEventStatusLabel && (
-                                    <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
-                                  )}
-                                  {!sharedEmailEventTypeLabel && (
-                                    <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
-                                  )}
-                                  {emailEventCreatedLabel && (
-                                    <Typography variant="caption" color="text.secondary">
-                                      {emailEventCreatedLabel}
-                                    </Typography>
-                                  )}
-                                </Stack>
+                                {showEmailEventMetadata && (
+                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
+                                    {!sharedEmailEventStatusLabel && (
+                                      <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
+                                    )}
+                                    {!sharedEmailEventTypeLabel && (
+                                      <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                    )}
+                                    {emailEventCreatedLabel && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {emailEventCreatedLabel}
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                )}
                                 {entry.ceMessage && (
                                   <Typography
                                     variant="body2"

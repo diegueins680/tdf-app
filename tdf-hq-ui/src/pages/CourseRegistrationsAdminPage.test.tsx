@@ -3959,12 +3959,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(`Resumen: Recordatorio de pago · ${sharedEmailCreatedLabel}`);
+      expect(document.body.textContent).toContain(`Resumen: Recordatorio de pago · Enviado · ${sharedEmailCreatedLabel}`);
+      expect(document.body.textContent).not.toContain('Estado de correos:');
       expect(document.body.textContent).not.toContain('Correos registrados:');
       expect(document.body.textContent).not.toContain('Tipo de correo:');
       expect(document.body.textContent).toContain('Primer recordatorio enviado.');
       expect(document.body.textContent).toContain('Segundo recordatorio enviado.');
       expect(countOccurrences(document.body, 'Recordatorio de pago')).toBe(1);
+      expect(countOccurrences(document.body, 'Enviado')).toBe(1);
       expect(countOccurrences(document.body, sharedEmailCreatedLabel)).toBe(1);
     });
 
