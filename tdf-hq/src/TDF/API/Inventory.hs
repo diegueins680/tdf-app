@@ -19,7 +19,10 @@ import           Servant.Multipart ( FileData
                                     , fdFileName
                                     , fdFileCType
                                     )
-import           Data.Char         (isControl)
+import           Data.Char         ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+                                    , generalCategory
+                                    , isControl
+                                    )
 import qualified Data.Text         as T
 import           System.FilePath   (takeExtension, takeFileName)
 
@@ -51,8 +54,8 @@ normalizeUploadName (Just rawValue) =
 
 validateUploadName :: Text -> Either Text (Maybe Text)
 validateUploadName rawName
-  | T.any isControl rawName =
-      Left "Asset upload name must not contain control characters"
+  | T.any isUnsafeUploadNameChar rawName =
+      Left "Asset upload name must not contain control characters or Unicode formatting marks"
   | T.any isPathSeparator rawName =
       Left "Asset upload name must not contain path separators"
   | T.null (imageExtension rawName) =
@@ -73,11 +76,16 @@ rejectAmbiguousFileName nameTxt file =
 validateBrowserFileName :: FileData Tmp -> Either Text ()
 validateBrowserFileName file =
   let fileName = T.strip (fdFileName file)
-  in if T.any isControl fileName
-       then Left "Uploaded file name must not contain control characters"
+  in if T.any isUnsafeUploadNameChar fileName
+       then Left "Uploaded file name must not contain control characters or Unicode formatting marks"
        else if T.any isPathSeparator fileName
          then Left "Uploaded file name must not contain path separators"
          else Right ()
+
+isUnsafeUploadNameChar :: Char -> Bool
+isUnsafeUploadNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateImageUpload :: Maybe Text -> FileData Tmp -> Either Text ()
 validateImageUpload nameTxt file = do

@@ -387,6 +387,27 @@ spec = do
                 <> T.unpack (fdFileName (aufFile payload))
             )
 
+    it "rejects invisible Unicode formatting marks in upload names before storage can normalize them" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected unsafe asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must not contain control characters or Unicode formatting marks"
+        (mkAssetUploadMultipart
+          [("name", "front-room\x202Eshot.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain control characters or Unicode formatting marks"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\x202Eshot.jpg"])
+
     it "rejects browser filenames with path separators instead of silently collapsing them into another stored asset name" $ do
       let assertInvalid rawFileName =
             case fromMultipart
