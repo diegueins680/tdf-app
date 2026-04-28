@@ -22,7 +22,9 @@ import TDF.WhatsApp.Client
   ( SendTextResult (..)
   , normalizeGraphApiVersion
   , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppRecipientPhone
   )
 import TDF.WhatsApp.History
   ( IncomingWhatsAppRecord (..)
@@ -85,6 +87,39 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
       normalizeWhatsAppPhoneNumberId "123?fields=id"
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
+
+  describe "TDF.WhatsApp.Client outbound payload normalization" $ do
+    it "normalizes recipient phones and message bodies before Graph request construction" $ do
+      normalizeWhatsAppRecipientPhone " +593 99 123 4567 "
+        `shouldBe` Right "+593991234567"
+      normalizeWhatsAppRecipientPhone "(02) 555-0123"
+        `shouldBe` Right "+025550123"
+      normalizeWhatsAppMessageBody "  Hola\nSeguimos por aqui.  "
+        `shouldBe` Right "Hola\nSeguimos por aqui."
+
+    it "rejects malformed recipients and text bodies before provider fallback handling" $ do
+      let recipientShapeMessage =
+            "Invalid WhatsApp recipient phone: expected 8-15 digits with optional "
+              <> "leading + and phone separators"
+          bodyControlMessage =
+            "Invalid WhatsApp message body: message must not contain "
+              <> "unsupported control characters"
+      normalizeWhatsAppRecipientPhone "   "
+        `shouldBe` Left "Invalid WhatsApp recipient phone: phone is required"
+      normalizeWhatsAppRecipientPhone "call me at 099 123 4567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "12345"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+1234567890123456"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "593+991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppMessageBody "   "
+        `shouldBe` Left "Invalid WhatsApp message body: message is required"
+      normalizeWhatsAppMessageBody (T.replicate 4097 "a")
+        `shouldBe` Left "Invalid WhatsApp message body: message must be 4096 characters or fewer"
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\NUL')
+        `shouldBe` Left bodyControlMessage
 
   describe "recordIncomingWhatsAppMessage" $ do
     it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do

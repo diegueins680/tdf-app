@@ -4,7 +4,9 @@ module TDF.WhatsApp.Client
   , extractMessageId
   , normalizeGraphApiVersion
   , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppRecipientPhone
   , sendText
   ) where
 
@@ -39,52 +41,66 @@ sendText mgr apiVersion token phoneId to body = do
           case normalizeWhatsAppPhoneNumberId phoneId of
             Left err -> pure (Left err)
             Right normalizedPhoneId -> do
-              initReq <-
-                parseRequest $
-                  "https://graph.facebook.com/"
-                    <> T.unpack version
-                    <> "/"
-                    <> T.unpack normalizedPhoneId
-                    <> "/messages"
-              let payload = object
-                    [ "messaging_product" .= ("whatsapp" :: Text)
-                    , "to"   .= to
-                    , "type" .= ("text" :: Text)
-                    , "text" .= object [ "body" .= body ]
-                    ]
-                  req = initReq
-                      { method = "POST"
-                      , requestHeaders =
-                          [ ("Content-Type", "application/json")
-                          , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
-                          ]
-                      , requestBody = RequestBodyLBS (encode payload)
-                      }
-              res <- try $ httpLbs req mgr :: IO (Either SomeException (Response LBS.ByteString))
-              pure $ case res of
-                Left e   -> Left (show e)
-                Right ok ->
-                  let status = statusCode (responseStatus ok)
-                      rawBody = responseBody ok
-                  in case eitherDecode' rawBody of
-                       Left err ->
-                         let rendered = TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
-                         in Left
-                              ( "Failed to decode WhatsApp API response ("
-                                  <> show status
-                                  <> "): "
-                                  <> err
-                                  <> " | "
-                                  <> T.unpack rendered
-                              )
-                       Right parsed ->
-                         if status >= 200 && status < 300
-                           then Right SendTextResult
-                             { sendTextPayload = parsed
-                             , sendTextMessageId = extractMessageId parsed
-                             }
-                           else
-                             Left ("HTTP " <> show status <> ": " <> T.unpack (renderValue parsed))
+              case normalizeWhatsAppRecipientPhone to of
+                Left err -> pure (Left err)
+                Right recipientPhone ->
+                  case normalizeWhatsAppMessageBody body of
+                    Left err -> pure (Left err)
+                    Right messageBody -> do
+                      initReq <-
+                        parseRequest $
+                          "https://graph.facebook.com/"
+                            <> T.unpack version
+                            <> "/"
+                            <> T.unpack normalizedPhoneId
+                            <> "/messages"
+                      let payload = object
+                            [ "messaging_product" .= ("whatsapp" :: Text)
+                            , "to"   .= recipientPhone
+                            , "type" .= ("text" :: Text)
+                            , "text" .= object [ "body" .= messageBody ]
+                            ]
+                          req = initReq
+                              { method = "POST"
+                              , requestHeaders =
+                                  [ ("Content-Type", "application/json")
+                                  , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
+                                  ]
+                              , requestBody = RequestBodyLBS (encode payload)
+                              }
+                      res <-
+                        (try (httpLbs req mgr) ::
+                          IO (Either SomeException (Response LBS.ByteString)))
+                      pure $ case res of
+                        Left e   -> Left (show e)
+                        Right ok ->
+                          let status = statusCode (responseStatus ok)
+                              rawBody = responseBody ok
+                          in case eitherDecode' rawBody of
+                               Left err ->
+                                 let rendered =
+                                       TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
+                                 in Left
+                                      ( "Failed to decode WhatsApp API response ("
+                                          <> show status
+                                          <> "): "
+                                          <> err
+                                          <> " | "
+                                          <> T.unpack rendered
+                                      )
+                               Right parsed ->
+                                 if status >= 200 && status < 300
+                                   then Right SendTextResult
+                                     { sendTextPayload = parsed
+                                     , sendTextMessageId = extractMessageId parsed
+                                     }
+                                   else
+                                     Left
+                                       ( "HTTP "
+                                           <> show status
+                                           <> ": "
+                                           <> T.unpack (renderValue parsed)
+                                       )
 
 normalizeGraphApiVersion :: Text -> Either String Text
 normalizeGraphApiVersion rawVersion
@@ -134,7 +150,68 @@ normalizeWhatsAppPhoneNumberId rawPhoneId
       Left "Invalid WhatsApp phone number id: expected digits only"
   where
     phoneId = T.strip rawPhoneId
-    isAsciiDigit ch = ch >= '0' && ch <= '9'
+
+normalizeWhatsAppRecipientPhone :: Text -> Either String Text
+normalizeWhatsAppRecipientPhone rawPhone =
+  let trimmed = T.strip rawPhone
+      onlyDigits = T.filter isAsciiDigit trimmed
+      digitCount = T.length onlyDigits
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isAsciiDigit trimmed
+      allowedPhoneChar ch =
+        isAsciiDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in if T.null trimmed || T.null onlyDigits
+       then Left "Invalid WhatsApp recipient phone: phone is required"
+       else if digitCount < 8
+            || digitCount > 15
+            || hasInvalidChars
+            || not plusIsValid
+         then
+           Left
+             invalidWhatsAppRecipientPhoneShapeMessage
+         else Right ("+" <> onlyDigits)
+
+invalidWhatsAppRecipientPhoneShapeMessage :: String
+invalidWhatsAppRecipientPhoneShapeMessage =
+  "Invalid WhatsApp recipient phone: expected 8-15 digits with optional "
+    <> "leading + and phone separators"
+
+normalizeWhatsAppMessageBody :: Text -> Either String Text
+normalizeWhatsAppMessageBody rawBody
+  | T.null body =
+      Left "Invalid WhatsApp message body: message is required"
+  | T.length body > maxWhatsAppMessageBodyChars =
+      Left "Invalid WhatsApp message body: message must be 4096 characters or fewer"
+  | T.any invalidMessageBodyControlChar body =
+      Left invalidWhatsAppMessageBodyControlMessage
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+maxWhatsAppMessageBodyChars :: Int
+maxWhatsAppMessageBodyChars = 4096
+
+invalidMessageBodyControlChar :: Char -> Bool
+invalidMessageBodyControlChar ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
+
+invalidWhatsAppMessageBodyControlMessage :: String
+invalidWhatsAppMessageBodyControlMessage =
+  "Invalid WhatsApp message body: message must not contain "
+    <> "unsupported control characters"
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 isUnsafeHeaderChar :: Char -> Bool
 isUnsafeHeaderChar ch =
