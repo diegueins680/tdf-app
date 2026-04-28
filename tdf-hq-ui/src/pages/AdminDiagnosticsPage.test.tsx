@@ -129,9 +129,11 @@ describe('AdminDiagnosticsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('[data-testid="admin-diagnostics-calendar-empty"]')).not.toBeNull();
         expect(container.textContent).toContain(
-          'Todavía no hay calendario configurado. Abre la sincronización para conectar Google Calendar.',
+          'Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.',
         );
-        expect(container.textContent).toContain('Abrir página de sincronización');
+        expect(container.textContent).toContain('Conectar calendario');
+        expect(container.querySelector('a[href="/configuracion/integraciones/calendario"]')).not.toBeNull();
+        expect(container.textContent).not.toContain('Abrir página de sincronización');
         expect(container.textContent).not.toContain('Calendar ID: —');
         expect(container.textContent).not.toContain('Última sincronización: —');
       });

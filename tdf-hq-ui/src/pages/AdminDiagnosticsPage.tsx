@@ -15,6 +15,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { SocialInboxAPI, type SocialMessage } from '../api/socialInbox';
 
 interface MessageStats {
@@ -107,6 +108,8 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
 const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
   `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
 
+const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
+
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
@@ -196,22 +199,31 @@ export default function AdminDiagnosticsPage() {
             </Typography>
           </>
         ) : (
-          <Alert severity="info" variant="outlined" sx={{ mt: 1 }} data-testid="admin-diagnostics-calendar-empty">
-            Todavía no hay calendario configurado. Abre la sincronización para conectar Google Calendar.
+          <Alert
+            severity="info"
+            variant="outlined"
+            sx={{ mt: 1 }}
+            data-testid="admin-diagnostics-calendar-empty"
+            action={(
+              <Button color="inherit" size="small" component={RouterLink} to={CALENDAR_SYNC_PATH}>
+                Conectar calendario
+              </Button>
+            )}
+          >
+            Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.
           </Alert>
         )}
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.location.href = '/calendario/sincronizar';
-            }
-          }}
-          sx={{ mt: 1 }}
-        >
-          Abrir página de sincronización
-        </Button>
+        {hasCalendarSyncState && (
+          <Button
+            variant="outlined"
+            size="small"
+            component={RouterLink}
+            to={CALENDAR_SYNC_PATH}
+            sx={{ mt: 1 }}
+          >
+            Abrir sincronización
+          </Button>
+        )}
       </Paper>
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
