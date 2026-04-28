@@ -31,6 +31,7 @@ data AdminConsoleCard = AdminConsoleCard
   { cardId :: Text
   , title  :: Text
   , body   :: [Text]
+  , implemented :: Bool
   } deriving stock (Show)
 
 instance ToJSON AdminConsoleCard where
@@ -39,6 +40,7 @@ instance ToJSON AdminConsoleCard where
       [ "cardId" .= cardId card
       , "title" .= title card
       , "body" .= body card
+      , "implemented" .= implemented card
       ]
 
 -- | Wrapper payload for the admin console endpoint.

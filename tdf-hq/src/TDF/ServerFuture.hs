@@ -105,6 +105,7 @@ adminConsoleCards =
           [ "La asignación de roles se administra desde la pantalla de Parties."
           , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
           ]
+      , implemented = False
       }
   , AdminConsoleCard
       { cardId = "api-tokens"
@@ -113,6 +114,7 @@ adminConsoleCards =
           [ "Los tokens de servicio deben administrarse desde un flujo dedicado."
           , "El acceso quedará separado de usuarios humanos para integraciones internas."
           ]
+      , implemented = False
       }
   ]
 
@@ -176,6 +178,7 @@ validateFutureAdminConsoleCard card
   | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
   | cardId card `notElem` allowedFutureAdminConsoleCardIds =
       invalidFutureAdminConsoleMetadata
+  | implemented card = invalidFutureAdminConsoleMetadata
   | title card /= expectedFutureAdminConsoleTitle (cardId card) =
       invalidFutureAdminConsoleMetadata
   | body card /= expectedFutureAdminConsoleBody (cardId card) =

@@ -7288,12 +7288,14 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureAdminConsoleCard" $ do
         it "rejects malformed or mislabeled admin console cards before serving fallback discovery metadata" $ do
-            let mkCard cardIdValue titleValue bodyValue =
+            let mkCardWith implementedValue cardIdValue titleValue bodyValue =
                     Future.AdminConsoleCard
                         { Future.cardId = cardIdValue
                         , Future.title = titleValue
                         , Future.body = bodyValue
+                        , Future.implemented = implementedValue
                         }
+                mkCard = mkCardWith False
                 validUserManagementBody =
                     [ "La asignación de roles se administra desde la pantalla de Parties."
                     , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
@@ -7320,6 +7322,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkCard "User Management" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "unknown-card" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "api-tokens" "Gestión de usuarios" ["Roles"])
+            assertInvalid (mkCardWith True "user-management" "Gestión de usuarios" validUserManagementBody)
             assertInvalid (mkCard "user-management" " Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión\nusuarios" ["Roles"])
             assertInvalid (mkCard "user-management" "Gestión\x2028usuarios" ["Roles"])
@@ -7338,6 +7341,7 @@ spec = describe "TDF.Server helpers" $ do
                         { Future.cardId = cardIdValue
                         , Future.title = titleValue
                         , Future.body = bodyValue
+                        , Future.implemented = False
                         }
                 userManagementBody =
                     [ "La asignación de roles se administra desde la pantalla de Parties."
@@ -7444,6 +7448,7 @@ spec = describe "TDF.Server helpers" $ do
                                           , "Próximamente aquí se podrá crear usuarios de servicio y tokens API."
                                           ] :: [Text]
                                         )
+                                    , "implemented" .= False
                                     ]
                                 , A.object
                                     [ "cardId" .= ("api-tokens" :: Text)
@@ -7453,6 +7458,7 @@ spec = describe "TDF.Server helpers" $ do
                                           , "El acceso quedará separado de usuarios humanos para integraciones internas."
                                           ] :: [Text]
                                         )
+                                    , "implemented" .= False
                                     ]
                                 ]
                             ]
