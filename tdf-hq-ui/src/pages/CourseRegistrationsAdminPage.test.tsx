@@ -233,7 +233,7 @@ const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Hay 2 formularios públicos listos; revisa cursos para compartir uno.';
+  'Todavía no hay inscripciones. Hay 2 formularios públicos listos para compartir.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
@@ -10604,8 +10604,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Elige en Configuración de cursos');
       expect(emptyState?.textContent).not.toContain('Elegir curso');
       expect(emptyState?.textContent).not.toContain('Elegir en cursos');
+      expect(emptyState?.textContent).not.toMatch(/revisa cursos/i);
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
+      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
       expect(countOccurrences(emptyState!, 'formulario')).toBe(1);
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
