@@ -49,6 +49,7 @@ import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
+import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
 import           System.IO (hPutStrLn, stderr)
 import qualified Network.Wai as Wai (Request)
@@ -1813,13 +1814,15 @@ validateDriveAccess user
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer user mAccessToken DriveUploadForm{..} = do
   either throwError pure (validateDriveAccess user)
-  manager <- liftIO $ newManager tlsManagerSettings
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
-  accessToken <- resolveDriveAccessToken manager providedToken
   mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
+  fileSize <- liftIO (getFileSize (fdPayload duFile))
+  either throwError pure (validateDriveUploadFileSize fileSize)
+  manager <- liftIO $ newManager tlsManagerSettings
+  accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
       (try (uploadToDrive manager accessToken duFile (Just nameOverride) folder) ::
@@ -1956,6 +1959,20 @@ validateDriveUploadName fieldName uploadName
   | otherwise = Right uploadName
   where
     isPathSeparator ch = ch == '/' || ch == '\\'
+
+maxDriveUploadBytes :: Integer
+maxDriveUploadBytes = 50 * 1024 * 1024
+
+validateDriveUploadFileSize :: Integer -> Either ServerError ()
+validateDriveUploadFileSize size
+  | size < 0 =
+      Left err400 { errBody = "Drive upload size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "Drive upload must not be empty" }
+  | size > maxDriveUploadBytes =
+      Left err400 { errBody = "Drive upload must be 50 MB or smaller" }
+  | otherwise =
+      Right ()
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken = validateDriveAccessTokenWith err400

@@ -256,6 +256,7 @@ import TDF.Server
     , extractChatKitSession
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
+    , validateDriveUploadFileSize
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , shouldRetryWithFallbackModel
@@ -3390,6 +3391,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "name must be 240 characters or fewer"
                 (resolveDriveUploadName (Just (T.replicate 241 "a")) "safe.pdf")
+
+    describe "validateDriveUploadFileSize" $ do
+        it "rejects empty or oversized Drive uploads before the proxy reads or sends the file" $ do
+            validateDriveUploadFileSize 1 `shouldBe` Right ()
+            validateDriveUploadFileSize (50 * 1024 * 1024) `shouldBe` Right ()
+
+            let assertInvalid rawSize expectedMessage =
+                    case validateDriveUploadFileSize rawSize of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive upload size to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid (-1) "Drive upload size is invalid"
+            assertInvalid 0 "Drive upload must not be empty"
+            assertInvalid (50 * 1024 * 1024 + 1) "Drive upload must be 50 MB or smaller"
 
     describe "validateConfiguredDriveAccessToken" $ do
         it "rejects malformed DRIVE_ACCESS_TOKEN fallbacks before upload requests reuse them" $ do
