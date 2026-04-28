@@ -1937,7 +1937,14 @@ export default function CourseRegistrationsAdminPage() {
   const filteredEmptyStateMessage = activeFilterSummary
     ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
     : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const hasExplicitCsvExportScope = hasCustomFilters || localSearchNarrowsRegistrations;
+  const hasTinyLimitOnlyView = hasCustomLimit
+    && !hasManualFilters
+    && !hasLocalSearch
+    && loadedRegistrationCount > 1
+    && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
+  const hasExplicitCsvExportScope = hasManualFilters
+    || localSearchNarrowsRegistrations
+    || (hasCustomLimit && !hasTinyLimitOnlyView);
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
   const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
@@ -2029,6 +2036,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch;
   const showUtilityCountSummary = !hasLocalSearch
     && !canCopyCsv
+    && !hasTinyLimitOnlyView
     && !showTinyDefaultCountInCurrentView
     && !suppressDefaultMediumListUtilityRow
     && !suppressDefaultUnscopedListUtilityRow

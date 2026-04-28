@@ -6874,7 +6874,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps reset attached to the current-view summary when a custom limit still shows multiple registrations', async () => {
+  it('keeps tiny limit-only views focused on reset instead of export chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -6900,7 +6900,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')?.textContent?.trim()).toBe('Restablecer límite');
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
-      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(countButtonsByText(container, 'Copiar CSV filtrado')).toBe(0);
       expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
     });
