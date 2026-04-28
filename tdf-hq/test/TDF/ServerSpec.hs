@@ -179,6 +179,7 @@ import TDF.Server
     , validateDatafastEntityId
     , validateDatafastResourcePath
     , validateDatafastOrderResourcePath
+    , validateDatafastResultCodeField
     , resolvePaypalBaseUrl
     , validatePayPalCredential
     , validatePayPalAccessTokenField
@@ -5004,6 +5005,29 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected malformed stored Datafast checkout id to be rejected, got: "
                             <> show pathVal
                         )
+
+    describe "validateDatafastResultCodeField" $ do
+        it "normalizes dot-separated Datafast result codes before order status decisions" $
+            validateDatafastResultCodeField " 000.100.110 "
+                `shouldBe` Right "000.100.110"
+
+        it "rejects malformed upstream result codes instead of marking orders failed ambiguously" $ do
+            let assertInvalid rawCode =
+                    case validateDatafastResultCodeField rawCode of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Datafast returned an invalid result code"
+                        Right codeVal ->
+                            expectationFailure
+                                ( "Expected invalid Datafast result code to be rejected, got: "
+                                    <> show codeVal
+                                )
+            assertInvalid "   "
+            assertInvalid "000.100.OK"
+            assertInvalid "000..100"
+            assertInvalid "000.100\nInjected"
+            assertInvalid (T.replicate 65 "1")
 
     describe "validateDatafastEntityId" $ do
         it "trims URL-safe Datafast entity ids before gateway requests" $

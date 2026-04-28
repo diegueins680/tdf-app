@@ -9563,8 +9563,8 @@ confirmDatafastPayment mOrderId mResourcePath = do
   dfEnv <- loadDatafastEnv
   statusResp <- datafastPaymentStatus dfEnv resourcePathTxt
   now <- liftIO getCurrentTime
-  let code = dfrCode (dfpResult statusResp)
-      success = isDfPaymentSuccess code
+  code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
+  let success = isDfPaymentSuccess code
       pending = isDfPaymentPending code
       nextStatus
         | success = "paid"
@@ -9717,7 +9717,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   case eitherDecode (responseBody resp) of
     Left _ -> throwError err502 { errBody = "No pudimos interpretar la respuesta de Datafast." }
     Right dfResp -> do
-      let code = dfrCode (dfcResult dfResp)
+      code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfcResult dfResp)))
       unless (isDfCheckoutSuccess code) $
         throwError err502 { errBody = "Datafast rechazó la solicitud de pago." }
       checkoutId <- either throwError pure (validateDatafastCheckoutId (dfcId dfResp))
@@ -9878,6 +9878,34 @@ isDfPaymentSuccess code =
 
 isDfPaymentPending :: Text -> Bool
 isDfPaymentPending code = code == "000.200.000"
+
+validateDatafastResultCodeField :: Text -> Either ServerError Text
+validateDatafastResultCodeField rawCode
+  | T.null code =
+      invalidDatafastResultCode
+  | T.length code > 64 =
+      invalidDatafastResultCode
+  | T.any (\ch -> isControl ch || isSpace ch) code =
+      invalidDatafastResultCode
+  | not (T.all isDatafastResultCodeChar code) =
+      invalidDatafastResultCode
+  | any T.null (T.splitOn "." code) =
+      invalidDatafastResultCode
+  | otherwise =
+      Right code
+  where
+    code = T.strip rawCode
+
+isDatafastResultCodeChar :: Char -> Bool
+isDatafastResultCodeChar ch =
+  isDigit ch || ch == '.'
+
+invalidDatafastResultCode :: Either ServerError a
+invalidDatafastResultCode =
+  Left err502
+    { errBody =
+        "Datafast returned an invalid result code"
+    }
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
