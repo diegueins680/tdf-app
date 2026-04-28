@@ -533,6 +533,21 @@ const getSharedEmailEventTypeLabel = (
   return firstLabel;
 };
 
+const getSharedEmailEventStatusLabel = (
+  events: readonly Pick<CourseEmailEventDTO, 'ceStatus'>[],
+) => {
+  if (events.length < 2) return '';
+
+  const rawStatuses = events.map((entry) => entry.ceStatus.trim());
+  if (rawStatuses.some((status) => status === '')) return '';
+
+  const labels = rawStatuses.map(eventStatusLabel);
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
 const getFollowUpTypeOptions = (entryType: string) => {
   const normalizedEntryType = entryType.trim().toLowerCase();
   if (
@@ -2830,6 +2845,7 @@ export default function CourseRegistrationsAdminPage() {
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
+  const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
   const sharedEmailEventSummary = sharedEmailEventCreatedLabel && sharedEmailEventTypeLabel
     ? `Resumen: ${sharedEmailEventTypeLabel} · ${sharedEmailEventCreatedLabel}`
     : '';
@@ -4535,6 +4551,11 @@ export default function CourseRegistrationsAdminPage() {
                           )}
                         </>
                       )}
+                      {sharedEmailEventStatusLabel && (
+                        <Typography variant="body2" color="text.secondary">
+                          Estado de correos: {sharedEmailEventStatusLabel}
+                        </Typography>
+                      )}
 
                       {emailEventsQuery.isLoading && (
                         <Stack direction="row" spacing={1} alignItems="center">
@@ -4573,7 +4594,9 @@ export default function CourseRegistrationsAdminPage() {
                             return (
                               <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
                                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                                  <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
+                                  {!sharedEmailEventStatusLabel && (
+                                    <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
+                                  )}
                                   {!sharedEmailEventTypeLabel && (
                                     <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
                                   )}

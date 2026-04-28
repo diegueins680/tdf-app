@@ -3824,6 +3824,58 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes repeated system-email statuses once instead of repeating the same chip per card', async () => {
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent({
+        ceId: 501,
+        ceEventType: 'registration_confirmation',
+        ceMessage: 'Confirmación lista.',
+        ceCreatedAt: '2030-03-03T12:00:00.000Z',
+      }),
+      buildEmailEvent({
+        ceId: 502,
+        ceEventType: 'payment_reminder',
+        ceMessage: 'Recordatorio listo.',
+        ceCreatedAt: '2030-03-04T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Estado de correos: Enviado');
+      expect(document.body.textContent).toContain('Confirmación de inscripción');
+      expect(document.body.textContent).toContain('Recordatorio de pago');
+      expect(document.body.textContent).toContain('Confirmación lista.');
+      expect(document.body.textContent).toContain('Recordatorio listo.');
+      expect(countOccurrences(document.body, 'Enviado')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('combines shared system-email type and date into one summary line', async () => {
     const sharedEmailCreatedAt = '2030-03-03T12:00:00.000Z';
     const sharedEmailCreatedLabel = formatTimestampForDisplay(sharedEmailCreatedAt, '-');
