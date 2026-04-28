@@ -692,7 +692,11 @@ export default function AdminUsersPage() {
     && includeInactive
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === visibleUsers.length;
-  const showInactiveOnlyScopeSummary = showOnlyInactiveUsers;
+  const showOnlyInactiveSearchResults = hasActiveSearch
+    && includeInactive
+    && visibleUsers.length > 1
+    && visibleInactiveUsersCount === visibleUsers.length;
+  const showInactiveOnlyScopeSummary = showOnlyInactiveUsers || showOnlyInactiveSearchResults;
   const showInactiveUsersGroup =
     includeInactive
     && visibleInactiveUsersCount > 0

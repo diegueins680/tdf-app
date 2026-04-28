@@ -2115,6 +2115,104 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('moves inactive-only multi-result search context into the header instead of adding a body section label', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+              partyName: 'Ada Active',
+            }),
+            buildUser({
+              userId: 102,
+              partyId: 44,
+              username: 'grace-archivada',
+              partyName: 'Grace Archivada',
+              active: false,
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-admin',
+              partyName: 'Linus Active',
+              primaryEmail: 'linus@example.com',
+            }),
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'bruno-admin',
+              partyName: 'Bruno Active',
+              primaryEmail: 'bruno@example.com',
+            }),
+            buildUser({
+              userId: 105,
+              partyId: 77,
+              username: 'maria-archivada',
+              partyName: 'María Archivada',
+              active: false,
+            }),
+          ]
+        : [
+            buildUser({
+              userId: 101,
+              partyId: 9,
+              username: 'ada-admin',
+              partyName: 'Ada Active',
+            }),
+            buildUser({
+              userId: 103,
+              partyId: 55,
+              username: 'linus-admin',
+              partyName: 'Linus Active',
+              primaryEmail: 'linus@example.com',
+            }),
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'bruno-admin',
+              partyName: 'Bruno Active',
+              primaryEmail: 'bruno@example.com',
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 104, 103]);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(1);
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'archivada');
+
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Mostrando 2 de 5 usuarios. Vista actual: solo usuarios inactivos.',
+        );
+        expect(getRenderedRowUserIds(container)).toEqual([102, 105]);
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
+        expect(hasExactText(container, '2 usuarios inactivos')).toBe(false);
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
+        expect(hasExactText(getRowByUserId(container, 105), 'Inactivo')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the shared missing-contact fix in the header instead of repeating the same chip on every row', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
