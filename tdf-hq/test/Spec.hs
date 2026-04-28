@@ -117,6 +117,7 @@ import TDF.ServerRadio
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
       validateRadioOptionalMetadataField,
+      validateRadioSearchFilter,
       validateRadioStreamUrl,
       validateRadioTransmissionIngestBase,
       validateRadioTransmissionWhipBase,
@@ -4818,6 +4819,35 @@ main = hspec $ do
                 other ->
                     expectationFailure
                         ("Expected cross-event ticket-id lookup to miss and same-event lookup to hit, got " <> show other)
+
+    describe "validateRadioSearchFilter" $ do
+        it "normalizes meaningful radio search filters before stream matching" $ do
+            validateRadioSearchFilter "country" 80 Nothing `shouldBe` Right Nothing
+            validateRadioSearchFilter "country" 80 (Just "  EC  ")
+                `shouldBe` Right (Just "ec")
+            validateRadioSearchFilter "genre" 120 (Just "  Drum and Bass  ")
+                `shouldBe` Right (Just "drum and bass")
+
+        it
+            "rejects blank, oversized, or control-character radio search filters"
+            $ do
+            let assertInvalid raw expected =
+                    case validateRadioSearchFilter "country" 80 raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid radio search filter to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid (Just "   ") "country filter must be omitted or non-blank"
+            assertInvalid
+                (Just (Data.Text.replicate 81 "x"))
+                "country filter must be 80 characters or fewer"
+            assertInvalid
+                (Just "EC\NUL")
+                "country filter must not contain control characters"
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $

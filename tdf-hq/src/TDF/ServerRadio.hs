@@ -11,6 +11,7 @@ module TDF.ServerRadio
   , validateRadioTransmissionWhipBase
   , resolveRadioTransmissionEnvBase
   , validateRadioOptionalMetadataField
+  , validateRadioSearchFilter
   , validateRadioImportSources
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
@@ -155,8 +156,31 @@ validateRadioOptionalMetadataField fieldName maxLength (Just rawValue) =
              { errBody =
                  BL.fromStrict . TE.encodeUtf8 $
                    fieldName <> " must not contain control characters"
-             }
-           else Right (Just value)
+           }
+         else Right (Just value)
+
+validateRadioSearchFilter :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
+validateRadioSearchFilter _ _ Nothing = Right Nothing
+validateRadioSearchFilter fieldName maxLength (Just rawValue)
+  | T.null value =
+      Left err400
+        { errBody = BL.fromStrict . TE.encodeUtf8 $
+            fieldName <> " filter must be omitted or non-blank"
+        }
+  | T.length value > maxLength =
+      Left err400
+        { errBody = BL.fromStrict . TE.encodeUtf8 $
+            fieldName <> " filter must be " <> T.pack (show maxLength) <> " characters or fewer"
+        }
+  | T.any isControl value =
+      Left err400
+        { errBody = BL.fromStrict . TE.encodeUtf8 $
+            fieldName <> " filter must not contain control characters"
+        }
+  | otherwise =
+      Right (Just (T.toLower value))
+  where
+    value = T.strip rawValue
 
 validateRadioTransmissionEndpointBase :: Text -> Text -> [Text] -> Text -> Either ServerError Text
 validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes rawBase
@@ -631,11 +655,11 @@ radioServer user =
     searchStreams :: Maybe Text -> Maybe Text -> m [RadioStreamDTO]
     searchStreams mCountry mGenre = do
       Env{..} <- ask
+      cQuery <- either throwError pure (validateRadioSearchFilter "country" 80 mCountry)
+      gQuery <- either throwError pure (validateRadioSearchFilter "genre" 120 mGenre)
       rows <- liftIO $ flip runSqlPool envPool $
         selectList [RadioStreamIsActive ==. True] [Desc RadioStreamUpdatedAt, LimitTo 400]
-      let cQuery = normalize mCountry
-          gQuery = normalize mGenre
-          matches (Entity _ RadioStream{..}) =
+      let matches (Entity _ RadioStream{..}) =
             matchesField cQuery radioStreamCountry && matchesField gQuery radioStreamGenre
       pure (map toDTO (filter matches rows))
 
@@ -787,9 +811,6 @@ radioServer user =
       case mVal of
         Nothing    -> False
         Just value -> query `T.isInfixOf` T.toLower value
-
-    normalize :: Maybe Text -> Maybe Text
-    normalize = fmap (T.toLower . T.strip)
 
     normalizeMaybe :: Maybe Text -> Maybe Text
     normalizeMaybe mTxt =
