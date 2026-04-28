@@ -148,7 +148,7 @@ validateFutureStubCatalog catalog = do
   normalized <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
-  if null normalized || length normalized /= length (nub normalized)
+  if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
     else Right normalized
 

@@ -7033,7 +7033,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "ops" "parties/list-columns"
 
     describe "validateFutureStubCatalog" $ do
-        it "rejects duplicate or malformed fallback discovery catalog entries" $ do
+        it "rejects drifted, duplicate, or malformed fallback discovery catalog entries" $ do
             case validateFutureStubCatalog allowedFutureStubMetadata of
                 Right catalog ->
                     catalog `shouldSatisfy` (not . null)
@@ -7052,6 +7052,9 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid future stub catalog, got: " <> show value)
 
             assertInvalid []
+            assertInvalid [("crm", "parties/list-columns")]
+            assertInvalid (("crm", "parties/export") : allowedFutureStubMetadata)
+            assertInvalid (reverse allowedFutureStubMetadata)
             assertInvalid [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
             assertInvalid [(" crm", "parties/list-columns")]
             assertInvalid [("crm", "parties/list columns")]
