@@ -21,6 +21,7 @@ module TDF.ServerAuth
   , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
+  , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , signupEmailExists
   , validateAuthPassword
@@ -912,7 +913,22 @@ lookupCredential rawIdentifier = do
       byUsername <- getBy (UniqueCredentialUsername trimmed)
       case byUsername of
         Just cred -> pure (Just cred)
-        Nothing -> lookupByEmail trimmed
+        Nothing -> lookupLoginEmailCredential trimmed
+
+lookupLoginEmailCredential :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
+lookupLoginEmailCredential emailAddress = do
+  let query =
+        "SELECT ?? FROM user_credential \
+        \ JOIN party ON user_credential.party_id = party.id \
+        \ WHERE lower(trim(COALESCE(party.primary_email, ''))) = lower(trim(?)) \
+        \ ORDER BY user_credential.id ASC \
+        \ LIMIT 2"
+  creds <- rawSql query [PersistText emailAddress]
+  pure (selectUniqueLoginEmailCredential creds)
+
+selectUniqueLoginEmailCredential :: [Entity UserCredential] -> Maybe (Entity UserCredential)
+selectUniqueLoginEmailCredential [credential] = Just credential
+selectUniqueLoginEmailCredential _ = Nothing
 
 lookupByEmail :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
 lookupByEmail emailAddress = do

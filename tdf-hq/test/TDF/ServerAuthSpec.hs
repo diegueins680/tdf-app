@@ -13,6 +13,7 @@ import Test.Hspec
 import TDF.Models (UserCredential (..))
 import TDF.ServerAuth
   ( normalizeAuthEmailAddress
+  , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , validatePasswordResetToken
   )
@@ -21,6 +22,7 @@ spec :: Spec
 spec = do
   authEmailSpec
   passwordResetTokenSpec
+  loginEmailFallbackSpec
   passwordResetDeliverySpec
 
 authEmailSpec :: Spec
@@ -100,6 +102,21 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
       Right value ->
         expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)
 
+loginEmailFallbackSpec :: Spec
+loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
+  it "allows exactly one login email fallback credential candidate" $
+    selectedLoginCredentialKey [credentialEntity 21 201]
+      `shouldBe` Just (toSqlKey 21)
+
+  it "rejects ambiguous login email fallback candidates instead of picking the first" $ do
+    selectedLoginCredentialKey []
+      `shouldBe` Nothing
+    selectedLoginCredentialKey
+      [ credentialEntity 21 201
+      , credentialEntity 22 202
+      ]
+      `shouldBe` Nothing
+
 passwordResetDeliverySpec :: Spec
 passwordResetDeliverySpec = describe "selectUniquePasswordResetCredential" $ do
   it "allows exactly one password reset credential candidate" $
@@ -131,3 +148,6 @@ credentialEntityKey (Entity key _) = key
 
 selectedCredentialKey :: [Entity UserCredential] -> Maybe (Key UserCredential)
 selectedCredentialKey = fmap credentialEntityKey . selectUniquePasswordResetCredential
+
+selectedLoginCredentialKey :: [Entity UserCredential] -> Maybe (Key UserCredential)
+selectedLoginCredentialKey = fmap credentialEntityKey . selectUniqueLoginEmailCredential
