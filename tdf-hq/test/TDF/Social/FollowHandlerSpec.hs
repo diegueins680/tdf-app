@@ -16,7 +16,12 @@ import Test.Hspec
 import TDF.DTO.SocialEventsDTO (ArtistFollowerDTO (..))
 import TDF.Models (Party (..))
 import TDF.Models.SocialEventsModels
-import TDF.Server.SocialEventsHandlers (followArtistDb, resolveExistingPartyIdText, resolveUniqueRsvpRow)
+import TDF.Server.SocialEventsHandlers
+    ( followArtistDb
+    , resolveExistingPartyIdText
+    , resolveUniqueRsvpRow
+    , validateEventImageUploadSize
+    )
 
 spec :: Spec
 spec = describe "social event handler helpers" $ do
@@ -40,6 +45,26 @@ spec = describe "social event handler helpers" $ do
                 BL8.unpack (errBody err) `shouldContain` "Multiple RSVP rows exist"
             Right value ->
                 expectationFailure ("Expected duplicate RSVP rows to be rejected, got: " <> show value)
+
+    it "rejects empty or oversized event image uploads before copying files" $ do
+        case validateEventImageUploadSize 1 of
+            Right () -> pure ()
+            Left err ->
+                expectationFailure
+                    ("Expected valid event image upload size, got: " <> show err)
+
+        let assertInvalid expectedMessage size =
+                case validateEventImageUploadSize size of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid event image upload size to be rejected, got: " <> show value)
+
+        assertInvalid "event image upload size is invalid" (-1)
+        assertInvalid "event image upload must not be empty" 0
+        assertInvalid "event image upload must be 10 MB or smaller" (10 * 1024 * 1024 + 1)
 
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1

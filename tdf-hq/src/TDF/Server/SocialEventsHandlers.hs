@@ -54,6 +54,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCurrencyInput
   , isImageUpload
+  , validateEventImageUploadSize
   ) where
 
 import           Control.Applicative ((<|>))
@@ -74,7 +75,7 @@ import           Data.Time (UTCTime, getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
-import           System.Directory (copyFile, createDirectoryIfMissing)
+import           System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
 import           System.FilePath ((</>), takeExtension, takeFileName)
 import           Text.Read (readMaybe)
 
@@ -657,6 +658,8 @@ socialEventsServer user = eventsServer
           publicUrl = buildUploadAssetUrl assetsBase relPath
           existingMeta = decodeEventMetadata (socialEventMetadata eventRow)
           updatedMeta = existingMeta { emImageUrl = Just publicUrl }
+      fileSize <- liftIO (getFileSize (fdPayload eiuFile))
+      either throwError pure (validateEventImageUploadSize fileSize)
       liftIO $ createDirectoryIfMissing True targetDir
       liftIO $ copyFile (fdPayload eiuFile) targetPath
       liftIO $ runSqlPool
@@ -2990,6 +2993,20 @@ isImageUpload mimeType fileName =
       "image/gif" -> ext == ".gif"
       "image/bmp" -> ext == ".bmp"
       _ -> False
+
+maxEventImageUploadBytes :: Integer
+maxEventImageUploadBytes = 10 * 1024 * 1024
+
+validateEventImageUploadSize :: Integer -> Either ServerError ()
+validateEventImageUploadSize size
+  | size < 0 =
+      Left err400 { errBody = "event image upload size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "event image upload must not be empty" }
+  | size > maxEventImageUploadBytes =
+      Left err400 { errBody = "event image upload must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 normalizeUploadMimeType :: T.Text -> T.Text
 normalizeUploadMimeType raw =
