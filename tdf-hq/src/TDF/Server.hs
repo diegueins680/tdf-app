@@ -7346,6 +7346,12 @@ normalizeRequestedResourceIds rawIds =
   let normalized = map T.strip rawIds
   in if any T.null normalized
        then Left err400 { errBody = "resourceIds must not contain blank entries" }
+       else if any (T.any isUnsafeResourceIdChar) normalized
+       then
+         Left err400
+           { errBody =
+               "resourceIds must not contain control characters or Unicode formatting marks"
+           }
        else case duplicateRequestedResourceIds normalized of
          [] -> Right normalized
          duplicateIds ->
@@ -7355,6 +7361,11 @@ normalizeRequestedResourceIds rawIds =
                    "resourceIds must not contain duplicate entries: "
                      <> T.intercalate ", " duplicateIds
              }
+
+isUnsafeResourceIdChar :: Char -> Bool
+isUnsafeResourceIdChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 duplicateRequestedResourceIds :: [Text] -> [Text]
 duplicateRequestedResourceIds = go Set.empty Set.empty []

@@ -6115,6 +6115,31 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected duplicate explicit booking room ids to be rejected, got: " <> show resourceKeys)
 
+        it "rejects unsafe explicit room ids before lookup fallback can echo malformed input" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+                assertInvalid rawResourceId = do
+                    result <- try $
+                        runResourceSqlite $
+                            resolveResourcesForBooking
+                                (Just "mixing")
+                                [rawResourceId]
+                                startsAt
+                                endsAt
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "resourceIds must not contain control characters or Unicode formatting marks"
+                        Right resourceKeys ->
+                            expectationFailure
+                                ( "Expected unsafe explicit booking room id to be rejected, got: "
+                                    <> show resourceKeys
+                                )
+            assertInvalid ("room-control" <> T.singleton '\NUL')
+            assertInvalid ("room-control" <> T.singleton '\x202E')
+
     describe "requirePersistedBookingDTO" $ do
         it "rejects empty post-insert booking projections instead of returning a fabricated fallback DTO" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
