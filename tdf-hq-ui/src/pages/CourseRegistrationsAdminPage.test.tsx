@@ -4411,6 +4411,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.',
       );
       expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
@@ -4451,7 +4452,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain('habilitar Marcar pagado');
-      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(1);
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
       expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
     });
 

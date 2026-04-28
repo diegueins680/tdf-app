@@ -2964,6 +2964,9 @@ export default function CourseRegistrationsAdminPage() {
   const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
     ? emptyReceiptEvidenceAlertMessage
     : emptyReceiptAlertMessage;
+  const emptyReceiptActionLabel = showEvidenceOnlyEmptyReceiptCopy
+    ? 'Agregar evidencia'
+    : 'Agregar primer comprobante';
   const showReceiptsSection = !(
     activeRegistrationKnownStatus === 'cancelled'
     && !hasReceipts
@@ -3357,7 +3360,7 @@ export default function CourseRegistrationsAdminPage() {
                       severity="info"
                       action={(
                         <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
-                          Agregar primer comprobante
+                          {emptyReceiptActionLabel}
                         </Button>
                       )}
                     >
