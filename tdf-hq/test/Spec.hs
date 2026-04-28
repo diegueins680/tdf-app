@@ -1328,6 +1328,14 @@ main = hspec $ do
                 [ ("WA_GRAPH_API_VERSION", Just "   ")
                 , ("WHATSAPP_API_VERSION", Just "2024-01")
                 ]
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "v0")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ]
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "v21.00")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ]
 
         it "surfaces WhatsApp provider send failures before reporting enrollment success" $ do
             let success =

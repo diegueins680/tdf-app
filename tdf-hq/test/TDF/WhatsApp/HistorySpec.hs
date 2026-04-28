@@ -63,6 +63,9 @@ spec = do
       assertInvalid "v20.0?fields=id"
       assertInvalid "latest"
       assertInvalid "v20 beta"
+      assertInvalid "v0"
+      assertInvalid "v00.0"
+      assertInvalid "v21.00"
 
   describe "TDF.WhatsApp.Client provider credential normalization" $ do
     it "trims send credentials before request construction" $ do

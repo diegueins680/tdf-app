@@ -99,13 +99,19 @@ normalizeGraphApiVersion rawVersion
       case T.uncons value of
         Just ('v', rest) ->
           case T.splitOn "." rest of
-            [major] -> allAsciiDigits major
-            [major, minor] -> allAsciiDigits major && allAsciiDigits minor
+            [major] -> isPositiveVersionSegment major
+            [major, minor] ->
+              isPositiveVersionSegment major && isCanonicalVersionSegment minor
             _ -> False
         _ -> False
 
-    allAsciiDigits value =
-      not (T.null value) && T.all (\ch -> ch >= '0' && ch <= '9') value
+    isPositiveVersionSegment value =
+      isCanonicalVersionSegment value && value /= "0"
+
+    isCanonicalVersionSegment value =
+      not (T.null value)
+        && T.all (\ch -> ch >= '0' && ch <= '9') value
+        && (value == "0" || not ("0" `T.isPrefixOf` value))
 
 normalizeWhatsAppAccessToken :: Text -> Either String Text
 normalizeWhatsAppAccessToken rawToken
