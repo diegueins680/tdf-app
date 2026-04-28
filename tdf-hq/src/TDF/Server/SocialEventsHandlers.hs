@@ -36,6 +36,7 @@ module TDF.Server.SocialEventsHandlers
   , validateStoredFinanceEntryDimensions
   , normalizePositivePartyIdText
   , resolveExistingPartyIdText
+  , resolveUniqueRsvpRow
   , validateEventArtistIds
   , normalizeMomentMediaType
   , normalizeMomentReaction
@@ -1119,8 +1120,9 @@ socialEventsServer user = eventsServer
         (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. partyIdVal] [])
         envPool
 
-      case existingRsvps of
-        [] -> do
+      existingRsvp <- either throwError pure (resolveUniqueRsvpRow existingRsvps)
+      case existingRsvp of
+        Nothing -> do
           key <- liftIO $ runSqlPool (insert EventRsvp
             { eventRsvpEventId = eventKey
             , eventRsvpPartyId = partyIdVal
@@ -1137,7 +1139,7 @@ socialEventsServer user = eventsServer
             , rsvpCreatedAt = Just now
             , rsvpUpdatedAt = Just now
             }
-        (Entity existingKey existing : _) -> do
+        Just (Entity existingKey existing) -> do
           liftIO $ runSqlPool (update existingKey
             [ EventRsvpStatus =. statusVal
             , EventRsvpUpdatedAt =. now
@@ -2173,6 +2175,15 @@ resolveExistingPartyIdText pool fieldName rawPartyId =
                       BL.fromStrict
                         (TE.encodeUtf8 (fieldName <> " references an unknown party"))
                   }
+
+resolveUniqueRsvpRow :: [Entity EventRsvp] -> Either ServerError (Maybe (Entity EventRsvp))
+resolveUniqueRsvpRow [] = Right Nothing
+resolveUniqueRsvpRow [row] = Right (Just row)
+resolveUniqueRsvpRow _ =
+  Left err409
+    { errBody =
+        "Multiple RSVP rows exist for this event and party; resolve duplicate rows before updating RSVP"
+    }
 
 normalizePositiveIdentifierText :: T.Text -> Maybe T.Text
 normalizePositiveIdentifierText rawIdentifier =

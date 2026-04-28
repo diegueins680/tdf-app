@@ -7,8 +7,8 @@ import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (insert)
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool)
+import Database.Persist (Entity (..), insert)
+import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
@@ -16,10 +16,31 @@ import Test.Hspec
 import TDF.DTO.SocialEventsDTO (ArtistFollowerDTO (..))
 import TDF.Models (Party (..))
 import TDF.Models.SocialEventsModels
-import TDF.Server.SocialEventsHandlers (followArtistDb, resolveExistingPartyIdText)
+import TDF.Server.SocialEventsHandlers (followArtistDb, resolveExistingPartyIdText, resolveUniqueRsvpRow)
 
 spec :: Spec
-spec = describe "followArtistDb helper" $ do
+spec = describe "social event handler helpers" $ do
+    it "rejects duplicate RSVP rows instead of updating an arbitrary existing match" $ do
+        now <- getCurrentTime
+        let rsvpRow rowId status =
+                Entity
+                    (toSqlKey rowId)
+                    EventRsvp
+                        { eventRsvpEventId = toSqlKey 7
+                        , eventRsvpPartyId = "42"
+                        , eventRsvpStatus = status
+                        , eventRsvpMetadata = Nothing
+                        , eventRsvpCreatedAt = now
+                        , eventRsvpUpdatedAt = now
+                        }
+
+        case resolveUniqueRsvpRow [rsvpRow 1 "accepted", rsvpRow 2 "maybe"] of
+            Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` "Multiple RSVP rows exist"
+            Right value ->
+                expectationFailure ("Expected duplicate RSVP rows to be rejected, got: " <> show value)
+
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
