@@ -555,11 +555,15 @@ instance FromJSON MarketplaceOrderUpdate where
       } <- genericParseJSON strictObjectOptions value
     paymentProviderVal <- o .:! "mouPaymentProvider"
     paidAtVal <- o .:! "mouPaidAt"
-    pure MarketplaceOrderUpdate
-      { mouStatus = statusVal
-      , mouPaymentProvider = paymentProviderVal
-      , mouPaidAt = paidAtVal
-      }
+    case (statusVal, paymentProviderVal, paidAtVal) of
+      (Nothing, Nothing, Nothing) ->
+        fail "MarketplaceOrderUpdate must include at least one field"
+      _ ->
+        pure MarketplaceOrderUpdate
+          { mouStatus = statusVal
+          , mouPaymentProvider = paymentProviderVal
+          , mouPaidAt = paidAtVal
+          }
   parseJSON _ = fail "MarketplaceOrderUpdate must be an object"
 
 data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed

@@ -981,6 +981,9 @@ spec = do
                 "{\"mouStatus\":\"paid\",\"status\":\"cancelled\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty order updates instead of accepting a no-op admin write" $
+            decodeMarketplaceOrderUpdate "{}" `shouldSatisfy` isLeft
+
     describe "PaypalCaptureReq FromJSON" $ do
         it "accepts canonical PayPal capture payloads" $
             case decodePaypalCapture
