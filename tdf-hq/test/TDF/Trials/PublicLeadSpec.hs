@@ -1222,6 +1222,17 @@ spec = do
         Right value ->
           expectationFailure ("Expected inverted class session window to be rejected, got " <> show value)
 
+    it "rejects unknown class session statuses instead of silently returning no classes" $ do
+      result <- try $ runTrialsInMemory $
+        privateClassSessionsListHandler Nothing Nothing Nothing Nothing Nothing (Just "done")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "status must be one of: programada, por-confirmar, realizada, cancelada"
+        Right value ->
+          expectationFailure ("Expected invalid class session status filter to be rejected, got " <> show value)
+
   describe "private package filtering" $ do
     it "rejects non-positive subject filters before querying packages" $ do
       let assertRejected rawSubjectId = do

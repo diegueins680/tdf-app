@@ -686,17 +686,40 @@ validateClassSessionListFilters
   -> Maybe Int
   -> Maybe UTCTime
   -> Maybe UTCTime
-  -> Either ServerError (Maybe Int, Maybe Int, Maybe Int, Maybe UTCTime, Maybe UTCTime)
-validateClassSessionListFilters rawSubjectId rawTeacherId rawStudentId mFrom mTo = do
+  -> Maybe Text
+  -> Either ServerError (Maybe Int, Maybe Int, Maybe Int, Maybe UTCTime, Maybe UTCTime, Maybe Text)
+validateClassSessionListFilters rawSubjectId rawTeacherId rawStudentId mFrom mTo rawStatus = do
   subjectId <- traverse (validatePositiveIntField "subjectId") rawSubjectId
   teacherId <- traverse (validatePositiveIntField "teacherId") rawTeacherId
   studentId <- traverse (validatePositiveIntField "studentId") rawStudentId
+  statusFilter <- validateOptionalClassSessionStatusFilter rawStatus
   case (mFrom, mTo) of
     (Just fromTs, Just toTs)
       | fromTs > toTs ->
           Left err400 { errBody = "from must be on or before to" }
     _ -> pure ()
-  Right (subjectId, teacherId, studentId, mFrom, mTo)
+  Right (subjectId, teacherId, studentId, mFrom, mTo, statusFilter)
+
+normalizeClassSessionStatusFilter :: Text -> Maybe Text
+normalizeClassSessionStatusFilter rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "programada" -> Just "programada"
+    "por-confirmar" -> Just "por-confirmar"
+    "realizada" -> Just "realizada"
+    "cancelada" -> Just "cancelada"
+    _ -> Nothing
+
+validateOptionalClassSessionStatusFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalClassSessionStatusFilter Nothing = Right Nothing
+validateOptionalClassSessionStatusFilter (Just rawStatus) =
+  case cleanOptional (Just rawStatus) of
+    Nothing -> Right Nothing
+    Just statusVal ->
+      case normalizeClassSessionStatusFilter statusVal of
+        Just normalized -> Right (Just normalized)
+        Nothing ->
+          Left err400
+            { errBody = "status must be one of: programada, por-confirmar, realizada, cancelada" }
 
 validateTeacherClassesFilters
   :: Int
@@ -1663,8 +1686,8 @@ privateTrialsServer user@AuthedUser{..} =
     classSessionsListH :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [ClassSessionDTO]
     classSessionsListH mSubject mTeacher mStudent mFrom mTo mStatus = do
       ensureSchoolAccess
-      (subjectIdFilter, teacherIdFilter, studentIdFilter, fromFilter, toFilter) <-
-        either (liftIO . throwIO) pure (validateClassSessionListFilters mSubject mTeacher mStudent mFrom mTo)
+      (subjectIdFilter, teacherIdFilter, studentIdFilter, fromFilter, toFilter, statusFilter) <-
+        either (liftIO . throwIO) pure (validateClassSessionListFilters mSubject mTeacher mStudent mFrom mTo mStatus)
       when (not isSchoolStaff) $
         case teacherIdFilter of
           Just tid | intKey tid /= auPartyId -> liftIO $ throwIO err403
@@ -1679,8 +1702,7 @@ privateTrialsServer user@AuthedUser{..} =
             ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) toFilter
       sessions <- selectList filters [Asc ClassSessionStartAt]
       dtos <- buildClassSessionDTOs sessions
-      let normalized = T.toLower . T.strip
-      pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> normalized s == normalized st) dtos) mStatus
+      pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> s == st) dtos) statusFilter
 
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
