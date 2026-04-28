@@ -409,12 +409,11 @@ sessionServer =
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword
 
-buildSessionResponse :: AuthedUser -> SqlPersistT IO SessionResponse
-buildSessionResponse AuthedUser{..} = do
+buildSessionResponse :: Maybe Text -> AuthedUser -> SqlPersistT IO SessionResponse
+buildSessionResponse mResolvedUsername AuthedUser{..} = do
   mParty <- get auPartyId
-  mCredential <- selectFirst [UserCredentialPartyId ==. auPartyId, UserCredentialActive ==. True] [Asc UserCredentialId]
   let fallbackUsername = "party-" <> T.pack (show (fromSqlKey auPartyId))
-      usernameText = maybe fallbackUsername (userCredentialUsername . entityVal) mCredential
+      usernameText = fromMaybe fallbackUsername (cleanOptional mResolvedUsername)
       displayNameText = fromMaybe usernameText (cleanOptional (M.partyDisplayName <$> mParty))
   pure SessionResponse
     { sessionUsername = usernameText
@@ -433,7 +432,11 @@ currentSessionMaybe mAuthorizationHeader mCookieHeader = do
       liftIO $
         flip runSqlPool pool $ do
           mUser <- loadAuthedUser token
-          traverse buildSessionResponse mUser
+          case mUser of
+            Nothing -> pure Nothing
+            Just user -> do
+              mUsername <- lookupUsernameFromToken token
+              Just <$> buildSessionResponse mUsername user
 
 logoutSession :: AppM (Api.SessionCookieHeaders NoContent)
 logoutSession = do

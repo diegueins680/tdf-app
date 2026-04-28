@@ -172,7 +172,10 @@ resolveUsernameFromLabel :: Text -> Maybe Text
 resolveUsernameFromLabel rawLabel =
   let trimmed = T.strip rawLabel
       attempt prefix = T.strip <$> T.stripPrefix prefix trimmed
-      resolved = attempt "password-login:" <|> attempt "password-reset:"
+      resolved =
+        attempt "password-login:"
+          <|> attempt "password-reset:"
+          <|> attempt "google-login:"
       nonEmpty txt =
         let stripped = T.strip txt
         in if T.null stripped then Nothing else Just stripped

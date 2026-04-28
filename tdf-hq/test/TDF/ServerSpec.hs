@@ -14,7 +14,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, count, get, insert, insertKey, (==.))
+import Database.Persist (Entity(..), Key, count, get, insert, insert_, insertKey, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
@@ -280,6 +280,7 @@ import TDF.ServerAuth
     , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
     , runPasswordResetConfirm
+    , sessionServer
     , signupEmailExists
     , validateAuthPassword
     , validateSignupDisplayName
@@ -2694,6 +2695,68 @@ spec = describe "TDF.Server helpers" $ do
 
             singleUsername `shouldBe` Just "single@example.com"
             ambiguousUsername `shouldBe` Nothing
+
+    describe "sessionServer" $
+        it "uses deterministic usernames when session credential fallback is ambiguous" $ do
+            (ambiguousPartyId, googlePartyId, ambiguousResult, googleResult) <-
+                ( runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    seededIds <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        currentSession :<|> _logoutSession = sessionServer
+                        runSession tokenValue =
+                            liftIO $
+                                runHandler $
+                                    runReaderT
+                                        ( currentSession
+                                            (Just ("Bearer " <> tokenValue))
+                                            Nothing
+                                        )
+                                        env
+                    ambiguousSession <- runSession "ambiguous-token"
+                    googleSession <- runSession "google-token"
+                    pure
+                        ( fst seededIds
+                        , snd seededIds
+                        , ambiguousSession
+                        , googleSession
+                        )
+                ) :: IO
+                    ( Key Party
+                    , Key Party
+                    , Either ServerError (Maybe DTO.SessionResponse)
+                    , Either ServerError (Maybe DTO.SessionResponse)
+                    )
+
+            let assertSession
+                    :: Text
+                    -> Key Party
+                    -> Either ServerError (Maybe DTO.SessionResponse)
+                    -> Expectation
+                assertSession expectedUsername expectedPartyId result =
+                    case result of
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected current session to load, got: " <> show serverErr)
+                        Right Nothing ->
+                            expectationFailure "Expected current session to authenticate"
+                        Right (Just session) -> do
+                            DTO.sessionPartyId session `shouldBe` fromSqlKey expectedPartyId
+                            DTO.sessionUsername session `shouldBe` expectedUsername
+
+            assertSession
+                ("party-" <> T.pack (show (fromSqlKey ambiguousPartyId)))
+                ambiguousPartyId
+                ambiguousResult
+            assertSession
+                "google@example.com"
+                googlePartyId
+                googleResult
 
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do
@@ -7579,6 +7642,51 @@ runAuthSqlite action =
         backend <- ask
         liftIO $ runReaderT initializeAuthSchema backend
         liftIO $ runReaderT action backend
+
+seedSessionUsernameFallbackRows :: SqlPersistT IO (Key Party, Key Party)
+seedSessionUsernameFallbackRows = do
+    now <- liftIO getCurrentTime
+    let insertParty displayName emailAddress =
+            insert
+                Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = displayName
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just emailAddress
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+        insertCredential partyId username =
+            insert_
+                UserCredential
+                    { userCredentialPartyId = partyId
+                    , userCredentialUsername = username
+                    , userCredentialPasswordHash = "hash"
+                    , userCredentialActive = True
+                    }
+        insertToken partyId tokenValue labelValue =
+            insert_
+                ApiToken
+                    { apiTokenToken = tokenValue
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = labelValue
+                    , apiTokenActive = True
+                    }
+    ambiguousPartyId <- insertParty "Ambiguous Session User" "ambiguous-session@example.com"
+    insertCredential ambiguousPartyId "first-session@example.com"
+    insertCredential ambiguousPartyId "second-session@example.com"
+    insertToken ambiguousPartyId "ambiguous-token" Nothing
+
+    googlePartyId <- insertParty "Google Session User" "google@example.com"
+    insertCredential googlePartyId "first-google-session@example.com"
+    insertCredential googlePartyId "second-google-session@example.com"
+    insertToken googlePartyId "google-token" (Just "google-login:google@example.com")
+    pure (ambiguousPartyId, googlePartyId)
 
 runPackageSqlite :: SqlPersistT IO a -> IO a
 runPackageSqlite action =
