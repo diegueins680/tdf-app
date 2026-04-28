@@ -1550,9 +1550,10 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 usuario inactivo oculto hasta que lo expandas.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista.',
         );
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(getPageGuidance(container)).not.toContain('usuario inactivo oculto');
         expect(container.textContent).not.toContain('3 usuarios en esta vista.');
         expect(container.textContent).not.toContain('1 pendiente de contacto');
       });
@@ -1691,10 +1692,11 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
         expect(getPageGuidance(container)).toBe(
-          'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado. 2 usuarios en esta vista. 1 usuario inactivo oculto hasta que lo expandas.',
+          'Usa WhatsApp cuando haya un número disponible. El acceso al perfil aparecerá desde el nombre cuando el usuario ya tenga un perfil vinculado. 2 usuarios en esta vista.',
         );
         expect(container.querySelector('[data-testid="admin-user-row-103"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(getPageGuidance(container)).not.toContain('usuario inactivo oculto');
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
@@ -1769,9 +1771,10 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 usuario inactivo oculto hasta que lo expandas. Acceso compartido en esta vista: Roles y módulos: Teacher.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Acceso compartido en esta vista: Roles y módulos: Teacher.',
         );
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+        expect(getPageGuidance(container)).not.toContain('usuario inactivo oculto');
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         expect(getRowByUserId(container, 101).textContent).not.toContain('Roles y módulos: Teacher');
         expect(getRowByUserId(container, 103).textContent).not.toContain('Roles y módulos: Teacher');
@@ -2537,8 +2540,9 @@ describe('AdminUsersPage', () => {
         expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(container.textContent).toContain('Inactivos incluidos');
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 1 usuario en esta vista. 1 usuario inactivo oculto hasta que lo expandas.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 1 usuario en esta vista.',
         );
+        expect(getPageGuidance(container)).not.toContain('usuario inactivo oculto');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(
           buttonText(container.querySelector('[aria-label="Ver 1 usuario inactivo"]')!),

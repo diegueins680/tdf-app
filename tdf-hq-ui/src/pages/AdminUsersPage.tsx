@@ -205,12 +205,6 @@ const buildExpandedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
   return `Ocultar ${formatInactiveUserCountLabel(users.length)}`;
 };
 
-const buildCollapsedInactiveUsersSummary = (count: number) => (
-  count === 1
-    ? '1 usuario inactivo oculto hasta que lo expandas.'
-    : `${formatInactiveUserCountLabel(count)} ocultos hasta que los expandas.`
-);
-
 const getUserAccessSummary = (values: string[]) =>
   normalizeAccessValues(values)
     .join(', ');
@@ -843,9 +837,6 @@ export default function AdminUsersPage() {
   const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary
     ? 'Vista actual: solo usuarios inactivos.'
     : '';
-  const collapsedInactiveUsersSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
-    ? buildCollapsedInactiveUsersSummary(visibleInactiveUsersCount)
-    : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
       !includeInactive
@@ -922,13 +913,11 @@ export default function AdminUsersPage() {
       activeScopeSummary,
       inactiveScopeSummary,
       inactiveOnlyScopeSummary,
-      collapsedInactiveUsersSummary,
     ]
       .filter(Boolean)
       .join(' '),
     [
       activeScopeSummary,
-      collapsedInactiveUsersSummary,
       inactiveOnlyScopeSummary,
       inactiveScopeSummary,
       visibleUsersSummary,
