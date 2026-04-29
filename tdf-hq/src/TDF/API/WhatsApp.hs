@@ -32,7 +32,16 @@ import Data.Aeson
   )
 import Data.Aeson.Types (Parser)
 import Control.Monad (unless)
-import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit, isSpace)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import Data.Int (Int64)
 import Data.Maybe (isNothing, listToMaybe, maybeToList)
 import Data.Text (Text)
@@ -204,8 +213,9 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
       Left err400 { errBody = "Completion token format is invalid" }
   | T.null nameValue || T.length nameValue > 200 =
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
-  | T.any isControl nameValue =
-      Left err400 { errBody = "Invalid name: must not contain control characters" }
+  | T.any isUnsafeLeadCompletionNameChar nameValue =
+      Left err400
+        { errBody = "Invalid name: must not contain control or hidden formatting characters" }
   | T.length emailValue > maxLeadCompletionEmailChars =
       Left err400 { errBody = "Invalid email: must be 254 characters or fewer" }
   | not (isValidEmail emailValue) =
@@ -237,6 +247,10 @@ maxLeadCompletionEmailDomainLabelChars = 63
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =
   isAscii c && isAlphaNum c
+
+isUnsafeLeadCompletionNameChar :: Char -> Bool
+isUnsafeLeadCompletionNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId

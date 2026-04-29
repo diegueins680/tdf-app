@@ -6971,7 +6971,16 @@ main = hspec $ do
                         expectationFailure ("Expected invalid lead completion payload to be rejected, got " <> show value)
             assertInvalid (CompleteReq "   " "Ada Lovelace" "ada@example.com") "Completion token is required"
             assertInvalid (CompleteReq validToken "   " "ada@example.com") "Invalid name: must be 1-200 characters"
-            assertInvalid (CompleteReq validToken "Ada\nLovelace" "ada@example.com") "Invalid name: must not contain control characters"
+            assertInvalid
+                (CompleteReq validToken "Ada\nLovelace" "ada@example.com")
+                "Invalid name: must not contain control or hidden formatting characters"
+            assertInvalid
+                ( CompleteReq
+                    validToken
+                    ("Ada" <> Data.Text.singleton '\x202E' <> "Lovelace")
+                    "ada@example.com"
+                )
+                "Invalid name: must not contain control or hidden formatting characters"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada @example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
