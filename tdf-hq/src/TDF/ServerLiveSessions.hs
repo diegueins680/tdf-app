@@ -10,6 +10,7 @@ module TDF.ServerLiveSessions
   , resolveLiveSessionMusicianLookup
   , sanitizeLiveSessionRiderFileName
   , validateLiveSessionReferencedPartyEmail
+  , validateLiveSessionRiderFileName
   , validateLiveSessionRiderFileSize
   , validateLiveSessionTermsAcceptance
   ) where
@@ -19,7 +20,16 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
-import           Data.Char                  (isAlphaNum, isAscii, isControl)
+import           Data.Char                  ( GeneralCategory
+                                              ( Format
+                                              , LineSeparator
+                                              , ParagraphSeparator
+                                              )
+                                            , generalCategory
+                                            , isAlphaNum
+                                            , isAscii
+                                            , isControl
+                                            )
 import           Data.Maybe                 (fromMaybe, mapMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
@@ -251,13 +261,13 @@ liveSessionsServer user = intakeHandler
 
     validateAndStoreRiderFile :: FileData Tmp -> m Text
     validateAndStoreRiderFile file@FileData{..} = do
+      safeName <- either throwError pure (validateLiveSessionRiderFileName fdFileName)
       size <- liftIO (getFileSize fdPayload)
       either throwError pure (validateLiveSessionRiderFileSize size)
-      liftIO (storeRiderFile file)
+      liftIO (storeRiderFile safeName file)
 
-    storeRiderFile :: FileData Tmp -> IO Text
-    storeRiderFile FileData{..} = do
-      let safeName = sanitizeLiveSessionRiderFileName fdFileName
+    storeRiderFile :: Text -> FileData Tmp -> IO Text
+    storeRiderFile safeName FileData{..} = do
       token <- toText <$> nextRandom
       let destDir  = "uploads/live-sessions"
           destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
@@ -354,6 +364,32 @@ validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
   where
     missingTermsVersion =
       Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
+
+validateLiveSessionRiderFileName :: Text -> Either ServerError Text
+validateLiveSessionRiderFileName rawName
+  | T.null trimmed =
+      Left err400 { errBody = "rider file name is required" }
+  | T.any isUnsafeRiderFileNameChar trimmed =
+      Left err400
+        { errBody =
+            "rider file name must not contain control characters or hidden formatting characters"
+        }
+  | T.any isPathSeparator trimmed =
+      Left err400 { errBody = "rider file name must not contain path separators" }
+  | sanitized == "rider" && trimmed /= "rider" =
+      Left err400 { errBody = "rider file name must include a usable name" }
+  | otherwise =
+      Right sanitized
+  where
+    trimmed = T.strip rawName
+    sanitized = sanitizeLiveSessionRiderFileName trimmed
+
+isUnsafeRiderFileNameChar :: Char -> Bool
+isUnsafeRiderFileNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isPathSeparator :: Char -> Bool
+isPathSeparator ch = ch == '/' || ch == '\\'
 
 sanitizeLiveSessionRiderFileName :: Text -> Text
 sanitizeLiveSessionRiderFileName rawName =

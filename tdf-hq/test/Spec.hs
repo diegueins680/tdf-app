@@ -209,6 +209,7 @@ import TDF.ServerLiveSessions
       resolveLiveSessionMusicianLookup,
       sanitizeLiveSessionRiderFileName,
       validateLiveSessionReferencedPartyEmail,
+      validateLiveSessionRiderFileName,
       validateLiveSessionRiderFileSize,
       validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
@@ -7730,6 +7731,28 @@ main = hspec $ do
             let sanitized = sanitizeLiveSessionRiderFileName (Data.Text.replicate 220 "a" <> ".pdf")
             Data.Text.length sanitized `shouldBe` 160
             sanitized `shouldBe` Data.Text.replicate 160 "a"
+
+    describe "validateLiveSessionRiderFileName" $ do
+        it "accepts safe rider names after stable backend sanitization" $
+            validateLiveSessionRiderFileName "  Stage rider final?.pdf  "
+                `shouldBe` Right "Stage-rider-final-.pdf"
+
+        it "rejects ambiguous rider names before upload storage falls back to a generic path" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateLiveSessionRiderFileName raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session rider file name, got "
+                                    <> show value
+                                )
+            assertInvalid "   " "rider file name is required"
+            assertInvalid "../stage.pdf" "rider file name must not contain path separators"
+            assertInvalid "folder\\stage.pdf" "rider file name must not contain path separators"
+            assertInvalid "stage\8203plot.pdf" "rider file name must not contain control characters"
+            assertInvalid "___" "rider file name must include a usable name"
 
     describe "validateLiveSessionRiderFileSize" $ do
         it "rejects empty, invalid, or oversized rider uploads before writing them" $ do
