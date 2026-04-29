@@ -324,6 +324,7 @@ const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
+const formatActiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} activo${count === 1 ? '' : 's'}`;
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
@@ -869,13 +870,17 @@ export default function AdminUsersPage() {
     if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || usersInCurrentSummary.length === 0) return '';
 
     const parts: string[] = [];
+    const countLabel =
+      shouldCollapseInactiveUsers && !showInactiveUsersList
+        ? formatActiveUserCountLabel(usersInCurrentSummary.length)
+        : formatUserCountLabel(usersInCurrentSummary.length);
 
     if (isFiltered) {
       parts.push(`Mostrando ${usersInCurrentSummary.length} de ${totalUsersCount} usuarios.`);
     } else if (hasActiveSearch && hasMultipleUsers) {
-      parts.push(`La búsqueda coincide con los ${formatUserCountLabel(usersInCurrentSummary.length)} de esta vista.`);
+      parts.push(`La búsqueda coincide con los ${countLabel} de esta vista.`);
     } else if (hasMultipleUsers) {
-      parts.push(`${formatUserCountLabel(usersInCurrentSummary.length)} en esta vista.`);
+      parts.push(`${countLabel} en esta vista.`);
     }
 
     if (showSharedPendingProfileGuidance) {
@@ -903,6 +908,8 @@ export default function AdminUsersPage() {
     showSharedPendingProfileGuidance,
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
+    shouldCollapseInactiveUsers,
+    showInactiveUsersList,
     totalUsersCount,
     currentSummaryPendingProfileCount,
     usersInCurrentSummary.length,
