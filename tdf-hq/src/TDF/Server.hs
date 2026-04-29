@@ -6737,14 +6737,15 @@ validateChatSendMessageBody rawBody
       Left err400 { errBody = "Mensaje vacío" }
   | T.length body > 5000 =
       Left err400 { errBody = "Mensaje demasiado largo (max 5000 caracteres)" }
-  | T.any isUnsafeChatMessageControl body =
-      Left err400 { errBody = "message must not contain control characters" }
+  | T.any isUnsupportedChatMessageChar body =
+      Left err400 { errBody = "message must not contain control or formatting characters" }
   | otherwise =
       Right body
   where
     body = T.strip rawBody
-    isUnsafeChatMessageControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+    isUnsupportedChatMessageChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateBookingListFilters :: Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> Either ServerError (Maybe Int64, Maybe Int64, Maybe Int64)
 validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do

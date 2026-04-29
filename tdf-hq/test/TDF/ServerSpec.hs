@@ -1376,8 +1376,11 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Mensaje vacío" (validateChatSendMessageBody "   ")
             assertInvalid "max 5000 caracteres" (validateChatSendMessageBody (T.replicate 5001 "a"))
             assertInvalid
-                "message must not contain control characters"
+                "message must not contain control or formatting characters"
                 (validateChatSendMessageBody ("Hola" <> T.singleton '\NUL'))
+            assertInvalid
+                "message must not contain control or formatting characters"
+                (validateChatSendMessageBody ("Hola" <> T.singleton '\x202E' <> "txt.exe"))
 
     describe "VCardExchangeRequest" $ do
         it "accepts canonical vCard exchange payloads" $
