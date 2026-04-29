@@ -7929,14 +7929,19 @@ describe('CourseRegistrationsAdminPage', () => {
       'landing_page',
       'course_landing_page',
       'public_form',
+      'public_course_form',
+      'public_course_page',
+      'public_course_signup_form',
       'formulario-publico',
+      'formulario_publico_del_curso',
+      'pagina-publica-de-curso',
       'registration_form',
       'course_signup_page',
       'enrollment_form',
       null,
     ] as const;
     listRegistrationsMock.mockResolvedValue(
-      buildRegistrations(9, (index) => ({
+      buildRegistrations(defaultSources.length, (index) => ({
         crSource: defaultSources[index % defaultSources.length],
       })),
     );
@@ -7954,7 +7959,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Landing page');
       expect(container.textContent).not.toContain('Fuente: Course landing page');
       expect(container.textContent).not.toContain('Fuente: Public form');
+      expect(container.textContent).not.toContain('Fuente: Public course form');
+      expect(container.textContent).not.toContain('Fuente: Public course page');
+      expect(container.textContent).not.toContain('Fuente: Public course signup form');
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
+      expect(container.textContent).not.toContain('Fuente: Formulario publico del curso');
+      expect(container.textContent).not.toContain('Fuente: Pagina publica de curso');
       expect(container.textContent).not.toContain('Fuente: Registration form');
       expect(container.textContent).not.toContain('Fuente: Course signup page');
       expect(container.textContent).not.toContain('Fuente: Enrollment form');
@@ -7963,11 +7973,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Landing page.');
       expect(container.textContent).not.toContain('Fuente visible: Course landing page.');
       expect(container.textContent).not.toContain('Fuente visible: Public form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public course form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public course page.');
+      expect(container.textContent).not.toContain('Fuente visible: Public course signup form.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
+      expect(container.textContent).not.toContain('Fuente visible: Formulario publico del curso.');
+      expect(container.textContent).not.toContain('Fuente visible: Pagina publica de curso.');
       expect(container.textContent).not.toContain('Fuente visible: Registration form.');
       expect(container.textContent).not.toContain('Fuente visible: Course signup page.');
       expect(container.textContent).not.toContain('Fuente visible: Enrollment form.');
-      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
     });
 
     listRegistrationsMock.mockClear();
@@ -7980,7 +7995,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain('No hay coincidencias para "course signup page" en las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "course signup page" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
