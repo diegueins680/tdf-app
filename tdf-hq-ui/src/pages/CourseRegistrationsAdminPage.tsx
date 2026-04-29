@@ -692,7 +692,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
       .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
       .trim();
 
-  return strippedCourseNoun || strippedTitle || trimmedTitle;
+  return strippedCourseNoun || strippedTitle;
 };
 
 const stripFirstRunCohortDescriptorSuffix = (title: string) => {
@@ -708,7 +708,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .trim();
 
-  return strippedTitle || trimmedTitle;
+  return strippedTitle;
 };
 
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
@@ -725,7 +725,7 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   if (!title) return slug;
   return stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
-  );
+  ) || slug;
 };
 
 const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
