@@ -187,6 +187,33 @@ spec = do
       firstId `shouldBe` secondId
       total `shouldBe` 1
 
+    it "rejects ambiguous fallback party rows instead of choosing one arbitrarily" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        let fallbackParty label = Models.Party
+              { Models.partyLegalName = Nothing
+              , Models.partyDisplayName = label
+              , Models.partyIsOrg = False
+              , Models.partyTaxId = Nothing
+              , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+              , Models.partyPrimaryPhone = Nothing
+              , Models.partyWhatsapp = Nothing
+              , Models.partyInstagram = Nothing
+              , Models.partyEmergencyContact = Nothing
+              , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+              , Models.partyCreatedAt = now
+              }
+        _ <- insert (fallbackParty "Public Trial Interest A")
+        _ <- insert (fallbackParty "Public Trial Interest B")
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "fallback party is ambiguous"
+        Right partyId ->
+          expectationFailure
+            ("Expected ambiguous fallback parties to be rejected, got " <> show partyId)
+
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
           candidate = buildTrialUsernameCandidate root 12

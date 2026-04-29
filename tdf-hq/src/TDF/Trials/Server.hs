@@ -1103,10 +1103,10 @@ publicLeadFallbackEmail = "public-interest@tdf.local"
 
 ensurePublicLeadParty :: UTCTime -> AppM PartyId
 ensurePublicLeadParty now = do
-  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
-  case mExisting of
-    Just (Entity partyId _) -> pure partyId
-    Nothing ->
+  existing <- selectList [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
+  case existing of
+    [Entity partyId _] -> pure partyId
+    [] ->
       insert Party
         { partyLegalName = Nothing
         , partyDisplayName = "Public Trial Interest"
@@ -1120,6 +1120,9 @@ ensurePublicLeadParty now = do
         , partyNotes = Just "System fallback party for anonymous public trial interests."
         , partyCreatedAt = now
         }
+    _ ->
+      liftIO $ throwIO err500
+        { errBody = "Anonymous public lead fallback party is ambiguous" }
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do
