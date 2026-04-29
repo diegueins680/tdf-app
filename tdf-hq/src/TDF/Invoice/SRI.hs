@@ -252,7 +252,7 @@ validateCustomer :: SriScriptCustomer -> Either Text SriScriptCustomer
 validateCustomer value = do
   rucValue <- validateCustomerRuc (ruc value)
   legalNameValue <- validateRequiredTextField "customer.legalName" (legalName value)
-  emailValue <- validateOptionalTextField "customer.email" (email value)
+  emailValue <- validateOptionalEmailField "customer.email" (email value)
   phoneValue <- validateOptionalTextField "customer.phone" (phone value)
   pure value
     { ruc = rucValue
@@ -269,6 +269,63 @@ validateCustomerRuc raw = do
     else if T.length value == 10 || T.length value == 13
       then Right value
       else Left (fieldMessage "customer.ruc" "must contain 10 or 13 digits")
+
+validateOptionalEmailField :: Text -> Maybe Text -> Either Text (Maybe Text)
+validateOptionalEmailField fieldName raw = do
+  mValue <- validateOptionalTextField fieldName raw
+  case mValue of
+    Nothing -> Right Nothing
+    Just value ->
+      let normalized = T.toLower value
+      in if T.length normalized > maxSriEmailChars
+           then Left (fieldMessage fieldName "must be 254 characters or fewer")
+           else if isValidSriEmail normalized
+             then Right (Just normalized)
+             else Left (fieldMessage fieldName "must be a valid email address")
+
+maxSriEmailChars :: Int
+maxSriEmailChars = 254
+
+maxSriEmailLocalPartChars :: Int
+maxSriEmailLocalPartChars = 64
+
+maxSriEmailDomainLabelChars :: Int
+maxSriEmailDomainLabelChars = 63
+
+isValidSriEmail :: Text -> Bool
+isValidSriEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      isValidSriEmailLocalPart localPart
+        && T.isInfixOf "." domain
+        && all isValidSriEmailDomainLabel (T.splitOn "." domain)
+    _ ->
+      False
+
+isValidSriEmailLocalPart :: Text -> Bool
+isValidSriEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= maxSriEmailLocalPartChars
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidSriEmailLocalChar localPart
+
+isValidSriEmailLocalChar :: Char -> Bool
+isValidSriEmailLocalChar ch =
+  isAsciiLower ch || isAsciiDigit ch || ch `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidSriEmailDomainLabel :: Text -> Bool
+isValidSriEmailDomainLabel label =
+  not (T.null label)
+    && T.length label <= maxSriEmailDomainLabelChars
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidSriEmailDomainChar label
+
+isValidSriEmailDomainChar :: Char -> Bool
+isValidSriEmailDomainChar ch =
+  isAsciiLower ch || isAsciiDigit ch || ch == '-'
 
 validateLines :: [SriScriptLine] -> Either Text [SriScriptLine]
 validateLines [] =
@@ -381,6 +438,9 @@ isInvalidTextChar ch = ch == '\DEL' || ch < ' '
 
 isAsciiDigit :: Char -> Bool
 isAsciiDigit ch = ch >= '0' && ch <= '9'
+
+isAsciiLower :: Char -> Bool
+isAsciiLower ch = ch >= 'a' && ch <= 'z'
 
 fieldMessage :: Text -> Text -> Text
 fieldMessage fieldName message =

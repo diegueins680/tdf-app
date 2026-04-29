@@ -2433,6 +2433,56 @@ main = hspec $ do
                 Right validated ->
                     Sri.ruc (Sri.customer validated) `shouldBe` "1710034065"
 
+        it "normalizes and validates optional SRI customer emails before invoking the script" $ do
+            let withEmail rawEmail =
+                    sampleSriScriptRequest
+                        { Sri.customer =
+                            (Sri.customer sampleSriScriptRequest) { Sri.email = rawEmail }
+                        }
+                assertInvalid expected rawEmail =
+                    case Sri.validateSriScriptRequest (withEmail rawEmail) of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI customer email to fail, got: "
+                                    <> show value
+                                )
+            case Sri.validateSriScriptRequest
+                (withEmail (Just " Customer+Billing@Example.COM ")) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI customer email to pass, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.email (Sri.customer validated)
+                        `shouldBe` Just "customer+billing@example.com"
+            case Sri.validateSriScriptRequest (withEmail (Just "   ")) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected blank SRI customer email to be omitted, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.email (Sri.customer validated) `shouldBe` Nothing
+
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "not-an-email")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example..com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just ".customer@example.com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@-example.com")
+            assertInvalid
+                "customer.email must be 254 characters or fewer"
+                (Just (Data.Text.replicate 245 "a" <> "@example.com"))
+
         it "requires explicit SRI IVA codes for tax rates the runner cannot infer" $ do
             let unsupportedTaxLine =
                     sampleSriScriptLine { Sri.taxBps = Just 1200 }
