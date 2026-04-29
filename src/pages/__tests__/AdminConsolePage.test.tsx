@@ -4099,9 +4099,7 @@ describe('AdminConsolePage', () => {
     const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
     await user.click(editButton);
 
-    expect(
-      screen.queryByText(/Estos roles muestran la misma navegación principal en esta app:/i),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nota: .*muestran la misma navegación principal/i)).not.toBeInTheDocument();
 
     const rolesSelect = document.body.querySelector('[role="combobox"]');
     if (!(rolesSelect instanceof HTMLElement)) {
@@ -4114,9 +4112,10 @@ describe('AdminConsolePage', () => {
 
     expect(
       await screen.findByText(
-        /Estos roles muestran la misma navegación principal en esta app: Admin y Manager\. Revisa si necesitas ambos antes de guardar\./i,
+        /Cambio pendiente: agregar Manager\. Nota: Admin y Manager muestran la misma navegación principal; revisa si necesitas todos antes de guardar\./i,
       ),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('pins currently assigned roles to the top of the role editor so admins can verify the current state first', async () => {
@@ -4189,8 +4188,9 @@ describe('AdminConsolePage', () => {
       screen.getByText(/Sin cambios pendientes\. Modifica la selección para habilitar Guardar cambios\./i),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText(/Estos roles muestran la misma navegación principal en esta app:/i),
+      screen.queryByText(/Nota: .*muestran la misma navegación principal/i),
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('replaces the single-audit table with a compact first-event summary', async () => {

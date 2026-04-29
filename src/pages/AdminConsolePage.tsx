@@ -1512,6 +1512,19 @@ export default function AdminConsolePage() {
       .map((group) => formatRoleGroupLabel(group))
       .join(' · ');
   }, [hasPendingRoleChanges, selectedRoles]);
+  const roleSelectionHelperText = useMemo(() => {
+    if (!hasPendingRoleChanges) {
+      return 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.';
+    }
+
+    const pendingSummary = pendingRoleChangesSummary ?? 'Hay cambios pendientes. Revisa la selección antes de guardar.';
+
+    if (!equivalentRoleWarning) {
+      return pendingSummary;
+    }
+
+    return `${pendingSummary} Nota: ${equivalentRoleWarning} muestran la misma navegación principal; revisa si necesitas todos antes de guardar.`;
+  }, [equivalentRoleWarning, hasPendingRoleChanges, pendingRoleChangesSummary]);
   const currentRolesForEditor = useMemo(
     () => (editingUser ? normalizeRoleSelection(editingUser.roles) : []),
     [editingUser],
@@ -2168,16 +2181,9 @@ export default function AdminConsolePage() {
               ))}
             </Select>
             <FormHelperText>
-              {hasPendingRoleChanges
-                ? (pendingRoleChangesSummary ?? 'Hay cambios pendientes. Revisa la selección antes de guardar.')
-                : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
+              {roleSelectionHelperText}
             </FormHelperText>
           </FormControl>
-          {equivalentRoleWarning && (
-            <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
-              Estos roles muestran la misma navegación principal en esta app: {equivalentRoleWarning}. Revisa si necesitas ambos antes de guardar.
-            </Alert>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={updateRolesMutation.isPending}>
