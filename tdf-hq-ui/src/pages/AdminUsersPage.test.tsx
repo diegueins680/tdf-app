@@ -4035,6 +4035,24 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('No hay coincidencias para "inactivos".');
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
       });
+
+      await changeInputValue(searchInput, 'desactivada');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(container.textContent).not.toContain('No hay coincidencias para "desactivada".');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+      });
+
+      await changeInputValue(searchInput, 'suspendida');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(container.textContent).not.toContain('No hay coincidencias para "suspendida".');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+      });
     } finally {
       await cleanup();
     }

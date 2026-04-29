@@ -643,8 +643,30 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
   const statusSearchValues = (user.active
-    ? ['activo', 'activa', 'activos', 'activas']
-    : ['inactivo', 'inactiva', 'inactivos', 'inactivas'])
+    ? [
+        'activo',
+        'activa',
+        'activos',
+        'activas',
+        'habilitado',
+        'habilitada',
+        'habilitados',
+        'habilitadas',
+      ]
+    : [
+        'inactivo',
+        'inactiva',
+        'inactivos',
+        'inactivas',
+        'desactivado',
+        'desactivada',
+        'desactivados',
+        'desactivadas',
+        'suspendido',
+        'suspendida',
+        'suspendidos',
+        'suspendidas',
+      ])
     .map(normalizeSearchValue);
 
   const searchSpace = [
