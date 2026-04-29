@@ -4476,22 +4476,26 @@ export default function CourseRegistrationsAdminPage() {
       >
         {showInlineEmptyNotesAction && (
           <MenuItem
+            aria-label={optionalDossierNotesActionLabel}
+            title={optionalDossierNotesActionLabel}
             onClick={() => {
               handleCloseDossierContextMenu();
               handleOpenNotesComposer();
             }}
           >
-            Agregar nota
+            {optionalDossierNotesActionLabel}
           </MenuItem>
         )}
         {showInlineEmptyFollowUpAction && (
           <MenuItem
+            aria-label={optionalDossierFollowUpActionLabel}
+            title={optionalDossierFollowUpActionLabel}
             onClick={() => {
               handleCloseDossierContextMenu();
               setShowFollowUpComposer(true);
             }}
           >
-            Agregar seguimiento
+            {optionalDossierFollowUpActionLabel}
           </MenuItem>
         )}
       </Menu>

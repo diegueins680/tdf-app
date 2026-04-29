@@ -418,6 +418,11 @@ const getComboboxByLabel = (root: ParentNode, labelText: string) => {
 };
 
 const openDossierContextAction = async (labelText: string) => {
+  const groupedMenuLabel = labelText === 'Agregar nota'
+    ? optionalDossierNotesActionLabel
+    : labelText === 'Agregar seguimiento'
+      ? optionalDossierFollowUpActionLabel
+      : labelText;
   const directButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
     (button) => (button.textContent ?? '').trim() === labelText,
   );
@@ -431,14 +436,25 @@ const openDossierContextAction = async (labelText: string) => {
     return;
   }
 
+  const groupedContextButton = Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(
+    (button) => {
+      const text = (button.textContent ?? '').trim();
+      return text === optionalDossierContextActionsLabel || text === compactOptionalDossierContextActionsLabel;
+    },
+  );
+
+  if (!groupedContextButton) {
+    throw new Error(`Grouped dossier context action not found for: ${labelText}`);
+  }
+
   await act(async () => {
-    clickButton(getButtonByText(document.body, optionalDossierContextActionsLabel));
+    clickButton(groupedContextButton);
     await flushPromises();
     await flushPromises();
   });
 
   await act(async () => {
-    clickElement(getMenuItemByText(document.body, labelText));
+    clickElement(getMenuItemByText(document.body, groupedMenuLabel));
     await flushPromises();
     await flushPromises();
   });
@@ -4197,8 +4213,25 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Agregar nota')).toBeTruthy();
-      expect(getMenuItemByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      const notesItem = getMenuItemByText(document.body, optionalDossierNotesActionLabel);
+      const followUpItem = getMenuItemByText(document.body, optionalDossierFollowUpActionLabel);
+
+      expect(notesItem).toBeTruthy();
+      expect(notesItem.getAttribute('aria-label')).toBe(optionalDossierNotesActionLabel);
+      expect(notesItem.getAttribute('title')).toBe(optionalDossierNotesActionLabel);
+      expect(followUpItem).toBeTruthy();
+      expect(followUpItem.getAttribute('aria-label')).toBe(optionalDossierFollowUpActionLabel);
+      expect(followUpItem.getAttribute('title')).toBe(optionalDossierFollowUpActionLabel);
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (item) => (item.textContent ?? '').trim() === 'Agregar nota',
+        ),
+      ).toBe(false);
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (item) => (item.textContent ?? '').trim() === 'Agregar seguimiento',
+        ),
+      ).toBe(false);
     });
 
     await cleanup();
