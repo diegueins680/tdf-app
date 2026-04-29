@@ -10584,27 +10584,36 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('strips signup-form descriptors from first-run cohort copy', async () => {
-    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Signup form - Beatmaking 101' }]);
-    listRegistrationsMock.mockResolvedValue([]);
+    const titles = [
+      'Signup form - Beatmaking 101',
+      'Sign-up form - Beatmaking 101',
+      'Course sign up page - Beatmaking 101',
+      'Beatmaking 101 - sign-up form',
+    ];
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
 
-    await waitForExpectation(() => {
-      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
-      expect(emptyState).not.toBeNull();
-      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
-      expect(emptyState?.textContent).not.toContain('Signup form - Beatmaking 101');
-      expect(countOccurrences(emptyState!, 'Signup form')).toBe(0);
-      expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
-      expect(
-        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateFormActionLabel);
-      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
-    });
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
 
-    await cleanup();
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/sign[-\s]?up/i);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+        ).toBe(initialEmptyStateFormActionLabel);
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
   });
 
   it('strips intake-form descriptors from first-run cohort copy', async () => {
