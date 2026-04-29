@@ -469,15 +469,20 @@ const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'pending_payment';
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
-  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pago pendiente';
 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
     ? 'reabrir la inscripción como pendiente'
-    : 'marcarla pendiente';
+    : 'marcar el pago como pendiente';
 
 const shouldUseDirectPendingRecoveryAction = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled';
+
+const canCancelRegistrationFromStatus = (currentStatus: string) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  return knownStatus == null || knownStatus === 'pending_payment';
+};
 
 const eventStatusColor = (
   status: string,
@@ -4502,7 +4507,7 @@ export default function CourseRegistrationsAdminPage() {
             {pendingStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
-        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'cancelled') && (
+        {statusMenuReg && canCancelRegistrationFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
             aria-label={`Cancelar inscripción para ${statusMenuActionTargetLabel}`}
             onClick={() => {

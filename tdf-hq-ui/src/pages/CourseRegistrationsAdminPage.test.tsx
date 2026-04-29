@@ -206,6 +206,7 @@ const emptyFollowUpAlertMessage =
 const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const markPaymentPendingLabel = 'Marcar pago pendiente';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
 const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
@@ -3265,7 +3266,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Marcar pagado');
-      expect(getMenuItemByText(document.body, 'Marcar pendiente')).toBeTruthy();
+      expect(getMenuItemByText(document.body, markPaymentPendingLabel)).toBeTruthy();
       expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
     });
 
@@ -3308,8 +3309,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Marcar pagado');
-      expect(getMenuItemByText(document.body, 'Marcar pendiente')).toBeTruthy();
-      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+      expect(getMenuItemByText(document.body, markPaymentPendingLabel)).toBeTruthy();
+      expect(document.body.textContent).not.toContain('Cancelar inscripción');
     });
 
     await cleanup();
@@ -3541,7 +3542,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Estado:')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelector('button[aria-label="Subir comprobante y marcar pagado para Ada Lovelace"]')).toBeNull();
-      expect(container.querySelector('button[aria-label="Marcar pendiente para Grace Hopper"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Marcar pago pendiente para Grace Hopper"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Cancelar inscripción para Katherine Johnson"]')).toBeNull();
     });
 
@@ -3560,7 +3561,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getMenuItemByText(document.body, 'Cancelar inscripción').getAttribute('aria-label')).toBe(
         'Cancelar inscripción para Ada Lovelace',
       );
-      expect(document.body.textContent).not.toContain('Marcar pendiente');
+      expect(document.body.textContent).not.toContain(markPaymentPendingLabel);
       expect(
         Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
       ).not.toContain('Abrir expediente de pago');
@@ -3575,14 +3576,17 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Marcar pendiente');
-      expect(document.body.textContent).toContain('Cancelar inscripción');
-      expect(getMenuItemByText(document.body, 'Marcar pendiente').getAttribute('aria-label')).toBe(
-        'Marcar pendiente para Grace Hopper',
+      expect(document.body.textContent).toContain(markPaymentPendingLabel);
+      expect(document.body.textContent).not.toContain('Cancelar inscripción');
+      expect(getMenuItemByText(document.body, markPaymentPendingLabel).getAttribute('aria-label')).toBe(
+        'Marcar pago pendiente para Grace Hopper',
       );
-      expect(getMenuItemByText(document.body, 'Cancelar inscripción').getAttribute('aria-label')).toBe(
-        'Cancelar inscripción para Grace Hopper',
-      );
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (element.textContent ?? '').trim()),
+      ).toEqual([markPaymentPendingLabel]);
+      expect(
+        document.body.querySelector('[role="menuitem"][aria-label="Cancelar inscripción para Grace Hopper"]'),
+      ).toBeNull();
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Estado actual:');
     });
@@ -3597,7 +3601,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Estado actualizado para Katherine Johnson.');
       expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
-      expect(document.body.textContent).not.toContain('Marcar pendiente');
+      expect(document.body.textContent).not.toContain(markPaymentPendingLabel);
       expect(document.body.textContent).not.toContain('Cancelar inscripción');
       expect(document.body.textContent).not.toContain('Estado actual:');
       expect(document.body.textContent).not.toContain('Subir comprobante para marcar pagado');
