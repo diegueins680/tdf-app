@@ -4214,6 +4214,24 @@ main = hspec $ do
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
 
+        it "maps legacy venueContact updates to the phone field and rejects conflicting aliases" $ do
+            case eitherDecode "{\"venueName\":\"Sala Uno\",\"venueContact\":\"+593991234567\"}"
+                :: Either String VenueUpdateDTO of
+                Left err ->
+                    expectationFailure err
+                Right parsed ->
+                    vcuPhone (vudContactUpdate parsed) `shouldBe` FieldValue "+593991234567"
+
+            (eitherDecode
+                "{\"venueName\":\"Sala Uno\",\"venuePhone\":\"+593991234567\",\"venueContact\":\"+593991234568\"}"
+                :: Either String VenueUpdateDTO)
+                `shouldSatisfy` isLeft
+
+            (eitherDecode
+                "{\"venueName\":\"Sala Uno\",\"venueContact\":\"{\\\"phone\\\":\\\"+593991234567\\\"}\"}"
+                :: Either String VenueUpdateDTO)
+                `shouldSatisfy` isLeft
+
         it "rejects unexpected venue update keys so contact typos fail instead of no-oping" $
             case eitherDecode
                 "{\"venueName\":\"Sala Uno\",\"venuePhoneNumber\":\"+593991234567\"}"

@@ -236,15 +236,42 @@ data VenueUpdateDTO = VenueUpdateDTO
 instance FromJSON VenueUpdateDTO where
   parseJSON value@(Object o) = do
     rejectUnknownObjectFields "VenueUpdateDTO" venueUpdateAllowedKeys o
+    phoneUpdate <- nullableFieldFromParsed <$> (o .:! "venuePhone")
+    legacyContactUpdate <- nullableFieldFromParsed <$> (o .:! "venueContact")
+    resolvedPhoneUpdate <- resolveVenuePhoneUpdate phoneUpdate legacyContactUpdate
     VenueUpdateDTO
       <$> parseJSON value
       <*> (VenueContactUpdateDTO
-            <$> (nullableFieldFromParsed <$> (o .:! "venuePhone"))
+            <$> pure resolvedPhoneUpdate
             <*> (nullableFieldFromParsed <$> (o .:! "venueWebsite"))
             <*> (nullableFieldFromParsed <$> (o .:! "venueState"))
             <*> (nullableFieldFromParsed <$> (o .:! "venueZipCode"))
             <*> (nullableFieldFromParsed <$> (o .:! "venueImageUrl")))
   parseJSON _ = fail "VenueUpdateDTO must be an object"
+
+resolveVenuePhoneUpdate
+  :: NullableFieldUpdate Text
+  -> NullableFieldUpdate Text
+  -> Parser (NullableFieldUpdate Text)
+resolveVenuePhoneUpdate phoneUpdate legacyContactUpdate = do
+  rejectStructuredVenueContact legacyContactUpdate
+  case (phoneUpdate, legacyContactUpdate) of
+    (FieldMissing, legacyUpdate) -> pure legacyUpdate
+    (phoneUpdateValue, FieldMissing) -> pure phoneUpdateValue
+    (FieldNull, FieldNull) -> pure FieldNull
+    (FieldValue phoneValue, FieldValue contactValue)
+      | T.strip phoneValue == T.strip contactValue -> pure (FieldValue phoneValue)
+    _ ->
+      fail "VenueUpdateDTO contains conflicting venuePhone and venueContact values"
+
+rejectStructuredVenueContact :: NullableFieldUpdate Text -> Parser ()
+rejectStructuredVenueContact (FieldValue rawContact)
+  | looksStructured (T.strip rawContact) =
+      fail "VenueUpdateDTO venueContact updates must use explicit venuePhone fields"
+  where
+    looksStructured value =
+      "{" `T.isPrefixOf` value || "[" `T.isPrefixOf` value
+rejectStructuredVenueContact _ = pure ()
 
 venueUpdateAllowedKeys :: [Text]
 venueUpdateAllowedKeys =
