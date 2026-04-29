@@ -1368,8 +1368,7 @@ export default function AdminConsolePage() {
     dbStatus: healthQuery.data?.db,
   });
   const showGettingStartedGuidance =
-    !consoleQuery.isPending
-    && !usersQuery.isLoading
+    !usersQuery.isLoading
     && !auditQuery.isLoading
     && users.length === 0
     && audits.length === 0;

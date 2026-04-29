@@ -410,6 +410,35 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('does not make first-run onboarding wait for optional preview modules', async () => {
+    mockConsolePreview.mockImplementation(() => new Promise(() => undefined));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i })).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Todavía no hay usuarios administrables\. Cuando exista el primero, aquí verás roles, último acceso y el atajo para editar roles\./i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /Todavía no hay eventos de auditoría\. Cuando alguien cambie permisos o datos del sistema, aquí verás quién hizo qué y cuándo\./i,
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
