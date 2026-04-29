@@ -1974,7 +1974,7 @@ resolveDriveUploadName mProvidedName rawFileName =
         else validateDriveUploadName "name" provided
     Nothing ->
       maybe
-        (Right "upload")
+        (Left err400 { errBody = "fileName is required when name is not provided" })
         (validateDriveUploadName "fileName")
         (cleanOptional (Just rawFileName))
 

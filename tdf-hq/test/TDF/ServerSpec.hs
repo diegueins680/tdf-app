@@ -3551,13 +3551,21 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
 
     describe "resolveDriveUploadName" $ do
-        it "prefers safe request names and falls back deterministically when omitted" $ do
+        it "prefers safe request names and rejects missing names instead of guessing" $ do
             resolveDriveUploadName (Just " Contract.pdf ") "browser-name.pdf"
                 `shouldBe` Right "Contract.pdf"
             resolveDriveUploadName Nothing " browser-name.pdf "
                 `shouldBe` Right "browser-name.pdf"
-            resolveDriveUploadName Nothing "   "
-                `shouldBe` Right "upload"
+            case resolveDriveUploadName Nothing "   " of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "fileName is required when name is not provided"
+                Right value ->
+                    expectationFailure
+                        ( "Expected missing Drive upload filename to be rejected, got: "
+                            <> show value
+                        )
 
         it "rejects unsafe Drive upload names before calling Google" $ do
             let assertInvalid expectedMessage result =
