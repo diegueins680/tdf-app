@@ -159,7 +159,14 @@ validateFutureStubCatalogEntry :: (Text, Text) -> Either ServerError (Text, Text
 validateFutureStubCatalogEntry (area, endpoint) = do
   areaClean <- validateFutureStubArea area
   endpointClean <- validateFutureStubEndpoint endpoint
-  pure (areaClean, endpointClean)
+  if (areaClean, endpointClean) `elem` reservedFutureStubRoutes
+    then invalidFutureStubMetadata
+    else pure (areaClean, endpointClean)
+
+reservedFutureStubRoutes :: [(Text, Text)]
+reservedFutureStubRoutes =
+  [ ("admin", "console")
+  ]
 
 validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
 validateFutureStubResponse response =

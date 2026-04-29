@@ -7519,7 +7519,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [("crm", "parties/list columns")]
 
     describe "validateFutureStubCatalogEntry" $
-        it "rejects deeply nested fallback discovery endpoint paths before catalog matching" $ do
+        it "rejects non-stub fallback discovery routes before catalog matching" $ do
             case validateFutureStubCatalogEntry ("crm", "parties/list-columns") of
                 Right value ->
                     value `shouldBe` ("crm", "parties/list-columns")
@@ -7535,6 +7535,18 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected deeply nested fallback discovery endpoint to fail, got: " <> show value)
+
+            case validateFutureStubCatalogEntry ("admin", "console") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                Right value ->
+                    expectationFailure
+                        ( "Expected reserved console route to stay out of the "
+                            <> "generic stub catalog, got: "
+                            <> show value
+                        )
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
