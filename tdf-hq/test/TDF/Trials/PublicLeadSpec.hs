@@ -214,6 +214,31 @@ spec = do
           expectationFailure
             ("Expected ambiguous fallback parties to be rejected, got " <> show partyId)
 
+    it "rejects fallback party rows that carry non-anonymous profile data" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        _ <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Just "+593991234567"
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+          , Models.partyCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "non-anonymous profile data"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party profile data to be rejected, got " <> show partyId)
+
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
           candidate = buildTrialUsernameCandidate root 12

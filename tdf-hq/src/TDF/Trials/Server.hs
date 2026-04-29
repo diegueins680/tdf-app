@@ -1105,7 +1105,9 @@ ensurePublicLeadParty :: UTCTime -> AppM PartyId
 ensurePublicLeadParty now = do
   existing <- selectList [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
   case existing of
-    [Entity partyId _] -> pure partyId
+    [Entity partyId party] -> do
+      validatePublicLeadFallbackParty party
+      pure partyId
     [] ->
       insert Party
         { partyLegalName = Nothing
@@ -1123,6 +1125,22 @@ ensurePublicLeadParty now = do
     _ ->
       liftIO $ throwIO err500
         { errBody = "Anonymous public lead fallback party is ambiguous" }
+
+validatePublicLeadFallbackParty :: Party -> AppM ()
+validatePublicLeadFallbackParty party =
+  unless (isAnonymousPublicLeadFallback party) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has non-anonymous profile data" }
+
+isAnonymousPublicLeadFallback :: Party -> Bool
+isAnonymousPublicLeadFallback party =
+  not (partyIsOrg party)
+    && isNothing (partyLegalName party)
+    && isNothing (partyTaxId party)
+    && isNothing (partyPrimaryPhone party)
+    && isNothing (partyWhatsapp party)
+    && isNothing (partyInstagram party)
+    && isNothing (partyEmergencyContact party)
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do
