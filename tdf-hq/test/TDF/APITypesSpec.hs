@@ -1477,6 +1477,14 @@ spec = do
                 "{\"ticketOrderStatus\":\"paid\",\"ticketPurchaseBuyerPartyId\":\"7\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects non-positive ticket quantities before ticket-tier lookup" $ do
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":0}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":-1}"
+                `shouldSatisfy` isLeft
+
     describe "social event RSVP request FromJSON" $ do
         it "accepts canonical RSVP create payloads and rejects server-managed RSVP fields" $ do
             case decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\"}" of

@@ -577,12 +577,15 @@ instance FromJSON TicketPurchaseRequestDTO where
       , "ticketPurchaseBuyerEmail"
       ]
       o
-    TicketPurchaseRequestDTO
-      <$> o .: "ticketPurchaseTierId"
-      <*> o .: "ticketPurchaseQuantity"
-      <*> o .:? "ticketPurchaseBuyerPartyId"
-      <*> o .:? "ticketPurchaseBuyerName"
-      <*> o .:? "ticketPurchaseBuyerEmail"
+    tierId <- o .: "ticketPurchaseTierId"
+    quantity <- o .: "ticketPurchaseQuantity"
+    if quantity <= (0 :: Int)
+      then fail "ticketPurchaseQuantity must be greater than 0"
+      else
+        TicketPurchaseRequestDTO tierId quantity
+          <$> o .:? "ticketPurchaseBuyerPartyId"
+          <*> o .:? "ticketPurchaseBuyerName"
+          <*> o .:? "ticketPurchaseBuyerEmail"
 
 data TicketOrderStatusUpdateDTO = TicketOrderStatusUpdateDTO
   { ticketOrderStatus :: Text
