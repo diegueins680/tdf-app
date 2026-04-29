@@ -1499,6 +1499,48 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('omits baseline shared Admin access regardless of API casing when a shared module is the useful signal', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-crm',
+        roles: ['admin'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-crm',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        roles: ['ADMIN'],
+        modules: ['crm'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Acceso compartido en esta vista: Módulos: crm.',
+        );
+        expect(container.textContent).not.toContain('Roles: admin');
+        expect(container.textContent).not.toContain('Roles: ADMIN');
+        expect(container.textContent).not.toContain('Roles: Admin');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Roles:');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Roles:');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Módulos: crm');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Módulos: crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps inactive scope and visibility labels separate when a lone inactive row stays collapsed', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive

@@ -916,13 +916,13 @@ export default function AdminUsersPage() {
     });
     if (isDefaultSharedAdminAccess) return '';
 
+    const showSharedRolesSummary = Boolean(sharedRolesSummary)
+      && !isSameAccessSummary(sharedRolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+    const showSharedModulesSummary = Boolean(sharedModulesSummary)
+      && !isSameAccessSummary(sharedModulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
     const sharedAccessSummary = formatAccessSummaryParts({
-      rolesSummary: sharedRolesSummary && sharedRolesSummary !== DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
-        ? sharedRolesSummary
-        : '',
-      modulesSummary: sharedModulesSummary && sharedModulesSummary !== DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
-        ? sharedModulesSummary
-        : '',
+      rolesSummary: showSharedRolesSummary ? sharedRolesSummary : '',
+      modulesSummary: showSharedModulesSummary ? sharedModulesSummary : '',
     });
     return sharedAccessSummary
       ? `Acceso compartido en esta vista: ${sharedAccessSummary}.`
