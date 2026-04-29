@@ -1222,8 +1222,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
       expect(activeStatusSummary?.textContent).toContain(
-        'La vista filtrada ya incluye este estado; usa "Restablecer vista" para volver a ver toda la lista.',
+        'La vista filtrada ya muestra solo este estado.',
       );
+      expect(activeStatusSummary?.textContent).not.toContain('Restablecer vista');
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();

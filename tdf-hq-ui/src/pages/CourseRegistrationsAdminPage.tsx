@@ -3851,7 +3851,7 @@ export default function CourseRegistrationsAdminPage() {
                             {statusFilterLabels[status]}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            La vista filtrada ya incluye este estado; usa "{resetViewLabel}" para volver a ver toda la lista.
+                            La vista filtrada ya muestra solo este estado.
                           </Typography>
                         </Stack>
                       ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
