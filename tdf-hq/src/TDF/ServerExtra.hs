@@ -1741,6 +1741,8 @@ sessionsServer user =
       roomKeys <- either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
+      serviceClean <- either throwError pure (validateSessionRequiredTextField "service" (scService req))
+      engineerRefClean <- either throwError pure (validateSessionRequiredTextField "engineerRef" (scEngineerRef req))
       either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
       either throwError pure =<< withPool (validateSessionReferences bandKey roomKeys)
       let
@@ -1750,10 +1752,10 @@ sessionsServer user =
           { sessionBookingRef           = scBookingRef req
           , sessionBandId               = bandKey
           , sessionClientPartyRef       = scClientPartyRef req
-          , sessionService              = scService req
+          , sessionService              = serviceClean
           , sessionStartAt              = scStartAt req
           , sessionEndAt                = scEndAt req
-          , sessionEngineerRef          = scEngineerRef req
+          , sessionEngineerRef          = engineerRefClean
           , sessionAssistantRef         = scAssistantRef req
           , sessionStatus               = status'
           , sessionSampleRate           = scSampleRate req
@@ -1802,6 +1804,8 @@ sessionsServer user =
           parsedRoomKeys <- traverse (parseKey @Room) rooms
           Just <$> either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
+      serviceUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "service") (suService req)
+      engineerRefUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "engineerRef") (suEngineerRef req)
       let currentSession = entityVal existing
           effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
           effectiveEndAt = fromMaybe (sessionEndAt currentSession) (suEndAt req)
@@ -1813,10 +1817,10 @@ sessionsServer user =
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
             , fmap (SessionBandId =.)               bandUpdate
             , fmap (SessionClientPartyRef =.)       (suClientPartyRef req)
-            , fmap (SessionService =.)              (suService req)
+            , fmap (SessionService =.)              serviceUpdate
             , fmap (SessionStartAt =.)              (suStartAt req)
             , fmap (SessionEndAt =.)                (suEndAt req)
-            , fmap (SessionEngineerRef =.)          (suEngineerRef req)
+            , fmap (SessionEngineerRef =.)          engineerRefUpdate
             , fmap (SessionAssistantRef =.)         (suAssistantRef req)
             , fmap (SessionStatus =.)               statusVal
             , fmap (SessionSampleRate =.)           (suSampleRate req)
@@ -2768,6 +2772,34 @@ parseSessionStatus = lookupStatus . normalise
       "closed"     -> Just Closed
       _             -> Nothing
     normalise = T.toLower . T.filter (`notElem` [' ', '_'])
+
+validateSessionRequiredTextField :: Text -> Text -> Either ServerError Text
+validateSessionRequiredTextField fieldName rawValue =
+  let cleanValue = T.strip rawValue
+  in if T.null cleanValue
+       then Left err400
+         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
+         }
+       else if T.length cleanValue > maxSessionRequiredTextChars
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxSessionRequiredTextChars) <> " characters or fewer"))
+           }
+       else if T.any isUnsafeSessionRequiredTextChar cleanValue
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 (fieldName <> " must not contain control characters or hidden formatting characters"))
+           }
+       else Right cleanValue
+
+isUnsafeSessionRequiredTextChar :: Char -> Bool
+isUnsafeSessionRequiredTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+maxSessionRequiredTextChars :: Int
+maxSessionRequiredTextChars = 160
 
 validateSessionStatusInput :: Maybe Text -> Either ServerError (Maybe SessionStatus)
 validateSessionStatusInput Nothing = Right Nothing

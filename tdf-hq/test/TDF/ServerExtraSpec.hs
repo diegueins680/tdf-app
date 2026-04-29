@@ -169,6 +169,7 @@ import TDF.ServerExtra (
     validateDistinctSessionRooms,
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
+    validateSessionRequiredTextField,
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
     validatePublicQrUploadContext,
@@ -4377,6 +4378,26 @@ spec = do
           targetPartyRef checkout `shouldBe` Just "Backline Crew"
           disposition checkout `shouldBe` "loan"
           returnedAt checkout `shouldSatisfy` isJust
+
+  describe "validateSessionRequiredTextField" $ do
+    it "trims required session text before persistence" $
+      validateSessionRequiredTextField "service" "  Grabacion live  "
+        `shouldBe` Right "Grabacion live"
+
+    it "rejects blank, oversized, or hidden required session text instead of storing ambiguous sessions" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid session required text error, got " <> show value)
+
+      assertInvalid "service is required"
+        (validateSessionRequiredTextField "service" "   ")
+      assertInvalid "engineerRef must not contain control characters or hidden formatting characters"
+        (validateSessionRequiredTextField "engineerRef" "Diego\nSaa")
+      assertInvalid "service must be 160 characters or fewer"
+        (validateSessionRequiredTextField "service" (T.replicate 161 "a"))
 
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
