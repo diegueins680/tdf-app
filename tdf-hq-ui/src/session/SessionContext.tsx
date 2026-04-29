@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
+import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 
 export interface SessionUser {
   username: string;
@@ -200,9 +201,27 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setSession(next);
   }, []);
 
+  const clearLocalSessionState = useCallback(() => {
+    sessionVersionRef.current += 1;
+    setLoading(false);
+    updateSessionState(null);
+    transientApiToken = null;
+  }, [updateSessionState]);
+
   useEffect(() => {
     persistSession(session, persistScope);
   }, [session, persistScope]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleAuthExpired = () => {
+      clearLocalSessionState();
+    };
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleAuthExpired);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, [clearLocalSessionState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -254,14 +273,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [updateSessionState]);
 
   const logout = useCallback(() => {
-    sessionVersionRef.current += 1;
-    setLoading(false);
-    updateSessionState(null);
-    transientApiToken = null;
+    clearLocalSessionState();
     void logoutSessionRequest().catch((error) => {
       console.warn('Failed to clear server session', error);
     });
-  }, [updateSessionState]);
+  }, [clearLocalSessionState]);
 
   const setApiToken = useCallback((token: string | null) => {
     sessionVersionRef.current += 1;

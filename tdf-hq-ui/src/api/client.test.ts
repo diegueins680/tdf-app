@@ -16,6 +16,7 @@ jest.unstable_mockModule('../utils/env', () => ({
 }));
 
 const { get, post, postForm } = await import('./client');
+const { AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
 
 interface MockResponseOptions {
   ok?: boolean;
@@ -181,5 +182,27 @@ describe('api client', () => {
     );
 
     await expect(get('/errors-array')).rejects.toThrow('Campo requerido');
+  });
+
+  it('notifies the session layer when protected API auth has expired', async () => {
+    const listener = jest.fn();
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        contentType: 'text/plain',
+        body: 'Missing or invalid auth token',
+      }),
+    );
+
+    try {
+      await expect(get('/protected')).rejects.toThrow('Missing or invalid auth token');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    }
   });
 });

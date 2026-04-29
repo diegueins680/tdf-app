@@ -1,5 +1,6 @@
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
+import { isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
 import { env } from '../utils/env';
 
 const API_BASE = env.read('VITE_API_BASE') ?? '';
@@ -97,6 +98,9 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     const statusText = res.statusText.trim();
     const statusLabel = statusText !== '' ? statusText : `HTTP ${res.status}`;
     const details = trimmed !== '' ? trimmed : statusLabel;
+    if ((res.status === 401 || res.status === 403) && isSessionAuthFailureMessage(details)) {
+      notifyAuthSessionExpired();
+    }
     throw new Error(details);
   }
 

@@ -21,6 +21,8 @@ import LinkIcon from '@mui/icons-material/Link';
 import EventIcon from '@mui/icons-material/Event';
 import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
+import { isSessionAuthFailureMessage } from '../session/authEvents';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
 
@@ -37,6 +39,14 @@ const normalizeHistoryEntries = (value: unknown): string[] => {
 
 const sameStringArray = (a: string[], b: string[]) =>
   a.length === b.length && a.every((value, idx) => value === b[idx]);
+
+const SESSION_EXPIRED_MESSAGE =
+  'La sesión del CMS expiró o el navegador no está enviando la cookie. Vuelve a iniciar sesión y reabre esta integración.';
+
+const getCalendarPageErrorMessage = (error: unknown, fallback: string): string | null => {
+  if (!(error instanceof Error)) return fallback;
+  return isSessionAuthFailureMessage(error.message) ? SESSION_EXPIRED_MESSAGE : error.message;
+};
 
 export default function CalendarSyncPage() {
   const zone: string = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
@@ -56,6 +66,10 @@ export default function CalendarSyncPage() {
 
   const trimmedCalendarId = calendarId.trim();
   const location = useLocation();
+  const loginRedirectPath = useMemo(
+    () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
+    [location.hash, location.pathname, location.search],
+  );
   const icsUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
     const base = (import.meta.env['VITE_CALENDAR_ICS_BASE'] ?? `${window.location.origin}/calendar/v1/ics`).trim();
@@ -231,12 +245,11 @@ export default function CalendarSyncPage() {
     queryFn: () => CalendarApi.getConfig(),
     staleTime: 5 * 60 * 1000,
   });
-  const configErrorMessage =
-    configQuery.error instanceof Error
-      ? configQuery.error.message
-      : configQuery.isError
-        ? 'No se pudo cargar la configuración de calendario.'
-        : null;
+  const configAuthError =
+    configQuery.error instanceof Error && isSessionAuthFailureMessage(configQuery.error.message);
+  const configErrorMessage = configQuery.isError
+    ? getCalendarPageErrorMessage(configQuery.error, 'No se pudo cargar la configuración de calendario.')
+    : null;
 
   const testConnection = useCallback(async () => {
     const res = await configQuery.refetch();
@@ -276,6 +289,9 @@ export default function CalendarSyncPage() {
   }, [fromInput, lastSyncAt, toInput]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
+  const eventsErrorMessage = eventsQuery.isError
+    ? getCalendarPageErrorMessage(eventsQuery.error, 'No se pudieron cargar los eventos.')
+    : null;
   const calendarIdError = showValidation && !trimmedCalendarId ? 'Ingresa el Calendar ID o usa "primary".' : '';
   const codeError = showValidation && !code.trim() ? 'Pega el code que te devuelve Google tras consentir.' : '';
 
@@ -390,7 +406,18 @@ export default function CalendarSyncPage() {
             </Button>
           </Stack>
           {configErrorMessage && (
-            <Alert severity="warning">{configErrorMessage}</Alert>
+            <Alert
+              severity="warning"
+              action={
+                configAuthError ? (
+                  <Button component={RouterLink} to={loginRedirectPath} color="inherit" size="small">
+                    Iniciar sesión
+                  </Button>
+                ) : undefined
+              }
+            >
+              {configErrorMessage}
+            </Alert>
           )}
           <Typography variant="subtitle1" fontWeight={700}>
             Pasos guiados
@@ -612,7 +639,7 @@ export default function CalendarSyncPage() {
             <Chip label={`${events.length}`} size="small" />
           </Stack>
           {eventsQuery.isLoading && <LinearProgress />}
-          {eventsQuery.isError && <Alert severity="error">No se pudieron cargar los eventos.</Alert>}
+          {eventsErrorMessage && <Alert severity="error">{eventsErrorMessage}</Alert>}
           <Divider />
           <Stack spacing={1.5}>
             {events.map((ev) => (
