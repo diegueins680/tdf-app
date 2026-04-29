@@ -11317,6 +11317,7 @@ sanitizeDriveWebContentLink expectedFileId mWebContentLink = do
   if "https://" `T.isPrefixOf` T.toLower url
       && TrialsServer.isValidHttpUrl url
       && isGoogleDriveDownloadHost url
+      && not ("#" `T.isInfixOf` url)
       && extractDriveContentFileId url == Just expectedFileId
     then Just (normalizeDriveResourceKeyParams url)
     else Nothing
