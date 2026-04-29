@@ -239,6 +239,31 @@ spec = do
           expectationFailure
             ("Expected fallback party profile data to be rejected, got " <> show partyId)
 
+    it "rejects fallback party rows whose reserved system markers were modified" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        _ <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest Imported"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Just "System fallback party for anonymous public trial interests."
+          , Models.partyCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "unexpected system marker fields"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party marker drift to be rejected, got " <> show partyId)
+
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
           candidate = buildTrialUsernameCandidate root 12

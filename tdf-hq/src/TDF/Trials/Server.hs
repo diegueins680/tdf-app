@@ -1101,6 +1101,12 @@ composeFullName firstName lastName =
 publicLeadFallbackEmail :: Text
 publicLeadFallbackEmail = "public-interest@tdf.local"
 
+publicLeadFallbackDisplayName :: Text
+publicLeadFallbackDisplayName = "Public Trial Interest"
+
+publicLeadFallbackNotes :: Text
+publicLeadFallbackNotes = "System fallback party for anonymous public trial interests."
+
 ensurePublicLeadParty :: UTCTime -> AppM PartyId
 ensurePublicLeadParty now = do
   existing <- selectList [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
@@ -1111,7 +1117,7 @@ ensurePublicLeadParty now = do
     [] ->
       insert Party
         { partyLegalName = Nothing
-        , partyDisplayName = "Public Trial Interest"
+        , partyDisplayName = publicLeadFallbackDisplayName
         , partyIsOrg = False
         , partyTaxId = Nothing
         , partyPrimaryEmail = Just publicLeadFallbackEmail
@@ -1119,7 +1125,7 @@ ensurePublicLeadParty now = do
         , partyWhatsapp = Nothing
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
-        , partyNotes = Just "System fallback party for anonymous public trial interests."
+        , partyNotes = Just publicLeadFallbackNotes
         , partyCreatedAt = now
         }
     _ ->
@@ -1127,10 +1133,13 @@ ensurePublicLeadParty now = do
         { errBody = "Anonymous public lead fallback party is ambiguous" }
 
 validatePublicLeadFallbackParty :: Party -> AppM ()
-validatePublicLeadFallbackParty party =
+validatePublicLeadFallbackParty party = do
   unless (isAnonymousPublicLeadFallback party) $
     liftIO $ throwIO err500
       { errBody = "Anonymous public lead fallback party has non-anonymous profile data" }
+  unless (hasPublicLeadFallbackMarkers party) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has unexpected system marker fields" }
 
 isAnonymousPublicLeadFallback :: Party -> Bool
 isAnonymousPublicLeadFallback party =
@@ -1141,6 +1150,12 @@ isAnonymousPublicLeadFallback party =
     && isNothing (partyWhatsapp party)
     && isNothing (partyInstagram party)
     && isNothing (partyEmergencyContact party)
+
+hasPublicLeadFallbackMarkers :: Party -> Bool
+hasPublicLeadFallbackMarkers party =
+  partyDisplayName party == publicLeadFallbackDisplayName
+    && partyPrimaryEmail party == Just publicLeadFallbackEmail
+    && partyNotes party == Just publicLeadFallbackNotes
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do
