@@ -1438,12 +1438,22 @@ validateAdminEmailBodyLines :: [Text] -> Either ServerError [Text]
 validateAdminEmailBodyLines rawLines
   | null bodyLines =
       Left err400 { errBody = "At least one non-empty body line is required" }
+  | length bodyLines > adminEmailBodyLineMaxCount =
+      Left err400 { errBody = "Body must include at most 50 non-empty lines" }
+  | any ((> adminEmailBodyLineMaxLength) . T.length) bodyLines =
+      Left err400 { errBody = "Body lines must be 1000 characters or fewer" }
   | any (T.any isControl) bodyLines =
       Left err400 { errBody = "Body lines must not contain control characters" }
   | otherwise =
       Right bodyLines
   where
     bodyLines = normalizeAdminEmailBodyLines rawLines
+
+adminEmailBodyLineMaxCount :: Int
+adminEmailBodyLineMaxCount = 50
+
+adminEmailBodyLineMaxLength :: Int
+adminEmailBodyLineMaxLength = 1000
 
 normalizeAdminEmailAddress :: Text -> Maybe Text
 normalizeAdminEmailAddress raw =

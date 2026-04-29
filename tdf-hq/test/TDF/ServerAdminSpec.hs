@@ -109,6 +109,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "At least one non-empty body line is required"
                 (validateAdminEmailBodyLines ["   ", ""])
             assertInvalid
+                "at most 50 non-empty lines"
+                (validateAdminEmailBodyLines (replicate 51 "Linea"))
+            assertInvalid
+                "1000 characters or fewer"
+                (validateAdminEmailBodyLines [T.replicate 1001 "A"])
+            assertInvalid
                 "Body lines must not contain control characters"
                 (validateAdminEmailBodyLines ["Hola\nBcc: ops@example.com"])
 
