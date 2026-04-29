@@ -328,6 +328,7 @@ const formatActiveUserCountLabel = (count: number) => `${formatUserCountLabel(co
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
+const ACCOUNT_SEARCH_PLACEHOLDER = 'Cuenta';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
@@ -366,8 +367,12 @@ const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
-const formatSearchPlaceholderTerms = (terms: readonly string[]) => {
-  if (terms.length <= 1) return terms[0] ?? SEARCH_INPUT_PLACEHOLDER;
+const formatSearchPlaceholderTerms = (
+  terms: readonly string[],
+  emptyFallback = SEARCH_INPUT_PLACEHOLDER,
+) => {
+  if (terms.length === 0) return emptyFallback;
+  if (terms.length === 1) return terms[0] ?? emptyFallback;
 
   const lastTerm = terms[terms.length - 1] ?? '';
   const connector = spanishOrConnector(lastTerm);
@@ -549,7 +554,10 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
   if (hasActiveUsers && hasInactiveUsers) terms.push(terms.length === 0 ? 'Estado' : 'estado');
 
-  return formatSearchPlaceholderTerms(terms);
+  return formatSearchPlaceholderTerms(
+    terms,
+    users.length > 0 ? ACCOUNT_SEARCH_PLACEHOLDER : SEARCH_INPUT_PLACEHOLDER,
+  );
 };
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
@@ -630,6 +638,7 @@ const dedupeAdminUsers = (users: readonly AdminUser[]) => {
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
+  const identity = summarizeUserIdentity(user);
   const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
@@ -641,6 +650,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const searchSpace = [
     user.username,
     user.partyName,
+    identity.primary,
     String(user.userId),
     ...partyIdSearchSpace,
     ...getUserContactSearchValues(user),

@@ -4238,6 +4238,70 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('uses account fallback search when admin identities are still blank', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 601,
+        partyId: null,
+        partyName: '   ',
+        username: '   ',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 602,
+        partyId: null,
+        partyName: '   ',
+        username: '   ',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 603,
+        partyId: null,
+        partyName: '   ',
+        username: '   ',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Cuenta');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('Nombre');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('usuario');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
+        expect(getRenderedRowUserIds(container)).toEqual([601, 602, 603]);
+        expect(getRowByUserId(container, 602).textContent).toContain('Cuenta #602');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'Cuenta #602');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([602]);
+        expect(getRowByUserId(container, 602).textContent).toContain('Cuenta #602');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps internal-id search available without foregrounding IDs in the first-time search hint', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
