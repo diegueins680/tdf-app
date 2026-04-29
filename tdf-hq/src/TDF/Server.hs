@@ -2703,7 +2703,7 @@ calendarServer user =
       -> [Value]
       -> AppM ([Value], Maybe Text)
     fetchAllPages manager token calendarId mSync mFrom mTo mPage acc = do
-      let baseUrl = T.unpack $ "https://www.googleapis.com/calendar/v3/calendars/" <> calendarId <> "/events"
+      let baseUrl = googleCalendarEventsEndpoint calendarId
           timeParams =
             case mSync of
               Just _ -> []
@@ -2830,6 +2830,17 @@ calendarServer user =
 
     formatTime' :: UTCTime -> ByteString
     formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
+
+googleCalendarEventsEndpoint :: Text -> String
+googleCalendarEventsEndpoint calendarId =
+  T.unpack $
+    "https://www.googleapis.com/calendar/v3/calendars/"
+      <> encodeGooglePathSegment calendarId
+      <> "/events"
+
+encodeGooglePathSegment :: Text -> Text
+encodeGooglePathSegment =
+  TE.decodeUtf8 . urlEncode True . TE.encodeUtf8
 
 productionCourseSlug :: AppConfig -> Text
 productionCourseSlug = courseSlugFallback

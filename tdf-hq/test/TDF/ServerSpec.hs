@@ -259,6 +259,7 @@ import TDF.Server
     , validateCalendarRedirectUri
     , validateConfiguredCalendarRedirectUri
     , validateGoogleCalendarEventStatus
+    , googleCalendarEventsEndpoint
     , validateConfiguredDriveAccessToken
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
@@ -4123,6 +4124,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "must not contain whitespace" "needs action"
             assertInvalid "must not contain control characters" "con\nfirmed"
             assertInvalid "must be one of" "archived"
+
+    describe "googleCalendarEventsEndpoint" $ do
+        it "encodes calendar ids as one path segment before sync requests are built" $ do
+            googleCalendarEventsEndpoint "primary"
+                `shouldBe` "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+            googleCalendarEventsEndpoint "team/calendar?debug=1#frag"
+                `shouldBe`
+                    "https://www.googleapis.com/calendar/v3/calendars/team%2Fcalendar%3Fdebug%3D1%23frag/events"
+            googleCalendarEventsEndpoint "en.usa#holiday@group.v.calendar.google.com"
+                `shouldBe`
+                    "https://www.googleapis.com/calendar/v3/calendars/en.usa%23holiday%40group.v.calendar.google.com/events"
 
     describe "validateDriveTokenRefreshRequest" $ do
         it "normalizes valid Drive refresh tokens before contacting Google" $
