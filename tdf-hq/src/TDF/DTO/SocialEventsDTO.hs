@@ -685,7 +685,10 @@ data EventFinanceEntryDTO = EventFinanceEntryDTO
   , efeUpdatedAt        :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON EventFinanceEntryDTO
-instance FromJSON EventFinanceEntryDTO
+instance FromJSON EventFinanceEntryDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data EventFinanceSummaryDTO = EventFinanceSummaryDTO
   { efsEventId                   :: Text

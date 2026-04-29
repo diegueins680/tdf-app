@@ -1497,6 +1497,39 @@ spec = do
                 "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpCreatedAt\":\"2026-01-01T00:00:00Z\"}"
                 `shouldSatisfy` isLeft
 
+    describe "social event finance entry request FromJSON" $ do
+        it "accepts canonical finance entries and rejects over-posted amount aliases" $ do
+            case decodeEventFinanceEntry (BL8.concat
+                [ "{\"efeDirection\":\"expense\""
+                , ",\"efeSource\":\"manual\""
+                , ",\"efeCategory\":\"production\""
+                , ",\"efeConcept\":\"Sound rental\""
+                , ",\"efeAmountCents\":5000"
+                , ",\"efeCurrency\":\"USD\""
+                , ",\"efeStatus\":\"planned\""
+                , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical finance entry payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.efeAmountCents payload `shouldBe` 5000
+                    SocialEvents.efeCurrency payload `shouldBe` "USD"
+
+            decodeEventFinanceEntry (BL8.concat
+                [ "{\"efeDirection\":\"expense\""
+                , ",\"efeSource\":\"manual\""
+                , ",\"efeCategory\":\"production\""
+                , ",\"efeConcept\":\"Sound rental\""
+                , ",\"efeAmountCents\":5000"
+                , ",\"amountCents\":1"
+                , ",\"efeCurrency\":\"USD\""
+                , ",\"efeStatus\":\"planned\""
+                , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                ])
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
@@ -1655,6 +1688,8 @@ spec = do
     decodeTicketPurchase = eitherDecode
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO
     decodeTicketOrderStatus = eitherDecode
+    decodeEventFinanceEntry :: BL8.ByteString -> Either String SocialEvents.EventFinanceEntryDTO
+    decodeEventFinanceEntry = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
