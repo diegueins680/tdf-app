@@ -37,6 +37,7 @@ stub rawArea rawEndpoint = do
         { stubArea        = area
         , stubEndpoint    = endpoint
         , stubPath        = futureStubPath area endpoint
+        , stubMethod      = futureStubMethod
         , stubStatus      = "planned"
         , stubImplemented = False
         }
@@ -176,6 +177,7 @@ validateFutureStubResponse response =
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
       | stubPath response /= futureStubPath area endpoint -> invalidFutureStubResponse
+      | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise ->
@@ -183,11 +185,15 @@ validateFutureStubResponse response =
             { stubArea = area
             , stubEndpoint = endpoint
             , stubPath = futureStubPath area endpoint
+            , stubMethod = futureStubMethod
             }
 
 futureStubPath :: Text -> Text -> Text
 futureStubPath area endpoint =
   "/stubs/" <> area <> "/" <> endpoint
+
+futureStubMethod :: Text
+futureStubMethod = "GET"
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard card

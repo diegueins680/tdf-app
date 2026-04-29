@@ -7568,11 +7568,12 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
-            let mkResponse area endpoint path status implemented =
+            let mkResponse area endpoint path method status implemented =
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
                         , stubPath = path
+                        , stubMethod = method
                         , stubStatus = status
                         , stubImplemented = implemented
                         }
@@ -7581,6 +7582,7 @@ spec = describe "TDF.Server helpers" $ do
                         "crm"
                         "parties/list-columns"
                         "/stubs/crm/parties/list-columns"
+                        "GET"
                         "planned"
                         False
                 assertInvalid response =
@@ -7598,6 +7600,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubArea response `shouldBe` "crm"
                     stubEndpoint response `shouldBe` "parties/list-columns"
                     stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
+                    stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
@@ -7609,6 +7612,23 @@ spec = describe "TDF.Server helpers" $ do
                     "crm"
                     "parties/list-columns"
                     "/stubs/crm/parties/list-columns"
+                    "POST"
+                    "planned"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "get"
+                    "planned"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "GET"
                     "ready"
                     False)
             assertInvalid
@@ -7616,6 +7636,7 @@ spec = describe "TDF.Server helpers" $ do
                     "crm"
                     "parties/list-columns"
                     "/stubs/crm/parties/list-columns"
+                    "GET"
                     "planned"
                     True)
             assertInvalid
@@ -7623,6 +7644,7 @@ spec = describe "TDF.Server helpers" $ do
                     "crm"
                     "parties/export"
                     "/stubs/crm/parties/export"
+                    "GET"
                     "planned"
                     False)
             assertInvalid
@@ -7630,6 +7652,7 @@ spec = describe "TDF.Server helpers" $ do
                     "crm"
                     "parties/list-columns"
                     "/stubs/crm/parties/filters"
+                    "GET"
                     "planned"
                     False)
 
@@ -7771,6 +7794,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right stubResponse -> do
                     stubArea stubResponse `shouldBe` "access"
                     stubEndpoint stubResponse `shouldBe` "login-options"
+                    stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
                 Left serverErr ->
                     expectationFailure
@@ -7822,6 +7846,7 @@ spec = describe "TDF.Server helpers" $ do
                             [ "stubArea" .= ("access" :: Text)
                             , "stubEndpoint" .= ("login-options" :: Text)
                             , "stubPath" .= ("/stubs/access/login-options" :: Text)
+                            , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("planned" :: Text)
                             , "stubImplemented" .= False
                             ]

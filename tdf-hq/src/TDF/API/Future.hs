@@ -14,6 +14,7 @@ data StubResponse = StubResponse
   { stubArea        :: Text
   , stubEndpoint    :: Text
   , stubPath        :: Text
+  , stubMethod      :: Text
   , stubStatus      :: Text
   , stubImplemented :: Bool
   } deriving stock (Show)
@@ -24,6 +25,7 @@ instance ToJSON StubResponse where
       [ "stubArea" .= stubArea response
       , "stubEndpoint" .= stubEndpoint response
       , "stubPath" .= stubPath response
+      , "stubMethod" .= stubMethod response
       , "stubStatus" .= stubStatus response
       , "stubImplemented" .= stubImplemented response
       ]
