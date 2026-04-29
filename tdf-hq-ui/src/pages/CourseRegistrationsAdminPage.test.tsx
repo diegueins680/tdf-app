@@ -222,6 +222,8 @@ const dossierScopeHint =
   'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
 const dossierOnlyScopeHint =
   'Abre el expediente desde el nombre; el estado abre acciones rápidas.';
+const pendingRecoveryScopeHint =
+  'Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.';
 const contactDossierScopeHint =
   'Abre el expediente desde el contacto; usa Cambiar estado para acciones rápidas.';
 const contactDossierOnlyScopeHint =
@@ -971,6 +973,45 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Estado actualizado para Ada Lovelace.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
+    });
+
+    await cleanup();
+  });
+
+  it('uses compact reopen actions when a shared cancelled summary already owns the current status', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'cancelled',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentView = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+      const adaAction = getButtonByAriaLabel(container, 'Reabrir como pendiente para Ada Lovelace');
+      const graceAction = getButtonByAriaLabel(container, 'Reabrir como pendiente para Grace Hopper');
+
+      expect(currentView?.textContent).toContain('Beatmaking 101 · Cancelado');
+      expect(currentView?.textContent).toContain(pendingRecoveryScopeHint);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(adaAction.textContent?.trim()).toBe('Reabrir');
+      expect(graceAction.textContent?.trim()).toBe('Reabrir');
+      expect(adaAction.getAttribute('title')).toBe('Reabrir como pendiente; actual: Cancelado');
+      expect(adaAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(countButtonsByText(container, 'Reabrir')).toBe(2);
+      expect(countButtonsByText(container, reopenPendingLabel)).toBe(0);
+      expect(container.textContent).not.toContain(dossierScopeHint);
     });
 
     await cleanup();

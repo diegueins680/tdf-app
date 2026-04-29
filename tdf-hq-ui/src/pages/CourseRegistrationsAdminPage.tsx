@@ -80,6 +80,8 @@ const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
+const buildPendingRecoveryScopeHint = (targetLabel: string) =>
+  `Abre el expediente desde ${targetLabel}; usa Reabrir para volver a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -470,6 +472,11 @@ const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pago pendiente';
+
+const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: boolean) =>
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' && useCompactActionLabel
+    ? 'Reabrir'
+    : pendingStatusMenuLabel(currentStatus);
 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
@@ -2161,8 +2168,12 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(reg.crStatus));
   const dossierScopeHint = [
-    useCompactStatusActionLabel
+    useCompactStatusActionLabel && allVisibleRowsUseDirectPendingRecoveryAction
+      ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+      : useCompactStatusActionLabel
       ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
       : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),
     singleVisibleMissingContactSummary,
@@ -4466,7 +4477,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         {useDirectPendingRecoveryAction
-                          ? pendingStatusMenuLabel(reg.crStatus)
+                          ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
                           : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
                       </Button>
                       <Box sx={{ flexGrow: 1 }} />
