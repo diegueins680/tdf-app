@@ -2038,7 +2038,7 @@ export default function CourseRegistrationsAdminPage() {
     && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
     && searchedRegistrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
-  const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
+  const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes && !hiddenLocalSearchMatchSummary
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';
   const sharedListContextSummaries = [

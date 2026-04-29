@@ -1813,6 +1813,36 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the search helper as the only notes explanation when hidden notes drive the match', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
+      crAdminNotes: index < 2 ? 'Beca aprobada por coordinación.' : null,
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'beca');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Mostrando 2 de 8 inscripciones cargadas.');
+      expect(container.textContent).toContain('Coinciden con nota interna.');
+      expect(container.textContent).not.toContain('Notas internas en todas las inscripciones visibles.');
+      expect(countOccurrences(container, 'nota interna')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('replaces a single cohort selector with context copy and restores it when multiple cohorts exist', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
