@@ -5831,8 +5831,8 @@ validateRolePayload raw =
 partyRelated :: AuthedUser -> Int64 -> AppM PartyRelatedDTO
 partyRelated user pidI = do
   requireModule user ModuleCRM
+  partyKey <- runDB (resolvePartyRelatedTarget pidI) >>= either throwError pure
   now <- liftIO getCurrentTime
-  let partyKey = toSqlKey pidI :: Key Party
 
   (asCustomer, asEngineer) <- runDB $ do
     customerRows <- selectList [BookingPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
@@ -5931,11 +5931,23 @@ partyRelated user pidI = do
           ++ map (toRelatedClass "profesor") teacherSessions
 
   pure PartyRelatedDTO
-    { prPartyId = pidI
+    { prPartyId = fromSqlKey partyKey
     , prBookings = bookingsOut
     , prClassSessions = classSessionsOut
     , prLabelTracks = map toRelatedTrack tracks
     }
+
+resolvePartyRelatedTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
+resolvePartyRelatedTarget rawPartyId =
+  case validatePositiveIdField "partyId" rawPartyId of
+    Left err -> pure (Left err)
+    Right partyId -> do
+      let partyKey = toSqlKey partyId :: PartyId
+      mParty <- get partyKey
+      pure $
+        case mParty of
+          Nothing -> Left err404 { errBody = "Party not found" }
+          Just _ -> Right partyKey
 
 -- Service marketplace
 serviceMarketplaceServer :: AuthedUser -> ServerT Api.ServiceMarketplaceAPI AppM

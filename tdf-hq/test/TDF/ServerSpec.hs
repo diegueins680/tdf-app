@@ -244,6 +244,7 @@ import TDF.Server
     , createReceipt
     , getReceipt
     , resolvePartyRoleAssignmentTarget
+    , resolvePartyRelatedTarget
     , fanUnfollowArtist
     , chatListMessages
     , adsGetCampaign
@@ -1062,6 +1063,29 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected existing party role assignment target to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
+
+    describe "resolvePartyRelatedTarget" $ do
+        it "rejects non-positive party ids before related lookups can return empty fallback data" $ do
+            result <- runAuthSqlite $
+                resolvePartyRelatedTarget 0
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "partyId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid related party id to be rejected, got: " <> show value)
+
+        it "returns 404 for unknown parties instead of publishing an empty related fallback" $ do
+            result <- runAuthSqlite $
+                resolvePartyRelatedTarget 999999
+            case result of
+                Left serverErr ->
+                    errHTTPCode serverErr `shouldBe` 404
+                Right value ->
+                    expectationFailure
+                        ("Expected unknown related party lookup to be rejected, got: " <> show value)
 
     describe "resolveSocialTargetPartyId" $ do
         it "rejects non-positive party ids before social follow creation attempts any lookup" $ do
