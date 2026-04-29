@@ -1985,10 +1985,12 @@ validateDriveUploadName fieldName uploadName
         { errBody =
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 240 characters or fewer"))
         }
-  | T.any isControl uploadName =
+  | T.any isUnsafeDriveUploadNameChar uploadName =
       Left err400
         { errBody =
-            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+            BL.fromStrict
+              (TE.encodeUtf8
+                (fieldName <> " must not contain control characters or Unicode formatting marks"))
         }
   | T.any isPathSeparator uploadName =
       Left err400
@@ -1998,6 +2000,11 @@ validateDriveUploadName fieldName uploadName
   | otherwise = Right uploadName
   where
     isPathSeparator ch = ch == '/' || ch == '\\'
+
+isUnsafeDriveUploadNameChar :: Char -> Bool
+isUnsafeDriveUploadNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 maxDriveUploadBytes :: Integer
 maxDriveUploadBytes = 50 * 1024 * 1024
