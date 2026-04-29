@@ -13,6 +13,7 @@ import           Servant
 data StubResponse = StubResponse
   { stubArea        :: Text
   , stubEndpoint    :: Text
+  , stubPath        :: Text
   , stubStatus      :: Text
   , stubImplemented :: Bool
   } deriving stock (Show)
@@ -22,6 +23,7 @@ instance ToJSON StubResponse where
     object
       [ "stubArea" .= stubArea response
       , "stubEndpoint" .= stubEndpoint response
+      , "stubPath" .= stubPath response
       , "stubStatus" .= stubStatus response
       , "stubImplemented" .= stubImplemented response
       ]

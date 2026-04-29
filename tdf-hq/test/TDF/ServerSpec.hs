@@ -7417,14 +7417,21 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
-            let mkResponse area endpoint status implemented =
+            let mkResponse area endpoint path status implemented =
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
+                        , stubPath = path
                         , stubStatus = status
                         , stubImplemented = implemented
                         }
-                validResponse = mkResponse "crm" "parties/list-columns" "planned" False
+                validResponse =
+                    mkResponse
+                        "crm"
+                        "parties/list-columns"
+                        "/stubs/crm/parties/list-columns"
+                        "planned"
+                        False
                 assertInvalid response =
                     case validateFutureStubResponse response of
                         Left serverErr -> do
@@ -7439,15 +7446,41 @@ spec = describe "TDF.Server helpers" $ do
                 Right response -> do
                     stubArea response `shouldBe` "crm"
                     stubEndpoint response `shouldBe` "parties/list-columns"
+                    stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
                     stubStatus response `shouldBe` "planned"
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
                     expectationFailure
                         ("Expected valid future stub response, got: " <> show serverErr)
 
-            assertInvalid (mkResponse "crm" "parties/list-columns" "ready" False)
-            assertInvalid (mkResponse "crm" "parties/list-columns" "planned" True)
-            assertInvalid (mkResponse "crm" "parties/export" "planned" False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "ready"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "planned"
+                    True)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/export"
+                    "/stubs/crm/parties/export"
+                    "planned"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/filters"
+                    "planned"
+                    False)
 
     describe "validateFutureAdminConsoleCard" $ do
         it "rejects malformed or mislabeled admin console cards before serving fallback discovery metadata" $ do
@@ -7637,6 +7670,7 @@ spec = describe "TDF.Server helpers" $ do
                         `shouldBe` A.object
                             [ "stubArea" .= ("access" :: Text)
                             , "stubEndpoint" .= ("login-options" :: Text)
+                            , "stubPath" .= ("/stubs/access/login-options" :: Text)
                             , "stubStatus" .= ("planned" :: Text)
                             , "stubImplemented" .= False
                             ]
