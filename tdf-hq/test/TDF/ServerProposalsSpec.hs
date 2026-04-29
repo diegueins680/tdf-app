@@ -202,6 +202,49 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected blank pipelineCardId create to fail, got: " <> show proposalDto)
 
+  it "rejects hidden-format proposal titles before persisting rows" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio\8203 proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.com"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Nothing
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure
+          ("Expected title rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            let expectedMessage =
+                  "title must not contain control characters or hidden formatting characters"
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` expectedMessage
+          Right proposalDto ->
+            expectationFailure
+              ("Expected hidden-format title create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
+
   it "rejects control characters in proposal notes on creation before any proposal rows are persisted" $ do
     result <-
       runProposalTest $ do

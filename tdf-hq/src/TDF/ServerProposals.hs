@@ -26,7 +26,15 @@ import           Control.Monad              (unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isControl
+  , isDigit
+  )
 import           Data.Int                   (Int64)
 import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
@@ -381,8 +389,8 @@ validateProposalTitle rawTitle
       Left err400 { errBody = "title is required" }
   | T.length title > maxProposalTitleChars =
       Left err400 { errBody = "title must be 160 characters or fewer" }
-  | T.any isControl title =
-      Left err400 { errBody = "title must not contain control characters" }
+  | T.any isUnsafeProposalInlineTextChar title =
+      Left err400 { errBody = proposalInlineTextError "title" }
   | otherwise =
       Right title
   where
@@ -413,8 +421,8 @@ validateOptionalProposalContactName (Just rawName) =
   case normalizeOptionalText (Just rawName) of
     Nothing -> Right Nothing
     Just contactName
-      | T.any isControl contactName ->
-          Left err400 { errBody = "contactName must not contain control characters" }
+      | T.any isUnsafeProposalInlineTextChar contactName ->
+          Left err400 { errBody = proposalInlineTextError "contactName" }
       | otherwise ->
           Right (Just contactName)
 
@@ -470,6 +478,15 @@ validateOptionalProposalClientPartyId (Just rawClientPartyId)
       Left err400 { errBody = "clientPartyId must be a positive integer" }
   | otherwise =
       Right (Just rawClientPartyId)
+
+isUnsafeProposalInlineTextChar :: Char -> Bool
+isUnsafeProposalInlineTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+proposalInlineTextError :: Text -> BL.ByteString
+proposalInlineTextError fieldName =
+  encodeUtf8Lazy
+    (fieldName <> " must not contain control characters or hidden formatting characters")
 
 resolveOptionalProposalClientPartyReference
   :: Maybe Int64
