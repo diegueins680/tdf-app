@@ -118,10 +118,15 @@ validateInstagramBearerToken label mRawToken =
     Nothing ->
       Left (label <> " no configurado")
     Just token
+      | T.length token > maxInstagramBearerTokenChars ->
+          Left (label <> " must be 4096 characters or fewer")
       | T.any invalidHeaderValueChar token ->
           Left (label <> " must not contain whitespace or control characters")
       | otherwise ->
           Right token
+
+maxInstagramBearerTokenChars :: Int
+maxInstagramBearerTokenChars = 4096
 
 validateInstagramAccountId :: Text -> Maybe Text -> Either Text Text
 validateInstagramAccountId label mRawAccountId =
