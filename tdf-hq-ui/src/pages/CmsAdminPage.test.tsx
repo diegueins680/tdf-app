@@ -238,15 +238,18 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the live-page action in a single primary place instead of duplicating it in the live summary card', async () => {
+  it('keeps the live-page action beside the live summary instead of pointing admins to another part of the page', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      const liveCard = container.querySelector<HTMLElement>('[data-testid="cms-admin-live-content-card"]');
+      expect(liveCard).not.toBeNull();
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
+      expect(countActionsByText(liveCard!, 'Abrir página en vivo')).toBe(1);
       expect(container.textContent).not.toContain('Ver en vivo');
-      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
+      expect(container.textContent).not.toContain('La página pública se abre con el botón principal de arriba.');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
     });
@@ -295,7 +298,7 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain(
         'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
-      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
+      expect(container.textContent).not.toContain('La página pública se abre con el botón principal de arriba.');
       expect(container.textContent).not.toContain('Para editar lo publicado');
     });
 

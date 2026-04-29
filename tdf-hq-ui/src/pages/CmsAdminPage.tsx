@@ -854,11 +854,6 @@ export default function CmsAdminPage() {
             Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
           </Typography>
         </Box>
-        {hasSlugSelection && liveContent && (
-          <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-            Abrir página en vivo
-          </Button>
-        )}
       </Stack>
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
@@ -915,7 +910,7 @@ export default function CmsAdminPage() {
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={5}>
-              <Card variant="outlined">
+              <Card variant="outlined" data-testid="cms-admin-live-content-card">
                 <CardContent>
                   <Stack spacing={1.5}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -967,6 +962,15 @@ export default function CmsAdminPage() {
                           </Typography>
                           <Button
                             size="small"
+                            variant="outlined"
+                            href={liveUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Abrir página en vivo
+                          </Button>
+                          <Button
+                            size="small"
                             variant="text"
                             onClick={() => setShowLivePayload((current) => !current)}
                           >
@@ -982,9 +986,6 @@ export default function CmsAdminPage() {
                             InputProps={{ readOnly: true }}
                           />
                         )}
-                        <Typography variant="caption" color="text.secondary">
-                          La página pública se abre con el botón principal de arriba.
-                        </Typography>
                       </Stack>
                     )}
                   </Stack>
