@@ -89,6 +89,29 @@ describe('SessionsPage', () => {
     mockSessionsUpdate.mockResolvedValue(undefined);
   });
 
+  it('keeps the initial sessions loading state compact instead of showing empty table controls', async () => {
+    mockSessionsList.mockImplementation(() => new Promise(() => undefined));
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Cargando sesiones…')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /Nueva sesión/i })).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Horario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Servicio$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Booking$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Ingeniero$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Salas$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
+  });
+
   it('replaces the empty sessions table with a focused first-run state until the first session exists', async () => {
     renderPage();
 

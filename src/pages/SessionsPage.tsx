@@ -1062,12 +1062,13 @@ export default function SessionsPage() {
 
   const sessions = sessionsQuery.data ?? { items: [], page: 1, pageSize, total: 0 };
   const rows: SessionDTO[] = sessions.items;
-  const showFirstSessionSetupState = !sessionsQuery.isLoading && !sessionsQuery.isError && sessions.total === 0;
+  const showSessionsLoadingState = sessionsQuery.isLoading && !sessionsQuery.data;
+  const showFirstSessionSetupState = !showSessionsLoadingState && !sessionsQuery.isError && sessions.total === 0;
   const singleSession =
-    !sessionsQuery.isLoading && !sessionsQuery.isError && sessions.total === 1 && rows.length === 1
+    !showSessionsLoadingState && !sessionsQuery.isError && sessions.total === 1 && rows.length === 1
       ? (rows[0] ?? null)
       : null;
-  const showSessionsTable = !showFirstSessionSetupState && singleSession == null;
+  const showSessionsTable = !showSessionsLoadingState && !showFirstSessionSetupState && singleSession == null;
   const singleSessionBookingRef = singleSession?.sBookingRef?.trim() ?? '';
   const singleSessionEngineerRef = singleSession?.sEngineerRef?.trim() ?? '';
   const singleSessionRoomNames = singleSession?.sRoomIds && singleSession.sRoomIds.length > 0
@@ -1088,7 +1089,16 @@ export default function SessionsPage() {
         <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva sesión</Button>
       </Stack>
       <Paper variant="outlined">
-        {showFirstSessionSetupState ? (
+        {showSessionsLoadingState ? (
+          <Box sx={{ px: 2, py: 3 }}>
+            <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
+              <CircularProgress size={20} />
+              <Typography variant="body2" color="text.secondary">
+                Cargando sesiones…
+              </Typography>
+            </Stack>
+          </Box>
+        ) : showFirstSessionSetupState ? (
           <Box sx={{ px: 2, py: 3 }}>
             <Stack spacing={1} alignItems="flex-start">
               <Typography variant="body1" fontWeight={600}>
@@ -1199,7 +1209,7 @@ export default function SessionsPage() {
                     <TableRow>
                       <TableCell colSpan={visibleSessionColumnCount}>
                         <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                          {sessionsQuery.isLoading ? 'Cargando sesiones…' : 'No hay sesiones registradas todavía.'}
+                          No hay sesiones registradas todavía.
                         </Typography>
                       </TableCell>
                     </TableRow>
