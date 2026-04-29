@@ -8007,9 +8007,12 @@ prepareLine CreateInvoiceLineReq{..} = do
     Just rawRef
       | rawRef > 0 -> Right (Just (toSqlKey rawRef :: Key PackagePurchase))
       | otherwise -> Left "packagePurchaseId must be a positive integer"
-  let subtotal = cilQuantity * cilUnitCents
-      tax      = (subtotal * taxBpsVal) `div` 10000
-      total    = subtotal + tax
+  let subtotalInteger = toInteger cilQuantity * toInteger cilUnitCents
+      taxInteger      = (subtotalInteger * toInteger taxBpsVal) `div` 10000
+      totalInteger    = subtotalInteger + taxInteger
+  subtotal <- validatePreparedCents "Line item subtotal" subtotalInteger
+  tax      <- validatePreparedCents "Line item tax" taxInteger
+  total    <- validatePreparedCents "Line item total" totalInteger
   pure PreparedLine
     { plDescription       = desc
     , plQuantity          = cilQuantity
@@ -8021,6 +8024,12 @@ prepareLine CreateInvoiceLineReq{..} = do
     , plTax               = tax
     , plTotal             = total
     }
+
+validatePreparedCents :: Text -> Integer -> Either Text Int
+validatePreparedCents fieldName value
+  | value > toInteger (maxBound :: Int) =
+      Left (fieldName <> " exceeds supported invoice amount")
+  | otherwise = Right (fromInteger value)
 
 invoiceLineFromPrepared :: Key Invoice -> PreparedLine -> InvoiceLine
 invoiceLineFromPrepared iid PreparedLine{..} = InvoiceLine

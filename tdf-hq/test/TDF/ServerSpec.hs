@@ -969,6 +969,22 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected excessive tax basis points to be rejected, got: " <> show (plTaxBps preparedLine))
 
+        it "rejects line totals that exceed the backend amount range before persistence" $
+            case prepareLine
+                CreateInvoiceLineReq
+                    { cilDescription = "Large annual license"
+                    , cilQuantity = maxBound
+                    , cilUnitCents = 1
+                    , cilTaxBps = Just 10000
+                    , cilServiceOrderId = Nothing
+                    , cilPackagePurchaseId = Nothing
+                    } of
+                Left errMsg ->
+                    errMsg `shouldBe` "Line item total exceeds supported invoice amount"
+                Right preparedLine ->
+                    expectationFailure
+                        ("Expected oversized invoice line total to be rejected, got: " <> show (plTotal preparedLine))
+
     describe "course registration lookup ids" $ do
         it "rejects non-positive registration ids before course admin handlers can treat malformed lookups as missing rows" $ do
             let assertInvalid result = case result of
