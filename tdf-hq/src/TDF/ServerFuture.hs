@@ -130,9 +130,8 @@ requireFutureAdminAccess user =
   either throwError pure (validateFutureAdminAccess user)
 
 validateFutureStubMetadata :: Text -> Text -> Either ServerError (Text, Text)
-validateFutureStubMetadata rawArea rawEndpoint = do
-  catalog <- validateFutureStubCatalog allowedFutureStubMetadata
-  validateFutureStubMetadataIn catalog rawArea rawEndpoint
+validateFutureStubMetadata =
+  validateFutureStubMetadataIn allowedFutureStubMetadata
 
 validateFutureStubMetadataIn
   :: [(Text, Text)]
@@ -140,9 +139,10 @@ validateFutureStubMetadataIn
   -> Text
   -> Either ServerError (Text, Text)
 validateFutureStubMetadataIn catalog rawArea rawEndpoint = do
+  validatedCatalog <- validateFutureStubCatalog catalog
   area <- validateFutureStubArea rawArea
   endpoint <- validateFutureStubEndpoint rawEndpoint
-  if (area, endpoint) `elem` catalog
+  if (area, endpoint) `elem` validatedCatalog
     then pure (area, endpoint)
     else invalidFutureStubMetadata
 

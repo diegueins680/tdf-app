@@ -310,6 +310,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalog
     , validateFutureStubCatalogEntry
     , validateFutureStubMetadata
+    , validateFutureStubMetadataIn
     , validateFutureStubResponse
     )
 import TDF.ServerExtra (validateSocialReplyBody)
@@ -7455,6 +7456,40 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
+
+        it "rejects non-canonical fallback discovery catalogs before endpoint lookup" $ do
+            case validateFutureStubMetadataIn
+                allowedFutureStubMetadata
+                "crm"
+                "parties/list-columns" of
+                Right value ->
+                    value `shouldBe` ("crm", "parties/list-columns")
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected canonical fallback discovery catalog, got: " <> show serverErr)
+
+            let assertInvalid catalog area endpoint =
+                    case validateFutureStubMetadataIn catalog area endpoint of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid fallback discovery catalog, got: " <> show value)
+
+            assertInvalid
+                (("crm", "parties/export") : allowedFutureStubMetadata)
+                "crm"
+                "parties/export"
+            assertInvalid
+                [("crm", "parties/list-columns")]
+                "crm"
+                "parties/list-columns"
+            assertInvalid
+                [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
+                "crm"
+                "parties/list-columns"
 
     describe "validateFutureStubCatalog" $ do
         it "rejects drifted, duplicate, or malformed fallback discovery catalog entries" $ do
