@@ -206,6 +206,36 @@ describe('InventoryPage', () => {
     historyMock.mockResolvedValue([]);
   });
 
+  it('keeps the initial inventory load to one clear state before table actions appear', async () => {
+    listAssetsMock.mockImplementation(() => new Promise(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Cargando inventario');
+        expect(container.textContent).toContain(
+          'Estamos consultando equipos antes de mostrar búsqueda, actualización o tabla operativa.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
+        expect(container.textContent).not.toContain('Primeros pasos');
+        expect(container.textContent).not.toContain('No se pudo cargar inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the blank inventory table and detached refresh chrome with one first-run reload path when there are no assets', async () => {
     listAssetsMock.mockResolvedValue([]);
 

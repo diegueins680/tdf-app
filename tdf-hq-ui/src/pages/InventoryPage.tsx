@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -310,6 +311,8 @@ const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
 const INVENTORY_HISTORY_OPEN_ACTION_LABEL = 'Historial abierto aquí abajo';
 const INVENTORY_CLEAR_SEARCH_ACTION_LABEL = 'Limpiar búsqueda';
 const INVENTORY_RESET_SEARCH_ACTION_LABEL = 'Volver a la tabla completa';
+const INVENTORY_INITIAL_LOADING_GUIDANCE =
+  'Estamos consultando equipos antes de mostrar búsqueda, actualización o tabla operativa.';
 
 function getInventoryMovementGuidance({
   canCheckout,
@@ -677,7 +680,8 @@ export default function InventoryPage() {
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const roomMap = useMemo(() => new Map(roomOptions.map((room) => [room.roomId, room])), [roomOptions]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
-  const showInventorySearch = !assetsQuery.isLoading && !assetsQuery.error && assets.length > 1;
+  const showInitialInventoryLoadingState = assetsQuery.isLoading && assets.length === 0;
+  const showInventorySearch = !showInitialInventoryLoadingState && !assetsQuery.error && assets.length > 1;
   const normalizedInventorySearch = normalizeInventoryComparisonValue(inventorySearch);
   const hasActiveInventorySearch = normalizedInventorySearch !== '';
   const grouped = useMemo(
@@ -688,14 +692,14 @@ export default function InventoryPage() {
     [assets, hasActiveInventorySearch, normalizedInventorySearch, roomMap, showInventorySearch],
   );
   const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
-  const showFirstAssetEmptyState = !assetsQuery.isLoading && !assetsQuery.error && assets.length === 0;
+  const showFirstAssetEmptyState = !showInitialInventoryLoadingState && !assetsQuery.error && assets.length === 0;
   const showInitialInventoryErrorState = Boolean(assetsQuery.error) && assets.length === 0;
-  const showSingleAssetSummary = !assetsQuery.isLoading && !assetsQuery.error && singleAsset != null;
+  const showSingleAssetSummary = !showInitialInventoryLoadingState && !assetsQuery.error && singleAsset != null;
   const filteredSingleAsset = showInventorySearch && hasActiveInventorySearch && grouped.length === 1
     ? (grouped[0] ?? null)
     : null;
   const showFilteredSingleAssetSummary =
-    !assetsQuery.isLoading && !assetsQuery.error && filteredSingleAsset != null;
+    !showInitialInventoryLoadingState && !assetsQuery.error && filteredSingleAsset != null;
   const showFilteredEmptyState = showInventorySearch && hasActiveInventorySearch && grouped.length === 0;
   const showSearchFallbackState = showFilteredSingleAssetSummary || showFilteredEmptyState;
   const showFilteredResultsCount = hasActiveInventorySearch && !showSearchFallbackState;
@@ -750,7 +754,11 @@ export default function InventoryPage() {
   ]
     .filter(Boolean)
     .join(' ');
-  const showHeaderRefreshAction = !showFirstAssetEmptyState && !showInitialInventoryErrorState && !hasActiveInventorySearch;
+  const showHeaderRefreshAction =
+    !showInitialInventoryLoadingState
+    && !showFirstAssetEmptyState
+    && !showInitialInventoryErrorState
+    && !hasActiveInventorySearch;
   const historyAlreadyOpenFromMenu = Boolean(
     actionsMenuTarget && historyViewMode === 'panel' && selected?.assetId === actionsMenuTarget.asset.assetId,
   );
@@ -776,7 +784,6 @@ export default function InventoryPage() {
       </Stack>
 
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
-      {assetsQuery.isLoading && <Typography>Cargando inventario…</Typography>}
       {assetsQuery.error && (
         <Alert
           severity="error"
@@ -819,7 +826,23 @@ export default function InventoryPage() {
         </Stack>
       )}
 
-      {!showInitialInventoryErrorState && (showFirstAssetEmptyState ? (
+      {!showInitialInventoryErrorState && (showInitialInventoryLoadingState ? (
+        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={18} />
+                <Typography variant="h6" fontWeight={700}>
+                  Cargando inventario
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                {INVENTORY_INITIAL_LOADING_GUIDANCE}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : showFirstAssetEmptyState ? (
         <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <CardContent>
             <Stack spacing={1}>
