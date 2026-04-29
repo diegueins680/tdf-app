@@ -681,10 +681,10 @@ const firstRunWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|captaci[oó]n\s+de\s+(?:leads?|prospectos|interesad[oa]s))|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunProviderFormDescriptorPrefixPattern =
-  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta)\s+(?:lead\s+)?forms?)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunProviderFormDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta)\s+(?:lead\s+)?forms?)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?)\s*$/i;
 
 const firstRunPublicRegistrationDescriptorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

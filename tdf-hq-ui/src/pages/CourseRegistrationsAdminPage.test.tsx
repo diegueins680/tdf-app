@@ -7027,6 +7027,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips provider-form wrappers from single-cohort first-run guidance', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Meta Lead Form - Beatmaking 101' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const publicFormLink = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Meta Lead Form');
+      expect(publicFormLink?.textContent?.trim()).toBe(initialEmptyStateFormActionLabel);
+      expect(publicFormLink?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(publicFormLink?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a URL-only cohort slug as a filter instead of treating it as a configured form', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([]);
