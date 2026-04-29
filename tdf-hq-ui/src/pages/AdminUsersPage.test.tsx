@@ -780,6 +780,44 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not repeat an Ecuador local mobile identity when the contact uses country code format', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyName: '   ',
+        username: '0999000111',
+        primaryEmail: null,
+        primaryPhone: '+593 999 000 111',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(hasLinkWithTextAndHref(row, '0999000111', '/perfil/9')).toBe(true);
+        expect(row.textContent?.match(/0999000111/g) ?? []).toHaveLength(1);
+        expect(row.textContent).not.toContain('+593 999 000 111');
+        expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(1);
+        expect(getButtonsByText(row, 'WhatsApp')[0]!.getAttribute('aria-label')).toBe(
+          'Abrir WhatsApp para 0999000111',
+        );
+        expect(row.textContent).not.toContain('WhatsApp pendiente');
+        expect(row.textContent).not.toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps duplicate identity contacts out of the admin search placeholder', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

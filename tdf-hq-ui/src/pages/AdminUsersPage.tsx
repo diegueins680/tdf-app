@@ -92,13 +92,33 @@ const normalizePhoneComparisonValue = (value?: string | null) => {
   return digits.length >= 7 ? digits : null;
 };
 
+const getPhoneComparisonCandidates = (value?: string | null) => {
+  const digits = normalizePhoneComparisonValue(value);
+  if (!digits) return [];
+
+  const candidates = [digits];
+  if (digits.startsWith('0') && digits.length > 7) {
+    candidates.push(digits.slice(1));
+  }
+
+  return candidates.filter((candidate, index) => (
+    candidate.length >= 7 && candidates.indexOf(candidate) === index
+  ));
+};
+
 const phoneComparisonValuesMatch = (left?: string | null, right?: string | null) => {
-  const leftDigits = normalizePhoneComparisonValue(left);
-  const rightDigits = normalizePhoneComparisonValue(right);
+  const leftCandidates = getPhoneComparisonCandidates(left);
+  const rightCandidates = getPhoneComparisonCandidates(right);
 
-  if (!leftDigits || !rightDigits) return false;
+  if (leftCandidates.length === 0 || rightCandidates.length === 0) return false;
 
-  return leftDigits === rightDigits || leftDigits.endsWith(rightDigits) || rightDigits.endsWith(leftDigits);
+  return leftCandidates.some((leftDigits) => (
+    rightCandidates.some((rightDigits) => (
+      leftDigits === rightDigits
+      || leftDigits.endsWith(rightDigits)
+      || rightDigits.endsWith(leftDigits)
+    ))
+  ));
 };
 
 const contactComparisonValuesMatch = (left?: string | null, right?: string | null) => {
