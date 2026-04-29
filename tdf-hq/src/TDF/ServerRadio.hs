@@ -16,6 +16,7 @@ module TDF.ServerRadio
   , validateRadioImportLimit
   , validateRadioMetadataRefreshLimit
   , resolveRadioNowPlayingFetchResult
+  , parseIcyMetaIntHeader
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -69,6 +70,22 @@ lookupHeader :: BS.ByteString -> [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe
 lookupHeader key hdrs =
   let target = CI.mk key
   in fmap snd (find (\(k, _) -> k == target) hdrs)
+
+parseIcyMetaIntHeader :: BS.ByteString -> Maybe Int
+parseIcyMetaIntHeader rawHeader = do
+  let header = trimHeaderValue rawHeader
+  if BS.null header || not (BS8.all isDigit header)
+    then Nothing
+    else case readMaybe (BS8.unpack header) of
+      Just value | value > 0 -> Just value
+      _                      -> Nothing
+
+trimHeaderValue :: BS.ByteString -> BS.ByteString
+trimHeaderValue =
+  BS8.dropWhile isSpace
+    . BS8.reverse
+    . BS8.dropWhile isSpace
+    . BS8.reverse
 
 validateRadioStreamUrl :: Text -> Either ServerError Text
 validateRadioStreamUrl rawUrl
@@ -954,11 +971,8 @@ radioServer user =
         Right title -> Right title
 
     parseIcyMetaInt :: [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe Int
-    parseIcyMetaInt hdrs = do
-      raw <- lookupHeader "icy-metaint" hdrs
-      case BS8.readInt raw of
-        Just (value, _) | value > 0 -> Just value
-        _ -> Nothing
+    parseIcyMetaInt hdrs =
+      lookupHeader "icy-metaint" hdrs >>= parseIcyMetaIntHeader
 
     readIcyStreamTitle :: BodyReader -> Int -> Int -> IO (Maybe Text)
     readIcyStreamTitle body metaInt attempts = go BS.empty attempts

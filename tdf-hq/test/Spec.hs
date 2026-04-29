@@ -123,7 +123,8 @@ import TDF.ServerRadio
       validateRadioStreamUrl,
       validateRadioTransmissionIngestBase,
       validateRadioTransmissionWhipBase,
-      validateRadioTransmissionPublicBase )
+      validateRadioTransmissionPublicBase,
+      parseIcyMetaIntHeader )
 import TDF.RagStore
     ( availabilityOverlaps,
       validateEmbeddingModelDimensions,
@@ -5571,6 +5572,14 @@ main = hspec $ do
             assertRejected 401
 
     describe "resolveRadioNowPlayingFetchResult" $ do
+        it "requires a complete positive icy-metaint header before reading stream metadata" $ do
+            parseIcyMetaIntHeader "16000" `shouldBe` Just 16000
+            parseIcyMetaIntHeader "  4096  " `shouldBe` Just 4096
+            parseIcyMetaIntHeader "16000; charset=utf-8" `shouldBe` Nothing
+            parseIcyMetaIntHeader "16000x" `shouldBe` Nothing
+            parseIcyMetaIntHeader "+16000" `shouldBe` Nothing
+            parseIcyMetaIntHeader "0" `shouldBe` Nothing
+
         it "keeps reachable-but-empty metadata distinct from upstream fetch failures" $ do
             case resolveRadioNowPlayingFetchResult (Right Nothing) of
                 Right value -> do
