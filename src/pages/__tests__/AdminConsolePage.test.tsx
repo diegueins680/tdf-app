@@ -2981,6 +2981,51 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No content available/i)).not.toBeInTheDocument();
   });
 
+  it('ignores not-applicable fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-not-applicable',
+          title: 'Integraciones',
+          body: ['N/A'],
+        },
+        {
+          cardId: 'service-tokens-not-applicable',
+          title: 'Service tokens',
+          body: ['Not applicable for this workspace.'],
+        },
+        {
+          cardId: 'api-access-no-aplica',
+          title: 'Acceso API',
+          body: ['No aplica por ahora.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Integraciones|Service tokens|Acceso API/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(screen.queryByText(/N\/A/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Not applicable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No aplica/i)).not.toBeInTheDocument();
+  });
+
   it('ignores permission and unavailable fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
