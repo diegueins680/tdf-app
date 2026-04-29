@@ -161,6 +161,8 @@ validateFutureStubCatalogEntry (area, endpoint) = do
   endpointClean <- validateFutureStubEndpoint endpoint
   if (areaClean, endpointClean) `elem` reservedFutureStubRoutes
     then invalidFutureStubMetadata
+    else if (areaClean, endpointClean) `notElem` allowedFutureStubMetadata
+      then invalidFutureStubMetadata
     else pure (areaClean, endpointClean)
 
 reservedFutureStubRoutes :: [(Text, Text)]

@@ -7543,6 +7543,17 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected deeply nested fallback discovery endpoint to fail, got: " <> show value)
 
+            case validateFutureStubCatalogEntry ("crm", "parties/export") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unregistered fallback discovery endpoint to fail, got: "
+                            <> show value
+                        )
+
             case validateFutureStubCatalogEntry ("admin", "console") of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 500
