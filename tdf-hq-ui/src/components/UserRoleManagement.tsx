@@ -198,6 +198,20 @@ const hasRoleSelectionChanged = (
   return normalizedCurrentRoles.some((role, index) => role !== normalizedNextRoles[index]);
 };
 
+const sortRolesForEditor = (currentRoles?: readonly RoleValue[] | null) => {
+  const currentRoleKeys = new Set(
+    normalizeRoleSelection(currentRoles).map((role) => role.toLocaleLowerCase('es')),
+  );
+
+  return [...ALL_ROLES].sort((left, right) => {
+    const leftPinned = currentRoleKeys.has(left.toLocaleLowerCase('es'));
+    const rightPinned = currentRoleKeys.has(right.toLocaleLowerCase('es'));
+
+    if (leftPinned !== rightPinned) return leftPinned ? -1 : 1;
+    return left.localeCompare(right);
+  });
+};
+
 const formatRoleGroupLabel = (roles: readonly RoleValue[]) => {
   if (roles.length <= 1) return roles[0] ?? '';
   if (roles.length === 2) return `${roles[0]} y ${roles[1]}`;
@@ -340,6 +354,7 @@ export default function UserRoleManagement() {
   const pendingRoleChangesSummary = selectedUser
     ? buildPendingRoleChangesSummary(selectedUser.roles, selectedRoles)
     : null;
+  const roleOptionsForEditor = sortRolesForEditor(selectedUser?.roles);
 
   useEffect(() => {
     void loadUsers();
@@ -623,7 +638,7 @@ export default function UserRoleManagement() {
                 </Box>
               )}
             >
-              {ALL_ROLES.map((role) => (
+              {roleOptionsForEditor.map((role) => (
                 <MenuItem key={role} value={role}>
                   {role}
                 </MenuItem>

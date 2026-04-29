@@ -95,6 +95,10 @@ const getMenuItemByText = (labelText: string) => {
   return item;
 };
 
+const expectToAppearBefore = (first: HTMLElement, second: HTMLElement) => {
+  expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+};
+
 const countExactText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
     (element) => buttonText(element) === labelText,
@@ -631,6 +635,58 @@ describe('UserRoleManagement', () => {
 
         expect(buttonText(rolesSelect)).toBe('Sin roles');
         expect(dialog.textContent).not.toContain('No roles');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('pins currently assigned roles to the top of the editor menu so admins verify before adding new access', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 307,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Teacher', 'Reception'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Editar roles de Linus QA"]')).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const rolesSelect = document.body.querySelector('[role="combobox"]');
+      if (!(rolesSelect instanceof HTMLElement)) {
+        throw new Error('Roles select not found');
+      }
+
+      await act(async () => {
+        rolesSelect.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const receptionOption = getMenuItemByText('Reception');
+        const teacherOption = getMenuItemByText('Teacher');
+        const adminOption = getMenuItemByText('Admin');
+
+        expectToAppearBefore(receptionOption, adminOption);
+        expectToAppearBefore(teacherOption, adminOption);
       });
     } finally {
       await cleanup();
