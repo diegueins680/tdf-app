@@ -2063,7 +2063,7 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected missing hub.mode to be rejected, got: " <> T.unpack challenge)
 
     describe "extractWhatsAppInbound" $ do
-        it "uses the sender/timestamp fallback when Meta sends a blank message id" $ do
+        it "uses a bounded sender/timestamp/hash fallback when Meta sends a blank message id" $ do
             let message rawId rawTimestamp =
                     WA.WAMessage
                         rawId
@@ -2089,12 +2089,17 @@ spec = describe "TDF.Server helpers" $ do
                             ]
                         ]
 
-            map waInboundExternalId (extractWhatsAppInbound payload)
-                `shouldBe`
-                    [ "wamid.real-id"
-                    , "593991234567-1713715201"
-                    , "593991234567-0"
-                    ]
+            case map waInboundExternalId (extractWhatsAppInbound payload) of
+                [realId, blankIdFallback, missingIdFallback] -> do
+                    realId `shouldBe` "wamid.real-id"
+                    blankIdFallback
+                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715201-"
+                    missingIdFallback
+                        `shouldSatisfy` T.isPrefixOf "593991234567-0-"
+                    blankIdFallback `shouldNotBe` missingIdFallback
+                rows ->
+                    expectationFailure
+                        ("Expected three inbound fallback ids, got: " <> show rows)
 
         it "uses the fallback id when Meta sends malformed WhatsApp message ids" $ do
             let message rawId rawTimestamp =
@@ -2123,13 +2128,52 @@ spec = describe "TDF.Server helpers" $ do
                             ]
                         ]
 
-            map waInboundExternalId (extractWhatsAppInbound payload)
-                `shouldBe`
-                    [ "593991234567-1713715203"
-                    , "593991234567-1713715204"
-                    , "593991234567-1713715205"
-                    , "wamid.valid"
-                    ]
+            case map waInboundExternalId (extractWhatsAppInbound payload) of
+                [spaceFallback, controlFallback, oversizeFallback, validId] -> do
+                    spaceFallback
+                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715203-"
+                    controlFallback
+                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715204-"
+                    oversizeFallback
+                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715205-"
+                    validId `shouldBe` "wamid.valid"
+                rows ->
+                    expectationFailure
+                        ("Expected malformed ids to use safe fallbacks, got: " <> show rows)
+
+        it "keeps same-second malformed-id fallbacks distinct by message shape" $ do
+            let message rawId rawBody =
+                    WA.WAMessage
+                        rawId
+                        "text"
+                        "593991234567"
+                        (Just (WA.WAText rawBody))
+                        Nothing
+                        Nothing
+                        (Just "1713715207")
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue
+                                    (Just
+                                        [ message (Just "bad id") "Primero"
+                                        , message (Just "bad id") "Segundo"
+                                        ])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+                fallbackIds = map waInboundExternalId (extractWhatsAppInbound payload)
+
+            fallbackIds `shouldSatisfy` all (T.isPrefixOf "593991234567-1713715207-")
+            case fallbackIds of
+                [firstFallback, secondFallback] ->
+                    secondFallback `shouldNotBe` firstFallback
+                rows ->
+                    expectationFailure
+                        ("Expected two same-second fallback ids, got: " <> show rows)
 
         it "skips blank sender or body rows and trims stored inbound webhook values" $ do
             let message rawSender rawBody =
@@ -2163,7 +2207,8 @@ spec = describe "TDF.Server helpers" $ do
 
             case extractWhatsAppInbound payload of
                 [row] -> do
-                    waInboundExternalId row `shouldBe` "593991234567-1713715202"
+                    waInboundExternalId row
+                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715202-"
                     waInboundSenderId row `shouldBe` "593991234567"
                     waInboundSenderName row `shouldBe` Just "Ada"
                     waInboundText row `shouldBe` "Inscribirme"

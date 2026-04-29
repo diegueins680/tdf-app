@@ -20,6 +20,7 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
+import           Data.Bits (xor)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
@@ -59,6 +60,8 @@ import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
+import           Data.Word (Word64)
+import           Numeric (showHex)
 import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
 import           System.IO (hPutStrLn, stderr)
@@ -4085,7 +4088,7 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
 
     resolvedExternalId senderId msg =
       fromMaybe
-        (senderId <> "-" <> fromMaybe "0" (cleanOptional (waTimestamp msg)))
+        (whatsAppWebhookFallbackExternalId senderId msg)
         (cleanWhatsAppWebhookExternalId (waId msg))
 
     cleanWhatsAppWebhookExternalId rawExternalId =
@@ -4096,18 +4099,57 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
           then Just externalId
           else Nothing
 
+    whatsAppWebhookFallbackExternalId senderId msg =
+      let timestampToken =
+            case cleanOptional (waTimestamp msg) of
+              Just ts | T.all isDigit ts && T.length ts <= 20 -> ts
+              _ -> "0"
+          bodyToken =
+            case text msg of
+              Just txtBody -> fromMaybe "" (cleanOptional (Just (WA.body txtBody)))
+              Nothing -> ""
+          referral = waReferral msg <|> (waContext msg >>= waContextReferral)
+          referralToken = TE.decodeUtf8 (BL.toStrict (encode (waReferralMetaObject referral)))
+          rawIdToken = fromMaybe "" (waId msg)
+          hashInput =
+            T.intercalate "|"
+              [ senderId
+              , timestampToken
+              , bodyToken
+              , rawIdToken
+              , referralToken
+              ]
+      in senderId <> "-" <> timestampToken <> "-" <> stableWebhookHash hashInput
+
+    stableWebhookHash txt =
+      let hexTxt = T.pack (showHex (T.foldl' hashStep fnvOffset txt) "")
+      in T.justifyRight 16 '0' hexTxt
+
+    hashStep h c = (h `xor` fromIntegral (fromEnum c)) * fnvPrime
+
+    fnvOffset = 14695981039346656037 :: Word64
+    fnvPrime = 1099511628211 :: Word64
+
     waReferralMeta Nothing = (Nothing, Nothing, Nothing)
     waReferralMeta (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =
       let adName = headline <|> waBody
-          metaObj = object
-            [ "source_id" .= sourceId
-            , "source_type" .= sourceType
-            , "source_url" .= sourceUrl
-            , "headline" .= headline
-            , "body" .= waBody
-            ]
+          metaObj =
+            waReferralMetaObject
+              (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl})
           metaTxt = Just (TE.decodeUtf8 (BL.toStrict (encode metaObj)))
       in (sourceId, adName, metaTxt)
+
+    waReferralMetaObject :: Maybe WAReferral -> Value
+    waReferralMetaObject Nothing =
+      Object mempty
+    waReferralMetaObject (Just WAReferral{sourceId, headline, waBody, sourceType, sourceUrl}) =
+      object
+        [ "source_id" .= sourceId
+        , "source_type" .= sourceType
+        , "source_url" .= sourceUrl
+        , "headline" .= headline
+        , "body" .= waBody
+        ]
 
 data WADeliveryStatus = WADeliveryStatus
   { waDeliveryExternalId :: Text
