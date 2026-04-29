@@ -1499,7 +1499,7 @@ export default function AdminConsolePage() {
     || usersQuery.isFetching;
   const firstRunDemoActionCopy = {
     description: 'Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
-    buttonLabel: 'Cargar datos de ejemplo (opcional)',
+    buttonLabel: 'Cargar datos de ejemplo',
     pendingLabel: 'Cargando ejemplo…',
   } as const;
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
@@ -1700,6 +1700,7 @@ export default function AdminConsolePage() {
                     startIcon={<AutoFixHighIcon />}
                     onClick={() => seedMutation.mutate()}
                     disabled={seedMutation.isPending}
+                    title={firstRunDemoActionCopy.description}
                   >
                     {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
                   </Button>

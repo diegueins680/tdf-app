@@ -126,12 +126,16 @@ describe('AdminConsolePage', () => {
     expect(
       screen.queryByRole('button', { name: /Refrescar/i }),
     ).not.toBeInTheDocument();
+    const firstRunSeedButton = screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i });
+    expect(firstRunSeedButton).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Cargar datos de ejemplo/i })).toHaveLength(1);
+    expect(firstRunSeedButton).toHaveAttribute(
+      'title',
+      'Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción.',
+    );
     expect(
-      screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Cargar datos de ejemplo \(opcional\)/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Cargar datos de ejemplo \(opcional\)/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(
         /Carga datos de ejemplo para revisar usuarios, roles y auditoría sin tocar producción\./i,
@@ -469,11 +473,9 @@ describe('AdminConsolePage', () => {
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+        screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /Cargar datos de ejemplo \(opcional\)/i }),
-      ).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Cargar datos de ejemplo/i })).toHaveLength(1);
       expect(
         screen.getByRole('link', { name: /1\. Estado del servicio/i }),
       ).toBeInTheDocument();
