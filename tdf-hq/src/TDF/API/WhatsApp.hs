@@ -32,7 +32,7 @@ import Data.Aeson
   )
 import Data.Aeson.Types (Parser)
 import Control.Monad (unless)
-import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
+import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit, isSpace)
 import Data.Int (Int64)
 import Data.Maybe (isNothing, listToMaybe, maybeToList)
 import Data.Text (Text)
@@ -305,9 +305,11 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
-                      | T.any isControl verifyToken ->
+                      | T.any (\ch -> isControl ch || isSpace ch) verifyToken ->
                           Left err400
-                            { errBody = "hub.verify_token must not contain control characters" }
+                            { errBody =
+                                "hub.verify_token must not contain control characters or whitespace"
+                            }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
         Just _ ->
@@ -319,7 +321,7 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Nothing ->
           Left err503 { errBody = "WhatsApp verify token not configured" }
         Just txt
-          | T.any isControl txt ->
+          | T.any (\ch -> isControl ch || isSpace ch) txt ->
               Left err503 { errBody = "WhatsApp verify token is misconfigured" }
           | otherwise ->
               Right txt

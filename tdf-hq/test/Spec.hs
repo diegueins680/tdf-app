@@ -6756,6 +6756,16 @@ main = hspec $ do
             case validateHookVerifyRequest
                     (Just "subscribe")
                     (Just "challenge-123")
+                    (Just "secret token")
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must not contain control characters or whitespace"
+                Right _ -> expectationFailure "Expected whitespace-bearing hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
                     (Just "secret")
                     (Just "secret\nInjected") of
                 Left err -> do
@@ -6763,6 +6773,16 @@ main = hspec $ do
                     BL.unpack (errBody err)
                         `shouldContain` "WhatsApp verify token is misconfigured"
                 Right _ -> expectationFailure "Expected unsafe verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just "secret token") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected whitespace-bearing verify-token config to be rejected"
 
     describe "extractFirstWebhookMessage" $ do
         it "scans all webhook entries and changes before treating a batch as no-message" $ do
