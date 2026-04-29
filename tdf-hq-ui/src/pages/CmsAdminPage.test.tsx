@@ -578,6 +578,43 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps invalid JSON recovery inline instead of allowing a save-alert detour', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(false);
+      });
+
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Payload JSON'), '{"heroTitle":');
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Error:');
+        expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
+        expect(countActionsByText(container, 'Formatear JSON')).toBe(0);
+        expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      });
+
+      await act(async () => {
+        getButtonByText(container, 'Guardar borrador').click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(alertMock).not.toHaveBeenCalled();
+    } finally {
+      alertMock.mockRestore();
+      await cleanup();
+    }
+  });
+
   it('keeps the live payload collapsed by default and opens it only on request', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

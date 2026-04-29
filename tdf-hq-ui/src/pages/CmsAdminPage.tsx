@@ -407,14 +407,13 @@ export default function CmsAdminPage() {
 
   const handleCreate = () => {
     if (!hasSlugSelection) {
-      alert('Selecciona o escribe un slug antes de guardar la versión.');
       return;
     }
+    if (payloadError) return;
     let parsed: unknown = null;
     try {
       parsed = JSON.parse(payload);
     } catch {
-      alert('Payload no es JSON válido.');
       return;
     }
     const normalizedTitle = title.trim();
@@ -694,6 +693,7 @@ export default function CmsAdminPage() {
   const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
+  const canSaveVersion = hasSlugSelection && !payloadError;
   const showFirstVersionHistoryGuidance =
     !listQuery.isLoading &&
     !listQuery.isError &&
@@ -1096,7 +1096,7 @@ export default function CmsAdminPage() {
                   <Button
                     variant="contained"
                     onClick={handleCreate}
-                    disabled={createMutation.isPending || !hasSlugSelection}
+                    disabled={createMutation.isPending || !canSaveVersion}
                   >
                     {saveActionLabel}
                   </Button>
