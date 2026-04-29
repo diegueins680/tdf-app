@@ -11319,22 +11319,21 @@ extractDriveContentFileId rawUrl =
           Just fileId
     _ ->
       Nothing
-  where
-    isValidDriveFileId fileId =
-      T.length fileId <= 256 && T.all isDriveFolderIdChar fileId
+
+isValidDriveFileId :: Text -> Bool
+isValidDriveFileId fileId =
+  T.length fileId <= 256 && T.all isDriveFolderIdChar fileId
 
 singleDriveIdQueryParam :: Text -> Maybe Text
 singleDriveIdQueryParam rawUrl =
-  case [ cleanValue
+  case [ queryParamValue rawParam
        | rawParam <- queryParams rawUrl
        , isNamedQueryParam "id" rawParam
-       , let rawValue = T.drop 1 (snd (T.breakOn "=" rawParam))
-       , let cleanValue = T.strip rawValue
-       , not (T.null rawValue)
-       , not (T.null cleanValue)
        ] of
-    [fileId]
-      | T.length fileId <= 256 && T.all isDriveFolderIdChar fileId ->
+    [Just rawFileId]
+      | let fileId = T.strip rawFileId
+      , not (T.null fileId)
+      , isValidDriveFileId fileId ->
           Just fileId
     _ ->
       Nothing
