@@ -10601,7 +10601,11 @@ resolvePaypalBaseUrl :: Maybe String -> Either ServerError String
 resolvePaypalBaseUrl mEnv =
   case fmap (T.toLower . T.strip . T.pack) mEnv of
     Nothing -> Right sandboxBase
-    Just "" -> Right sandboxBase
+    Just "" ->
+      Left err500
+        { errBody =
+            "PAYPAL_ENV is configured but blank; unset it to use sandbox"
+        }
     Just envTxt
       | envTxt `elem` ["sandbox", "test"] -> Right sandboxBase
       | envTxt `elem` ["live", "prod", "production"] -> Right liveBase

@@ -5513,6 +5513,18 @@ spec = describe "TDF.Server helpers" $ do
                             <> show baseUrl
                         )
 
+        it "rejects explicitly blank PayPal environments instead of silently using sandbox" $
+            case resolvePaypalBaseUrl (Just "   ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "PAYPAL_ENV is configured but blank; unset it to use sandbox"
+                Right baseUrl ->
+                    expectationFailure
+                        ( "Expected blank PayPal environment to be rejected, got: "
+                            <> show baseUrl
+                        )
+
     describe "validatePayPalCredential" $ do
         it "trims configured PayPal credentials before Basic auth headers are built" $ do
             validatePayPalCredential "PAYPAL_CLIENT_ID" (Just " client-id ")
