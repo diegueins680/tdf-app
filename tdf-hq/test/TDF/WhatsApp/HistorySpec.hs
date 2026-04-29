@@ -122,6 +122,38 @@ spec = do
         `shouldBe` Left bodyControlMessage
 
   describe "recordIncomingWhatsAppMessage" $ do
+    it "allocates safe distinct fallback external ids for malformed inbound ids" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incoming rawExternalId body = IncomingWhatsAppRecord
+            { iwrExternalId = rawExternalId
+            , iwrSenderId = " +593 99 123 4567 "
+            , iwrSenderName = Just "Ada"
+            , iwrText = body
+            , iwrAdExternalId = Nothing
+            , iwrAdName = Nothing
+            , iwrCampaignExternalId = Nothing
+            , iwrCampaignName = Nothing
+            , iwrMetadata = Nothing
+            , iwrTransportPayload = Nothing
+            , iwrSource = Just "history_spec"
+            }
+      (firstExternalId, secondExternalId, firstText, secondText) <- runWhatsAppHistorySql $ do
+        first <- recordIncomingWhatsAppMessage now (incoming "   " "Primer mensaje")
+        second <- recordIncomingWhatsAppMessage now (incoming "wamid with spaces" "Segundo mensaje")
+        pure
+          ( ME.whatsAppMessageExternalId (entityVal first)
+          , ME.whatsAppMessageExternalId (entityVal second)
+          , ME.whatsAppMessageText (entityVal first)
+          , ME.whatsAppMessageText (entityVal second)
+          )
+
+      firstExternalId `shouldSatisfy` (\val -> ("+593991234567-in-" :: Text) `T.isPrefixOf` val)
+      secondExternalId `shouldBe` firstExternalId <> "-2"
+      T.any isSpace firstExternalId `shouldBe` False
+      T.any isSpace secondExternalId `shouldBe` False
+      firstText `shouldBe` Just "Primer mensaje"
+      secondText `shouldBe` Just "Segundo mensaje"
+
     it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
           incoming body adName metadata payload = IncomingWhatsAppRecord

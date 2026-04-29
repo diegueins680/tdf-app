@@ -21,7 +21,7 @@ module TDF.WhatsApp.History
 import           Control.Applicative ((<|>))
 import           Data.Aeson (Value, encode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isDigit, isSpace)
+import           Data.Char (isControl, isDigit, isSpace)
 import           Data.List (nub)
 import           Data.Maybe (catMaybes, isJust, fromMaybe)
 import           Data.Text (Text)
@@ -157,8 +157,13 @@ recordIncomingWhatsAppMessage
   -> SqlPersistT IO (Entity ME.WhatsAppMessage)
 recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
   snapshot <- resolveWhatsAppContactSnapshot Nothing (Just iwrSenderId)
-  let externalId = nonEmptyOr ("incoming-" <> T.pack (show now)) iwrExternalId
-      senderId = nonEmptyOr "unknown" iwrSenderId
+  let senderId = nonEmptyOr "unknown" iwrSenderId
+  externalId <-
+    maybe
+      (allocateGeneratedWhatsAppExternalId (generatedIncomingWhatsAppExternalIdBase senderId now))
+      pure
+      (normalizeStoredWhatsAppExternalId iwrExternalId)
+  let
       senderName = cleanMaybeText iwrSenderName <|> wcsDisplayName snapshot
       bodyVal = cleanMaybeText (Just iwrText)
       metadataVal = cleanMaybeText iwrMetadata
@@ -240,7 +245,7 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
       fallbackExternalId = generatedWhatsAppExternalIdBase recipientPhone now
       providedExternalId = case sendResult of
         Left _ -> Nothing
-        Right resp -> cleanMaybeText (sendTextMessageId resp)
+        Right resp -> sendTextMessageId resp >>= normalizeStoredWhatsAppExternalId
   externalId <- maybe (allocateGeneratedWhatsAppExternalId fallbackExternalId) pure providedExternalId
   let
       isFailure =
@@ -320,6 +325,21 @@ generatedWhatsAppExternalIdBase recipientPhone now =
       case cleanMaybeText (Just recipientPhone) of
         Nothing -> "unknown"
         Just value -> value
+
+generatedIncomingWhatsAppExternalIdBase :: Text -> UTCTime -> Text
+generatedIncomingWhatsAppExternalIdBase senderId now =
+  safeBase <> "-in-" <> T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" now)
+  where
+    safeBase = fromMaybe "unknown" (normalizeWhatsAppPhone senderId)
+
+normalizeStoredWhatsAppExternalId :: Text -> Maybe Text
+normalizeStoredWhatsAppExternalId raw =
+  let externalId = T.strip raw
+  in if T.null externalId
+        || T.length externalId > 512
+        || T.any (\ch -> isSpace ch || isControl ch) externalId
+       then Nothing
+       else Just externalId
 
 allocateGeneratedWhatsAppExternalId :: Text -> SqlPersistT IO Text
 allocateGeneratedWhatsAppExternalId baseExternalId = go (0 :: Int)
