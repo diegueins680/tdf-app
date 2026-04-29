@@ -3902,7 +3902,7 @@ describe('AdminConsolePage', () => {
     }
 
     expect(within(activeRow).queryByText(/^Activo$/i)).not.toBeInTheDocument();
-    expect(within(activeRow).getByText('—')).toBeInTheDocument();
+    expect(within(activeRow).queryByText('—')).not.toBeInTheDocument();
     expect(within(invitedRow).getByText('Invitado')).toBeInTheDocument();
   });
 

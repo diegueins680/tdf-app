@@ -1572,8 +1572,8 @@ export default function AdminConsolePage() {
   };
 
   const renderStatus = (status?: AdminUserStatus | null, options?: { hideActive?: boolean }) => {
-    if (!status) return '—';
-    if (options?.hideActive && status === 'ACTIVE') return '—';
+    if (!status) return null;
+    if (options?.hideActive && status === 'ACTIVE') return null;
     const meta = STATUS_META[status];
     if (!meta) {
       return status;
