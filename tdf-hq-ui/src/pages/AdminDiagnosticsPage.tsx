@@ -109,6 +109,7 @@ const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
   `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
 
 const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
+const CALENDAR_SYNC_PENDING_COPY = 'Aún no se registra una sincronización.';
 
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
@@ -194,12 +195,20 @@ export default function AdminDiagnosticsPage() {
         <Typography variant="h6">Sincronización de calendario</Typography>
         {hasCalendarSyncState ? (
           <>
-            <Typography variant="body2" color="text.secondary">
-              Calendar ID: {calendarId ?? '—'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Última sincronización: {lastSyncAt ?? '—'}
-            </Typography>
+            {calendarId && (
+              <Typography variant="body2" color="text.secondary">
+                Calendar ID: {calendarId}
+              </Typography>
+            )}
+            {lastSyncAt ? (
+              <Typography variant="body2" color="text.secondary">
+                Última sincronización: {lastSyncAt}
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="admin-diagnostics-calendar-sync-pending">
+                {CALENDAR_SYNC_PENDING_COPY}
+              </Typography>
+            )}
           </>
         ) : (
           <Alert

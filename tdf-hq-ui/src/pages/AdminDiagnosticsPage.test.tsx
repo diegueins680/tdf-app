@@ -142,6 +142,28 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('keeps partial calendar setup focused on the next missing sync state', async () => {
+    window.localStorage.setItem('calendar-sync.calendarId', 'primary-calendar');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Calendar ID: primary-calendar');
+        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-sync-pending"]')).not.toBeNull();
+        expect(container.textContent).toContain('Aún no se registra una sincronización.');
+        expect(container.textContent).toContain('Abrir sincronización');
+        expect(container.textContent).not.toContain('Última sincronización: —');
+        expect(container.textContent).not.toContain('Calendar ID: —');
+        expect(container.textContent).not.toContain('Conectar calendario');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces repeated quiet-channel empty states with one first-run summary for the whole section', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
