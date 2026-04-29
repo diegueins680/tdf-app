@@ -11304,10 +11304,36 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
   appendDriveResourceKey resolvedResourceKey baseUrl
   where
     fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
-    baseUrl = fromMaybe fallbackPublicUrl (sanitizeDriveWebContentLink fileId mWebContentLink)
+    mContentLink = sanitizeDriveWebContentLink fileId mWebContentLink
+    baseUrlCandidate = fromMaybe fallbackPublicUrl mContentLink
+    baseUrl =
+      if explicitResourceKeysConflict
+        then dropNamedQueryParam "resourcekey" baseUrlCandidate
+        else baseUrlCandidate
+    explicitResourceKeyCandidates =
+      [ sanitizeDriveResourceKey mUploadResourceKey
+      , sanitizeDriveResourceKey mMetaResourceKey
+      ]
+    explicitResourceKeysConflict =
+      hasConflictingDriveResourceKeys explicitResourceKeyCandidates
     resolvedResourceKey =
-      sanitizeDriveResourceKey mUploadResourceKey
-        <|> sanitizeDriveResourceKey mMetaResourceKey
+      if explicitResourceKeysConflict
+        then Nothing
+        else
+          resolveDriveResourceKey explicitResourceKeyCandidates
+            <|> (mContentLink >>= singleValidResourceKeyParam)
+
+resolveDriveResourceKey :: [Maybe Text] -> Maybe Text
+resolveDriveResourceKey resourceKeyCandidates =
+  case dedupeStable (catMaybes resourceKeyCandidates) of
+    [resourceKey] -> Just resourceKey
+    _ -> Nothing
+
+hasConflictingDriveResourceKeys :: [Maybe Text] -> Bool
+hasConflictingDriveResourceKeys resourceKeyCandidates =
+  case dedupeStable (catMaybes resourceKeyCandidates) of
+    _ : _ : _ -> True
+    _ -> False
 
 sanitizeDriveResourceKey :: Maybe Text -> Maybe Text
 sanitizeDriveResourceKey mResourceKey = do

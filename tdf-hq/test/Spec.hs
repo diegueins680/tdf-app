@@ -3708,6 +3708,29 @@ main = hspec $ do
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=1A_B-99"
 
+        it "drops Drive resource keys when explicit API fallback candidates disagree" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                Nothing
+                (Just "rk_upload")
+                (Just "rk_meta")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&resourcekey=rk_link&export=download")
+                (Just "rk_upload")
+                Nothing
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download&resourcekey=rk_upload"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&resourcekey=rk_link&export=download")
+                (Just "rk_upload")
+                (Just "rk_meta")
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download"
+
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
             sanitizeFeedbackAttachmentFileName "  ../Bug report final?.png  "
