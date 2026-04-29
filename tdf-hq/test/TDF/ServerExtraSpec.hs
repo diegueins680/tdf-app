@@ -1367,6 +1367,46 @@ spec = do
         Right value ->
           expectationFailure ("Expected control-character pipeline card patch title to fail, got " <> show value)
 
+    it "rejects negative sort orders before Kanban ordering is persisted" $ do
+      createResult <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate "Demo Lead" Nothing Nothing (Just (-1)) Nothing)
+      case createResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card sortOrder must be greater than or equal to 0"
+        Right value ->
+          expectationFailure ("Expected negative pipeline card create sortOrder to fail, got " <> show value)
+
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      patchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Nothing
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 0
+              , ME.pipelineCardNotes = Nothing
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate Nothing Nothing Nothing (Just (-1)) Nothing)
+      case patchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card sortOrder must be greater than or equal to 0"
+        Right value ->
+          expectationFailure ("Expected negative pipeline card patch sortOrder to fail, got " <> show value)
+
     it "rejects empty patch payloads instead of silently returning unchanged pipeline cards" $ do
       existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
         Just key -> pure key

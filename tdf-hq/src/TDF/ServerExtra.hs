@@ -1973,6 +1973,7 @@ pipelinesServer user rawType =
       ensureModule ModuleScheduling user
       titleClean <- either throwError pure (normalizePipelineCardTitle (pccTitle req))
       stageValue <- resolveStage kind (pccStage req)
+      sortOrderValue <- either throwError pure (validatePipelineCardSortOrder (pccSortOrder req))
       let artistValue = normalizeOptionalTextField (pccArtist req)
           notesValue = normalizeOptionalTextField (pccNotes req)
       now <- liftIO getCurrentTime
@@ -1982,7 +1983,7 @@ pipelinesServer user rawType =
           , ME.pipelineCardTitle       = titleClean
           , ME.pipelineCardArtist      = artistValue
           , ME.pipelineCardStage       = stageValue
-          , ME.pipelineCardSortOrder   = fromMaybe 0 (pccSortOrder req)
+          , ME.pipelineCardSortOrder   = fromMaybe 0 sortOrderValue
           , ME.pipelineCardNotes       = notesValue
           , ME.pipelineCardCreatedAt   = now
           , ME.pipelineCardUpdatedAt   = now
@@ -2013,10 +2014,11 @@ pipelinesServer user rawType =
       stageUpdate <- case pcuStage req of
         Nothing   -> pure Nothing
         Just raw  -> Just <$> resolveStage kind (Just raw)
+      sortOrderUpdate <- either throwError pure (validatePipelineCardSortOrder (pcuSortOrder req))
       let artistUpdate = normalizeOptionalTextFieldUpdate (pcuArtist req)
           notesUpdate = normalizeOptionalTextFieldUpdate (pcuNotes req)
       either throwError pure
-        (validatePipelineCardPatchIntent titleUpdate artistUpdate stageUpdate (pcuSortOrder req) notesUpdate)
+        (validatePipelineCardPatchIntent titleUpdate artistUpdate stageUpdate sortOrderUpdate notesUpdate)
       now <- liftIO getCurrentTime
       result <- withPool $ do
         mEntity <- getEntity cardKey
@@ -2029,7 +2031,7 @@ pipelinesServer user rawType =
                       [ fmap (ME.PipelineCardTitle =.) titleUpdate
                       , fmap (ME.PipelineCardArtist =.) artistUpdate
                       , fmap (ME.PipelineCardStage =.) stageUpdate
-                      , fmap (ME.PipelineCardSortOrder =.) (pcuSortOrder req)
+                      , fmap (ME.PipelineCardSortOrder =.) sortOrderUpdate
                       , fmap (ME.PipelineCardNotes =.) notesUpdate
                       ]
                     updates' = if null updates
@@ -2189,6 +2191,14 @@ normalizePipelineCardTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text
 normalizePipelineCardTitleUpdate Nothing = Right Nothing
 normalizePipelineCardTitleUpdate (Just rawTitle) =
   Just <$> normalizePipelineCardTitle rawTitle
+
+validatePipelineCardSortOrder :: Maybe Int -> Either ServerError (Maybe Int)
+validatePipelineCardSortOrder Nothing = Right Nothing
+validatePipelineCardSortOrder (Just sortOrderValue)
+  | sortOrderValue < 0 =
+      Left err400 { errBody = "Pipeline card sortOrder must be greater than or equal to 0" }
+  | otherwise =
+      Right (Just sortOrderValue)
 
 normalizeOptionalTextFieldUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
 normalizeOptionalTextFieldUpdate = fmap normalizeOptionalTextField
