@@ -1973,6 +1973,9 @@ export default function CourseRegistrationsAdminPage() {
     && hasNamedVisibleSource
     ? `Fuente: ${singleVisibleSourceLabel}`
     : '';
+  const standaloneSingleChoiceBusySearchSourceSummary = standaloneSingleChoiceInlineSourceSummary
+    ? `Fuente visible: ${singleVisibleSourceLabel}`
+    : '';
   const resetViewLabel = getResetViewLabel({
     hasCustomLimit,
     hasSlugFilter: hasEffectiveSlugFilter,
@@ -2195,7 +2198,7 @@ export default function CourseRegistrationsAdminPage() {
         : '',
     ].filter(Boolean).join('. ')
     : hideBusyListPassiveSingleCohortSummary
-      ? singleAvailableCohortLabel
+      ? [singleAvailableCohortLabel, standaloneSingleChoiceBusySearchSourceSummary].filter(Boolean).join(' · ')
       : hideBusyListPassiveSingleStatusSummary && singleVisibleStatus
         ? statusFilterLabels[singleVisibleStatus]
       : '';

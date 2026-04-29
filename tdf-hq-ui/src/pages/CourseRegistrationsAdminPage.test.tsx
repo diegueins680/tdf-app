@@ -7498,6 +7498,34 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds a shared source into busy single-cohort search guidance without restoring source chrome', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crSource: 'meta_ads',
+        crStatus: index === 8 ? 'paid' : 'pending_payment',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Fuente visible: Meta ads. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countOccurrences(container, 'Fuente visible: Meta ads.')).toBe(1);
+      expect(container.textContent).not.toContain('Fuente: Meta ads');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Meta ads.');
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps busy single-choice defaults focused on search and compact row status actions', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
