@@ -127,8 +127,12 @@ validateOptionalFeedbackMetadata fieldName rawValue =
     Just value
       | T.length value > maxFeedbackMetadataChars ->
           Left (feedbackFieldError fieldName "must be 80 characters or fewer")
-      | T.any isControl value ->
-          Left (feedbackFieldError fieldName "must not contain control characters")
+      | T.any isUnsafeFeedbackSingleLineChar value ->
+          Left
+            ( feedbackFieldError
+                fieldName
+                "must not contain control characters or hidden formatting characters"
+            )
       | otherwise ->
           Right (Just value)
 
@@ -194,8 +198,11 @@ validateFeedbackTitle rawTitle
       Left err400 { errBody = "title is required" }
   | T.length title > maxFeedbackTitleChars =
       Left err400 { errBody = "title must be 160 characters or fewer" }
-  | T.any isControl title =
-      Left err400 { errBody = "title must not contain control characters" }
+  | T.any isUnsafeFeedbackSingleLineChar title =
+      Left err400
+        { errBody =
+            "title must not contain control characters or hidden formatting characters"
+        }
   | otherwise =
       Right title
   where
@@ -208,13 +215,25 @@ validateFeedbackDescription rawDescription
   | T.length description > maxFeedbackDescriptionChars =
       Left err400 { errBody = "description must be 5000 characters or fewer" }
   | T.any isDisallowedDescriptionControl description =
-      Left err400 { errBody = "description must not contain control characters" }
+      Left err400
+        { errBody =
+            "description must not contain control characters or hidden formatting characters"
+        }
   | otherwise =
       Right description
   where
     description = T.strip rawDescription
     isDisallowedDescriptionControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || isHiddenFormattingChar ch
+
+isUnsafeFeedbackSingleLineChar :: Char -> Bool
+isUnsafeFeedbackSingleLineChar ch =
+  isControl ch || isHiddenFormattingChar ch
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateFeedbackConsent :: Bool -> Either ServerError ()
 validateFeedbackConsent True = Right ()

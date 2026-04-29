@@ -3238,6 +3238,9 @@ main = hspec $ do
             assertInvalid "billing" "category must be one of: bug, idea, ux, datos"
             assertInvalid (Data.Text.replicate 81 "x") "category must be 80 characters or fewer"
             assertInvalid "bug\nidea" "category must not contain control characters"
+            assertInvalid
+                ("bug" <> "\x200B")
+                "category must not contain control characters or hidden formatting characters"
 
     describe "validateFeedbackSeverity" $ do
         it "normalizes supported priorities before storage and notifications" $ do
@@ -3277,6 +3280,9 @@ main = hspec $ do
             assertInvalid
                 "Bug\nBcc: attacker@example.com"
                 "title must not contain control characters"
+            assertInvalid
+                ("Checkout " <> "\x202E" <> "diap")
+                "title must not contain control characters or hidden formatting characters"
             assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
 
     describe "validateFeedbackDescription" $ do
@@ -3300,6 +3306,9 @@ main = hspec $ do
             assertInvalid
                 "steps\NULhidden"
                 "description must not contain control characters"
+            assertInvalid
+                ("steps" <> "\x200D" <> "hidden")
+                "description must not contain control characters or hidden formatting characters"
 
     describe "validateFeedbackConsent" $ do
         it "requires explicit consent before the backend stores or emails feedback" $ do
