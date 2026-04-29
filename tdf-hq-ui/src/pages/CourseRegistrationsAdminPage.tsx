@@ -669,10 +669,10 @@ const firstRunApplicationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page))?|application\s+(?:form|page)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
 const firstRunWorkshopDescriptorPrefixPattern =
-  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
 
 const firstRunWorkshopDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunWaitlistDescriptorPrefixPattern =
   /^(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|captaci[oó]n\s+de\s+(?:leads?|prospectos|interesad[oa]s))|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

@@ -11286,7 +11286,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Formulario del taller - Beatmaking 101',
       'Solicitud de inscripción al taller - Beatmaking 101',
+      'Workshop application form - Beatmaking 101',
       'Beatmaking 101 - workshop registration form',
+      'Beatmaking 101 - workshop application form',
     ];
 
     for (const title of titles) {
@@ -11305,6 +11307,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario del taller');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Solicitud de inscripción al taller');
         expect(emptyState?.textContent).not.toContain('workshop registration');
+        expect(emptyState?.textContent).not.toContain('workshop application');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
