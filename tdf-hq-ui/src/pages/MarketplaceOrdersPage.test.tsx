@@ -600,6 +600,63 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('copies filter links without default filter params so shared views stay readable', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).not.toBeNull();
+        expect(container.textContent).toContain('Estado: Pagado');
+      });
+
+      await clickActionByText(container, 'Copiar enlace de filtros');
+
+      await waitForExpectation(() => {
+        expect(writeTextMock).toHaveBeenCalledTimes(1);
+        const copiedUrl = new URL(writeTextMock.mock.calls[0]?.[0] ?? '');
+        expect(copiedUrl.searchParams.get('status')).toBe('paid');
+        expect(copiedUrl.searchParams.has('provider')).toBe(false);
+        expect(copiedUrl.searchParams.has('paidOnly')).toBe(false);
+        expect(copiedUrl.searchParams.has('q')).toBe(false);
+        expect(copiedUrl.searchParams.has('from')).toBe(false);
+        expect(copiedUrl.searchParams.has('to')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces a single real status filter with context copy when the current list already shares one status', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

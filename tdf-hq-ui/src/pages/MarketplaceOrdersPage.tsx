@@ -433,9 +433,12 @@ export default function MarketplaceOrdersPage() {
   const copyFiltersLink = () => {
     const url = new URL(window.location.href);
     const params = url.searchParams;
-    params.set('status', statusFilter);
-    params.set('provider', providerFilter);
-    params.set('paidOnly', activePaidOnlyFilter ? '1' : '0');
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    else params.delete('status');
+    if (providerFilter !== 'all') params.set('provider', providerFilter);
+    else params.delete('provider');
+    if (activePaidOnlyFilter) params.set('paidOnly', '1');
+    else params.delete('paidOnly');
     if (search.trim()) params.set('q', search.trim());
     else params.delete('q');
     if (fromDate) params.set('from', fromDate);
