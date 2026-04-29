@@ -181,6 +181,7 @@ import TDF.Server
     , validateDatafastOrderResourcePath
     , validateDatafastResultCodeField
     , validateDatafastSuccessfulPaymentAmountAndCurrency
+    , validateOptionalDatafastCredential
     , resolvePaypalBaseUrl
     , validatePayPalCredential
     , validatePayPalAccessTokenField
@@ -5399,6 +5400,35 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "entity/../status")
                 "DATAFAST_ENTITY_ID must contain only ASCII letters"
+
+    describe "validateOptionalDatafastCredential" $ do
+        it "omits blank optional Datafast parameters and trims configured values" $ do
+            validateOptionalDatafastCredential "DATAFAST_MID" Nothing
+                `shouldBe` Right Nothing
+            validateOptionalDatafastCredential "DATAFAST_TID" (Just "   ")
+                `shouldBe` Right Nothing
+            validateOptionalDatafastCredential "DATAFAST_PSERV" (Just "  pserv-123  ")
+                `shouldBe` Right (Just "pserv-123")
+
+        it "rejects unsafe optional Datafast parameters before gateway requests are built" $ do
+            let assertInvalid envName rawValue expectedMessage =
+                    case validateOptionalDatafastCredential envName rawValue of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid optional Datafast parameter to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "DATAFAST_MID"
+                (Just "mid value")
+                "DATAFAST_MID must not contain control characters or whitespace"
+            assertInvalid
+                "DATAFAST_VERSIONDF"
+                (Just "2\nextra")
+                "DATAFAST_VERSIONDF must not contain control characters or whitespace"
 
     describe "label track update validation" $ do
         it "accepts omitted or positive owner filters before listing label tracks" $ do

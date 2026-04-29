@@ -10452,15 +10452,24 @@ loadDatafastEnv = do
   baseUrl <- either throwError pure (validateDatafastBaseUrl mBase)
   entityId <- either throwError pure (validateDatafastEntityId mEntity)
   bearer <- either throwError pure (validateDatafastCredential "DATAFAST_BEARER_TOKEN" mBearer)
-  let testModeVal = mTest >>= (\v -> let t = T.strip (T.pack v) in if T.null t then Nothing else Just t)
+  testModeVal <-
+    either throwError pure (validateOptionalDatafastCredential "DATAFAST_TEST_MODE" mTest)
+  midVal <- either throwError pure (validateOptionalDatafastCredential "DATAFAST_MID" mMid)
+  tidVal <- either throwError pure (validateOptionalDatafastCredential "DATAFAST_TID" mTid)
+  pservVal <- either throwError pure (validateOptionalDatafastCredential "DATAFAST_PSERV" mPserv)
+  userData2Val <-
+    either throwError pure (validateOptionalDatafastCredential "DATAFAST_USER_DATA2" mUserData2)
+  versionDfVal <-
+    either throwError pure (validateOptionalDatafastCredential "DATAFAST_VERSIONDF" mVersionDf)
+  let versionDf = fromMaybe "2" versionDfVal
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
         catMaybes
-          [ optPair "customParameters[SHOPPER_MID]" (T.strip . T.pack <$> mMid)
-          , optPair "customParameters[SHOPPER_TID]" (T.strip . T.pack <$> mTid)
-          , optPair "customParameters[SHOPPER_PSERV]" (T.strip . T.pack <$> mPserv)
-          , optPair "risk.parameters[USER_DATA2]" (T.strip . T.pack <$> mUserData2)
-          , optPair "customParameters[SHOPPER_VERSIONDF]" (Just (maybe "2" (T.pack) mVersionDf))
+          [ optPair "customParameters[SHOPPER_MID]" midVal
+          , optPair "customParameters[SHOPPER_TID]" tidVal
+          , optPair "customParameters[SHOPPER_PSERV]" pservVal
+          , optPair "risk.parameters[USER_DATA2]" userData2Val
+          , optPair "customParameters[SHOPPER_VERSIONDF]" (Just versionDf)
           ]
   pure DatafastEnv
     { dfEntityId = entityId
@@ -10472,6 +10481,20 @@ loadDatafastEnv = do
 
 validateDatafastCredential :: Text -> Maybe String -> Either ServerError Text
 validateDatafastCredential = validateRequiredGatewayCredential
+
+validateOptionalDatafastCredential :: Text -> Maybe String -> Either ServerError (Maybe Text)
+validateOptionalDatafastCredential envName mRawCredential =
+  case normalizeOptionalInput (T.pack <$> mRawCredential) of
+    Nothing -> Right Nothing
+    Just credential
+      | T.any (\ch -> isControl ch || isSpace ch) credential ->
+          Left err500
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must not contain control characters or whitespace"
+            }
+      | otherwise ->
+          Right (Just credential)
 
 validateDatafastEntityId :: Maybe String -> Either ServerError Text
 validateDatafastEntityId mRawEntityId = do
