@@ -321,6 +321,7 @@ import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.Client as WhatsAppClient
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 import qualified TDF.WhatsApp.Service as WhatsAppService
+import qualified TDF.WhatsApp.Transport as WhatsAppTransport
 import qualified TDF.WhatsApp.Types as WA
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
@@ -360,6 +361,13 @@ clearWhatsAppProviderCredentialEnv =
     , ("WHATSAPP_TOKEN", Nothing)
     , ("WA_PHONE_ID", Nothing)
     , ("WHATSAPP_PHONE_NUMBER_ID", Nothing)
+    ]
+
+clearWhatsAppTransportVersionEnv :: [(String, Maybe String)]
+clearWhatsAppTransportVersionEnv =
+    [ ("WHATSAPP_API_VERSION", Nothing)
+    , ("WA_GRAPH_API_VERSION", Nothing)
+    , ("WA_API_VERSION", Nothing)
     ]
 
 initializeTicketCheckInSchema :: SqlPersistT IO ()
@@ -1345,6 +1353,45 @@ main = hspec $ do
                 [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                     "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes WhatsApp transport alias fallbacks before provider sends" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_TOKEN", Just " token_123 ")
+                , ("WA_PHONE_ID", Just " 1234567890 ")
+                , ("WA_API_VERSION", Just " V21.0 ")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waToken cfg `shouldBe` Just "token_123"
+                    WhatsAppTransport.waPhoneId cfg `shouldBe` Just "1234567890"
+                    WhatsAppTransport.waApiVersion cfg `shouldBe` Just "v21.0"
+
+        it "rejects malformed WhatsApp transport fallbacks before provider sends" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token value") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp access token"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WHATSAPP_API_VERSION", Just "latest") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp Graph API version"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do

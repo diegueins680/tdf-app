@@ -14,7 +14,13 @@ import           Network.HTTP.Client (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           System.Environment (lookupEnv)
 
-import           TDF.WhatsApp.Client (SendTextResult, sendText)
+import           TDF.WhatsApp.Client
+  ( SendTextResult
+  , normalizeGraphApiVersion
+  , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppPhoneNumberId
+  , sendText
+  )
 
 data WhatsAppEnv = WhatsAppEnv
   { waManager       :: Manager
@@ -28,11 +34,17 @@ data WhatsAppEnv = WhatsAppEnv
 loadWhatsAppEnv :: IO WhatsAppEnv
 loadWhatsAppEnv = do
   manager <- newManager tlsManagerSettings
-  token <- firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
-  phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
+  token <-
+    validateOptionalEnvText normalizeWhatsAppAccessToken
+      =<< firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
+  phoneId <-
+    validateOptionalEnvText normalizeWhatsAppPhoneNumberId
+      =<< firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
   verify <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
-  apiVersion <- firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
+  apiVersion <-
+    validateOptionalEnvText normalizeGraphApiVersion
+      =<< firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
     { waManager = manager
     , waToken = token
@@ -41,6 +53,11 @@ loadWhatsAppEnv = do
     , waContactNumber = contact
     , waApiVersion = apiVersion
     }
+
+validateOptionalEnvText :: (Text -> Either String Text) -> Maybe Text -> IO (Maybe Text)
+validateOptionalEnvText _ Nothing = pure Nothing
+validateOptionalEnvText normalizeValue (Just rawValue) =
+  either fail (pure . Just) (normalizeValue rawValue)
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
 sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
