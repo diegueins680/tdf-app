@@ -291,7 +291,13 @@ validFutureStubPath :: Text -> Bool
 validFutureStubPath endpoint =
   not (T.null endpoint)
     && T.length endpoint <= 128
-    && all validFutureStubSlug (T.splitOn "/" endpoint)
+    && length segments <= maxFutureStubEndpointSegments
+    && all validFutureStubSlug segments
+  where
+    segments = T.splitOn "/" endpoint
+
+maxFutureStubEndpointSegments :: Int
+maxFutureStubEndpointSegments = 2
 
 validFutureStubSlug :: Text -> Bool
 validFutureStubSlug slug =

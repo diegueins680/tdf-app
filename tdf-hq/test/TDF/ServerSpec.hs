@@ -306,6 +306,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleView
     , validateFutureStubCatalog
+    , validateFutureStubCatalogEntry
     , validateFutureStubMetadata
     , validateFutureStubResponse
     )
@@ -7384,6 +7385,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
             assertInvalid [(" crm", "parties/list-columns")]
             assertInvalid [("crm", "parties/list columns")]
+
+    describe "validateFutureStubCatalogEntry" $
+        it "rejects deeply nested fallback discovery endpoint paths before catalog matching" $ do
+            case validateFutureStubCatalogEntry ("crm", "parties/list-columns") of
+                Right value ->
+                    value `shouldBe` ("crm", "parties/list-columns")
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid fallback discovery catalog entry, got: " <> show serverErr)
+
+            case validateFutureStubCatalogEntry ("crm", "parties/detail/tabs") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                Right value ->
+                    expectationFailure
+                        ("Expected deeply nested fallback discovery endpoint to fail, got: " <> show value)
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
