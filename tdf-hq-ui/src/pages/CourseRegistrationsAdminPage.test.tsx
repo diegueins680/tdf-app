@@ -8200,7 +8200,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('No hay coincidencias para "instagram story"');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -8245,7 +8245,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -8649,8 +8649,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
-      expect(container.textContent).not.toContain('Coinciden con nota interna.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Coinciden con nota interna.');
       expect(container.textContent).not.toContain('No hay coincidencias para "todos pidieron factura"');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -8850,7 +8850,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Coinciden con origen o campaña.');
       expect(container.textContent).not.toContain('No hay coincidencias para "curso abril"');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -9301,7 +9302,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Busca dentro de este lote sin cambiar los filtros de cohorte o estado.');
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
@@ -9347,7 +9348,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('La búsqueda coincide con las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
       expect(filterUtilities).not.toBeNull();
       expect(getButtonByText(filterUtilities!, copyVisibleCsvLabel(9))).toBeTruthy();
       expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();

@@ -283,8 +283,8 @@ const buildLoadedSearchScopeHint = (loadedCount: number) =>
   `Busca dentro de las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const buildFullLocalSearchMatchHint = (loadedCount: number) =>
   loadedCount === 1
-    ? 'La búsqueda coincide con la inscripción cargada.'
-    : `La búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
+    ? 'Sin cambios: la búsqueda coincide con la inscripción cargada.'
+    : `Sin cambios: la búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
 
@@ -1915,7 +1915,10 @@ export default function CourseRegistrationsAdminPage() {
           localSearchSingleResultActionHint.trim(),
         ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
-          ? buildFullLocalSearchMatchHint(loadedRegistrationCount)
+          ? [
+            buildFullLocalSearchMatchHint(loadedRegistrationCount),
+            hiddenLocalSearchMatchSummary,
+          ].filter(Boolean).join(' ')
           : undefined
     : viewHitsCurrentLimit
       ? `${buildLoadedSearchScopeHint(loadedRegistrationCount)}${localSearchOnboardingActionHint}`
