@@ -2737,6 +2737,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
+    setHasUsedRowAction(true);
     setPageFlash(null);
     void updateStatusMutation
       .mutateAsync({ id: reg.crId, courseSlug: reg.crCourseSlug, newStatus })

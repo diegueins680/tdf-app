@@ -940,6 +940,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('drops the first-time dossier hint after the direct cancelled-row recovery action', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierOnlyScopeHint,
+      );
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Ada Lovelace').textContent?.trim()).toBe(
+        reopenPendingLabel,
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Reabrir como pendiente para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Estado actualizado para Ada Lovelace.');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the current-view summary but drops filter onboarding copy after the first row action', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
