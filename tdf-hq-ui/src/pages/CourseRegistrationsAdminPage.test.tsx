@@ -10404,6 +10404,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Microsoft Forms - Beatmaking 101',
       'Beatmaking 101 - Typeform',
       'Beatmaking 101 - MS Form',
+      'Airtable form - Beatmaking 101',
+      'HubSpot Forms for Beatmaking 101',
+      'Beatmaking 101 - Paperform',
     ];
 
     for (const title of titles) {
@@ -10424,6 +10427,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Jotform');
         expect(emptyState?.textContent).not.toContain('Microsoft Forms');
         expect(emptyState?.textContent).not.toContain('MS Form');
+        expect(emptyState?.textContent).not.toContain('Airtable');
+        expect(emptyState?.textContent).not.toContain('HubSpot');
+        expect(emptyState?.textContent).not.toContain('Paperform');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

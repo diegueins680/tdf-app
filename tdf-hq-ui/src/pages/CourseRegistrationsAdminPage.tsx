@@ -669,10 +669,10 @@ const firstRunWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s)|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?)\s*$/i;
 
 const firstRunProviderFormDescriptorPrefixPattern =
-  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|paper\s*forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunProviderFormDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|paper\s*forms?)\s*$/i;
 
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
