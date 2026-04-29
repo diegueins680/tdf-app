@@ -10648,6 +10648,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Mailchimp signup form - Beatmaking 101',
       'Beatmaking 101 - Mailchimp form',
       'Beatmaking 101 - Paperform',
+      'SurveyMonkey form - Beatmaking 101',
+      'Beatmaking 101 - SurveyMonkey',
+      'Wufoo form for Beatmaking 101',
+      'Formstack - Beatmaking 101',
+      'Zoho Forms for Beatmaking 101',
+      'Beatmaking 101 - Gravity Forms',
     ];
 
     for (const title of titles) {
@@ -10672,6 +10678,11 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('HubSpot');
         expect(emptyState?.textContent).not.toContain('Mailchimp');
         expect(emptyState?.textContent).not.toContain('Paperform');
+        expect(emptyState?.textContent).not.toContain('SurveyMonkey');
+        expect(emptyState?.textContent).not.toContain('Wufoo');
+        expect(emptyState?.textContent).not.toContain('Formstack');
+        expect(emptyState?.textContent).not.toContain('Zoho');
+        expect(emptyState?.textContent).not.toContain('Gravity Forms');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
