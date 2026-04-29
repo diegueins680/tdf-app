@@ -4023,6 +4023,8 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "/configuracion/integraciones/calendario"
             assertInvalid "http://tdf-app.pages.dev/configuracion/integraciones/calendario"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-calendar/callback"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?code=abc"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#code"
             assertInvalid "https://user:secret@tdf-app.pages.dev/configuracion/integraciones/calendario"
@@ -4033,15 +4035,29 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     Right "http://127.0.0.1:5173/configuracion/integraciones/calendario"
 
+            let configuredRedirectMsg =
+                    "GOOGLE_REDIRECT_URI must be an absolute https "
+                        <> "Google Calendar OAuth callback URL"
+
             case validateConfiguredCalendarRedirectUri
                     "http://tdf-app.pages.dev/configuracion/integraciones/calendario" of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 503
                     BL8.unpack (errBody serverErr)
-                        `shouldContain` "GOOGLE_REDIRECT_URI must be an absolute https URL"
+                        `shouldContain` configuredRedirectMsg
                 Right value ->
                     expectationFailure
                         ("Expected insecure configured Calendar redirect URI to fail, got: " <> show value)
+
+            case validateConfiguredCalendarRedirectUri
+                    "https://tdf-app.pages.dev/oauth/google-calendar/callback" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` configuredRedirectMsg
+                Right value ->
+                    expectationFailure
+                        ("Expected wrong configured Calendar redirect path to fail, got: " <> show value)
 
     describe "validateCalendarEventListQuery" $ do
         it "normalizes explicit Calendar event filters before database lookup" $ do

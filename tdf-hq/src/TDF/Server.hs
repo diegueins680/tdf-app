@@ -2337,8 +2337,9 @@ validateCalendarRedirectUri rawRedirect =
     _ ->
       Left err400
         { errBody =
-            "redirectUri must be an absolute https Google Calendar OAuth callback URL, "
-              <> "or http://localhost for local development, without query or fragment"
+            "redirectUri must be an absolute https Google Calendar OAuth callback URL ending "
+              <> "in /configuracion/integraciones/calendario, or http://localhost for local "
+              <> "development, without query or fragment"
         }
 
 validateCalendarAuthorizationCode :: Text -> Either ServerError Text
@@ -2360,17 +2361,20 @@ validateConfiguredCalendarRedirectUri rawRedirect =
     _ ->
       Left err503
         { errBody =
-            "GOOGLE_REDIRECT_URI must be an absolute https URL, "
-              <> "or http://localhost for local development, without query or fragment"
+            "GOOGLE_REDIRECT_URI must be an absolute https Google Calendar OAuth callback "
+              <> "URL ending in /configuracion/integraciones/calendario, or http://localhost "
+              <> "for local development, without query or fragment"
         }
 
 isSafeCalendarRedirectUri :: Text -> Bool
 isSafeCalendarRedirectUri uri
+  | not (googleCalendarOAuthCallbackPath `T.isSuffixOf` uri) = False
   | "https://" `T.isPrefixOf` lowerUri = True
   | "http://" `T.isPrefixOf` lowerUri =
       maybe False isLocalCalendarRedirectHost (calendarRedirectHost (T.drop 7 uri))
   | otherwise = False
   where
+    googleCalendarOAuthCallbackPath = "/configuracion/integraciones/calendario"
     lowerUri = T.toLower uri
 
 calendarRedirectHost :: Text -> Maybe Text
