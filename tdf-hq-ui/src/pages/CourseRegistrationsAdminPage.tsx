@@ -3160,7 +3160,11 @@ export default function CourseRegistrationsAdminPage() {
   const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
-    ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
+    ? (
+      cohortSummaryLabelsBySlug.get(activeRegistrationCourseSlug)
+      ?? cohortLabelsBySlug.get(activeRegistrationCourseSlug)
+      ?? activeRegistrationCourseSlug
+    )
     : '';
   const activeRegistrationIdentity = activeRegistration
     ? registrationIdentityDisplay(

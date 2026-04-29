@@ -2148,7 +2148,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses the course label inside the dossier while omitting the default public-form source', async () => {
+  it('uses the concise course label inside the dossier while omitting raw slug and default source noise', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -2165,8 +2165,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        `Curso: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        `Curso: Beatmaking 101 · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       );
+      expect(document.body.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(document.body.textContent).not.toContain('Fuente: landing');
       expect(document.body.textContent).not.toContain('Slug: beatmaking-101');
     });
@@ -2200,8 +2201,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const dialog = getDialog();
       expect(dialog.textContent).toContain(
-        `Curso: Beatmaking 101 (beatmaking-101) · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
+        `Curso: Beatmaking 101 · Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`,
       );
+      expect(dialog.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(dialog.textContent).not.toContain('Fuente: Sin fuente');
     });
 
@@ -2233,7 +2235,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const dialog = getDialog();
-      expect(dialog.textContent).toContain('Curso: Beatmaking 101 (beatmaking-101) · Fuente: instagram');
+      expect(dialog.textContent).toContain('Curso: Beatmaking 101 · Fuente: instagram');
+      expect(dialog.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(dialog.textContent).not.toContain('Fuente: landing');
     });
 
@@ -2591,7 +2594,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const dialog = getDialog();
-      expect(hasExactText(dialog, 'Curso: Beatmaking 101 (beatmaking-101)')).toBe(true);
+      expect(hasExactText(dialog, 'Curso: Beatmaking 101')).toBe(true);
+      expect(dialog.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(dialog.textContent).not.toContain('Creado: -');
       expect(dialog.textContent).not.toContain('Fuente: Sin fuente');
     });
