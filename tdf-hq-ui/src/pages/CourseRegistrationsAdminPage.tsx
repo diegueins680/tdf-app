@@ -883,7 +883,6 @@ const registrationVisibleSearchText = (
   return [
     reg.crFullName,
     reg.crEmail,
-    reg.crPhoneE164,
     `registro #${reg.crId}`,
     String(reg.crId),
     courseSlug,
@@ -1775,7 +1774,6 @@ export default function CourseRegistrationsAdminPage() {
       const haystack = [
         reg.crFullName,
         reg.crEmail,
-        reg.crPhoneE164,
         `registro #${reg.crId}`,
         String(reg.crId),
         reg.crAdminNotes,

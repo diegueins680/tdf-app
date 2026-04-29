@@ -8016,6 +8016,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps short E.164 phone fragments from flooding the visible registration list', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), '999');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'Para buscar por teléfono, usa al menos 4 dígitos del número.',
+      );
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('matches hyphenated registration names from spaced search so admins avoid a false empty recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => (
       index === 4
