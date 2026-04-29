@@ -14,6 +14,7 @@ module TDF.ServerFeedback
   , validateFeedbackConsent
   , validateOptionalFeedbackContactEmail
   , validateFeedbackAttachmentSize
+  , validateFeedbackAttachmentFileName
   , sanitizeFeedbackAttachmentFileName
   ) where
 
@@ -22,7 +23,14 @@ import           Control.Monad              (forM_)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, ask)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
+import           Data.Char                  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+                                            , generalCategory
+                                            , isAlphaNum
+                                            , isAscii
+                                            , isAsciiLower
+                                            , isControl
+                                            , isDigit
+                                            )
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
@@ -89,18 +97,18 @@ feedbackServer user = submitFeedback
 
     validateAndStoreAttachment :: FileData Tmp -> m FilePath
     validateAndStoreAttachment file@FileData{..} = do
+      safeName <- either throwError pure (validateFeedbackAttachmentFileName fdFileName)
       size <- liftIO (getFileSize fdPayload)
       either throwError pure (validateFeedbackAttachmentSize size)
-      liftIO (storeAttachment file)
+      liftIO (storeAttachment safeName file)
 
-    storeAttachment :: FileData Tmp -> IO FilePath
-    storeAttachment FileData{..} = do
-      let safeName = sanitizeFeedbackAttachmentFileName (T.pack (takeFileName (T.unpack fdFileName)))
+    storeAttachment :: Text -> FileData Tmp -> IO FilePath
+    storeAttachment safeName FileData{fdPayload = payload} = do
       token <- toText <$> nextRandom
       let destDir = "uploads/feedback"
       createDirectoryIfMissing True destDir
       let destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
-      BL.readFile fdPayload >>= BL.writeFile destPath
+      BL.readFile payload >>= BL.writeFile destPath
       pure destPath
 
 normalizeOptionalFeedbackText :: Maybe Text -> Maybe Text
@@ -226,6 +234,32 @@ validateFeedbackAttachmentSize size
       Left err400 { errBody = "attachment must be 10 MB or smaller" }
   | otherwise =
       Right ()
+
+validateFeedbackAttachmentFileName :: Text -> Either ServerError Text
+validateFeedbackAttachmentFileName rawName
+  | T.null trimmed =
+      Left err400 { errBody = "attachment file name is required" }
+  | T.any isUnsafeAttachmentFileNameChar trimmed =
+      Left err400
+        { errBody =
+            "attachment file name must not contain control characters or hidden formatting characters"
+        }
+  | T.any isPathSeparator trimmed =
+      Left err400 { errBody = "attachment file name must not contain path separators" }
+  | sanitized == "attachment" && trimmed /= "attachment" =
+      Left err400 { errBody = "attachment file name must include a usable name" }
+  | otherwise =
+      Right sanitized
+  where
+    trimmed = T.strip rawName
+    sanitized = sanitizeFeedbackAttachmentFileName trimmed
+
+isUnsafeAttachmentFileNameChar :: Char -> Bool
+isUnsafeAttachmentFileNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isPathSeparator :: Char -> Bool
+isPathSeparator ch = ch == '/' || ch == '\\'
 
 isValidFeedbackEmail :: Text -> Bool
 isValidFeedbackEmail candidate =

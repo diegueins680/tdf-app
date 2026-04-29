@@ -175,6 +175,7 @@ import TDF.ServerFeedback
       validateFeedbackCategory,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
+      validateFeedbackAttachmentFileName,
       validateFeedbackTitle,
       validateFeedbackConsent,
       validateFeedbackSeverity,
@@ -3726,6 +3727,26 @@ main = hspec $ do
             sanitizeFeedbackAttachmentFileName
                 (Data.Text.replicate 160 "a" <> ".png")
                 `shouldBe` (Data.Text.replicate 116 "a" <> ".png")
+
+    describe "validateFeedbackAttachmentFileName" $ do
+        it "accepts safe attachment names after stable backend sanitization" $
+            validateFeedbackAttachmentFileName "  Bug report final?.png  "
+                `shouldBe` Right "Bug-report-final-.png"
+
+        it "rejects ambiguous attachment names before feedback storage falls back to a generic path" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackAttachmentFileName raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment file name, got " <> show value)
+            assertInvalid "   " "attachment file name is required"
+            assertInvalid "../secret.png" "attachment file name must not contain path separators"
+            assertInvalid "folder\\secret.png" "attachment file name must not contain path separators"
+            assertInvalid "screen\8203shot.png" "attachment file name must not contain control characters"
+            assertInvalid "__--__" "attachment file name must include a usable name"
 
     describe "validateFeedbackAttachmentSize" $ do
         it "accepts non-empty boundary-sized feedback attachments" $ do
