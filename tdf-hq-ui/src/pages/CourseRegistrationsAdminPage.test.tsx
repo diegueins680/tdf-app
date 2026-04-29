@@ -8145,6 +8145,11 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Fuente visible: Instagram story. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countOccurrences(container, 'Fuente visible: Instagram story.')).toBe(1);
       expect(container.textContent).toContain('Fuente visible: Instagram story.');
       expect(container.textContent).not.toContain('Fuente: Instagram story');
       expect(getDossierTriggers(container)).toHaveLength(9);

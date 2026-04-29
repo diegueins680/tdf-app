@@ -2113,14 +2113,26 @@ export default function CourseRegistrationsAdminPage() {
     && hasLocalSearch
     && !localSearchNarrowsRegistrations
     && loadedRegistrationCount > 1;
+  const canFoldSharedSourceIntoBusySearch = Boolean(
+    showBusyListSearchOnboarding
+    && combinedSingleChoiceSummary
+    && combinedSingleChoiceSourceSummary
+    && combinedSingleChoicePassiveContextSummary === combinedSingleChoiceSourceSummary
+    && !combinedSingleChoiceCustomStatusGuidance
+    && !hasCustomFilters
+    && !showAdvancedLimitControl,
+  );
   const hasSharedListContextSummary = Boolean(
-    combinedSharedListContextSummary
-    || shouldShowSharedStatusSummary
-    || shouldShowSharedCohortSummary
-    || shouldShowSharedSourceSummary
-    || sharedVisibleCreatedAtSummary
-    || sharedVisibleMissingContactSummary
-    || sharedVisibleNotesSummary,
+    !canFoldSharedSourceIntoBusySearch
+    && (
+      combinedSharedListContextSummary
+      || shouldShowSharedStatusSummary
+      || shouldShowSharedCohortSummary
+      || shouldShowSharedSourceSummary
+      || sharedVisibleCreatedAtSummary
+      || sharedVisibleMissingContactSummary
+      || sharedVisibleNotesSummary
+    ),
   );
   const hideBusyListPassiveCurrentViewPanel = (
     showBusyListSearchOnboarding
@@ -2129,7 +2141,7 @@ export default function CourseRegistrationsAdminPage() {
     && Boolean(combinedSingleChoiceSummary)
     && !hasCustomFilters
     && !showAdvancedLimitControl
-    && !combinedSingleChoiceContextSummary
+    && (canFoldSharedSourceIntoBusySearch || !combinedSingleChoiceContextSummary)
     && !hasSharedListContextSummary;
   const hideBusyListPassiveSingleCohortSummary = showBusyListSearchOnboarding
     && Boolean(singleAvailableCohortLabel)
@@ -2147,7 +2159,12 @@ export default function CourseRegistrationsAdminPage() {
     && !standaloneSingleChoiceInlineSourceSummary
     && !hasSharedListContextSummary;
   const hiddenBusyListContextSummary = hideBusyListPassiveCurrentViewPanel
-    ? combinedSingleChoiceSummary
+    ? [
+      combinedSingleChoiceSummary,
+      canFoldSharedSourceIntoBusySearch && combinedSingleChoiceSourceSummary
+        ? combinedSingleChoiceSourceSummary.replace(/\.$/, '')
+        : '',
+    ].filter(Boolean).join('. ')
     : hideBusyListPassiveSingleCohortSummary
       ? singleAvailableCohortLabel
       : hideBusyListPassiveSingleStatusSummary && singleVisibleStatus
