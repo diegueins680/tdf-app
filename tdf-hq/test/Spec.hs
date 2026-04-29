@@ -255,6 +255,7 @@ import TDF.Server.SocialEventsHandlers (
     validateEventArtistIds,
     validateRsvpStatus,
     validateTicketCheckInLookup,
+    validateStoredTicketOrderStatus,
     validateTicketCheckInOrderStatus,
     validateTicketCheckInTicketStatus,
     findTicketForCheckIn,
@@ -4980,6 +4981,18 @@ main = hspec $ do
                 (validateTicketCheckInOrderStatus (Just ""))
             assertInvariant "Stored ticket order status is invalid"
                 (validateTicketCheckInOrderStatus (Just "unknown"))
+
+    describe "validateStoredTicketOrderStatus" $ do
+        it "rejects invalid persisted ticket order states before status updates can fall back to pending" $ do
+            validateStoredTicketOrderStatus (Just " refunded ")
+                `shouldBe` Right "refunded"
+            case validateStoredTicketOrderStatus (Just "unknown") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err) `shouldContain` "Stored ticket order status is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid stored ticket order status to be rejected, got " <> show value)
 
     describe "validateTicketCheckInTicketStatus" $ do
         it "accepts canonical ticket states for ticket check-in decisions" $ do

@@ -47,6 +47,7 @@ module TDF.Server.SocialEventsHandlers
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
   , validateTicketCheckInLookup
+  , validateStoredTicketOrderStatus
   , validateTicketCheckInOrderStatus
   , validateTicketCheckInTicketStatus
   , findTicketForCheckIn
@@ -1580,7 +1581,8 @@ socialEventsServer user = eventsServer
       mOrder <- liftIO $ runSqlPool (get orderKey) envPool
       order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
       when (eventTicketOrderEventId order /= eventKey) $ throwError err400 { errBody = "Ticket order does not belong to this event" }
-      let oldStatus = normalizeTicketOrderStatus (Just (eventTicketOrderStatus order))
+      oldStatus <- either throwError pure
+        (validateStoredTicketOrderStatus (Just (eventTicketOrderStatus order)))
       when (oldStatus `elem` ["cancelled", "refunded"] && newStatus == "paid") $
         throwError err400 { errBody = "Closed orders cannot be moved back to paid" }
 
@@ -2293,13 +2295,16 @@ normalizeTicketStatus mStatus =
     Nothing -> "issued"
     Just s -> s
 
-validateTicketCheckInOrderStatus :: Maybe T.Text -> Either ServerError T.Text
-validateTicketCheckInOrderStatus Nothing =
+validateStoredTicketOrderStatus :: Maybe T.Text -> Either ServerError T.Text
+validateStoredTicketOrderStatus Nothing =
   Left err500 { errBody = "Ticket order could not be loaded" }
-validateTicketCheckInOrderStatus (Just rawStatus) =
+validateStoredTicketOrderStatus (Just rawStatus) =
   case parseTicketOrderStatus rawStatus of
     Just statusVal -> Right statusVal
     Nothing -> Left err500 { errBody = "Stored ticket order status is invalid" }
+
+validateTicketCheckInOrderStatus :: Maybe T.Text -> Either ServerError T.Text
+validateTicketCheckInOrderStatus = validateStoredTicketOrderStatus
 
 validateTicketCheckInTicketStatus :: T.Text -> Either ServerError T.Text
 validateTicketCheckInTicketStatus rawStatus =
