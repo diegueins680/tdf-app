@@ -1881,6 +1881,14 @@ export default function CourseRegistrationsAdminPage() {
   const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && !hasCustomFilters
     && !viewHitsCurrentLimit;
+  const defaultEmptyLocalSearchScopeSummary = showDefaultEmptyLocalSearchFocus
+    ? [
+      combinedSingleChoiceSummary
+        || singleAvailableCohortLabel
+        || (showSingleStatusSummary && singleVisibleStatus ? statusFilterLabels[singleVisibleStatus] : ''),
+      hasNamedVisibleSource ? `Fuente visible: ${singleVisibleSourceLabel}` : '',
+    ].filter(Boolean).join(' · ')
+    : '';
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
   const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
     && searchedRegistrations[0] != null
@@ -1950,6 +1958,7 @@ export default function CourseRegistrationsAdminPage() {
       : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
+      defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',
       shortPhoneSearchHint
         || `No hay coincidencias para "${localSearchSummary}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
       shortPhoneSearchHint ? '' : viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',

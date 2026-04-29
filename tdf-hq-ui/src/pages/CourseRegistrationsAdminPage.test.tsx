@@ -9158,6 +9158,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
+      );
       expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('sin   coincidencias');
       expect(container.textContent).not.toContain('Búsqueda local en el lote cargado (9 inscripciones).');
