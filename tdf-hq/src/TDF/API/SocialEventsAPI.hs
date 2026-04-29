@@ -21,7 +21,12 @@ module TDF.API.SocialEventsAPI
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Char (isControl, isSpace)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import Servant
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -118,8 +123,8 @@ instance FromMultipart Tmp EventImageUploadForm where
 
       validateUploadName label rawName
         | T.null (T.strip rawName) = Right ()
-        | T.any isControl rawName =
-            Left (label <> " must not contain control characters")
+        | T.any isUnsafeUploadNameChar rawName =
+            Left (label <> " must not contain control characters or Unicode formatting marks")
         | T.any isPathSeparator rawName =
             Left (label <> " must not contain path separators")
         | not (hasNonEmptyUploadBaseName rawName) =
@@ -131,6 +136,10 @@ instance FromMultipart Tmp EventImageUploadForm where
       maxUploadNameLength = 180 :: Int
 
       isPathSeparator ch = ch == '/' || ch == '\\'
+
+      isUnsafeUploadNameChar ch =
+        isControl ch
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
       hasNonEmptyUploadBaseName rawName =
         let trimmed = T.strip rawName

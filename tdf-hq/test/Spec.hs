@@ -4595,6 +4595,11 @@ main = hspec $ do
                     [("name", "poster\nfinal.png")]
                     [mkEventImageFile "file" "poster.png"])
             assertInvalid
+                "Uploaded image name must not contain control characters or Unicode formatting marks"
+                (mkEventImageMultipart
+                    [("name", "poster\x202E\&final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
                 "Uploaded browser file name must not contain path separators"
                 (mkEventImageMultipart
                     []
@@ -4604,6 +4609,11 @@ main = hspec $ do
                 (mkEventImageMultipart
                     []
                     [mkEventImageFile "file" "poster\nfinal.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain control characters or Unicode formatting marks"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster\x200B\&final.png"])
             assertInvalid
                 "Uploaded image name must include a non-empty base name"
                 (mkEventImageMultipart
