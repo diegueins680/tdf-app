@@ -10663,10 +10663,12 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('strips seat-reservation descriptors from first-run cohort copy', async () => {
+  it('strips seat-request descriptors from first-run cohort copy', async () => {
     const titles = [
       'Formulario de reserva de cupo - Beatmaking 101',
+      'Solicitud de cupo - Beatmaking 101',
       'Beatmaking 101 - reserva de cupo',
+      'Beatmaking 101 - solicitud de cupo',
     ];
 
     for (const title of titles) {
@@ -10683,7 +10685,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de reserva');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Solicitud de cupo');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - reserva');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - solicitud');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
