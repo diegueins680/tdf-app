@@ -22,6 +22,7 @@ module TDF.ServerAdmin
   , validateAdminWhatsAppSendMode
   , validateAdminWhatsAppMessageBody
   , resolveAdminWhatsAppSendPhone
+  , resolveAdminWhatsAppResendPhone
   , validateAdminEmailSubject
   , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
@@ -906,8 +907,7 @@ adminServer user =
         (cleanMaybeText (ME.whatsAppMessageText msg))
       resendBody <- either throwError pure $
         validateAdminWhatsAppMessageBody (fromMaybe originalBody (cleanMaybeText awrrMessage))
-      let phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
-      targetPhone <- maybe (throwError err400 { errBody = "No se pudo determinar el número destino" }) pure phone
+      targetPhone <- either throwError pure (resolveAdminWhatsAppResendPhone msg)
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv targetPhone resendBody
@@ -1235,6 +1235,20 @@ resolveAdminWhatsAppSendPhone _ candidatePhones _ =
     (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") })
     Right
     (listToMaybe candidatePhones)
+
+resolveAdminWhatsAppResendPhone :: ME.WhatsAppMessage -> Either ServerError Text
+resolveAdminWhatsAppResendPhone msg =
+  maybe
+    ( Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino")
+        }
+    )
+    Right
+    (storedPhone <|> senderPhone)
+  where
+    storedPhone =
+      cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
+    senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject

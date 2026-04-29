@@ -56,6 +56,7 @@ import TDF.ServerAdmin (
     validateAdminWhatsAppSendMode,
     validateAdminWhatsAppMessageBody,
     resolveAdminWhatsAppSendPhone,
+    resolveAdminWhatsAppResendPhone,
     validateAdminEmailSubject,
     validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
@@ -524,6 +525,32 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         `shouldContain` "mensaje de referencia"
                 Right phone ->
                     expectationFailure ("Expected invalid reply phone to be rejected, got " <> show phone)
+
+    describe "resolveAdminWhatsAppResendPhone" $ do
+        it "validates stored resend phones before falling back to sender ids" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                resendTarget =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-resend" "outgoing")
+                        { ME.whatsAppMessagePhoneE164 = Just "not-a-phone"
+                        , ME.whatsAppMessageSenderId = "593999000333"
+                        }
+            resolveAdminWhatsAppResendPhone resendTarget
+                `shouldBe` Right "+593999000333"
+
+        it "rejects resend targets without any resolvable WhatsApp phone" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                resendTarget =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-resend-no-phone" "outgoing")
+                        { ME.whatsAppMessagePhoneE164 = Just "not-a-phone"
+                        , ME.whatsAppMessageSenderId = "also-not-a-phone"
+                        }
+            case resolveAdminWhatsAppResendPhone resendTarget of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "No se pudo determinar"
+                Right phone ->
+                    expectationFailure ("Expected invalid resend phone to be rejected, got " <> show phone)
 
     describe "validateUserCommunicationHistoryLimit" $ do
         it "defaults omitted limits and accepts explicit values inside the supported history window" $ do
