@@ -23,7 +23,7 @@ import           Control.Exception (IOException, displayException, try)
 import           System.Directory (doesFileExist, makeAbsolute)
 import           System.Environment (lookupEnv)
 import           System.Exit (ExitCode(..))
-import           System.FilePath (takeExtension)
+import           System.FilePath (isAbsolute, takeExtension)
 import           System.Process (proc, readCreateProcessWithExitCode)
 
 import qualified Data.Aeson as Aeson
@@ -409,11 +409,17 @@ normalizeConfiguredScriptPath raw =
        then Left blankConfiguredScriptMessage
        else if any isControl trimmed
          then Left invalidConfiguredScriptControlMessage
+         else if not (isAbsolute trimmed)
+           then Left relativeConfiguredScriptMessage
          else Right trimmed
 
 invalidConfiguredScriptControlMessage :: Text
 invalidConfiguredScriptControlMessage =
   "SRI_INVOICE_SCRIPT must not contain control characters."
+
+relativeConfiguredScriptMessage :: Text
+relativeConfiguredScriptMessage =
+  "SRI_INVOICE_SCRIPT must be an absolute path; unset it to use the default script discovery."
 
 firstExisting :: [FilePath] -> IO (Maybe FilePath)
 firstExisting [] = pure Nothing

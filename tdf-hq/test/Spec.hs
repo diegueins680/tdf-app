@@ -2494,6 +2494,17 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected control-character SRI script path to fail, got: " <> show value)
 
+        it "rejects relative SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "scripts/generate-sri-invoice.mjs")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must be an absolute path"
+                    Right value ->
+                        expectationFailure
+                            ("Expected relative SRI script path to fail, got: " <> show value)
+
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
                 hClose handle
