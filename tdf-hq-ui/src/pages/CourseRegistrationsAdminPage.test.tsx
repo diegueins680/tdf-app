@@ -11243,6 +11243,41 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips lead-capture descriptors from first-run cohort copy', async () => {
+    const titles = [
+      'Lead capture form - Beatmaking 101',
+      'Beatmaking 101 - lead capture page',
+      'Formulario de captación de leads - Beatmaking 101',
+      'Beatmaking 101 - página de captación de interesados',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Lead capture');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de captación');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - página');
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('waits for cohort context before showing first-run empty-state actions', async () => {
     listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
     listRegistrationsMock.mockResolvedValue([]);
