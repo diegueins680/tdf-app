@@ -2471,6 +2471,19 @@ validateGoogleCalendarEventStatus rawStatus
   where
     statusVal = T.toLower (T.strip rawStatus)
 
+validateGoogleCalendarEventId :: Text -> Either Text Text
+validateGoogleCalendarEventId rawEventId
+  | T.null eventIdVal =
+      Left "Google Calendar event id must not be blank"
+  | T.any isControl eventIdVal =
+      Left "Google Calendar event id must not contain control characters"
+  | T.any isSpace eventIdVal =
+      Left "Google Calendar event id must not contain whitespace"
+  | otherwise =
+      Right eventIdVal
+  where
+    eventIdVal = T.strip rawEventId
+
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =
        calendarAuthUrlH
@@ -2783,7 +2796,9 @@ calendarServer user =
     parseEvent :: Text -> Value -> Maybe ParsedEvent
     parseEvent _ val =
       parseMaybe (withObject "GoogleEvent" $ \o -> do
-        gid <- o .: "id"
+        gid <-
+          o .: "id"
+            >>= either (fail . T.unpack) pure . validateGoogleCalendarEventId
         status <-
           o .:? "status"
             >>= maybe

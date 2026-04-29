@@ -258,6 +258,7 @@ import TDF.Server
     , validateCalendarEventListQuery
     , validateCalendarRedirectUri
     , validateConfiguredCalendarRedirectUri
+    , validateGoogleCalendarEventId
     , validateGoogleCalendarEventStatus
     , googleCalendarEventsEndpoint
     , validateConfiguredDriveAccessToken
@@ -4152,6 +4153,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "must not contain whitespace" "needs action"
             assertInvalid "must not contain control characters" "con\nfirmed"
             assertInvalid "must be one of" "archived"
+
+    describe "validateGoogleCalendarEventId" $ do
+        it "normalizes upstream event ids before they become persisted event keys" $
+            validateGoogleCalendarEventId " google-event_123 "
+                `shouldBe` Right "google-event_123"
+
+        it "rejects malformed upstream event ids instead of creating ambiguous event rows" $ do
+            let assertInvalid expected rawEventId =
+                    case validateGoogleCalendarEventId rawEventId of
+                        Left err -> T.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Google Calendar event id, got: "
+                                    <> show value
+                                )
+            assertInvalid "must not be blank" "   "
+            assertInvalid "must not contain whitespace" "event 123"
+            assertInvalid "must not contain control characters" "event\n123"
 
     describe "googleCalendarEventsEndpoint" $ do
         it "encodes calendar ids as one path segment before sync requests are built" $ do
