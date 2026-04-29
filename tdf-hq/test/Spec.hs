@@ -2291,6 +2291,41 @@ main = hspec $ do
                         `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
 
+        it "validates optional SRI document identifiers before returning script output" $ do
+            let validSriAuthorizationNumber =
+                    "3003202601179321509200120011000000000163200767814"
+                assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed optional SRI document id to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "authorizationNumber must contain exactly 49 ASCII digits"
+                "{\"ok\":false,\"status\":\"received\",\"authorizationNumber\":\"123\"}"
+            assertInvalid
+                "invoiceNumber must use SRI format ###-###-#########"
+                "{\"ok\":false,\"status\":\"received\",\"invoiceNumber\":\"INV-2026-1\"}"
+            case Sri.decodeSriScriptOutput
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"authorizationNumber\":\" "
+                    <> validSriAuthorizationNumber
+                    <> " \","
+                    <> "\"invoiceNumber\":\" 001-100-000000001 \"}"
+                ) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected optional SRI document ids to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result -> do
+                    DTO.sirAuthorizationNumber result
+                        `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
+                    DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
+
         it "rejects negative SRI totals before invoice results are trusted" $
             case Sri.decodeSriScriptOutput
                 ( "{\"ok\":true,\"status\":\"issued\","

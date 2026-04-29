@@ -127,9 +127,42 @@ validateSriScriptResult dto =
        then Left "SRI script JSON output status is required"
        else if T.any isInvalidStatusChar statusValue
          then Left "SRI script JSON output status must not contain control characters"
-         else validateScriptTotal dto { sirStatus = statusValue } >>= validateIssuedResult
+         else
+           validateScriptTotal dto { sirStatus = statusValue }
+             >>= validateIssuedResult
+             >>= validateOptionalDocumentIdentifiers
   where
     isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
+
+    validateOptionalDocumentIdentifiers result = do
+      authorizationNumber <-
+        validateOptionalOutputField
+          "authorizationNumber"
+          validateSriAuthorizationNumber
+          (sirAuthorizationNumber result)
+      invoiceNumber <-
+        validateOptionalOutputField
+          "invoiceNumber"
+          validateIssuedInvoiceNumber
+          (sirInvoiceNumber result)
+      Right result
+        { sirAuthorizationNumber = authorizationNumber
+        , sirInvoiceNumber = invoiceNumber
+        }
+
+    validateOptionalOutputField fieldName validateShape mValue =
+      case T.strip <$> mValue of
+        Nothing -> Right Nothing
+        Just value
+          | T.null value -> Right Nothing
+          | T.any isInvalidStatusChar value ->
+              Left
+                ( "SRI script JSON output "
+                    <> fieldName
+                    <> " must not contain control characters"
+                )
+          | otherwise ->
+              Just <$> validateShape value
 
     validateScriptTotal result =
       case sirTotal result of
