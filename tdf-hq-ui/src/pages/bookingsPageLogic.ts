@@ -281,6 +281,14 @@ export const getBookingEngineerFieldState = ({
   }
 
   if (engineerCount === 0) {
+    if (!hasAssignedEngineer && !requiresEngineerForService(normalizedServiceType)) {
+      return {
+        helperText: '',
+        label: 'Ingeniero',
+        showField: false,
+      };
+    }
+
     return {
       helperText: hasAssignedEngineer
         ? 'No hay ingenieros en el catálogo de contactos. Conserva el nombre actual o actualiza contactos para volver a seleccionarlo.'

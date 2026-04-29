@@ -1405,11 +1405,11 @@ const openDialogForRange = (start: Date, end: Date) => {
                 )}
                 noOptionsText="Sin ingenieros en el catálogo"
               />
-            ) : (
+            ) : engineerFieldState.helperText ? (
               <Alert severity="info" variant="outlined">
                 {engineerFieldState.helperText}
               </Alert>
-            )}
+            ) : null}
             {roomsFieldState.showField ? (
               <Autocomplete
                 multiple

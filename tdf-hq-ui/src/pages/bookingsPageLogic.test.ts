@@ -253,6 +253,16 @@ describe('bookingsPageLogic', () => {
     expect(getBookingEngineerFieldState({
       engineerCount: 0,
       hasAssignedEngineer: false,
+      serviceType: 'Band rehearsal',
+    })).toEqual({
+      helperText: '',
+      label: 'Ingeniero',
+      showField: false,
+    });
+
+    expect(getBookingEngineerFieldState({
+      engineerCount: 0,
+      hasAssignedEngineer: false,
       serviceType: 'Mixing',
     })).toEqual({
       helperText: 'Todavía no hay ingenieros en el catálogo de contactos. Continúa sin asignar uno o agrégalo después.',
