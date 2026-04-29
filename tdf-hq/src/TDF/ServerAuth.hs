@@ -47,7 +47,14 @@ import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, valida
 import Data.Aeson (FromJSON (..), Value (..), eitherDecode, withObject, (.:), (.:?))
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
-import Data.Char (isAsciiLower, isControl, isDigit, isSpace)
+import Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
@@ -336,10 +343,16 @@ validateSignupDisplayName :: Text -> Text -> Either ServerError Text
 validateSignupDisplayName rawFirst rawLast
   | T.null firstClean && T.null lastClean =
       Left (signupNameError "First or last name is required")
-  | T.any isControl firstClean =
-      Left (signupNameError "firstName must not contain control characters")
-  | T.any isControl lastClean =
-      Left (signupNameError "lastName must not contain control characters")
+  | T.any isUnsafeSignupNameChar firstClean =
+      Left
+        ( signupNameError
+            "firstName must not contain control or hidden formatting characters"
+        )
+  | T.any isUnsafeSignupNameChar lastClean =
+      Left
+        ( signupNameError
+            "lastName must not contain control or hidden formatting characters"
+        )
   | T.length firstClean > maxSignupNamePartChars =
       Left (signupNameError "firstName must be 80 characters or fewer")
   | T.length lastClean > maxSignupNamePartChars =
@@ -359,6 +372,10 @@ maxSignupNamePartChars = 80
 
 maxSignupDisplayNameChars :: Int
 maxSignupDisplayNameChars = 160
+
+isUnsafeSignupNameChar :: Char -> Bool
+isUnsafeSignupNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing

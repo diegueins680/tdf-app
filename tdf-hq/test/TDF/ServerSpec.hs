@@ -2906,7 +2906,8 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid signup display name, got: " <> show value)
             assertInvalid "First or last name is required" $
                 validateSignupDisplayName "   " "   "
-            assertInvalid "firstName must not contain control characters" $
+            assertInvalid
+                "firstName must not contain control or hidden formatting characters" $
                 validateSignupDisplayName "Ada\nBcc: ops@example.com" "Lovelace"
             assertInvalid "lastName must be 80 characters or fewer" $
                 validateSignupDisplayName "Ada" (T.replicate 81 "x")

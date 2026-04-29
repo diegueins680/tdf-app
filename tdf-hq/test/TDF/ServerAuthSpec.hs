@@ -3,6 +3,7 @@
 module TDF.ServerAuthSpec (spec) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Char (chr)
 import Data.Int (Int64)
 import qualified Data.Text as T
 import Database.Persist (Entity (..), Key)
@@ -17,11 +18,13 @@ import TDF.ServerAuth
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , validatePasswordResetToken
+  , validateSignupDisplayName
   )
 
 spec :: Spec
 spec = do
   authEmailSpec
+  signupDisplayNameSpec
   passwordResetTokenSpec
   loginEmailFallbackSpec
   googleLoginEmailFallbackSpec
@@ -58,6 +61,28 @@ authEmailSpec = describe "normalizeAuthEmailAddress" $ do
             ]
       )
       `shouldBe` Nothing
+
+signupDisplayNameSpec :: Spec
+signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
+  it "trims signup name parts into the stored display name" $
+    validateSignupDisplayName "  Ada  " "  Lovelace  "
+      `shouldBe` Right "Ada Lovelace"
+
+  it "rejects hidden formatting characters before signup stores ambiguous display names" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertRejected label result =
+          case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` label
+              BL8.unpack (errBody err) `shouldContain` "hidden formatting"
+            Right value ->
+              expectationFailure
+                ("Expected hidden formatting character to be rejected, got " <> show value)
+    assertRejected "firstName" $
+      validateSignupDisplayName ("Ada" <> hiddenFormat) "Lovelace"
+    assertRejected "lastName" $
+      validateSignupDisplayName "Ada" ("Love" <> hiddenFormat <> "lace")
 
 passwordResetTokenSpec :: Spec
 passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
