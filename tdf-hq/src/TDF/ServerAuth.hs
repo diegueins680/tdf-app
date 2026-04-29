@@ -1198,21 +1198,21 @@ createTokenWithLabel pid label = do
 
 findReusableActiveToken :: PartyId -> Maybe Text -> SqlPersistT IO (Maybe Text)
 findReusableActiveToken pid preferredLabel = do
-  preferred <- case preferredLabel of
+  candidates <- case preferredLabel of
     Just lbl ->
-      selectFirst
+      selectList
         [ ApiTokenPartyId ==. pid
         , ApiTokenActive ==. True
         , ApiTokenLabel ==. Just lbl
         ]
         [Asc ApiTokenId]
-    Nothing -> pure Nothing
-  case preferred of
-    Just (Entity _ tok) -> pure (Just (apiTokenToken tok))
-    Nothing | isJust preferredLabel -> pure Nothing
-    Nothing -> do
-      fallback <- selectFirst [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] [Asc ApiTokenId]
-      pure (apiTokenToken . entityVal <$> fallback)
+    Nothing ->
+      selectList [ApiTokenPartyId ==. pid, ApiTokenActive ==. True] [Asc ApiTokenId]
+  pure (apiTokenToken . entityVal <$> selectUniqueActiveToken candidates)
+
+selectUniqueActiveToken :: [Entity ApiToken] -> Maybe (Entity ApiToken)
+selectUniqueActiveToken [tokenEntity] = Just tokenEntity
+selectUniqueActiveToken _ = Nothing
 
 isReadOnlySqlError :: SqlError -> Bool
 isReadOnlySqlError sqlErr = sqlState sqlErr == BS8.pack "25006"

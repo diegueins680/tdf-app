@@ -4582,7 +4582,7 @@ spec = describe "TDF.Server helpers" $ do
             updatedHash `shouldNotBe` Just "old-hash"
             tokenActive `shouldBe` Just False
 
-    describe "findReusableActiveToken" $
+    describe "findReusableActiveToken" $ do
         it "does not fall back to unrelated active tokens for labeled session reuse" $ do
             result <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
@@ -4612,6 +4612,38 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenActive = True
                     }
                 findReusableActiveToken partyId (Just "password-login:login@example.com")
+
+            result `shouldBe` Nothing
+
+        it "rejects duplicate labeled token reuse instead of picking the first active token" $ do
+            result <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Duplicate Login User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "duplicate-login@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyCreatedAt = now
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "first-login-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-login:duplicate-login@example.com"
+                    , apiTokenActive = True
+                    }
+                _ <- insert ApiToken
+                    { apiTokenToken = "second-login-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "password-login:duplicate-login@example.com"
+                    , apiTokenActive = True
+                    }
+                findReusableActiveToken partyId (Just "password-login:duplicate-login@example.com")
 
             result `shouldBe` Nothing
 
