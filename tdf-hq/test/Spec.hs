@@ -5469,6 +5469,29 @@ main = hspec $ do
             assertInvalid "https://rádio.example.com/live"
             assertInvalid "https://[2001:db8::１]/live"
 
+        it "rejects oversized DNS hosts before metadata fetches can fail ambiguously" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl must include a valid host"
+                        Right value ->
+                            expectationFailure
+                                ("Expected oversized streamUrl host to be rejected, got " <> show value)
+            assertInvalid
+                ("https://" <> Data.Text.replicate 64 "a" <> ".example.com/live")
+            assertInvalid
+                ( "https://"
+                    <> Data.Text.intercalate
+                        "."
+                        [ Data.Text.replicate 63 "a"
+                        , Data.Text.replicate 63 "b"
+                        , Data.Text.replicate 63 "c"
+                        , Data.Text.replicate 61 "d"
+                        ]
+                    <> ".com/live"
+                )
+
         it "rejects malformed bracketed IPv6 hosts before metadata fetches can use them" $ do
             let assertInvalid rawUrl =
                     case validateRadioStreamUrl rawUrl of

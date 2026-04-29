@@ -366,6 +366,8 @@ validateRadioAuthority rawAuthority
 
     validateAuthorityHost host
       | T.null host = Left err400 { errBody = "streamUrl must include a host" }
+      | T.length host > maxRadioHostnameChars =
+          Left err400 { errBody = "streamUrl must include a valid host" }
       | T.isPrefixOf "." host || T.isSuffixOf "." host =
           Left err400 { errBody = "streamUrl must include a valid host" }
       | isAmbiguousNumericHost host =
@@ -376,6 +378,7 @@ validateRadioAuthority rawAuthority
       where
         invalidHostLabel label =
           T.null label
+            || T.length label > maxRadioHostnameLabelChars
             || T.isPrefixOf "-" label
             || T.isSuffixOf "-" label
             || T.any (not . isValidHostChar) label
@@ -395,6 +398,12 @@ validateRadioAuthority rawAuthority
                    Left err400 { errBody = "streamUrl port must be between 1 and 65535" }
       | otherwise =
           Left err400 { errBody = "streamUrl must include a valid host" }
+
+maxRadioHostnameChars :: Int
+maxRadioHostnameChars = 253
+
+maxRadioHostnameLabelChars :: Int
+maxRadioHostnameLabelChars = 63
 
 isValidBracketedIpv6Host :: Text -> Bool
 isValidBracketedIpv6Host host =
