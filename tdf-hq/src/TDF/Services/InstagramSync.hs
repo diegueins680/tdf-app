@@ -10,7 +10,7 @@ module TDF.Services.InstagramSync
 
 import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl, isDigit, isSpace)
+import           Data.Char (isControl, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -25,7 +25,11 @@ import           Network.HTTP.Types.Status (statusCode)
 import           Network.HTTP.Types.URI (renderSimpleQuery)
 import qualified Data.ByteString.Lazy as BL
 
-import           TDF.Config (AppConfig(..), normalizeConfiguredGraphNodeId)
+import           TDF.Config
+  ( AppConfig(..)
+  , normalizeConfiguredGraphNodeId
+  , normalizeConfiguredHttpsUrl
+  )
 
 data InstagramMedia = InstagramMedia
   { imId        :: Text
@@ -68,25 +72,18 @@ validateInstagramMediaUrl fieldName rawUrl
       fail (T.unpack fieldName <> " must be 2048 characters or fewer")
   | T.any (\ch -> isSpace ch || isControl ch) url =
       fail (T.unpack fieldName <> " must not contain whitespace or control characters")
-  | not ("https://" `T.isPrefixOf` lowerUrl) =
-      fail (T.unpack fieldName <> " must be an absolute public https URL")
-  | T.null authority || T.any (== '@') authority || not (isPublicDnsAuthority authority) =
+  | not (isPublicHttpsUrl fieldName url) =
       fail (T.unpack fieldName <> " must be an absolute public https URL")
   | otherwise =
       pure url
   where
     url = T.strip rawUrl
-    lowerUrl = T.toLower url
-    authority = T.takeWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') (T.drop 8 url)
 
-isPublicDnsAuthority :: Text -> Bool
-isPublicDnsAuthority rawAuthority =
-  let host = T.toLower (T.takeWhile (/= ':') rawAuthority)
-  in not (T.null host)
-       && host /= "localhost"
-       && "." `T.isInfixOf` host
-       && not ("[" `T.isPrefixOf` host)
-       && not (T.all (\ch -> isDigit ch || ch == '.') host)
+isPublicHttpsUrl :: Text -> Text -> Bool
+isPublicHttpsUrl fieldName url =
+  case normalizeConfiguredHttpsUrl (T.unpack fieldName) (T.unpack url) of
+    Right (Just normalized) -> normalized == url
+    _ -> False
 
 newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 

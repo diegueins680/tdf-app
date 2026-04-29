@@ -7354,6 +7354,12 @@ spec = describe "TDF.Server helpers" $ do
                 "media_url must be an absolute public https URL"
                 "{\"id\":\"ig-media-42\",\"media_url\":\"https://localhost/post.jpg\"}"
             assertInvalid
+                "media_url must be an absolute public https URL"
+                "{\"id\":\"ig-media-42\",\"media_url\":\"https://cdn..example.com/post.jpg\"}"
+            assertInvalid
+                "media_url must be an absolute public https URL"
+                "{\"id\":\"ig-media-42\",\"media_url\":\"https://cdn.example.com:70000/post.jpg\"}"
+            assertInvalid
                 "permalink must not contain whitespace"
                 "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com/p/post 42/\"}"
 
