@@ -5786,6 +5786,12 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldReturn` Left "FACEBOOK_MESSAGING_TOKEN must not contain whitespace or control characters"
 
             sendFacebookText
+                (configuredCfg { facebookMessagingToken = Just (T.replicate 4097 "a") })
+                "recipient-1"
+                "hola"
+                `shouldReturn` Left "FACEBOOK_MESSAGING_TOKEN must be 4096 characters or fewer"
+
+            sendFacebookText
                 (configuredCfg { facebookMessagingPageId = Just "page_123/messages" })
                 "recipient-1"
                 "hola"

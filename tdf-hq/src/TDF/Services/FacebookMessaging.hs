@@ -73,10 +73,15 @@ validateFacebookBearerToken rawToken =
     Nothing ->
       Left "FACEBOOK_MESSAGING_TOKEN no configurado"
     Just token
+      | T.length token > maxFacebookBearerTokenChars ->
+          Left "FACEBOOK_MESSAGING_TOKEN must be 4096 characters or fewer"
       | T.any invalidHeaderValueChar token ->
           Left "FACEBOOK_MESSAGING_TOKEN must not contain whitespace or control characters"
       | otherwise ->
           Right token
+
+maxFacebookBearerTokenChars :: Int
+maxFacebookBearerTokenChars = 4096
 
 validateFacebookPageId :: Maybe Text -> Either Text Text
 validateFacebookPageId rawPageId =
