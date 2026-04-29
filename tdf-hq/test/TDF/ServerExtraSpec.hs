@@ -5006,6 +5006,14 @@ spec = do
         403
         "Meta verify token not configured"
         (validate (Just "subscribe") (Just "challenge-123") (Just "secret") [Just "   "])
+      assertInvalid
+        403
+        "Meta verify token candidates conflict"
+        (validate
+          (Just "subscribe")
+          (Just "challenge-123")
+          (Just "secret")
+          [Just "secret", Just "other-secret"])
 
     it "rejects unsafe Meta webhook verification values before echoing or falling back" $ do
       let assertInvalid expectedCode expectedMessage result =

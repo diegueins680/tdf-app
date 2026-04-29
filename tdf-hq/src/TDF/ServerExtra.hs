@@ -17,7 +17,7 @@ import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
 import           Data.Char
@@ -3772,12 +3772,14 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
   where
     validateConfiguredMetaVerifyToken :: [Maybe Text] -> Either ServerError Text
     validateConfiguredMetaVerifyToken candidates =
-      case listToMaybe (mapMaybe nonBlankText candidates) of
-        Nothing ->
+      case mapMaybe nonBlankText candidates of
+        [] ->
           Left err403 { errBody = "Meta verify token not configured" }
-        Just expected
-          | T.any isUnsafeMetaVerifyTokenChar expected ->
+        expected : rest
+          | any (T.any isUnsafeMetaVerifyTokenChar) (expected : rest) ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
+          | any (/= expected) rest ->
+              Left err403 { errBody = "Meta verify token candidates conflict" }
           | otherwise ->
               Right expected
 
