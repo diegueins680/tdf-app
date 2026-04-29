@@ -2818,6 +2818,44 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No elements available/i)).not.toBeInTheDocument();
   });
 
+  it('ignores no-content fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-content-empty',
+          title: 'Integraciones',
+          body: ['Sin contenido por ahora.'],
+        },
+        {
+          cardId: 'service-tokens-content-empty',
+          title: 'Service tokens',
+          body: ['No content available yet.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Integraciones|Service tokens/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin contenido/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No content available/i)).not.toBeInTheDocument();
+  });
+
   it('ignores permission and unavailable fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
