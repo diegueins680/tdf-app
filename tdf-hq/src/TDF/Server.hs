@@ -8964,6 +8964,11 @@ shouldRetryWithFallbackModel status rawMessage =
       [ "rate limit"
       , "too many requests"
       , "quota"
+      , "billing_hard_limit"
+      , "billing issue"
+      , "payment_required"
+      , "payment required"
+      , "payment method"
       ]
 
 tidalSystemPrompt :: Text

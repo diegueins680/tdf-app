@@ -200,7 +200,8 @@ import TDF.Server
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
-      validatePayPalApprovalUrl )
+      validatePayPalApprovalUrl,
+      shouldRetryWithFallbackModel )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -1129,6 +1130,20 @@ main = hspec $ do
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 257 "a"))
                 "OPENAI_MODEL must be 256 characters or fewer"
+
+        it "does not hide OpenAI billing failures behind model fallback retries" $ do
+            shouldRetryWithFallbackModel
+                404
+                "The model gpt-expired does not exist or you do not have access to it."
+                `shouldBe` True
+            shouldRetryWithFallbackModel
+                403
+                "billing_hard_limit_reached: model_not_found for this account"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "payment_required: model_not_found for this account"
+                `shouldBe` False
 
         it "normalizes configured RAG tuning integers before building retrieval plans" $ do
             withEnvOverrides
