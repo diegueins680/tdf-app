@@ -1876,8 +1876,18 @@ export default function CourseRegistrationsAdminPage() {
     () => hasSearchableCustomRegistrationStatus(registrations),
     [registrations],
   );
+  const statusAlreadyVisibleInBusySearchOnboarding = Boolean(combinedSingleChoiceSummary)
+    && showLocalSearchControl
+    && !hasLocalSearch
+    && !hasCustomFilters
+    && !viewHitsCurrentLimit
+    && limit === DEFAULT_LIMIT;
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
-    ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
+    ? ` ${
+      statusAlreadyVisibleInBusySearchOnboarding
+        ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+        : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
+    }`
     : '';
   const localSearchSingleResultTargetLabel =
     localSearchNarrowsRegistrations && searchedRegistrations.length === 1
@@ -2089,7 +2099,13 @@ export default function CourseRegistrationsAdminPage() {
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock && !showSingleResultWithOnlyPassiveFilterContext;
+  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showBusyListNonNarrowingSearch = showLocalSearchControl
+    && hasLocalSearch
+    && !localSearchNarrowsRegistrations
+    && loadedRegistrationCount > 1;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
+    || statusAlreadyVisibleInBusySearchOnboarding
     || statusAlreadyVisibleInFilterStrip
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
@@ -2108,11 +2124,6 @@ export default function CourseRegistrationsAdminPage() {
     combinedSingleChoicePassiveContextSummary,
     showInlineCurrentViewDossierHint ? dossierScopeHint : '',
   ].filter(Boolean).join(' ');
-  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
-  const showBusyListNonNarrowingSearch = showLocalSearchControl
-    && hasLocalSearch
-    && !localSearchNarrowsRegistrations
-    && loadedRegistrationCount > 1;
   const canFoldSharedSourceIntoBusySearch = Boolean(
     showBusyListSearchOnboarding
     && combinedSingleChoiceSummary

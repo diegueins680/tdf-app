@@ -7498,7 +7498,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps busy single-choice defaults focused on search instead of a passive current-view panel', async () => {
+  it('keeps busy single-choice defaults focused on search and compact row status actions', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
     const container = document.createElement('div');
@@ -7518,7 +7518,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
-      expect(container.textContent).toContain(dossierOnlyScopeHint);
+      expect(container.textContent).toContain(dossierScopeHint);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
 
     await cleanup();
@@ -8448,9 +8450,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchInput.getAttribute('placeholder')).toBe('Registro');
       expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
       expect(container.textContent).toContain(
-        'Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el registro; el estado abre acciones rápidas.',
+        `Busca dentro de las 9 inscripciones cargadas. ${recordDossierScopeHint}`,
       );
       expect(container.textContent).not.toContain('sin cambiar filtros');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');
     });
@@ -8856,8 +8859,7 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('uses the single visible identity type after local search narrows a mixed busy list', async () => {
-    const mixedBusySearchHint =
-      'Abre el expediente desde el dato principal de cada fila; el estado abre acciones rápidas.';
+    const mixedBusySearchHint = mixedIdentityDossierScopeHint;
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
