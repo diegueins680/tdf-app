@@ -262,17 +262,18 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getPageGuidance(container)).toBe(
@@ -297,17 +298,17 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
         expect(container.textContent).not.toContain('Incluir inactivos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(container.textContent).toContain(ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE);
         expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
@@ -2619,16 +2620,17 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(container.textContent).toContain('Inactivos incluidos');
         expect(getPageGuidance(container)).toBe(
@@ -2663,19 +2665,19 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
         );
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. No hay usuarios inactivos en esta vista.',
         );
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
@@ -3172,8 +3174,9 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.textContent).not.toContain(
@@ -3866,12 +3869,13 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
-        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
       });
 
-      await clickButton(getButtonsByText(container, 'Buscar también en inactivos')[0]!);
+      await clickButton(getButtonsByText(container, 'Buscar también en cuentas inactivas')[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
@@ -3879,7 +3883,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain(
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
-        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(container.textContent).not.toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
@@ -4463,8 +4467,8 @@ describe('AdminUsersPage', () => {
         );
         expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
@@ -4520,8 +4524,8 @@ describe('AdminUsersPage', () => {
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(1);
-        expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).toContain('Limpiar búsqueda');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();

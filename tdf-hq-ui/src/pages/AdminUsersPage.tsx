@@ -332,8 +332,8 @@ const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
-const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
-const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en inactivos';
+const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar cuentas inactivas';
+const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en cuentas inactivas';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
