@@ -21,6 +21,7 @@ module TDF.ServerAuth
   , parsePasswordChangeAuthToken
   , resolvePasswordResetDelivery
   , runPasswordResetConfirm
+  , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , signupEmailExists
@@ -51,7 +52,7 @@ import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
 import Data.List (nub)
-import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -844,49 +845,56 @@ issuerAllowed (Just issRaw) =
 
 completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
 completeGoogleLogin GoogleProfile{..} = do
-  mExisting <- lookupByEmail gpEmail
-  case mExisting of
-    Just (Entity _ cred)
-      | not (userCredentialActive cred) ->
-          pure (Left "Cuenta deshabilitada. Contacta a soporte.")
-      | otherwise -> do
-          sessionToken <- createReusableSessionToken (userCredentialPartyId cred) (Just ("google-login:" <> gpEmail))
+  existingResult <- lookupByEmail gpEmail
+  case existingResult of
+    Left err -> pure (Left err)
+    Right mExisting ->
+      case mExisting of
+        Just (Entity _ cred)
+          | not (userCredentialActive cred) ->
+              pure (Left "Cuenta deshabilitada. Contacta a soporte.")
+          | otherwise -> do
+              sessionToken <-
+                createReusableSessionToken
+                  (userCredentialPartyId cred)
+                  (Just ("google-login:" <> gpEmail))
+              mUser <- loadAuthedUser sessionToken
+              case mUser of
+                Nothing -> pure (Left "No pudimos cargar tu perfil.")
+                Just user -> pure (Right (toLoginResponse sessionToken user))
+        Nothing -> do
+          now <- liftIO getCurrentTime
+          let displayName = fromMaybe gpEmail (cleanOptional gpName)
+              partyRecord = Party
+                { partyLegalName = Nothing
+                , partyDisplayName = displayName
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Just gpEmail
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyCreatedAt = now
+                }
+          pid <- insert partyRecord
+          applyRoles pid [Customer, Fan]
+          ensureFanProfileIfMissing pid displayName now
+          tempPassword <- liftIO generateTemporaryPassword
+          hashed <- liftIO (hashPasswordText tempPassword)
+          _ <- insert UserCredential
+            { userCredentialPartyId = pid
+            , userCredentialUsername = gpEmail
+            , userCredentialPasswordHash = hashed
+            , userCredentialActive = True
+            }
+          sessionToken <-
+            createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
           mUser <- loadAuthedUser sessionToken
           case mUser of
             Nothing -> pure (Left "No pudimos cargar tu perfil.")
             Just user -> pure (Right (toLoginResponse sessionToken user))
-    Nothing -> do
-      now <- liftIO getCurrentTime
-      let displayName = fromMaybe gpEmail (cleanOptional gpName)
-          partyRecord = Party
-            { partyLegalName = Nothing
-            , partyDisplayName = displayName
-            , partyIsOrg = False
-            , partyTaxId = Nothing
-            , partyPrimaryEmail = Just gpEmail
-            , partyPrimaryPhone = Nothing
-            , partyWhatsapp = Nothing
-            , partyInstagram = Nothing
-            , partyEmergencyContact = Nothing
-            , partyNotes = Nothing
-            , partyCreatedAt = now
-            }
-      pid <- insert partyRecord
-      applyRoles pid [Customer, Fan]
-      ensureFanProfileIfMissing pid displayName now
-      tempPassword <- liftIO generateTemporaryPassword
-      hashed <- liftIO (hashPasswordText tempPassword)
-      _ <- insert UserCredential
-        { userCredentialPartyId = pid
-        , userCredentialUsername = gpEmail
-        , userCredentialPasswordHash = hashed
-        , userCredentialActive = True
-        }
-      sessionToken <- createReusableSessionToken pid (Just ("google-login:" <> gpEmail))
-      mUser <- loadAuthedUser sessionToken
-      case mUser of
-        Nothing -> pure (Left "No pudimos cargar tu perfil.")
-        Just user -> pure (Right (toLoginResponse sessionToken user))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
 runLogin identifier pwd = do
@@ -933,15 +941,24 @@ selectUniqueLoginEmailCredential :: [Entity UserCredential] -> Maybe (Entity Use
 selectUniqueLoginEmailCredential [credential] = Just credential
 selectUniqueLoginEmailCredential _ = Nothing
 
-lookupByEmail :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
+lookupByEmail :: Text -> SqlPersistT IO (Either Text (Maybe (Entity UserCredential)))
 lookupByEmail emailAddress = do
   let query =
         "SELECT ?? FROM user_credential \
         \ JOIN party ON user_credential.party_id = party.id \
         \ WHERE lower(trim(COALESCE(party.primary_email, ''))) = lower(trim(?)) \
-        \ LIMIT 1"
+        \ ORDER BY user_credential.id ASC \
+        \ LIMIT 2"
   creds <- rawSql query [PersistText emailAddress]
-  pure (listToMaybe creds)
+  pure (selectUniqueGoogleLoginCredential creds)
+
+selectUniqueGoogleLoginCredential
+  :: [Entity UserCredential]
+  -> Either Text (Maybe (Entity UserCredential))
+selectUniqueGoogleLoginCredential [] = Right Nothing
+selectUniqueGoogleLoginCredential [credential] = Right (Just credential)
+selectUniqueGoogleLoginCredential _ =
+  Left "Hay varias cuentas asociadas a este correo de Google. Contacta a soporte."
 
 runSignupDb
   :: Text

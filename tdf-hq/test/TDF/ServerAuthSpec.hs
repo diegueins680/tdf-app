@@ -13,6 +13,7 @@ import Test.Hspec
 import TDF.Models (UserCredential (..))
 import TDF.ServerAuth
   ( normalizeAuthEmailAddress
+  , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , validatePasswordResetToken
@@ -23,6 +24,7 @@ spec = do
   authEmailSpec
   passwordResetTokenSpec
   loginEmailFallbackSpec
+  googleLoginEmailFallbackSpec
   passwordResetDeliverySpec
 
 authEmailSpec :: Spec
@@ -117,6 +119,25 @@ loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
       ]
       `shouldBe` Nothing
 
+googleLoginEmailFallbackSpec :: Spec
+googleLoginEmailFallbackSpec = describe "selectUniqueGoogleLoginCredential" $ do
+  it "allows absent or exactly one Google email credential candidate" $ do
+    selectedGoogleCredentialKey []
+      `shouldBe` Right Nothing
+    selectedGoogleCredentialKey [credentialEntity 31 301]
+      `shouldBe` Right (Just (toSqlKey 31))
+
+  it "rejects ambiguous Google email credentials before account fallback creation" $
+    case selectedGoogleCredentialKey
+      [ credentialEntity 31 301
+      , credentialEntity 32 302
+      ] of
+      Left err ->
+        T.unpack err `shouldContain` "varias cuentas"
+      Right value ->
+        expectationFailure
+          ("Expected ambiguous Google email credentials to fail, got " <> show value)
+
 passwordResetDeliverySpec :: Spec
 passwordResetDeliverySpec = describe "selectUniquePasswordResetCredential" $ do
   it "allows exactly one password reset credential candidate" $
@@ -151,3 +172,9 @@ selectedCredentialKey = fmap credentialEntityKey . selectUniquePasswordResetCred
 
 selectedLoginCredentialKey :: [Entity UserCredential] -> Maybe (Key UserCredential)
 selectedLoginCredentialKey = fmap credentialEntityKey . selectUniqueLoginEmailCredential
+
+selectedGoogleCredentialKey
+  :: [Entity UserCredential]
+  -> Either T.Text (Maybe (Key UserCredential))
+selectedGoogleCredentialKey =
+  fmap (fmap credentialEntityKey) . selectUniqueGoogleLoginCredential
