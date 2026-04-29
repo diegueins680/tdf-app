@@ -1204,7 +1204,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await thirdRender.cleanup();
   }, 20_000);
 
-  it('treats the selected cohort as passive context when it is the only configured cohort', async () => {
+  it('keeps a redundant single-cohort URL filter out of the minimal single-result view', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
@@ -1215,14 +1215,19 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(container.textContent).toContain('Vista actual');
-      expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(container.textContent).not.toContain('Vista filtrada:');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        dossierOnlyScopeHint,
+      );
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
     });

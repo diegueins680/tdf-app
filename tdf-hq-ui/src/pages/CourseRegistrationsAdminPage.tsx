@@ -2141,7 +2141,7 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
   const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
     && !hasCustomFilters
-    && !hasSlugFilter
+    && !hasEffectiveSlugFilter
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock && !showSingleResultWithOnlyPassiveFilterContext;
