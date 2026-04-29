@@ -9916,7 +9916,12 @@ isValidDatafastCheckoutId checkoutId =
     && T.length checkoutId <= 256
     && checkoutId /= "."
     && checkoutId /= ".."
+    && T.any isDatafastCheckoutIdAtom checkoutId
     && T.all isDatafastCheckoutIdChar checkoutId
+
+isDatafastCheckoutIdAtom :: Char -> Bool
+isDatafastCheckoutIdAtom c =
+  isAsciiUpper c || isAsciiLower c || isDigit c
 
 isDatafastCheckoutIdChar :: Char -> Bool
 isDatafastCheckoutIdChar c =

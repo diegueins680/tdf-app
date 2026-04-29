@@ -3368,6 +3368,8 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid Datafast checkout id, got " <> show value)
             assertInvalid "   "
+            assertInvalid "---"
+            assertInvalid "..."
             assertInvalid "../payment"
             assertInvalid "checkout?entityId=other"
             assertInvalid "checkout&entityId=other"
