@@ -1670,6 +1670,10 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [registrations]);
+  const hasVisibleCustomStatuses = useMemo(
+    () => registrations.some((reg) => !normalizeKnownRegistrationStatus(reg.crStatus)),
+    [registrations],
+  );
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
@@ -1680,10 +1684,11 @@ export default function CourseRegistrationsAdminPage() {
   );
   const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
   const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
+    if (hasVisibleCustomStatuses) return null;
     if (!hasVisibleRegistrations) return null;
     const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
-  }, [hasVisibleRegistrations, visibleStatusFilters]);
+  }, [hasVisibleCustomStatuses, hasVisibleRegistrations, visibleStatusFilters]);
   const singleVisibleCustomStatus = useMemo(() => {
     if (!hasVisibleRegistrations || status !== 'all') return null;
     const statusesByKey = new Map<string, string>();
@@ -2033,6 +2038,7 @@ export default function CourseRegistrationsAdminPage() {
     && actionableStatusFilters[0] === status;
   const showActiveStatusFilterSummary = hasVisibleRegistrations
     && hasStatusFilter
+    && !hasVisibleCustomStatuses
     && (
       hasEffectiveSlugFilter
       || hasCustomLimit
