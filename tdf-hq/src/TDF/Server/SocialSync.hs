@@ -12,6 +12,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncPermalink
   , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
+  , validateSocialSyncTagFilter
   ) where
 
 import           Control.Monad              (forM)
@@ -178,7 +179,7 @@ socialSyncServer user =
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
       limitVal <- either throwError pure (validateSocialSyncPostsLimit mLimit)
-      let normalizedTag = normalizeSocialSyncTagFilter mTag
+      normalizedTag <- either throwError pure (validateSocialSyncTagFilter mTag)
       let filters = catMaybes
             [ (SocialSyncPostPlatform ==.) <$> platformFilter
             , (SocialSyncPostArtistPartyId ==.) . Just <$> partyKey
@@ -338,7 +339,7 @@ validateSocialSyncIngestSource (Just raw) =
           Left err400
             { errBody = BL.fromStrict (TE.encodeUtf8 "ingestSource must be 64 characters or fewer")
             }
-      | T.all isSocialSyncIngestSourceChar source ->
+      | T.all isSocialSyncLabelChar source ->
           Right (T.toLower source)
       | otherwise ->
           Left err400
@@ -348,9 +349,10 @@ validateSocialSyncIngestSource (Just raw) =
                      "ingestSource must contain only ASCII letters, digits, "
                        <> "hyphen, or underscore")
             }
-  where
-    isSocialSyncIngestSourceChar c =
-      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+isSocialSyncLabelChar :: Char -> Bool
+isSocialSyncLabelChar c =
+  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
 validateSocialSyncPermalink :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialSyncPermalink Nothing = Right Nothing
@@ -420,6 +422,25 @@ validateSocialSyncPostsLimit (Just n)
         { errBody = BL.fromStrict (TE.encodeUtf8 "limit must be between 1 and 500")
         }
 
+validateSocialSyncTagFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncTagFilter Nothing = Right Nothing
+validateSocialSyncTagFilter (Just raw) =
+  case nonEmptyText raw of
+    Nothing -> Right Nothing
+    Just tag
+      | T.length tag > 64 ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 "tag must be 64 characters or fewer")
+            }
+      | T.all isSocialSyncLabelChar tag ->
+          Right (Just (T.toLower tag))
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "tag must contain only ASCII letters, digits, hyphen, or underscore")
+            }
+
 validatePositiveSocialSyncId :: Text -> Text -> Either ServerError Int64
 validatePositiveSocialSyncId fieldName raw =
   case readMaybeInt64 raw of
@@ -449,9 +470,6 @@ resolveSocialSyncRunLabel fallback rawValues =
     [] -> fallback
     [label] -> label
     _ -> "mixed"
-
-normalizeSocialSyncTagFilter :: Maybe Text -> Maybe Text
-normalizeSocialSyncTagFilter mTag = T.toLower <$> (mTag >>= nonEmptyText)
 
 filterSocialSyncRows :: Maybe Text -> Int -> [Entity SocialSyncPost] -> [Entity SocialSyncPost]
 filterSocialSyncRows Nothing _ rows = rows

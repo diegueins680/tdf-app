@@ -216,6 +216,7 @@ import TDF.Server.SocialSync
       validateSocialSyncArtistProfileId,
       validateSocialSyncPlatform,
       validateSocialSyncPostsLimit,
+      validateSocialSyncTagFilter,
       validateSocialSyncIngestSource,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
@@ -4225,6 +4226,25 @@ main = hspec $ do
             assertInvalid (-5)
             assertInvalid 501
 
+    describe "social sync tag filter validation" $ do
+        it "normalizes omitted, blank, and canonical tag labels" $ do
+            validateSocialSyncTagFilter Nothing `shouldBe` Right Nothing
+            validateSocialSyncTagFilter (Just "   ") `shouldBe` Right Nothing
+            validateSocialSyncTagFilter (Just " Release_2026 ")
+                `shouldBe` Right (Just "release_2026")
+
+        it "rejects malformed tag filters before fallback tag scans run" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateSocialSyncTagFilter (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid social sync tag to be rejected, got " <> show value)
+            assertInvalid "release show" "tag must contain only ASCII letters"
+            assertInvalid "release\nshow" "tag must contain only ASCII letters"
+            assertInvalid (Data.Text.replicate 65 "x") "tag must be 64 characters or fewer"
+
     describe "social sync posts list handler" $ do
         it "applies the tag filter before the response limit so tagged queries do not miss older matches" $ do
             let setup = do
@@ -4250,6 +4270,17 @@ main = hspec $ do
                     expectationFailure ("Expected blank-tag social sync query to succeed, got: " <> show err)
                 Right posts ->
                     map sspdExternalPostId posts `shouldBe` ["ig-general-newest"]
+
+        it "rejects malformed tag filters before issuing broad fallback queries" $ do
+            let setup =
+                    insert_ (mkSocialSyncPost "instagram" "ig-release" (Just "release") currentSocialSyncTestTime)
+            result <- runSocialSyncListHandler setup Nothing Nothing Nothing (Just "release show") (Just 1)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "tag must contain only ASCII letters"
+                Right posts ->
+                    expectationFailure ("Expected malformed tag filter to fail, got: " <> show posts)
 
     describe "social events update payload parsing" $ do
         it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
