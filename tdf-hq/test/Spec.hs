@@ -182,7 +182,8 @@ import TDF.ServerFeedback
 import TDF.ServerInstagramOAuth
     ( FacebookAccessToken (..),
       instagramOAuthServer,
-      resolveInstagramRedirectUri )
+      resolveInstagramRedirectUri,
+      validateInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
       GoogleEventsPage (..),
@@ -2967,12 +2968,49 @@ main = hspec $ do
             resolveInstagramRedirectUri cfg (Just "   ")
                 `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
 
+        it "rejects unsafe configured Instagram callback fallbacks before token exchange" $ do
+            cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig
+            case resolveInstagramRedirectUri cfg Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "Configured Instagram OAuth callback URL must be an absolute https URL"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsafe configured Instagram redirect fallback to fail, got: "
+                            <> show value
+                        )
+
         it "normalizes valid explicit Instagram redirect URIs before token exchange" $ do
             cfg <- loadInstagramConfig
             resolveInstagramRedirectUri
                 cfg
-                (Just " https://tdf-app.pages.dev/oauth/instagram/callback ")
+                (Just " https://hq.example.com/admin/oauth/instagram/callback ")
+                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+
+        it "only accepts HTTPS or local development Instagram OAuth callback shapes" $ do
+            validateInstagramRedirectUri
+                " https://tdf-app.pages.dev/oauth/instagram/callback "
                 `shouldBe` Right "https://tdf-app.pages.dev/oauth/instagram/callback"
+            validateInstagramRedirectUri
+                " http://127.0.0.1:5173/oauth/instagram/callback "
+                `shouldBe` Right "http://127.0.0.1:5173/oauth/instagram/callback"
+
+            let assertInvalid rawRedirect =
+                    case validateInstagramRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute https Instagram OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
+            assertInvalid "http://hq.example.com/oauth/instagram/callback"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
 
         it "requires social inbox access before exchanging Instagram OAuth codes" $ do
             let fanUser =
@@ -3012,12 +3050,13 @@ main = hspec $ do
                             errHTTPCode serverErr `shouldBe` 400
                             BL.unpack (errBody serverErr)
                                 `shouldContain`
-                                    "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment"
+                                    "redirectUri must be an absolute https Instagram OAuth callback URL"
                         Right value ->
                             expectationFailure
                                 ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
             assertInvalid "/oauth/instagram/callback"
             assertInvalid "javascript:alert(1)"
+            assertInvalid "http://hq.example.com/admin/oauth/instagram/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"

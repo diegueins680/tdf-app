@@ -8,6 +8,7 @@ module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
   , FacebookAccessToken(..)
   , resolveInstagramRedirectUri
+  , validateInstagramRedirectUri
   ) where
 
 import           Control.Exception          (SomeException, displayException, try)
@@ -36,6 +37,7 @@ import           Network.HTTP.Client.TLS    (tlsManagerSettings)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (renderSimpleQuery)
 import           Servant
+import           Text.Read                  (readMaybe)
 
 import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..), hasSocialInboxAccess)
@@ -308,9 +310,11 @@ loadFacebookCreds cfg =
         { errBody = "Facebook app credentials not configured (FACEBOOK_APP_ID / FACEBOOK_APP_SECRET)." }
 
 resolveInstagramRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
-resolveInstagramRedirectUri cfg mProvided =
-  let configuredRedirectUri = resolveConfiguredAppBase cfg <> "/oauth/instagram/callback"
-  in maybe
+resolveInstagramRedirectUri cfg mProvided = do
+  configuredRedirectUri <-
+    validateConfiguredInstagramRedirectUri
+      (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback")
+  maybe
     (Right configuredRedirectUri)
     (validateProvidedRedirectUri configuredRedirectUri)
     (mProvided >>= cleanRedirectText)
@@ -327,19 +331,79 @@ resolveInstagramRedirectUri cfg mProvided =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
 
+validateConfiguredInstagramRedirectUri :: Text -> Either ServerError Text
+validateConfiguredInstagramRedirectUri rawRedirect =
+  case validateInstagramRedirectUri rawRedirect of
+    Right redirectUri -> Right redirectUri
+    Left _ ->
+      Left err503
+        { errBody =
+            "Configured Instagram OAuth callback URL must be an absolute https URL ending "
+              <> "in /oauth/instagram/callback, or http://localhost for local development, "
+              <> "without query or fragment"
+        }
+
 validateInstagramRedirectUri :: Text -> Either ServerError Text
 validateInstagramRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
     Right (Just uri)
-      | instagramOAuthCallbackPath `T.isSuffixOf` uri -> Right uri
+      | isSafeInstagramRedirectUri uri -> Right uri
       | otherwise -> invalidRedirect
     _ ->
       invalidRedirect
   where
-    instagramOAuthCallbackPath = "/oauth/instagram/callback"
     invalidRedirect =
       Left err400
-        { errBody = "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment" }
+        { errBody =
+            "redirectUri must be an absolute https Instagram OAuth callback URL ending "
+              <> "in /oauth/instagram/callback, or http://localhost for local development, "
+              <> "without query or fragment"
+        }
+
+isSafeInstagramRedirectUri :: Text -> Bool
+isSafeInstagramRedirectUri uri
+  | not (instagramOAuthCallbackPath `T.isSuffixOf` uri) = False
+  | "https://" `T.isPrefixOf` lowerUri = True
+  | "http://" `T.isPrefixOf` lowerUri =
+      maybe False isLocalInstagramRedirectHost (instagramRedirectHost (T.drop 7 uri))
+  | otherwise = False
+  where
+    instagramOAuthCallbackPath = "/oauth/instagram/callback"
+    lowerUri = T.toLower uri
+
+instagramRedirectHost :: Text -> Maybe Text
+instagramRedirectHost remainder =
+  let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+  in if T.null authority
+       then Nothing
+       else if "[" `T.isPrefixOf` authority
+         then
+           let (hostPart, rest) = T.breakOn "]" authority
+           in if T.null rest
+                then Nothing
+                else Just (T.toLower (T.drop 1 hostPart))
+         else
+           let (host, _) = T.breakOn ":" authority
+           in if T.null host then Nothing else Just (T.toLower host)
+
+isLocalInstagramRedirectHost :: Text -> Bool
+isLocalInstagramRedirectHost host =
+  host == "localhost"
+    || ".localhost" `T.isSuffixOf` host
+    || host == "::1"
+    || isLoopbackIpv4Host host
+
+isLoopbackIpv4Host :: Text -> Bool
+isLoopbackIpv4Host host =
+  case traverse parseOctet (T.splitOn "." host) of
+    Just [first, _, _, _] -> first == (127 :: Int)
+    _ -> False
+  where
+    parseOctet segment = do
+      value <- readMaybe (T.unpack segment)
+      if value >= (0 :: Int) && value <= 255
+        then Just value
+        else Nothing
 
 requestFacebookToken
   :: (MonadError ServerError m, MonadIO m)
