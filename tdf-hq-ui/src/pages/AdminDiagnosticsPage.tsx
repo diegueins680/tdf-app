@@ -108,6 +108,18 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
 const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
   `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
 
+const hasSingleSocialMessageState = (stats: MessageStats) => {
+  if (stats.incoming.length === 0) return false;
+
+  const nonZeroStateCount = [
+    stats.replied.length,
+    stats.pending.length,
+    stats.failed.length,
+  ].filter((count) => count > 0).length;
+
+  return nonZeroStateCount === 1;
+};
+
 const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
 const CALENDAR_SYNC_PENDING_COPY = 'Aún no se registra una sincronización.';
 
@@ -311,7 +323,9 @@ export default function AdminDiagnosticsPage() {
                     <Typography variant="subtitle1" fontWeight={700}>
                       {label}
                     </Typography>
-                    <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
+                    {!hasSingleSocialMessageState(stats) && (
+                      <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
+                    )}
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {stats.replied.length > 0 && (

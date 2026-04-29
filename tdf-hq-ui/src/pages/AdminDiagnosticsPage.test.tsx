@@ -89,6 +89,13 @@ const buildMessage = (overrides: Partial<SocialMessage> = {}): SocialMessage => 
 const countOccurrences = (root: ParentNode, text: string) =>
   (root.textContent ?? '').split(text).length - 1;
 
+const getSocialChannelCardByLabel = (root: ParentNode, labelText: string) => {
+  const card = Array.from(root.querySelectorAll<HTMLElement>('[data-testid="admin-diagnostics-social-channel-card"]'))
+    .find((candidate) => candidate.textContent?.includes(labelText));
+  if (!card) throw new Error(`Social channel card not found: ${labelText}`);
+  return card;
+};
+
 describe('AdminDiagnosticsPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -329,6 +336,37 @@ describe('AdminDiagnosticsPage', () => {
         expect(container.textContent).not.toContain('Respondidos: 0');
         expect(container.textContent).not.toContain('Pendientes: 0');
         expect(container.textContent).not.toContain('Fallidos: 0');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides the incoming total when a single channel state already says the same count', async () => {
+    listInstagramMessagesMock.mockResolvedValue([buildMessage({ externalId: 'instagram-replied' })]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({ externalId: 'facebook-replied' }),
+      buildMessage({
+        externalId: 'facebook-pending',
+        repliedAt: null,
+        replyText: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const instagramCard = getSocialChannelCardByLabel(container, 'Instagram');
+        const facebookCard = getSocialChannelCardByLabel(container, 'Facebook');
+
+        expect(instagramCard.textContent).toContain('Respondidos: 1');
+        expect(instagramCard.textContent).not.toContain('Entrantes: 1');
+        expect(facebookCard.textContent).toContain('Entrantes: 2');
+        expect(facebookCard.textContent).toContain('Respondidos: 1');
+        expect(facebookCard.textContent).toContain('Pendientes: 1');
       });
     } finally {
       await cleanup();
