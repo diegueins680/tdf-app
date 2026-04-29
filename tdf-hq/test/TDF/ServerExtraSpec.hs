@@ -4987,12 +4987,20 @@ spec = do
         (validate (Just "challenge\nInjected: value") (Just "secret") [Just "secret"])
       assertInvalid
         400
-        "hub.verify_token must not contain control characters"
+        "hub.verify_token must not contain whitespace or control characters"
         (validate (Just "challenge-123") (Just "secret\nInjected") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token must not contain whitespace or control characters"
+        (validate (Just "challenge-123") (Just "secret token") [Just "secret"])
       assertInvalid
         403
         "Meta verify token is misconfigured"
         (validate (Just "challenge-123") (Just "secret") [Just "bad\nsecret", Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token is misconfigured"
+        (validate (Just "challenge-123") (Just "secret") [Just "bad secret", Just "secret"])
 
   describe "validateMetaWebhookChannel" $ do
     it "accepts only route-matching Meta webhook object values" $ do

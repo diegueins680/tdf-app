@@ -3747,9 +3747,9 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just provided
-                      | T.any isControl provided ->
+                      | T.any isUnsafeMetaVerifyTokenChar provided ->
                           Left err400
-                            { errBody = "hub.verify_token must not contain control characters" }
+                            { errBody = "hub.verify_token must not contain whitespace or control characters" }
                       | provided == expected -> Right challengeVal
                       | otherwise ->
                           Left err403
@@ -3766,7 +3766,7 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
         Nothing ->
           Left err403 { errBody = "Meta verify token not configured" }
         Just expected
-          | T.any isControl expected ->
+          | T.any isUnsafeMetaVerifyTokenChar expected ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
           | otherwise ->
               Right expected
@@ -3785,6 +3785,8 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
           Left err400 { errBody = "hub.challenge must not contain control characters" }
       | otherwise =
           Right challenge
+
+    isUnsafeMetaVerifyTokenChar ch = isSpace ch || isControl ch
 
 instagramWebhookServer
   :: ( MonadIO m
