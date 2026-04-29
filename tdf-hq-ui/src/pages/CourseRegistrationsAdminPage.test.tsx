@@ -1830,9 +1830,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
-      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
-      expect(container.textContent).toContain('Cohorte única por ahora.');
+      expect(container.textContent).not.toContain('Cohorte disponible');
+      expect(container.textContent).not.toContain('Cohorte única por ahora.');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
       expect(container.textContent).not.toContain('Usa Estado para cambiar la vista.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
@@ -1855,6 +1856,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(secondContainer, 'Curso / cohorte')).toBe(true);
+      expect(secondContainer.textContent).not.toContain('Formulario público');
       expect(secondContainer.textContent).not.toContain('Cohorte única por ahora.');
     });
 
@@ -1972,7 +1974,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
-      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).toContain('Beatmaking 101 · Fuente: instagram');
       expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
@@ -2667,7 +2669,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).not.toContain('Katherine Johnson');
-      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Estado filtrado');
       expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Pagado');
@@ -2779,7 +2781,7 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(container.textContent).toContain('Cohorte disponible');
+      expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
       const activeStatusSummary = container.querySelector<HTMLElement>(
         '[data-testid="course-registration-active-status-summary"]',
@@ -2825,7 +2827,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(cohortSummary).not.toBeNull();
-      expect(cohortSummary?.textContent).toContain('Cohorte disponible');
+      expect(cohortSummary?.textContent).toContain('Formulario público');
       expect(cohortSummary?.textContent).toContain('Beatmaking 101 · Fuente: Meta ads');
       expect(cohortSummary?.textContent).not.toContain('Fuente visible: Meta ads.');
       expect(countOccurrences(cohortSummary!, 'Fuente: Meta ads')).toBe(1);

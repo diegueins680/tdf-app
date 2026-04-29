@@ -2306,7 +2306,6 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
-  const singleAvailableCohortHelperText = 'Cohorte única por ahora.';
   const singleVisibleStatusHelperText = showCohortFilterUnavailableSummary
     ? ''
     : 'Estado único en esta vista.';
@@ -3736,17 +3735,12 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohorte disponible
+                          Formulario público
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
                           {singleAvailableCohortLabel}
                           {standaloneSingleChoiceInlineSourceSummary ? ` · ${standaloneSingleChoiceInlineSourceSummary}` : ''}
                         </Typography>
-                        {showFirstRunFilterHelper && (
-                          <Typography variant="caption" color="text.secondary">
-                            {singleAvailableCohortHelperText}
-                          </Typography>
-                        )}
                         {showInlineSingleChoiceLimitToggle && (
                           <Button
                             size="small"
