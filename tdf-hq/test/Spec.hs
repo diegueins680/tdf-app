@@ -2696,6 +2696,7 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "https://app.example.com/admin"
             assertInvalid "javascript:alert(1)"
+            assertInvalid "https://admin"
             assertInvalid "https://999.999.999.999"
             assertInvalid "https://1.2.3"
 

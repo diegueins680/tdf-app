@@ -178,9 +178,18 @@ parseHttpBaseOrigin raw
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
   BS.length host <= 253
+    && hasPublicOrLocalhostShape host
     && not (isAmbiguousNumericHost host)
     && all validLabel (BS.split '.' host)
   where
+    hasPublicOrLocalhostShape candidate =
+      candidate == "localhost"
+        || ".localhost" `BS.isSuffixOf` candidate
+        || BS.any (== '.') candidate
+        || case parseIpv4Octets candidate of
+             Just _ -> True
+             Nothing -> False
+
     isAmbiguousNumericHost candidate =
       BS.all (\ch -> isDigit ch || ch == '.') candidate
         && isNothing (parseIpv4Octets candidate)
