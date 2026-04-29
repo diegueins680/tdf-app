@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  Box,
   Button,
   Checkbox,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -305,11 +307,34 @@ export default function InvoicesPage() {
   const invoicesQuery = useQuery({ queryKey: ['invoices'], queryFn: Invoices.list });
 
   const invoices = invoicesQuery.data ?? [];
+  const showInvoicesLoading = invoicesQuery.isLoading;
+  const hasInvoicesError = invoicesQuery.isError;
+  const invoicesError = hasInvoicesError
+    ? ((invoicesQuery.error as Error).message || 'No se pudo cargar facturación.')
+    : null;
+  const showFirstInvoiceSetup = !showInvoicesLoading && !hasInvoicesError && invoices.length === 0;
+  const pageDescription = showInvoicesLoading
+    ? 'Cargando facturas y recibos asociados…'
+    : hasInvoicesError
+      ? 'No se pudo cargar facturación. Revisa la conexión y vuelve a intentar.'
+      : showFirstInvoiceSetup
+        ? 'Empieza con Nueva factura. La tabla y enlaces a recibos aparecerán cuando exista la primera factura.'
+        : 'Revisa facturas emitidas, totales, estado y recibos asociados desde esta vista.';
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="h5">Facturación</Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        justifyContent="space-between"
+      >
+        <Box>
+          <Typography variant="h5">Facturación</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {pageDescription}
+          </Typography>
+        </Box>
         <Button variant="contained" onClick={() => setDialogOpen(true)}>Nueva factura</Button>
       </Stack>
 
@@ -329,53 +354,66 @@ export default function InvoicesPage() {
         </Alert>
       )}
 
-      <Paper variant="outlined">
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>#</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Subtotal</TableCell>
-                <TableCell>IVA</TableCell>
-                <TableCell>Recibo</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.invId} hover>
-                  <TableCell>{invoice.number ?? invoice.invId}</TableCell>
-                  <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>{invoice.statusI}</Typography>
-                  </TableCell>
-                  <TableCell>{formatAmount(invoice.subtotalC, invoice.currency)}</TableCell>
-                  <TableCell>{formatAmount(invoice.taxC, invoice.currency)}</TableCell>
-                  <TableCell>
-                    {invoice.receiptId != null ? (
-                      <Button component={RouterLink} to={`/finance/receipts/${invoice.receiptId}`} size="small">
-                        Ver recibo
-                      </Button>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">—</Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {invoices.length === 0 && (
+      {showInvoicesLoading ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
+            <CircularProgress size={20} />
+            <Typography variant="body2" color="text.secondary">
+              Cargando facturas…
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : hasInvoicesError ? (
+        <Alert severity="error">{invoicesError}</Alert>
+      ) : showFirstInvoiceSetup ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1}>
+            <Typography variant="h6">Todavía no hay facturas registradas.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Usa Nueva factura para emitir la primera. Cuando exista al menos una, aquí podrás revisar totales, estado y recibos sin navegar una tabla vacía.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : (
+        <Paper variant="outlined">
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={6}>
-                    <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                      No hay facturas registradas.
-                    </Typography>
-                  </TableCell>
+                  <TableCell>#</TableCell>
+                  <TableCell>Total</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Subtotal</TableCell>
+                  <TableCell>IVA</TableCell>
+                  <TableCell>Recibo</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {invoices.map((invoice) => (
+                  <TableRow key={invoice.invId} hover>
+                    <TableCell>{invoice.number ?? invoice.invId}</TableCell>
+                    <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>{invoice.statusI}</Typography>
+                    </TableCell>
+                    <TableCell>{formatAmount(invoice.subtotalC, invoice.currency)}</TableCell>
+                    <TableCell>{formatAmount(invoice.taxC, invoice.currency)}</TableCell>
+                    <TableCell>
+                      {invoice.receiptId != null ? (
+                        <Button component={RouterLink} to={`/finance/receipts/${invoice.receiptId}`} size="small">
+                          Ver recibo
+                        </Button>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">—</Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
 
       <CreateInvoiceDialog
         open={dialogOpen}
