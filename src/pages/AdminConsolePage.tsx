@@ -1446,6 +1446,17 @@ export default function AdminConsolePage() {
   const additionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
+  const auditEntrySignature = JSON.stringify(
+    audits.map((entry) => [
+      entry.auditId,
+      entry.actorId,
+      entry.entity,
+      entry.entityId,
+      entry.action,
+      entry.diff,
+      entry.createdAt,
+    ]),
+  );
   useEffect(() => {
     if (showGettingStartedGuidance) {
       setShowFirstRunAdditionalModules(false);
@@ -1459,6 +1470,9 @@ export default function AdminConsolePage() {
       setShowStandaloneAdditionalModules(false);
     }
   }, [consoleCards.length]);
+  useEffect(() => {
+    setShowAllAuditEntries(false);
+  }, [auditEntrySignature]);
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;

@@ -4511,6 +4511,63 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('collapses expanded audit history when a refreshed audit feed arrives', async () => {
+    const user = userEvent.setup();
+    mockAuditLogs.mockResolvedValue(
+      Array.from({ length: 7 }, (_, index) => {
+        const auditNumber = index + 1;
+
+        return {
+          auditId: `audit-${auditNumber}`,
+          actorId: null,
+          entity: 'package',
+          entityId: `PKG-${auditNumber}`,
+          action: `package.synced.${auditNumber}`,
+          diff: null,
+          createdAt: `2026-04-09T1${auditNumber}:00:00.000Z`,
+        };
+      }),
+    );
+
+    const { queryClient } = renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: /Ver 2 cambios anteriores/i }));
+
+    expect(await screen.findByText('Paquete · PKG-1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Mostrar solo cambios recientes/i })).toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(
+        ['admin', 'audit'],
+        Array.from({ length: 7 }, (_, index) => {
+          const auditNumber = index + 1;
+
+          return {
+            auditId: `audit-next-${auditNumber}`,
+            actorId: null,
+            entity: 'package',
+            entityId: `PKG-NEXT-${auditNumber}`,
+            action: `package.synced.next.${auditNumber}`,
+            diff: null,
+            createdAt: `2026-04-10T1${auditNumber}:00:00.000Z`,
+          };
+        }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Paquete · PKG-NEXT-7')).toBeInTheDocument();
+      expect(screen.getByText('Paquete · PKG-NEXT-3')).toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-NEXT-2')).not.toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-NEXT-1')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver 2 cambios anteriores/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Mostrar solo cambios recientes/i })).not.toBeInTheDocument();
+  });
+
   it('keeps a single detailed audit empty state when the page is not in first-run checklist mode', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
