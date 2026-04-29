@@ -96,14 +96,18 @@ const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?
   };
 };
 
-const renderDialog = async (container: HTMLElement, selection: { channel: 'instagram'; message: SocialMessage }) => {
+const renderDialog = async (
+  container: HTMLElement,
+  selection: { channel: 'instagram'; message: SocialMessage },
+  reviewMode = true,
+) => {
   let root: Root | null = createRoot(container);
 
   await act(async () => {
     root?.render(
       <SocialMessageDialog
         selection={selection}
-        reviewMode
+        reviewMode={reviewMode}
         activeAsset={null}
         onClose={() => undefined}
         onRefresh={() => undefined}
@@ -131,6 +135,9 @@ const countInstagramSetupLinks = (root: ParentNode) =>
 
 const countButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
+
+const countButtonsByAriaLabel = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((candidate) => candidate.getAttribute('aria-label') === labelText).length;
 
 const countInteractiveElementsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button, a')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
@@ -742,6 +749,39 @@ describe('SocialInboxPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('keeps provider message ID copy chrome in review mode only', async () => {
+    const normalContainer = document.createElement('div');
+    document.body.appendChild(normalContainer);
+    const normalDialog = await renderDialog(normalContainer, {
+      channel: 'instagram',
+      message: buildMessage(),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Remitente');
+      expect(document.body.textContent).toContain('Responder');
+      expect(document.body.textContent).not.toContain('Message ID');
+      expect(countButtonsByAriaLabel(document.body, 'Copiar ID')).toBe(0);
+      expect(countButtonsByAriaLabel(document.body, 'Copiar remitente')).toBe(1);
+    });
+
+    await normalDialog.cleanup();
+
+    const reviewContainer = document.createElement('div');
+    document.body.appendChild(reviewContainer);
+    const reviewDialog = await renderDialog(reviewContainer, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Message ID');
+      expect(countButtonsByAriaLabel(document.body, 'Copy ID')).toBe(1);
+    });
+
+    await reviewDialog.cleanup();
   });
 
   it('treats an already delivered reply as proof instead of preloading duplicate send controls', async () => {

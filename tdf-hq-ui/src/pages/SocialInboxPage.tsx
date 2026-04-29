@@ -681,25 +681,27 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       </Tooltip>
                     </Stack>
                   </Stack>
-                  <Stack spacing={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
-                    <Typography variant="overline" color="text.secondary">
-                      {reviewMode ? 'Message ID' : 'ID'}
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-                        {msg.externalId}
+                  {reviewMode && (
+                    <Stack spacing={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
+                      <Typography variant="overline" color="text.secondary">
+                        Message ID
                       </Typography>
-                      <Tooltip title={reviewMode ? 'Copy ID' : 'Copiar ID'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => void handleCopyExternal()}
-                          aria-label={reviewMode ? 'Copy ID' : 'Copiar ID'}
-                        >
-                          <ContentCopyIcon fontSize="inherit" />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                          {msg.externalId}
+                        </Typography>
+                        <Tooltip title="Copy ID">
+                          <IconButton
+                            size="small"
+                            onClick={() => void handleCopyExternal()}
+                            aria-label="Copy ID"
+                          >
+                            <ContentCopyIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </Stack>
-                  </Stack>
+                  )}
                 </Stack>
 
                 <Divider />
