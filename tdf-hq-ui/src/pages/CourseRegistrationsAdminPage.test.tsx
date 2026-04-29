@@ -6425,6 +6425,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(document.body, sharedReceiptCreatedLabel)).toBe(1);
       expect(document.body.textContent).toContain(`Todos registrados: ${sharedFollowUpCreatedLabel}`);
       expect(countOccurrences(document.body, sharedFollowUpCreatedLabel)).toBe(1);
+      expect(document.body.textContent).toContain('Tipo de seguimiento: Llamada');
+      expect(countOccurrences(document.body, 'Llamada')).toBe(1);
       expect(document.body.textContent).toContain('receipt.pdf');
       expect(document.body.textContent).toContain('receipt-2.pdf');
       expect(document.body.textContent).toContain('Confirmó transferencia');

@@ -551,6 +551,18 @@ const getSharedEmailEventStatusLabel = (
   return firstLabel;
 };
 
+const getSharedFollowUpTypeLabel = (
+  followUps: readonly Pick<CourseRegistrationFollowUpDTO, 'crfEntryType'>[],
+) => {
+  if (followUps.length < 2) return '';
+
+  const labels = followUps.map((entry) => eventTypeLabel(entry.crfEntryType).trim());
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
 const getFollowUpTypeOptions = (entryType: string) => {
   const normalizedEntryType = entryType.trim().toLowerCase();
   if (
@@ -2979,6 +2991,7 @@ export default function CourseRegistrationsAdminPage() {
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
+  const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
   const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
@@ -4840,6 +4853,11 @@ export default function CourseRegistrationsAdminPage() {
                         Todos registrados: {sharedFollowUpCreatedLabel}
                       </Typography>
                     )}
+                    {sharedFollowUpTypeLabel && (
+                      <Typography variant="body2" color="text.secondary">
+                        Tipo de seguimiento: {sharedFollowUpTypeLabel}
+                      </Typography>
+                    )}
 
                     <Grid container spacing={2}>
                       {showFollowUpComposer && (
@@ -5020,6 +5038,10 @@ export default function CourseRegistrationsAdminPage() {
                               const followUpCreatedLabel = sharedFollowUpCreatedLabel
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
+                              const showFollowUpTypeChip = !sharedFollowUpTypeLabel;
+                              const showFollowUpMetadata = showFollowUpTypeChip
+                                || Boolean(followUpCreatedLabel)
+                                || Boolean(entry.crfNextFollowUpAt);
                               const followUpAttachmentLabel =
                                 entry.crfAttachmentName?.trim() || `Adjunto de ${followUpActionLabel}`;
                               const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
@@ -5027,22 +5049,32 @@ export default function CourseRegistrationsAdminPage() {
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
                                   <Stack spacing={1}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
-                                      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                                        <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
-                                        {followUpCreatedLabel && (
-                                          <Typography variant="caption" color="text.secondary">
-                                            {followUpCreatedLabel}
-                                          </Typography>
-                                        )}
-                                        {entry.crfNextFollowUpAt && (
-                                          <Chip
-                                            size="small"
-                                            color="warning"
-                                            label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                          />
-                                        )}
-                                      </Stack>
+                                    <Stack
+                                      direction="row"
+                                      justifyContent={showFollowUpMetadata ? 'space-between' : 'flex-end'}
+                                      alignItems="flex-start"
+                                      flexWrap="wrap"
+                                      useFlexGap
+                                    >
+                                      {showFollowUpMetadata && (
+                                        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                          {showFollowUpTypeChip && (
+                                            <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
+                                          )}
+                                          {followUpCreatedLabel && (
+                                            <Typography variant="caption" color="text.secondary">
+                                              {followUpCreatedLabel}
+                                            </Typography>
+                                          )}
+                                          {entry.crfNextFollowUpAt && (
+                                            <Chip
+                                              size="small"
+                                              color="warning"
+                                              label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
+                                            />
+                                          )}
+                                        </Stack>
+                                      )}
                                       {isFollowUpBeingEdited ? (
                                         <Typography variant="body2" color="text.secondary">
                                           En edición
