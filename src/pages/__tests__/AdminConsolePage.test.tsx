@@ -1056,6 +1056,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps panel-style built-in admin titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-health-panel',
+          title: 'Service health panel',
+          body: ['Verify API readiness before changing admin access.'],
+        },
+        {
+          cardId: 'fallback-users-roles-tile',
+          title: 'Users & roles tile',
+          body: ['Review which teammates can open each protected workflow.'],
+        },
+        {
+          cardId: 'fallback-recent-audit-dashboard',
+          title: 'Recent audit dashboard',
+          body: ['Check recent access changes before repeating an action.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service health panel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Users & roles tile')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent audit dashboard')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Verify API readiness before changing admin access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review which teammates can open each protected workflow\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Check recent access changes before repeating an action\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps user-permission fallback titles out of first-run optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
