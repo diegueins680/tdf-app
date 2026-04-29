@@ -392,12 +392,13 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
-      expect(
-        screen.getByText(/No se pudo cargar el panel dinámico\. Mostrando la consola base\./i),
-      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Cargar datos de ejemplo/i })).toBeInTheDocument();
     });
 
+    expect(
+      screen.queryByText(/No se pudo cargar el panel dinámico/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vista dinámica no disponible/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: /Revisar estado del servicio/i }),
     ).not.toBeInTheDocument();

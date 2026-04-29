@@ -1387,7 +1387,7 @@ export default function AdminConsolePage() {
   const showGettingStartedSectionLinks = gettingStartedSections.length > 1;
   const firstRunServiceNeedsRefresh =
     showFirstRunServiceHealthGate && !shouldShowHealthLoadingState;
-  const showConsoleError = consoleError && !showFirstRunServiceHealthGate;
+  const showConsoleError = consoleError && !showGettingStartedGuidance;
   const showHeaderRefreshAction =
     hasAdminPanelError || (!isAdminPanelBaselining && (!showGettingStartedGuidance || firstRunServiceNeedsRefresh));
   const showFirstRunRefreshAction =
