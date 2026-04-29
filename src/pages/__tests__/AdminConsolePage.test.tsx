@@ -3082,6 +3082,46 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Requiere permisos de administrador/i)).not.toBeInTheDocument();
   });
 
+  it('ignores generic unavailable fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-credentials-unavailable',
+          title: 'Credenciales externas',
+          body: ['Unavailable in this workspace.'],
+        },
+        {
+          cardId: 'service-integrations-unavailable',
+          title: 'Integraciones técnicas',
+          body: ['Esta sección no está disponible en este entorno.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Unavailable in this workspace/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no está disponible/i)).not.toBeInTheDocument();
+  });
+
   it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

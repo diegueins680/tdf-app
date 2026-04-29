@@ -259,6 +259,7 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'admin access required',
   'admin role required',
   'temporarily unavailable',
+  'unavailable',
   'not available',
   'acceso denegado',
   'acceso restringido',
@@ -275,6 +276,7 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'requiere permisos de administrador',
   'solo administradores',
   'temporalmente no disponible',
+  'no esta disponible',
   'no disponible',
 ] as const;
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
