@@ -1991,8 +1991,7 @@ export default function CourseRegistrationsAdminPage() {
     || localSearchNarrowsRegistrations
     || (hasCustomLimit && !hasTinyLimitOnlyView);
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
-  const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
-  const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
+  const showCopyCsvAction = canCopyCsv && !copyMessage;
   const showLocalSearchInlineClearAction = hasLocalSearch
     && !showEmptyLocalSearchResults;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
