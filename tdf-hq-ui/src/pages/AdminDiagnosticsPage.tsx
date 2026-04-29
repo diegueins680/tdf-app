@@ -150,7 +150,10 @@ export default function AdminDiagnosticsPage() {
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
   const hasSocialQueryError = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
-  const visibleSocialChannels = socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
+  const showSocialLoadingSummary = !hasSocialQueryError && socialChannels.every(({ loading }) => loading);
+  const visibleSocialChannels = showSocialLoadingSummary
+    ? []
+    : socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
   const quietSocialChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
     ? []
     : socialChannels
@@ -163,7 +166,7 @@ export default function AdminDiagnosticsPage() {
       .map(({ label }) => label);
   const showSharedAwaitingReplyHistorySummary = awaitingReplyHistoryChannelLabels.length > 1;
   const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
-  const showSocialRefreshAction = !showGlobalSocialQuietGuidance;
+  const showSocialRefreshAction = !showGlobalSocialQuietGuidance && !showSocialLoadingSummary;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -259,6 +262,16 @@ export default function AdminDiagnosticsPage() {
               </Button>
             )}
           </Stack>
+          {showSocialLoadingSummary && (
+            <Alert
+              severity="info"
+              variant="outlined"
+              data-testid="admin-diagnostics-social-loading-summary"
+              icon={<CircularProgress size={16} />}
+            >
+              Cargando mensajes de Instagram, Facebook y WhatsApp…
+            </Alert>
+          )}
           {showGlobalSocialQuietGuidance && (
             <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-quiet-summary">
               Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp.

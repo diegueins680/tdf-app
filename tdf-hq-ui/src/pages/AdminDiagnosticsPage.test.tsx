@@ -171,6 +171,29 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('collapses first-load social checks into one loading summary', async () => {
+    listInstagramMessagesMock.mockImplementation(() => new Promise<SocialMessage[]>(() => undefined));
+    listFacebookMessagesMock.mockImplementation(() => new Promise<SocialMessage[]>(() => undefined));
+    listWhatsAppMessagesMock.mockImplementation(() => new Promise<SocialMessage[]>(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="admin-diagnostics-social-loading-summary"]')).not.toBeNull();
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(0);
+        expect(container.textContent).toContain('Cargando mensajes de Instagram, Facebook y WhatsApp…');
+        expect(container.textContent).not.toContain('Actualizar mensajes');
+        expect(container.textContent).not.toContain('Entrantes: 0');
+        expect(container.querySelectorAll('thead')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps social inbox errors focused on recovery instead of empty channel cards', async () => {
     listInstagramMessagesMock.mockRejectedValue(new Error('instagram unavailable'));
 
