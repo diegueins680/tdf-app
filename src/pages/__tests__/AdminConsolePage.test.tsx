@@ -1645,6 +1645,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps dashboard-labeled admin landing fallbacks out of first-run optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-panel-administrativo',
+          title: 'Panel administrativo',
+          body: ['Vista principal para monitorear configuración, acceso y auditoría.'],
+        },
+        {
+          cardId: 'fallback-administrative-dashboard',
+          title: 'Administrative dashboard',
+          body: ['Review the administrative workspace before changing access.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Panel administrativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administrative dashboard')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Vista principal para monitorear configuración, acceso y auditoría\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review the administrative workspace before changing access\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps getting-started fallback cards from duplicating the first-run checklist', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
