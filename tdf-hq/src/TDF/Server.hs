@@ -1856,11 +1856,12 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   fileSize <- liftIO (getFileSize (fdPayload duFile))
   either throwError pure (validateDriveUploadFileSize fileSize)
+  mimeType <- either throwError pure (resolveDriveUploadMimeType (fdFileCType duFile))
   manager <- liftIO $ newManager tlsManagerSettings
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile (Just nameOverride) folder) ::
+      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
@@ -2026,6 +2027,53 @@ validateDriveUploadFileSize size
       Left err400 { errBody = "Drive upload must be 50 MB or smaller" }
   | otherwise =
       Right ()
+
+defaultDriveUploadMimeType :: Text
+defaultDriveUploadMimeType = "application/octet-stream"
+
+resolveDriveUploadMimeType :: Text -> Either ServerError Text
+resolveDriveUploadMimeType rawMimeType
+  | T.null cleaned =
+      Right defaultDriveUploadMimeType
+  | T.any isUnsafeDriveUploadMimeTypeChar cleaned =
+      Left err400
+        { errBody =
+            "file content type must not contain control characters or Unicode formatting marks"
+        }
+  | otherwise =
+      validateDriveUploadMimeType mediaType
+  where
+    cleaned = T.toLower (T.strip rawMimeType)
+    mediaType = T.strip (fst (T.breakOn ";" cleaned))
+
+validateDriveUploadMimeType :: Text -> Either ServerError Text
+validateDriveUploadMimeType mimeType
+  | T.length mimeType > 255 = invalid
+  | otherwise =
+      case T.splitOn "/" mimeType of
+        [typePart, subtypePart]
+          | isDriveMimeToken typePart && isDriveMimeToken subtypePart ->
+              Right mimeType
+        _ -> invalid
+  where
+    invalid =
+      Left err400
+        { errBody = "file content type must be a MIME type like application/pdf" }
+
+isDriveMimeToken :: Text -> Bool
+isDriveMimeToken token =
+  not (T.null token) && T.all isDriveMimeTokenChar token
+
+isDriveMimeTokenChar :: Char -> Bool
+isDriveMimeTokenChar ch =
+  isAsciiLower ch
+    || isDigit ch
+    || ch `elem` ("!#$%&'*+-.^_`|~" :: String)
+
+isUnsafeDriveUploadMimeTypeChar :: Char -> Bool
+isUnsafeDriveUploadMimeTypeChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateDriveAccessToken :: Text -> Either ServerError Text
 validateDriveAccessToken = validateDriveAccessTokenWith err400
@@ -11287,17 +11335,15 @@ uploadToDrive
   :: Manager
   -> Text            -- ^ Google access token (user or service)
   -> FileData Tmp    -- ^ Uploaded file from client
+  -> Text            -- ^ Normalized file MIME type
   -> Maybe Text      -- ^ Optional override name
   -> Maybe Text      -- ^ Optional folder id
   -> IO DriveUploadDTO
-uploadToDrive manager accessToken file mName mFolder = do
+uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
   uuid <- nextRandom
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
       fileName = fromMaybe (fdFileName file) mName
-      mimeTypeTxt =
-        let raw = T.strip (fdFileCType file)
-        in if T.null raw then "application/octet-stream" else raw
       mimeTypeBS = TE.encodeUtf8 mimeTypeTxt
       meta = object $
         [ "name" .= fileName

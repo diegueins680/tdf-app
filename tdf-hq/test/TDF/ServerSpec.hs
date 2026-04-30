@@ -271,6 +271,7 @@ import TDF.Server
     , extractChatKitSession
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
+    , resolveDriveUploadMimeType
     , validateDriveUploadFileSize
     , resolveDrivePublicUrl
     , resolveWorkflowId
@@ -3742,6 +3743,47 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-1) "Drive upload size is invalid"
             assertInvalid 0 "Drive upload must not be empty"
             assertInvalid (50 * 1024 * 1024 + 1) "Drive upload must be 50 MB or smaller"
+
+    describe "resolveDriveUploadMimeType" $ do
+        it "defaults blank upload content types and canonicalizes safe MIME values" $ do
+            resolveDriveUploadMimeType "   "
+                `shouldBe` Right "application/octet-stream"
+            resolveDriveUploadMimeType " Application/PDF "
+                `shouldBe` Right "application/pdf"
+            resolveDriveUploadMimeType " Text/Plain; Charset=UTF-8 "
+                `shouldBe` Right "text/plain"
+            resolveDriveUploadMimeType "image/svg+xml"
+                `shouldBe` Right "image/svg+xml"
+
+        it "rejects malformed or header-shaped upload content types before Drive proxying" $ do
+            let assertInvalid expectedMessage rawMimeType =
+                    case resolveDriveUploadMimeType rawMimeType of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive upload content type to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "file content type must be a MIME type"
+                "application"
+            assertInvalid
+                "file content type must be a MIME type"
+                "application/"
+            assertInvalid
+                "file content type must be a MIME type"
+                "/pdf"
+            assertInvalid
+                "file content type must be a MIME type"
+                ("application/" <> T.replicate 244 "a")
+            assertInvalid
+                "file content type must not contain control characters"
+                "application/pdf\r\nContent-Type: text/plain"
+            assertInvalid
+                "file content type must not contain control characters"
+                "application/pdf\x202E"
 
     describe "validateConfiguredDriveAccessToken" $ do
         it "rejects malformed DRIVE_ACCESS_TOKEN fallbacks before upload requests reuse them" $ do
