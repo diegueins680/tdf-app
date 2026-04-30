@@ -580,6 +580,18 @@ const getSharedFollowUpTypeLabel = (
   return firstLabel;
 };
 
+const getSharedReceiptNotes = (
+  receipts: readonly Pick<CourseRegistrationReceiptDTO, 'crrNotes'>[],
+) => {
+  if (receipts.length < 2) return '';
+
+  const notes = receipts.map((receipt) => receipt.crrNotes?.trim() ?? '');
+  const [firstNote] = notes;
+
+  if (!firstNote || notes.some((note) => note !== firstNote)) return '';
+  return firstNote;
+};
+
 const getFollowUpTypeOptions = (entryType: string) => {
   const normalizedEntryType = entryType.trim().toLowerCase();
   if (
@@ -3089,6 +3101,7 @@ export default function CourseRegistrationsAdminPage() {
   const followUps = dedupeCourseRegistrationFollowUps(dossierData?.crdFollowUps ?? []);
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
+  const sharedReceiptNotes = getSharedReceiptNotes(receipts);
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
@@ -3441,6 +3454,15 @@ export default function CourseRegistrationsAdminPage() {
                   Todos subidos: {sharedReceiptCreatedLabel}
                 </Typography>
               )}
+              {sharedReceiptNotes && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  data-testid="course-registration-shared-receipt-notes"
+                >
+                  Nota de comprobantes: {sharedReceiptNotes}
+                </Typography>
+              )}
             </Box>
             {showAddReceiptAction && (
               <Button
@@ -3570,6 +3592,8 @@ export default function CourseRegistrationsAdminPage() {
                       ? ''
                       : formatOptionalDate(receipt.crrCreatedAt);
                     const isReceiptBeingEdited = receiptForm.editingId === receipt.crrId;
+                    const receiptNotes = receipt.crrNotes?.trim() ?? '';
+                    const showReceiptNotes = Boolean(receiptNotes) && receiptNotes !== sharedReceiptNotes;
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
@@ -3624,9 +3648,9 @@ export default function CourseRegistrationsAdminPage() {
                               </IconButton>
                             ) : null}
                           </Stack>
-                          {receipt.crrNotes && (
+                          {showReceiptNotes && (
                             <Typography variant="body2" color="text.secondary">
-                              {receipt.crrNotes}
+                              {receiptNotes}
                             </Typography>
                           )}
                         </Stack>

@@ -6534,6 +6534,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes repeated receipt notes once instead of repeating them on every saved proof', async () => {
+    const sharedReceiptNote = 'Transferencia confirmada por coordinación.';
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt({
+            crrNotes: sharedReceiptNote,
+            crrCreatedAt: '2030-03-01T12:00:00.000Z',
+          }),
+          buildReceipt({
+            crrId: 302,
+            crrFileName: 'receipt-2.pdf',
+            crrNotes: sharedReceiptNote,
+            crrCreatedAt: '2030-03-02T12:00:00.000Z',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const sharedNote = document.body.querySelector<HTMLElement>(
+        '[data-testid="course-registration-shared-receipt-notes"]',
+      );
+
+      expect(sharedNote?.textContent).toBe(`Nota de comprobantes: ${sharedReceiptNote}`);
+      expect(countOccurrences(document.body, sharedReceiptNote)).toBe(1);
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).toContain('receipt-2.pdf');
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf')).toBeTruthy();
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt-2.pdf')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('disambiguates repeated receipt filenames so saved receipt actions stay distinct', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
