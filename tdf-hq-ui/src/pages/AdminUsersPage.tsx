@@ -818,7 +818,7 @@ export default function AdminUsersPage() {
     (hasCurrentSummaryWhatsAppAction || currentSummaryHasMixedPendingContactStates)
     && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
   const showSharedPendingProfileGuidance = usersInCurrentSummary.length > 1
-    && currentSummaryPendingProfileCount > 1
+    && currentSummaryPendingProfileCount > 0
     && (hasCurrentSummaryLinkedProfile || hasActiveSearch);
   const showSharedContactStateGuidance = usersInCurrentSummary.length > 1
     && (showMixedContactStateGuidance || currentSummaryAllNeedContact || currentSummaryAllNeedWhatsApp);

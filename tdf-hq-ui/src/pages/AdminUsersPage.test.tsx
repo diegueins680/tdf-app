@@ -1107,7 +1107,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps users without a linked profile as plain text so the row does not imply a broken action', async () => {
+  it('summarizes one pending profile in the header while keeping the row name plain text', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -1132,9 +1132,12 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 usuario todavía sin perfil vinculado; su nombre no abre un perfil. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos.',
+        );
         const missingProfileRow = getRowByUserId(container, 101);
         expect(hasExactText(missingProfileRow, 'Ada Lovelace')).toBe(true);
-        expect(missingProfileRow.textContent).toContain('Perfil pendiente');
+        expect(missingProfileRow.textContent).not.toContain('Perfil pendiente');
         expect(hasLinkWithTextAndHref(missingProfileRow, 'Ada Lovelace', '/perfil/null')).toBe(false);
         expect(
           Array.from(missingProfileRow.querySelectorAll<HTMLAnchorElement>('a')).some(
@@ -1146,6 +1149,7 @@ describe('AdminUsersPage', () => {
         const linkedProfileRow = getRowByUserId(container, 102);
         expect(hasLinkWithTextAndHref(linkedProfileRow, 'Grace Hopper', '/perfil/10')).toBe(true);
         expect(linkedProfileRow.textContent).not.toContain('Perfil pendiente');
+        expect(countExactText(container, 'Perfil pendiente')).toBe(0);
         expect(container.innerHTML).not.toContain('/perfil/null');
         expect(container.innerHTML).not.toContain('/perfil/undefined');
       });
