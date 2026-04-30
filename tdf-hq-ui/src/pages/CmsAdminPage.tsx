@@ -31,7 +31,10 @@ import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
-const locales = ['es', 'en'];
+const localeOptions = [
+  { value: 'es', label: 'Español (es)' },
+  { value: 'en', label: 'Inglés (en)' },
+] as const;
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
 const CONTENT_STATUS_OPTIONS = ['draft', 'published'] as const;
@@ -52,7 +55,7 @@ const schemaHints: Record<string, string[]> = {
   'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
 };
 const draftAutosaveHelperText =
-  'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas.';
+  'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas.';
 const samplePayloads: Record<string, SamplePayload> = {
   'records-public': {
     heroTitle: 'Lanzamientos destacados',
@@ -225,6 +228,9 @@ const formatCmsStatusLabel = (value: string) => {
   const normalized = normalizeCmsStatus(value);
   return CMS_STATUS_LABELS[normalized] ?? (value.trim() || 'Sin estado');
 };
+
+const formatLocaleLabel = (value: string) =>
+  localeOptions.find((option) => option.value === value)?.label ?? value;
 
 export default function CmsAdminPage() {
   const qc = useQueryClient();
@@ -583,7 +589,7 @@ export default function CmsAdminPage() {
     const parts: string[] = [];
     if (sharedVersionTitle) parts.push(`título ${sharedVersionTitle}`);
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
-    if (sharedVersionLocale) parts.push(`locale ${sharedVersionLocale}`);
+    if (sharedVersionLocale) parts.push(`idioma ${formatLocaleLabel(sharedVersionLocale)}`);
     if (sharedVersionStatus) parts.push(`estado ${formatCmsStatusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
   }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle]);
@@ -732,7 +738,7 @@ export default function CmsAdminPage() {
             <Stack spacing={1.5}>
               <Typography fontWeight={700}>{pendingVersion.ccdTitle ?? pendingVersion.ccdSlug}</Typography>
               <Typography variant="body2" color="text.secondary">
-                v{pendingVersion.ccdVersion} · {formatCmsStatusLabel(pendingVersion.ccdStatus)} · {pendingVersion.ccdLocale} ·{' '}
+                v{pendingVersion.ccdVersion} · {formatCmsStatusLabel(pendingVersion.ccdStatus)} · {formatLocaleLabel(pendingVersion.ccdLocale)} ·{' '}
                 {pendingVersion.ccdPublishedAt
                   ? `publicado ${formatCmsAdminTimestamp(pendingVersion.ccdPublishedAt)}`
                   : `creado ${formatCmsAdminTimestamp(pendingVersion.ccdCreatedAt)}`}
@@ -740,7 +746,7 @@ export default function CmsAdminPage() {
               <Typography variant="body2">
                 Live actual:{' '}
                 {liveContent
-                  ? `v${liveContent.ccdVersion} (${formatCmsStatusLabel(liveContent.ccdStatus)} · ${liveContent.ccdLocale})`
+                  ? `v${liveContent.ccdVersion} (${formatCmsStatusLabel(liveContent.ccdStatus)} · ${formatLocaleLabel(liveContent.ccdLocale)})`
                   : 'no hay versión publicada'}
               </Typography>
               <Typography
@@ -900,12 +906,12 @@ export default function CmsAdminPage() {
               <TextField
                 select
                 fullWidth
-                label="Locale"
+                label="Idioma"
                 value={localeFilter}
                 onChange={(e) => setLocaleFilter(e.target.value)}
               >
-                {locales.map((loc) => (
-                  <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                {localeOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -1230,7 +1236,7 @@ export default function CmsAdminPage() {
                       <Typography fontWeight={700}>{rowTitle}</Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
-                        {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
+                        {!sharedVersionLocale && <Chip label={formatLocaleLabel(v.ccdLocale)} size="small" />}
                         {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
                         {!sharedVersionStatus && !isCurrentLiveVersion && (
                           <Chip

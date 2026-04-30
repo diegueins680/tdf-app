@@ -194,7 +194,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas.',
+        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas.',
       );
       expect(container.textContent).not.toContain('Guardar borrador local');
     });
@@ -222,6 +222,25 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('labels CMS language context for admins instead of leaking locale jargon', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Idioma')).toBe(1);
+      expect(countLabelsByText(container, 'Locale')).toBe(0);
+      expect(container.textContent).toContain('Español (es)');
+      expect(container.textContent).toContain(
+        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es).',
+      );
+      expect(container.textContent).not.toContain('slug y locale');
+      expect(container.textContent).not.toContain('locale es');
+    });
+
+    await cleanup();
+  });
+
   it('keeps live-start copy out of the editor helper when the alert already owns it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -231,7 +250,7 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
+        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
       expect(guidance?.textContent).not.toContain('Usar versión en vivo');
       expect(container.textContent).toContain(
@@ -919,7 +938,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('shows shared title, slug, and locale context once above the versions list instead of repeating them on each row', async () => {
+  it('shows shared title, slug, and language context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -928,13 +947,13 @@ describe('CmsAdminPage', () => {
       const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
       expect(history).not.toBeNull();
       expect(history?.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · locale es.',
+        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es).',
       );
       expect((history?.textContent ?? '').split('Landing principal').length - 1).toBe(1);
       expect(history?.textContent).toContain('Versión v4');
       expect(history?.textContent).toContain('Versión v3');
       expect(countExactText(container, 'records-public')).toBe(1);
-      expect(countExactText(container, 'es')).toBe(1);
+      expect(countExactText(container, 'Español (es)')).toBe(1);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
     });
@@ -1177,7 +1196,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · locale es · estado Publicado.',
+        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es) · estado Publicado.',
       );
       expect(countExactText(container, 'Publicado')).toBe(1);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
