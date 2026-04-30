@@ -900,11 +900,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   )}
                 </Stack>
 
-                {reviewMode && !hasDeliveredReply && (
+                {reviewMode && !hasDeliveredReply && !showAiDraftControls && (
                   <Alert severity="info" variant="outlined">
-                    {showAiDraftControls
-                      ? 'Explain each button while recording: AI draft (optional), message textarea, and Send action.'
-                      : 'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.'}
+                    Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.
                   </Alert>
                 )}
 

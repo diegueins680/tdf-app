@@ -784,6 +784,31 @@ describe('SocialInboxPage', () => {
     await reviewDialog.cleanup();
   });
 
+  it('keeps the pending text-message review dialog to one Step 2 helper instead of restating every visible control', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Step 2 of 3: keep this dialog visible, click Send, then show the same delivered text in the native client.',
+      );
+      expect(document.body.textContent).not.toContain('Explain each button while recording');
+      expect(document.body.textContent).not.toContain(
+        'Explain the attachment, message textarea, and Send action while recording.',
+      );
+      expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(true);
+      expect(hasLabel(document.body, 'Outgoing message')).toBe(true);
+      expect(countButtonsByText(document.body, 'Generate with AI')).toBe(1);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('treats an already delivered reply as proof instead of preloading duplicate send controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
