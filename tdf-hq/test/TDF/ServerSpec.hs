@@ -6343,6 +6343,15 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " "buyerName requerido"
             assertInvalid (T.replicate 161 "a") "buyerName must be 160 characters or fewer"
             assertInvalid "Ada\nLovelace" "buyerName must not contain control characters"
+            assertInvalid
+                ("Ada" <> T.singleton '\x200B' <> "Lovelace")
+                "Unicode formatting/separator characters"
+            assertInvalid
+                ("Ada" <> T.singleton '\x202E' <> "ecalevoL")
+                "Unicode formatting/separator characters"
+            assertInvalid
+                ("Ada" <> T.singleton '\x2028' <> "Lovelace")
+                "Unicode formatting/separator characters"
 
     describe "validateMarketplaceBuyerEmail" $ do
         it "trims and lowercases valid buyer emails before checkout creates marketplace orders" $

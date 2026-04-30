@@ -4596,10 +4596,19 @@ validateMarketplaceBuyerName rawName =
     Just nameVal
       | T.length nameVal > 160 ->
           Left err400 { errBody = "buyerName must be 160 characters or fewer" }
-      | T.any isControl nameVal ->
-          Left err400 { errBody = "buyerName must not contain control characters" }
+      | T.any isUnsafeMarketplaceBuyerNameChar nameVal ->
+          Left err400
+            { errBody =
+                "buyerName must not contain control characters or "
+                  <> "Unicode formatting/separator characters"
+            }
       | otherwise ->
           Right nameVal
+
+isUnsafeMarketplaceBuyerNameChar :: Char -> Bool
+isUnsafeMarketplaceBuyerNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateCourseRegistrationUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationUrlField _ Nothing = Right Nothing
