@@ -228,13 +228,15 @@ export default function AdminUserCommunicationDialog({
                     >
                       Notificar
                     </Button>
-                    <Button
-                      variant="contained"
-                      disabled={sendMutation.isPending || !draft.trim() || !replyTarget}
-                      onClick={() => sendMutation.mutate('reply')}
-                    >
-                      Responder
-                    </Button>
+                    {replyTarget && (
+                      <Button
+                        variant="contained"
+                        disabled={sendMutation.isPending || !draft.trim()}
+                        onClick={() => sendMutation.mutate('reply')}
+                      >
+                        Responder
+                      </Button>
+                    )}
                   </Stack>
                 </Stack>
               </Paper>
