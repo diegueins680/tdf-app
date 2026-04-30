@@ -1089,6 +1089,9 @@ spec = do
                 "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"   \"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"---___\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
                 "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
                 `shouldSatisfy` isLeft
 

@@ -647,11 +647,16 @@ isValidPayPalCapturePaypalId :: Text -> Bool
 isValidPayPalCapturePaypalId paypalId =
   not (T.null paypalId)
     && T.length paypalId <= 128
+    && T.any isPayPalCapturePaypalIdAtom paypalId
     && T.all isPayPalCapturePaypalIdChar paypalId
+
+isPayPalCapturePaypalIdAtom :: Char -> Bool
+isPayPalCapturePaypalIdAtom c =
+  isDigit c || isAsciiLower c || isAsciiUpper c
 
 isPayPalCapturePaypalIdChar :: Char -> Bool
 isPayPalCapturePaypalIdChar c =
-  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+  isPayPalCapturePaypalIdAtom c || c == '-' || c == '_'
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text
