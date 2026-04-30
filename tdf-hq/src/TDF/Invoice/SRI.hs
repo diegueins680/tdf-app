@@ -14,7 +14,11 @@ module TDF.Invoice.SRI
 import           Prelude hiding (lines)
 
 import           Control.Monad (when)
-import           Data.Char (isControl)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  )
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -125,16 +129,14 @@ validateSriScriptResult dto =
   let statusValue = T.strip (sirStatus dto)
   in if T.null statusValue
        then Left "SRI script JSON output status is required"
-       else if T.any isInvalidStatusChar statusValue
-         then Left "SRI script JSON output status must not contain control characters"
+       else if T.any isInvalidVisibleTextChar statusValue
+         then Left "SRI script JSON output status must not contain control characters or hidden formatting characters"
          else
            validateScriptTotal dto { sirStatus = statusValue }
              >>= validateIssuedResult
              >>= validateOptionalDocumentIdentifiers
              >>= validateOptionalBuyerEmail
   where
-    isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
-
     validateOptionalBuyerEmail result = do
       buyerEmail <-
         validateOptionalOutputField
@@ -164,11 +166,11 @@ validateSriScriptResult dto =
         Nothing -> Right Nothing
         Just value
           | T.null value -> Right Nothing
-          | T.any isInvalidStatusChar value ->
+          | T.any isInvalidVisibleTextChar value ->
               Left
                 ( "SRI script JSON output "
                     <> fieldName
-                    <> " must not contain control characters"
+                    <> " must not contain control characters or hidden formatting characters"
                 )
           | otherwise ->
               Just <$> validateShape value
@@ -204,11 +206,11 @@ validateSriScriptResult dto =
         Just value
           | T.null value ->
               Left ("SRI script JSON output " <> fieldName <> " is required when status is issued")
-          | T.any isInvalidStatusChar value ->
+          | T.any isInvalidVisibleTextChar value ->
               Left
                 ( "SRI script JSON output "
                     <> fieldName
-                    <> " must not contain control characters"
+                    <> " must not contain control characters or hidden formatting characters"
                 )
           | otherwise ->
               Right value
@@ -428,8 +430,8 @@ validateRequiredTextField fieldName raw =
   let value = T.strip raw
   in if T.null value
        then Left (fieldMessage fieldName "is required")
-       else if T.any isInvalidTextChar value
-         then Left (fieldMessage fieldName "must not contain control characters")
+       else if T.any isInvalidVisibleTextChar value
+         then Left (fieldMessage fieldName "must not contain control characters or hidden formatting characters")
          else Right value
 
 validateOptionalTextField :: Text -> Maybe Text -> Either Text (Maybe Text)
@@ -438,20 +440,24 @@ validateOptionalTextField fieldName (Just raw) =
   let value = T.strip raw
   in if T.null value
        then Right Nothing
-       else if T.any isInvalidTextChar value
-         then Left (fieldMessage fieldName "must not contain control characters")
+       else if T.any isInvalidVisibleTextChar value
+         then Left (fieldMessage fieldName "must not contain control characters or hidden formatting characters")
          else Right (Just value)
 
 validateOptionalSecretField :: Text -> Maybe Text -> Either Text (Maybe Text)
 validateOptionalSecretField _ Nothing = Right Nothing
 validateOptionalSecretField fieldName (Just raw)
   | T.null (T.strip raw) = Right Nothing
-  | T.any isInvalidTextChar raw =
+  | T.any isControlTextChar raw =
       Left (fieldMessage fieldName "must not contain control characters")
   | otherwise = Right (Just raw)
 
-isInvalidTextChar :: Char -> Bool
-isInvalidTextChar ch = ch == '\DEL' || ch < ' '
+isInvalidVisibleTextChar :: Char -> Bool
+isInvalidVisibleTextChar ch =
+  isControlTextChar ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isControlTextChar :: Char -> Bool
+isControlTextChar ch = ch == '\DEL' || ch < ' '
 
 isAsciiDigit :: Char -> Bool
 isAsciiDigit ch = ch >= '0' && ch <= '9'

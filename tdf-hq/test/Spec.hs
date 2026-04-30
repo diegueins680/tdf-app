@@ -2592,6 +2592,33 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected invalid SRI payment mode to fail, got: " <> show value)
 
+        it "rejects hidden formatting markers in SRI request text before invoking the script" $ do
+            let hidden = Data.Text.singleton '\x202E'
+                assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected hidden-format SRI request text to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "customer.legalName must not contain control characters or hidden formatting characters"
+                sampleSriScriptRequest
+                    { Sri.customer =
+                        (Sri.customer sampleSriScriptRequest)
+                            { Sri.legalName = "TDF" <> hidden <> " Customer" }
+                    }
+            assertInvalid
+                "lines[1].description must not contain control characters or hidden formatting characters"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine
+                            { Sri.description = "Studio" <> hidden <> " session" }
+                        ]
+                    }
+
         it "rejects malformed SRI customer tax ids before invoking the script" $ do
             let withRuc rawRuc =
                     sampleSriScriptRequest
