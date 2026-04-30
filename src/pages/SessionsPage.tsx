@@ -174,6 +174,36 @@ const cleanString = (value?: string) => {
 
 const hasPresentValue = (value?: string | null) => (value?.trim().length ?? 0) > 0;
 
+function formatCompactSessionColumnList(labels: readonly string[]) {
+  if (labels.length === 0) {
+    return '';
+  }
+
+  if (labels.length === 1) {
+    return labels[0] ?? '';
+  }
+
+  if (labels.length === 2) {
+    const [first, second] = labels;
+    const conjunction = second?.trim().toLowerCase().startsWith('i') ? ' e ' : ' y ';
+    return `${first ?? ''}${conjunction}${second ?? ''}`;
+  }
+
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+}
+
+function buildCompactSessionColumnsDescription(hiddenColumnLabels: readonly string[]) {
+  if (hiddenColumnLabels.length === 0) {
+    return null;
+  }
+
+  const labels = formatCompactSessionColumnList(hiddenColumnLabels);
+  const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
+  const fieldLabel = hiddenColumnLabels.length === 1 ? 'ese campo' : 'esos campos';
+
+  return `Vista compacta: ${labels} ${verb} cuando exista información real en ${fieldLabel}.`;
+}
+
 const stringOrNull = (value?: string) => {
   if (value === undefined) return undefined;
   const trimmed = value.trim();
@@ -1077,6 +1107,13 @@ export default function SessionsPage() {
   const showBookingColumn = rows.some((session) => hasPresentValue(session.sBookingRef));
   const showEngineerColumn = rows.some((session) => hasPresentValue(session.sEngineerRef));
   const showRoomsColumn = rows.some((session) => (session.sRoomIds?.length ?? 0) > 0);
+  const compactSessionColumnsDescription = rows.length > 0
+    ? buildCompactSessionColumnsDescription([
+      ...(!showBookingColumn ? ['booking'] : []),
+      ...(!showEngineerColumn ? ['ingeniero'] : []),
+      ...(!showRoomsColumn ? ['salas'] : []),
+    ])
+    : null;
   const visibleSessionColumnCount = 4
     + (showBookingColumn ? 1 : 0)
     + (showEngineerColumn ? 1 : 0)
@@ -1168,6 +1205,11 @@ export default function SessionsPage() {
           </Box>
         ) : showSessionsTable ? (
           <>
+            {compactSessionColumnsDescription && (
+              <Typography variant="body2" color="text.secondary" sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+                {compactSessionColumnsDescription}
+              </Typography>
+            )}
             <TableContainer>
               <Table size="small">
                 <TableHead>

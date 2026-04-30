@@ -303,6 +303,11 @@ describe('SessionsPage', () => {
       expect(screen.getByRole('columnheader', { name: /^Acciones$/i })).toBeInTheDocument();
       expect(screen.getByText('Producción')).toBeInTheDocument();
       expect(screen.getByText('Ensayo')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Vista compacta: booking, ingeniero y salas aparecerán cuando exista información real en esos campos\./i,
+        ),
+      ).toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /^Booking$/i })).not.toBeInTheDocument();
