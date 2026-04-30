@@ -1693,6 +1693,16 @@ describe('AdminConsolePage', () => {
           title: 'Datos de ejemplo',
           body: ['Prepara usuarios y auditoría de demostración para validar el panel.'],
         },
+        {
+          cardId: 'fallback-sample-fixtures',
+          title: 'Demo fixtures',
+          body: ['Generate sample users, roles, and audit events for review.'],
+        },
+        {
+          cardId: 'fallback-datos-prueba',
+          title: 'Datos de prueba',
+          body: ['Prepara usuarios y auditoría de demostración para validar el panel.'],
+        },
       ],
     });
 
@@ -1713,6 +1723,8 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Demo workspace')).not.toBeInTheDocument();
     expect(screen.queryByText(/^Datos de ejemplo$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Demo fixtures')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de prueba')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Generate sample users, roles, and audit events for review\./i),
     ).not.toBeInTheDocument();

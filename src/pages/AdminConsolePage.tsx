@@ -296,6 +296,8 @@ const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'confirma el resultado en auditoria reciente antes de seguir con otro cambio',
   'confirm who changed what before repeating an admin action',
   'review service health users roles and audit activity from one admin landing page',
+  'generate sample users roles and audit events for review',
+  'prepara usuarios y auditoria de demostracion para validar el panel',
 ] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
