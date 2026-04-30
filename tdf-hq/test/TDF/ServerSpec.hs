@@ -6441,6 +6441,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files_example.com/proof.pdf"
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+            assertInvalid "attachmentUrl" ("https://files.example.com/proof" <> T.singleton '\x202E' <> "fdp")
 
     describe "course registration attachment name validation" $ do
         it "normalizes optional attachment labels before storing course-registration metadata" $ do

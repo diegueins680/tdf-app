@@ -766,7 +766,10 @@ isValidHttpUrl rawUrl
     trimmed = T.strip rawUrl
     lowerUrl = T.toLower trimmed
 
-    invalidUrlChar ch = isSpace ch || isControl ch
+    invalidUrlChar ch =
+      isSpace ch
+        || isControl ch
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
     hasValidAuthority remainder =
       let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
