@@ -222,7 +222,12 @@ parseGoogleTokenField fieldName raw =
        then fail (T.unpack fieldName <> " must not be blank")
        else if T.any (\ch -> isSpace ch || isControl ch) clean
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
-         else pure clean
+         else if T.length clean > maxDriveOAuthTokenChars
+           then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
+           else pure clean
+
+maxDriveOAuthTokenChars :: Int
+maxDriveOAuthTokenChars = 4096
 
 parseGoogleTokenType :: Text -> Parser Text
 parseGoogleTokenType raw = do
@@ -2151,6 +2156,8 @@ validateDriveRefreshToken rawToken =
            then Left err400 { errBody = "refreshToken must not contain control characters" }
            else if T.any isSpace tokenVal
            then Left err400 { errBody = "refreshToken must not contain whitespace" }
+           else if T.length tokenVal > maxDriveOAuthTokenChars
+           then Left err400 { errBody = "refreshToken must be 4096 characters or fewer" }
            else Right tokenVal
 
 validateDriveAuthorizationCode :: Text -> Either ServerError Text
@@ -2163,6 +2170,8 @@ validateDriveAuthorizationCode rawCode =
            then Left err400 { errBody = "code must not contain control characters" }
            else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
+           else if T.length codeVal > maxDriveOAuthTokenChars
+           then Left err400 { errBody = "code must be 4096 characters or fewer" }
            else Right codeVal
 
 validateDriveCodeVerifier :: Text -> Either ServerError Text

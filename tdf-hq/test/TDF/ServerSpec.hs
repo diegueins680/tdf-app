@@ -3922,6 +3922,17 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"access_token\":\"access-token\","
                     <> "\"refresh_token\":\"refresh token\","
                     <> "\"expires_in\":3600}"
+            assertRejected $
+                BL8.pack $
+                    "{\"access_token\":\""
+                        <> T.unpack (T.replicate 4097 "a")
+                        <> "\",\"expires_in\":3600}"
+            assertRejected $
+                BL8.pack $
+                    "{\"access_token\":\"access-token\","
+                        <> "\"refresh_token\":\""
+                        <> T.unpack (T.replicate 4097 "r")
+                        <> "\",\"expires_in\":3600}"
             assertRejected "{\"access_token\":\"access-token\"}"
             assertRejected "{\"access_token\":\"access-token\",\"expires_in\":0}"
             assertRejected "{\"access_token\":\"access-token\",\"expires_in\":-1}"
@@ -4158,6 +4169,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "code must not contain whitespace" baseRequest { code = "oauth code" }
             assertInvalid "code must not contain control characters" baseRequest { code = "oauth\NUL\&code" }
             assertInvalid
+                "code must be 4096 characters or fewer"
+                baseRequest { code = T.replicate 4097 "a" }
+            assertInvalid
                 "codeVerifier must be a PKCE verifier"
                 baseRequest { codeVerifier = "short" }
             assertInvalid
@@ -4392,6 +4406,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "refreshToken must not contain control characters"
                 (DriveTokenRefreshRequest "1//refresh\NUL\&token")
+            assertInvalid
+                "refreshToken must be 4096 characters or fewer"
+                (DriveTokenRefreshRequest (T.replicate 4097 "r"))
 
         it "rejects unexpected Drive refresh keys so typoed token writes fail explicitly" $
             ( eitherDecode
