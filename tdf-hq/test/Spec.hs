@@ -2743,17 +2743,20 @@ main = hspec $ do
                             ("Expected blank SRI script path to fail, got: " <> show value)
 
         it "rejects control-character SRI_INVOICE_SCRIPT paths before filesystem discovery" $
-            withEnvOverrides
-                [("SRI_INVOICE_SCRIPT", Just "/tmp/tdf-hq-sri\nscript.mjs")]
-                $ do
-                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
-                    case result of
-                        Left err ->
-                            Data.Text.unpack err
-                                `shouldContain` "SRI_INVOICE_SCRIPT must not contain control characters"
-                        Right value ->
-                            expectationFailure
-                                ("Expected control-character SRI script path to fail, got: " <> show value)
+            mapM_
+                (\rawPath ->
+                    withEnvOverrides [("SRI_INVOICE_SCRIPT", Just rawPath)] $ do
+                        result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                        case result of
+                            Left err ->
+                                Data.Text.unpack err
+                                    `shouldContain` "SRI_INVOICE_SCRIPT must not contain control characters"
+                            Right value ->
+                                expectationFailure
+                                    ("Expected control-character SRI script path to fail, got: " <> show value))
+                [ "/tmp/tdf-hq-sri\nscript.mjs"
+                , "/tmp/tdf-hq-sri-script.mjs\n"
+                ]
 
         it "rejects relative SRI_INVOICE_SCRIPT paths before filesystem discovery" $
             withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "scripts/generate-sri-invoice.mjs")] $ do

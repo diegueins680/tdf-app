@@ -514,14 +514,15 @@ missingDefaultScriptMessage =
 
 normalizeConfiguredScriptPath :: String -> Either Text FilePath
 normalizeConfiguredScriptPath raw =
-  let trimmed = T.unpack (T.strip (T.pack raw))
+  let rawText = T.pack raw
+      trimmed = T.unpack (T.strip rawText)
   in if null trimmed
        then Left blankConfiguredScriptMessage
-       else if any isControl trimmed
+       else if T.any isControl rawText
          then Left invalidConfiguredScriptControlMessage
-         else if not (isAbsolute trimmed)
-           then Left relativeConfiguredScriptMessage
-         else Right trimmed
+       else if not (isAbsolute trimmed)
+         then Left relativeConfiguredScriptMessage
+       else Right trimmed
 
 invalidConfiguredScriptControlMessage :: Text
 invalidConfiguredScriptControlMessage =
