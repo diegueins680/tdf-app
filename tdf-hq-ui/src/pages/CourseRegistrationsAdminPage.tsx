@@ -787,6 +787,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     ? strippedTitle
     : strippedTitle
       .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
+      .replace(/^(?:de|del|para(?:\s+el)?)\s+/, '')
       .trim();
 
   return strippedCourseNoun || strippedTitle;
