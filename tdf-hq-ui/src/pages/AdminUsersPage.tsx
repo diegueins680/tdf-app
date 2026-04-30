@@ -381,6 +381,8 @@ const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const makeSingleUserInactiveGuidance = (guidance: string) =>
+  guidance.replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.');
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
@@ -936,7 +938,7 @@ export default function AdminUsersPage() {
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos en esta vista.'
     : '';
-  const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary
+  const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary && !showSingleUserGuidance
     ? 'Vista actual: solo usuarios inactivos.'
     : '';
   const searchEmptyStateMessage = showSearchEmptyState
@@ -1046,7 +1048,7 @@ export default function AdminUsersPage() {
       : hasCurrentSummaryLinkedProfile
         ? ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO
         : ADMIN_USERS_PAGE_PROFILE_PENDING_NUMBER_SETUP_INTRO;
-  const singleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
+  const baseSingleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
     ? buildPendingProfileGuidance({
         scope: 'single-user',
         readiness: singleVisibleUserReadiness ?? 'missing-contact',
@@ -1056,6 +1058,9 @@ export default function AdminUsersPage() {
       : singleVisibleUserReadiness === 'contact-ready'
         ? SINGLE_USER_NUMBER_SETUP_GUIDANCE
         : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+  const singleUserGuidance = showOnlyInactiveUsers
+    ? makeSingleUserInactiveGuidance(baseSingleUserGuidance)
+    : baseSingleUserGuidance;
   const singleSearchResultGuidance = showSingleSearchResultGuidance
     ? (
       singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
