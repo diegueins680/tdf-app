@@ -9065,7 +9065,10 @@ tidalAgentServer user TidalAgentRequest{..} = do
   Env{..} <- ask
   let prompt = T.strip taPrompt
   when (T.null prompt) $ throwBadRequest "Prompt requerido"
-  when (T.length prompt > 2000) $ throwBadRequest "Prompt demasiado largo (max 2000 caracteres)"
+  when (T.length prompt > maxTidalAgentPromptChars) $
+    throwBadRequest "Prompt demasiado largo (max 2000 caracteres)"
+  when (T.any isUnsupportedTidalAgentPromptChar prompt) $
+    throwBadRequest "Prompt contiene caracteres de control o formato no soportados"
   apiKey <- case openAiApiKey envConfig of
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key

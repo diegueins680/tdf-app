@@ -203,9 +203,15 @@ spec = do
                     modelVal `shouldBe` Just "ft:gpt-4o-mini:tdf:tidal:abc123"
 
         it
-            "rejects blank, malformed, or unexpected model selectors before upstream calls"
+            "rejects malformed prompts and model selectors before upstream calls"
             $ do
             decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithPrompt (BL8.pack (replicate 2001 'a')))
+                `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u0000beat")
+                `shouldSatisfy` isLeft
+            decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u202Ebeat")
+                `shouldSatisfy` isLeft
             decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
             decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
                 `shouldSatisfy` isLeft
@@ -1577,6 +1583,9 @@ spec = do
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
     decodeTidalAgentRequest = eitherDecode
+    tidalAgentRequestWithPrompt :: BL8.ByteString -> BL8.ByteString
+    tidalAgentRequestWithPrompt rawPrompt =
+        "{\"prompt\":\"" <> rawPrompt <> "\"}"
     tidalAgentRequestWithModel :: BL8.ByteString -> BL8.ByteString
     tidalAgentRequestWithModel rawModel =
         "{\"prompt\":\"play a broken beat\",\"model\":\"" <> rawModel <> "\"}"

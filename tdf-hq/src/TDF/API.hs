@@ -15,7 +15,13 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
-import           Data.Char (isControl, isSpace, toLower)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  , toLower
+  )
 import           Data.Aeson (ToJSON(..), FromJSON(..), Object, Value(..), object, (.=), defaultOptions, genericParseJSON, genericToJSON, fieldLabelModifier, rejectUnknownFields)
 import           Data.Aeson.Types (Parser, camelTo2, withObject, (.:?))
 import qualified Data.Aeson.Key as AesonKey
@@ -730,21 +736,29 @@ data TidalAgentRequest = TidalAgentRequest
 instance FromJSON TidalAgentRequest where
   parseJSON = withObject "TidalAgentRequest" $ \o -> do
     rejectUnexpectedObjectFields "TidalAgentRequest" ["prompt", "model"] o
-    prompt <- normalizeRequiredTextField "prompt" =<< o .:? "prompt"
+    prompt <- normalizeRequiredPrompt =<< o .:? "prompt"
     model <- traverse (normalizeOptionalTextField "model") =<< o .:? "model"
     pure TidalAgentRequest
       { taPrompt = prompt
       , taModel = model
       }
     where
-      normalizeRequiredTextField fieldName mRawValue =
+      normalizeRequiredPrompt mRawValue =
         case mRawValue of
-          Nothing -> fail (T.unpack fieldName <> " is required")
+          Nothing -> fail "prompt is required"
           Just rawValue ->
             let trimmedValue = T.strip rawValue
             in if T.null trimmedValue
-                 then fail (T.unpack fieldName <> " cannot be blank")
-                 else pure trimmedValue
+                 then fail "prompt cannot be blank"
+                 else validatePromptField trimmedValue
+
+      validatePromptField promptValue
+        | T.length promptValue > maxTidalAgentPromptChars =
+            fail ("prompt must be " <> show maxTidalAgentPromptChars <> " characters or fewer")
+        | T.any isUnsupportedTidalAgentPromptChar promptValue =
+            fail "prompt must not contain unsupported control or formatting characters"
+        | otherwise =
+            pure promptValue
 
       normalizeOptionalTextField fieldName rawValue =
         let trimmedValue = T.strip rawValue
@@ -772,6 +786,14 @@ instance FromJSON TidalAgentRequest where
           || (ch >= 'A' && ch <= 'Z')
           || (ch >= '0' && ch <= '9')
           || ch `elem` ("._-:" :: String)
+
+maxTidalAgentPromptChars :: Int
+maxTidalAgentPromptChars = 2000
+
+isUnsupportedTidalAgentPromptChar :: Char -> Bool
+isUnsupportedTidalAgentPromptChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 data TidalAgentResponse = TidalAgentResponse
   { taContent :: Text
