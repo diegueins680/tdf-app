@@ -1917,6 +1917,9 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
+  const hidePassiveFiltersDuringEmptyLocalSearch = showEmptyLocalSearchResults
+    && !hasManualFilters
+    && !cohortsQuery.isError;
   const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && !hasCustomFilters
     && !viewHitsCurrentLimit;
@@ -2289,7 +2292,8 @@ export default function CourseRegistrationsAdminPage() {
     && !showInlineCurrentViewDossierHint;
   const showFirstRunFilterHelper = showFilterOnboardingCopy
     && !showSingleResultWithoutHiddenLimit
-    && !showBusyListSearchOnboarding;
+    && !showBusyListSearchOnboarding
+    && !hidePassiveFiltersDuringEmptyLocalSearch;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
@@ -2343,6 +2347,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showEmptyLocalSearchResults,
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
+    && !hidePassiveFiltersDuringEmptyLocalSearch
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
   const showFilteredResetAction = !showEmptyLocalSearchResults
@@ -2468,14 +2473,19 @@ export default function CourseRegistrationsAdminPage() {
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
   const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch
+    && !hidePassiveFiltersDuringEmptyLocalSearch
     && !hideBusyListPassiveSingleStatusSummary;
   const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
+    && !hidePassiveFiltersDuringEmptyLocalSearch
     && !hideBusyListPassiveSingleCohortSummary;
-  const showCohortFilterColumn = showCohortSelect
-    || showCohortFilterUnavailableSummary
-    || showCohortFilterLoadingSummary
-    || showEmptyCohortFilterSummary
-    || showPassiveSingleCohortSummary;
+  const showCohortFilterColumn = !hidePassiveFiltersDuringEmptyLocalSearch
+    && (
+      showCohortSelect
+      || showCohortFilterUnavailableSummary
+      || showCohortFilterLoadingSummary
+      || showEmptyCohortFilterSummary
+      || showPassiveSingleCohortSummary
+    );
   const filterGridColumns = showStatusFilterColumn ? 6 : 12;
   const statusFilterGridColumns = showCohortFilterColumn ? 6 : 12;
   const customStatusFilterGuidance = customStatusFilterUnavailableMessage;

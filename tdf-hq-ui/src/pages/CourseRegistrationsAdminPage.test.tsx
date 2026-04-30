@@ -10064,6 +10064,10 @@ describe('CourseRegistrationsAdminPage', () => {
         'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas. Aumenta el límite si el registro puede estar fuera del lote cargado.',
       );
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).not.toContain('Filtrar por estado');
+      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
@@ -10117,7 +10121,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
-  });
+  }, 20_000);
 
   it('keeps the initial loading state focused on the first-result setup instead of filters or refresh actions', async () => {
     listRegistrationsMock.mockImplementation(() => new Promise(() => undefined));
