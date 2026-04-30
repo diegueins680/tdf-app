@@ -1287,6 +1287,9 @@ validateMetaBackfillOptions raw = do
     Object metaBackfillFields
       | Just unknownKey <- listToMaybe (unknownMetaBackfillKeys metaBackfillFields) ->
           metaBackfillBadRequest ("Unexpected meta backfill field: " <> AKey.toText unknownKey)
+      | Just nullKey <- listToMaybe (nullMetaBackfillKeys metaBackfillFields) ->
+          metaBackfillBadRequest
+            (AKey.toText nullKey <> " must be omitted instead of null")
     _ -> pure ()
   case parseMaybe (withObject "MetaBackfillOptions" parseOptions) raw of
     Nothing -> metaBackfillBadRequest "Invalid meta backfill payload"
@@ -1328,6 +1331,10 @@ allowedMetaBackfillKeys =
 unknownMetaBackfillKeys :: AKeyMap.KeyMap Value -> [AKey.Key]
 unknownMetaBackfillKeys =
   filter (`Set.notMember` allowedMetaBackfillKeys) . AKeyMap.keys
+
+nullMetaBackfillKeys :: AKeyMap.KeyMap Value -> [AKey.Key]
+nullMetaBackfillKeys =
+  map fst . filter ((== Null) . snd) . AKeyMap.toList
 
 validateMetaBackfillPlatform :: Maybe Text -> Either ServerError Text
 validateMetaBackfillPlatform Nothing = pure "all"

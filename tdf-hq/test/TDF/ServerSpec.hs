@@ -2404,6 +2404,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Unexpected meta backfill field: conversationlimit"
                 (validateMetaBackfillOptions (object ["conversationlimit" .= (200 :: Int)]))
+            assertInvalid
+                "conversationLimit must be omitted instead of null"
+                (validateMetaBackfillOptions (object ["conversationLimit" .= A.Null]))
+            assertInvalid
+                "onlyUnread must be omitted instead of null"
+                (validateMetaBackfillOptions (object ["onlyUnread" .= A.Null]))
 
     describe "resolveInstagramBackfillTarget" $ do
         it "uses /me only when the account id is omitted and trims explicit account targets" $ do
