@@ -41,7 +41,18 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
+import           Data.Char              ( GeneralCategory
+                                          ( Format
+                                          , LineSeparator
+                                          , ParagraphSeparator
+                                          )
+                                        , generalCategory
+                                        , isAlphaNum
+                                        , isAsciiLower
+                                        , isControl
+                                        , isDigit
+                                        , isSpace
+                                        )
 import           Data.List              (nub)
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Int               (Int64)
@@ -1205,8 +1216,8 @@ validateAdminWhatsAppMessageBody rawBody
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
   | T.length body > adminWhatsAppMessageMaxLength =
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje demasiado largo (max 4096 caracteres)") }
-  | T.any isUnsupportedWhatsAppMessageControl body =
-      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje no debe contener caracteres de control no soportados") }
+  | T.any isUnsupportedAdminWhatsAppMessageChar body =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje no debe contener caracteres de control o formato no soportados") }
   | otherwise =
       Right body
   where
@@ -1215,9 +1226,10 @@ validateAdminWhatsAppMessageBody rawBody
 adminWhatsAppMessageMaxLength :: Int
 adminWhatsAppMessageMaxLength = 4096
 
-isUnsupportedWhatsAppMessageControl :: Char -> Bool
-isUnsupportedWhatsAppMessageControl ch =
-  isControl ch && ch `notElem` ("\n\r\t" :: String)
+isUnsupportedAdminWhatsAppMessageChar :: Char -> Bool
+isUnsupportedAdminWhatsAppMessageChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 resolveAdminWhatsAppSendPhone :: Text -> [Text] -> Maybe ME.WhatsAppMessage -> Either ServerError Text
 resolveAdminWhatsAppSendPhone "reply" _ (Just msg) =

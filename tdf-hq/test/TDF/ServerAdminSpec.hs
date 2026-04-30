@@ -482,7 +482,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             validateAdminWhatsAppMessageBody (T.replicate 4096 "a")
                 `shouldBe` Right (T.replicate 4096 "a")
 
-        it "rejects blank, oversized, or unsupported-control messages before WhatsApp dispatch" $ do
+        it "rejects blank, oversized, control, or hidden-format messages before WhatsApp dispatch" $ do
             let assertInvalid expectedMessage result = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
@@ -494,8 +494,11 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "max 4096 caracteres"
                 (validateAdminWhatsAppMessageBody (T.replicate 4097 "a"))
             assertInvalid
-                "caracteres de control no soportados"
+                "caracteres de control o formato no soportados"
                 (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\NUL'))
+            assertInvalid
+                "caracteres de control o formato no soportados"
+                (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\x202E' <> "cod"))
 
     describe "resolveAdminWhatsAppSendPhone" $ do
         it "routes replies to the referenced message phone instead of the first party fallback" $ do
