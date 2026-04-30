@@ -1829,7 +1829,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps missing-provider guidance hidden until a paid state needs it', async () => {
+  it('keeps the payment shortcut hidden until a provider can be saved with it', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1853,23 +1853,24 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
+        expect(document.body.textContent).toContain('Requerido antes de marcar una orden como pagada.');
         expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
-      });
-
-      await clickActionByText(document.body, 'Marcar pagado ahora');
-
-      await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('No hay método de pago registrado.');
-        const saveButton = queryActionByText(document.body, 'Guardar cambios');
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
       });
 
       const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
       await setInputValue(providerInput, 'manual');
 
       await waitForExpectation(() => {
+        expect(document.body.textContent).not.toContain('Requerido antes de marcar una orden como pagada.');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).not.toBeNull();
+      });
+
+      await clickActionByText(document.body, 'Marcar pagado ahora');
+
+      await waitForExpectation(() => {
         expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
+        expect(countLabelsByText(document.body, 'Fecha de pago')).toBe(1);
         const saveButton = queryActionByText(document.body, 'Guardar cambios');
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(false);

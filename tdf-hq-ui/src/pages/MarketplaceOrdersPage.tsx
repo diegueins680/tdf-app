@@ -620,7 +620,11 @@ export default function MarketplaceOrdersPage() {
     }
     return null;
   })();
-  const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus);
+  const paymentProviderRequiredForShortcut = Boolean(selectedOrder && !isPaidOrderStatus(effectiveStatus) && !effectiveProvider);
+  const paymentProviderHelperText = paymentProviderRequiredForShortcut
+    ? 'Requerido antes de marcar una orden como pagada.'
+    : undefined;
+  const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus) && Boolean(effectiveProvider);
   const selectedBuyerEmail = selectedOrder ? normalizeEmailValue(selectedOrder.moBuyerEmail) : '';
   const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
   const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
@@ -1242,6 +1246,7 @@ export default function MarketplaceOrdersPage() {
                           value={paymentProviderInput}
                           onChange={(e) => setPaymentProviderInput(e.target.value)}
                           placeholder="paypal, transferencia, cash..."
+                          helperText={paymentProviderHelperText}
                         />
                         {showPaymentTimestampInput && (
                           <TextField
