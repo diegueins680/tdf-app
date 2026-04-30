@@ -2307,11 +2307,11 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
         );
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([102]);
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
         expect(container.textContent).not.toContain('1 usuario inactivo');
       });
     } finally {
@@ -4087,10 +4087,10 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
         );
         expect(getRenderedRowUserIds(container)).toEqual([102]);
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
       await changeInputValue(searchInput, 'inactivos');
@@ -4098,7 +4098,8 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "inactivos".');
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
       await changeInputValue(searchInput, 'desactivada');
@@ -4107,7 +4108,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "desactivada".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
       await changeInputValue(searchInput, 'archivada');
@@ -4116,7 +4118,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "archivada".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
       await changeInputValue(searchInput, 'suspendida');
@@ -4125,7 +4128,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "suspendida".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(true);
+        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
     } finally {
       await cleanup();

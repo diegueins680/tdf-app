@@ -762,7 +762,7 @@ export default function AdminUsersPage() {
     && visibleInactiveUsersCount === visibleUsers.length;
   const showOnlyInactiveSearchResults = hasActiveSearch
     && includeInactive
-    && visibleUsers.length > 1
+    && visibleUsers.length > 0
     && visibleInactiveUsersCount === visibleUsers.length;
   const showInactiveOnlyScopeSummary = showOnlyInactiveUsers || showOnlyInactiveSearchResults;
   const showInactiveUsersGroup =
@@ -1205,7 +1205,7 @@ export default function AdminUsersPage() {
                   <UserRow
                     key={user.userId}
                     user={user}
-                    showInactiveStatusChip={includeInactive && !user.active}
+                    showInactiveStatusChip={includeInactive && !user.active && !showInactiveOnlyScopeSummary}
                     onOpenCommunications={() => setSelectedUser(user)}
                     sharedModulesSummary={sharedModulesSummary}
                     sharedRolesSummary={sharedRolesSummary}
