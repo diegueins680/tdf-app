@@ -99,6 +99,8 @@ validateRadioStreamUrl rawUrl
       Left err400 { errBody = "streamUrl must not contain whitespace" }
   | T.any isControl streamUrl =
       Left err400 { errBody = "streamUrl must not contain control characters" }
+  | T.any isHiddenRadioFormatChar streamUrl =
+      Left err400 { errBody = "streamUrl must not contain hidden formatting characters" }
   | Nothing <- mRemainder =
       Left err400 { errBody = "streamUrl must be http(s)" }
   | "#" `T.isInfixOf` streamUrl =
@@ -161,6 +163,12 @@ resolveRadioTransmissionEnvBase label _ (Just rawValue)
             BL.fromStrict . TE.encodeUtf8 $
               label <> " must not contain control characters"
         }
+  | T.any isHiddenRadioFormatChar cleaned =
+      Left err500
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              label <> " must not contain hidden formatting characters"
+        }
   | otherwise =
       Right cleaned
   where
@@ -215,7 +223,11 @@ validateRadioSearchFilter fieldName maxLength (Just rawValue)
 
 isUnsafeRadioTextChar :: Char -> Bool
 isUnsafeRadioTextChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch || isHiddenRadioFormatChar ch
+
+isHiddenRadioFormatChar :: Char -> Bool
+isHiddenRadioFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateRadioTransmissionEndpointBase :: Text -> Text -> [Text] -> Text -> Either ServerError Text
 validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes rawBase
@@ -225,6 +237,8 @@ validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes ra
       Left err400 { errBody = fieldBody " must not contain whitespace" }
   | T.any isControl endpointBase =
       Left err400 { errBody = fieldBody " must not contain control characters" }
+  | T.any isHiddenRadioFormatChar endpointBase =
+      Left err400 { errBody = fieldBody " must not contain hidden formatting characters" }
   | Nothing <- mRemainder =
       Left err400 { errBody = fieldBody (" must be " <> allowedSchemesText) }
   | T.null authority =

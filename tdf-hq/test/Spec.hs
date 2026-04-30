@@ -5613,6 +5613,13 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not contain control characters"
                 Right _ -> expectationFailure "Expected control-character streamUrl to be rejected"
+            case validateRadioStreamUrl
+                ("https://radio.example.com/live" <> Data.Text.singleton '\x200B') of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl must not contain hidden formatting characters"
+                Right _ -> expectationFailure "Expected hidden-format streamUrl to be rejected"
             case validateRadioStreamUrl "https://radio.example.com/live#main" of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -5888,6 +5895,10 @@ main = hspec $ do
                 "RADIO_WHIP_BASE"
                 "https://radio.example.com/whip\NUL"
                 " must not contain control characters"
+            assertInvalid
+                "RADIO_PUBLIC_BASE"
+                ("https://radio.example.com/live" <> "\x200B")
+                " must not contain hidden formatting characters"
 
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
@@ -5916,6 +5927,11 @@ main = hspec $ do
             assertInvalid
                 (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live\DEL")
                 "RADIO_INGEST_BASE must not contain control characters"
+            assertInvalid
+                ( validateRadioTransmissionIngestBase
+                    ("rtmp://stream.example.com/live" <> Data.Text.singleton '\x200B')
+                )
+                "RADIO_INGEST_BASE must not contain hidden formatting characters"
             assertInvalid
                 (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
                 "RADIO_WHIP_BASE must be https"
