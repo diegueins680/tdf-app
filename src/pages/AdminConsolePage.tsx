@@ -328,6 +328,7 @@ const MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH = 32;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const AUDIT_VISIBLE_ENTRY_LIMIT = 5;
+const ADMIN_DATE_UNAVAILABLE_LABEL = 'Fecha no disponible';
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
@@ -673,10 +674,14 @@ function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {
   return dedupedEntries;
 }
 
-function getAuditEntryTimestamp(entry: Pick<AuditLogEntry, 'createdAt'>) {
-  const timestamp = Date.parse(entry.createdAt);
+function parseAdminDateTimestamp(value: string) {
+  const timestamp = Date.parse(value.trim());
 
-  return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+  return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function getAuditEntryTimestamp(entry: Pick<AuditLogEntry, 'createdAt'>) {
+  return parseAdminDateTimestamp(entry.createdAt) ?? Number.NEGATIVE_INFINITY;
 }
 
 function compareAuditEntries(left: AuditLogEntry, right: AuditLogEntry) {
@@ -708,18 +713,19 @@ function sortAuditEntries(entries: readonly AuditLogEntry[]) {
 }
 
 function formatDate(value: string) {
-  return new Date(value).toLocaleString();
+  const timestamp = parseAdminDateTimestamp(value);
+
+  return timestamp == null ? ADMIN_DATE_UNAVAILABLE_LABEL : new Date(timestamp).toLocaleString();
 }
 
 function formatDateOrDash(value?: string | null) {
-  if (!value) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue) {
     return '—';
   }
-  try {
-    return formatDate(value);
-  } catch {
-    return value;
-  }
+
+  return formatDate(trimmedValue);
 }
 
 function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {

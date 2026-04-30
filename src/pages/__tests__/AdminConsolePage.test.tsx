@@ -4462,6 +4462,42 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Actor:\s*101/i)).not.toBeInTheDocument();
   });
 
+  it('replaces invalid admin timestamps with a user-facing fallback', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        lastSeenAt: 'not-a-date',
+      }),
+    ]);
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Manager',
+        createdAt: 'not-a-date',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      const auditDateRow = screen.getByText(/^Fecha:/i).closest('p');
+      if (!(auditDateRow instanceof HTMLElement)) {
+        throw new Error('Expected audit date row to render');
+      }
+
+      expect(screen.getByText(/^Último acceso:/i)).toHaveTextContent('Último acceso: Fecha no disponible');
+      expect(auditDateRow).toHaveTextContent('Fecha: Fecha no disponible');
+    });
+
+    expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/not-a-date/i)).not.toBeInTheDocument();
+  });
+
   it('hides empty actor and detail rows in the single-audit summary until that context exists', async () => {
     mockAuditLogs.mockResolvedValue([
       {
