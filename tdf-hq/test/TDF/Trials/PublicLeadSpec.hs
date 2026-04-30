@@ -264,6 +264,50 @@ spec = do
           expectationFailure
             ("Expected fallback party marker drift to be rejected, got " <> show partyId)
 
+    it "rejects fallback party rows that already have account or role links" $ do
+      let fallbackParty now = Models.Party
+            { Models.partyLegalName = Nothing
+            , Models.partyDisplayName = "Public Trial Interest"
+            , Models.partyIsOrg = False
+            , Models.partyTaxId = Nothing
+            , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+            , Models.partyPrimaryPhone = Nothing
+            , Models.partyWhatsapp = Nothing
+            , Models.partyInstagram = Nothing
+            , Models.partyEmergencyContact = Nothing
+            , Models.partyNotes =
+                Just "System fallback party for anonymous public trial interests."
+            , Models.partyCreatedAt = now
+            }
+          assertRejected attach = do
+            result <- (try $ runInMemory $ do
+              now <- liftIO getCurrentTime
+              partyId <- insert (fallbackParty now)
+              _ <- attach partyId
+              ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 500
+                BL8.unpack (errBody err) `shouldContain` "account or role links"
+              Right partyId ->
+                expectationFailure
+                  ("Expected fallback party relation drift to be rejected, got " <> show partyId)
+      assertRejected $ \partyId -> do
+        _ <- insert Models.PartyRole
+          { Models.partyRolePartyId = partyId
+          , Models.partyRoleRole = Models.Customer
+          , Models.partyRoleActive = True
+          }
+        pure ()
+      assertRejected $ \partyId -> do
+        _ <- insert Models.UserCredential
+          { Models.userCredentialPartyId = partyId
+          , Models.userCredentialUsername = "public-interest@tdf.local"
+          , Models.userCredentialPasswordHash = "hash"
+          , Models.userCredentialActive = False
+          }
+        pure ()
+
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
           candidate = buildTrialUsernameCandidate root 12
@@ -2130,6 +2174,24 @@ initializePartySchema = do
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"party_role\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"role\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"username\" VARCHAR NOT NULL,\
+    \\"password_hash\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL\
     \)"
     []
 

@@ -1113,6 +1113,7 @@ ensurePublicLeadParty now = do
   case existing of
     [Entity partyId party] -> do
       validatePublicLeadFallbackParty party
+      validatePublicLeadFallbackRelations partyId
       pure partyId
     [] ->
       insert Party
@@ -1156,6 +1157,14 @@ hasPublicLeadFallbackMarkers party =
   partyDisplayName party == publicLeadFallbackDisplayName
     && partyPrimaryEmail party == Just publicLeadFallbackEmail
     && partyNotes party == Just publicLeadFallbackNotes
+
+validatePublicLeadFallbackRelations :: PartyId -> AppM ()
+validatePublicLeadFallbackRelations partyId = do
+  mRole <- selectFirst [Models.PartyRolePartyId ==. partyId] []
+  mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
+  when (isJust mRole || isJust mCred) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has account or role links" }
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do
