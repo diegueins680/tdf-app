@@ -19,7 +19,8 @@ module TDF.Handlers.InputList
 
 import           Control.Applicative        ((<|>))
 import           Control.Monad              (forM_, guard, when)
-import           Data.Char                  (isAlphaNum)
+import           Data.Char                  (GeneralCategory(Format, LineSeparator, ParagraphSeparator),
+                                             generalCategory, isAlphaNum, isControl)
 import           Data.List                  (find)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (mapMaybe)
@@ -217,6 +218,7 @@ latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar
   where
     escapeChar c = case c of
+      _ | isUnsafeLatexTextChar c -> " "
       '&'  -> "\\&"
       '%'  -> "\\%"
       '$'  -> "\\$"
@@ -228,6 +230,10 @@ latexEscape = T.concatMap escapeChar
       '^'  -> "\\textasciicircum{}"
       '\\' -> "\\textbackslash{}"
       _    -> T.singleton c
+
+    isUnsafeLatexTextChar ch =
+      isControl ch
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 generateInputListPdf :: Text -> IO (Either Text BL.ByteString)
 generateInputListPdf = generateInputListPdfWithAssets Nothing

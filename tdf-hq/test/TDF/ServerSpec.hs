@@ -58,7 +58,7 @@ import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.Config (AppConfig(..))
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
-import TDF.Handlers.InputList (AssetField (..))
+import TDF.Handlers.InputList (AssetField (..), renderInputListLatex)
 import TDF.Models
     ( ApiToken (..)
     , ArtistProfile (..)
@@ -598,6 +598,19 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "channel requires sessionId"
                 (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
+
+    describe "renderInputListLatex" $
+        it "keeps generated headings single-line by neutralizing control and formatting characters" $ do
+            let latex =
+                    renderInputListLatex
+                        ("Session\n\\input{secret}" <> T.singleton '\x202E' <> "x")
+                        []
+                titleLines =
+                    filter ("\\section*" `T.isPrefixOf`) (T.lines latex)
+            titleLines
+                `shouldBe`
+                    [ "\\section*{Input List --- Session \\textbackslash{}input\\{secret\\} x}"
+                    ]
 
     describe "parseMcpRequest" $ do
         it "accepts canonical JSON-RPC 2.0 MCP requests" $
