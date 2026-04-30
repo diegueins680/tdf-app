@@ -5414,6 +5414,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   "
             assertInvalid "000.100.OK"
             assertInvalid "000..100"
+            assertInvalid "\x0660\x0660\x0660.\x0661\x0660\x0660.\x0661\x0661\x0660"
             assertInvalid "000.100\nInjected"
             assertInvalid (T.replicate 65 "1")
 
@@ -5448,6 +5449,14 @@ spec = describe "TDF.Server helpers" $ do
                 502
                 "invalid payment amount"
                 (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "25.001") (Just "USD"))
+            assertInvalid
+                502
+                "invalid payment amount"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency
+                    2500
+                    "USD"
+                    (Just "\x0662\x0665.00")
+                    (Just "USD"))
             assertInvalid
                 502
                 "amount does not match"

@@ -10054,7 +10054,7 @@ validateDatafastResultCodeField rawCode
 
 isDatafastResultCodeChar :: Char -> Bool
 isDatafastResultCodeChar ch =
-  isDigit ch || ch == '.'
+  isAsciiDecimalDigit ch || ch == '.'
 
 invalidDatafastResultCode :: Either ServerError a
 invalidDatafastResultCode =
@@ -10131,10 +10131,14 @@ parseDecimalDigits rawDigits =
   where
     step Nothing _ = Nothing
     step (Just acc) ch
-      | isDigit ch =
+      | isAsciiDecimalDigit ch =
           Just (acc * 10 + fromIntegral (fromEnum ch - fromEnum '0'))
       | otherwise =
           Nothing
+
+isAsciiDecimalDigit :: Char -> Bool
+isAsciiDecimalDigit ch =
+  ch >= '0' && ch <= '9'
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
