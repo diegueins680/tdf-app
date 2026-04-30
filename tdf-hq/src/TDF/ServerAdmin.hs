@@ -1142,8 +1142,9 @@ validateSocialUnholdNote (Just rawNote)
   | T.null note = Right Nothing
   | T.length note > 500 =
       Left err400 { errBody = "note must be 500 characters or fewer" }
-  | T.any isControl note =
-      Left err400 { errBody = "note must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar note =
+      Left err400
+        { errBody = "note must not contain control characters or hidden format characters" }
   | otherwise = Right (Just note)
   where
     note = T.strip rawNote
@@ -1156,10 +1157,17 @@ validateSocialUnholdIdentifier fieldName value
       invalid (" must not contain control characters")
   | T.any isSpace value =
       invalid (" must not contain whitespace")
+  | T.any isUnsupportedAdminAuditChar value =
+      invalid (" must not contain hidden format characters")
   | otherwise = Right value
   where
     invalid reason =
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> reason)) }
+
+isUnsupportedAdminAuditChar :: Char -> Bool
+isUnsupportedAdminAuditChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 auditNoteSuffix :: Maybe Text -> Text
 auditNoteSuffix Nothing = ""

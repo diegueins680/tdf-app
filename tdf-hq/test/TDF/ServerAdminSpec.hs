@@ -896,6 +896,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "senderId must not contain control characters"
                 (validateSocialUnholdLookup Nothing (Just ("wa:+593" <> T.singleton '\NUL')))
             assertInvalid
+                "senderId must not contain hidden format characters"
+                ( validateSocialUnholdLookup
+                    Nothing
+                    (Just ("wa:+593" <> T.singleton '\x202E' <> "999000111"))
+                )
+            assertInvalid
                 "externalId must be 256 characters or fewer"
                 (validateSocialUnholdLookup (Just (T.replicate 257 "x")) Nothing)
 
@@ -916,6 +922,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "note must not contain control characters"
                 (validateSocialUnholdNote (Just "retry\nnow"))
+            assertInvalid
+                "note must not contain control characters or hidden format characters"
+                (validateSocialUnholdNote (Just ("retry" <> T.singleton '\x202E' <> "now")))
             assertInvalid
                 "note must be 500 characters or fewer"
                 (validateSocialUnholdNote (Just (T.replicate 501 "x")))
