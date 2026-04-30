@@ -7842,6 +7842,54 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses the direct recovery hint when busy-list search leaves one cancelled registration', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => (
+        index === 8
+          ? {
+            crFullName: 'Nina Simone',
+            crEmail: 'nina@example.com',
+            crStatus: 'cancelled',
+          }
+          : {}
+      )),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain(
+        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.',
+      );
+      expect(container.textContent).not.toContain(
+        'Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+      );
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Nina Simone').textContent?.trim()).toBe(
+        'Reabrir como pendiente',
+      );
+      expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Nina Simone').getAttribute('aria-haspopup')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps single missing-contact search guidance in the helper instead of row fallback copy', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

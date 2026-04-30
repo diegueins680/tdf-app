@@ -2027,12 +2027,19 @@ export default function CourseRegistrationsAdminPage() {
         : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
     }`
     : '';
-  const localSearchSingleResultTargetLabel =
+  const localSearchSingleResult =
     localSearchNarrowsRegistrations && searchedRegistrations.length === 1
-      ? registrationIdentityTargetLabel(searchedRegistrations)
-      : dossierIdentityTargetLabel;
-  const localSearchSingleResultActionHint = localSearchNarrowsRegistrations && searchedRegistrations.length === 1
-    ? ` ${buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)}`
+      ? (searchedRegistrations[0] ?? null)
+      : null;
+  const localSearchSingleResultTargetLabel = localSearchSingleResult
+    ? registrationIdentityTargetLabel(searchedRegistrations)
+    : dossierIdentityTargetLabel;
+  const localSearchSingleResultActionHint = localSearchSingleResult
+    ? ` ${
+      shouldUseDirectPendingRecoveryAction(localSearchSingleResult.crStatus)
+        ? buildPendingRecoveryScopeHint(localSearchSingleResultTargetLabel)
+        : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
+    }`
     : '';
   const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
