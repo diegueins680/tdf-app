@@ -124,13 +124,13 @@ describe('LogsPage', () => {
         expect(getLogsMock).toHaveBeenCalledWith(100);
         expect(container.textContent).toContain('Logs del servidor');
         expect(container.textContent).toContain(
-          'Todavia no hay logs disponibles. Esta vista se actualiza automaticamente y mostrara filtros cuando exista el primer registro.',
+          'Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro.',
         );
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).not.toBeNull();
         expect(container.querySelector('table')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
-        expect(container.textContent).not.toContain('Limite');
+        expect(container.textContent).not.toContain('Límite');
         expect(container.textContent).not.toContain('No logs available');
         expect(container.textContent).not.toContain('Timestamp');
         expect(container.textContent).not.toContain('Level');
@@ -152,10 +152,10 @@ describe('LogsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Servidor listo');
-        expect(container.textContent).toContain('Actualizacion automatica cada 5 segundos.');
+        expect(container.textContent).toContain('Actualización automática cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
         expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')).toBeNull();
-        expect(container.textContent).toContain('Limite');
+        expect(container.textContent).toContain('Límite');
         expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
         expect(hasTableHeader(container, 'Nivel')).toBe(true);
         expect(hasTableHeader(container, 'Mensaje')).toBe(true);
@@ -239,7 +239,7 @@ describe('LogsPage', () => {
     }
   });
 
-  it('keeps refresh available when the log request fails', async () => {
+  it('keeps retry with the failed log request instead of adding a detached header icon', async () => {
     getLogsMock.mockRejectedValue(new Error('logs unavailable'));
 
     const container = document.createElement('div');
@@ -248,11 +248,12 @@ describe('LogsPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Failed to load logs: logs unavailable');
-        expect(container.textContent).not.toContain('Actualizacion automatica cada 5 segundos.');
+        expect(container.textContent).toContain('No se pudieron cargar los logs: logs unavailable');
+        expect(container.textContent).not.toContain('Actualización automática cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
-        expect(container.textContent).toContain('Limite');
-        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
+        expect(container.textContent).toContain('Límite');
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
+        expect(container.textContent).toContain('Reintentar logs');
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
       });
     } finally {

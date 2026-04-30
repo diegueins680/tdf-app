@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
+  Button,
   Chip,
   CircularProgress,
   IconButton,
@@ -17,7 +18,6 @@ import {
   Typography,
   Tooltip,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Admin } from '../api/admin';
 import { formatTimestampForDisplay } from '../utils/dateTime';
@@ -88,7 +88,6 @@ export default function LogsPage() {
   const showLevelColumn = sharedLevelSummary === '';
   const showLogsTable = logsQuery.isLoading || hasLogs;
   const showLimitControl = logsQuery.isLoading || logsQuery.isError || hasLogs;
-  const showRefreshAction = logsQuery.isError;
   const showAutoRefreshHint = logsQuery.isLoading || hasLogs;
   const visibleTableColumnCount = 2 + (showLevelColumn ? 1 : 0);
 
@@ -101,7 +100,7 @@ export default function LogsPage() {
           </Typography>
           {showAutoRefreshHint && !logsQuery.isError && (
             <Typography variant="body2" color="text.secondary">
-              Actualizacion automatica cada 5 segundos.
+              Actualización automática cada 5 segundos.
             </Typography>
           )}
         </Stack>
@@ -109,22 +108,13 @@ export default function LogsPage() {
           {showLimitControl && (
             <TextField
               type="number"
-              label="Limite"
+              label="Límite"
               value={limit}
               onChange={(e) => setLimit(parseLogLimit(e.target.value))}
               size="small"
               sx={{ width: 100 }}
               inputProps={{ min: 1, max: 1000 }}
             />
-          )}
-          {showRefreshAction && (
-            <Tooltip title="Refrescar logs">
-              <span>
-                <IconButton aria-label="Refrescar logs" onClick={() => void logsQuery.refetch()} disabled={logsQuery.isFetching}>
-                  <RefreshIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
           )}
           {hasLogs && (
             <Tooltip title="Vaciar logs">
@@ -144,14 +134,26 @@ export default function LogsPage() {
       </Stack>
 
       {logsQuery.isError && (
-        <Alert severity="error">
-          Failed to load logs: {logsQuery.error instanceof Error ? logsQuery.error.message : 'Unknown error'}
+        <Alert
+          severity="error"
+          action={(
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => void logsQuery.refetch()}
+              disabled={logsQuery.isFetching}
+            >
+              Reintentar logs
+            </Button>
+          )}
+        >
+          No se pudieron cargar los logs: {logsQuery.error instanceof Error ? logsQuery.error.message : 'error desconocido'}
         </Alert>
       )}
 
       {clearLogsMutation.isError && (
         <Alert severity="error">
-          Failed to clear logs: {clearLogsMutation.error instanceof Error ? clearLogsMutation.error.message : 'Unknown error'}
+          No se pudieron vaciar los logs: {clearLogsMutation.error instanceof Error ? clearLogsMutation.error.message : 'error desconocido'}
         </Alert>
       )}
 
@@ -163,7 +165,7 @@ export default function LogsPage() {
 
       {!logsQuery.isLoading && !logsQuery.isError && !hasLogs && (
         <Alert severity="info" variant="outlined" data-testid="server-logs-empty-state">
-          Todavia no hay logs disponibles. Esta vista se actualiza automaticamente y mostrara filtros cuando exista el primer registro.
+          Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro.
         </Alert>
       )}
 
