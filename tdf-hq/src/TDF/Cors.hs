@@ -113,8 +113,9 @@ parseHttpsOriginHost origin = do
 
 normalizeConfiguredCorsOrigin :: String -> Either String String
 normalizeConfiguredCorsOrigin raw =
-  let normalized = normalizeOrigin raw
-  in case normalized of
+  let rawTrimmed = trim raw
+      normalized = normalizeOrigin raw
+  in case rawTrimmed of
     "*" -> Right "*"
     _ ->
       case parseHttpOrigin normalized of

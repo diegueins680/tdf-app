@@ -2764,6 +2764,7 @@ main = hspec $ do
             assertInvalid "https://admin"
             assertInvalid "https://999.999.999.999"
             assertInvalid "https://1.2.3"
+            assertInvalid "*/"
 
         it "rejects malformed boolean CORS flags instead of treating typos as false" $ do
             let baseOverrides =
