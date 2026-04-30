@@ -2449,6 +2449,35 @@ main = hspec $ do
                         `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
 
+        it "validates optional SRI buyer email before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI buyer email to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"not-an-email\"}"
+            assertInvalid
+                "buyerEmail must be 254 characters or fewer"
+                ( "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\""
+                    <> Data.Text.unpack (Data.Text.replicate 245 "a")
+                    <> "@example.com\"}"
+                )
+            case Sri.decodeSriScriptOutput
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\" Billing+SRI@Example.COM \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI buyer email to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    DTO.sirBuyerEmail result `shouldBe` Just "billing+sri@example.com"
+
         it "rejects negative SRI totals before invoice results are trusted" $
             case Sri.decodeSriScriptOutput
                 ( "{\"ok\":true,\"status\":\"issued\","

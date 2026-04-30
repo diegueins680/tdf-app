@@ -131,8 +131,17 @@ validateSriScriptResult dto =
            validateScriptTotal dto { sirStatus = statusValue }
              >>= validateIssuedResult
              >>= validateOptionalDocumentIdentifiers
+             >>= validateOptionalBuyerEmail
   where
     isInvalidStatusChar ch = ch == '\DEL' || ch < ' '
+
+    validateOptionalBuyerEmail result = do
+      buyerEmail <-
+        validateOptionalOutputField
+          "buyerEmail"
+          validateSriBuyerEmail
+          (sirBuyerEmail result)
+      Right result { sirBuyerEmail = buyerEmail }
 
     validateOptionalDocumentIdentifiers result = do
       authorizationNumber <-
@@ -217,6 +226,14 @@ validateSriScriptResult dto =
         else
           Left
             "SRI script JSON output authorizationNumber must contain exactly 49 ASCII digits"
+
+    validateSriBuyerEmail value =
+      let normalized = T.toLower value
+      in if T.length normalized > maxSriEmailChars
+           then Left "SRI script JSON output buyerEmail must be 254 characters or fewer"
+           else if isValidSriEmail normalized
+             then Right normalized
+             else Left "SRI script JSON output buyerEmail must be a valid email address"
 
     isSriInvoiceNumber value =
       case T.splitOn "-" value of
