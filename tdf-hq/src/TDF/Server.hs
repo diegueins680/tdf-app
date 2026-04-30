@@ -11377,8 +11377,10 @@ data DriveApiResp = DriveApiResp
 instance FromJSON DriveApiResp where
   parseJSON = withObject "DriveApiResp" $ \o -> do
     darId <- (o .: "id") >>= parseDriveApiFileId
-    darWebViewLink <- o .:? "webViewLink"
-    darWebContentLink <- o .:? "webContentLink"
+    darWebViewLink <-
+      (o .:? "webViewLink") >>= parseDriveApiLink "webViewLink" darId
+    darWebContentLink <-
+      (o .:? "webContentLink") >>= parseDriveApiLink "webContentLink" darId
     darResourceKey <- o .:? "resourceKey"
     pure DriveApiResp{..}
 
@@ -11392,6 +11394,21 @@ parseDriveApiFileId rawFileId
       pure fileId
   where
     fileId = T.strip rawFileId
+
+parseDriveApiLink :: Text -> Text -> Maybe Text -> Parser (Maybe Text)
+parseDriveApiLink _ _ Nothing = pure Nothing
+parseDriveApiLink fieldName fileId (Just rawLink) =
+  case cleanOptional (Just rawLink) of
+    Nothing ->
+      fail (T.unpack fieldName <> " must not be blank")
+    Just _ ->
+      case sanitizeDriveWebContentLink fileId (Just rawLink) of
+        Just link -> pure (Just link)
+        Nothing ->
+          fail
+            ( T.unpack fieldName
+                <> " must be a Google Drive https link for the uploaded file"
+            )
 
 data DriveMetaResp = DriveMetaResp
   { dmrResourceKey :: Maybe Text

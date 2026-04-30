@@ -3928,12 +3928,17 @@ spec = describe "TDF.Server helpers" $ do
         it "normalizes valid Google Drive file ids from upload responses" $ do
             let rawResponse =
                     "{\"id\":\" file_123-A \","
+                        <> "\"webViewLink\":\""
+                        <> "https://drive.google.com/file/d/file_123-A/view?usp=drivesdk"
+                        <> "\","
                         <> "\"webContentLink\":\"https://drive.google.com/uc?id=file_123-A\"}"
             case (eitherDecode rawResponse :: Either String DriveApiResp) of
                 Left err ->
                     expectationFailure ("Expected Drive upload response to decode, got: " <> err)
                 Right payload -> do
                     darId payload `shouldBe` "file_123-A"
+                    darWebViewLink payload
+                        `shouldBe` Just "https://drive.google.com/file/d/file_123-A/view?usp=drivesdk"
                     darWebContentLink payload
                         `shouldBe` Just "https://drive.google.com/uc?id=file_123-A"
 
@@ -3943,6 +3948,12 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected "{\"id\":\"   \"}"
             assertRejected "{\"id\":\"file 123\"}"
             assertRejected "{\"id\":\"file-123&alt=media\"}"
+            assertRejected $
+                "{\"id\":\"file-123\","
+                    <> "\"webContentLink\":\"https://evil.example.com/uc?id=file-123\"}"
+            assertRejected $
+                "{\"id\":\"file-123\","
+                    <> "\"webViewLink\":\"https://drive.google.com/file/d/other-file/view\"}"
 
     describe "GoogleToken FromJSON" $ do
         it "normalizes valid Google OAuth token responses before proxying them" $ do
