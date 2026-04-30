@@ -2648,7 +2648,10 @@ calendarServer user =
       calendarIdFilter <- either throwError pure (validateOptionalCalendarIdQuery mCalendarId)
       mCfg <- case calendarIdFilter of
         Just cid -> runDB $ getBy (Cal.UniqueCalendar cid)
-        _ -> listToMaybe <$> runDB (selectList [] [Desc Cal.GoogleCalendarConfigUpdatedAt, LimitTo 1])
+        _ -> do
+          candidates <- runDB $
+            selectList [] [Desc Cal.GoogleCalendarConfigUpdatedAt, LimitTo 2]
+          either throwError pure (selectUniqueCalendarConfigFallback candidates)
       pure (toCfgDTO <$> mCfg)
 
     calendarSyncH :: CalAPI.SyncRequest -> AppM CalAPI.SyncResult
@@ -2916,6 +2919,17 @@ googleCalendarEventsEndpoint calendarId =
     "https://www.googleapis.com/calendar/v3/calendars/"
       <> encodeGooglePathSegment calendarId
       <> "/events"
+
+selectUniqueCalendarConfigFallback
+  :: [Entity Cal.GoogleCalendarConfig]
+  -> Either ServerError (Maybe (Entity Cal.GoogleCalendarConfig))
+selectUniqueCalendarConfigFallback [] = Right Nothing
+selectUniqueCalendarConfigFallback [cfg] = Right (Just cfg)
+selectUniqueCalendarConfigFallback _ =
+  Left err409
+    { errBody =
+        "calendarId is required when multiple Google Calendar configs exist"
+    }
 
 encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =

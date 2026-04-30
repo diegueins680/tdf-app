@@ -56,6 +56,7 @@ import Servant.Multipart
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import TDF.Config (AppConfig(..))
+import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
 import TDF.Handlers.InputList (AssetField (..), renderInputListLatex)
@@ -264,6 +265,7 @@ import TDF.Server
     , validateConfiguredCalendarRedirectUri
     , validateGoogleCalendarEventId
     , validateGoogleCalendarEventStatus
+    , selectUniqueCalendarConfigFallback
     , googleCalendarEventsEndpoint
     , validateConfiguredDriveAccessToken
     , resolveDriveClientCreds
@@ -4389,6 +4391,39 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "from must be on or before to"
                 (validateCalendarEventListQuery Nothing (Just fromTs) (Just toTs) Nothing)
+
+    describe "selectUniqueCalendarConfigFallback" $ do
+        it "uses the implicit config fallback only when it is unambiguous" $ do
+            case selectUniqueCalendarConfigFallback [] of
+                Right Nothing -> pure ()
+                other ->
+                    expectationFailure
+                        ( "Expected no Calendar config fallback candidates, got: "
+                            <> show (fmap (fmap (fromSqlKey . entityKey)) other)
+                        )
+            case selectUniqueCalendarConfigFallback [calendarConfigEntity 1 "primary"] of
+                Right (Just cfg) ->
+                    fromSqlKey (entityKey cfg) `shouldBe` 1
+                other ->
+                    expectationFailure
+                        ( "Expected a single Calendar config fallback candidate, got: "
+                            <> show (fmap (fmap (fromSqlKey . entityKey)) other)
+                        )
+
+        it "rejects multiple calendar configs instead of picking the latest silently" $
+            case selectUniqueCalendarConfigFallback
+                    [ calendarConfigEntity 1 "primary"
+                    , calendarConfigEntity 2 "team@example.com"
+                    ] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL8.unpack (errBody err)
+                        `shouldContain` "calendarId is required when multiple Google Calendar configs exist"
+                Right value ->
+                    expectationFailure
+                        ( "Expected ambiguous Calendar config fallback to fail, got: "
+                            <> show (fmap (fromSqlKey . entityKey) value)
+                        )
 
     describe "validateGoogleCalendarEventStatus" $ do
         it "normalizes only statuses the sync path can persist and report consistently" $ do
@@ -8756,6 +8791,25 @@ fixtureWhatsAppMessage keyVal now externalId direction phone =
         , ME.whatsAppMessageResendOfMessageId = Nothing
         , ME.whatsAppMessageCreatedAt = now
         }
+
+calendarConfigEntity :: Int -> Text -> Entity Cal.GoogleCalendarConfig
+calendarConfigEntity keyVal calendarIdVal =
+    Entity (toSqlKey (fromIntegral keyVal)) Cal.GoogleCalendarConfig
+        { Cal.googleCalendarConfigOwnerId = Nothing
+        , Cal.googleCalendarConfigCalendarId = calendarIdVal
+        , Cal.googleCalendarConfigAccessToken = Just "access-token"
+        , Cal.googleCalendarConfigRefreshToken = Nothing
+        , Cal.googleCalendarConfigTokenType = Just "Bearer"
+        , Cal.googleCalendarConfigTokenExpiresAt = Nothing
+        , Cal.googleCalendarConfigSyncCursor = Nothing
+        , Cal.googleCalendarConfigSyncedAt = Nothing
+        , Cal.googleCalendarConfigCreatedAt = calendarConfigFixtureTime
+        , Cal.googleCalendarConfigUpdatedAt = calendarConfigFixtureTime
+        }
+
+calendarConfigFixtureTime :: UTCTime
+calendarConfigFixtureTime =
+    UTCTime (fromGregorian 2026 4 30) (secondsToDiffTime 0)
 
 initializePackageSchema :: SqlPersistT IO ()
 initializePackageSchema = do
