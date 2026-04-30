@@ -8071,17 +8071,22 @@ spec = describe "TDF.Server helpers" $ do
                     mkCard "user-management" "Gestión de usuarios" userManagementBody
                 validApiTokensCard =
                     mkCard "api-tokens" "Tokens API" apiTokensBody
-                mkView statusValue cardsValue =
+                mkViewWith statusValue roleValue moduleValue implementedValue cardsValue =
                     Future.AdminConsoleView
                         { Future.status = statusValue
+                        , Future.viewRequiredRole = roleValue
+                        , Future.viewRequiredModule = moduleValue
+                        , Future.viewImplemented = implementedValue
                         , Future.cards = cardsValue
                         }
+                mkView statusValue =
+                    mkViewWith statusValue "Admin" "Admin" False
+                validCards =
+                    [ validUserManagementCard
+                    , validApiTokensCard
+                    ]
                 validView =
-                    mkView
-                        "preview"
-                        [ validUserManagementCard
-                        , validApiTokensCard
-                        ]
+                    mkView "preview" validCards
                 assertInvalid view =
                     case validateFutureAdminConsoleView view of
                         Left serverErr -> do
@@ -8093,7 +8098,10 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid admin console view, got: " <> show value)
 
             case validateFutureAdminConsoleView validView of
-                Right view ->
+                Right view -> do
+                    Future.viewRequiredRole view `shouldBe` "Admin"
+                    Future.viewRequiredModule view `shouldBe` "Admin"
+                    Future.viewImplemented view `shouldBe` False
                     map Future.cardId (Future.cards view)
                         `shouldBe` ["user-management", "api-tokens"]
                 Left serverErr ->
@@ -8101,6 +8109,9 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected valid admin console view, got: " <> show serverErr)
 
             assertInvalid (mkView "planned" [validUserManagementCard])
+            assertInvalid (mkViewWith "preview" "Manager" "Admin" False validCards)
+            assertInvalid (mkViewWith "preview" "Admin" "CRM" False validCards)
+            assertInvalid (mkViewWith "preview" "Admin" "Admin" True validCards)
             assertInvalid (mkView "preview" [])
             assertInvalid (mkView "preview" [validUserManagementCard])
             assertInvalid
@@ -8178,12 +8189,18 @@ spec = describe "TDF.Server helpers" $ do
             case firstFutureAdminConsole (mkUser [Admin]) of
                 Right consoleView -> do
                     Future.status consoleView `shouldBe` "preview"
+                    Future.viewRequiredRole consoleView `shouldBe` "Admin"
+                    Future.viewRequiredModule consoleView `shouldBe` "Admin"
+                    Future.viewImplemented consoleView `shouldBe` False
                     map Future.cardId (Future.cards consoleView)
                         `shouldBe` ["user-management", "api-tokens"]
                     Future.cards consoleView `shouldSatisfy` (not . null)
                     A.toJSON consoleView
                         `shouldBe` A.object
                             [ "status" .= ("preview" :: Text)
+                            , "stubRequiredRole" .= ("Admin" :: Text)
+                            , "stubRequiredModule" .= ("Admin" :: Text)
+                            , "stubImplemented" .= False
                             , "cards" .=
                                 [ A.object
                                     [ "cardId" .= ("user-management" :: Text)

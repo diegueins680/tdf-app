@@ -96,6 +96,9 @@ futureServer user = futureCatalog
         validateFutureAdminConsoleView $
         AdminConsoleView
           { status = "preview"
+          , viewRequiredRole = futureStubRequiredRole
+          , viewRequiredModule = futureStubRequiredModule
+          , viewImplemented = False
           , cards = adminConsoleCards
           }
 
@@ -280,12 +283,20 @@ allowedFutureAdminConsoleCardIds =
 validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminConsoleView
 validateFutureAdminConsoleView view
   | status view /= "preview" = invalidFutureAdminConsoleMetadata
+  | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
+  | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
+  | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
       if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
            || hasDuplicateFutureAdminConsoleTitles validatedCards
         then invalidFutureAdminConsoleMetadata
-        else Right view { cards = validatedCards }
+        else Right view
+          { viewRequiredRole = futureStubRequiredRole
+          , viewRequiredModule = futureStubRequiredModule
+          , viewImplemented = False
+          , cards = validatedCards
+          }
 
 hasDuplicateFutureAdminConsoleTitles :: [AdminConsoleCard] -> Bool
 hasDuplicateFutureAdminConsoleTitles cardsValue =
