@@ -691,6 +691,12 @@ const firstRunRegistrationLinkDescriptorPrefixPattern =
 const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+links?)|(?:enlaces?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:enlaces?\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
+const firstRunSignupSheetDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?sign[-\s]?up\s+sheet|(?:hoja|planilla)\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSignupSheetDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?sign[-\s]?up\s+sheet|(?:hoja|planilla)\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)\s+de\s+registro)\s*$/i;
+
 const firstRunWorkshopDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -743,6 +749,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
+    .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
@@ -770,6 +777,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
+    .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
