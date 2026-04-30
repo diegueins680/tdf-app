@@ -634,6 +634,31 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected multiline broadcast subject to be rejected, got " <> show value)
 
+    describe "admin seed route authorization" $
+        it "requires literal Admin instead of broad Admin-module membership before seeding" $ do
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            let assertRejected role = do
+                    result <- runAdminTest (seedHandlerFor (mkUser [role]))
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right NoContent ->
+                            expectationFailure
+                                ("Expected " <> show role <> " seed access to be rejected")
+
+            assertRejected StudioManager
+            assertRejected Webmaster
+            result <- runAdminTest (seedHandlerFor malformedAdmin)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing required module access"
+                Right NoContent ->
+                    expectationFailure
+                        "Expected malformed Admin seed access to be rejected"
+
     describe "admin lookup id validation" $ do
         it "rejects non-positive user ids before admin user lookups can degrade malformed input into 404s" $ do
             let _listUsers :<|> _createUser :<|> userById = usersHandlersFor (mkUser [Admin])
@@ -1117,6 +1142,22 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     isLeft (Right _) = False
 
 type AdminTestM = ReaderT Env (ExceptT ServerError IO)
+
+seedHandlerFor :: AuthedUser -> AdminTestM NoContent
+seedHandlerFor user =
+    case adminServer user of
+        seedHandler
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> _artists
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                seedHandler
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =

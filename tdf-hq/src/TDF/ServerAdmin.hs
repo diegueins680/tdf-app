@@ -176,6 +176,7 @@ adminServer user =
   :<|> socialRouter
   where
     seedHandler = do
+      ensureStrictAdmin user
       ensureModule ModuleAdmin user
       withPool seedAll
       pure NoContent
