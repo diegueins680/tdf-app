@@ -439,9 +439,10 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
       expect(container.textContent).toContain(
-        'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.',
+        'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.',
       );
       expect(countButtonsByText(container, 'Actualizar inbox')).toBe(1);
+      expect(countTextOccurrences(container, 'Actualizar inbox')).toBe(1);
       expect(countButtonsByText(container, 'Actualizar')).toBe(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);

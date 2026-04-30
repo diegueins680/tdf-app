@@ -1529,7 +1529,7 @@ export default function SocialInboxPage() {
                 ? activeAsset
                   ? reviewSelectedAssetEmptyStateMessage
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
-                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
+                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.'}
             </Typography>
           </Stack>
         </Alert>
