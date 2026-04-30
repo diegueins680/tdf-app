@@ -116,6 +116,13 @@ validateFacebookRecipientId rawRecipientId =
           Left "Facebook recipient id must not contain whitespace or control characters"
       | T.length recipientId > maxFacebookRecipientIdChars ->
           Left "Facebook recipient id must be 256 characters or fewer"
+      | not (T.any isGraphNodeIdAtom recipientId)
+          || T.any (not . isGraphNodeIdChar) recipientId ->
+          Left
+            ( "Facebook recipient id must be a Graph node id using only "
+                <> "ASCII letters, numbers, '.', '_' or '-' with at least one "
+                <> "letter or number (256 chars max)"
+            )
       | otherwise ->
           Right recipientId
 

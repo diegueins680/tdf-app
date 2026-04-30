@@ -6049,6 +6049,17 @@ spec = describe "TDF.Server helpers" $ do
 
             sendFacebookText
                 configuredCfg
+                "recipient/1"
+                "hola"
+                `shouldReturn`
+                    Left
+                        ( "Facebook recipient id must be a Graph node id using only "
+                            <> "ASCII letters, numbers, '.', '_' or '-' with at least one "
+                            <> "letter or number (256 chars max)"
+                        )
+
+            sendFacebookText
+                configuredCfg
                 "recipient-1"
                 "   "
                 `shouldReturn` Left "Facebook message body requerido"
