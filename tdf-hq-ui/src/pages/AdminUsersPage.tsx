@@ -368,6 +368,7 @@ const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
   'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO =
   'Estos usuarios todavía no tienen un perfil vinculado. Cuando lo tengan, podrás abrirlos desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const NO_ACCESS_ASSIGNED_SUMMARY = 'Sin acceso asignado';
 const SINGLE_USER_GUIDANCE =
   'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const SINGLE_USER_NUMBER_SETUP_GUIDANCE =
@@ -443,6 +444,11 @@ const buildUserAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
+
+  if (!rolesSummary && !modulesSummary) {
+    return NO_ACCESS_ASSIGNED_SUMMARY;
+  }
+
   const showRolesSummary = Boolean(rolesSummary)
     && !isSameAccessSummary(rolesSummary, sharedRolesSummary)
     && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
@@ -469,6 +475,11 @@ const buildUserRowAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
+
+  if (!rolesSummary && !modulesSummary) {
+    return NO_ACCESS_ASSIGNED_SUMMARY;
+  }
+
   if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
     return '';
   }

@@ -2828,6 +2828,36 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('flags a lone admin account with no assigned access without adding row filler', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-sin-acceso',
+        roles: [],
+        modules: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Sin acceso asignado.',
+        );
+
+        const loneRow = getRowByUserId(container, 101);
+        expect(loneRow.textContent).not.toContain('Sin acceso asignado');
+        expect(loneRow.textContent).not.toContain('Roles:');
+        expect(loneRow.textContent).not.toContain('Módulos:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
