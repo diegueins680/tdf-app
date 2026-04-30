@@ -3421,6 +3421,18 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 500 "invalid model response format"
                 `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "authentication_error: project does not have access to model gpt-x"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                0
+                "invalid_api_key: model_not_found"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "Incorrect API key provided: model_not_found"
+                `shouldBe` False
 
     describe "resolveWorkflowId" $ do
         it "uses the configured ChatKit workflow when the request override is omitted or blank" $ do
