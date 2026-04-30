@@ -161,6 +161,7 @@ import TDF.ServerInternships
 import TDF.ServerProposals
     ( ProposalContentSource (..),
       validateOptionalProposalClientPartyId,
+      validateOptionalProposalContactName,
       validateOptionalProposalContactEmail,
       validateOptionalProposalNotes,
       validateOptionalProposalContactPhone,
@@ -6266,6 +6267,27 @@ main = hspec $ do
                         expectationFailure ("Expected invalid proposal version to be rejected, got " <> show value)
             assertInvalid 0
             assertInvalid (-2)
+
+    describe "validateOptionalProposalContactName" $ do
+        it "normalizes optional proposal contact names and bounds their stored shape" $ do
+            validateOptionalProposalContactName Nothing `shouldBe` Right Nothing
+            validateOptionalProposalContactName (Just "   ") `shouldBe` Right Nothing
+            validateOptionalProposalContactName (Just "  Ana Gomez  ")
+                `shouldBe` Right (Just "Ana Gomez")
+
+            let assertInvalid raw expected = case validateOptionalProposalContactName (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid proposal contactName to be rejected, got " <> show value)
+            assertInvalid
+                (Data.Text.replicate 161 "a")
+                "contactName must be 160 characters or fewer"
+            assertInvalid
+                "Ana\NULGomez"
+                "contactName must not contain control characters"
 
     describe "validateOptionalProposalContactEmail" $ do
         it "normalizes valid proposal contact emails and treats blanks as unset" $ do

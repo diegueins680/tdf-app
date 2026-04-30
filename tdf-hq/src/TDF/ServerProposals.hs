@@ -11,6 +11,7 @@ module TDF.ServerProposals
   , resolveOptionalProposalPipelineCardReference
   , resolveOptionalProposalPipelineCardReferenceUpdate
   , validateOptionalProposalStatus
+  , validateOptionalProposalContactName
   , validateOptionalProposalContactEmail
   , validateOptionalProposalContactPhone
   , validateOptionalProposalNotes
@@ -421,10 +422,15 @@ validateOptionalProposalContactName (Just rawName) =
   case normalizeOptionalText (Just rawName) of
     Nothing -> Right Nothing
     Just contactName
+      | T.length contactName > maxProposalContactNameChars ->
+          Left err400 { errBody = "contactName must be 160 characters or fewer" }
       | T.any isUnsafeProposalInlineTextChar contactName ->
           Left err400 { errBody = proposalInlineTextError "contactName" }
       | otherwise ->
           Right (Just contactName)
+
+maxProposalContactNameChars :: Int
+maxProposalContactNameChars = 160
 
 validateOptionalProposalContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalProposalContactEmail Nothing = Right Nothing
