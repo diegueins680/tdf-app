@@ -21,7 +21,7 @@ module TDF.WhatsApp.History
 import           Control.Applicative ((<|>))
 import           Data.Aeson (Value, encode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isControl, isDigit, isSpace)
+import           Data.Char (isControl, isSpace)
 import           Data.List (nub)
 import           Data.Maybe (catMaybes, isJust, fromMaybe)
 import           Data.Text (Text)
@@ -87,13 +87,13 @@ data WhatsAppDeliveryUpdate = WhatsAppDeliveryUpdate
 normalizeWhatsAppPhone :: Text -> Maybe Text
 normalizeWhatsAppPhone raw =
   let trimmed = T.strip raw
-      onlyDigits = T.filter isDigit trimmed
+      onlyDigits = T.filter isAsciiDigit trimmed
       digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isDigit trimmed
+      firstDigitIndex = T.findIndex isAsciiDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isAsciiDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -101,7 +101,7 @@ normalizeWhatsAppPhone raw =
           Just idx ->
             case firstDigitIndex of
               Nothing -> False
-              Just digitIdx -> plusCount == 1 && idx < digitIdx
+              Just digitIdx -> plusCount == 1 && idx == 0 && digitIdx == 1
   in
     if T.null onlyDigits
         || digitCount < 8
@@ -110,6 +110,9 @@ normalizeWhatsAppPhone raw =
         || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 resolveWhatsAppContactSnapshot
   :: Maybe PartyId

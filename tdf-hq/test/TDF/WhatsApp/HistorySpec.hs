@@ -42,10 +42,26 @@ spec = do
       normalizeWhatsAppPhone "(02) 555-0123" `shouldBe` Just "+025550123"
 
     it "rejects mixed-text or implausible phone inputs instead of deriving misleading matches" $ do
+      let arabicIndicPhone =
+            T.pack
+              [ '+'
+              , '\x0665'
+              , '\x0669'
+              , '\x0663'
+              , '\x0669'
+              , '\x0669'
+              , '\x0661'
+              , '\x0662'
+              , '\x0663'
+              , '\x0664'
+              , '\x0665'
+              ]
       normalizeWhatsAppPhone "call me at 099 123 4567" `shouldBe` Nothing
       normalizeWhatsAppPhone "12345" `shouldBe` Nothing
       normalizeWhatsAppPhone "+1234567890123456" `shouldBe` Nothing
       normalizeWhatsAppPhone "593+991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone "+-593991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone arabicIndicPhone `shouldBe` Nothing
 
   describe "TDF.WhatsApp.Client.normalizeGraphApiVersion" $ do
     it "defaults blank versions and canonicalizes supported Graph API versions" $ do
@@ -113,6 +129,8 @@ spec = do
       normalizeWhatsAppRecipientPhone "+1234567890123456"
         `shouldBe` Left recipientShapeMessage
       normalizeWhatsAppRecipientPhone "593+991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+-593991234567"
         `shouldBe` Left recipientShapeMessage
       normalizeWhatsAppMessageBody "   "
         `shouldBe` Left "Invalid WhatsApp message body: message is required"

@@ -168,7 +168,7 @@ normalizeWhatsAppRecipientPhone rawPhone =
           Just idx ->
             case firstDigitIndex of
               Nothing -> False
-              Just digitIdx -> plusCount == 1 && idx < digitIdx
+              Just digitIdx -> plusCount == 1 && idx == 0 && digitIdx == 1
   in if T.null trimmed || T.null onlyDigits
        then Left "Invalid WhatsApp recipient phone: phone is required"
        else if digitCount < 8
