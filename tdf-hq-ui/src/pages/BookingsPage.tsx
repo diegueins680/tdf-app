@@ -367,11 +367,12 @@ export default function BookingsPage() {
     () =>
       getBookingServiceFieldState({
         hasServiceCatalog: serviceTypes.length > 0,
+        manualEntryRequested: manualServiceFallbackOpen,
         mode,
         serviceCatalogReady,
         serviceLocked,
       }),
-    [mode, serviceCatalogReady, serviceLocked, serviceTypes.length],
+    [manualServiceFallbackOpen, mode, serviceCatalogReady, serviceLocked, serviceTypes.length],
   );
   const serviceFallbackEntryState = useMemo(
     () =>

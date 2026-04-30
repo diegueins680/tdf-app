@@ -147,6 +147,17 @@ describe('bookingsPageLogic', () => {
       helperText: 'Todavía no hay catálogo de servicios. Escribe el servicio manualmente para actualizar la sesión.',
       mode: 'manual',
     });
+
+    expect(getBookingServiceFieldState({
+      hasServiceCatalog: false,
+      manualEntryRequested: true,
+      mode: 'create',
+      serviceCatalogReady: true,
+      serviceLocked: false,
+    })).toEqual({
+      helperText: 'Escribe el servicio manualmente. Si prefieres una opción común, vuelve a plantillas.',
+      mode: 'manual',
+    });
   });
 
   it('keeps the no-catalog fallback focused on one service-entry path at a time', () => {

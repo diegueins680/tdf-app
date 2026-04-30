@@ -197,11 +197,13 @@ export const shouldShowQuickBookingTemplate = ({
 
 export const getBookingServiceFieldState = ({
   hasServiceCatalog,
+  manualEntryRequested = false,
   mode,
   serviceCatalogReady,
   serviceLocked,
 }: {
   hasServiceCatalog: boolean;
+  manualEntryRequested?: boolean;
   mode: 'create' | 'edit';
   serviceCatalogReady: boolean;
   serviceLocked: boolean;
@@ -215,7 +217,9 @@ export const getBookingServiceFieldState = ({
 
   if (mode === 'create') {
     return {
-      helperText: 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
+      helperText: manualEntryRequested
+        ? 'Escribe el servicio manualmente. Si prefieres una opción común, vuelve a plantillas.'
+        : 'Todavía no hay catálogo de servicios. Usa una plantilla de respaldo o escribe el servicio manualmente.',
       mode: 'manual',
     };
   }
