@@ -10160,12 +10160,20 @@ validateDatafastResultCodeField rawCode
       invalidDatafastResultCode
   | not (T.all isDatafastResultCodeChar code) =
       invalidDatafastResultCode
-  | any T.null (T.splitOn "." code) =
+  | not (hasCanonicalDatafastResultCodeShape code) =
       invalidDatafastResultCode
   | otherwise =
       Right code
   where
     code = T.strip rawCode
+
+hasCanonicalDatafastResultCodeShape :: Text -> Bool
+hasCanonicalDatafastResultCodeShape code =
+  case T.splitOn "." code of
+    [major, minor, detail] ->
+      all ((== 3) . T.length) [major, minor, detail]
+    _ ->
+      False
 
 isDatafastResultCodeChar :: Char -> Bool
 isDatafastResultCodeChar ch =

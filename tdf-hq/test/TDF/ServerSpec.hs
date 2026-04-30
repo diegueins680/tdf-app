@@ -5554,6 +5554,9 @@ spec = describe "TDF.Server helpers" $ do
                                     <> show codeVal
                                 )
             assertInvalid "   "
+            assertInvalid "000.100"
+            assertInvalid "000.1000"
+            assertInvalid "000.100.110.999"
             assertInvalid "000.100.OK"
             assertInvalid "000..100"
             assertInvalid "\x0660\x0660\x0660.\x0661\x0660\x0660.\x0661\x0661\x0660"
