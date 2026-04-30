@@ -146,6 +146,8 @@ const BUILT_IN_ADMIN_CARD_TITLES = [
   'roles and access',
   'access and roles',
   'role management',
+  'access overview',
+  'resumen de accesos',
   'control de acceso',
   'gestion de accesos',
   'administracion de accesos',
