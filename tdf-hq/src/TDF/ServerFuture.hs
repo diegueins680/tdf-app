@@ -299,9 +299,22 @@ allowedFutureStubMetadata =
   , ("experience", "auditing")
   ]
 
+allowedFutureStubAreas :: [Text]
+allowedFutureStubAreas =
+  [ "access"
+  , "crm"
+  , "scheduling"
+  , "packages"
+  , "invoicing"
+  , "inventory"
+  , "admin"
+  , "experience"
+  ]
+
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
   | rawArea /= area = invalidFutureStubMetadata
+  | area `notElem` allowedFutureStubAreas = invalidFutureStubMetadata
   | validFutureStubSlug area = Right area
   | otherwise = invalidFutureStubMetadata
   where

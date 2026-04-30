@@ -309,6 +309,7 @@ import TDF.ServerFuture
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleView
+    , validateFutureStubArea
     , validateFutureStubCatalog
     , validateFutureStubCatalogEntry
     , validateFutureStubMetadata
@@ -7606,6 +7607,8 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubMetadata" $ do
         it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
+            validateFutureStubArea "access" `shouldBe` Right "access"
+
             case validateFutureStubMetadata "crm" "parties/list-columns" of
                 Right value ->
                     value `shouldBe` ("crm", "parties/list-columns")
@@ -7635,6 +7638,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
             assertInvalid "ops" "parties/list-columns"
+
+            case validateFutureStubArea "ops" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unmounted fallback discovery area to fail, got: "
+                            <> show value
+                        )
 
         it "rejects non-canonical fallback discovery catalogs before endpoint lookup" $ do
             case validateFutureStubMetadataIn
