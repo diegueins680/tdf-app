@@ -733,6 +733,12 @@ const firstRunPublicRegistrationDescriptorPrefixPattern =
 const firstRunPublicRegistrationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))\s*$/i;
 
+const firstRunReservationDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:booking|reservation)\s+(?:form|page|portal)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+reserva(?:\s+de\s+cupos?)?|reservas?\s+de\s+cupos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunReservationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:booking|reservation)\s+(?:form|page|portal)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+reserva(?:\s+de\s+cupos?)?|reservas?\s+de\s+cupos?)\s*$/i;
+
 const firstRunCourseEnrollmentConnectorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -756,6 +762,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
     .replace(
@@ -784,6 +791,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
     .replace(
