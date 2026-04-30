@@ -2858,6 +2858,55 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('summarizes shared missing access once instead of repeating it on every admin row', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-sin-acceso',
+        roles: [],
+        modules: [],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Sin Acceso',
+        username: 'grace-sin-acceso',
+        primaryEmail: 'grace@example.com',
+        roles: [],
+        modules: [],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Sin Acceso',
+        username: 'linus-sin-acceso',
+        primaryEmail: 'linus@example.com',
+        roles: [],
+        modules: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. Vista actual: solo usuarios activos. Acceso compartido en esta vista: Sin acceso asignado.',
+        );
+
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Sin acceso asignado');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Sin acceso asignado');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Sin acceso asignado');
+        expect(countExactText(container, 'Sin acceso asignado')).toBe(0);
+        expect(container.textContent?.match(/Sin acceso asignado/g) ?? []).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

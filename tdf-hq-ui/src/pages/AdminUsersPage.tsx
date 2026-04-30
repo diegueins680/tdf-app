@@ -503,6 +503,9 @@ const buildUserRowAccessSummary = ({
   });
 };
 
+const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
+  getUserAccessSummary(user.roles) === '' && getUserAccessSummary(user.modules) === '';
+
 const isDefaultAdminAccessSummary = ({
   modulesSummary,
   rolesSummary,
@@ -901,6 +904,12 @@ export default function AdminUsersPage() {
     () => getUserIdsRequiringIdentityDisambiguator(usersVisibleForIdentityDisambiguation),
     [usersVisibleForIdentityDisambiguation],
   );
+  const currentSummaryNoAccessCount = useMemo(
+    () => usersInCurrentSummary.filter(hasNoAccessAssigned).length,
+    [usersInCurrentSummary],
+  );
+  const showSharedNoAccessGuidance = usersInCurrentSummary.length > 1
+    && currentSummaryNoAccessCount === usersInCurrentSummary.length;
   useEffect(() => {
     if (!showInactiveUsersGroup || hasActiveSearch) {
       setShowInactiveUsers(false);
@@ -980,6 +989,9 @@ export default function AdminUsersPage() {
   ]);
   const sharedAccessGuidance = useMemo(() => {
     if (showSingleUserGuidance) return '';
+    if (showSharedNoAccessGuidance) {
+      return `Acceso compartido en esta vista: ${NO_ACCESS_ASSIGNED_SUMMARY}.`;
+    }
 
     const isDefaultSharedAdminAccess = isDefaultAdminAccessSummary({
       rolesSummary: sharedRolesSummary,
@@ -998,7 +1010,8 @@ export default function AdminUsersPage() {
     return sharedAccessSummary
       ? `Acceso compartido en esta vista: ${sharedAccessSummary}.`
       : '';
-  }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
+  }, [sharedModulesSummary, sharedRolesSummary, showSharedNoAccessGuidance, showSingleUserGuidance]);
+  const hideAccessSummaryForCurrentRows = hideRowAccessSummary || showSharedNoAccessGuidance;
   const viewGuidance = useMemo(
     () => [
       visibleUsersSummary,
@@ -1220,7 +1233,7 @@ export default function AdminUsersPage() {
                     onOpenCommunications={() => setSelectedUser(user)}
                     sharedModulesSummary={sharedModulesSummary}
                     sharedRolesSummary={sharedRolesSummary}
-                    hideAccessSummary={hideRowAccessSummary}
+                    hideAccessSummary={hideAccessSummaryForCurrentRows}
                     hidePendingStateChip={hideSingleRowPendingState}
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                     showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
@@ -1271,7 +1284,7 @@ export default function AdminUsersPage() {
                             onOpenCommunications={() => setSelectedUser(user)}
                             sharedModulesSummary={sharedModulesSummary}
                             sharedRolesSummary={sharedRolesSummary}
-                            hideAccessSummary={hideRowAccessSummary}
+                            hideAccessSummary={hideAccessSummaryForCurrentRows}
                             hidePendingStateChip={hideSingleRowPendingState}
                             hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
                             showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
