@@ -504,6 +504,67 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('lets admins search by summary contact states without adding repeated row chips', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'with-phone',
+        primaryEmail: 'ready@example.com',
+        primaryPhone: '+593999000111',
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        username: 'email-only',
+        primaryEmail: 'email@example.com',
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        username: 'no-contact',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 1 listo para WhatsApp, 1 pendiente de WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos.',
+        );
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'pendiente de contacto');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([103]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.',
+        );
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Contacto pendiente');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('WhatsApp pendiente');
+      });
+
+      await changeInputValue(searchInput, 'pendiente de WhatsApp');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getRowByUserId(container, 102).textContent).toContain('email@example.com');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Contacto pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('orders mixed-readiness rows by the next available admin action before falling back to name', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

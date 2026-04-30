@@ -179,6 +179,22 @@ const getUserContactReadiness = (
   return 'missing-contact' as const;
 };
 
+const getUserContactReadinessSearchValues = (
+  user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>,
+) => {
+  const readiness = getUserContactReadiness(user);
+
+  if (readiness === 'whatsapp-ready') {
+    return ['listo para WhatsApp', 'WhatsApp listo'];
+  }
+
+  if (readiness === 'contact-ready') {
+    return ['pendiente de WhatsApp', 'pendiente WhatsApp', 'sin WhatsApp'];
+  }
+
+  return ['pendiente de contacto', 'pendiente contacto', 'contacto pendiente', 'sin contacto'];
+};
+
 const joinSpanishSummaryParts = (parts: readonly string[]) => {
   if (parts.length <= 1) return parts[0] ?? '';
   if (parts.length === 2) return `${parts[0]} y ${parts[1]}`;
@@ -676,6 +692,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     String(user.userId),
     ...partyIdSearchSpace,
     ...getUserContactSearchValues(user),
+    ...getUserContactReadinessSearchValues(user),
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]
