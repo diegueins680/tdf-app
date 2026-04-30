@@ -222,7 +222,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps editor guidance in one helper block instead of stacking separate autosave and compare lines', async () => {
+  it('keeps live-start copy out of the editor helper when the alert already owns it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -231,7 +231,11 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas. Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
+      );
+      expect(guidance?.textContent).not.toContain('Usar versión en vivo');
+      expect(container.textContent).toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
     });
 
@@ -670,7 +674,7 @@ describe('CmsAdminPage', () => {
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
       expect(container.textContent).toContain(
-        'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
     });
 
@@ -698,7 +702,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Comparar con live')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
-        'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
     });
 

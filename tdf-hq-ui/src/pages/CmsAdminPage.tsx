@@ -681,12 +681,16 @@ export default function CmsAdminPage() {
         : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const showSamplePayloadGuidance =
     !liveLookupFailed && (!liveContent || liveEditorActionState.showUseLiveAction);
+  const showLiveStartGuidance =
+    showSamplePayloadGuidance && Boolean(liveContent) && liveEditorActionState.showUseLiveAction;
   const compareHint = livePayloadPretty
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
       : payloadChanged
         ? editorHasMeaningfulPayloadDraft
           ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+          : showLiveStartGuidance
+            ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
           : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
         : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
