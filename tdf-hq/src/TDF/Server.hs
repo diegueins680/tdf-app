@@ -4264,13 +4264,13 @@ normalizePhone = normalizeWhatsAppPhone
 normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
 normalizeCourseRegistrationPhoneInput raw =
   let trimmed = T.strip raw
-      onlyDigits = T.filter isDigit trimmed
+      onlyDigits = T.filter isAsciiPhoneDigit trimmed
       digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isDigit trimmed
+      firstDigitIndex = T.findIndex isAsciiPhoneDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isAsciiPhoneDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -4287,6 +4287,9 @@ normalizeCourseRegistrationPhoneInput raw =
          || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isAsciiPhoneDigit :: Char -> Bool
+isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'
 
 normalizeSlug :: Text -> Text
 normalizeSlug = T.toLower . T.strip

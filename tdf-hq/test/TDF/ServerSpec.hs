@@ -5899,6 +5899,31 @@ spec = describe "TDF.Server helpers" $ do
                 Right phoneVal ->
                     expectationFailure ("Expected mixed text phone input to be rejected, got: " <> show phoneVal)
 
+        it "rejects non-ASCII digits before storing an E.164-style phone" $ do
+            let arabicIndicPhone =
+                    T.pack
+                        [ '+'
+                        , '\x0665'
+                        , '\x0669'
+                        , '\x0663'
+                        , '\x0669'
+                        , '\x0669'
+                        , '\x0661'
+                        , '\x0662'
+                        , '\x0663'
+                        , '\x0664'
+                        , '\x0665'
+                        ]
+            case validateCourseRegistrationPhoneE164 (Just arabicIndicPhone) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                Right phoneVal ->
+                    expectationFailure
+                        ( "Expected non-ASCII phone digits to be rejected, got: "
+                            <> show phoneVal
+                        )
+
     describe "validateCourseRegistrationSource" $ do
         it "normalizes meaningful public registration source keywords before persistence" $ do
             validateCourseRegistrationSource " Landing " `shouldBe` Right "landing"
