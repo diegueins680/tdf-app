@@ -1265,6 +1265,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Vista rápida')).toBe(0);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).toContain(
@@ -1280,6 +1281,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).toContain(

@@ -43,6 +43,7 @@ import LocalMallIcon from '@mui/icons-material/LocalMall';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ClearIcon from '@mui/icons-material/Clear';
 import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { DateTime } from 'luxon';
@@ -670,14 +671,16 @@ export default function MarketplaceOrdersPage() {
                 InputProps={{
                   endAdornment: hasSearchInput ? (
                     <InputAdornment position="end">
-                      <Button
-                        size="small"
-                        aria-label="Limpiar búsqueda"
-                        onClick={() => setSearch('')}
-                        sx={{ minWidth: 0, px: 0.5, textTransform: 'none' }}
-                      >
-                        Limpiar
-                      </Button>
+                      <Tooltip title="Limpiar búsqueda">
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          aria-label="Limpiar búsqueda"
+                          onClick={() => setSearch('')}
+                        >
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </InputAdornment>
                   ) : undefined,
                 }}
