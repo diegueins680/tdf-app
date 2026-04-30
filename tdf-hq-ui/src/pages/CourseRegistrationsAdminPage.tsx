@@ -78,7 +78,7 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre la página pública cuando estés listo para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;
+  `Abre el expediente desde ${targetLabel}; el botón de estado abre acciones rápidas.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>

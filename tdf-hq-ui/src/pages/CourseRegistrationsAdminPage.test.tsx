@@ -219,19 +219,19 @@ const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
-  'Abre el expediente desde el nombre; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el nombre; el botón de estado abre acciones rápidas.';
 const dossierOnlyScopeHint =
   'Abre el expediente desde el nombre; el estado abre acciones rápidas.';
 const pendingRecoveryScopeHint =
   'Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.';
 const contactDossierScopeHint =
-  'Abre el expediente desde el contacto; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el contacto; el botón de estado abre acciones rápidas.';
 const contactDossierOnlyScopeHint =
   'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
-  'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el registro; el botón de estado abre acciones rápidas.';
 const mixedIdentityDossierScopeHint =
-  'Abre el expediente desde el nombre, el contacto o el registro; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el nombre, el contacto o el registro; el botón de estado abre acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
