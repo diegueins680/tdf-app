@@ -764,6 +764,12 @@ const firstRunPreMatriculaDescriptorPrefixPattern =
 const firstRunPreMatriculaDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+pre[-\s]?matr[ií]cula|pre[-\s]?matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunSpanishAdmissionsDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+admisiones|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSpanishAdmissionsDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+admisiones|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
 const firstRunLooseEnrollmentDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)(?:\s*(?:[-:/|]\s*))/i;
 
@@ -784,6 +790,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
+    .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(
       /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+contacto|de\s+consulta|de\s+inter[eé]s|para\s+el|para)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso|para\s+el|para)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:course\s+)?(?:intake|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
@@ -815,6 +822,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
+    .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(
       /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+contacto|de\s+consulta|de\s+inter[eé]s)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:course\s+)?(?:intake|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
