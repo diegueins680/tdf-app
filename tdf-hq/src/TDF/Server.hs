@@ -7263,6 +7263,11 @@ validatePayPalCaptureOrderId rawOrderId =
     Just orderId
       | T.length orderId > 128 ->
           Left err400 { errBody = "paypalOrderId must be 128 characters or fewer" }
+      | not (T.any isPayPalOrderIdAtom orderId) ->
+          Left err400
+            { errBody =
+                "paypalOrderId must contain at least one ASCII letter or digit"
+            }
       | T.all isPayPalOrderIdChar orderId ->
           Right orderId
       | otherwise ->
@@ -7283,7 +7288,12 @@ isValidPayPalOrderId :: Text -> Bool
 isValidPayPalOrderId orderId =
   not (T.null orderId)
     && T.length orderId <= 128
+    && T.any isPayPalOrderIdAtom orderId
     && T.all isPayPalOrderIdChar orderId
+
+isPayPalOrderIdAtom :: Char -> Bool
+isPayPalOrderIdAtom c =
+  isDigit c || isAsciiLower c || isAsciiUpper c
 
 isPayPalOrderIdChar :: Char -> Bool
 isPayPalOrderIdChar c =

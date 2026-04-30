@@ -5786,6 +5786,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "PayPal returned an invalid approval URL"
                 [PayPalLink "approve" "https://evil.example/checkoutnow?token=ORDER-123"]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [ PayPalLink
+                    "approve"
+                    "https://www.sandbox.paypal.com/checkoutnow?token=---"
+                ]
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do
@@ -5808,6 +5814,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " "paypalOrderId is required"
             assertInvalid "ORDER/../capture" "paypalOrderId must contain only ASCII letters"
             assertInvalid "ORDER 123" "paypalOrderId must contain only ASCII letters"
+            assertInvalid
+                "---"
+                "paypalOrderId must contain at least one ASCII letter or digit"
             assertInvalid (T.replicate 129 "A") "paypalOrderId must be 128 characters or fewer"
 
     describe "validatePayPalCaptureOrderReference" $ do
@@ -5841,19 +5850,22 @@ spec = describe "TDF.Server helpers" $ do
                 "paypalOrderId does not match this order's PayPal order"
                 (validatePayPalCaptureOrderReference (Just "EXPECTED") "OTHER")
 
-        it "rejects malformed stored PayPal order ids as server state errors" $
-            case validatePayPalCaptureOrderReference
-                    (Just "PAYPAL/../ORDER")
-                    "PAYPAL-ORDER_123" of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 500
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Stored PayPal order id is invalid"
-                Right orderId ->
-                    expectationFailure
-                        ( "Expected malformed stored PayPal order id to be rejected, got: "
-                            <> show orderId
-                        )
+        it "rejects malformed stored PayPal order ids as server state errors" $ do
+            let assertInvalidStored rawStoredOrderId =
+                    case validatePayPalCaptureOrderReference
+                            (Just rawStoredOrderId)
+                            "PAYPAL-ORDER_123" of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Stored PayPal order id is invalid"
+                        Right orderId ->
+                            expectationFailure
+                                ( "Expected malformed stored PayPal order id to be rejected, got: "
+                                    <> show orderId
+                                )
+            assertInvalidStored "PAYPAL/../ORDER"
+            assertInvalidStored "___"
 
     describe "validateCourseRegistrationPhoneE164" $ do
         it "preserves omitted and blank phones while normalizing meaningful values" $ do
