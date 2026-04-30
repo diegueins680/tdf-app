@@ -10136,9 +10136,12 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
+
       expect(hasLabel(container, loadLimitLabel)).toBe(true);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Ocultar límite')).toBe(1);
+      expect(countButtonsByText(container, 'Ocultar límite')).toBe(0);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 

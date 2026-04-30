@@ -1991,9 +1991,11 @@ export default function CourseRegistrationsAdminPage() {
     && looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
     ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
     : '';
-  const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchResults
+  const showEmptyLocalSearchLimitGuidance = showEmptyLocalSearchResults
     && viewHitsCurrentLimit
     && !shortPhoneSearchHint;
+  const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
+    && !showAdvancedFilters;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations),
@@ -4144,7 +4146,7 @@ export default function CourseRegistrationsAdminPage() {
             </Grid>
             {showAdvancedLimitControl
               && !showInlineSingleChoiceLimitToggle
-              && !showEmptyLocalSearchLimitRecoveryAction && (
+              && !showEmptyLocalSearchLimitGuidance && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
