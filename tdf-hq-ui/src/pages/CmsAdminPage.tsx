@@ -541,6 +541,7 @@ export default function CmsAdminPage() {
       titleChangedFromLive,
     ],
   );
+  const showLivePayloadInspectAction = Boolean(liveContent) && !liveEditorActionState.showLiveInSyncChip;
   const draftVsLiveDiff = useMemo(
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
     [formattedPayload, livePayloadPretty],
@@ -958,7 +959,9 @@ export default function CmsAdminPage() {
                         </Stack>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                           <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                            Payload en vivo disponible.
+                            {showLivePayloadInspectAction
+                              ? 'Payload en vivo disponible.'
+                              : 'El editor ya usa el payload en vivo.'}
                           </Typography>
                           <Button
                             size="small"
@@ -969,15 +972,17 @@ export default function CmsAdminPage() {
                           >
                             Abrir página en vivo
                           </Button>
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => setShowLivePayload((current) => !current)}
-                          >
-                            {showLivePayload ? 'Ocultar payload en vivo' : 'Ver payload en vivo'}
-                          </Button>
+                          {showLivePayloadInspectAction && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              onClick={() => setShowLivePayload((current) => !current)}
+                            >
+                              {showLivePayload ? 'Ocultar payload en vivo' : 'Ver payload en vivo'}
+                            </Button>
+                          )}
                         </Stack>
-                        {showLivePayload && (
+                        {showLivePayloadInspectAction && showLivePayload && (
                           <TextField
                             label="Payload actual"
                             value={livePayloadPretty}

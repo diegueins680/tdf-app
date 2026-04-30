@@ -437,6 +437,45 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the live payload inspector once the editor already shows that payload', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Payload en vivo disponible.');
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(1);
+      expect(countLabelsByText(container, 'Payload actual')).toBe(0);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Ver payload en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Payload actual')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('El editor ya usa el payload en vivo.');
+      expect(container.textContent).toContain('Editor coincide con live');
+      expect(container.textContent).not.toContain('Payload en vivo disponible.');
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
+      expect(countLabelsByText(container, 'Payload actual')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the clear-payload fallback for new content until the editor has JSON to clear', async () => {
     getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
 
