@@ -715,6 +715,12 @@ const firstRunProviderFormDescriptorPrefixPattern =
 const firstRunProviderFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:google\s+forms?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta)\s+(?:lead\s+)?forms?)|(?:microsoft|ms)\s+forms?|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?)\s*$/i;
 
+const firstRunInquiryDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:contact|inquiry|lead)\s+(?:form|page)|formulario\s+de\s+(?:contacto|consulta|inter[eé]s)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunInquiryDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|lead)\s+(?:form|page)|formulario\s+de\s+(?:contacto|consulta|inter[eé]s)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
 const firstRunPublicRegistrationDescriptorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -741,6 +747,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -767,6 +774,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
