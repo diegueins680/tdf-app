@@ -260,6 +260,7 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
+    validateArtistName,
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -5036,6 +5037,22 @@ main = hspec $ do
             isImageUpload "image/jpeg" "poster.txt" `shouldBe` False
             isImageUpload "image/png" "poster.jpg" `shouldBe` False
             isImageUpload "image/svg+xml" "poster.svg" `shouldBe` False
+
+    describe "validateArtistName" $ do
+        it "trims canonical artist names before persistence" $
+            validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"
+
+        it "rejects blank or control-character artist names before artist writes persist them" $ do
+            let assertInvalid rawName expected =
+                    case validateArtistName rawName of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid artist name to be rejected, got " <> show value)
+            assertInvalid "   " "artist name is required"
+            assertInvalid "Los\nMentores" "artist name must not contain control characters"
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =

@@ -56,6 +56,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketTierCurrencyInput
   , isImageUpload
   , validateEventImageUploadSize
+  , validateArtistName
   ) where
 
 import           Control.Applicative ((<|>))
@@ -972,11 +973,11 @@ socialEventsServer user = eventsServer
     createArtist dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
+      artistNameVal <- either throwError pure (validateArtistName (artistName dto))
       let genreList = normalizeArtistGenres (artistGenres dto)
       key <- liftIO $ runSqlPool (insert ArtistProfile
         { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
-        , artistProfileName = artistName dto
+        , artistProfileName = artistNameVal
         , artistProfileBio = artistBio dto
         , artistProfileAvatarUrl = artistAvatarUrl dto
         -- Keep this nullable for compatibility with deployments where the
@@ -997,7 +998,7 @@ socialEventsServer user = eventsServer
       pure ArtistDTO
         { artistId = Just (renderKeyText key)
         , artistPartyId = cleanMaybeText (artistPartyId dto)
-        , artistName = artistName dto
+        , artistName = artistNameVal
         , artistGenres = genreList
         , artistBio = artistBio dto
         , artistAvatarUrl = artistAvatarUrl dto
@@ -1033,14 +1034,14 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       artistKey <- parseArtistId idStr
       now <- liftIO getCurrentTime
-      when (T.null (T.strip (artistName dto))) $ throwError err400 { errBody = "artist name is required" }
+      artistNameVal <- either throwError pure (validateArtistName (artistName dto))
       mExisting <- liftIO $ runSqlPool (get artistKey) envPool
       existing <- maybe (throwError err404 { errBody = "Artist not found" }) pure mExisting
       let genreList = normalizeArtistGenres (artistGenres dto)
       let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
       liftIO $ runSqlPool (update artistKey
         [ ArtistProfilePartyId =. nextPartyId
-        , ArtistProfileName =. artistName dto
+        , ArtistProfileName =. artistNameVal
         , ArtistProfileBio =. artistBio dto
         , ArtistProfileAvatarUrl =. artistAvatarUrl dto
         , ArtistProfileSocialLinks =. encodeSocialLinks (artistSocialLinks dto)
@@ -1057,6 +1058,7 @@ socialEventsServer user = eventsServer
         envPool
       pure dto
         { artistId = Just (T.strip idStr)
+        , artistName = artistNameVal
         , artistGenres = genreList
         , artistPartyId = nextPartyId
         , artistCreatedAt = Just (artistProfileCreatedAt existing)
@@ -2275,6 +2277,17 @@ validateEventArtistIds artists = do
               case readMaybe (T.unpack normalizedArtistId) :: Maybe Int64 of
                 Just artistIdValue -> Right (Just (toSqlKey artistIdValue))
                 Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
+
+validateArtistName :: T.Text -> Either ServerError T.Text
+validateArtistName rawName
+  | T.null normalized =
+      Left err400 { errBody = "artist name is required" }
+  | T.any isControl rawName =
+      Left err400 { errBody = "artist name must not contain control characters" }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawName
 
 -- | Normalize invitation status to a lowercase, non-empty value.
 normalizeInvitationStatus :: Maybe T.Text -> T.Text
