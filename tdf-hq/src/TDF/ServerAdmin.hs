@@ -266,6 +266,7 @@ adminServer user =
       socialUnholdHandler :<|> socialStatusHandler :<|> socialErrorsHandler
 
     socialUnholdHandler SocialUnholdRequest{..} = do
+      ensureStrictAdmin user
       ensureModule ModuleAdmin user
       now <- liftIO getCurrentTime
       channel <- either throwError pure (parseSocialErrorsChannel (Just surChannel))

@@ -921,6 +921,48 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 (validateSocialUnholdNote (Just (T.replicate 501 "x")))
 
     describe "social unhold route validation" $ do
+        it "requires literal Admin before retrying held social replies" $ do
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-incoming-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+                assertRoleRejected role = do
+                    let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                            socialHandlersFor (mkUser [role])
+                    result <- runAdminTest (socialUnhold req)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected "
+                                    <> show role
+                                    <> " social unhold to be rejected, got "
+                                    <> show value
+                                )
+
+            assertRoleRejected StudioManager
+            assertRoleRejected Webmaster
+
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                    socialHandlersFor malformedAdmin
+            result <- runAdminTest (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing required module access"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed Admin social unhold to be rejected, got "
+                            <> show value
+                        )
+
         it "rejects blank channels before surfacing lookup-shape errors" $ do
             let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
                 req =
