@@ -28,6 +28,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AssetDTO, AssetCheckoutDTO, PartyDTO, RoomDTO } from '../api/types';
@@ -306,6 +307,8 @@ const INVENTORY_SINGLE_SEARCH_RESULT_TITLE = 'Resultado único';
 const INVENTORY_SINGLE_SEARCH_RESULT_GUIDANCE =
   'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen.';
 const INVENTORY_ROW_SECONDARY_ACTIONS_LABEL = 'QR e historial';
+const INVENTORY_ROW_SECONDARY_ACTIONS_GUIDANCE =
+  'El botón de más opciones de cada fila agrupa QR e historial.';
 const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
 const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
 const INVENTORY_HISTORY_OPEN_ACTION_LABEL = 'Historial abierto aquí abajo';
@@ -751,6 +754,7 @@ export default function InventoryPage() {
     showLocationSetupGuidance ? INVENTORY_LOCATION_SETUP_GUIDANCE : '',
     showCheckoutContextGuidance ? INVENTORY_CHECKOUT_CONTEXT_GUIDANCE : '',
     movementGuidance,
+    grouped.length > 1 ? INVENTORY_ROW_SECONDARY_ACTIONS_GUIDANCE : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -1063,15 +1067,16 @@ export default function InventoryPage() {
                                 </IconButton>
                               </Tooltip>
                             )}
-                            <Button
-                              size="small"
-                              variant="text"
-                              onClick={(event) => openActionsMenu(event, asset)}
-                              aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
-                              sx={{ textTransform: 'none' }}
-                            >
-                              {INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}
-                            </Button>
+                            <Tooltip title={INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}>
+                              <IconButton
+                                size="small"
+                                onClick={(event) => openActionsMenu(event, asset)}
+                                aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
+                                aria-haspopup="menu"
+                              >
+                                <MoreHorizIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           </Stack>
                         </TableCell>
                       </TableRow>

@@ -531,7 +531,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps repeated table actions compact by naming the secondary row menu after QR and history', async () => {
+  it('keeps repeated table secondary actions compact as an icon-only menu with one guidance line', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
       buildAsset({
@@ -555,6 +555,9 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain(
           'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
+        expect(container.textContent).toContain(
+          'El botón de más opciones de cada fila agrupa QR e historial.',
+        );
         expect(container.textContent).not.toContain('Abre Acciones para ver QR o historial.');
         expect(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
@@ -563,7 +566,12 @@ describe('InventoryPage', () => {
           Array.from(container.querySelectorAll('button')).filter(
             (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
-        ).toHaveLength(2);
+        ).toHaveLength(0);
+        expect(
+          Array.from(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).every(
+            (button) => (button.textContent ?? '').trim() === '',
+          ),
+        ).toBe(true);
         expect(
           Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Acciones',
