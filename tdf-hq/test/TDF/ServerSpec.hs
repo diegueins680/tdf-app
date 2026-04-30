@@ -333,13 +333,19 @@ mkUser roles =
 
 firstFutureStub :: AuthedUser -> Either ServerError StubResponse
 firstFutureStub user =
-    let accessStubs :<|> _ = futureServer user
+    let _catalog :<|> accessStubs :<|> _ = futureServer user
         loginOptions :<|> _ = accessStubs
     in loginOptions
 
+futureCatalog :: AuthedUser -> Either ServerError [StubResponse]
+futureCatalog user =
+    let catalog :<|> _ = futureServer user
+    in catalog
+
 firstFutureAdminConsole :: AuthedUser -> Either ServerError Future.AdminConsoleView
 firstFutureAdminConsole user =
-    let _access
+    let _catalog
+            :<|> _access
             :<|> _crm
             :<|> _scheduling
             :<|> _packages
@@ -8109,6 +8115,32 @@ spec = describe "TDF.Server helpers" $ do
                     ])
 
     describe "futureServer" $ do
+        it "serves a validated canonical fallback discovery catalog" $ do
+            case futureCatalog (mkUser [StudioManager]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                Right value ->
+                    expectationFailure
+                        ("Expected fallback discovery catalog access to be rejected, got: " <> show value)
+
+            case futureCatalog (mkUser [Admin]) of
+                Right catalog -> do
+                    map (\response -> (stubArea response, stubEndpoint response)) catalog
+                        `shouldBe` allowedFutureStubMetadata
+                    map stubPath catalog
+                        `shouldBe` map
+                            (\(area, endpoint) -> "/stubs/" <> area <> "/" <> endpoint)
+                            allowedFutureStubMetadata
+                    catalog `shouldSatisfy` all ((== "GET") . stubMethod)
+                    catalog `shouldSatisfy` all ((== "planned") . stubStatus)
+                    catalog `shouldSatisfy` all ((== "Admin") . stubRequiredRole)
+                    catalog `shouldSatisfy` all ((== "Admin") . stubRequiredModule)
+                    catalog `shouldSatisfy` all (not . stubImplemented)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected Admin fallback discovery catalog, got: " <> show serverErr)
+
         it "requires literal Admin before serving fallback discovery stubs" $ do
             case firstFutureStub (mkUser [StudioManager]) of
                 Left serverErr -> do

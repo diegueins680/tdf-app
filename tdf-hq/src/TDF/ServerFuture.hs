@@ -49,7 +49,8 @@ futureServer
   :: MonadError ServerError m
   => AuthedUser
   -> ServerT FutureAPI m
-futureServer user = accessStubs
+futureServer user = futureCatalog
+          :<|> accessStubs
           :<|> crmStubs
           :<|> schedulingStubs
           :<|> packagesStubs
@@ -58,6 +59,9 @@ futureServer user = accessStubs
           :<|> adminStubs
           :<|> crossCuttingStubs
   where
+    futureCatalog =
+      requireFutureAdminAccess user *> futureStubCatalogResponse
+
     adminStub area endpoint =
       requireFutureAdminAccess user *> stub area endpoint
 
@@ -194,6 +198,31 @@ validateFutureStubResponse response =
             , stubRequiredRole = futureStubRequiredRole
             , stubRequiredModule = futureStubRequiredModule
             }
+
+futureStubCatalogResponse
+  :: MonadError ServerError m
+  => m [StubResponse]
+futureStubCatalogResponse =
+  either throwError pure validateFutureStubCatalogResponse
+
+validateFutureStubCatalogResponse :: Either ServerError [StubResponse]
+validateFutureStubCatalogResponse = do
+  catalog <- validateFutureStubCatalog allowedFutureStubMetadata
+  traverse (uncurry futureStubResponseFor) catalog
+
+futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
+futureStubResponseFor area endpoint =
+  validateFutureStubResponse $
+    StubResponse
+      { stubArea = area
+      , stubEndpoint = endpoint
+      , stubPath = futureStubPath area endpoint
+      , stubMethod = futureStubMethod
+      , stubStatus = "planned"
+      , stubRequiredRole = futureStubRequiredRole
+      , stubRequiredModule = futureStubRequiredModule
+      , stubImplemented = False
+      }
 
 futureStubPath :: Text -> Text -> Text
 futureStubPath area endpoint =

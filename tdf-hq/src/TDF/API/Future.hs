@@ -111,9 +111,14 @@ type CrossCuttingStubAPI =
   :<|> "design"     :> Get '[JSON] StubResponse
   :<|> "auditing"   :> Get '[JSON] StubResponse
 
+-- Canonical discovery index for planned stub endpoints.
+type FutureCatalogAPI =
+       "catalog" :> Get '[JSON] [StubResponse]
+
 -- Aggregate API exposed under /stubs/*
 type FutureAPI =
-       "access"      :> AccessStubAPI
+       FutureCatalogAPI
+  :<|> "access"      :> AccessStubAPI
   :<|> "crm"         :> CrmStubAPI
   :<|> "scheduling"  :> SchedulingStubAPI
   :<|> "packages"    :> PackagesStubAPI
