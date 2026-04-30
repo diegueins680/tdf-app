@@ -366,6 +366,8 @@ clearWhatsAppProviderCredentialEnv =
     , ("WHATSAPP_TOKEN", Nothing)
     , ("WA_PHONE_ID", Nothing)
     , ("WHATSAPP_PHONE_NUMBER_ID", Nothing)
+    , ("WA_VERIFY_TOKEN", Nothing)
+    , ("WHATSAPP_VERIFY_TOKEN", Nothing)
     ]
 
 clearWhatsAppTransportVersionEnv :: [(String, Maybe String)]
@@ -1359,6 +1361,24 @@ main = hspec $ do
                     WhatsAppService.waToken cfg `shouldBe` "token_123"
                     WhatsAppService.waPhoneId cfg `shouldBe` "1234567890"
 
+        it "normalizes WhatsApp verify token aliases before webhook verification" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WHATSAPP_VERIFY_TOKEN", Just " webhook-secret_123 ") ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waVerifyToken cfg `shouldBe` Just "webhook-secret_123"
+                    validateHookVerifyRequest
+                        (Just "subscribe")
+                        (Just "challenge-123")
+                        (Just "webhook-secret_123")
+                        (WhatsAppService.waVerifyToken cfg)
+                        `shouldBe` Right "challenge-123"
+
+                    transport <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waVerifyToken transport `shouldBe` Just "webhook-secret_123"
+
         it "rejects malformed WhatsApp provider credentials before enrollment sends" $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
@@ -1372,6 +1392,13 @@ main = hspec $ do
                 [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                     "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WA_VERIFY_TOKEN", Just "webhook secret") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp verify token"
                         `isInfixOf` show (err :: IOException)
 
         it "normalizes WhatsApp transport alias fallbacks before provider sends" $
@@ -1411,6 +1438,14 @@ main = hspec $ do
                 [ ("WHATSAPP_API_VERSION", Just "latest") ])
                 $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
                     "Invalid WhatsApp Graph API version"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WHATSAPP_VERIFY_TOKEN", Just "webhook\nsecret") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp verify token"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do

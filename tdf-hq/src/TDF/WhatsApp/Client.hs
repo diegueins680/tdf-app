@@ -7,6 +7,7 @@ module TDF.WhatsApp.Client
   , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
   , normalizeWhatsAppRecipientPhone
+  , normalizeWhatsAppVerifyToken
   , sendText
   ) where
 
@@ -135,6 +136,17 @@ normalizeWhatsAppAccessToken rawToken
       Left "Invalid WhatsApp access token: token is required"
   | T.any isUnsafeHeaderChar token =
       Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+  | otherwise =
+      Right token
+  where
+    token = T.strip rawToken
+
+normalizeWhatsAppVerifyToken :: Text -> Either String Text
+normalizeWhatsAppVerifyToken rawToken
+  | T.null token =
+      Left "Invalid WhatsApp verify token: token is required"
+  | T.any isUnsafeHeaderChar token =
+      Left "Invalid WhatsApp verify token: must not contain whitespace or control characters"
   | otherwise =
       Right token
   where

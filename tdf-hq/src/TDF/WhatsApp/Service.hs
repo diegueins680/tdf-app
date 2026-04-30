@@ -25,6 +25,7 @@ import TDF.WhatsApp.Client
   ( SendTextResult (..)
   , normalizeWhatsAppAccessToken
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppVerifyToken
   , sendText
   )
 
@@ -55,7 +56,8 @@ loadWhatsAppConfig = do
     =<< lookupFirstNonEmptyEnv ["WA_TOKEN", "WHATSAPP_TOKEN"]
   pid <- requireValidOptionalCredential normalizeWhatsAppPhoneNumberId
     =<< lookupFirstNonEmptyEnv ["WA_PHONE_ID", "WHATSAPP_PHONE_NUMBER_ID"]
-  ver <- fmap (fmap T.pack) (lookupEnv "WA_VERIFY_TOKEN")
+  ver <- traverse (either fail pure . normalizeWhatsAppVerifyToken . T.pack)
+    =<< lookupFirstNonEmptyEnv ["WA_VERIFY_TOKEN", "WHATSAPP_VERIFY_TOKEN"]
   mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"

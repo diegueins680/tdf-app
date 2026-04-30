@@ -19,6 +19,7 @@ import           TDF.WhatsApp.Client
   , normalizeGraphApiVersion
   , normalizeWhatsAppAccessToken
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppVerifyToken
   , sendText
   )
 
@@ -40,7 +41,9 @@ loadWhatsAppEnv = do
   phoneId <-
     validateOptionalEnvText normalizeWhatsAppPhoneNumberId
       =<< firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
-  verify <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
+  verify <-
+    validateOptionalEnvText normalizeWhatsAppVerifyToken
+      =<< firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <-
     validateOptionalEnvText normalizeGraphApiVersion
