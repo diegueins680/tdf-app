@@ -1596,6 +1596,55 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps admin-home fallback cards from duplicating the first-run landing page', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-admin-home',
+          title: 'Admin home',
+          body: ['Review health, access, and audit follow-up before changing settings.'],
+        },
+        {
+          cardId: 'fallback-inicio-administracion',
+          title: 'Inicio de administración',
+          body: ['Consulta salud, accesos y auditoría antes de continuar.'],
+        },
+        {
+          cardId: 'admin-landing',
+          title: 'Home',
+          body: ['Review the admin landing page before changing access.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin home')).not.toBeInTheDocument();
+    expect(screen.queryByText('Inicio de administración')).not.toBeInTheDocument();
+    expect(screen.queryByText('Home')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review health, access, and audit follow-up/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Consulta salud, accesos y auditoría antes de continuar\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps getting-started fallback cards from duplicating the first-run checklist', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
