@@ -202,6 +202,7 @@ import TDF.Server
     , validateSessionInputLookup
     , validateInputListInventoryFilters
     , resolveSocialTargetPartyId
+    , validateSocialProfilePartyIds
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
     , requirePersistedBookingDTO
@@ -1184,6 +1185,29 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected existing social target party to resolve, got: " <> show serverErr)
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
+
+    describe "validateSocialProfilePartyIds" $ do
+        it "keeps social profile batch lookups positive, unique, and bounded" $ do
+            validateSocialProfilePartyIds [] `shouldBe` Right []
+            validateSocialProfilePartyIds [12, 33, 44] `shouldBe` Right [12, 33, 44]
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid social profile party ids, got: " <> show value)
+            assertInvalid
+                "partyId query must contain only positive integers"
+                (validateSocialProfilePartyIds [12, 0, 44])
+            assertInvalid
+                "partyId query must not contain duplicate ids"
+                (validateSocialProfilePartyIds [12, 33, 12])
+            assertInvalid
+                "partyId query supports at most 100 ids"
+                (validateSocialProfilePartyIds [1..101])
 
     describe "fanUnfollowArtist" $ do
         it "rejects invalid fan follow targets before deleting can return a misleading no-op" $ do
