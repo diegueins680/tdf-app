@@ -667,7 +667,10 @@ data EventBudgetLineDTO = EventBudgetLineDTO
   , eblUpdatedAt    :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 instance ToJSON EventBudgetLineDTO
-instance FromJSON EventBudgetLineDTO
+instance FromJSON EventBudgetLineDTO where
+  parseJSON = genericParseJSON defaultOptions
+    { rejectUnknownFields = True
+    }
 
 data EventFinanceEntryDTO = EventFinanceEntryDTO
   { efeId               :: Maybe Text

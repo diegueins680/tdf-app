@@ -78,6 +78,7 @@ import TDF.DTO.SocialEventsDTO
       EventMomentCommentCreateDTO (..),
       EventMomentCreateDTO (..),
       EventMomentReactionRequestDTO (..),
+      EventBudgetLineDTO (..),
       EventUpdateDTO (..),
       InvitationDTO (..),
       InvitationUpdateDTO (..),
@@ -6941,6 +6942,30 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored budget line planned cents is invalid"
                 Right value ->
                     expectationFailure ("Expected invalid stored budget cents to be rejected, got " <> show value)
+
+    describe "event budget line JSON contract" $ do
+        it "rejects unknown write fields before budget line handlers can ignore typoed input" $ do
+            let canonicalPayload =
+                    "{\"eblId\":null,\"eblEventId\":null,\"eblCode\":\"TICKETS\","
+                        <> "\"eblName\":\"Ticket sales\",\"eblType\":\"income\","
+                        <> "\"eblCategory\":\"tickets\",\"eblPlannedCents\":250000,"
+                        <> "\"eblActualCents\":null,\"eblNotes\":null,"
+                        <> "\"eblCreatedAt\":null,\"eblUpdatedAt\":null}"
+                unexpectedPayload =
+                    "{\"eblId\":null,\"eblEventId\":null,\"eblCode\":\"TICKETS\","
+                        <> "\"eblName\":\"Ticket sales\",\"eblType\":\"income\","
+                        <> "\"eblCategory\":\"tickets\",\"eblPlannedCents\":250000,"
+                        <> "\"eblActualCents\":null,\"eblNotes\":null,"
+                        <> "\"eblCreatedAt\":null,\"eblUpdatedAt\":null,"
+                        <> "\"ignored\":true}"
+            case (eitherDecode canonicalPayload :: Either String EventBudgetLineDTO) of
+                Left err ->
+                    expectationFailure ("Expected canonical budget line payload to decode, got: " <> err)
+                Right payload ->
+                    eblCode payload `shouldBe` "TICKETS"
+
+            (eitherDecode unexpectedPayload :: Either String EventBudgetLineDTO)
+                `shouldSatisfy` isLeft
 
     describe "event list query validation" $ do
         it "accepts blank filters and canonicalizes supported event type and status values" $ do
