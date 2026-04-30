@@ -363,7 +363,8 @@ validateInstagramRedirectUri rawRedirect =
 isSafeInstagramRedirectUri :: Text -> Bool
 isSafeInstagramRedirectUri uri
   | not (instagramOAuthCallbackPath `T.isSuffixOf` uri) = False
-  | "https://" `T.isPrefixOf` lowerUri = True
+  | "https://" `T.isPrefixOf` lowerUri =
+      maybe False (not . isLocalInstagramRedirectHost) (instagramRedirectHost (T.drop 8 uri))
   | "http://" `T.isPrefixOf` lowerUri =
       maybe False isLocalInstagramRedirectHost (instagramRedirectHost (T.drop 7 uri))
   | otherwise = False

@@ -3025,6 +3025,9 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
             assertInvalid "http://hq.example.com/oauth/instagram/callback"
+            assertInvalid "https://localhost/oauth/instagram/callback"
+            assertInvalid "https://127.0.0.1:5173/oauth/instagram/callback"
+            assertInvalid "https://[::1]:5173/oauth/instagram/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
