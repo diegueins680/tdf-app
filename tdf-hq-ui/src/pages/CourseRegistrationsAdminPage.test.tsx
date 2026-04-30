@@ -11006,9 +11006,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Registration link - Beatmaking 101',
       'Beatmaking 101 - enrollment link',
+      'Registration URL - Beatmaking 101',
+      'Beatmaking 101 - enrollment URL',
       'Course sign-up link - Beatmaking 101',
       'Enlace de inscripción - Beatmaking 101',
       'Beatmaking 101 - enlace de inscripción',
+      'URL de inscripción - Beatmaking 101',
+      'Beatmaking 101 - URL de inscripción',
     ];
 
     for (const title of titles) {
@@ -11024,8 +11028,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/(?:registration|enrollment|sign[-\s]?up)\s+link/i);
-        expect(emptyState?.textContent).not.toMatch(/enlace\s+de\s+inscripci[oó]n/i);
+        expect(emptyState?.textContent).not.toMatch(/(?:registration|enrollment|sign[-\s]?up)\s+(?:link|url)/i);
+        expect(emptyState?.textContent).not.toMatch(/(?:enlace|url)\s+de\s+inscripci[oó]n/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
