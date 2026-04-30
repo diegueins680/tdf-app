@@ -391,8 +391,12 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
+        'Cargando mensajes entrantes antes de mostrar filtros y canales.',
+      );
+      expect(container.textContent).toContain(
         'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.',
       );
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(countButtonsByText(container, 'Actualizar')).toBe(0);
@@ -414,6 +418,8 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Inbox social');
+      expect(container.textContent).toContain('Mensajes entrantes y respuestas por canal.');
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(countButtonsByText(container, 'Actualizar')).toBe(1);
       expect(countButtonsByText(container, 'Refresh')).toBe(0);
       expect(container.textContent).not.toContain('App Review mode auto-refreshes every 5 seconds');
@@ -429,6 +435,8 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Inbox social');
+      expect(container.textContent).toContain('Primer mensaje entrante pendiente.');
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
       expect(container.textContent).toContain(
         'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.',

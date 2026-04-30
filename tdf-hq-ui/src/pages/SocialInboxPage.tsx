@@ -56,6 +56,10 @@ const DEFAULT_LIMIT = 100;
 const reviewSelectedAssetEmptyStateTitle = 'Waiting for the first inbound message.';
 const reviewSelectedAssetEmptyStateMessage =
   'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.';
+const normalInboxReadySubtitle = 'Mensajes entrantes y respuestas por canal.';
+const normalInboxLoadingSubtitle = 'Cargando mensajes entrantes antes de mostrar filtros y canales.';
+const normalInboxEmptySubtitle = 'Primer mensaje entrante pendiente.';
+const normalInboxErrorSubtitle = 'No se pudieron cargar los canales del inbox.';
 
 const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
@@ -1352,6 +1356,19 @@ export default function SocialInboxPage() {
     && displayFilter !== 'all'
     && filterCounts.all > 0
     && filterCounts[displayFilter] === 0;
+  const pageSubtitle = reviewMode
+    ? activeAsset
+      ? hasAnyInboundMessage
+        ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+        : 'Step 1/3 complete: send one inbound test message to the selected professional/business account.'
+      : 'Step 1/3: select the exact Page + professional/business account for this review run.'
+    : showInboxLoadingState
+      ? normalInboxLoadingSubtitle
+      : showUnifiedEmptyState
+        ? normalInboxEmptySubtitle
+        : showChannelErrorOnlyState
+          ? normalInboxErrorSubtitle
+          : normalInboxReadySubtitle;
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1407,13 +1424,7 @@ export default function SocialInboxPage() {
             {reviewMode ? 'Meta App Review: Messaging Inbox' : 'Inbox social'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {reviewMode
-              ? activeAsset
-                ? hasAnyInboundMessage
-                  ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
-                  : 'Step 1/3 complete: send one inbound test message to the selected professional/business account.'
-                : 'Step 1/3: select the exact Page + professional/business account for this review run.'
-              : 'Auto respuestas registradas por el cron diario.'}
+            {pageSubtitle}
           </Typography>
         </Stack>
         {showHeaderControls && (
