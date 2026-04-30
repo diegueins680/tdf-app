@@ -6,7 +6,16 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace, toLower)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  , toLower
+  )
 import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
@@ -413,12 +422,16 @@ normalizeMarketplaceBuyerNameField rawName
       fail "mcrBuyerName is required"
   | T.length trimmed > 160 =
       fail "mcrBuyerName must be 160 characters or fewer"
-  | T.any isControl trimmed =
-      fail "mcrBuyerName must not contain control characters"
+  | T.any isUnsafeMarketplaceBuyerNameChar trimmed =
+      fail "mcrBuyerName must not contain control characters or hidden formatting characters"
   | otherwise =
       pure trimmed
   where
     trimmed = T.strip rawName
+
+isUnsafeMarketplaceBuyerNameChar :: Char -> Bool
+isUnsafeMarketplaceBuyerNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizeMarketplaceBuyerEmailField :: Text -> Parser Text
 normalizeMarketplaceBuyerEmailField rawEmail
