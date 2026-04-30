@@ -2924,6 +2924,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
+      expect(countButtonsByText(activeStatusSummary!, 'Mostrar todos los estados')).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();

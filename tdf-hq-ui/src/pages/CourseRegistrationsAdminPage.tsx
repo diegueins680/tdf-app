@@ -2395,11 +2395,18 @@ export default function CourseRegistrationsAdminPage() {
     && !hidePassiveFiltersDuringEmptyLocalSearch
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
-  const showFilteredResetAction = !showEmptyLocalSearchResults
+  const showFilteredResetActionCandidate = !showEmptyLocalSearchResults
     && !hasLocalSearch
     && !showInlineSummaryResetAction
     && !cohortFilterCanSelfReset
     && !statusFilterCanSelfReset;
+  const showInlineActiveStatusResetAction = showActiveStatusFilterSummary
+    && showFilteredResetActionCandidate
+    && !activeViewSummaryMessage
+    && !showUtilityCountSummary
+    && !showScopedCopyCsvAction
+    && !showScopedCopyMessage;
+  const showFilteredResetAction = showFilteredResetActionCandidate && !showInlineActiveStatusResetAction;
   const showFilteredEmptyStateResetAction = hasManualFilters;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters;
   const filteredUtilitySummaryMessage = useMemo(
@@ -4052,6 +4059,16 @@ export default function CourseRegistrationsAdminPage() {
                           <Typography variant="caption" color="text.secondary">
                             La vista filtrada ya muestra solo este estado.
                           </Typography>
+                          {showInlineActiveStatusResetAction && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                              onClick={handleResetFilters}
+                            >
+                              {resetViewLabel}
+                            </Button>
+                          )}
                         </Stack>
                       ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
                         <Stack
