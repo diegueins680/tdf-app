@@ -2833,6 +2833,11 @@ main = hspec $ do
                 Right origin ->
                     expectationFailure
                         ("Expected query-bearing fallback to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com:0443/app" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected ambiguous fallback port to fail, got: " <> origin)
 
         it "rejects malformed configured origins before building the credentialed policy" $ do
             let assertInvalid rawOrigin =
@@ -2853,6 +2858,7 @@ main = hspec $ do
             assertInvalid "https://admin"
             assertInvalid "https://999.999.999.999"
             assertInvalid "https://1.2.3"
+            assertInvalid "https://app.example.com:0443"
             assertInvalid "*/"
 
         it "rejects malformed boolean CORS flags instead of treating typos as false" $ do

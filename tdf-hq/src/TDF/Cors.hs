@@ -230,6 +230,7 @@ validOriginSuffix suffix
       let port = BS.drop 1 suffix
       in not (BS.null port)
         && BS.all isDigit port
+        && not (BS.length port > 1 && BS.head port == '0')
         && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
             (readMaybe (BS.unpack port))
   | otherwise = False
