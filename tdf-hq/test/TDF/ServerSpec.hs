@@ -277,6 +277,7 @@ import TDF.Server
     , listMarketplace
     , resolveMarketplacePhotoUrl
     )
+import qualified TDF.ServerRadio as Radio
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
     ( findReusableActiveToken
@@ -456,6 +457,39 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "radio metadata validation" $ do
+        it "rejects hidden formatting markers in upstream now-playing titles" $
+            case Radio.resolveRadioNowPlayingFetchResult
+                (Right (Just ("Artist" <> "\x202E" <> " - Track")))
+             of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 502
+                    BL8.unpack (errBody err) `shouldContain` "hidden formatting"
+                Right value ->
+                    expectationFailure
+                        ("Expected unsafe now-playing metadata to be rejected, got: " <> show value)
+
+        it "rejects hidden formatting markers in stored radio metadata and filters" $ do
+            case Radio.validateRadioOptionalMetadataField
+                "rsuName"
+                160
+                (Just ("Station" <> "\x200B"))
+             of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "hidden formatting"
+                Right value ->
+                    expectationFailure
+                        ("Expected unsafe station metadata to be rejected, got: " <> show value)
+
+            case Radio.validateRadioSearchFilter "genre" 120 (Just ("jazz" <> "\x2028")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "hidden formatting"
+                Right value ->
+                    expectationFailure
+                        ("Expected unsafe radio search filter to be rejected, got: " <> show value)
+
     describe "Party request FromJSON" $ do
         it "accepts canonical CRM party create and update bodies" $ do
             case decodePartyCreate

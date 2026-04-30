@@ -25,7 +25,9 @@ import           Control.Monad          (forM, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
-import           Data.Char              (digitToInt, isAlphaNum, isAscii, isControl, isDigit, isHexDigit, isSpace)
+import           Data.Char              (GeneralCategory(Format, LineSeparator, ParagraphSeparator),
+                                         digitToInt, generalCategory, isAlphaNum, isAscii, isControl, isDigit,
+                                         isHexDigit, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', find, findIndex)
 import qualified Data.Map.Strict        as Map
@@ -180,11 +182,11 @@ validateRadioOptionalMetadataField fieldName maxLength (Just rawValue) =
                BL.fromStrict . TE.encodeUtf8 $
                  fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
            }
-         else if T.any isControl value
+         else if T.any isUnsafeRadioTextChar value
            then Left err400
              { errBody =
                  BL.fromStrict . TE.encodeUtf8 $
-                   fieldName <> " must not contain control characters"
+                   fieldName <> " must not contain control or hidden formatting characters"
            }
          else Right (Just value)
 
@@ -201,15 +203,19 @@ validateRadioSearchFilter fieldName maxLength (Just rawValue)
         { errBody = BL.fromStrict . TE.encodeUtf8 $
             fieldName <> " filter must be " <> T.pack (show maxLength) <> " characters or fewer"
         }
-  | T.any isControl value =
+  | T.any isUnsafeRadioTextChar value =
       Left err400
         { errBody = BL.fromStrict . TE.encodeUtf8 $
-            fieldName <> " filter must not contain control characters"
+            fieldName <> " filter must not contain control or hidden formatting characters"
         }
   | otherwise =
       Right (Just (T.toLower value))
   where
     value = T.strip rawValue
+
+isUnsafeRadioTextChar :: Char -> Bool
+isUnsafeRadioTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateRadioTransmissionEndpointBase :: Text -> Text -> [Text] -> Text -> Either ServerError Text
 validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes rawBase
@@ -643,8 +649,8 @@ validateRadioNowPlayingTitle mTxt =
     Just txt
       | T.length txt > maxRadioNowPlayingTitleChars ->
           Left err502 { errBody = "Now-playing metadata title must be 512 characters or fewer" }
-      | T.any isControl txt ->
-          Left err502 { errBody = "Now-playing metadata title must not contain control characters" }
+      | T.any isUnsafeRadioTextChar txt ->
+          Left err502 { errBody = "Now-playing metadata title must not contain control or hidden formatting characters" }
       | otherwise -> Right (Just txt)
     _ -> Right Nothing
 
