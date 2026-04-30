@@ -2811,20 +2811,52 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                _ <- insert ApiToken
+                    { apiTokenToken = "mixed-reset-token"
+                    , apiTokenPartyId = partyId
+                    , apiTokenLabel = Just "Password-Reset:user@example.com"
+                    , apiTokenActive = True
+                    }
+                insert_
+                    UserCredential
+                        { userCredentialPartyId = partyId
+                        , userCredentialUsername = "fallback@example.com"
+                        , userCredentialPasswordHash = "hash"
+                        , userCredentialActive = True
+                        }
                 sessionUser <- loadAuthedUser "session-token"
                 resetUser <- loadAuthedUser "reset-token"
+                mixedResetUser <- loadAuthedUser "mixed-reset-token"
                 sessionUsername <- lookupUsernameFromToken "session-token"
                 resetUsername <- lookupUsernameFromToken "reset-token"
-                pure (partyId, sessionUser, resetUser, sessionUsername, resetUsername)
-            let (expectedPartyId, sessionResult, resetResult, sessionUsername, resetUsername) =
-                    authResults
+                mixedResetUsername <- lookupUsernameFromToken "mixed-reset-token"
+                pure
+                    ( partyId
+                    , sessionUser
+                    , resetUser
+                    , mixedResetUser
+                    , sessionUsername
+                    , resetUsername
+                    , mixedResetUsername
+                    )
+            let
+                ( expectedPartyId
+                    , sessionResult
+                    , resetResult
+                    , mixedResetResult
+                    , sessionUsername
+                    , resetUsername
+                    , mixedResetUsername
+                    ) = authResults
 
             case sessionResult of
                 Just user -> auPartyId user `shouldBe` expectedPartyId
                 Nothing -> expectationFailure "Expected session token to authenticate"
             resetResult `shouldBe` Nothing
+            mixedResetResult `shouldBe` Nothing
             sessionUsername `shouldBe` Just "user@example.com"
             resetUsername `shouldBe` Nothing
+            mixedResetUsername `shouldBe` Nothing
 
     describe "lookupUsernameFromToken" $
         it "uses the unlabeled-token credential fallback only when exactly one active credential exists" $ do

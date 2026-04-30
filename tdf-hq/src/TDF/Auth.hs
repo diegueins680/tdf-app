@@ -143,7 +143,7 @@ loadAuthedUser token = do
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
 isAuthenticatableApiTokenLabel Nothing = True
 isAuthenticatableApiTokenLabel (Just rawLabel) =
-  not ("password-reset:" `T.isPrefixOf` T.strip rawLabel)
+  not ("password-reset:" `T.isPrefixOf` T.toLower (T.strip rawLabel))
 
 lookupUsernameFromToken :: Text -> SqlPersistT IO (Maybe Text)
 lookupUsernameFromToken token = do
