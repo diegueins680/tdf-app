@@ -657,6 +657,61 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps active status filters visible when the server returns an empty filtered result', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const contactOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'contact',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [] : [pendingOrder, contactOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(container.textContent).toContain('Sin resultados en esta vista. 1 filtro activo.');
+        expect(container.textContent).toContain(
+          'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
+        );
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.textContent).not.toContain('Todavía no hay órdenes. Cuando llegue la primera');
+        expect(container.querySelector('tbody tr')).toBeNull();
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Sin resultados en esta vista.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces a single real status filter with context copy when the current list already shares one status', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

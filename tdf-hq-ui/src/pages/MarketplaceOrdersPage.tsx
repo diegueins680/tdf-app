@@ -349,12 +349,14 @@ export default function MarketplaceOrdersPage() {
   const showExportCsvAction = filtered.length > 0;
   const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
-  const ordersSummary = summarizeMarketplaceOrderList({
-    totalOrders: orders.length,
-    visibleOrders: filtered.length,
-    activeFilterCount: filtersActiveCount,
-  });
-  const showFirstOrderEmptyState = !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
+  const ordersSummary = filtersDirty && orders.length === 0
+    ? `Sin resultados en esta vista. ${filtersActiveCount} filtro${filtersActiveCount === 1 ? '' : 's'} activo${filtersActiveCount === 1 ? '' : 's'}.`
+    : summarizeMarketplaceOrderList({
+      totalOrders: orders.length,
+      visibleOrders: filtered.length,
+      activeFilterCount: filtersActiveCount,
+    });
+  const showFirstOrderEmptyState = !filtersDirty && !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 0;
   const showSingleOrderFocusedState =
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showSingleVisibleOrderSummary =
@@ -372,7 +374,7 @@ export default function MarketplaceOrdersPage() {
     !showFirstOrderEmptyState
     && !showSingleVisibleOrderSummary
     && (showVisibleOrderBreakdown || showExportCsvAction);
-  const showListChrome = ordersQuery.isLoading || (orders.length > 0 && !showSingleOrderFocusedState);
+  const showListChrome = ordersQuery.isLoading || filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState);
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
   const showPaidOnlyAdvancedFilter = !statusFilterImpliesPaid;
