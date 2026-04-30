@@ -3538,6 +3538,14 @@ spec = describe "TDF.Server helpers" $ do
                 403
                 "Incorrect API key provided: model_not_found"
                 `shouldBe` False
+            shouldRetryWithFallbackModel
+                0
+                "network timeout while retrying unknown model gpt-x"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                0
+                "TLS certificate verification failed for model_not_found"
+                `shouldBe` False
 
     describe "resolveWorkflowId" $ do
         it "uses the configured ChatKit workflow when the request override is omitted or blank" $ do
