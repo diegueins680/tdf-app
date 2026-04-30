@@ -483,8 +483,13 @@ const pendingStatusMenuTargetLabel = (currentStatus: string) =>
     ? 'reabrir la inscripción como pendiente'
     : 'marcar el pago como pendiente';
 
-const shouldUseDirectPendingRecoveryAction = (currentStatus: string) =>
-  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled';
+const shouldUseDirectPendingRecoveryAction = (
+  currentStatus: string,
+  includePaidRecovery = false,
+) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  return knownStatus === 'cancelled' || (includePaidRecovery && knownStatus === 'paid');
+};
 
 const canCancelRegistrationFromStatus = (currentStatus: string) => {
   const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
@@ -4388,7 +4393,11 @@ export default function CourseRegistrationsAdminPage() {
                       && !rowSecondaryIdentity
                     );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
-                  const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(reg.crStatus);
+                  const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(
+                    reg.crStatus,
+                    searchedRegistrations.length === 1
+                      && (showActiveStatusFilterSummary || showSingleStatusSummaryInPageChrome),
+                  );
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
@@ -4485,7 +4494,7 @@ export default function CourseRegistrationsAdminPage() {
                         endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
                         title={
                           useDirectPendingRecoveryAction
-                            ? `Reabrir como pendiente; actual: ${registrationStatusLabel(reg.crStatus)}`
+                            ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
                             : `Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`
                         }
                         aria-label={

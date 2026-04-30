@@ -2807,7 +2807,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector<HTMLElement>('[data-testid="course-registration-active-status-summary"]')?.textContent).toContain('Pagado');
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      const pendingRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
+      expect(pendingRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(pendingRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
+      expect(pendingRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista filtrada: estado pagado.');
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
     });
@@ -2928,6 +2932,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
+      const pendingRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
+      expect(pendingRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(pendingRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
+      expect(pendingRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
     });
 
     await cleanup();
