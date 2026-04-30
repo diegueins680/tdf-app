@@ -210,6 +210,7 @@ import TDF.ServerLiveSessions
       LiveSessionMusicianLookup (..),
       resolveLiveSessionMusicianLookup,
       sanitizeLiveSessionRiderFileName,
+      validateLiveSessionOptionalEmail,
       validateLiveSessionReferencedPartyEmail,
       validateLiveSessionRiderFileName,
       validateLiveSessionRiderFileSize,
@@ -7911,6 +7912,32 @@ main = hspec $ do
                 `shouldBe` LookupLiveSessionMusicianByEmail "player@example.com"
             resolveLiveSessionMusicianLookup Nothing `shouldBe` CreateLiveSessionMusician
             resolveLiveSessionMusicianLookup (Just "   ") `shouldBe` CreateLiveSessionMusician
+
+    describe "validateLiveSessionOptionalEmail" $ do
+        it "normalizes optional live-session emails before lookup and persistence" $ do
+            validateLiveSessionOptionalEmail "contactEmail" Nothing `shouldBe` Right Nothing
+            validateLiveSessionOptionalEmail "contactEmail" (Just "   ")
+                `shouldBe` Right Nothing
+            validateLiveSessionOptionalEmail "contactEmail" (Just " Player@Example.com ")
+                `shouldBe` Right (Just "player@example.com")
+
+        it "rejects malformed live-session emails instead of falling back to new accounts" $ do
+            let assertInvalid fieldName rawEmail =
+                    case validateLiveSessionOptionalEmail fieldName (Just rawEmail) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    (Data.Text.unpack fieldName <> " must be a valid email address")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed live-session email to be rejected, got "
+                                    <> show value
+                                )
+
+            assertInvalid "contactEmail" "contact example.com"
+            assertInvalid "musicians.email" "player@example..com"
+            assertInvalid "musicians.email" "player\n@example.com"
 
     describe "validateLiveSessionReferencedPartyEmail" $ do
         it "accepts omitted or matching emails for referenced musicians without turning intake rows into party updates" $ do

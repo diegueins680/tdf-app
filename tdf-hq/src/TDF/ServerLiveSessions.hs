@@ -9,6 +9,7 @@ module TDF.ServerLiveSessions
   , buildLiveSessionUsernameCollisionCandidate
   , resolveLiveSessionMusicianLookup
   , sanitizeLiveSessionRiderFileName
+  , validateLiveSessionOptionalEmail
   , validateLiveSessionReferencedPartyEmail
   , validateLiveSessionRiderFileName
   , validateLiveSessionRiderFileSize
@@ -51,6 +52,7 @@ import           TDF.DB                     (Env(..))
 import           TDF.Models
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
+import           TDF.ServerAuth             (normalizeAuthEmailAddress)
 
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
@@ -88,11 +90,14 @@ liveSessionsServer user = intakeHandler
           validateLiveSessionTermsAcceptance
             (lsiAcceptedTerms payload)
             (lsiTermsVersion payload)
+      contactEmail <-
+        either throwError pure $
+          validateLiveSessionOptionalEmail "contactEmail" (lsiContactEmail payload)
 
       now <- liftIO getCurrentTime
       riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
 
-      partyKeys <- mapM (ensureMusician now) (lsiMusicians payload)
+      preparedMusicians <- mapM (ensureMusician now) (lsiMusicians payload)
       resolvedSongOrders <-
         either
           (\err ->
@@ -109,7 +114,7 @@ liveSessionsServer user = intakeHandler
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
         , ME.liveSessionIntakePrimaryGenre = lsiPrimaryGenre payload
         , ME.liveSessionIntakeInputList    = lsiInputList payload
-        , ME.liveSessionIntakeContactEmail = T.strip <$> lsiContactEmail payload
+        , ME.liveSessionIntakeContactEmail = contactEmail
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
         , ME.liveSessionIntakeAvailability = lsiAvailability payload
@@ -129,17 +134,19 @@ liveSessionsServer user = intakeHandler
                  else Just (sortOrder, title, song)
 
       withPool $
-        forM_ (zip partyKeys (lsiMusicians payload)) $ \(partyKey, m) ->
-          insert_ ME.LiveSessionMusician
-            { ME.liveSessionMusicianIntakeId   = intakeId
-            , ME.liveSessionMusicianPartyId    = partyKey
-            , ME.liveSessionMusicianName       = lsmName m
-            , ME.liveSessionMusicianEmail      = lsmEmail m
-            , ME.liveSessionMusicianInstrument = lsmInstrument m
-            , ME.liveSessionMusicianRole       = lsmRole m
-            , ME.liveSessionMusicianNotes      = lsmNotes m
-            , ME.liveSessionMusicianIsExisting = lsmIsExisting m
-            }
+        forM_
+          (zip preparedMusicians (lsiMusicians payload))
+          $ \((partyKey, musicianEmail), m) ->
+              insert_ ME.LiveSessionMusician
+                { ME.liveSessionMusicianIntakeId   = intakeId
+                , ME.liveSessionMusicianPartyId    = partyKey
+                , ME.liveSessionMusicianName       = lsmName m
+                , ME.liveSessionMusicianEmail      = musicianEmail
+                , ME.liveSessionMusicianInstrument = lsmInstrument m
+                , ME.liveSessionMusicianRole       = lsmRole m
+                , ME.liveSessionMusicianNotes      = lsmNotes m
+                , ME.liveSessionMusicianIsExisting = lsmIsExisting m
+                }
 
       withPool $
         forM_ preparedSongs $ \(sortOrder, title, song) ->
@@ -154,10 +161,12 @@ liveSessionsServer user = intakeHandler
 
       pure NoContent
 
-    ensureMusician :: UTCTime -> LiveSessionMusicianPayload -> m (Key Party)
+    ensureMusician :: UTCTime -> LiveSessionMusicianPayload -> m (Key Party, Maybe Text)
     ensureMusician now LiveSessionMusicianPayload{..} = do
-      let mEmail = T.strip <$> lsmEmail
-          trimmedName = T.strip lsmName
+      mEmail <-
+        either throwError pure $
+          validateLiveSessionOptionalEmail "musicians.email" lsmEmail
+      let trimmedName = T.strip lsmName
       (partyKey, accountEmail) <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
@@ -183,7 +192,10 @@ liveSessionsServer user = intakeHandler
             Nothing -> withPool $ do
               key <- insert Party
                 { partyLegalName        = Nothing
-                , partyDisplayName      = if T.null trimmedName then "Músico Live Session" else trimmedName
+                , partyDisplayName      =
+                    if T.null trimmedName
+                      then "Músico Live Session"
+                      else trimmedName
                 , partyIsOrg            = False
                 , partyTaxId            = Nothing
                 , partyPrimaryEmail     = mEmail
@@ -200,7 +212,7 @@ liveSessionsServer user = intakeHandler
         throwError err400 { errBody = "Invalid party reference" }
       withPool $ ensureArtistRole partyKey
       withPool $ ensureUserAccount partyKey accountEmail
-      pure partyKey
+      pure (partyKey, mEmail)
 
     ensureArtistRole :: PartyId -> SqlPersistT IO ()
     ensureArtistRole pid = do
@@ -304,15 +316,33 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
 
 resolveLiveSessionMusicianLookup :: Maybe Text -> LiveSessionMusicianLookup
 resolveLiveSessionMusicianLookup rawEmail =
-  case T.toLower . T.strip <$> rawEmail of
-    Just email | not (T.null email) -> LookupLiveSessionMusicianByEmail email
+  case rawEmail >>= normalizeAuthEmailAddress of
+    Just email -> LookupLiveSessionMusicianByEmail email
     _ -> CreateLiveSessionMusician
+
+validateLiveSessionOptionalEmail
+  :: Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateLiveSessionOptionalEmail _ Nothing = Right Nothing
+validateLiveSessionOptionalEmail fieldName (Just rawEmail)
+  | T.null (T.strip rawEmail) =
+      Right Nothing
+  | Just email <- normalizeAuthEmailAddress rawEmail =
+      Right (Just email)
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be a valid email address"))
+        }
 
 validateLiveSessionReferencedPartyEmail
   :: Maybe Text
   -> Maybe Text
   -> Either ServerError (Maybe Text)
-validateLiveSessionReferencedPartyEmail rawExistingEmail rawSuppliedEmail =
+validateLiveSessionReferencedPartyEmail rawExistingEmail rawSuppliedEmail = do
+  suppliedEmail <- validateLiveSessionOptionalEmail "musicians.email" rawSuppliedEmail
   case suppliedEmail of
     Nothing ->
       Right existingEmail
@@ -325,14 +355,7 @@ validateLiveSessionReferencedPartyEmail rawExistingEmail rawSuppliedEmail =
                 "Referenced musician email must match the existing party email"
             }
   where
-    existingEmail = normalizeReferencedPartyEmail rawExistingEmail
-    suppliedEmail = normalizeReferencedPartyEmail rawSuppliedEmail
-
-normalizeReferencedPartyEmail :: Maybe Text -> Maybe Text
-normalizeReferencedPartyEmail rawEmail =
-  case T.toLower . T.strip <$> rawEmail of
-    Just email | not (T.null email) -> Just email
-    _ -> Nothing
+    existingEmail = rawExistingEmail >>= normalizeAuthEmailAddress
 
 validateLiveSessionTermsAcceptance :: Bool -> Maybe Text -> Either ServerError Text
 validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
