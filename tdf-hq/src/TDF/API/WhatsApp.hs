@@ -274,12 +274,13 @@ validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
   | otherwise =
       Right ()
   where
-    storedTokenValue = nonBlank mStoredToken
+    storedTokenValue = canonicalStoredToken mStoredToken
 
-    nonBlank :: Maybe Text -> Maybe Text
-    nonBlank mTxt =
-      case fmap T.strip mTxt of
-        Just txt | not (T.null txt) -> Just txt
+    canonicalStoredToken :: Maybe Text -> Maybe Text
+    canonicalStoredToken mTxt =
+      case mTxt of
+        Just txt
+          | txt == T.strip txt && isValidLeadCompletionToken txt -> Just txt
         _ -> Nothing
 
 isCompletableLeadStatus :: Text -> Bool
