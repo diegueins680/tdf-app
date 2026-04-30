@@ -149,7 +149,7 @@ validateFallbackConnUrl envName raw
                  validateConnectionHostPort hostPort
                    *> validateConnectionDatabasePath databasePath
                    *> validateConnectionQueryParams databasePath
-                   *> Right raw
+                   *> Right (T.unpack value)
 
     validateConnectionHostPort :: Text -> Either String ()
     validateConnectionHostPort hostPort

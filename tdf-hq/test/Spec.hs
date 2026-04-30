@@ -1723,6 +1723,29 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
 
+        it "normalizes surrounding whitespace on DATABASE_URL before URL fallback handling" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "  postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq  ")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg
+                        `shouldBe`
+                            "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+
         it "keeps DATABASE_URL authoritative when only partial keyword DB env vars exist" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
