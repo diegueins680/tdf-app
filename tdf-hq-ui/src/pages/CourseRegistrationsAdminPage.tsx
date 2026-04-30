@@ -686,6 +686,12 @@ const firstRunWorkshopDescriptorPrefixPattern =
 const firstRunWorkshopDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
 
+const firstRunClassDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|class\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunClassDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|class\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
+
 const firstRunWaitlistDescriptorPrefixPattern =
   /^(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|captaci[oó]n\s+de\s+(?:leads?|prospectos|interesad[oa]s))|lista\s+de\s+(?:espera|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -720,6 +726,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
+    .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
@@ -744,6 +751,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
+    .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
