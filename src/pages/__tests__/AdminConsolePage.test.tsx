@@ -4541,6 +4541,48 @@ describe('AdminConsolePage', () => {
     expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toHaveAttribute('title', 'roles.updated');
   });
 
+  it('deduplicates repeated audit entries when fallback data only changes whitespace', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.created',
+        diff: null,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: null,
+        entity: ' package ',
+        entityId: ' PKG-1 ',
+        action: ' package.created ',
+        diff: '   ',
+        createdAt: ' 2026-04-09T15:30:00.000Z ',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Package created/i)).toBeInTheDocument();
+      expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
+  });
+
   it('merges repeated audit ids so one richer event keeps the compact first-event summary', async () => {
     mockAuditLogs.mockResolvedValue([
       {

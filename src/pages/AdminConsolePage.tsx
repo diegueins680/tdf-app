@@ -622,12 +622,12 @@ function mergeAuditEntries(primary: AuditLogEntry, duplicate: AuditLogEntry): Au
 
 function getAuditEntryFingerprint(entry: AuditLogEntry) {
   return [
-    entry.entity,
-    entry.entityId,
-    entry.action,
+    entry.entity.trim(),
+    entry.entityId.trim(),
+    entry.action.trim(),
     entry.actorId ?? '',
-    entry.diff ?? '',
-    entry.createdAt,
+    entry.diff?.trim() ?? '',
+    entry.createdAt.trim(),
   ].join('::');
 }
 
