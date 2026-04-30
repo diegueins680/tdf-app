@@ -470,7 +470,7 @@ loadConfig = do
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
   fbMsgTokenEnv <- lookupFirstEnv
     ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
-  fbMsgPageIdEnv <- lookupFirstNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
+  fbMsgPageIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
   fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -660,6 +660,28 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just (key, normalized))
         Nothing -> lookupFirstNamedEnv rest
+    lookupUniqueNamedEnv keys = do
+      values <- lookupNamedEnvValues keys
+      case values of
+        [] -> pure Nothing
+        firstValue:rest ->
+          case filter ((/= snd firstValue) . snd) rest of
+            [] -> pure (Just firstValue)
+            conflict:_ ->
+              fail
+                ( fst firstValue
+                    <> " and "
+                    <> fst conflict
+                    <> " must not be set to different values"
+                )
+    lookupNamedEnvValues [] = pure []
+    lookupNamedEnvValues (key:rest) = do
+      value <- lookupEnv key
+      values <- lookupNamedEnvValues rest
+      pure $
+        case value >>= normalizeEnvString of
+          Just normalized -> (key, normalized) : values
+          Nothing -> values
     lookupFirstConnUrlEnv _ [] = pure Nothing
     lookupFirstConnUrlEnv requireValid (key:rest) = do
       value <- lookupEnv key

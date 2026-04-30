@@ -1044,6 +1044,15 @@ main = hspec $ do
                     instagramMessagingAccountId cfg
                         `shouldBe` Just "17841400000000000"
 
+        it "rejects Facebook page-id fallback alias conflicts before send URLs are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_PAGE_ID", Just "page_primary")
+                , ("FACEBOOK_PAGE_ID", Just "page_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_MESSAGING_PAGE_ID and FACEBOOK_PAGE_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed Graph messaging node ids before token-bearing requests are built" $ do
             let graphIdKeys =
                     [ "FACEBOOK_MESSAGING_PAGE_ID"
