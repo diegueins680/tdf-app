@@ -1529,6 +1529,15 @@ spec = do
                 Right payload ->
                     SocialEvents.ticketOrderStatus payload `shouldBe` "paid"
 
+            case decodeTicketCheckIn "{\"ticketCheckInTicketCode\":\" TDF-ABCDEF123456 \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket check-in payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketCheckInTicketId payload `shouldBe` Nothing
+                    SocialEvents.ticketCheckInTicketCode payload
+                        `shouldBe` Just "TDF-ABCDEF123456"
+
         it "rejects unexpected ticket keys instead of silently ignoring over-posted fields" $ do
             decodeTicketTier
                 "{\"ticketTierCode\":\"general\",\"ticketTierName\":\"General\",\"ticketTierPriceCents\":1200,\"ticketTierCurrency\":\"USD\",\"ticketTierQuantityTotal\":100,\"ticketTierQuantitySold\":0,\"ticketTierActive\":true,\"ticketTierPrice\":12}"
@@ -1542,6 +1551,9 @@ spec = do
             decodeTicketOrderStatus
                 "{\"ticketOrderStatus\":\"paid\",\"ticketPurchaseBuyerPartyId\":\"7\"}"
                 `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
+                `shouldSatisfy` isLeft
 
         it "rejects non-positive ticket quantities before ticket-tier lookup" $ do
             decodeTicketPurchase
@@ -1549,6 +1561,18 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":-1}"
+                `shouldSatisfy` isLeft
+
+        it "rejects missing, blank, or ambiguous ticket check-in lookup fields" $ do
+            decodeTicketCheckIn "{}" `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"42\",\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketCode\":\"   \"}"
                 `shouldSatisfy` isLeft
 
     describe "social event RSVP request FromJSON" $ do
@@ -1778,6 +1802,8 @@ spec = do
     decodeTicketPurchase = eitherDecode
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO
     decodeTicketOrderStatus = eitherDecode
+    decodeTicketCheckIn :: BL8.ByteString -> Either String SocialEvents.TicketCheckInRequestDTO
+    decodeTicketCheckIn = eitherDecode
     decodeEventFinanceEntry :: BL8.ByteString -> Either String SocialEvents.EventFinanceEntryDTO
     decodeEventFinanceEntry = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn

@@ -614,9 +614,26 @@ instance FromJSON TicketCheckInRequestDTO where
       , "ticketCheckInTicketCode"
       ]
       o
-    TicketCheckInRequestDTO
-      <$> o .:? "ticketCheckInTicketId"
-      <*> o .:? "ticketCheckInTicketCode"
+    ticketId <-
+      o .:? "ticketCheckInTicketId"
+        >>= traverse (normalizeTicketCheckInLookupField "ticketCheckInTicketId")
+    ticketCode <-
+      o .:? "ticketCheckInTicketCode"
+        >>= traverse (normalizeTicketCheckInLookupField "ticketCheckInTicketCode")
+    case (ticketId, ticketCode) of
+      (Just _, Just _) ->
+        fail "TicketCheckInRequestDTO requires exactly one ticket lookup field"
+      (Nothing, Nothing) ->
+        fail "TicketCheckInRequestDTO requires ticketCheckInTicketId or ticketCheckInTicketCode"
+      _ ->
+        pure (TicketCheckInRequestDTO ticketId ticketCode)
+
+normalizeTicketCheckInLookupField :: String -> Text -> Parser Text
+normalizeTicketCheckInLookupField fieldName rawValue =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed
+       then fail (fieldName <> " must not be blank")
+       else pure trimmed
 
 data TicketDTO = TicketDTO
   { ticketId          :: Maybe Text
