@@ -6983,6 +6983,8 @@ spec = describe "TDF.Server helpers" $ do
         it "rejects malformed engineer-name fallbacks before booking persistence" $ do
             validateEngineer Nothing Nothing (Just "Alex\nOps")
                 `shouldBe` Left "engineerName no debe contener caracteres de control"
+            validateEngineer Nothing Nothing (Just ("Alex" <> T.singleton '\x202E' <> "Ops"))
+                `shouldBe` Left "engineerName no debe contener marcas Unicode invisibles"
             validateEngineer (Just "mastering") Nothing (Just (T.replicate 161 "A"))
                 `shouldBe` Left "engineerName debe tener 160 caracteres o menos"
 

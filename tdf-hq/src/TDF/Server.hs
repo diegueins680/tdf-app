@@ -7423,9 +7423,16 @@ validateEngineer svc mEngineerId mEngineerName
   | Just engineerName <- mEngineerName
   , T.any isControl (T.strip engineerName) =
       Left "engineerName no debe contener caracteres de control"
+  | Just engineerName <- mEngineerName
+  , T.any isUnsafeEngineerNameFormattingChar (T.strip engineerName) =
+      Left "engineerName no debe contener marcas Unicode invisibles"
   | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
+
+isUnsafeEngineerNameFormattingChar :: Char -> Bool
+isUnsafeEngineerNameFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 resolveBookingEngineerName :: Maybe Text -> Maybe (Entity Party) -> Maybe Text
 resolveBookingEngineerName fallbackName mEngineerParty =
