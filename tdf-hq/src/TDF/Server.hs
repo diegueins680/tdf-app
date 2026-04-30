@@ -7336,14 +7336,15 @@ marketplaceOptionalOrderStatusErrorBody =
     <> "paypal_failed"
 
 parsePayPalCaptureOrderStatus :: Text -> Either ServerError Text
-parsePayPalCaptureOrderStatus rawStatus =
-  case normalizePayPalCaptureOrderStatus rawStatus of
+parsePayPalCaptureOrderStatus rawStatus = do
+  status <- validatePayPalCaptureStatusField (Just rawStatus)
+  case normalizePayPalCaptureOrderStatus status of
     Just normalized -> Right normalized
     Nothing ->
       Left err502
         { errBody =
             BL.fromStrict . TE.encodeUtf8 $
-              "Unsupported PayPal capture status: " <> T.strip rawStatus
+              "Unsupported PayPal capture status: " <> status
         }
 
 validatePayPalCaptureOrderId :: Text -> Either ServerError Text
@@ -11005,10 +11006,28 @@ validatePayPalCaptureStatusField (Just rawStatus)
         { errBody =
             "PayPal capture response status must not contain control characters or whitespace"
         }
+  | not (T.any isPayPalCaptureStatusAtom statusTxt) =
+      Left err502
+        { errBody =
+            "PayPal capture response status must contain at least one ASCII letter"
+        }
+  | not (T.all isPayPalCaptureStatusChar statusTxt) =
+      Left err502
+        { errBody =
+            "PayPal capture response status must contain only ASCII letters or underscore"
+        }
   | otherwise =
       Right statusTxt
   where
     statusTxt = T.strip rawStatus
+
+isPayPalCaptureStatusAtom :: Char -> Bool
+isPayPalCaptureStatusAtom ch =
+  isAsciiLower ch || isAsciiUpper ch
+
+isPayPalCaptureStatusChar :: Char -> Bool
+isPayPalCaptureStatusChar ch =
+  isPayPalCaptureStatusAtom ch || ch == '_'
 
 parsePayPalPayerEmail :: Value -> Parser (Maybe Text)
 parsePayPalPayerEmail =

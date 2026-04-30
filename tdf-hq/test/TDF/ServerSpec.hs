@@ -5680,6 +5680,8 @@ spec = describe "TDF.Server helpers" $ do
         it "maps known PayPal capture statuses onto canonical marketplace order states" $ do
             parsePayPalCaptureOrderStatus "COMPLETED" `shouldBe` Right "paid"
             parsePayPalCaptureOrderStatus " approved " `shouldBe` Right "paypal_pending"
+            parsePayPalCaptureOrderStatus "PAYER_ACTION_REQUIRED"
+                `shouldBe` Right "paypal_pending"
             parsePayPalCaptureOrderStatus "VOIDED" `shouldBe` Right "cancelled"
             parsePayPalCaptureOrderStatus "DENIED" `shouldBe` Right "paypal_failed"
 
@@ -5694,6 +5696,24 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected unsupported PayPal capture status to be rejected, got: "
                             <> show statusVal
                         )
+
+        it "rejects malformed PayPal capture status shapes before fallback mapping" $ do
+            let assertInvalid rawStatus expectedMessage =
+                    case parsePayPalCaptureOrderStatus rawStatus of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected malformed PayPal capture status to be rejected, got: "
+                                    <> show statusVal
+                                )
+            assertInvalid
+                "PAYER-ACTION-REQUIRED"
+                "PayPal capture response status must contain only ASCII letters or underscore"
+            assertInvalid
+                "COMPLETED1"
+                "PayPal capture response status must contain only ASCII letters or underscore"
 
     describe "resolvePaypalBaseUrl" $ do
         it "keeps the default sandbox fallback and accepts explicit live aliases" $ do
