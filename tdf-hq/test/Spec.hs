@@ -1460,6 +1460,30 @@ main = hspec $ do
                     "Invalid WhatsApp verify token"
                         `isInfixOf` show (err :: IOException)
 
+        it "validates outgoing WhatsApp send input before reporting missing provider config" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++ clearWhatsAppTransportVersionEnv)
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    let assertSendError rawPhone rawMessage expectedMessage = do
+                            result <- WhatsAppTransport.sendWhatsAppTextIO cfg rawPhone rawMessage
+                            case result of
+                                Left err ->
+                                    Data.Text.unpack err `shouldContain` expectedMessage
+                                Right value ->
+                                    expectationFailure
+                                        ( "Expected WhatsApp send validation to fail, got: "
+                                            <> show value
+                                        )
+                    assertSendError
+                        "call me"
+                        "Hola"
+                        "Invalid WhatsApp recipient phone"
+                    assertSendError
+                        "+593991234567"
+                        "   "
+                        "Invalid WhatsApp message body"
+
         it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

@@ -18,7 +18,9 @@ import           TDF.WhatsApp.Client
   ( SendTextResult
   , normalizeGraphApiVersion
   , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppRecipientPhone
   , normalizeWhatsAppVerifyToken
   , sendText
   )
@@ -64,13 +66,19 @@ validateOptionalEnvText normalizeValue (Just rawValue) =
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
 sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
-  case (waToken, waPhoneId) of
-    (Just tok, Just pid) -> do
-      let version = fromMaybe "v20.0" waApiVersion
-      result <- sendText waManager version tok pid phone msg
-      pure (either (Left . T.pack) Right result)
-    _ ->
-      pure (Left (missingConfigMessage env))
+  case normalizeWhatsAppRecipientPhone phone of
+    Left err -> pure (Left (T.pack err))
+    Right recipientPhone ->
+      case normalizeWhatsAppMessageBody msg of
+        Left err -> pure (Left (T.pack err))
+        Right messageBody ->
+          case (waToken, waPhoneId) of
+            (Just tok, Just pid) -> do
+              let version = fromMaybe "v20.0" waApiVersion
+              result <- sendText waManager version tok pid recipientPhone messageBody
+              pure (either (Left . T.pack) Right result)
+            _ ->
+              pure (Left (missingConfigMessage env))
 
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
