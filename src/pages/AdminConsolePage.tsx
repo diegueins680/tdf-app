@@ -1538,7 +1538,7 @@ export default function AdminConsolePage() {
   }, [hasPendingRoleChanges, selectedRoles]);
   const roleSelectionHelperText = useMemo(() => {
     if (!hasPendingRoleChanges) {
-      return 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.';
+      return 'Sin cambios pendientes. Modifica la selección para mostrar Guardar cambios.';
     }
 
     const pendingSummary = pendingRoleChangesSummary ?? 'Hay cambios pendientes. Revisa la selección antes de guardar.';
@@ -2211,15 +2211,17 @@ export default function AdminConsolePage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={updateRolesMutation.isPending}>
-            Cancelar
+            {hasPendingRoleChanges ? 'Descartar cambios' : 'Cerrar'}
           </Button>
-          <Button
-            onClick={handleSaveRoles}
-            variant="contained"
-            disabled={updateRolesMutation.isPending || !hasPendingRoleChanges}
-          >
-            {updateRolesMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-          </Button>
+          {hasPendingRoleChanges && (
+            <Button
+              onClick={handleSaveRoles}
+              variant="contained"
+              disabled={updateRolesMutation.isPending}
+            >
+              {updateRolesMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Stack>

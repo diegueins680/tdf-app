@@ -4137,7 +4137,7 @@ describe('AdminConsolePage', () => {
     expectToAppearBefore(screen.getByText('Grace Hopper'), screen.getByText('Zoe Washburne'));
   });
 
-  it('summarizes the exact pending role change before enabling save', async () => {
+  it('keeps role review uncluttered until a pending role change needs save and discard actions', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
@@ -4146,11 +4146,12 @@ describe('AdminConsolePage', () => {
     const editButton = await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' });
     await user.click(editButton);
 
-    const saveButton = await screen.findByRole('button', { name: /Guardar cambios/i });
     expect(
-      screen.getByText(/Sin cambios pendientes\. Modifica la selección para habilitar Guardar cambios\./i),
+      screen.getByText(/Sin cambios pendientes\. Modifica la selección para mostrar Guardar cambios\./i),
     ).toBeInTheDocument();
-    expect(saveButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Cerrar$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Guardar cambios/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Descartar cambios/i })).not.toBeInTheDocument();
 
     const rolesSelect = document.body.querySelector('[role="combobox"]');
     if (!(rolesSelect instanceof HTMLElement)) {
@@ -4162,7 +4163,10 @@ describe('AdminConsolePage', () => {
     await user.keyboard('{Escape}');
 
     await waitFor(() => {
+      const saveButton = screen.getByRole('button', { name: /Guardar cambios/i });
       expect(saveButton).toBeEnabled();
+      expect(screen.getByRole('button', { name: /Descartar cambios/i })).toBeEnabled();
+      expect(screen.queryByRole('button', { name: /^Cerrar$/i })).not.toBeInTheDocument();
       expect(screen.getByText(/Cambio pendiente: agregar Manager\./i)).toBeInTheDocument();
     });
   });
@@ -4383,7 +4387,7 @@ describe('AdminConsolePage', () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Sin cambios pendientes\. Modifica la selección para habilitar Guardar cambios\./i),
+      screen.getByText(/Sin cambios pendientes\. Modifica la selección para mostrar Guardar cambios\./i),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/Nota: .*muestran la misma navegación principal/i),
