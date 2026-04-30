@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -1093,12 +1094,16 @@ export default function SessionsPage() {
   const sessions = sessionsQuery.data ?? { items: [], page: 1, pageSize, total: 0 };
   const rows: SessionDTO[] = sessions.items;
   const showSessionsLoadingState = sessionsQuery.isLoading && !sessionsQuery.data;
-  const showFirstSessionSetupState = !showSessionsLoadingState && !sessionsQuery.isError && sessions.total === 0;
+  const showSessionsErrorState = !showSessionsLoadingState && sessionsQuery.isError;
+  const sessionsErrorMessage = sessionsQuery.error instanceof Error && sessionsQuery.error.message.trim()
+    ? sessionsQuery.error.message
+    : 'Intenta actualizar la página o revisar la conexión antes de crear una nueva sesión.';
+  const showFirstSessionSetupState = !showSessionsLoadingState && !showSessionsErrorState && sessions.total === 0;
   const singleSession =
-    !showSessionsLoadingState && !sessionsQuery.isError && sessions.total === 1 && rows.length === 1
+    !showSessionsLoadingState && !showSessionsErrorState && sessions.total === 1 && rows.length === 1
       ? (rows[0] ?? null)
       : null;
-  const showSessionsTable = !showSessionsLoadingState && !showFirstSessionSetupState && singleSession == null;
+  const showSessionsTable = !showSessionsLoadingState && !showSessionsErrorState && !showFirstSessionSetupState && singleSession == null;
   const singleSessionBookingRef = singleSession?.sBookingRef?.trim() ?? '';
   const singleSessionEngineerRef = singleSession?.sEngineerRef?.trim() ?? '';
   const singleSessionRoomNames = singleSession?.sRoomIds && singleSession.sRoomIds.length > 0
@@ -1134,6 +1139,17 @@ export default function SessionsPage() {
                 Cargando sesiones…
               </Typography>
             </Stack>
+          </Box>
+        ) : showSessionsErrorState ? (
+          <Box sx={{ px: 2, py: 3 }}>
+            <Alert severity="error">
+              <Typography variant="body2" fontWeight={600}>
+                No se pudo cargar la lista de sesiones.
+              </Typography>
+              <Typography variant="body2">
+                {sessionsErrorMessage}
+              </Typography>
+            </Alert>
           </Box>
         ) : showFirstSessionSetupState ? (
           <Box sx={{ px: 2, py: 3 }}>

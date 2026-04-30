@@ -112,6 +112,25 @@ describe('SessionsPage', () => {
     expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
   });
 
+  it('shows one focused sessions error state instead of an empty table shell', async () => {
+    mockSessionsList.mockRejectedValue(new Error('API no disponible'));
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText('No se pudo cargar la lista de sesiones.')).toBeInTheDocument();
+      expect(screen.getByText('API no disponible')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /Nueva sesión/i })).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByText('Todavía no hay sesiones registradas.')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
+  });
+
   it('replaces the empty sessions table with a focused first-run state until the first session exists', async () => {
     renderPage();
 
