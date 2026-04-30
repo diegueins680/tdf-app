@@ -1966,6 +1966,37 @@ main = hspec $ do
             expectInvalid (baseUrl <> "?sslmode=require&")
             expectInvalid (baseUrl <> "?=value")
 
+        it "rejects unsafe DATABASE_URL query parameter names before fallback use" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                expectInvalid databaseUrl =
+                    withEnvOverrides (withoutKeywordDb databaseUrl)
+                        $ loadConfig `shouldThrow` \err ->
+                            ( "DATABASE_URL query parameter names must use only "
+                                <> "ASCII letters, numbers, and underscores"
+                            )
+                                `isInfixOf` show (err :: IOException)
+
+            expectInvalid (baseUrl <> "?target_session_attrs%20=read-write")
+            expectInvalid (baseUrl <> "?sslmode=require&target-session-attrs=read-write")
+
         it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")

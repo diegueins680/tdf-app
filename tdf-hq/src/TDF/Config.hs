@@ -274,6 +274,11 @@ validateFallbackConnUrl envName raw
               validateRecognizedParams =
                 if T.null query || any T.null queryParamNames
                   then Left (envName <> " query parameters must include names")
+                  else if any (not . isValidConnectionQueryParamName) queryParamNames
+                    then Left $
+                      envName
+                        <> " query parameter names must use only ASCII letters, "
+                        <> "numbers, and underscores"
                   else if any T.null targetSessionAttrs
                     then Left (envName <> " target_session_attrs must not be blank")
                   else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
@@ -286,6 +291,17 @@ validateFallbackConnUrl envName raw
           in rejectDuplicate "target_session_attrs" targetSessionAttrs
                *> rejectDuplicate "sslmode" sslModes
                *> validateRecognizedParams
+
+    isValidConnectionQueryParamName :: Text -> Bool
+    isValidConnectionQueryParamName name =
+      T.all isConnectionQueryParamNameChar name
+
+    isConnectionQueryParamNameChar :: Char -> Bool
+    isConnectionQueryParamNameChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || isDigit ch
+        || ch == '_'
 
 isValidConnectionSslMode :: Text -> Bool
 isValidConnectionSslMode rawMode =
