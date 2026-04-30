@@ -9550,10 +9550,12 @@ getMarketplaceItem rawId = do
         mAsset <- get (ME.marketplaceListingAssetId listing)
         pure (Just (listingKey, listing, mAsset))
   case mRow of
-    Nothing -> throwError err404
-    Just row -> do
+    Nothing -> throwError marketplaceListingNotFound
+    Just row@(_, listing, _) -> do
+      either throwError pure $
+        validateMarketplacePublicListingActive (ME.marketplaceListingActive listing)
       mDto <- toMarketplaceDTO assetsBase row
-      maybe (throwError err404) pure mDto
+      maybe (throwError marketplaceListingNotFound) pure mDto
 
 toMarketplaceDTO
   :: Text
@@ -9631,28 +9633,40 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
         <> " or fewer"
   now <- liftIO getCurrentTime
   Env{..} <- ask
-  mDto <- liftIO $ flip runSqlPool envPool $ do
+  result <- liftIO $ flip runSqlPool envPool $ do
+    mCart <- get cartKey
     mListing <- get listingKey
-    case mListing of
-      Nothing -> pure Nothing
-      Just _ -> do
-        existing <- selectFirst [ME.MarketplaceCartItemCartId ==. cartKey, ME.MarketplaceCartItemListingId ==. listingKey] []
-        case existing of
-          Nothing ->
-            if mciuQuantity == 0
-              then pure ()
-              else void $ insert ME.MarketplaceCartItem
-                     { ME.marketplaceCartItemCartId = cartKey
-                     , ME.marketplaceCartItemListingId = listingKey
-                     , ME.marketplaceCartItemQuantity = mciuQuantity
-                     }
-          Just (Entity itemId _) ->
-            if mciuQuantity == 0
-              then delete itemId
-              else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
-        update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-        loadCartDTO cartKey
-  maybe (throwError err404) pure mDto
+    case (mCart, mListing) of
+      (Nothing, _) ->
+        pure (Left marketplaceCartNotFound)
+      (_, Nothing) ->
+        pure (Left marketplaceListingNotFound)
+      (Just _, Just listing) ->
+        case validateMarketplacePublicListingActive (ME.marketplaceListingActive listing) of
+          Left serverErr -> pure (Left serverErr)
+          Right () -> do
+            existing <-
+              selectFirst
+                [ ME.MarketplaceCartItemCartId ==. cartKey
+                , ME.MarketplaceCartItemListingId ==. listingKey
+                ]
+                []
+            case existing of
+              Nothing ->
+                if mciuQuantity == 0
+                  then pure ()
+                  else void $ insert ME.MarketplaceCartItem
+                         { ME.marketplaceCartItemCartId = cartKey
+                         , ME.marketplaceCartItemListingId = listingKey
+                         , ME.marketplaceCartItemQuantity = mciuQuantity
+                         }
+              Just (Entity itemId _) ->
+                if mciuQuantity == 0
+                  then delete itemId
+                  else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
+            update cartKey [ME.MarketplaceCartUpdatedAt =. now]
+            maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO cartKey
+  either throwError pure result
 
 checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
 checkoutCart rawId MarketplaceCheckoutReq{..} = do
@@ -10327,6 +10341,19 @@ validateMarketplacePathId label rawId =
         case readMaybe (T.unpack normalized) of
           Just pathId | pathId > 0 -> Right pathId
           _ -> invalid
+
+marketplaceCartNotFound :: ServerError
+marketplaceCartNotFound =
+  err404 { errBody = "Marketplace cart not found" }
+
+marketplaceListingNotFound :: ServerError
+marketplaceListingNotFound =
+  err404 { errBody = "Marketplace listing not found" }
+
+validateMarketplacePublicListingActive :: Bool -> Either ServerError ()
+validateMarketplacePublicListingActive True = Right ()
+validateMarketplacePublicListingActive False =
+  Left marketplaceListingNotFound
 
 requireMarketplaceAccess :: AuthedUser -> AppM ()
 requireMarketplaceAccess user =

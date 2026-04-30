@@ -174,6 +174,7 @@ import TDF.Server
     , validateMarketplaceBuyerEmail
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
+    , validateMarketplacePublicListingActive
     , requireMarketplaceCartTotals
     , validateMarketplaceCartLineQuantity
     , validateDatafastEntityId
@@ -5336,6 +5337,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "cart" "-1"
             assertInvalid "listing" "+1"
             assertInvalid "order" "abc"
+
+    describe "validateMarketplacePublicListingActive" $ do
+        it "rejects inactive listings before public item lookups or cart writes expose them" $ do
+            validateMarketplacePublicListingActive True `shouldBe` Right ()
+            case validateMarketplacePublicListingActive False of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Marketplace listing not found"
+                Right () ->
+                    expectationFailure "Expected inactive marketplace listing to be hidden"
 
     describe "requireMarketplaceCartTotals" $ do
         it "distinguishes missing carts from empty carts before checkout handlers respond" $ do
