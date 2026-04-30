@@ -956,8 +956,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierOnlyScopeHint,
+        pendingRecoveryScopeHint,
       );
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Ada Lovelace').textContent?.trim()).toBe(
         reopenPendingLabel,
       );

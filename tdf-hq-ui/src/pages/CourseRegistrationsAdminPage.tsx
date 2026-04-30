@@ -2262,7 +2262,7 @@ export default function CourseRegistrationsAdminPage() {
   const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(reg.crStatus));
   const dossierScopeHint = [
-    useCompactStatusActionLabel && allVisibleRowsUseDirectPendingRecoveryAction
+    allVisibleRowsUseDirectPendingRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
       : useCompactStatusActionLabel
       ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
