@@ -24,6 +24,8 @@ import TDF.API.Types
     , BandMemberInput (..)
     , ClockInRequest (..)
     , ClockOutRequest (..)
+    , DriveTokenExchangeRequest (..)
+    , DriveTokenRefreshRequest (..)
     , DropdownOptionCreate (..)
     , DropdownOptionUpdate (..)
     , InternProfileUpdate (..)
@@ -745,6 +747,64 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"status\":\"confirmed\"}"
+                `shouldSatisfy` isLeft
+
+    describe "Drive token request FromJSON" $ do
+        it
+            "normalizes canonical Drive token exchange and refresh payloads before handlers call Google"
+            $ do
+            case decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\" 4/0Adeu5OAuthCode \""
+                    , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \""
+                    , ",\"redirectUri\":\"   \"}"
+                    ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Drive token payload to decode, got: " <> err)
+                Right (DriveTokenExchangeRequest codeVal verifierVal redirectUriVal) -> do
+                    codeVal `shouldBe` "4/0Adeu5OAuthCode"
+                    verifierVal `shouldBe` "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                    redirectUriVal `shouldBe` Nothing
+
+            case decodeDriveTokenRefresh "{\"refreshToken\":\" 1//refresh-token_ABC.123 \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Drive refresh payload to decode, got: " <> err)
+                Right (DriveTokenRefreshRequest refreshTokenVal) ->
+                    refreshTokenVal `shouldBe` "1//refresh-token_ABC.123"
+
+        it
+            "rejects blank, typoed, or malformed Drive token bodies before ambiguous Google calls"
+            $ do
+            decodeDriveTokenExchange
+                (driveTokenExchangeJson "   " "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
+                (driveTokenExchangeJson "oauth code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
+                (driveTokenExchangeJson "oauth-code" "short")
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
+                (driveTokenExchangeJson "oauth-code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP/")
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\"oauth-code\""
+                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                    , ",\"syncCursor\":\"stale\"}"
+                    ])
+                `shouldSatisfy` isLeft
+            decodeDriveTokenRefresh
+                "{\"refreshToken\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeDriveTokenRefresh
+                "{\"refreshToken\":\"refresh\\ntoken\"}"
+                `shouldSatisfy` isLeft
+            decodeDriveTokenRefresh
+                "{\"refreshToken\":\"refresh-token\",\"refresh_token\":\"legacy\"}"
                 `shouldSatisfy` isLeft
 
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
@@ -1640,6 +1700,19 @@ spec = do
     decodeCalendarTokenExchange = eitherDecode
     decodeCalendarSync :: BL8.ByteString -> Either String Calendar.SyncRequest
     decodeCalendarSync = eitherDecode
+    decodeDriveTokenExchange :: BL8.ByteString -> Either String DriveTokenExchangeRequest
+    decodeDriveTokenExchange = eitherDecode
+    decodeDriveTokenRefresh :: BL8.ByteString -> Either String DriveTokenRefreshRequest
+    decodeDriveTokenRefresh = eitherDecode
+    driveTokenExchangeJson :: BL8.ByteString -> BL8.ByteString -> BL8.ByteString
+    driveTokenExchangeJson rawCode rawVerifier =
+        BL8.concat
+            [ "{\"code\":\""
+            , rawCode
+            , "\",\"codeVerifier\":\""
+            , rawVerifier
+            , "\"}"
+            ]
     decodeServiceCatalogCreate :: BL8.ByteString -> Either String ServiceCatalogCreate
     decodeServiceCatalogCreate = eitherDecode
     decodeServiceCatalogUpdate :: BL8.ByteString -> Either String ServiceCatalogUpdate

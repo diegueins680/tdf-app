@@ -751,14 +751,63 @@ data DriveTokenExchangeRequest = DriveTokenExchangeRequest
   } deriving (Show, Generic)
 instance ToJSON DriveTokenExchangeRequest
 instance FromJSON DriveTokenExchangeRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    codeVal <- parseDriveOAuthTokenField "code" (code payload)
+    codeVerifierVal <- parseDriveCodeVerifierField (codeVerifier payload)
+    pure payload
+      { code = codeVal
+      , codeVerifier = codeVerifierVal
+      , redirectUri = normalizeDriveOptionalTextField (redirectUri payload)
+      }
 
 data DriveTokenRefreshRequest = DriveTokenRefreshRequest
   { refreshToken :: Text
   } deriving (Show, Generic)
 instance ToJSON DriveTokenRefreshRequest
 instance FromJSON DriveTokenRefreshRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    DriveTokenRefreshRequest rawToken <- genericParseJSON strictObjectOptions value
+    tokenVal <- parseDriveOAuthTokenField "refreshToken" rawToken
+    pure (DriveTokenRefreshRequest tokenVal)
+
+parseDriveOAuthTokenField :: String -> Text -> Parser Text
+parseDriveOAuthTokenField fieldName rawValue
+  | T.null cleanValue =
+      fail (fieldName <> " must not be blank")
+  | T.any (\ch -> isSpace ch || isControl ch) cleanValue =
+      fail (fieldName <> " must not contain whitespace or control characters")
+  | T.length cleanValue > maxDriveOAuthRequestTokenChars =
+      fail (fieldName <> " must be 4096 characters or fewer")
+  | otherwise =
+      pure cleanValue
+  where
+    cleanValue = T.strip rawValue
+
+parseDriveCodeVerifierField :: Text -> Parser Text
+parseDriveCodeVerifierField rawValue =
+  let verifier = T.strip rawValue
+      verifierLength = T.length verifier
+      isPkceVerifierChar ch =
+        isAsciiLower ch
+          || isAsciiUpper ch
+          || isDigit ch
+          || ch `elem` ("-._~" :: String)
+  in if verifierLength < 43
+        || verifierLength > 128
+        || not (T.all isPkceVerifierChar verifier)
+       then
+         fail "codeVerifier must be a PKCE verifier (43-128 chars: A-Z a-z 0-9 - . _ ~)"
+       else pure verifier
+
+normalizeDriveOptionalTextField :: Maybe Text -> Maybe Text
+normalizeDriveOptionalTextField rawValue =
+  case T.strip <$> rawValue of
+    Just cleanValue | not (T.null cleanValue) -> Just cleanValue
+    _ -> Nothing
+
+maxDriveOAuthRequestTokenChars :: Int
+maxDriveOAuthRequestTokenChars = 4096
 
 data DriveTokenResponse = DriveTokenResponse
   { accessToken  :: Text
