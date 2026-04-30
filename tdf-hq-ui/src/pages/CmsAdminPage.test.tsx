@@ -1073,7 +1073,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides version filters until the CMS history has enough entries to compare', async () => {
+  it('hides the version history panel until a live page has additional saved history to compare', async () => {
     listMock.mockResolvedValue([buildContent()]);
 
     const container = document.createElement('div');
@@ -1081,7 +1081,9 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.textContent).not.toContain('Versiones');
+      expect(container.textContent).not.toContain(
         'La única versión guardada ya está resumida arriba; el historial aparecerá cuando guardes otra versión.',
       );
       expect(container.textContent).not.toContain(

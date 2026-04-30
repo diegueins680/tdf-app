@@ -705,7 +705,7 @@ export default function CmsAdminPage() {
     listQuery.isLoading ||
     listQuery.isError ||
     listDataInvalid ||
-    versions.length > 0 ||
+    (versions.length > 0 && !showSingleLiveVersionSummary) ||
     hasActiveVersionFilters;
   const showVersionHistoryEmptyState =
     Boolean(versionListUiState.emptyMessage) &&
