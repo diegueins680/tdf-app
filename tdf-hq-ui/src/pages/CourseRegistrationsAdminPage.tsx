@@ -1931,7 +1931,12 @@ export default function CourseRegistrationsAdminPage() {
     }),
     [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, searchedRegistrations],
   );
-  const shortPhoneSearchHint = looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
+  const hasSearchablePhoneContacts = useMemo(
+    () => registrations.some((reg) => Boolean(reg.crPhoneE164?.trim())),
+    [registrations],
+  );
+  const shortPhoneSearchHint = hasSearchablePhoneContacts
+    && looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
     ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
     : '';
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
