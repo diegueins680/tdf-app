@@ -58,6 +58,7 @@ const emptyReceiptEvidenceAlertMessage = 'El primer comprobante queda como evide
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
+const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
   `Todavía no hay inscripciones. Hay ${count} formularios públicos listos; elige cuál compartir primero.`;
@@ -3232,6 +3233,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasReceiptMetadataDraft;
   const showReceiptExistingLinkAction = !showReceiptUrlField && !canSubmitReceipt;
   const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
+  const showReceiptUploadWidget = !showReceiptUrlField || receiptForm.editingId != null;
   const showReceiptMetadataFields = (
     receiptForm.editingId != null
     || Boolean(trimToNull(receiptForm.fileName))
@@ -3504,18 +3506,20 @@ export default function CourseRegistrationsAdminPage() {
             {showReceiptComposer && (
               <Grid item xs={12} md={showReceiptReviewPane ? 6 : 12} data-testid="course-registration-receipt-composer-pane">
                 <Stack spacing={1.5}>
-                  <GoogleDriveUploadWidget
-                    label={
-                      receiptForm.fileName
-                        ? `Archivo listo: ${receiptForm.fileName}`
-                        : 'Subir comprobante (imagen/PDF)'
-                    }
-                    helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
-                    accept="application/pdf,image/*"
-                    multiple={false}
-                    onComplete={handleReceiptUpload}
-                    dense
-                  />
+                  {showReceiptUploadWidget && (
+                    <GoogleDriveUploadWidget
+                      label={
+                        receiptForm.fileName
+                          ? `Archivo listo: ${receiptForm.fileName}`
+                          : 'Subir comprobante (imagen/PDF)'
+                      }
+                      helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                      accept="application/pdf,image/*"
+                      multiple={false}
+                      onComplete={handleReceiptUpload}
+                      dense
+                    />
+                  )}
                   {showReceiptExistingLinkAction && (
                     <Button
                       size="small"
@@ -3551,9 +3555,9 @@ export default function CourseRegistrationsAdminPage() {
                   )}
                   {!showReceiptMetadataFields && (
                     <Typography variant="caption" color="text.secondary">
-                      Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y
-                      {' '}
-                      las notas.
+                      {showReceiptUrlField
+                        ? receiptUrlFallbackHelpText
+                        : 'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.'}
                     </Typography>
                   )}
                   <Collapse in={showReceiptMetadataFields} unmountOnExit>

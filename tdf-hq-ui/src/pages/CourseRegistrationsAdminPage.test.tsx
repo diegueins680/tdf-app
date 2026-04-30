@@ -4988,6 +4988,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
+      expect(document.body.querySelector('[data-testid="mock-receipt-upload"]')).toBeNull();
+      expect(document.body.textContent).toContain(
+        'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.',
+      );
       expect(getButtonByText(document.body, 'Ocultar enlace existente')).toBeTruthy();
       expect(getButtonByText(document.body, 'Ocultar enlace existente').getAttribute('aria-expanded')).toBe('true');
     });
@@ -5001,6 +5005,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo').getAttribute('aria-expanded')).toBe('false');
+      expect(document.body.querySelector('[data-testid="mock-receipt-upload"]')).not.toBeNull();
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Ocultar enlace existente',
@@ -5046,16 +5051,6 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo'));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(hasLabel(document.body, 'URL del comprobante')).toBe(true);
     });
 
     const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-receipt-upload"]');
