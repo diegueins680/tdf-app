@@ -16,6 +16,7 @@ data StubResponse = StubResponse
   , stubPath        :: Text
   , stubMethod      :: Text
   , stubStatus      :: Text
+  , stubRequiredRole :: Text
   , stubImplemented :: Bool
   } deriving stock (Show)
 
@@ -27,6 +28,7 @@ instance ToJSON StubResponse where
       , "stubPath" .= stubPath response
       , "stubMethod" .= stubMethod response
       , "stubStatus" .= stubStatus response
+      , "stubRequiredRole" .= stubRequiredRole response
       , "stubImplemented" .= stubImplemented response
       ]
 

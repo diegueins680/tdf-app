@@ -7654,13 +7654,14 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
-            let mkResponse area endpoint path method status implemented =
+            let mkResponse area endpoint path method status requiredRole implemented =
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
                         , stubPath = path
                         , stubMethod = method
                         , stubStatus = status
+                        , stubRequiredRole = requiredRole
                         , stubImplemented = implemented
                         }
                 validResponse =
@@ -7670,6 +7671,7 @@ spec = describe "TDF.Server helpers" $ do
                         "/stubs/crm/parties/list-columns"
                         "GET"
                         "planned"
+                        "Admin"
                         False
                 assertInvalid response =
                     case validateFutureStubResponse response of
@@ -7688,6 +7690,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
+                    stubRequiredRole response `shouldBe` "Admin"
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
                     expectationFailure
@@ -7700,6 +7703,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "POST"
                     "planned"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7708,6 +7712,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "get"
                     "planned"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7716,6 +7721,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "GET"
                     "ready"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7724,6 +7730,16 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "GET"
                     "planned"
+                    "Manager"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "GET"
+                    "planned"
+                    "Admin"
                     True)
             assertInvalid
                 (mkResponse
@@ -7732,6 +7748,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/export"
                     "GET"
                     "planned"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7740,6 +7757,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/filters"
                     "GET"
                     "planned"
+                    "Admin"
                     False)
 
     describe "validateFutureAdminConsoleCard" $ do
@@ -7882,6 +7900,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubEndpoint stubResponse `shouldBe` "login-options"
                     stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
+                    stubRequiredRole stubResponse `shouldBe` "Admin"
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)
@@ -7934,6 +7953,7 @@ spec = describe "TDF.Server helpers" $ do
                             , "stubPath" .= ("/stubs/access/login-options" :: Text)
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("planned" :: Text)
+                            , "stubRequiredRole" .= ("Admin" :: Text)
                             , "stubImplemented" .= False
                             ]
                 Left serverErr ->

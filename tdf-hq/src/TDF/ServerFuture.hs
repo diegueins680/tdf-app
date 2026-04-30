@@ -39,6 +39,7 @@ stub rawArea rawEndpoint = do
         , stubPath        = futureStubPath area endpoint
         , stubMethod      = futureStubMethod
         , stubStatus      = "planned"
+        , stubRequiredRole = futureStubRequiredRole
         , stubImplemented = False
         }
 
@@ -179,6 +180,7 @@ validateFutureStubResponse response =
       | stubPath response /= futureStubPath area endpoint -> invalidFutureStubResponse
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
+      | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise ->
           Right response
@@ -186,6 +188,7 @@ validateFutureStubResponse response =
             , stubEndpoint = endpoint
             , stubPath = futureStubPath area endpoint
             , stubMethod = futureStubMethod
+            , stubRequiredRole = futureStubRequiredRole
             }
 
 futureStubPath :: Text -> Text -> Text
@@ -194,6 +197,9 @@ futureStubPath area endpoint =
 
 futureStubMethod :: Text
 futureStubMethod = "GET"
+
+futureStubRequiredRole :: Text
+futureStubRequiredRole = "Admin"
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard card
