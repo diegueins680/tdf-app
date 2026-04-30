@@ -326,6 +326,25 @@ describe('UserRoleManagement', () => {
         expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper (ID 213)"]')).toBeNull();
       });
+
+      const duplicateEditButton = container.querySelector('button[aria-label="Editar roles de Ana Admin (ID 212)"]');
+      if (!(duplicateEditButton instanceof HTMLButtonElement)) {
+        throw new Error('Duplicate edit roles button not found');
+      }
+
+      await act(async () => {
+        duplicateEditButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        if (!(dialog instanceof HTMLElement)) {
+          throw new Error('Edit roles dialog not found');
+        }
+
+        expect(dialog.querySelector('h2')?.textContent).toBe('Editar roles de Ana Admin (ID 212)');
+      });
     } finally {
       await cleanup();
     }

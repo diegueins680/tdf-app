@@ -355,6 +355,12 @@ export default function UserRoleManagement() {
     ? buildPendingRoleChangesSummary(selectedUser.roles, selectedRoles)
     : null;
   const roleOptionsForEditor = sortRolesForEditor(selectedUser?.roles);
+  const selectedUserNeedsIdentityDisambiguator = selectedUser
+    ? userIdsRequiringIdentityDisambiguator.has(selectedUser.id)
+    : false;
+  const editDialogTitle = selectedUser
+    ? buildEditRolesLabel(selectedUser, selectedUserNeedsIdentityDisambiguator)
+    : 'Editar roles';
 
   useEffect(() => {
     void loadUsers();
@@ -610,7 +616,7 @@ export default function UserRoleManagement() {
       )}
 
       <Dialog open={editDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Editar roles de {selectedUser?.name}</DialogTitle>
+        <DialogTitle>{editDialogTitle}</DialogTitle>
         <DialogContent>
           {dialogError && (
             <Alert severity="error" sx={{ mt: 2 }}>
