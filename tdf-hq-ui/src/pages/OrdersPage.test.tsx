@@ -52,6 +52,22 @@ const clickButton = async (button: HTMLElement) => {
   });
 };
 
+const changeTextControlValue = async (control: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype = control instanceof HTMLTextAreaElement
+    ? HTMLTextAreaElement.prototype
+    : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Text control value setter not found');
+
+  await act(async () => {
+    valueSetter.call(control, value);
+    control.dispatchEvent(new Event('input', { bubbles: true }));
+    control.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -93,6 +109,31 @@ const getRowByBookingId = (root: ParentNode, bookingId: number) => {
     throw new Error(`Row not found: ${bookingId}`);
   }
   return row;
+};
+
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const button = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(
+    (candidate) => buttonText(candidate) === labelText,
+  );
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
+const getTextControlByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => buttonText(element) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement) || !label.htmlFor) {
+    throw new Error(`Label not found: ${labelText}`);
+  }
+
+  const control = label.ownerDocument.getElementById(label.htmlFor);
+  if (!(control instanceof HTMLInputElement) && !(control instanceof HTMLTextAreaElement)) {
+    throw new Error(`Text control not found: ${labelText}`);
+  }
+  return control;
 };
 
 const countOccurrencesIgnoringCase = (value: string, fragment: string) =>
@@ -455,6 +496,68 @@ describe('OrdersPage', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar sesión #102');
         expect(document.body.textContent).not.toContain('Editar sesión #101');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the edit dialog save action disabled until a session field changes', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 131,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        notes: '',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 132,
+        title: 'Master final',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mastering',
+        notes: '',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRowByBookingId(container, 131)).not.toBeNull();
+      });
+
+      await clickButton(getRowByBookingId(container, 131));
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Editar sesión #131');
+        expect(getButtonByText(document.body, 'Guardar cambios').disabled).toBe(true);
+      });
+
+      await changeTextControlValue(getTextControlByLabel(document.body, 'Notas internas'), 'Cliente pidió invoice.');
+
+      await waitForExpectation(() => {
+        expect(getButtonByText(document.body, 'Guardar cambios').disabled).toBe(false);
+      });
+
+      await clickButton(getButtonByText(document.body, 'Guardar cambios'));
+
+      await waitForExpectation(() => {
+        expect(updateBookingMock).toHaveBeenCalledWith(131, expect.objectContaining({
+          ubNotes: 'Cliente pidió invoice.',
+        }));
       });
     } finally {
       await cleanup();

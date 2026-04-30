@@ -795,23 +795,26 @@ interface OrderEditDialogProps {
   errorMessage: string | null;
 }
 
+const buildOrderEditFormState = (booking: BookingDTO | null) => ({
+  title: booking?.title ?? '',
+  serviceType: booking?.serviceType ?? '',
+  status: normalizeStatusValue(booking?.status),
+  notes: booking?.notes ?? '',
+});
+
 function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessage }: OrderEditDialogProps) {
-  const [form, setForm] = useState({
-    title: '',
-    serviceType: '',
-    status: normalizeStatusValue('Tentative'),
-    notes: '',
-  });
+  const initialForm = useMemo(() => buildOrderEditFormState(booking), [booking]);
+  const [form, setForm] = useState(() => buildOrderEditFormState(null));
+  const hasChanges =
+    form.title !== initialForm.title
+    || form.serviceType !== initialForm.serviceType
+    || form.status !== initialForm.status
+    || form.notes !== initialForm.notes;
 
   useEffect(() => {
     if (!booking) return;
-    setForm({
-      title: booking.title ?? '',
-      serviceType: booking.serviceType ?? '',
-      status: normalizeStatusValue(booking.status),
-      notes: booking.notes ?? '',
-    });
-  }, [booking]);
+    setForm(initialForm);
+  }, [booking, initialForm]);
 
   if (!booking) {
     return null;
@@ -828,6 +831,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!hasChanges) return;
     const payload: BookingUpdatePayload = {
       ubTitle: form.title,
       ubServiceType: form.serviceType,
@@ -892,7 +896,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button type="submit" variant="contained" disabled={saving}>
+          <Button type="submit" variant="contained" disabled={saving || !hasChanges}>
             Guardar cambios
           </Button>
         </DialogActions>
