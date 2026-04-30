@@ -506,6 +506,12 @@ const buildUserRowAccessSummary = ({
 const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
   getUserAccessSummary(user.roles) === '' && getUserAccessSummary(user.modules) === '';
 
+const getUserAccessStateSearchValues = (user: Pick<AdminUser, 'modules' | 'roles'>) => (
+  hasNoAccessAssigned(user)
+    ? ['sin acceso', 'sin acceso asignado', 'sin permisos', 'acceso pendiente']
+    : []
+);
+
 const isDefaultAdminAccessSummary = ({
   modulesSummary,
   rolesSummary,
@@ -711,6 +717,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     ...partyIdSearchSpace,
     ...getUserContactSearchValues(user),
     ...getUserContactReadinessSearchValues(user),
+    ...getUserAccessStateSearchValues(user),
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]

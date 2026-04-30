@@ -2907,6 +2907,59 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('lets admins search by the shared no-access state without repeating it on every row', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-sin-acceso',
+        roles: [],
+        modules: [],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Sin Acceso',
+        username: 'grace-sin-acceso',
+        primaryEmail: 'grace@example.com',
+        roles: [],
+        modules: [],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Admin',
+        username: 'linus-admin',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'sin acceso');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Mostrando 2 de 3 usuarios. Acceso compartido en esta vista: Sin acceso asignado.',
+        );
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Sin acceso asignado');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Sin acceso asignado');
+        expect(container.textContent?.match(/Sin acceso asignado/g) ?? []).toHaveLength(1);
+        expect(container.textContent).not.toContain('No hay coincidencias');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes repeated roles and modules once per row so access scope is easier to scan', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
