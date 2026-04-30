@@ -231,7 +231,7 @@ const contactDossierOnlyScopeHint =
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; usa Cambiar estado para acciones rápidas.';
 const mixedIdentityDossierScopeHint =
-  'Abre el expediente desde el dato principal de cada fila; usa Cambiar estado para acciones rápidas.';
+  'Abre el expediente desde el nombre, el contacto o el registro; usa Cambiar estado para acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
@@ -1544,7 +1544,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses one inclusive first-time hint for mixed identity rows instead of row-level guidance', async () => {
+  it('uses one precise first-time hint for mixed identity rows instead of row-level guidance', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -1576,9 +1576,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(contactDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
-      expect(container.textContent).not.toContain('Abre el expediente desde el nombre');
-      expect(container.textContent).not.toContain('Abre el expediente desde el contacto');
-      expect(container.textContent).not.toContain('Abre el expediente desde el registro');
+      expect(container.textContent).not.toContain('dato principal de cada fila');
+      expect(countOccurrences(container, 'Abre el expediente desde')).toBe(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();

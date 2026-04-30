@@ -1130,13 +1130,19 @@ const formatVisibleMissingContactSummary = (missingContactCount: number, visible
 
 const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
   const identityKinds = new Set(registrations.map(registrationIdentityKind));
-  if (identityKinds.size === 1) {
-    const [kind] = Array.from(identityKinds);
-    if (kind === 'contact') return 'el contacto';
-    if (kind === 'record') return 'el registro';
-  }
-  if (identityKinds.size > 1) return 'el dato principal de cada fila';
-  return 'el nombre';
+  const orderedTargetLabels = (['name', 'contact', 'record'] as const)
+    .filter((kind) => identityKinds.has(kind))
+    .map((kind) => {
+      if (kind === 'contact') return 'el contacto';
+      if (kind === 'record') return 'el registro';
+      return 'el nombre';
+    });
+
+  if (orderedTargetLabels.length === 0) return 'el nombre';
+  if (orderedTargetLabels.length === 1) return orderedTargetLabels[0] ?? 'el nombre';
+  const lastTargetLabel = orderedTargetLabels[orderedTargetLabels.length - 1] ?? 'el registro';
+  if (orderedTargetLabels.length === 2) return `${orderedTargetLabels[0] ?? 'el nombre'} o ${lastTargetLabel}`;
+  return `${orderedTargetLabels.slice(0, -1).join(', ')} o ${lastTargetLabel}`;
 };
 
 const registrationContactSummary = (
