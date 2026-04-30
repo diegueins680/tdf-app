@@ -3047,8 +3047,11 @@ validatePaymentConcept rawConcept =
        then Left err400 { errBody = "concept is required" }
        else if T.length trimmed > 240
          then Left err400 { errBody = "concept must be 240 characters or fewer" }
-         else if T.any isControl trimmed
-           then Left err400 { errBody = "concept must not contain control characters" }
+         else if T.any isUnsafePaymentTextChar trimmed
+           then Left err400
+             { errBody =
+                 "concept must not contain control characters or hidden formatting characters"
+             }
            else Right trimmed
 
 validatePaymentReference :: Maybe Text -> Either ServerError (Maybe Text)
@@ -3060,11 +3063,12 @@ validatePaymentPeriod rawValue =
   case normalizeOptionalTextField rawValue of
     Nothing -> Right Nothing
     Just value
-      | T.any isControl value ->
+      | T.any isUnsafePaymentTextChar value ->
           Left err400
             { errBody =
                 BL.fromStrict $
-                  TE.encodeUtf8 "period must not contain control characters"
+                  TE.encodeUtf8 $
+                    "period must not contain control characters or hidden formatting characters"
             }
       | hasValidPaymentPeriodShape value ->
           Right (Just value)
@@ -3098,15 +3102,19 @@ validateOptionalPaymentTextField fieldName maxLength rawValue =
                   TE.encodeUtf8 $
                     fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
             }
-      | T.any isControl value ->
+      | T.any isUnsafePaymentTextChar value ->
           Left err400
             { errBody =
                 BL.fromStrict $
                   TE.encodeUtf8 $
-                    fieldName <> " must not contain control characters"
+                    fieldName <> " must not contain control characters or hidden formatting characters"
             }
       | otherwise ->
           Right (Just value)
+
+isUnsafePaymentTextChar :: Char -> Bool
+isUnsafePaymentTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod

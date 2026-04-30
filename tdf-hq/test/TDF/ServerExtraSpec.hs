@@ -4722,7 +4722,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
-    it "rejects oversized or control-character concepts before storing manual payment rows" $ do
+    it "rejects oversized or unsafe-character concepts before storing manual payment rows" $ do
       let assertInvalid expectedMessage rawConcept =
             case validatePaymentConcept rawConcept of
               Left err -> do
@@ -4732,6 +4732,9 @@ spec = do
                 expectationFailure ("Expected invalid payment concept error, got " <> show value)
       assertInvalid "concept must be 240 characters or fewer" (T.replicate 241 "a")
       assertInvalid "concept must not contain control characters" "Honorarios\nabril"
+      assertInvalid
+        "hidden formatting characters"
+        ("Honorarios " <> "\x202E" <> "abril")
 
   describe "validatePaymentReference and validatePaymentPeriod" $ do
     it "normalizes optional manual payment labels before persistence" $ do
@@ -4754,6 +4757,9 @@ spec = do
         "reference must not contain control characters"
         (validatePaymentReference (Just "REC\n42"))
       assertInvalid
+        "hidden formatting characters"
+        (validatePaymentReference (Just ("REC" <> "\x200B" <> "42")))
+      assertInvalid
         "period must be in YYYY-MM format"
         (validatePaymentPeriod (Just "2026-4"))
       assertInvalid
@@ -4765,6 +4771,9 @@ spec = do
       assertInvalid
         "period must not contain control characters"
         (validatePaymentPeriod (Just "2026\n04"))
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentPeriod (Just ("2026" <> "\x202E" <> "-04")))
 
   describe "validatePaymentReferences" $ do
     it "accepts existing party, order, and invoice references when the invoice includes that order" $ do
