@@ -5657,6 +5657,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "token with spaces")
                 "PayPal token response access token must not contain control characters"
+            assertInvalid
+                (Just (T.replicate 4097 "a"))
+                "PayPal token response access token must be 4096 characters or fewer"
 
     describe "validatePayPalTokenResponse" $ do
         it "requires Bearer PayPal token responses before payment request headers are built" $ do

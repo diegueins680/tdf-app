@@ -10693,6 +10693,11 @@ validatePayPalAccessTokenField (Just rawToken) =
     Nothing ->
       Left err502 { errBody = "PayPal token response access token cannot be blank" }
     Just token
+      | T.length token > 4096 ->
+          Left err502
+            { errBody =
+                "PayPal token response access token must be 4096 characters or fewer"
+            }
       | T.any (\ch -> isControl ch || isSpace ch) token ->
           Left err502
             { errBody =
