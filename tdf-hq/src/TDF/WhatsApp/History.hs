@@ -129,9 +129,7 @@ resolveWhatsAppContactSnapshot mPartyId mPhone = do
           let aliases = phoneLookupAliases phoneVal
           in if null aliases
                then pure Nothing
-                 else selectFirst
-                 ([PartyWhatsapp <-. map Just aliases] ||. [PartyPrimaryPhone <-. map Just aliases])
-                 [Asc PartyId]
+               else selectUniquePartyByPhoneAliases aliases
   let displayNameVal =
         case mParty of
           Nothing -> Nothing
@@ -491,6 +489,16 @@ messageBelongsToParty partyKey phones msg =
   ME.whatsAppMessagePartyId msg == Just partyKey
     || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
     || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
+
+selectUniquePartyByPhoneAliases :: [Text] -> SqlPersistT IO (Maybe (Entity Party))
+selectUniquePartyByPhoneAliases aliases = do
+  parties <-
+    selectList
+      ([PartyWhatsapp <-. map Just aliases] ||. [PartyPrimaryPhone <-. map Just aliases])
+      [Asc PartyId, LimitTo 2]
+  case parties of
+    [party] -> pure (Just party)
+    _ -> pure Nothing
 
 setOptionalFieldUpdate :: PersistField typ => EntityField record (Maybe typ) -> Maybe typ -> Maybe (Update record)
 setOptionalFieldUpdate field = fmap (\value -> field =. Just value)

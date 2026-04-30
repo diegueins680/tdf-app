@@ -17,6 +17,7 @@ import Database.Persist.Sql (SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
+import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.Client
   ( SendTextResult (..)
@@ -216,6 +217,33 @@ spec = do
       storedAdName `shouldBe` Just "Original ad"
       storedMetadata `shouldBe` Just "original-metadata"
       storedPayload `shouldBe` Just "original-payload"
+
+    it "leaves party ownership unset when phone-only lookup matches multiple parties" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incoming = IncomingWhatsAppRecord
+            { iwrExternalId = "wamid.ambiguous-phone"
+            , iwrSenderId = " +593 99 123 4567 "
+            , iwrSenderName = Just "WhatsApp Sender"
+            , iwrText = "Hola"
+            , iwrAdExternalId = Nothing
+            , iwrAdName = Nothing
+            , iwrCampaignExternalId = Nothing
+            , iwrCampaignName = Nothing
+            , iwrMetadata = Nothing
+            , iwrTransportPayload = Nothing
+            , iwrSource = Just "history_spec"
+            }
+      (partyId, phoneE164) <- runWhatsAppHistorySql $ do
+        _ <- insert (seedParty now "Ada" (Just "+593991234567") Nothing)
+        _ <- insert (seedParty now "Bea" Nothing (Just "593991234567"))
+        stored <- recordIncomingWhatsAppMessage now incoming
+        pure
+          ( ME.whatsAppMessagePartyId (entityVal stored)
+          , ME.whatsAppMessagePhoneE164 (entityVal stored)
+          )
+
+      partyId `shouldBe` Nothing
+      phoneE164 `shouldBe` Just "+593991234567"
 
   describe "recordOutgoingWhatsAppMessage" $ do
     it "falls back to a generated external id when a transport success returns a blank message id" $ do
@@ -447,4 +475,20 @@ seedWhatsAppMessage now externalId direction =
     , ME.whatsAppMessageSource = Just "history_spec_seed"
     , ME.whatsAppMessageResendOfMessageId = Nothing
     , ME.whatsAppMessageCreatedAt = now
+    }
+
+seedParty :: UTCTime -> Text -> Maybe Text -> Maybe Text -> M.Party
+seedParty now displayName whatsapp primaryPhone =
+  M.Party
+    { M.partyLegalName = Nothing
+    , M.partyDisplayName = displayName
+    , M.partyIsOrg = False
+    , M.partyTaxId = Nothing
+    , M.partyPrimaryEmail = Nothing
+    , M.partyPrimaryPhone = primaryPhone
+    , M.partyWhatsapp = whatsapp
+    , M.partyInstagram = Nothing
+    , M.partyEmergencyContact = Nothing
+    , M.partyNotes = Nothing
+    , M.partyCreatedAt = now
     }
