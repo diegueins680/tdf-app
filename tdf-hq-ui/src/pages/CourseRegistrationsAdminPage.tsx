@@ -1979,6 +1979,9 @@ export default function CourseRegistrationsAdminPage() {
     && looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
     ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
     : '';
+  const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchResults
+    && viewHitsCurrentLimit
+    && !shortPhoneSearchHint;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations),
@@ -2032,7 +2035,11 @@ export default function CourseRegistrationsAdminPage() {
       defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',
       shortPhoneSearchHint
         || `No hay coincidencias para "${localSearchSummary}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
-      shortPhoneSearchHint ? '' : viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
+      shortPhoneSearchHint || showEmptyLocalSearchLimitRecoveryAction
+        ? ''
+        : viewHitsCurrentLimit
+          ? cappedLocalSearchEmptyHint
+          : '',
     ].filter(Boolean).join(' ')
     : '';
   const visibleRegistrationsSummary = hasCustomFilters
@@ -4111,7 +4118,9 @@ export default function CourseRegistrationsAdminPage() {
                 </>
               )}
             </Grid>
-            {showAdvancedLimitControl && !showInlineSingleChoiceLimitToggle && (
+            {showAdvancedLimitControl
+              && !showInlineSingleChoiceLimitToggle
+              && !showEmptyLocalSearchLimitRecoveryAction && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
@@ -4395,10 +4404,23 @@ export default function CourseRegistrationsAdminPage() {
           {!regsQuery.isLoading && showEmptyLocalSearchResults && (
             <Alert
               severity="info"
+              data-testid="course-registration-empty-local-search"
               action={(
-                <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
-                  Limpiar búsqueda
-                </Button>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {showEmptyLocalSearchLimitRecoveryAction && (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={handleToggleAdvancedFilters}
+                      aria-expanded={showAdvancedFilters}
+                    >
+                      {limitToggleLabel}
+                    </Button>
+                  )}
+                  <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
+                    Limpiar búsqueda
+                  </Button>
+                </Stack>
               )}
             >
               {emptyLocalSearchResultsMessage}

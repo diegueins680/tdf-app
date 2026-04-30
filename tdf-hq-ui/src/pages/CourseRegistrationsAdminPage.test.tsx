@@ -10060,14 +10060,34 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain(
-        'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas. Aumenta el límite si el registro puede estar fuera del lote cargado.',
+      const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
+      expect(emptySearch).not.toBeNull();
+      expect(emptySearch?.textContent).toContain(
+        'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
       );
+      expect(emptySearch?.textContent).not.toContain(
+        'Aumenta el límite si el registro puede estar fuera del lote cargado.',
+      );
+      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Filtrar por estado');
-      expect(getButtonByText(container, 'Ajustar límite')).toBeTruthy();
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Ajustar límite'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
+      expect(countButtonsByText(container, 'Ocultar límite')).toBe(1);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
@@ -10080,17 +10100,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(200);
       expect(container.textContent).not.toContain('No hay coincidencias para "sin coincidencias"');
-      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(container, 'Ajustar límite'));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
       expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
     await act(async () => {
