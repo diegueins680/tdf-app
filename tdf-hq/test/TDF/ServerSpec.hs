@@ -7779,7 +7779,7 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
-            let mkResponse area endpoint path method status requiredRole implemented =
+            let mkResponse area endpoint path method status requiredRole requiredModule implemented =
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
@@ -7787,6 +7787,7 @@ spec = describe "TDF.Server helpers" $ do
                         , stubMethod = method
                         , stubStatus = status
                         , stubRequiredRole = requiredRole
+                        , stubRequiredModule = requiredModule
                         , stubImplemented = implemented
                         }
                 validResponse =
@@ -7796,6 +7797,7 @@ spec = describe "TDF.Server helpers" $ do
                         "/stubs/crm/parties/list-columns"
                         "GET"
                         "planned"
+                        "Admin"
                         "Admin"
                         False
                 assertInvalid response =
@@ -7816,6 +7818,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
                     stubRequiredRole response `shouldBe` "Admin"
+                    stubRequiredModule response `shouldBe` "Admin"
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
                     expectationFailure
@@ -7829,6 +7832,7 @@ spec = describe "TDF.Server helpers" $ do
                     "POST"
                     "planned"
                     "Admin"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7837,6 +7841,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "get"
                     "planned"
+                    "Admin"
                     "Admin"
                     False)
             assertInvalid
@@ -7847,6 +7852,7 @@ spec = describe "TDF.Server helpers" $ do
                     "GET"
                     "ready"
                     "Admin"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7856,6 +7862,7 @@ spec = describe "TDF.Server helpers" $ do
                     "GET"
                     "planned"
                     "Manager"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7864,6 +7871,17 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/list-columns"
                     "GET"
                     "planned"
+                    "Admin"
+                    "CRM"
+                    False)
+            assertInvalid
+                (mkResponse
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "GET"
+                    "planned"
+                    "Admin"
                     "Admin"
                     True)
             assertInvalid
@@ -7874,6 +7892,7 @@ spec = describe "TDF.Server helpers" $ do
                     "GET"
                     "planned"
                     "Admin"
+                    "Admin"
                     False)
             assertInvalid
                 (mkResponse
@@ -7882,6 +7901,7 @@ spec = describe "TDF.Server helpers" $ do
                     "/stubs/crm/parties/filters"
                     "GET"
                     "planned"
+                    "Admin"
                     "Admin"
                     False)
 
@@ -8026,6 +8046,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
                     stubRequiredRole stubResponse `shouldBe` "Admin"
+                    stubRequiredModule stubResponse `shouldBe` "Admin"
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)
@@ -8079,6 +8100,7 @@ spec = describe "TDF.Server helpers" $ do
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("planned" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
+                            , "stubRequiredModule" .= ("Admin" :: Text)
                             , "stubImplemented" .= False
                             ]
                 Left serverErr ->

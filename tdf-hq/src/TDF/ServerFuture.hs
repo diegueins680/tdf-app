@@ -20,6 +20,7 @@ import           TDF.Auth
   , ModuleAccess(ModuleAdmin)
   , hasModuleAccess
   , hasStrictAdminAccess
+  , moduleName
   )
 
 -- | Shared helper to quickly craft stub responses.
@@ -40,6 +41,7 @@ stub rawArea rawEndpoint = do
         , stubMethod      = futureStubMethod
         , stubStatus      = "planned"
         , stubRequiredRole = futureStubRequiredRole
+        , stubRequiredModule = futureStubRequiredModule
         , stubImplemented = False
         }
 
@@ -181,6 +183,7 @@ validateFutureStubResponse response =
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
+      | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise ->
           Right response
@@ -189,6 +192,7 @@ validateFutureStubResponse response =
             , stubPath = futureStubPath area endpoint
             , stubMethod = futureStubMethod
             , stubRequiredRole = futureStubRequiredRole
+            , stubRequiredModule = futureStubRequiredModule
             }
 
 futureStubPath :: Text -> Text -> Text
@@ -200,6 +204,9 @@ futureStubMethod = "GET"
 
 futureStubRequiredRole :: Text
 futureStubRequiredRole = "Admin"
+
+futureStubRequiredModule :: Text
+futureStubRequiredModule = moduleName ModuleAdmin
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard card
