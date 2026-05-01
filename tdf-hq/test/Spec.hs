@@ -128,6 +128,7 @@ import TDF.ServerRadio
       parseIcyMetaIntHeader )
 import TDF.RagStore
     ( availabilityOverlaps,
+      callOpenAIEmbeddingsWith,
       validateEmbeddingModelDimensions,
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
@@ -7490,6 +7491,30 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
             validateEmbeddingResponseDimensions 1 [[infinityValue]]
                 `shouldSatisfy` isLeft
+
+    describe "callOpenAIEmbeddingsWith" $
+        it "returns request exceptions as errors so embedding fallback can handle them" $
+            withEnvOverrides
+                ( clearRagEnv
+                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
+                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                       ]
+                )
+                $ do
+                    cfg <- loadConfig
+                    result <-
+                        callOpenAIEmbeddingsWith
+                            (\_ -> ioError (userError "socket closed"))
+                            cfg
+                            ["consulta"]
+                    case result of
+                        Left err -> do
+                            err `shouldSatisfy`
+                                Data.Text.isInfixOf "OpenAI embeddings request failed"
+                            err `shouldSatisfy` Data.Text.isInfixOf "socket closed"
+                        Right value ->
+                            expectationFailure
+                                ("Expected request exception to return Left, got " <> show value)
 
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do

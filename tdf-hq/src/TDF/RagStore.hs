@@ -8,6 +8,7 @@ module TDF.RagStore
   , retrieveRagContext
   , getRagIndexStats
   , availabilityOverlaps
+  , callOpenAIEmbeddingsWith
   , validateEmbeddingModelDimensions
   , validateEmbeddingResponseOrder
   , validateEmbeddingResponseDimensions
@@ -17,7 +18,7 @@ import           Control.Monad          (forM, forM_)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny, throwM)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
-import           Data.ByteString.Lazy   (toStrict)
+import           Data.ByteString.Lazy   (ByteString, toStrict)
 import           Data.Char              (isAlphaNum, ord, toLower)
 import           Data.Int               (Int64)
 import           Data.List              (foldl', sortOn)
@@ -32,7 +33,7 @@ import           Data.Time.Format       (defaultTimeLocale, formatTime)
 import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
 import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
-import           Network.HTTP.Client    (Request(..), httpLbs, newManager, parseRequest, responseBody, responseStatus, RequestBody(..))
+import           Network.HTTP.Client    (Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
@@ -798,10 +799,20 @@ hashToken dim token =
 
 callOpenAIEmbeddings :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 callOpenAIEmbeddings cfg inputs =
+  callOpenAIEmbeddingsWith (\req -> do
+    manager <- newManager tlsManagerSettings
+    httpLbs req manager
+  ) cfg inputs
+
+callOpenAIEmbeddingsWith
+  :: (Request -> IO (Response ByteString))
+  -> AppConfig
+  -> [Text]
+  -> IO (Either Text [[Double]])
+callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
   case openAiApiKey cfg of
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
-      manager <- newManager tlsManagerSettings
       reqBase <- parseRequest "https://api.openai.com/v1/embeddings"
       let body = encode EmbeddingReq
             { model = openAiEmbedModel cfg
@@ -816,26 +827,31 @@ callOpenAIEmbeddings cfg inputs =
                   ]
               , requestBody = RequestBodyLBS body
               }
-      resp <- httpLbs req manager
-      let status = statusCode (responseStatus resp)
-      let raw = responseBody resp
-      if status < 200 || status >= 300
-        then case eitherDecode raw of
-          Right OpenAIErrorResp{..} ->
-            pure (Left ("OpenAI embeddings error: " <> oeMessage oeError))
-          Left _ ->
-            pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
-        else
-          case eitherDecode raw of
-            Left err -> pure (Left (T.pack err))
-            Right (EmbeddingResp embeddings) ->
-              pure $ do
-                expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
-                orderedEmbeddings <-
-                  validateEmbeddingResponseOrder
-                    (length inputs)
-                    [(index item, embedding item) | item <- embeddings]
-                validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
+      respResult <-
+        (Right <$> runEmbeddingRequest req) `catchAny` \err ->
+          pure (Left ("OpenAI embeddings request failed: " <> T.pack (show err)))
+      case respResult of
+        Left err -> pure (Left err)
+        Right resp -> do
+          let status = statusCode (responseStatus resp)
+          let raw = responseBody resp
+          if status < 200 || status >= 300
+            then case eitherDecode raw of
+              Right OpenAIErrorResp{..} ->
+                pure (Left ("OpenAI embeddings error: " <> oeMessage oeError))
+              Left _ ->
+                pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
+            else
+              case eitherDecode raw of
+                Left err -> pure (Left (T.pack err))
+                Right (EmbeddingResp embeddings) ->
+                  pure $ do
+                    expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
+                    orderedEmbeddings <-
+                      validateEmbeddingResponseOrder
+                        (length inputs)
+                        [(index item, embedding item) | item <- embeddings]
+                    validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)
