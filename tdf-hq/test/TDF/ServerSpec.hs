@@ -4221,6 +4221,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "DRIVE_ACCESS_TOKEN must not be blank" "   "
             assertInvalid "must not contain whitespace" "fallback token"
             assertInvalid "must not contain control characters" "fallback-token\NULInjected"
+            assertInvalid "must not contain hidden formatting characters" "fallback-token\x202E\&Injected"
             assertInvalid
                 "must be 4096 characters or fewer"
                 (T.replicate 4097 "a")
@@ -4603,6 +4604,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "code must not contain whitespace" baseRequest { code = "oauth code" }
             assertInvalid "code must not contain control characters" baseRequest { code = "oauth\NUL\&code" }
             assertInvalid
+                "code must not contain hidden formatting characters"
+                baseRequest { code = "oauth\x202E\&code" }
+            assertInvalid
                 "code must be 4096 characters or fewer"
                 baseRequest { code = T.replicate 4097 "a" }
             assertInvalid
@@ -4612,22 +4616,22 @@ spec = describe "TDF.Server helpers" $ do
                 "codeVerifier must be a PKCE verifier"
                 baseRequest { codeVerifier = T.replicate 42 "a" <> "!" }
             assertInvalid
-                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                "redirectUri must be an absolute https Google Drive OAuth callback URL"
                 baseRequest { redirectUri = Just "/oauth/google-drive/callback" }
             assertInvalid
-                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                "redirectUri must be an absolute https Google Drive OAuth callback URL"
                 baseRequest
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/other"
                     }
             assertInvalid
-                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                "redirectUri must be an absolute https Google Drive OAuth callback URL"
                 baseRequest
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
                     }
             assertInvalid
-                "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+                "redirectUri must be an absolute https Google Drive OAuth callback URL"
                 baseRequest
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
@@ -4907,6 +4911,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "refreshToken must not contain control characters"
                 (DriveTokenRefreshRequest "1//refresh\NUL\&token")
+            assertInvalid
+                "refreshToken must not contain hidden formatting characters"
+                (DriveTokenRefreshRequest "1//refresh\x202E\&token")
             assertInvalid
                 "refreshToken must be 4096 characters or fewer"
                 (DriveTokenRefreshRequest (T.replicate 4097 "r"))

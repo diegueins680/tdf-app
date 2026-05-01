@@ -222,12 +222,18 @@ parseGoogleTokenField fieldName raw =
        then fail (T.unpack fieldName <> " must not be blank")
        else if T.any (\ch -> isSpace ch || isControl ch) clean
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
-         else if T.length clean > maxDriveOAuthTokenChars
-           then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
-           else pure clean
+         else if T.any isHiddenDriveOAuthTokenChar clean
+           then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
+           else if T.length clean > maxDriveOAuthTokenChars
+             then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
+             else pure clean
 
 maxDriveOAuthTokenChars :: Int
 maxDriveOAuthTokenChars = 4096
+
+isHiddenDriveOAuthTokenChar :: Char -> Bool
+isHiddenDriveOAuthTokenChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 parseGoogleTokenType :: Text -> Parser Text
 parseGoogleTokenType raw = do
@@ -2115,6 +2121,9 @@ validateDriveAccessTokenWith baseError token
       Left baseError { errBody = "Google Drive access token must not contain whitespace" }
   | T.any isControl token =
       Left baseError { errBody = "Google Drive access token must not contain control characters" }
+  | T.any isHiddenDriveOAuthTokenChar token =
+      Left baseError
+        { errBody = "Google Drive access token must not contain hidden formatting characters" }
   | otherwise = Right token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
@@ -2171,6 +2180,8 @@ validateDriveRefreshToken rawToken =
        else
          if T.any isControl tokenVal
            then Left err400 { errBody = "refreshToken must not contain control characters" }
+           else if T.any isHiddenDriveOAuthTokenChar tokenVal
+             then Left err400 { errBody = "refreshToken must not contain hidden formatting characters" }
            else if T.any isSpace tokenVal
            then Left err400 { errBody = "refreshToken must not contain whitespace" }
            else if T.length tokenVal > maxDriveOAuthTokenChars
@@ -2185,6 +2196,8 @@ validateDriveAuthorizationCode rawCode =
        else
          if T.any isControl codeVal
            then Left err400 { errBody = "code must not contain control characters" }
+           else if T.any isHiddenDriveOAuthTokenChar codeVal
+             then Left err400 { errBody = "code must not contain hidden formatting characters" }
            else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
            else if T.length codeVal > maxDriveOAuthTokenChars

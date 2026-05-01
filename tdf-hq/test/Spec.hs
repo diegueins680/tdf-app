@@ -4208,6 +4208,10 @@ main = hspec $ do
                 (Just "ya29.valid\NULtoken")
                 "Google Drive access token must not contain control characters"
             assertInvalid
+                (Just "ya29.valid\x202E\&token")
+                Nothing
+                "Google Drive access token must not contain hidden formatting characters"
+            assertInvalid
                 (Just (Data.Text.replicate 4097 "a"))
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
