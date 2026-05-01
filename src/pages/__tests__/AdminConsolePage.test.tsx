@@ -1515,6 +1515,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps access-security fallback titles from duplicating the built-in users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-access-security',
+          title: 'Access security',
+          body: ['Review security and team permissions before editing admin roles.'],
+        },
+        {
+          cardId: 'fallback-seguridad-permisos',
+          title: 'Seguridad y permisos',
+          body: ['Revisa seguridad y permisos del equipo antes de cambiar roles administrativos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access security')).not.toBeInTheDocument();
+    expect(screen.queryByText('Seguridad y permisos')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review security and team permissions before editing admin roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa seguridad y permisos del equipo antes de cambiar roles administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps role-access fallback titles out of first-run optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
