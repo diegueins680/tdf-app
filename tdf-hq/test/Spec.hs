@@ -2599,6 +2599,9 @@ main = hspec $ do
                 "authorizationNumber is required when status is issued"
                 "{\"ok\":true,\"status\":\"issued\",\"invoiceNumber\":\"001-100-000000001\"}"
             assertInvalid
+                "authorizationNumber is required when status is issued"
+                "{\"ok\":true,\"status\":\"Issued\",\"invoiceNumber\":\"001-100-000000001\"}"
+            assertInvalid
                 "invoiceNumber is required when status is issued"
                 ( "{\"ok\":true,\"status\":\"issued\","
                     <> "\"authorizationNumber\":\""
@@ -2620,7 +2623,7 @@ main = hspec $ do
                     <> "\"invoiceNumber\":\"INV-2026-1\"}"
                 )
             let completeIssued =
-                    "{\"ok\":true,\"status\":\"issued\","
+                    "{\"ok\":true,\"status\":\" ISSUED \","
                         <> "\"authorizationNumber\":\" "
                         <> validSriAuthorizationNumber
                         <> " \","
@@ -2632,6 +2635,7 @@ main = hspec $ do
                             <> Data.Text.unpack err
                         )
                 Right result -> do
+                    DTO.sirStatus result `shouldBe` "issued"
                     DTO.sirAuthorizationNumber result
                         `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"

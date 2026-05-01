@@ -126,12 +126,13 @@ decodeSriScriptOutput stdoutTxt =
 validateSriScriptResult :: SriIssueResultDTO -> Either Text SriIssueResultDTO
 validateSriScriptResult dto =
   let statusValue = T.strip (sirStatus dto)
+      canonicalStatus = canonicalSriStatus statusValue
   in if T.null statusValue
        then Left "SRI script JSON output status is required"
        else if T.any isInvalidVisibleTextChar statusValue
          then Left "SRI script JSON output status must not contain control characters or hidden formatting characters"
          else
-             validateScriptTotal dto { sirStatus = statusValue }
+             validateScriptTotal dto { sirStatus = canonicalStatus }
              >>= validateIssuedResult
              >>= validateOptionalDocumentIdentifiers
              >>= validateOptionalBuyer
@@ -264,6 +265,11 @@ validateSriScriptResult dto =
                 && T.all isAsciiDigit sequential
         _ ->
           False
+
+canonicalSriStatus :: Text -> Text
+canonicalSriStatus statusValue
+  | T.toLower statusValue == "issued" = "issued"
+  | otherwise = statusValue
 
 validateOutputTaxIdField :: Text -> Text -> Either Text Text
 validateOutputTaxIdField fieldName raw = do
