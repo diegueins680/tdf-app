@@ -413,6 +413,7 @@ normalizeAuthPhoneNumber raw =
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
         isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasControlChars = T.any isControl trimmed
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -425,6 +426,7 @@ normalizeAuthPhoneNumber raw =
     if T.null onlyDigits
          || digitCount < 8
          || digitCount > 15
+         || hasControlChars
          || hasInvalidChars
          || not plusIsValid
       then Nothing

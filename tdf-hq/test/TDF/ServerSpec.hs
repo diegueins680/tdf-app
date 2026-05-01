@@ -3114,6 +3114,8 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid signup phone to be rejected, got: " <> show value)
             assertInvalid "---"
             assertInvalid "call me at 099 123 4567"
+            assertInvalid "099\n1234567"
+            assertInvalid "099\t1234567"
             assertInvalid "12345"
             assertInvalid "+1234567890123456"
 
