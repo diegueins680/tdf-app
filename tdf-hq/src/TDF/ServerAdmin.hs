@@ -1244,10 +1244,12 @@ isUnsupportedAdminWhatsAppMessageChar ch =
 
 resolveAdminWhatsAppSendPhone :: Text -> [Text] -> Maybe ME.WhatsAppMessage -> Either ServerError Text
 resolveAdminWhatsAppSendPhone "reply" _ (Just msg) =
-  case storedPhone <|> senderPhone of
-    Just phone -> Right phone
-    Nothing ->
+  case resolveMessagePhone storedPhone senderPhone of
+    Right (Just phone) -> Right phone
+    Right Nothing ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino del mensaje de referencia") }
+    Left errBodyText ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 errBodyText) }
   where
     storedPhone = cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
     senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
@@ -1261,17 +1263,24 @@ resolveAdminWhatsAppSendPhone _ candidatePhones _ =
 
 resolveAdminWhatsAppResendPhone :: ME.WhatsAppMessage -> Either ServerError Text
 resolveAdminWhatsAppResendPhone msg =
-  maybe
-    ( Left err400
+  case resolveMessagePhone storedPhone senderPhone of
+    Right (Just phone) -> Right phone
+    Right Nothing ->
+      Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino")
         }
-    )
-    Right
-    (storedPhone <|> senderPhone)
+    Left errBodyText ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 errBodyText) }
   where
     storedPhone =
       cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
     senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+
+resolveMessagePhone :: Maybe Text -> Maybe Text -> Either Text (Maybe Text)
+resolveMessagePhone (Just storedPhone) (Just senderPhone)
+  | storedPhone == senderPhone = Right (Just storedPhone)
+  | otherwise = Left "Número destino ambiguo en el historial de WhatsApp"
+resolveMessagePhone storedPhone senderPhone = Right (storedPhone <|> senderPhone)
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject
