@@ -1336,6 +1336,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps access-profile fallback titles from duplicating the built-in users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-perfiles-acceso',
+          title: 'Perfiles de acceso',
+          body: ['Revisa perfiles de acceso antes de cambiar permisos administrativos.'],
+        },
+        {
+          cardId: 'fallback-access-profiles',
+          title: 'Access profiles',
+          body: ['Review access profiles before changing admin permissions.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Perfiles de acceso')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access profiles')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa perfiles de acceso antes de cambiar permisos administrativos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review access profiles before changing admin permissions\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps user-administration fallback titles from duplicating the built-in users workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
