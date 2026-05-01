@@ -1012,6 +1012,66 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps recent-activity fallback titles from duplicating recent audit', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-recent-activity',
+          title: 'Recent activity',
+          body: ['Review recent admin changes before repeating actions.'],
+        },
+        {
+          cardId: 'fallback-recent-changes',
+          title: 'Recent changes',
+          body: ['Review recent workspace changes before repeating admin actions.'],
+        },
+        {
+          cardId: 'fallback-actividad-reciente',
+          title: 'Actividad reciente',
+          body: ['Revisa actividad reciente del sistema antes de repetir acciones.'],
+        },
+        {
+          cardId: 'fallback-cambios-recientes',
+          title: 'Cambios recientes',
+          body: ['Revisa cambios recientes del sistema antes de repetir acciones.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent activity')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent changes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Actividad reciente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cambios recientes')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review recent admin changes before repeating actions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review recent workspace changes before repeating admin actions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa actividad reciente del sistema antes de repetir acciones\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa cambios recientes del sistema antes de repetir acciones\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps audit-trail fallback titles from duplicating recent audit', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
