@@ -9393,12 +9393,32 @@ extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
       mCode <- o .:? "code"
       mMessage <- o .:? "message"
       pure (catMaybes [mType, mCode, mMessage])
-  requireText candidates
+  requireSanitizedText candidates
   where
-    requireText values =
+    requireSanitizedText values =
       case nonEmptyText (T.intercalate ": " (map T.strip values)) of
-        Just txt -> pure txt
+        Just txt ->
+          maybe (fail "message missing") pure (sanitizeApiErrorMessage txt)
         Nothing -> fail "message missing"
+
+maxApiErrorMessageChars :: Int
+maxApiErrorMessageChars = 500
+
+sanitizeApiErrorMessage :: Text -> Maybe Text
+sanitizeApiErrorMessage raw =
+  nonEmptyText $
+    if T.length cleaned > maxApiErrorMessageChars
+      then T.take maxApiErrorMessageChars cleaned <> " [truncated]"
+      else cleaned
+  where
+    cleaned =
+      T.unwords $
+        T.words $
+          T.map normalizeErrorChar raw
+    normalizeErrorChar ch
+      | isControl ch = ' '
+      | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+      | otherwise = ch
 
 extractModelReplyText :: Value -> Maybe Text
 extractModelReplyText payload =

@@ -205,6 +205,7 @@ import TDF.Server
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
+      extractApiErrorMessage,
       shouldRetryWithFallbackModel )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
@@ -1170,6 +1171,31 @@ main = hspec $ do
                 403
                 "payment_required: model_not_found for this account"
                 `shouldBe` False
+
+        it "sanitizes upstream OpenAI errors before fallback handling exposes them" $ do
+            let payload =
+                    A.object
+                        [ "error" .= A.object
+                            [ "type" .= ("invalid_request_error" :: Text)
+                            , "code" .= ("model_not_found" :: Text)
+                            , "message" .=
+                                ( "model\nnot\NULfound"
+                                    <> Data.Text.replicate 700 "x"
+                                    :: Text
+                                )
+                            ]
+                        ]
+            case extractApiErrorMessage payload of
+                Just msg -> do
+                    msg `shouldSatisfy`
+                        Data.Text.isInfixOf
+                            "invalid_request_error: model_not_found: model not found"
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+                    msg `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+                    Data.Text.length msg `shouldSatisfy` (<= 520)
+                Nothing ->
+                    expectationFailure "Expected sanitized upstream API error message"
 
         it "normalizes configured RAG tuning integers before building retrieval plans" $ do
             withEnvOverrides
