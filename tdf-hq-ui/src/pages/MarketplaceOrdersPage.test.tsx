@@ -2129,6 +2129,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
+        expect(container.textContent).not.toContain(
+          'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa.',
+        );
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
         expect(container.querySelector('tbody tr')).toBeNull();
       });

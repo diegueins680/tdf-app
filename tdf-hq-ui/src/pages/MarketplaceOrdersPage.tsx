@@ -362,6 +362,8 @@ export default function MarketplaceOrdersPage() {
     !ordersQuery.isLoading && !ordersQuery.isError && orders.length === 1 && !filtersDirty;
   const showSingleVisibleOrderSummary =
     !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 1;
+  const showEmptyOrdersState =
+    !showFirstOrderEmptyState && !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 0;
   const showFilteredSingleOrderSummary = showSingleVisibleOrderSummary && !showSingleOrderFocusedState;
   const singleVisibleOrder = showSingleVisibleOrderSummary ? (filtered[0] ?? null) : null;
   const singleVisibleOrderSummaryText = showSingleOrderFocusedState
@@ -874,11 +876,11 @@ export default function MarketplaceOrdersPage() {
                     {clearFiltersActionLabel}
                   </Button>
                 </>
-              ) : (
+              ) : !showEmptyOrdersState ? (
                 <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
                   {filterTrayHelperText}
                 </Typography>
-              )}
+              ) : null}
             </Stack>
           </Stack>
           {paidTotal > 0 && paidVisible === 0 && filtersDirty && (
@@ -999,7 +1001,7 @@ export default function MarketplaceOrdersPage() {
               </Button>
             </Stack>
           )}
-          {!showFirstOrderEmptyState && !ordersQuery.isLoading && filtered.length === 0 && (
+          {showEmptyOrdersState && (
             <Alert severity="info">
               {emptyOrdersMessage}
             </Alert>
