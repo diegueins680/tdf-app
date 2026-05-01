@@ -7916,6 +7916,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a narrowed busy single-choice search focused on the matching row', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'estudiante 9');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Estudiante 9');
+      expect(container.textContent).toContain(
+        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+      );
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 9').textContent?.trim()).toBe(
+        'Pendiente de pago',
+      );
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('uses the direct recovery hint when busy-list search leaves one cancelled registration', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (

@@ -2318,12 +2318,21 @@ export default function CourseRegistrationsAdminPage() {
     && !hasEffectiveSlugFilter
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
-  const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock && !showSingleResultWithOnlyPassiveFilterContext;
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const showBusyListNonNarrowingSearch = showLocalSearchControl
     && hasLocalSearch
     && !localSearchNarrowsRegistrations
     && loadedRegistrationCount > 1;
+  const hideSingleResultLocalSearchPassiveCurrentView = Boolean(
+    localSearchSingleResult
+    && combinedSingleChoiceSummary
+    && !combinedSingleChoiceSourceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl,
+  );
+  const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock
+    && !showSingleResultWithOnlyPassiveFilterContext
+    && !hideSingleResultLocalSearchPassiveCurrentView;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInBusySearchOnboarding
     || statusAlreadyVisibleInFilterStrip
@@ -2342,6 +2351,7 @@ export default function CourseRegistrationsAdminPage() {
   ].filter(Boolean).join(' ');
   const showInlineCurrentViewDossierHint = Boolean(combinedSingleChoiceSummary)
     && showFilterOnboardingCopy
+    && !hideSingleResultLocalSearchPassiveCurrentView
     && loadedRegistrationCount > 1
     && (!showLocalSearchControl || hasLocalSearch);
   const combinedSingleChoiceContextSummary = [
@@ -2372,11 +2382,16 @@ export default function CourseRegistrationsAdminPage() {
   const hideBusyListPassiveCurrentViewPanel = (
     showBusyListSearchOnboarding
     || showBusyListNonNarrowingSearch
+    || hideSingleResultLocalSearchPassiveCurrentView
   )
     && Boolean(combinedSingleChoiceSummary)
     && !hasCustomFilters
     && !showAdvancedLimitControl
-    && (canFoldSharedSourceIntoBusySearch || !combinedSingleChoiceContextSummary)
+    && (
+      hideSingleResultLocalSearchPassiveCurrentView
+      || canFoldSharedSourceIntoBusySearch
+      || !combinedSingleChoiceContextSummary
+    )
     && !hasSharedListContextSummary;
   const hideBusyListPassiveSingleCohortSummary = showBusyListSearchOnboarding
     && Boolean(singleAvailableCohortLabel)
@@ -2395,6 +2410,7 @@ export default function CourseRegistrationsAdminPage() {
     && !standaloneSingleChoiceInlineSourceSummary
     && !hasSharedListContextSummary;
   const hiddenBusyListContextSummary = hideBusyListPassiveCurrentViewPanel
+    && !hideSingleResultLocalSearchPassiveCurrentView
     ? [
       combinedSingleChoiceSummary,
       canFoldSharedSourceIntoBusySearch && combinedSingleChoiceSourceSummary
