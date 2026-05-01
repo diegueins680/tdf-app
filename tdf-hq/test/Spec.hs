@@ -2883,6 +2883,19 @@ main = hspec $ do
                 , "/tmp/tdf-hq-sri-script.mjs\n"
                 ]
 
+        it "rejects hidden-format SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides
+                [("SRI_INVOICE_SCRIPT", Just ("/tmp/tdf-hq-sri" <> ['\x202E'] <> "script.mjs"))]
+                $ do
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err
+                                `shouldContain` "SRI_INVOICE_SCRIPT must not contain control characters or hidden formatting characters"
+                        Right value ->
+                            expectationFailure
+                                ("Expected hidden-format SRI script path to fail, got: " <> show value)
+
         it "rejects relative SRI_INVOICE_SCRIPT paths before filesystem discovery" $
             withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "scripts/generate-sri-invoice.mjs")] $ do
                 result <- Sri.runSriInvoiceScript sampleSriScriptRequest

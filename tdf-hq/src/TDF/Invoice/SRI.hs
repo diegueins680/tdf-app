@@ -17,7 +17,6 @@ import           Control.Monad (when)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
-  , isControl
   )
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -524,7 +523,7 @@ normalizeConfiguredScriptPath raw =
       trimmed = T.unpack (T.strip rawText)
   in if null trimmed
        then Left blankConfiguredScriptMessage
-       else if T.any isControl rawText
+       else if T.any isInvalidVisibleTextChar rawText
          then Left invalidConfiguredScriptControlMessage
        else if not (isAbsolute trimmed)
          then Left relativeConfiguredScriptMessage
@@ -532,7 +531,7 @@ normalizeConfiguredScriptPath raw =
 
 invalidConfiguredScriptControlMessage :: Text
 invalidConfiguredScriptControlMessage =
-  "SRI_INVOICE_SCRIPT must not contain control characters."
+  "SRI_INVOICE_SCRIPT must not contain control characters or hidden formatting characters."
 
 relativeConfiguredScriptMessage :: Text
 relativeConfiguredScriptMessage =
