@@ -62,6 +62,9 @@ spec = do
       normalizeWhatsAppPhone "+1234567890123456" `shouldBe` Nothing
       normalizeWhatsAppPhone "593+991234567" `shouldBe` Nothing
       normalizeWhatsAppPhone "+-593991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone "+593\n991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone ("+593" <> T.singleton '\x00A0' <> "991234567") `shouldBe` Nothing
+      normalizeWhatsAppPhone ("+593" <> T.singleton '\x200B' <> "991234567") `shouldBe` Nothing
       normalizeWhatsAppPhone arabicIndicPhone `shouldBe` Nothing
 
   describe "TDF.WhatsApp.Client.normalizeGraphApiVersion" $ do
