@@ -12,11 +12,12 @@ import           Data.Char
 import           Data.List            (nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
+import           Database.Persist.Sql (fromSqlKey)
 import           Servant
 
 import           TDF.API.Future
 import           TDF.Auth
-  ( AuthedUser
+  ( AuthedUser(..)
   , ModuleAccess(ModuleAdmin)
   , hasModuleAccess
   , hasStrictAdminAccess
@@ -134,6 +135,8 @@ adminConsoleCards =
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
 validateFutureAdminAccess user
+  | fromSqlKey (auPartyId user) <= 0 =
+      Left err403 { errBody = "Valid admin party required" }
   | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
   | hasModuleAccess ModuleAdmin user = Right ()
   | otherwise = Left err403 { errBody = "Admin module access required" }

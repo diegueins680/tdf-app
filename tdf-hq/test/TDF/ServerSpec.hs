@@ -8206,6 +8206,21 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected malformed Admin access to be rejected, got: " <> show value)
 
+        it "rejects Admin-shaped sessions with impossible party ids" $ do
+            forM_ [0, -7] $ \rawPartyId -> do
+                let malformedAdmin =
+                        (mkUser [Admin]) { auPartyId = toSqlKey rawPartyId }
+                case validateFutureAdminAccess malformedAdmin of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 403
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "Valid admin party required"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected malformed Admin party id to be rejected, got: "
+                                <> show value
+                            )
+
     describe "validateFutureStubMetadata" $ do
         it "derives mounted fallback discovery areas from the canonical catalog" $ do
             allowedFutureStubAreas
