@@ -11292,11 +11292,14 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips social lead-ad descriptors from first-run cohort copy', async () => {
+  it('strips social lead-source descriptors from first-run cohort copy', async () => {
     const titles = [
       'Facebook Lead Ad - Beatmaking 101',
       'Instagram lead ad form for Beatmaking 101',
       'Beatmaking 101 - Meta lead ads',
+      'Facebook leads - Beatmaking 101',
+      'Leads de Instagram para Beatmaking 101',
+      'Beatmaking 101 - Meta leads',
     ];
 
     for (const title of titles) {
@@ -11312,7 +11315,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/lead ads?/i);
+        expect(emptyState?.textContent).not.toMatch(/lead ads?|leads? de|leads?/i);
         expect(emptyState?.textContent).not.toMatch(/Facebook|Instagram|Meta/);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
