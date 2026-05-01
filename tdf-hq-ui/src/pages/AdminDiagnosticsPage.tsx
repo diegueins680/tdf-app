@@ -123,6 +123,11 @@ const hasSingleSocialMessageState = (stats: MessageStats) => {
 const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
 const CALENDAR_SYNC_PENDING_COPY = 'Aún no se registra una sincronización.';
 
+const normalizeStoredDiagnosticValue = (value: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+};
+
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
@@ -134,8 +139,12 @@ export default function AdminDiagnosticsPage() {
     typeof window !== 'undefined'
       ? ((window as typeof window & { __MISSING_ENV__?: string[] }).__MISSING_ENV__ ?? [])
       : [];
-  const calendarId = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.calendarId') : null;
-  const lastSyncAt = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.lastSyncAt') : null;
+  const calendarId = typeof window !== 'undefined'
+    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.calendarId'))
+    : null;
+  const lastSyncAt = typeof window !== 'undefined'
+    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.lastSyncAt'))
+    : null;
   const hasCalendarSyncState = Boolean(calendarId || lastSyncAt);
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],

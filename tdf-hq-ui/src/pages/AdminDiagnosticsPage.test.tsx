@@ -149,6 +149,30 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('treats blank stored calendar sync values as unconfigured setup state', async () => {
+    window.localStorage.setItem('calendar-sync.calendarId', '   ');
+    window.localStorage.setItem('calendar-sync.lastSyncAt', '\n\t');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="admin-diagnostics-calendar-empty"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.',
+        );
+        expect(container.textContent).toContain('Conectar calendario');
+        expect(container.textContent).not.toContain('Calendar ID:');
+        expect(container.textContent).not.toContain('Última sincronización:');
+        expect(container.textContent).not.toContain('Aún no se registra una sincronización.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps partial calendar setup focused on the next missing sync state', async () => {
     window.localStorage.setItem('calendar-sync.calendarId', 'primary-calendar');
 
