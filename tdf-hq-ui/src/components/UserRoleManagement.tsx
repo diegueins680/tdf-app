@@ -653,17 +653,19 @@ export default function UserRoleManagement() {
             <FormHelperText>
               {hasPendingRoleChanges
                 ? (pendingRoleChangesSummary ?? 'Listo para guardar esta actualización de permisos.')
-                : 'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.'}
+                : 'Sin cambios pendientes. Modifica la selección para mostrar Guardar cambios.'}
             </FormHelperText>
           </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={saving}>
-            Cancelar
+            {hasPendingRoleChanges ? 'Descartar cambios' : 'Cerrar'}
           </Button>
-          <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving || !hasPendingRoleChanges}>
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
+          {hasPendingRoleChanges && (
+            <Button onClick={() => void handleSaveRoles()} variant="contained" disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

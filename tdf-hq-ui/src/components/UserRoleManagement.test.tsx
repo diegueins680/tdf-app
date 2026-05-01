@@ -401,7 +401,8 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar roles de Grace Hopper');
-        expect(document.body.textContent).toContain('Guardar');
+        expect(getButtonsByText(document.body, 'Cerrar')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Guardar cambios')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -712,7 +713,7 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps save disabled until the admin makes a real role change', async () => {
+  it('keeps the save action hidden until the admin makes a real role change', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 304,
@@ -744,11 +745,13 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain(
-          'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.',
+          'Sin cambios pendientes. Modifica la selección para mostrar Guardar cambios.',
         );
-        const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+        const closeButton = getButtonsByText(document.body, 'Cerrar')[0];
+        expect(closeButton).toBeInstanceOf(HTMLButtonElement);
+        expect((closeButton as HTMLButtonElement).disabled).toBe(false);
+        expect(getButtonsByText(document.body, 'Guardar cambios')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Descartar cambios')).toHaveLength(0);
         expect(updateUserRolesMock).not.toHaveBeenCalled();
       });
     } finally {
