@@ -99,6 +99,10 @@ const getPhoneComparisonCandidates = (value?: string | null) => {
   const candidates = [digits];
   if (digits.startsWith('0') && digits.length > 7) {
     candidates.push(digits.slice(1));
+    candidates.push(`593${digits.slice(1)}`);
+  }
+  if (digits.startsWith('593') && digits.length > 9) {
+    candidates.push(`0${digits.slice(3)}`);
   }
 
   return candidates.filter((candidate, index) => (
@@ -164,7 +168,7 @@ const getUserContactSearchValues = (
     .filter((value): value is string => value != null)
     .flatMap((value) => {
       const phoneDigits = normalizePhoneComparisonValue(value);
-      return phoneDigits ? [value, phoneDigits] : [value];
+      return phoneDigits ? [value, ...getPhoneComparisonCandidates(value)] : [value];
     })
 );
 
