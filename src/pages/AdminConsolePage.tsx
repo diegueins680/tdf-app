@@ -346,6 +346,7 @@ const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'start
 const ERROR_HEALTH_INDICATORS = new Set(['down', 'offline', 'error', 'failed', 'fail', 'unhealthy']);
 const ADMIN_USER_ROLES_COLUMN_HEADER = 'Roles';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
+const ROLE_SAVE_REFRESH_FOLLOWUP = 'Al guardar, usuarios y auditoría se actualizarán automáticamente.';
 const AUDIT_ACTION_LABELS: Record<string, string> = {
   'roles.updated': 'Roles actualizados',
 };
@@ -1345,6 +1346,7 @@ export default function AdminConsolePage() {
       AdminApi.updateUserRoles(userId, roles),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+      qc.invalidateQueries({ queryKey: ['admin', 'audit'] });
       setEditingUser(null);
       setDialogError(null);
     },
@@ -1580,10 +1582,10 @@ export default function AdminConsolePage() {
     const pendingSummary = pendingRoleChangesSummary ?? 'Hay cambios pendientes. Revisa la selección antes de guardar.';
 
     if (!equivalentRoleWarning) {
-      return pendingSummary;
+      return `${pendingSummary} ${ROLE_SAVE_REFRESH_FOLLOWUP}`;
     }
 
-    return `${pendingSummary} Nota: ${equivalentRoleWarning} muestran la misma navegación principal; revisa si necesitas todos antes de guardar.`;
+    return `${pendingSummary} Nota: ${equivalentRoleWarning} muestran la misma navegación principal; revisa si necesitas todos antes de guardar. ${ROLE_SAVE_REFRESH_FOLLOWUP}`;
   }, [equivalentRoleWarning, hasPendingRoleChanges, pendingRoleChangesSummary]);
   const currentRolesForEditor = useMemo(
     () => (editingUser ? normalizeRoleSelection(editingUser.roles) : []),

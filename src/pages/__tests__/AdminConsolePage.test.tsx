@@ -4309,6 +4309,39 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('refreshes users and audit after saving roles so admins can verify the change inline', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+
+    const { queryClient } = renderPage();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await user.click(await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' }));
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    await user.click(rolesSelect);
+    await user.click(getMenuItemByText('Teacher'));
+    await user.keyboard('{Escape}');
+
+    expect(
+      await screen.findByText(
+        /Cambio pendiente: agregar Teacher\. Al guardar, usuarios y auditoría se actualizarán automáticamente\./i,
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateUserRoles).toHaveBeenCalledWith(101, ['Admin', 'Teacher']);
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'users'] });
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['admin', 'audit'] });
+    });
+  });
+
   it('normalizes repeated role labels so the admin page shows one stable access summary', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([
