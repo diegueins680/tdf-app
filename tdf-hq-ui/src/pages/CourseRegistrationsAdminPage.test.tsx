@@ -12196,6 +12196,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Lead capture form - Beatmaking 101',
       'Beatmaking 101 - lead capture page',
       'Formulario de captación de leads - Beatmaking 101',
+      'Captura de prospectos - Beatmaking 101',
+      'Beatmaking 101 - captura de leads',
       'Beatmaking 101 - página de captación de interesados',
     ];
 
@@ -12214,6 +12216,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Lead capture');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de captación');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Captura de prospectos');
+        expect(emptyState?.textContent).not.toContain('captura de leads');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - página');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
