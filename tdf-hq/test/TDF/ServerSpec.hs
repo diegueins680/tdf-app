@@ -2437,9 +2437,9 @@ spec = describe "TDF.Server helpers" $ do
                 [realId, blankIdFallback, missingIdFallback] -> do
                     realId `shouldBe` "wamid.real-id"
                     blankIdFallback
-                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715201-"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715201-"
                     missingIdFallback
-                        `shouldSatisfy` T.isPrefixOf "593991234567-0-"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-0-"
                     blankIdFallback `shouldNotBe` missingIdFallback
                 rows ->
                     expectationFailure
@@ -2475,11 +2475,11 @@ spec = describe "TDF.Server helpers" $ do
             case map waInboundExternalId (extractWhatsAppInbound payload) of
                 [spaceFallback, controlFallback, oversizeFallback, validId] -> do
                     spaceFallback
-                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715203-"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715203-"
                     controlFallback
-                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715204-"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715204-"
                     oversizeFallback
-                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715205-"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715205-"
                     validId `shouldBe` "wamid.valid"
                 rows ->
                     expectationFailure
@@ -2511,7 +2511,7 @@ spec = describe "TDF.Server helpers" $ do
                         ]
                 fallbackIds = map waInboundExternalId (extractWhatsAppInbound payload)
 
-            fallbackIds `shouldSatisfy` all (T.isPrefixOf "593991234567-1713715207-")
+            fallbackIds `shouldSatisfy` all (T.isPrefixOf "+593991234567-1713715207-")
             case fallbackIds of
                 [firstFallback, secondFallback] ->
                     secondFallback `shouldNotBe` firstFallback
@@ -2519,7 +2519,7 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected two same-second fallback ids, got: " <> show rows)
 
-        it "skips blank sender or body rows and trims stored inbound webhook values" $ do
+        it "skips blank sender, malformed sender, or body rows and trims stored inbound webhook values" $ do
             let message rawSender rawBody =
                     WA.WAMessage
                         (Just "   ")
@@ -2540,6 +2540,7 @@ spec = describe "TDF.Server helpers" $ do
                                 (WA.WAValue
                                     (Just
                                         [ message "   " "Inscribirme"
+                                        , message "call me at 099 123 4567" "Inscribirme"
                                         , message "593991234567" "   "
                                         , message " 593991234567 " "  Inscribirme  "
                                         ])
@@ -2552,8 +2553,8 @@ spec = describe "TDF.Server helpers" $ do
             case extractWhatsAppInbound payload of
                 [row] -> do
                     waInboundExternalId row
-                        `shouldSatisfy` T.isPrefixOf "593991234567-1713715202-"
-                    waInboundSenderId row `shouldBe` "593991234567"
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715202-"
+                    waInboundSenderId row `shouldBe` "+593991234567"
                     waInboundSenderName row `shouldBe` Just "Ada"
                     waInboundText row `shouldBe` "Inscribirme"
                 rows ->

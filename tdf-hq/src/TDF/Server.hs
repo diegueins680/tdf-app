@@ -4251,7 +4251,7 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
       let contactMap = Map.fromList
             [ (waIdVal, cleanOptional (WA.name =<< WA.waIdProfile contact))
             | contact <- fromMaybe [] mContacts
-            , Just waIdVal <- [cleanOptional (WA.waIdValue contact)]
+            , Just waIdVal <- [cleanOptional (WA.waIdValue contact) >>= normalizeWhatsAppPhone]
             ]
       in
         [ WAInbound
@@ -4267,7 +4267,7 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
             }
         | msg@WAMessage{waType, text=Just txtBody} <- msgs
         , waType == "text"
-        , Just senderId <- [cleanOptional (Just (WA.from msg))]
+        , Just senderId <- [cleanOptional (Just (WA.from msg)) >>= normalizeWhatsAppPhone]
         , Just body <- [cleanOptional (Just (WA.body txtBody))]
         , let referral = waReferral msg <|> (waContext msg >>= waContextReferral)
               (adExt, adName, metaTxt) = waReferralMeta referral
