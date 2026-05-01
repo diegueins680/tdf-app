@@ -6426,6 +6426,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses a generic follow-up label instead of placeholder chrome when saved metadata is blank', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdFollowUps: [
+          buildFollowUp({
+            crfEntryType: '   ',
+            crfSubject: '   ',
+            crfCreatedAt: '   ',
+            crfUpdatedAt: '   ',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasExactText(document.body, 'Seguimiento')).toBe(true);
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Seguimiento')).toBeTruthy();
+      expect(document.body.querySelector('button[aria-label="Abrir acciones para seguimiento  del -"]')).toBeNull();
+      expect(document.body.textContent).not.toContain(' del -');
+    });
+
+    await cleanup();
+  });
+
   it('shows the mark-paid action only when the dossier can actually use it', async () => {
     const markPaidReceiptHint = 'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.';
     const registration = buildRegistration();

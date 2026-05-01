@@ -579,6 +579,8 @@ const eventTypeLabel = (eventType: string) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
 
+const followUpTypeLabel = (entryType: string) => eventTypeLabel(entryType) || 'Seguimiento';
+
 const getSharedEmailEventTypeLabel = (
   events: readonly Pick<CourseEmailEventDTO, 'ceEventType'>[],
 ) => {
@@ -611,7 +613,7 @@ const getSharedFollowUpTypeLabel = (
 ) => {
   if (followUps.length < 2) return '';
 
-  const labels = followUps.map((entry) => eventTypeLabel(entry.crfEntryType).trim());
+  const labels = followUps.map((entry) => followUpTypeLabel(entry.crfEntryType).trim());
   const [firstLabel] = labels;
 
   if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
@@ -645,8 +647,14 @@ const getFollowUpTypeOptions = (entryType: string) => {
 const followUpSubjectLabel = (entry: Pick<CourseRegistrationFollowUpDTO, 'crfSubject'>) =>
   entry.crfSubject?.trim() ?? '';
 
-const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
-  followUpSubjectLabel(entry) || `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
+const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) => {
+  const subject = followUpSubjectLabel(entry);
+  if (subject) return subject;
+
+  const typeLabel = followUpTypeLabel(entry.crfEntryType);
+  const createdLabel = formatOptionalDate(entry.crfCreatedAt);
+  return createdLabel ? `${typeLabel} del ${createdLabel}` : typeLabel;
+};
 
 const normalizeFollowUpActionTargetKey = (entry: CourseRegistrationFollowUpDTO) =>
   followUpActionTargetLabel(entry).toLocaleLowerCase('es');
@@ -5382,7 +5390,7 @@ export default function CourseRegistrationsAdminPage() {
                                       {showFollowUpMetadata && (
                                         <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
                                           {showFollowUpTypeChip && (
-                                            <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
+                                            <Chip size="small" label={followUpTypeLabel(entry.crfEntryType)} variant="outlined" />
                                           )}
                                           {followUpCreatedLabel && (
                                             <Typography variant="caption" color="text.secondary">
