@@ -7072,9 +7072,10 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain(
-        'No hay inscripciones en la vista actual: estado pagado · límite 50. Revisa los filtros o restablece la vista si esperabas resultados.',
+        'No hay inscripciones en la vista actual: estado pagado · límite 50.',
       );
       expect(container.textContent).not.toContain('cohorte Beatmaking 101 (beatmaking-101) · estado pagado');
+      expect(container.textContent).not.toContain('Revisa los filtros o restablece la vista si esperabas resultados.');
       expect(container.textContent).not.toContain('Restablece la vista o usa refrescar si esperabas resultados.');
       expect(container.textContent).not.toContain(
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
@@ -7254,8 +7255,9 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(container.textContent).toContain(
-        'No hay inscripciones con los filtros actuales: cohorte archived-course. Revisa los filtros o restablece la vista si esperabas resultados.',
+        'No hay inscripciones con los filtros actuales: cohorte archived-course.',
       );
+      expect(container.textContent).not.toContain('Revisa los filtros o restablece la vista si esperabas resultados.');
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para archived-course.');
       expect(container.textContent).not.toContain(initialEmptyStateFormActionLabel);
       expect(container.querySelector('a[href="/inscripcion/archived-course"]')).toBeNull();

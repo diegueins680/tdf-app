@@ -2187,16 +2187,20 @@ export default function CourseRegistrationsAdminPage() {
     && !hasSlugFilter;
   const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
   const filteredEmptyStateRecoveryHint = hasManualFilters
-    ? 'Revisa los filtros o restablece la vista si esperabas resultados.'
+    ? ''
     : 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit
       ? 'en la vista actual'
       : 'con los filtros actuales'
     : 'con el límite actual';
-  const filteredEmptyStateMessage = activeFilterSummary
-    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
-    : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
+  const filteredEmptyStateBaseMessage = activeFilterSummary
+    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}.`
+    : `No hay inscripciones ${filteredEmptyStateScope}.`;
+  const filteredEmptyStateMessage = [
+    filteredEmptyStateBaseMessage,
+    filteredEmptyStateRecoveryHint,
+  ].filter(Boolean).join(' ');
   const hasTinyLimitOnlyView = hasCustomLimit
     && !hasManualFilters
     && !hasLocalSearch
