@@ -337,6 +337,17 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'temporalmente no disponible',
   'no esta disponible',
   'no disponible',
+  'not configured',
+  'not configured yet',
+  'not set up',
+  'not set up yet',
+  'setup required',
+  'requires setup',
+  'no configurado',
+  'no esta configurado',
+  'sin configurar',
+  'aun no esta configurado',
+  'todavia no esta configurado',
 ] as const;
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'revisa el estado del sistema ajusta permisos y valida cambios recientes desde un solo lugar',

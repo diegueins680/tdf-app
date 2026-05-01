@@ -3594,6 +3594,53 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/no está disponible/i)).not.toBeInTheDocument();
   });
 
+  it('ignores setup-required fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-credentials-setup',
+          title: 'Credenciales externas',
+          body: ['Setup required before this module can be opened.'],
+        },
+        {
+          cardId: 'technical-integrations-unconfigured',
+          title: 'Integraciones técnicas',
+          body: ['Aún no está configurado en este entorno.'],
+        },
+        {
+          cardId: 'service-tokens-unconfigured',
+          title: 'Service tokens',
+          body: ['Not configured yet.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Credenciales externas|Integraciones técnicas|Service tokens/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Setup required/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no está configurado/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Not configured yet/i)).not.toBeInTheDocument();
+  });
+
   it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
