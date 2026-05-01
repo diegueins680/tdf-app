@@ -76,8 +76,8 @@ const getSingleContactPrimaryActionLabel = ({
   party: Pick<PartyDTO, 'hasUserAccount' | 'primaryEmail'>;
 }) => {
   if (!hasPartyPrimaryEmail(party)) return 'Completar contacto';
-  if (!party.hasUserAccount) return 'Editar o crear usuario';
-  return canManageRoles ? 'Editar o revisar acceso' : 'Editar contacto';
+  if (!party.hasUserAccount) return 'Crear usuario';
+  return canManageRoles ? 'Revisar acceso' : 'Editar contacto';
 };
 
 const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;

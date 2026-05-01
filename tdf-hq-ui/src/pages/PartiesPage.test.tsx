@@ -426,7 +426,8 @@ describe('PartiesPage', () => {
         );
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
-        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
         expect(countButtonsByAriaLabel(container, 'Abrir acciones para Ada Lovelace')).toBe(1);
         expect(container.textContent).not.toContain('Acciones de Ada Lovelace');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
@@ -565,7 +566,8 @@ describe('PartiesPage', () => {
         expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
-        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
         expect(container.textContent).not.toContain('Acciones de Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
       });
@@ -785,11 +787,12 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Primer contacto registrado');
         expect(container.textContent).toContain('Ada Lovelace');
-        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
       });
 
       await act(async () => {
-        clickButton(getButtonsByText(document.body, 'Editar o crear usuario')[0]!);
+        clickButton(getButtonsByText(document.body, 'Crear usuario')[0]!);
         await flushPromises();
         await flushPromises();
       });
@@ -814,8 +817,16 @@ describe('PartiesPage', () => {
         );
       });
 
+      const createUserSubmit = getButtonsByText(document.body, 'Crear usuario').find(
+        (button) => button.closest('[role="dialog"]'),
+      );
+
+      if (!createUserSubmit) {
+        throw new Error('Create-user dialog submit button not found');
+      }
+
       await act(async () => {
-        clickButton(getButtonsByText(document.body, 'Crear usuario')[0]!);
+        clickButton(createUserSubmit);
         await flushPromises();
         await flushPromises();
       });
