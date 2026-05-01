@@ -323,7 +323,7 @@ export default function AdminDiagnosticsPage() {
                     <Typography variant="subtitle1" fontWeight={700}>
                       {label}
                     </Typography>
-                    {!hasSingleSocialMessageState(stats) && (
+                    {!loading && !hasSingleSocialMessageState(stats) && (
                       <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
                     )}
                   </Stack>

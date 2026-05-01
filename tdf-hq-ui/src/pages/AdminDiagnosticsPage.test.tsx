@@ -268,6 +268,27 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('keeps partially loading social channels from showing confirmed zero-count chips', async () => {
+    listInstagramMessagesMock.mockResolvedValue([buildMessage()]);
+    listFacebookMessagesMock.mockImplementation(() => new Promise<SocialMessage[]>(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(2);
+        expect(getSocialChannelCardByLabel(container, 'Instagram').textContent).toContain('Respondidos: 1');
+        expect(getSocialChannelCardByLabel(container, 'Facebook').textContent).not.toContain('Entrantes: 0');
+        expect(container.textContent).toContain('Sin mensajes entrantes en WhatsApp.');
+        expect(container.textContent).not.toContain('Entrantes: 0');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces repeated pre-history guidance with one shared summary when multiple channels are still awaiting their first reply', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage({
