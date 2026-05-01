@@ -3700,6 +3700,14 @@ spec = describe "TDF.Server helpers" $ do
                 "Incorrect API key provided: model_not_found"
                 `shouldBe` False
             shouldRetryWithFallbackModel
+                403
+                "permission_denied: model_not_found for this project"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "forbidden: model_not_found for this organization"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
                 0
                 "network timeout while retrying unknown model gpt-x"
                 `shouldBe` False
