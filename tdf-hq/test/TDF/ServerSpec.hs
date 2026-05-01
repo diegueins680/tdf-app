@@ -314,6 +314,7 @@ import TDF.ServerProposals
     )
 import TDF.ServerFuture
     ( allowedFutureStubMetadata
+    , allowedFutureStubAreas
     , futureServer
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
@@ -7981,6 +7982,20 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected malformed Admin access to be rejected, got: " <> show value)
 
     describe "validateFutureStubMetadata" $ do
+        it "derives mounted fallback discovery areas from the canonical catalog" $ do
+            allowedFutureStubAreas
+                `shouldBe` [ "access"
+                           , "crm"
+                           , "scheduling"
+                           , "packages"
+                           , "invoicing"
+                           , "inventory"
+                           , "admin"
+                           , "experience"
+                           ]
+            forM_ allowedFutureStubMetadata $ \(area, _endpoint) ->
+                validateFutureStubArea area `shouldBe` Right area
+
         it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
             validateFutureStubArea "access" `shouldBe` Right "access"
 

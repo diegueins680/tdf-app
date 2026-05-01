@@ -366,15 +366,7 @@ allowedFutureStubMetadata =
 
 allowedFutureStubAreas :: [Text]
 allowedFutureStubAreas =
-  [ "access"
-  , "crm"
-  , "scheduling"
-  , "packages"
-  , "invoicing"
-  , "inventory"
-  , "admin"
-  , "experience"
-  ]
+  nub (map fst allowedFutureStubMetadata)
 
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
