@@ -404,6 +404,24 @@ function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
     .join('\n');
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripAdminConsoleTitlePrefix(paragraph: string, title: string) {
+  const trimmedParagraph = paragraph.trim();
+  const trimmedTitle = title.trim();
+
+  if (trimmedParagraph === '' || trimmedTitle === '') {
+    return trimmedParagraph;
+  }
+
+  const titlePrefixPattern = new RegExp(`^${escapeRegExp(trimmedTitle)}\\s*[:—–-]\\s*`, 'i');
+  const strippedParagraph = trimmedParagraph.replace(titlePrefixPattern, '').trim();
+
+  return strippedParagraph === '' ? trimmedParagraph : strippedParagraph;
+}
+
 const BUILT_IN_ADMIN_CARD_ID_KEYS = new Set(
   BUILT_IN_ADMIN_CARD_IDS.map((value) => normalizeBuiltInAdminConsoleSectionKey(value)),
 );
@@ -420,7 +438,7 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
     const titleParagraphKey = normalizeAdminConsoleParagraphKey(title);
     const seenParagraphs = new Set<string>();
     const body = card.body
-      .map((paragraph) => paragraph.trim())
+      .map((paragraph) => stripAdminConsoleTitlePrefix(paragraph, title))
       .filter((paragraph) => paragraph.length > 0)
       .filter((paragraph) => !isPlaceholderAdminConsoleParagraph(paragraph))
       .filter((paragraph) => !isBuiltInAdminConsoleParagraph(paragraph))
