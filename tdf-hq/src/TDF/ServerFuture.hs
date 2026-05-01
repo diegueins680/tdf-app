@@ -62,32 +62,32 @@ futureServer user = futureCatalog
     futureCatalog =
       requireFutureAdminAccess user *> futureStubCatalogResponse
 
-    adminStub area endpoint =
+    adminStubEntry (area, endpoint) =
       requireFutureAdminAccess user *> stub area endpoint
 
-    accessStubs =    adminStub "access" "login-options"
-                :<|> adminStub "access" "module-behaviour"
-                :<|> adminStub "access" "session-policy"
+    accessStubs =    adminStubEntry accessLoginOptionsStub
+                :<|> adminStubEntry accessModuleBehaviourStub
+                :<|> adminStubEntry accessSessionPolicyStub
 
-    crmStubs =       adminStub "crm" "parties/list-columns"
-                :<|> adminStub "crm" "parties/filters"
-                :<|> adminStub "crm" "parties/detail-tabs"
+    crmStubs =       adminStubEntry crmPartiesListColumnsStub
+                :<|> adminStubEntry crmPartiesFiltersStub
+                :<|> adminStubEntry crmPartiesDetailTabsStub
 
-    schedulingStubs =    adminStub "scheduling" "bookings/views"
-                    :<|> adminStub "scheduling" "sessions/creation"
-                    :<|> adminStub "scheduling" "rooms/features"
+    schedulingStubs =    adminStubEntry schedulingBookingsViewsStub
+                    :<|> adminStubEntry schedulingSessionsCreationStub
+                    :<|> adminStubEntry schedulingRoomsFeaturesStub
 
-    packagesStubs =  adminStub "packages" "catalog"
-                :<|> adminStub "packages" "purchase-flow"
+    packagesStubs =  adminStubEntry packagesCatalogStub
+                :<|> adminStubEntry packagesPurchaseFlowStub
 
-    invoicingStubs = adminStub "invoicing" "composer"
-                :<|> adminStub "invoicing" "status-flow"
+    invoicingStubs = adminStubEntry invoicingComposerStub
+                :<|> adminStubEntry invoicingStatusFlowStub
 
-    inventoryStubs = adminStub "inventory" "assets/metadata"
-                :<|> adminStub "inventory" "assets/workflow"
-                :<|> adminStub "inventory" "stock"
+    inventoryStubs = adminStubEntry inventoryAssetsMetadataStub
+                :<|> adminStubEntry inventoryAssetsWorkflowStub
+                :<|> adminStubEntry inventoryStockStub
 
-    adminStubs =     adminStub "admin" "seed"
+    adminStubs =     adminStubEntry adminSeedStub
                 :<|> adminConsole
 
     adminConsole = do
@@ -104,11 +104,11 @@ futureServer user = futureCatalog
           , cards = adminConsoleCards
           }
 
-    crossCuttingStubs = adminStub "experience" "navigation"
-                    :<|> adminStub "experience" "feedback"
-                    :<|> adminStub "experience" "offline"
-                    :<|> adminStub "experience" "design"
-                    :<|> adminStub "experience" "auditing"
+    crossCuttingStubs = adminStubEntry experienceNavigationStub
+                    :<|> adminStubEntry experienceFeedbackStub
+                    :<|> adminStubEntry experienceOfflineStub
+                    :<|> adminStubEntry experienceDesignStub
+                    :<|> adminStubEntry experienceAuditingStub
 
 adminConsoleCards :: [AdminConsoleCard]
 adminConsoleCards =
@@ -344,30 +344,75 @@ invalidCardText maxLength value =
       isControl ch
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
+accessLoginOptionsStub, accessModuleBehaviourStub, accessSessionPolicyStub
+  :: (Text, Text)
+accessLoginOptionsStub = ("access", "login-options")
+accessModuleBehaviourStub = ("access", "module-behaviour")
+accessSessionPolicyStub = ("access", "session-policy")
+
+crmPartiesListColumnsStub, crmPartiesFiltersStub, crmPartiesDetailTabsStub
+  :: (Text, Text)
+crmPartiesListColumnsStub = ("crm", "parties/list-columns")
+crmPartiesFiltersStub = ("crm", "parties/filters")
+crmPartiesDetailTabsStub = ("crm", "parties/detail-tabs")
+
+schedulingBookingsViewsStub, schedulingSessionsCreationStub, schedulingRoomsFeaturesStub
+  :: (Text, Text)
+schedulingBookingsViewsStub = ("scheduling", "bookings/views")
+schedulingSessionsCreationStub = ("scheduling", "sessions/creation")
+schedulingRoomsFeaturesStub = ("scheduling", "rooms/features")
+
+packagesCatalogStub, packagesPurchaseFlowStub :: (Text, Text)
+packagesCatalogStub = ("packages", "catalog")
+packagesPurchaseFlowStub = ("packages", "purchase-flow")
+
+invoicingComposerStub, invoicingStatusFlowStub :: (Text, Text)
+invoicingComposerStub = ("invoicing", "composer")
+invoicingStatusFlowStub = ("invoicing", "status-flow")
+
+inventoryAssetsMetadataStub, inventoryAssetsWorkflowStub, inventoryStockStub
+  :: (Text, Text)
+inventoryAssetsMetadataStub = ("inventory", "assets/metadata")
+inventoryAssetsWorkflowStub = ("inventory", "assets/workflow")
+inventoryStockStub = ("inventory", "stock")
+
+adminSeedStub :: (Text, Text)
+adminSeedStub = ("admin", "seed")
+
+experienceNavigationStub, experienceFeedbackStub, experienceOfflineStub
+  :: (Text, Text)
+experienceNavigationStub = ("experience", "navigation")
+experienceFeedbackStub = ("experience", "feedback")
+experienceOfflineStub = ("experience", "offline")
+
+experienceDesignStub, experienceAuditingStub :: (Text, Text)
+experienceDesignStub = ("experience", "design")
+experienceAuditingStub = ("experience", "auditing")
+
 allowedFutureStubMetadata :: [(Text, Text)]
 allowedFutureStubMetadata =
-  [ ("access", "login-options")
-  , ("access", "module-behaviour")
-  , ("access", "session-policy")
-  , ("crm", "parties/list-columns")
-  , ("crm", "parties/filters")
-  , ("crm", "parties/detail-tabs")
-  , ("scheduling", "bookings/views")
-  , ("scheduling", "sessions/creation")
-  , ("scheduling", "rooms/features")
-  , ("packages", "catalog")
-  , ("packages", "purchase-flow")
-  , ("invoicing", "composer")
-  , ("invoicing", "status-flow")
-  , ("inventory", "assets/metadata")
-  , ("inventory", "assets/workflow")
-  , ("inventory", "stock")
-  , ("admin", "seed")
-  , ("experience", "navigation")
-  , ("experience", "feedback")
-  , ("experience", "offline")
-  , ("experience", "design")
-  , ("experience", "auditing")
+  [ accessLoginOptionsStub
+  , accessModuleBehaviourStub
+  , accessSessionPolicyStub
+  , crmPartiesListColumnsStub
+  , crmPartiesFiltersStub
+  , crmPartiesDetailTabsStub
+  , schedulingBookingsViewsStub
+  , schedulingSessionsCreationStub
+  , schedulingRoomsFeaturesStub
+  , packagesCatalogStub
+  , packagesPurchaseFlowStub
+  , invoicingComposerStub
+  , invoicingStatusFlowStub
+  , inventoryAssetsMetadataStub
+  , inventoryAssetsWorkflowStub
+  , inventoryStockStub
+  , adminSeedStub
+  , experienceNavigationStub
+  , experienceFeedbackStub
+  , experienceOfflineStub
+  , experienceDesignStub
+  , experienceAuditingStub
   ]
 
 allowedFutureStubAreas :: [Text]

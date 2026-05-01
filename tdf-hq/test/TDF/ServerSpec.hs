@@ -369,6 +369,63 @@ firstFutureAdminConsole user =
         _seed :<|> adminConsole = adminStubs
     in adminConsole
 
+allFutureStubs :: AuthedUser -> [Either ServerError StubResponse]
+allFutureStubs user =
+    let _catalog
+            :<|> accessStubs
+            :<|> crmStubs
+            :<|> schedulingStubs
+            :<|> packagesStubs
+            :<|> invoicingStubs
+            :<|> inventoryStubs
+            :<|> adminStubs
+            :<|> experienceStubs = futureServer user
+        accessLoginOptions
+            :<|> accessModuleBehaviour
+            :<|> accessSessionPolicy = accessStubs
+        crmPartiesListColumns
+            :<|> crmPartiesFilters
+            :<|> crmPartiesDetailTabs = crmStubs
+        schedulingBookingsViews
+            :<|> schedulingSessionsCreation
+            :<|> schedulingRoomsFeatures = schedulingStubs
+        packagesCatalog
+            :<|> packagesPurchaseFlow = packagesStubs
+        invoicingComposer
+            :<|> invoicingStatusFlow = invoicingStubs
+        inventoryAssetsMetadata
+            :<|> inventoryAssetsWorkflow
+            :<|> inventoryStock = inventoryStubs
+        adminSeed :<|> _adminConsole = adminStubs
+        experienceNavigation
+            :<|> experienceFeedback
+            :<|> experienceOffline
+            :<|> experienceDesign
+            :<|> experienceAuditing = experienceStubs
+    in [ accessLoginOptions
+       , accessModuleBehaviour
+       , accessSessionPolicy
+       , crmPartiesListColumns
+       , crmPartiesFilters
+       , crmPartiesDetailTabs
+       , schedulingBookingsViews
+       , schedulingSessionsCreation
+       , schedulingRoomsFeatures
+       , packagesCatalog
+       , packagesPurchaseFlow
+       , invoicingComposer
+       , invoicingStatusFlow
+       , inventoryAssetsMetadata
+       , inventoryAssetsWorkflow
+       , inventoryStock
+       , adminSeed
+       , experienceNavigation
+       , experienceFeedback
+       , experienceOffline
+       , experienceDesign
+       , experienceAuditing
+       ]
+
 inputListSessionKey :: ME.SessionId
 inputListSessionKey =
     case fromPathPiece ("00000000-0000-0000-0000-000000000084" :: Text) of
@@ -8628,6 +8685,38 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback discovery catalog, got: " <> show serverErr)
+
+        it "keeps every mounted fallback discovery stub aligned with the canonical catalog" $ do
+            let assertRejected response =
+                    case response of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected mounted fallback discovery stub access to be "
+                                    <> "rejected, got: "
+                                    <> show value
+                                )
+            mapM_ assertRejected (allFutureStubs (mkUser [StudioManager]))
+
+            case sequence (allFutureStubs (mkUser [Admin])) of
+                Right routeResponses -> do
+                    map (\response -> (stubArea response, stubEndpoint response)) routeResponses
+                        `shouldBe` allowedFutureStubMetadata
+                    map stubPath routeResponses
+                        `shouldBe` map
+                            (\(area, endpoint) -> "/stubs/" <> area <> "/" <> endpoint)
+                            allowedFutureStubMetadata
+                    routeResponses `shouldSatisfy` all ((== "GET") . stubMethod)
+                    routeResponses `shouldSatisfy` all ((== "planned") . stubStatus)
+                    routeResponses `shouldSatisfy` all ((== "Admin") . stubRequiredRole)
+                    routeResponses `shouldSatisfy` all ((== "Admin") . stubRequiredModule)
+                    routeResponses `shouldSatisfy` all (not . stubImplemented)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected every mounted fallback discovery stub to validate, got: "
+                            <> show serverErr)
 
         it "requires literal Admin before serving fallback discovery stubs" $ do
             case firstFutureStub (mkUser [StudioManager]) of
