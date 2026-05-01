@@ -1381,6 +1381,9 @@ normalizeBrainEntryTags (Just rawTags) =
           Left err400 { errBody = "brain entry tags must be 40 characters or fewer" }
       | T.any isControl tag =
           Left err400 { errBody = "brain entry tags must not contain control characters" }
+      | T.any isUnsupportedAdminAuditChar tag =
+          Left err400
+            { errBody = "brain entry tags must not contain hidden format characters" }
       | otherwise =
           Right tag
 

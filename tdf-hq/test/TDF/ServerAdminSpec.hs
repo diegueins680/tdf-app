@@ -507,6 +507,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "must not contain control characters"
                 (normalizeBrainEntryTags (Just ["ops\ninternal"]))
+            assertInvalid
+                "must not contain hidden format characters"
+                (normalizeBrainEntryTags (Just ["ops" <> T.singleton '\x202E' <> "internal"]))
 
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
