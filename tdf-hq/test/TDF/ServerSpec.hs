@@ -6154,6 +6154,10 @@ spec = describe "TDF.Server helpers" $ do
                 "DATAFAST_VERSIONDF"
                 (Just "2\nextra")
                 "DATAFAST_VERSIONDF must not contain control characters or whitespace"
+            assertInvalid
+                "DATAFAST_TID"
+                (Just ("tid" <> [toEnum 0x202E] <> "value"))
+                "hidden formatting characters"
 
     describe "label track update validation" $ do
         it "accepts omitted or positive owner filters before listing label tracks" $ do
@@ -6358,6 +6362,10 @@ spec = describe "TDF.Server helpers" $ do
                 "PAYPAL_CLIENT_SECRET"
                 (Just "secret\nwith-break")
                 "PAYPAL_CLIENT_SECRET must not contain control characters"
+            assertInvalid
+                "PAYPAL_CLIENT_ID"
+                (Just ("client" <> [toEnum 0x202E] <> "id"))
+                "hidden formatting characters"
 
     describe "validatePayPalAccessTokenField" $ do
         it "normalizes PayPal access tokens before Bearer auth headers are built" $
@@ -6383,6 +6391,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "token with spaces")
                 "PayPal token response access token must not contain control characters"
+            assertInvalid
+                (Just ("token" <> T.singleton '\x202E' <> "value"))
+                "hidden formatting characters"
             assertInvalid
                 (Just (T.replicate 4097 "a"))
                 "PayPal token response access token must be 4096 characters or fewer"

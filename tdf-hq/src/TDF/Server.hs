@@ -10958,11 +10958,11 @@ validateOptionalDatafastCredential envName mRawCredential =
   case normalizeOptionalInput (T.pack <$> mRawCredential) of
     Nothing -> Right Nothing
     Just credential
-      | T.any (\ch -> isControl ch || isSpace ch) credential ->
+      | T.any isGatewayAuthHeaderUnsafeChar credential ->
           Left err500
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must not contain control characters or whitespace"
+                  gatewayAuthHeaderUnsafeMessage envName
             }
       | otherwise ->
           Right (Just credential)
@@ -11082,14 +11082,24 @@ validateRequiredGatewayCredential envName mRawCredential =
               envName <> " must be configured"
         }
     Just credential
-      | T.any (\ch -> isControl ch || isSpace ch) credential ->
+      | T.any isGatewayAuthHeaderUnsafeChar credential ->
           Left err500
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must not contain control characters or whitespace"
+                  gatewayAuthHeaderUnsafeMessage envName
             }
       | otherwise ->
           Right credential
+
+gatewayAuthHeaderUnsafeMessage :: Text -> Text
+gatewayAuthHeaderUnsafeMessage fieldName =
+  fieldName
+    <> " must not contain control characters or whitespace, "
+    <> "or hidden formatting characters"
+
+isGatewayAuthHeaderUnsafeChar :: Char -> Bool
+isGatewayAuthHeaderUnsafeChar ch =
+  isControl ch || isSpace ch || generalCategory ch == Format
 
 resolvePaypalBaseUrl :: Maybe String -> Either ServerError String
 resolvePaypalBaseUrl mEnv =
@@ -11152,10 +11162,11 @@ validatePayPalAccessTokenField (Just rawToken) =
             { errBody =
                 "PayPal token response access token must be 4096 characters or fewer"
             }
-      | T.any (\ch -> isControl ch || isSpace ch) token ->
+      | T.any isGatewayAuthHeaderUnsafeChar token ->
           Left err502
             { errBody =
-                "PayPal token response access token must not contain control characters or whitespace"
+                BL.fromStrict . TE.encodeUtf8 $
+                  gatewayAuthHeaderUnsafeMessage "PayPal token response access token"
             }
       | otherwise ->
           Right token
