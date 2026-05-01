@@ -514,6 +514,12 @@ const getUserAccessStateSearchValues = (user: Pick<AdminUser, 'modules' | 'roles
     : []
 );
 
+const getUserProfileStateSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? []
+    : ['perfil pendiente', 'sin perfil', 'sin perfil vinculado', 'perfil no vinculado']
+);
+
 const isDefaultAdminAccessSummary = ({
   modulesSummary,
   rolesSummary,
@@ -720,6 +726,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     ...getUserContactSearchValues(user),
     ...getUserContactReadinessSearchValues(user),
     ...getUserAccessStateSearchValues(user),
+    ...getUserProfileStateSearchValues(user),
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]

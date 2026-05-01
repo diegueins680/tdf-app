@@ -1201,6 +1201,60 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('lets admins search by pending-profile state without repeating profile labels on every row', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: null,
+        partyName: 'Ada Sin Perfil',
+        username: 'ada-no-profile',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: null,
+        partyName: 'Grace Sin Perfil',
+        username: 'grace-no-profile',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 10,
+        partyName: 'Linus Vinculado',
+        username: 'linus-linked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 2 usuarios todavía sin perfil vinculado; sus nombres no abren un perfil. Vista actual: solo usuarios activos.',
+        );
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('perfil');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Perfil pendiente');
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'perfil pendiente');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getPageGuidance(container)).toBe(
+          'Mostrando 2 de 3 usuarios. 2 usuarios todavía sin perfil vinculado; sus nombres no abren un perfil.',
+        );
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Perfil pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Perfil pendiente');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the multi-user intro focused on available actions when no visible user has a linked profile', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
