@@ -1564,12 +1564,22 @@ spec = do
                 "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
                 `shouldSatisfy` isLeft
 
-        it "rejects non-positive ticket quantities before ticket-tier lookup" $ do
+        it "rejects non-positive or excessive ticket quantities before ticket-tier lookup" $ do
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":0}"
                 `shouldSatisfy` isLeft
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":-1}"
+                `shouldSatisfy` isLeft
+            case decodeTicketPurchase (ticketPurchaseJson SocialEvents.maxTicketPurchaseQuantity) of
+                Left err ->
+                    expectationFailure
+                        ("Expected capped ticket purchase payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.ticketPurchaseQuantity payload
+                        `shouldBe` SocialEvents.maxTicketPurchaseQuantity
+            decodeTicketPurchase
+                (ticketPurchaseJson (SocialEvents.maxTicketPurchaseQuantity + 1))
                 `shouldSatisfy` isLeft
 
         it "rejects missing, blank, or ambiguous ticket check-in lookup fields" $ do
@@ -1809,6 +1819,9 @@ spec = do
     decodeTicketTier = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
+    ticketPurchaseJson :: Int -> BL8.ByteString
+    ticketPurchaseJson quantity =
+        BL8.pack ("{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":" <> show quantity <> "}")
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO
     decodeTicketOrderStatus = eitherDecode
     decodeTicketCheckIn :: BL8.ByteString -> Either String SocialEvents.TicketCheckInRequestDTO

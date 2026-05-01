@@ -27,6 +27,7 @@ module TDF.DTO.SocialEventsDTO
   , EventMomentCommentCreateDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
+  , maxTicketPurchaseQuantity
   , TicketOrderStatusUpdateDTO(..)
   , TicketCheckInRequestDTO(..)
   , TicketDTO(..)
@@ -565,6 +566,10 @@ data TicketPurchaseRequestDTO = TicketPurchaseRequestDTO
   , ticketPurchaseBuyerName :: Maybe Text
   , ticketPurchaseBuyerEmail :: Maybe Text
   } deriving (Show, Eq, Generic)
+
+maxTicketPurchaseQuantity :: Int
+maxTicketPurchaseQuantity = 100
+
 instance ToJSON TicketPurchaseRequestDTO
 instance FromJSON TicketPurchaseRequestDTO where
   parseJSON = withObject "TicketPurchaseRequestDTO" $ \o -> do
@@ -582,10 +587,13 @@ instance FromJSON TicketPurchaseRequestDTO where
     if quantity <= (0 :: Int)
       then fail "ticketPurchaseQuantity must be greater than 0"
       else
-        TicketPurchaseRequestDTO tierId quantity
-          <$> o .:? "ticketPurchaseBuyerPartyId"
-          <*> o .:? "ticketPurchaseBuyerName"
-          <*> o .:? "ticketPurchaseBuyerEmail"
+        if quantity > maxTicketPurchaseQuantity
+          then fail "ticketPurchaseQuantity exceeds the per-order limit"
+          else
+            TicketPurchaseRequestDTO tierId quantity
+              <$> o .:? "ticketPurchaseBuyerPartyId"
+              <*> o .:? "ticketPurchaseBuyerName"
+              <*> o .:? "ticketPurchaseBuyerEmail"
 
 data TicketOrderStatusUpdateDTO = TicketOrderStatusUpdateDTO
   { ticketOrderStatus :: Text
