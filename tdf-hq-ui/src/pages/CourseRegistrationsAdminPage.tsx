@@ -746,6 +746,12 @@ const firstRunPublicRegistrationDescriptorPrefixPattern =
 const firstRunPublicRegistrationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))\s*$/i;
 
+const firstRunOnlineRegistrationDescriptorPrefixPattern =
+  /^(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOnlineRegistrationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
 const firstRunReservationDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:booking|reservation)\s+(?:form|page|portal)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+reserva(?:\s+de\s+cupos?)?|reservas?\s+de\s+cupos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -787,6 +793,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -819,6 +826,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
