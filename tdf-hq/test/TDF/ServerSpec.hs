@@ -7524,6 +7524,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "title must not contain control characters"
                 (validateOptionalBookingTitleUpdate (Just "Sesion\nmezcla"))
+            assertInvalid
+                "hidden formatting characters"
+                (validateRequiredBookingTitle ("Sesion" <> T.singleton '\x200B' <> "mezcla"))
+            assertInvalid
+                "hidden formatting characters"
+                (validateOptionalBookingTitleUpdate (Just ("Sesion" <> T.singleton '\x202E' <> "mezcla")))
 
     describe "booking notes validation" $ do
         it "normalizes blank and meaningful booking notes before persistence" $ do

@@ -4639,8 +4639,11 @@ validateRequiredBookingTitle rawTitle =
        then Left err400 { errBody = "title is required" }
        else if T.length titleVal > bookingTitleMaxLength
          then Left err400 { errBody = "title must be 160 characters or fewer" }
-         else if T.any isControl titleVal
-           then Left err400 { errBody = "title must not contain control characters" }
+         else if T.any isUnsafeBookingTitleChar titleVal
+           then Left err400
+             { errBody =
+                 "title must not contain control characters or hidden formatting characters"
+             }
            else Right titleVal
 
 validateOptionalBookingTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
@@ -4650,6 +4653,11 @@ validateOptionalBookingTitleUpdate (Just rawTitle) =
 
 bookingTitleMaxLength :: Int
 bookingTitleMaxLength = 160
+
+isUnsafeBookingTitleChar :: Char -> Bool
+isUnsafeBookingTitleChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validateBookingNotes Nothing = Right Nothing
