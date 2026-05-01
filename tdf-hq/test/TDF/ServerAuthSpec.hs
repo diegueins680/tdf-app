@@ -11,6 +11,7 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
+import TDF.DTO (LoginRequest (..))
 import TDF.Models (UserCredential (..))
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
@@ -19,6 +20,7 @@ import TDF.ServerAuth
   , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
+  , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validatePasswordResetToken
   , validateSignupDisplayName
@@ -27,6 +29,7 @@ import TDF.ServerAuth
 spec :: Spec
 spec = do
   authEmailSpec
+  loginRequestSpec
   signupDisplayNameSpec
   passwordResetTokenSpec
   googleTokenInfoSpec
@@ -65,6 +68,37 @@ authEmailSpec = describe "normalizeAuthEmailAddress" $ do
             ]
       )
       `shouldBe` Nothing
+
+loginRequestSpec :: Spec
+loginRequestSpec = describe "validateLoginRequest" $ do
+  it "trims canonical login inputs before credential lookup" $
+    case validateLoginRequest (LoginRequest " ada@example.com " " TempPass123! ") of
+      Right (LoginRequest usernameVal passwordVal) -> do
+        usernameVal `shouldBe` "ada@example.com"
+        passwordVal `shouldBe` "TempPass123!"
+      Left err ->
+        expectationFailure ("Expected valid login request, got " <> show err)
+
+  it "rejects malformed login inputs before database fallback lookup" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertRejected label request =
+          case validateLoginRequest request of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` label
+            Right value ->
+              expectationFailure ("Expected invalid login request, got " <> show value)
+    assertRejected "Username is required" (LoginRequest "   " "TempPass123!")
+    assertRejected
+      "Username must not contain whitespace"
+      (LoginRequest "ada example" "TempPass123!")
+    assertRejected
+      "hidden formatting"
+      (LoginRequest ("ada" <> hiddenFormat <> "@example.com") "TempPass123!")
+    assertRejected "Password is required" (LoginRequest "ada@example.com" "   ")
+    assertRejected
+      "Password must not contain control characters"
+      (LoginRequest "ada@example.com" "Temp\nPass123!")
 
 signupDisplayNameSpec :: Spec
 signupDisplayNameSpec = describe "validateSignupDisplayName" $ do

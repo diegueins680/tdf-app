@@ -27,6 +27,7 @@ module TDF.ServerAuth
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , signupEmailExists
+  , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validateAuthPassword
   , validatePasswordResetToken
@@ -480,7 +481,8 @@ withSessionCookie response@LoginResponse{token = sessionToken} = do
   pure (addHeader (sessionCookieHeader cfg sessionToken) response)
 
 login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
-login LoginRequest{..} = do
+login rawRequest = do
+  LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
   Env pool _ <- ask
   result <- liftIO $ flip runSqlPool pool (runLogin username password)
   case result of
@@ -652,6 +654,40 @@ passwordChangeAuthTokenMaxLength = 512
 
 invalidPasswordChangeAuthTokenChar :: Char -> Bool
 invalidPasswordChangeAuthTokenChar ch = isSpace ch || isControl ch
+
+validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
+validateLoginRequest (LoginRequest rawUsername rawPassword)
+  | T.null usernameClean =
+      Left err400 { errBody = "Username is required" }
+  | T.length usernameClean > maxLoginIdentifierChars =
+      Left err400 { errBody = "Username must be 254 characters or fewer" }
+  | T.any invalidLoginIdentifierChar usernameClean =
+      Left err400
+        { errBody = loginIdentifierError }
+  | T.null passwordClean =
+      Left err400 { errBody = "Password is required" }
+  | BS8.length (TE.encodeUtf8 passwordClean) > maxBcryptPasswordBytes =
+      Left err400 { errBody = "Password must be 72 bytes or fewer" }
+  | T.any isControl passwordClean =
+      Left err400 { errBody = "Password must not contain control characters" }
+  | otherwise =
+      Right (LoginRequest usernameClean passwordClean)
+  where
+    usernameClean = T.strip rawUsername
+    passwordClean = T.strip rawPassword
+
+maxLoginIdentifierChars :: Int
+maxLoginIdentifierChars = 254
+
+loginIdentifierError :: BL.ByteString
+loginIdentifierError =
+  "Username must not contain whitespace, control characters, or hidden formatting characters"
+
+invalidLoginIdentifierChar :: Char -> Bool
+invalidLoginIdentifierChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validatePasswordResetToken :: Text -> Either ServerError Text
 validatePasswordResetToken rawToken
