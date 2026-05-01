@@ -206,6 +206,7 @@ import TDF.Server
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
       extractApiErrorMessage,
+      chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
@@ -1197,6 +1198,20 @@ main = hspec $ do
                     Data.Text.length msg `shouldSatisfy` (<= 520)
                 Nothing ->
                     expectationFailure "Expected sanitized upstream API error message"
+
+        it "uses status fallback text for non-JSON ChatKit upstream errors" $ do
+            chatKitSessionErrorMessage 503 (BL.pack "<html>unavailable</html>")
+                `shouldBe` "Error al crear sesión ChatKit (HTTP 503)"
+            chatKitSessionErrorMessage
+                429
+                ( A.encode $
+                    A.object
+                        [ "error" .= A.object
+                            [ "message" .= ("rate limit\nretry later" :: Text)
+                            ]
+                        ]
+                )
+                `shouldBe` "rate limit retry later"
 
         it "normalizes configured RAG tuning integers before building retrieval plans" $ do
             withEnvOverrides

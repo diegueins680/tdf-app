@@ -9349,12 +9349,12 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
   resp <- liftIO $ httpLbs req manager
   let status = statusCode (responseStatus resp)
       raw = responseBody resp
-  case eitherDecode raw of
-    Left err ->
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
-    Right payload ->
-      if status >= 200 && status < 300
-        then case extractChatKitSession payload of
+  if status >= 200 && status < 300
+    then case (eitherDecode raw :: Either String Value) of
+      Left err ->
+        throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
+      Right payload ->
+        case extractChatKitSession payload of
           Just (secret, expiresAfter) ->
             pure ChatKitSessionResponse
               { ckrClientSecret = secret
@@ -9362,10 +9362,17 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
               }
           Nothing ->
             throwError err502 { errBody = "ChatKit respondió sin client_secret" }
-        else do
-          let baseMsg = "Error al crear sesión ChatKit (HTTP " <> T.pack (show status) <> ")"
-              msg = fromMaybe baseMsg (extractApiErrorMessage payload)
-          throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+    else do
+      let msg = chatKitSessionErrorMessage status raw
+      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+chatKitSessionErrorMessage :: Int -> BL.ByteString -> Text
+chatKitSessionErrorMessage status raw =
+  case (eitherDecode raw :: Either String Value) of
+    Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
+    Left _ -> baseMsg
+  where
+    baseMsg = "Error al crear sesión ChatKit (HTTP " <> T.pack (show status) <> ")"
 
 resolveWorkflowId :: Maybe Text -> Maybe Text -> Either ServerError Text
 resolveWorkflowId primary fallback =
