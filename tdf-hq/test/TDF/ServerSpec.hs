@@ -569,6 +569,26 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected unsafe radio search filter to be rejected, got: " <> show value)
 
+        it "rejects blank explicit import sources instead of silently dropping them" $ do
+            case Radio.validateRadioImportSources
+                (Just ["https://stations.example.com/streams.csv", "   "])
+             of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "sources must not include blank entries"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank radio import source to be rejected, got: " <> show value)
+
+            case Radio.validateRadioImportSources
+                (Just [" https://stations.example.com/streams.csv "])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected radio import source to normalize, got: " <> show err)
+                Right sources ->
+                    sources `shouldBe` ["https://stations.example.com/streams.csv"]
+
     describe "Party request FromJSON" $ do
         it "accepts canonical CRM party create and update bodies" $ do
             case decodePartyCreate

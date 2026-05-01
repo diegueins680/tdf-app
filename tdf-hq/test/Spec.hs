@@ -6351,7 +6351,7 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid radio import sources to be rejected, got " <> show value)
             assertInvalid (Just []) "sources must include at least one public http(s) URL"
-            assertInvalid (Just ["   "]) "sources must include at least one public http(s) URL"
+            assertInvalid (Just ["   "]) "sources must not include blank entries"
             assertInvalid (Just ["ftp://radio.example.com/catalog.csv"]) "source must be http(s)"
             assertInvalid (Just ["http://127.0.0.1/catalog.csv"]) "source must not target localhost or private network addresses"
 

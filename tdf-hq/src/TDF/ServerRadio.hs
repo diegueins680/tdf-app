@@ -289,15 +289,18 @@ normalizePublicBaseScheme baseUrl
 
 validateRadioImportSources :: Maybe [Text] -> Either ServerError [Text]
 validateRadioImportSources Nothing = Right defaultRadioImportSources
-validateRadioImportSources (Just rawSources) =
-  case dedupeCanonicalSources (filter (not . T.null) (map (T.strip . canonicalRadioImportSource) rawSources)) of
-    [] ->
-      Left err400 { errBody = "sources must include at least one public http(s) URL" }
-    cleanedSources
-      | length cleanedSources > maxRadioImportSources ->
-          Left err400 { errBody = "sources must include at most 8 public http(s) URLs" }
-      | otherwise ->
-          traverse validateExplicitSource cleanedSources
+validateRadioImportSources (Just rawSources)
+  | any (T.null . T.strip) rawSources =
+      Left err400 { errBody = "sources must not include blank entries" }
+  | otherwise =
+      case dedupeCanonicalSources (map (T.strip . canonicalRadioImportSource) rawSources) of
+        [] ->
+          Left err400 { errBody = "sources must include at least one public http(s) URL" }
+        cleanedSources
+          | length cleanedSources > maxRadioImportSources ->
+              Left err400 { errBody = "sources must include at most 8 public http(s) URLs" }
+          | otherwise ->
+              traverse validateExplicitSource cleanedSources
   where
     validateExplicitSource source =
       case validateRadioStreamUrl source of
