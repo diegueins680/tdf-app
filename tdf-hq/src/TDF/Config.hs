@@ -155,10 +155,21 @@ validateFallbackConnUrl envName raw
                else if atCount > 1
                  then Left (envName <> " must not contain multiple @ separators")
                else
-                 validateConnectionHostPort hostPort
+                 validateConnectionUserInfo authority
+                   *> validateConnectionHostPort hostPort
                    *> validateConnectionDatabasePath databasePath
                    *> validateConnectionQueryParams databasePath
                    *> Right (T.unpack value)
+
+    validateConnectionUserInfo :: Text -> Either String ()
+    validateConnectionUserInfo authority =
+      case T.breakOn "@" authority of
+        (_, "") -> Right ()
+        (userinfo, _) ->
+          let username = T.takeWhile (/= ':') userinfo
+          in if T.null username
+               then Left (envName <> " userinfo must include a username")
+               else Right ()
 
     validateConnectionHostPort :: Text -> Either String ()
     validateConnectionHostPort hostPort
