@@ -2019,8 +2019,12 @@ export default function AdminConsolePage() {
                     ) : null}
                   </Stack>
                   <Stack spacing={0.5} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Roles: {formatEditableRoleList(singleAdminUser.roles)}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      title={formatEditableRoleList(singleAdminUser.roles)}
+                    >
+                      Roles: {formatInlineAdminUserRoleSummary(singleAdminUser.roles)}
                     </Typography>
                     <Button
                       size="small"

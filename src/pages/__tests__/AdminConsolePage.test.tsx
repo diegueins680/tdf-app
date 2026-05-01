@@ -4562,6 +4562,29 @@ describe('AdminConsolePage', () => {
     expect(rolesSelect).not.toHaveTextContent('Engineer, Teacher, Reception');
   });
 
+  it('keeps long single-user role summaries compact while preserving the full role detail', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        roles: ['Admin', 'Manager', 'Engineer', 'Teacher', 'Reception'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      const roleSummary = screen.getByText('Roles: Admin, Manager +3 roles');
+
+      expect(roleSummary).toHaveAttribute('title', 'Admin, Manager, Engineer, Teacher, Reception');
+      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar roles');
+    });
+
+    expect(
+      screen.queryByText('Roles: Admin, Manager, Engineer, Teacher, Reception'),
+    ).not.toBeInTheDocument();
+  });
+
   it('turns empty role assignments into an explicit action while keeping the edit flow accurate', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([
