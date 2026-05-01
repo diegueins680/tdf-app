@@ -346,7 +346,7 @@ export default function OrdersPage() {
     ? (rows[0] ?? null)
     : null;
   const showSingleSessionSummary = singleRow != null;
-  const showRefreshAction = totalRows > 0;
+  const showRefreshAction = totalRows > 1;
 
   useEffect(() => {
     if (page > maxPage) {

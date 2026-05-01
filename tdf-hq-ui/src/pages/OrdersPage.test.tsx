@@ -313,6 +313,7 @@ describe('OrdersPage', () => {
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Horario')).toBe(false);
         expect(hasTableHeader(container, 'Live Sessions')).toBe(false);
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
         expect(container.textContent).not.toContain('Filas por página');
         expect(container.textContent).not.toContain('Rows per page');
         expect(
