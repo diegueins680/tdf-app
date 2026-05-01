@@ -158,10 +158,20 @@ const getUserIdsRequiringIdentityDisambiguator = (users: readonly NormalizedUser
   );
 };
 
-const buildEditRolesLabel = (user: Pick<NormalizedUser, 'id' | 'name'>, showIdentityDisambiguator: boolean) =>
-  showIdentityDisambiguator
-    ? `Editar roles de ${user.name} (ID ${user.id})`
-    : `Editar roles de ${user.name}`;
+const getRoleEditActionLabel = (roles?: readonly RoleValue[] | null) =>
+  roles?.some((role) => role.trim()) ? 'Editar roles' : 'Asignar roles';
+
+const buildEditRolesLabel = (
+  user: Pick<NormalizedUser, 'id' | 'name'>,
+  showIdentityDisambiguator: boolean,
+  roles?: readonly RoleValue[] | null,
+) => {
+  const actionLabel = getRoleEditActionLabel(roles);
+
+  return showIdentityDisambiguator
+    ? `${actionLabel} de ${user.name} (ID ${user.id})`
+    : `${actionLabel} de ${user.name}`;
+};
 
 const CANONICAL_ROLES_BY_KEY = new Map(
   ALL_ROLES.map((role) => [role.toLocaleLowerCase('es'), role as RoleValue]),
@@ -251,7 +261,7 @@ const buildRoleButtonTitle = ({
 }) => {
   const normalizedRoles = normalizeRoleSelection(roles);
   const rolesSummary = normalizedRoles.length === 0 ? EMPTY_ROLES_LABEL : normalizedRoles.join(', ');
-  return `${buildEditRolesLabel(user, showIdentityDisambiguator)}. Roles actuales: ${rolesSummary}.`;
+  return `${buildEditRolesLabel(user, showIdentityDisambiguator, roles)}. Roles actuales: ${rolesSummary}.`;
 };
 
 const renderInlineRoleChips = (roles: readonly RoleValue[]) => {
@@ -359,7 +369,7 @@ export default function UserRoleManagement() {
     ? userIdsRequiringIdentityDisambiguator.has(selectedUser.id)
     : false;
   const editDialogTitle = selectedUser
-    ? buildEditRolesLabel(selectedUser, selectedUserNeedsIdentityDisambiguator)
+    ? buildEditRolesLabel(selectedUser, selectedUserNeedsIdentityDisambiguator, selectedUser.roles)
     : 'Editar roles';
 
   useEffect(() => {
@@ -514,6 +524,7 @@ export default function UserRoleManagement() {
                         aria-label={buildEditRolesLabel(
                           singleUser,
                           userIdsRequiringIdentityDisambiguator.has(singleUser.id),
+                          singleUser.roles,
                         )}
                         title={buildRoleButtonTitle({
                           roles: singleUser.roles,
@@ -588,7 +599,7 @@ export default function UserRoleManagement() {
                         <TableCell>
                           <ButtonBase
                             onClick={() => handleEditClick(user)}
-                            aria-label={buildEditRolesLabel(user, showIdentityDisambiguator)}
+                            aria-label={buildEditRolesLabel(user, showIdentityDisambiguator, user.roles)}
                             title={buildRoleButtonTitle({
                               roles: user.roles,
                               user,

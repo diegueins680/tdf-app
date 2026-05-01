@@ -632,13 +632,15 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('No roles');
       });
 
-      const editButton = container.querySelector('button[aria-label="Editar roles de Nina Sin Roles"]');
-      if (!(editButton instanceof HTMLButtonElement)) {
-        throw new Error('Edit roles button not found');
+      const assignButton = container.querySelector('button[aria-label="Asignar roles de Nina Sin Roles"]');
+      if (!(assignButton instanceof HTMLButtonElement)) {
+        throw new Error('Assign roles button not found');
       }
+      expect(assignButton.getAttribute('title')).toBe('Asignar roles de Nina Sin Roles. Roles actuales: Sin roles.');
+      expect(container.querySelector('button[aria-label="Editar roles de Nina Sin Roles"]')).toBeNull();
 
       await act(async () => {
-        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        assignButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         await flushPromises();
       });
 
@@ -653,7 +655,9 @@ describe('UserRoleManagement', () => {
           throw new Error('Roles select not found');
         }
 
+        expect(dialog.querySelector('h2')?.textContent).toBe('Asignar roles de Nina Sin Roles');
         expect(buttonText(rolesSelect)).toBe('Sin roles');
+        expect(dialog.textContent).not.toContain('Editar roles de Nina Sin Roles');
         expect(dialog.textContent).not.toContain('No roles');
       });
     } finally {
