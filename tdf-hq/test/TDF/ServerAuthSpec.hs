@@ -152,6 +152,21 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
         expectationFailure
           ("Expected malformed Google token email to be rejected, got " <> show profile)
 
+  it "rejects blank or unsafe Google subjects before account fallback creation" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertRejected rawSubject =
+          case validateGoogleIdTokenInfo
+            (Just "client-id")
+            googleTokenInfo { gitSub = rawSubject } of
+            Left err ->
+              T.unpack err `shouldContain` "identificador válido"
+            Right profile ->
+              expectationFailure
+                ("Expected malformed Google subject to be rejected, got " <> show profile)
+    assertRejected "   "
+    assertRejected "google sub 1"
+    assertRejected ("google-sub-" <> hiddenFormat <> "1")
+
 loginEmailFallbackSpec :: Spec
 loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
   it "allows exactly one login email fallback credential candidate" $

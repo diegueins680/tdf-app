@@ -858,6 +858,8 @@ validateGoogleIdTokenInfo mExpectedClientId info
       Left "El token de Google no coincide con el cliente configurado."
   | not (issuerAllowed (gitIss info)) =
       Left "El token de Google proviene de un emisor no permitido."
+  | T.null (T.strip (gitSub info)) || T.any invalidGoogleSubjectChar (gitSub info) =
+      Left "El token de Google no contiene un identificador válido."
   | otherwise =
       case normalizeAuthEmailAddress (gitEmail info) of
         Nothing ->
@@ -876,6 +878,12 @@ issuerAllowed Nothing = False
 issuerAllowed (Just issRaw) =
   let issuer = T.toLower (T.strip issRaw)
   in issuer == "accounts.google.com" || issuer == "https://accounts.google.com"
+
+invalidGoogleSubjectChar :: Char -> Bool
+invalidGoogleSubjectChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
 completeGoogleLogin GoogleProfile{..} = do
