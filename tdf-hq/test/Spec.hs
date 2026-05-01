@@ -13,6 +13,7 @@ import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
 import Data.List (isInfixOf)
+import Data.Maybe (isNothing)
 import Data.Text (Text)
 import qualified Data.Text
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
@@ -191,6 +192,8 @@ import TDF.ServerInstagramOAuth
 import TDF.Server
     ( buildWhatsappCtaFor,
       GoogleEventsPage (..),
+      parseMcpRequest,
+      parseToolCallParams,
       resolveDriveRedirectUri,
       resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
@@ -617,6 +620,31 @@ main = hspec $ do
                 $ do
                     info <- getVersionInfo
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
+    describe "MCP parser" $ do
+        it "rejects ambiguous request method names before dispatch" $ do
+            let requestWithMethod methodName =
+                    A.object
+                        [ "jsonrpc" .= ("2.0" :: Text)
+                        , "id" .= (1 :: Int)
+                        , "method" .= (methodName :: Text)
+                        , "params" .= A.object []
+                        ]
+            parseMcpRequest (requestWithMethod "tools/call extra")
+                `shouldSatisfy` isNothing
+            parseMcpRequest (requestWithMethod "tools/call\nextra")
+                `shouldSatisfy` isNothing
+
+        it "rejects ambiguous tool call names before constructing error messages" $ do
+            let callWithName toolName =
+                    A.object
+                        [ "name" .= (toolName :: Text)
+                        , "arguments" .= A.object []
+                        ]
+            parseToolCallParams (callWithName "tdf_health_check extra")
+                `shouldSatisfy` isNothing
+            parseToolCallParams (callWithName "tdf_health_check\nextra")
+                `shouldSatisfy` isNothing
 
     describe "loadConfig" $ do
         it "rejects malformed APP_PORT instead of booting on an unintended port" $ do

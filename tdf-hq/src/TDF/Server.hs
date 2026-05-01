@@ -378,12 +378,7 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
     Just (Number n)
       | not (Sci.isInteger n) -> fail "id number must be integral"
     _               -> pure ()
-  method <- o .: "method"
-  let methodClean = T.strip method
-  when (T.null methodClean) $
-    fail "method is required"
-  when (method /= methodClean) $
-    fail "method must not include surrounding whitespace"
+  method <- o .: "method" >>= validateMcpNameField "method"
   mParams <- o .:? "params"
   case mParams of
     Nothing -> pure (McpRequest reqId method Nothing)
@@ -393,18 +388,35 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
   rejectUnexpectedObjectFields "ToolCallParams" ["name", "arguments"] o
-  toolName <- o .: "name"
-  let toolNameClean = T.strip toolName
-  when (T.null toolNameClean) $
-    fail "name is required"
-  when (toolName /= toolNameClean) $
-    fail "name must not include surrounding whitespace"
+  toolName <- o .: "name" >>= validateMcpNameField "name"
   args <- case AKeyMap.lookup "arguments" o of
     Nothing -> pure (object [])
     Just value@(Object _) -> pure value
     Just Null -> fail "arguments must be an object"
     Just _ -> fail "arguments must be an object"
   pure (toolName, args)
+
+validateMcpNameField :: Text -> Text -> Parser Text
+validateMcpNameField fieldName rawName = do
+  let name = T.strip rawName
+  when (T.null name) $
+    fail (T.unpack fieldName <> " is required")
+  when (rawName /= name) $
+    fail (T.unpack fieldName <> " must not include surrounding whitespace")
+  when (T.length name > 128) $
+    fail (T.unpack fieldName <> " must be 128 characters or fewer")
+  when (T.any isUnsafeMcpNameChar name) $
+    fail
+      ( T.unpack fieldName
+          <> " must not contain whitespace, control characters, or Unicode formatting marks"
+      )
+  pure name
+
+isUnsafeMcpNameChar :: Char -> Bool
+isUnsafeMcpNameChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateMcpToolArguments :: Text -> Value -> Either Text ()
 validateMcpToolArguments "tdf_health_check" (Object args)
