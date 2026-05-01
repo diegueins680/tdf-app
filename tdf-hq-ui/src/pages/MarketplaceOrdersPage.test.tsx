@@ -1930,7 +1930,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps save disabled until the order editor has a real change', async () => {
+  it('keeps the save action hidden until the order editor has a real change', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1953,9 +1953,10 @@ describe('MarketplaceOrdersPage', () => {
       await clickFirstOrderRow(container);
 
       await waitForExpectation(() => {
-        const saveButton = queryActionByText(document.body, 'Guardar cambios');
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
       });
 
       const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
@@ -1965,6 +1966,7 @@ describe('MarketplaceOrdersPage', () => {
         const saveButton = queryActionByText(document.body, 'Guardar cambios');
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -1997,10 +1999,10 @@ describe('MarketplaceOrdersPage', () => {
         expect(document.body.textContent).toContain('Estado:');
         expect(document.body.textContent).toContain('Pendiente');
         expect(normalizeText(getSelectTriggerByLabel(document.body, 'Nuevo estado').textContent)).toBe('Sin cambios');
-
-        const saveButton = queryActionByText(document.body, 'Guardar cambios');
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
       });
     } finally {
       await cleanup();
@@ -2034,7 +2036,10 @@ describe('MarketplaceOrdersPage', () => {
         expect(document.body.textContent).toContain('Detalle de la orden');
         expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
         expect(queryActionByText(document.body, 'Registrar fecha de pago ahora')).toBeNull();
-        expect(queryActionByText(document.body, 'Guardar cambios')).not.toBeNull();
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
       });
     } finally {
       await cleanup();

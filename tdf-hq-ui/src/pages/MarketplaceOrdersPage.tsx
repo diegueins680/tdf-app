@@ -1289,15 +1289,26 @@ export default function MarketplaceOrdersPage() {
                               Marcar pagado ahora
                             </Button>
                           )}
-                          <Button
-                            variant="contained"
-                            onClick={() => {
-                              void handleSave();
-                            }}
-                            disabled={updateMutation.isPending || blockSave || !hasOrderUpdateChange}
-                          >
-                            Guardar cambios
-                          </Button>
+                          {hasOrderUpdateChange ? (
+                            <Button
+                              variant="contained"
+                              onClick={() => {
+                                void handleSave();
+                              }}
+                              disabled={updateMutation.isPending || blockSave}
+                            >
+                              Guardar cambios
+                            </Button>
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              data-testid="marketplace-order-editor-idle"
+                              sx={{ alignSelf: 'center' }}
+                            >
+                              Sin cambios pendientes.
+                            </Typography>
+                          )}
                         </Stack>
                         {updateMutation.isError && (
                           <Alert severity="error">{updateMutation.error?.message ?? 'No se pudo actualizar'}</Alert>
