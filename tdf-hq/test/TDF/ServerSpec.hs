@@ -974,6 +974,26 @@ spec = describe "TDF.Server helpers" $ do
                     plPackagePurchaseId preparedLine `shouldBe` Nothing
                     plTotal preparedLine `shouldBe` 13440
 
+        it "rejects unsafe invoice line description characters before persistence" $ do
+            let assertInvalid rawDescription =
+                    case prepareLine
+                        CreateInvoiceLineReq
+                            { cilDescription = rawDescription
+                            , cilQuantity = 1
+                            , cilUnitCents = 1000
+                            , cilTaxBps = Nothing
+                            , cilServiceOrderId = Nothing
+                            , cilPackagePurchaseId = Nothing
+                            } of
+                        Left errMsg ->
+                            errMsg
+                                `shouldBe` "Line item description must not contain control characters or Unicode formatting marks"
+                        Right preparedLine ->
+                            expectationFailure
+                                ("Expected unsafe invoice line description to be rejected, got: " <> T.unpack (plDescription preparedLine))
+            assertInvalid "Session\nInjection"
+            assertInvalid ("Session" <> T.singleton '\x202E' <> "001")
+
         it "rejects non-positive provenance references before invoice creation can hit ambiguous foreign-key errors" $ do
             let assertInvalid expectedMessage request =
                     case prepareLine request of

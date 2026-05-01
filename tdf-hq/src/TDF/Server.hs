@@ -8184,6 +8184,8 @@ prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
 prepareLine CreateInvoiceLineReq{..} = do
   let desc = T.strip cilDescription
   if T.null desc then Left "Line item description is required" else pure ()
+  when (T.any isUnsafeInvoiceLineDescriptionChar desc) $
+    Left "Line item description must not contain control characters or Unicode formatting marks"
   when (cilQuantity <= 0) $ Left "Line item quantity must be greater than zero"
   when (cilUnitCents < 0) $ Left "Line item unit amount must be zero or greater"
   let taxBpsVal = fromMaybe 0 cilTaxBps
@@ -8218,6 +8220,10 @@ prepareLine CreateInvoiceLineReq{..} = do
     , plTax               = tax
     , plTotal             = total
     }
+
+isUnsafeInvoiceLineDescriptionChar :: Char -> Bool
+isUnsafeInvoiceLineDescriptionChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validatePreparedCents :: Text -> Integer -> Either Text Int
 validatePreparedCents fieldName value
