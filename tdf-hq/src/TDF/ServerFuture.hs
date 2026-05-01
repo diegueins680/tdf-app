@@ -211,7 +211,19 @@ futureStubCatalogResponse =
 validateFutureStubCatalogResponse :: Either ServerError [StubResponse]
 validateFutureStubCatalogResponse = do
   catalog <- validateFutureStubCatalog allowedFutureStubMetadata
-  traverse (uncurry futureStubResponseFor) catalog
+  responses <- traverse (uncurry futureStubResponseFor) catalog
+  validateFutureStubCatalogResponses responses
+
+validateFutureStubCatalogResponses :: [StubResponse] -> Either ServerError [StubResponse]
+validateFutureStubCatalogResponses responses = do
+  validatedResponses <- traverse validateFutureStubResponse responses
+  let metadata = map (\response -> (stubArea response, stubEndpoint response)) validatedResponses
+      paths = map stubPath validatedResponses
+  if metadata /= allowedFutureStubMetadata
+       || length metadata /= length (nub metadata)
+       || length paths /= length (nub paths)
+    then invalidFutureStubCatalog
+    else Right validatedResponses
 
 futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
 futureStubResponseFor area endpoint =

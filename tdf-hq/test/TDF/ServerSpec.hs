@@ -317,6 +317,7 @@ import TDF.ServerFuture
     , validateFutureStubArea
     , validateFutureStubCatalog
     , validateFutureStubCatalogEntry
+    , validateFutureStubCatalogResponses
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
     , validateFutureStubResponse
@@ -7921,6 +7922,47 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
             assertInvalid [(" crm", "parties/list-columns")]
             assertInvalid [("crm", "parties/list columns")]
+
+    describe "validateFutureStubCatalogResponses" $ do
+        it "rejects missing, duplicated, or reordered fallback discovery responses" $ do
+            let mkResponse area endpoint =
+                    StubResponse
+                        { stubArea = area
+                        , stubEndpoint = endpoint
+                        , stubPath = "/stubs/" <> area <> "/" <> endpoint
+                        , stubMethod = "GET"
+                        , stubStatus = "planned"
+                        , stubRequiredRole = "Admin"
+                        , stubRequiredModule = "Admin"
+                        , stubImplemented = False
+                        }
+                validResponses =
+                    map (uncurry mkResponse) allowedFutureStubMetadata
+                assertInvalid responses =
+                    case validateFutureStubCatalogResponses responses of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid fallback discovery responses, got: " <> show value)
+
+            case validateFutureStubCatalogResponses validResponses of
+                Right responses ->
+                    map (\response -> (stubArea response, stubEndpoint response)) responses
+                        `shouldBe` allowedFutureStubMetadata
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected production future stub responses to be valid, got: " <> show serverErr)
+
+            case validResponses of
+                firstResponse : remainingResponses -> do
+                    assertInvalid remainingResponses
+                    assertInvalid (validResponses <> [firstResponse])
+                    assertInvalid (remainingResponses <> [firstResponse])
+                [] ->
+                    expectationFailure "Expected fallback discovery response fixture to be non-empty"
 
     describe "validateFutureStubCatalogEntry" $
         it "rejects non-stub fallback discovery routes before catalog matching" $ do
