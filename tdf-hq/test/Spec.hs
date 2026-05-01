@@ -2330,6 +2330,30 @@ main = hspec $ do
                         cfg
                         Nothing
                         Nothing
+                        "recipient/1"
+                        "hola"
+                        `shouldReturn`
+                            Left
+                                ( "Instagram recipient id must be a Graph node id using only "
+                                    <> "ASCII letters, numbers, '.', '_' or '-' with at least "
+                                    <> "one letter or number (256 chars max)"
+                                )
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "---"
+                        "hola"
+                        `shouldReturn`
+                            Left
+                                ( "Instagram recipient id must be a Graph node id using only "
+                                    <> "ASCII letters, numbers, '.', '_' or '-' with at least "
+                                    <> "one letter or number (256 chars max)"
+                                )
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
                         "recipient-1"
                         "   "
                         `shouldReturn` Left "Instagram message body requerido"
