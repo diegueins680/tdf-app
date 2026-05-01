@@ -8266,14 +8266,32 @@ spec = describe "TDF.Server helpers" $ do
                     mkCard "user-management" "Gestión de usuarios" userManagementBody
                 validApiTokensCard =
                     mkCard "api-tokens" "Tokens API" apiTokensBody
-                mkViewWith statusValue roleValue moduleValue implementedValue cardsValue =
+                mkViewWithRoute
+                    pathValue
+                    methodValue
+                    statusValue
+                    roleValue
+                    moduleValue
+                    implementedValue
+                    cardsValue =
                     Future.AdminConsoleView
-                        { Future.status = statusValue
+                        { Future.viewPath = pathValue
+                        , Future.viewMethod = methodValue
+                        , Future.status = statusValue
                         , Future.viewRequiredRole = roleValue
                         , Future.viewRequiredModule = moduleValue
                         , Future.viewImplemented = implementedValue
                         , Future.cards = cardsValue
                         }
+                mkViewWith statusValue roleValue moduleValue implementedValue cardsValue =
+                    mkViewWithRoute
+                        "/stubs/admin/console"
+                        "GET"
+                        statusValue
+                        roleValue
+                        moduleValue
+                        implementedValue
+                        cardsValue
                 mkView statusValue =
                     mkViewWith statusValue "Admin" "Admin" False
                 validCards =
@@ -8294,6 +8312,8 @@ spec = describe "TDF.Server helpers" $ do
 
             case validateFutureAdminConsoleView validView of
                 Right view -> do
+                    Future.viewPath view `shouldBe` "/stubs/admin/console"
+                    Future.viewMethod view `shouldBe` "GET"
                     Future.viewRequiredRole view `shouldBe` "Admin"
                     Future.viewRequiredModule view `shouldBe` "Admin"
                     Future.viewImplemented view `shouldBe` False
@@ -8304,6 +8324,24 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected valid admin console view, got: " <> show serverErr)
 
             assertInvalid (mkView "planned" [validUserManagementCard])
+            assertInvalid
+                (mkViewWithRoute
+                    "/stubs/admin/seed"
+                    "GET"
+                    "preview"
+                    "Admin"
+                    "Admin"
+                    False
+                    validCards)
+            assertInvalid
+                (mkViewWithRoute
+                    "/stubs/admin/console"
+                    "POST"
+                    "preview"
+                    "Admin"
+                    "Admin"
+                    False
+                    validCards)
             assertInvalid (mkViewWith "preview" "Manager" "Admin" False validCards)
             assertInvalid (mkViewWith "preview" "Admin" "CRM" False validCards)
             assertInvalid (mkViewWith "preview" "Admin" "Admin" True validCards)
@@ -8383,6 +8421,8 @@ spec = describe "TDF.Server helpers" $ do
         it "serves admin console preview cards only after metadata validation" $
             case firstFutureAdminConsole (mkUser [Admin]) of
                 Right consoleView -> do
+                    Future.viewPath consoleView `shouldBe` "/stubs/admin/console"
+                    Future.viewMethod consoleView `shouldBe` "GET"
                     Future.status consoleView `shouldBe` "preview"
                     Future.viewRequiredRole consoleView `shouldBe` "Admin"
                     Future.viewRequiredModule consoleView `shouldBe` "Admin"
@@ -8392,7 +8432,9 @@ spec = describe "TDF.Server helpers" $ do
                     Future.cards consoleView `shouldSatisfy` (not . null)
                     A.toJSON consoleView
                         `shouldBe` A.object
-                            [ "status" .= ("preview" :: Text)
+                            [ "stubPath" .= ("/stubs/admin/console" :: Text)
+                            , "stubMethod" .= ("GET" :: Text)
+                            , "status" .= ("preview" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
                             , "stubRequiredModule" .= ("Admin" :: Text)
                             , "stubImplemented" .= False

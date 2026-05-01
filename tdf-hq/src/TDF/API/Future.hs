@@ -53,7 +53,9 @@ instance ToJSON AdminConsoleCard where
 
 -- | Wrapper payload for the admin console endpoint.
 data AdminConsoleView = AdminConsoleView
-  { status             :: Text
+  { viewPath           :: Text
+  , viewMethod         :: Text
+  , status             :: Text
   , viewRequiredRole   :: Text
   , viewRequiredModule :: Text
   , viewImplemented    :: Bool
@@ -63,7 +65,9 @@ data AdminConsoleView = AdminConsoleView
 instance ToJSON AdminConsoleView where
   toJSON view =
     object
-      [ "status" .= status view
+      [ "stubPath" .= viewPath view
+      , "stubMethod" .= viewMethod view
+      , "status" .= status view
       , "stubRequiredRole" .= viewRequiredRole view
       , "stubRequiredModule" .= viewRequiredModule view
       , "stubImplemented" .= viewImplemented view
