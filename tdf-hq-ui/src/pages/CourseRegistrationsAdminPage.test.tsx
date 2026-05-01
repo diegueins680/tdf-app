@@ -2122,6 +2122,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('humanizes camelCase source labels before showing shared source context', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crSource: 'instagramStory',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+        crSource: 'instagramStory',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-cohort-summary"]',
+      );
+
+      expect(cohortSummary).not.toBeNull();
+      expect(cohortSummary?.textContent).toContain('Beatmaking 101 · Fuente: Instagram story');
+      expect(container.textContent).not.toContain('instagramStory');
+      expect(countOccurrences(container, 'Fuente: Instagram story')).toBe(1);
+      expect(container.textContent).not.toContain('Fuente visible: Instagram story.');
+      expect(getDossierTriggers(container)).toHaveLength(2);
+    });
+
+    await cleanup();
+  });
+
   it('omits passive single-choice context when the default view has only one registration', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

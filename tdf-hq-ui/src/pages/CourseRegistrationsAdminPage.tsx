@@ -908,8 +908,15 @@ const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
 };
 
 const humanizeDelimitedSourceLabel = (source: string) => {
-  if (!/[_./-]/.test(source)) return source;
-  const normalized = source.replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const hasDelimitedParts = /[_./-]/.test(source);
+  const hasCamelCaseParts = /[a-z0-9][A-Z]/.test(source);
+  if (!hasDelimitedParts && !hasCamelCaseParts) return source;
+  const normalized = source
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_./-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!normalized) return source;
   const sentenceCaseSource = normalized.toLocaleLowerCase('es');
   return `${sentenceCaseSource.charAt(0).toLocaleUpperCase('es')}${sentenceCaseSource.slice(1)}`;
