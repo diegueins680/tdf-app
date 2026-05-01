@@ -5198,6 +5198,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Basic session-token"
             assertInvalid "Bearer too many parts"
             assertInvalid "Bearer session\NULtoken"
+            assertInvalid "Bearer session\x200Dtoken"
 
         it "rejects oversized bearer tokens before fallback username lookup" $ do
             let tooLongToken = T.replicate 513 "a"

@@ -653,7 +653,10 @@ passwordChangeAuthTokenMaxLength :: Int
 passwordChangeAuthTokenMaxLength = 512
 
 invalidPasswordChangeAuthTokenChar :: Char -> Bool
-invalidPasswordChangeAuthTokenChar ch = isSpace ch || isControl ch
+invalidPasswordChangeAuthTokenChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
 validateLoginRequest (LoginRequest rawUsername rawPassword)
