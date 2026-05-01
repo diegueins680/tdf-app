@@ -434,6 +434,15 @@ const registrationStatusLabel = (status: string) => {
   return knownStatus ? statusFilterLabels[knownStatus] : customRegistrationStatusLabel(status);
 };
 
+const registrationStatusSearchValues = (status: string) => {
+  const label = registrationStatusLabel(status);
+  const knownStatus = normalizeKnownRegistrationStatus(status);
+
+  if (knownStatus === 'paid') return [label, 'Pagada'];
+  if (knownStatus === 'cancelled') return [label, 'Cancelada'];
+  return [label];
+};
+
 const registrationStatusButtonLabel = (
   status: string,
   useCompactActionLabel: boolean,
@@ -1949,7 +1958,7 @@ export default function CourseRegistrationsAdminPage() {
         reg.crAdminNotes,
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
-        registrationStatusLabel(reg.crStatus),
+        ...registrationStatusSearchValues(reg.crStatus),
         getSearchableRegistrationSource(reg.crSource),
         getSearchableRegistrationAcquisitionContext(reg),
       ].join(' ');
