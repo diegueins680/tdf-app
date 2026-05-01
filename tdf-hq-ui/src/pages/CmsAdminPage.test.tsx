@@ -800,12 +800,18 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: '', locale: 'es' });
+      expect(listMock).not.toHaveBeenCalled();
       expect(getPublicMock).not.toHaveBeenCalled();
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
       expect(container.textContent).toContain(
         'Completa este slug para habilitar el guardado y Abrir página en vivo.',
       );
+      expect(container.textContent).toContain(
+        'Elige un slug para consultar la versión publicada de esa página.',
+      );
+      expect(container.textContent).not.toContain('Sin contenido publicado');
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).toBeNull();
       expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
     });
 

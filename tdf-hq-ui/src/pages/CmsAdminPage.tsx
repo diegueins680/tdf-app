@@ -332,6 +332,7 @@ export default function CmsAdminPage() {
   const listQuery = useQuery({
     queryKey: ['cms-content', slugFilter, localeFilter],
     queryFn: () => Cms.list({ slug: slugFilter, locale: localeFilter }),
+    enabled: hasSlugSelection,
   });
 
   const liveQuery = useQuery({
@@ -706,6 +707,7 @@ export default function CmsAdminPage() {
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
   const canSaveVersion = hasSlugSelection && !payloadError;
   const showFirstVersionHistoryGuidance =
+    hasSlugSelection &&
     !listQuery.isLoading &&
     !listQuery.isError &&
     !listDataInvalid &&
@@ -943,7 +945,12 @@ export default function CmsAdminPage() {
                         }
                       />
                     )}
-                    {!liveQuery.isError && !liveQuery.isLoading && !liveContent && (
+                    {!hasSlugSelection && (
+                      <Alert severity="info">
+                        Elige un slug para consultar la versión publicada de esa página.
+                      </Alert>
+                    )}
+                    {hasSlugSelection && !liveQuery.isError && !liveQuery.isLoading && !liveContent && (
                       <Alert severity="warning">
                         <AlertTitle>Sin contenido publicado</AlertTitle>
                         Publica una versión para activar la vista previa en vivo y el enlace a la página pública.
