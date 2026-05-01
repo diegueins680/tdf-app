@@ -208,7 +208,7 @@ const firstFollowUpComposerHelpText =
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaymentPendingLabel = 'Marcar pago pendiente';
 const reopenPendingLabel = 'Reabrir como pendiente';
-const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} fila${count === 1 ? '' : 's'})`;
+const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
 const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
@@ -9710,7 +9710,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchUtilities).not.toBeNull();
       const copyButton = getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel);
       expect(copyButton).toBeTruthy();
-      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 filas visibles como CSV');
+      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
       expect(countButtonsByText(searchUtilities!, copyVisibleCsvLabel(2))).toBe(0);
       expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
@@ -9927,8 +9927,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const copyButton = getButtonByText(container, copyVisibleSearchCsvLabel);
       expect(copyButton).toBeTruthy();
       expect(copyButton.textContent?.trim()).toBe(copyVisibleSearchCsvLabel);
-      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 filas visibles como CSV');
-      expect(copyButton.getAttribute('title')).toBe('Copia solo las filas visibles de esta vista.');
+      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
+      expect(copyButton.getAttribute('title')).toBe('Copia solo las inscripciones visibles de esta vista.');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
@@ -9953,7 +9953,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(csv).toContain('"Pagado"');
       expect(csv).not.toContain('"pending_payment"');
       expect(csv).not.toContain('"Estudiante 1"');
-      expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).toContain('CSV copiado');
+      expect(container.textContent).not.toContain('CSV copiado (2 inscripciones)');
       expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);
     });
 
@@ -10020,7 +10021,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchUtilities?.textContent).toContain('No se pudo copiar el CSV');
       expect(countButtonsByText(searchUtilities!, copyVisibleSearchCsvLabel)).toBe(0);
       expect(countButtonsByText(searchUtilities!, copyVisibleCsvLabel(2))).toBe(0);
-      expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).not.toContain('CSV copiado');
     });
 
     await cleanup();
@@ -10079,7 +10080,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(writeTextMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).toContain('CSV copiado');
+      expect(container.textContent).not.toContain('CSV copiado (2 inscripciones)');
       expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);
     });
 
@@ -10092,7 +10094,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
       expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).not.toContain('CSV copiado');
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
@@ -10157,7 +10159,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(writeTextMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).toContain('CSV copiado');
+      expect(container.textContent).not.toContain('CSV copiado (2 inscripciones)');
       expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);
     });
 
@@ -10180,7 +10183,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(1);
-      expect(container.textContent).not.toContain('Copiado CSV (2 filas)');
+      expect(container.textContent).not.toContain('CSV copiado');
       expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });

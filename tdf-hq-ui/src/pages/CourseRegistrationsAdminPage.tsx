@@ -274,7 +274,7 @@ const getResetViewLabel = ({
   return 'Restablecer vista';
 };
 
-const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
+const formatCsvRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 const formatLoadedRegistrationCountLabel = (count: number) =>
   `${count} inscripci${count === 1 ? 'ón cargada' : 'ones cargadas'}`;
@@ -2243,8 +2243,9 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const copyCsvButtonLabel = showLocalSearchUtilityRow
     ? 'Copiar visibles como CSV'
-    : `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
-  const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
+    : `Copiar CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonAccessibleLabel =
+    `Copiar ${formatCsvRegistrationCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const visibleCsvScopeKey = useMemo(
     () => searchedRegistrations
       .map((reg) => `${reg.crCourseSlug}:${reg.crId}:${reg.crStatus}:${reg.crUpdatedAt}`)
@@ -2848,7 +2849,7 @@ export default function CourseRegistrationsAdminPage() {
       .join('\n');
     try {
       await navigator.clipboard.writeText(csv);
-      setCopyMessage(`Copiado CSV (${formatRowCountLabel(rows.length)})`);
+      setCopyMessage('CSV copiado');
       setTimeout(() => setCopyMessage(null), 2000);
     } catch {
       setCopyMessage('No se pudo copiar el CSV');
@@ -3399,7 +3400,7 @@ export default function CourseRegistrationsAdminPage() {
       size="small"
       startIcon={<ContentCopyIcon fontSize="small" />}
       aria-label={copyCsvButtonAccessibleLabel}
-      title="Copia solo las filas visibles de esta vista."
+      title="Copia solo las inscripciones visibles de esta vista."
       onClick={() => void handleCopyCsv()}
     >
       {copyCsvButtonLabel}
