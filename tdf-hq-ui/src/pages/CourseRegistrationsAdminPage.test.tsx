@@ -11507,6 +11507,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Course registration portal - Beatmaking 101',
       'Beatmaking 101 - enrollment portal',
       'Application portal for Beatmaking 101',
+      'Portal de inscripción - Beatmaking 101',
+      'Beatmaking 101 - portal de inscripción',
+      'Portal público de inscripciones del curso - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -11522,7 +11525,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toContain('portal');
+        expect(emptyState?.textContent).not.toMatch(/portal/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
