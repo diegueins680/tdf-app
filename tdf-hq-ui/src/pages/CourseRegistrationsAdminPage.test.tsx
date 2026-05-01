@@ -213,7 +213,7 @@ const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
-const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
+const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
 const customStatusFilterUnavailableMessage =
@@ -3124,6 +3124,55 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('aria-haspopup')).toBe('menu');
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').getAttribute('aria-haspopup')).toBeNull();
       expect(countOccurrences(container, 'Estado:')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps active status-filter fallback copy accurate when mixed statuses are returned', async () => {
+    const pendingRegistration = buildRegistration();
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crStatus: 'paid',
+    });
+
+    listRegistrationsMock.mockResolvedValue([pendingRegistration, paidRegistration]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(container.querySelector('[data-testid="course-registration-active-status-summary"]')).toBeNull();
+      expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).not.toBeNull();
+      expect(getButtonByAriaLabel(container, clearPaidStatusFilterLabel)).toBeTruthy();
+      expect(container.textContent).toContain(activeStatusFilterHelperText);
+      expect(container.textContent).not.toContain('Esta vista ya está filtrada por ese estado.');
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Grace Hopper');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, clearPaidStatusFilterLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
     });
 
     await cleanup();
