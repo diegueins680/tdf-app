@@ -12,7 +12,15 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isDigit)
+import           Data.Char                  ( GeneralCategory
+                                            ( Format
+                                            , LineSeparator
+                                            , ParagraphSeparator
+                                            )
+                                            , generalCategory
+                                            , isControl
+                                            , isDigit
+                                            )
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
@@ -148,13 +156,8 @@ validateInternTodoTextUpdate (Just rawText) =
   Just <$> validateInternTodoText rawText
 
 validateInternProjectTitle :: Text -> Either ServerError Text
-validateInternProjectTitle rawTitle
-  | T.null normalized =
-      Left err400 { errBody = "project title is required" }
-  | otherwise =
-      Right normalized
-  where
-    normalized = T.strip rawTitle
+validateInternProjectTitle =
+  validateInternTitleField "project title"
 
 validateInternProjectTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternProjectTitleUpdate Nothing = Right Nothing
@@ -162,18 +165,41 @@ validateInternProjectTitleUpdate (Just rawTitle) =
   Just <$> validateInternProjectTitle rawTitle
 
 validateInternTaskTitle :: Text -> Either ServerError Text
-validateInternTaskTitle rawTitle
-  | T.null normalized =
-      Left err400 { errBody = "task title is required" }
-  | otherwise =
-      Right normalized
-  where
-    normalized = T.strip rawTitle
+validateInternTaskTitle =
+  validateInternTitleField "task title"
 
 validateInternTaskTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternTaskTitleUpdate Nothing = Right Nothing
 validateInternTaskTitleUpdate (Just rawTitle) =
   Just <$> validateInternTaskTitle rawTitle
+
+validateInternTitleField :: Text -> Text -> Either ServerError Text
+validateInternTitleField fieldName rawTitle
+  | T.null normalized =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
+        }
+  | T.length normalized > internTitleMaxLength =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 160 characters or fewer"))
+        }
+  | T.any isUnsafeInternTitleChar normalized =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must not contain control or hidden formatting characters"))
+        }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawTitle
+
+internTitleMaxLength :: Int
+internTitleMaxLength = 160
+
+isUnsafeInternTitleChar :: Char -> Bool
+isUnsafeInternTitleChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}

@@ -6868,6 +6868,23 @@ main = hspec $ do
             assertInvalid (validateInternProjectTitle "   ")
             assertInvalid (validateInternProjectTitleUpdate (Just "   "))
 
+        it "rejects unsafe or oversized project titles before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship project title, got " <> show value)
+            assertInvalid
+                (validateInternProjectTitle "Backline\nAudit")
+                "project title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternProjectTitle ("Backline" <> Data.Text.singleton '\x202E' <> "Audit"))
+                "project title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternProjectTitle (Data.Text.replicate 161 "a"))
+                "project title must be 160 characters or fewer"
+
     describe "internship task title validation" $ do
         it "trims task titles while preserving omitted update payloads" $ do
             validateInternTaskTitle "  Label metadata pass  "
@@ -6885,6 +6902,23 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship task title, got " <> show value)
             assertInvalid (validateInternTaskTitle "   ")
             assertInvalid (validateInternTaskTitleUpdate (Just "   "))
+
+        it "rejects unsafe or oversized task titles before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship task title, got " <> show value)
+            assertInvalid
+                (validateInternTaskTitle "Metadata\rPass")
+                "task title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTaskTitle ("Metadata" <> Data.Text.singleton '\x202E' <> "Pass"))
+                "task title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTaskTitle (Data.Text.replicate 161 "a"))
+                "task title must be 160 characters or fewer"
 
     describe "internship todo text validation" $ do
         it "trims meaningful todo text while preserving omitted update payloads" $ do
