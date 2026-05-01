@@ -11250,9 +11250,17 @@ loadTrackOwnerNames rows = do
 
 validateLabelTrackTitle :: Text -> Either ServerError Text
 validateLabelTrackTitle rawTitle =
-  case normalizeOptionalInput (Just rawTitle) of
-    Just title -> Right title
-    Nothing -> Left err400 { errBody = "Título requerido" }
+  let title = T.strip rawTitle
+  in if T.null title
+       then Left err400 { errBody = "Título requerido" }
+       else if T.length title > labelTrackTitleMaxLength
+         then Left err400 { errBody = "Título debe tener 160 caracteres o menos" }
+         else if T.any isUnsafePublicBookingLabelChar title
+           then Left err400 { errBody = "Título no debe contener caracteres de control o formato" }
+           else Right title
+
+labelTrackTitleMaxLength :: Int
+labelTrackTitleMaxLength = 160
 
 validateOptionalLabelTrackStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalLabelTrackStatus Nothing = Right Nothing

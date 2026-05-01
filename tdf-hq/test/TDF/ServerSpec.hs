@@ -5947,12 +5947,12 @@ spec = describe "TDF.Server helpers" $ do
             validateOptionalLabelTrackStatus (Just " DONE ") `shouldBe` Right (Just "done")
             validateOptionalLabelTrackStatus (Just "open") `shouldBe` Right (Just "open")
 
-        it "rejects blank titles and unsupported statuses before patching label-track rows" $ do
-            let assertTitleInvalid rawTitle =
+        it "rejects malformed titles and unsupported statuses before patching label-track rows" $ do
+            let assertTitleInvalid rawTitle expectedMessage =
                     case validateLabelTrackTitle rawTitle of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` "Título requerido"
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
                         Right titleVal ->
                             expectationFailure ("Expected invalid label track title to be rejected, got: " <> show titleVal)
                 assertStatusInvalid rawStatus =
@@ -5962,8 +5962,15 @@ spec = describe "TDF.Server helpers" $ do
                             BL8.unpack (errBody serverErr) `shouldContain` "status must be one of: open, done"
                         Right statusVal ->
                             expectationFailure ("Expected invalid label track status to be rejected, got: " <> show statusVal)
-            assertTitleInvalid "   "
-            assertTitleInvalid "\n\t"
+            assertTitleInvalid "   " "Título requerido"
+            assertTitleInvalid "\n\t" "Título requerido"
+            assertTitleInvalid "Mezcla\nfinal" "Título no debe contener caracteres de control"
+            assertTitleInvalid
+                ("Mezcla" <> T.singleton '\x202E' <> "final")
+                "Título no debe contener caracteres de control"
+            assertTitleInvalid
+                (T.replicate 161 "a")
+                "Título debe tener 160 caracteres o menos"
             assertStatusInvalid "closed"
             assertStatusInvalid "in_progress"
 
