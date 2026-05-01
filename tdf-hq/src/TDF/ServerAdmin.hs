@@ -11,6 +11,7 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminUsername
   , normalizeAdminEmailBodyLines
+  , resolveAdminEmailTestBody
   , validateAdminEmailBodyLines
   , parseSocialErrorsChannel
   , SocialUnholdLookup(..)
@@ -231,8 +232,8 @@ adminServer user =
       subj <- either throwError pure $
         maybe (Right "Correo de prueba TDF") validateAdminEmailSubject etrSubject
       ctaUrl <- either throwError pure (validateAdminEmailCtaUrl etrCtaUrl)
+      body <- either throwError pure (resolveAdminEmailTestBody etrBody)
       let emailSvc = EmailSvc.mkEmailService cfg
-          body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
           targetName = fromMaybe "" etrName
           preMsg = "[Admin][EmailTest] Sending to " <> targetEmail <> " | subject: " <> subj
       liftIO $ addLog LogInfo preMsg
@@ -1455,6 +1456,11 @@ buildSendResponse sendResult (Entity msgKey msg) =
 normalizeAdminEmailBodyLines :: [Text] -> [Text]
 normalizeAdminEmailBodyLines =
   filter (not . T.null) . map T.strip
+
+resolveAdminEmailTestBody :: Maybe Text -> Either ServerError [Text]
+resolveAdminEmailTestBody Nothing = Right ["Correo de prueba desde TDF HQ."]
+resolveAdminEmailTestBody (Just rawBody) =
+  validateAdminEmailBodyLines [rawBody]
 
 validateAdminEmailBodyLines :: [Text] -> Either ServerError [Text]
 validateAdminEmailBodyLines rawLines
