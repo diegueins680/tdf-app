@@ -11560,8 +11560,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Formulario de admisión - Beatmaking 101',
       'Admisiones del curso - Beatmaking 101',
+      'Solicitud de ingreso - Beatmaking 101',
       'Beatmaking 101 - admission form',
       'Beatmaking 101 - formulario de admisiones',
+      'Beatmaking 101 - ingreso al curso',
     ];
 
     for (const title of titles) {
@@ -11579,6 +11581,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de admisión');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Admisiones');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Solicitud de ingreso');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - ingreso');
         expect(emptyState?.textContent).not.toContain('formulario de admisiones');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - admission');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
@@ -11590,6 +11594,26 @@ describe('CourseRegistrationsAdminPage', () => {
 
       await cleanup();
     }
+  });
+
+  it('keeps legitimate ingreso course titles in first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([{ ccSlug: 'ingreso-programacion', ccTitle: 'Ingreso a la programación' }]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Ingreso a la programación. Abre la página pública cuando estés listo para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('ingreso-programacion');
+    });
+
+    await cleanup();
   });
 
   it('strips application-form descriptors from first-run cohort copy', async () => {
