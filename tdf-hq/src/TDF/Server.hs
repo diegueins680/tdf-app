@@ -9335,6 +9335,7 @@ shouldRetryWithFallbackModel status rawMessage =
       , "permission_denied"
       , "permission denied"
       , "forbidden"
+      , "billing"
       , "billing_hard_limit"
       , "billing issue"
       , "payment_required"

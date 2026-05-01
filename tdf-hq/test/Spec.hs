@@ -1201,6 +1201,10 @@ main = hspec $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel
                 403
+                "billing_not_active: model_not_found for this account"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
                 "payment_required: model_not_found for this account"
                 `shouldBe` False
 
