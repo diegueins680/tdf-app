@@ -44,7 +44,7 @@ import           Data.UUID                  (toText)
 import qualified Data.UUID                  as UUID
 import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
-import           Data.Aeson.Types           (Parser, parseMaybe, withObject, (.!=))
+import           Data.Aeson.Types           (Parser, parseEither, parseMaybe, withObject, (.!=))
 import qualified Data.Aeson                as A
 import           Data.Int                   (Int64)
 import qualified Data.Scientific            as Sci
@@ -3361,15 +3361,27 @@ data MetaInboundEvent
   | MetaInboundDeleted IGInboundDeleted
   deriving (Eq, Show)
 
+validateMetaInboundPayload :: A.Value -> Either ServerError [MetaInboundEvent]
+validateMetaInboundPayload payload =
+  case parseEither A.parseJSON payload of
+    Left parseErr ->
+      Left err400
+        { errBody =
+            BL8.pack ("Invalid Meta webhook payload: " <> parseErr)
+        }
+    Right IGWebhook{igEntries} ->
+      Right (concatMap extractEntry igEntries)
+
 extractMetaInbound :: A.Value -> [MetaInboundEvent]
 extractMetaInbound payload =
-  case parseMaybe A.parseJSON payload of
-    Nothing -> []
-    Just IGWebhook{igEntries} -> concatMap extractEntry igEntries
-  where
-    extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
-      mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
+  case validateMetaInboundPayload payload of
+    Left _ -> []
+    Right events -> events
 
+extractEntry :: IGEntry -> [MetaInboundEvent]
+extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
+  mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
+  where
     extractMessagingEvent mEntryId IGMessaging{igSender, igRecipient, igMessage, igReferral = eventReferral, igTimestamp} = do
       msg@IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments, igIsDeleted} <- igMessage
       if fromMaybe False igIsDeleted
@@ -3830,7 +3842,7 @@ instagramWebhookServer =
       Env{..} <- ask
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
-      let incoming = extractMetaInbound payload
+      incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
         BL8.hPutStrLn stderr (A.encode payload)
@@ -3854,7 +3866,7 @@ facebookWebhookServer =
       Env{..} <- ask
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
-      let incoming = extractMetaInbound payload
+      incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
         BL8.hPutStrLn stderr (A.encode payload)

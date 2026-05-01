@@ -137,6 +137,7 @@ import TDF.ServerExtra (
     validateSocialLimit,
     metaWebhookVerifyTokenCandidates,
     verifyMetaWebhook,
+    validateMetaInboundPayload,
     validateMetaWebhookChannel,
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
@@ -5094,6 +5095,32 @@ spec = do
       assertInvalid
         "Meta webhook object does not match the webhook endpoint"
         (validateMetaWebhookChannel MetaFacebook (A.object ["object" .= ("instagram" :: Text)]))
+
+  describe "validateMetaInboundPayload" $ do
+    it "rejects malformed Meta webhook fields instead of treating them as an empty inbox batch" $ do
+      let payload =
+            A.object
+              [ "object" .= ("instagram" :: Text)
+              , "entry" .=
+                  [ A.object
+                      [ "messaging" .=
+                          [ A.object
+                              [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                              , "timestamp" .= ("not-a-timestamp" :: Text)
+                              , "message" .= A.object ["text" .= ("hola" :: Text)]
+                              ]
+                          ]
+                      ]
+                  ]
+              ]
+      case validateMetaInboundPayload payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+          BL8.unpack (errBody err) `shouldContain` "timestamp"
+        Right events ->
+          expectationFailure
+            ("Expected malformed Meta webhook payload to fail, got " <> show events)
 
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do
