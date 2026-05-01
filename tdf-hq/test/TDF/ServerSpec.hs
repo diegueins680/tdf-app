@@ -4192,13 +4192,17 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do
-            let verifier = T.replicate 43 "a"
+            let cfg =
+                    (marketplaceTestConfig False)
+                        { appBaseUrl = Just "http://localhost:5173"
+                        }
+                verifier = T.replicate 43 "a"
                 request =
                     DriveTokenExchangeRequest
                         "  oauth-code-123  "
                         ("  " <> verifier <> "  ")
                         (Just "  http://localhost:5173/oauth/google-drive/callback  ")
-            case validateDriveTokenExchangeRequest (error "cfg should be unused") request of
+            case validateDriveTokenExchangeRequest cfg request of
                 Left serverErr ->
                     expectationFailure
                         ( "Expected Drive token exchange request to normalize, got: "
@@ -4210,14 +4214,15 @@ spec = describe "TDF.Server helpers" $ do
                     redirectVal `shouldBe` "http://localhost:5173/oauth/google-drive/callback"
 
         it "rejects malformed Drive OAuth exchange fields before Google token calls" $ do
-            let validVerifier = T.replicate 43 "a"
+            let cfg = marketplaceTestConfig False
+                validVerifier = T.replicate 43 "a"
                 baseRequest =
                     DriveTokenExchangeRequest
                         "oauth-code-123"
                         validVerifier
                         (Just "https://tdf-app.pages.dev/oauth/google-drive/callback")
                 assertInvalid expectedMessage request =
-                    case validateDriveTokenExchangeRequest (error "cfg should be unused") request of
+                    case validateDriveTokenExchangeRequest cfg request of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
                             BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
@@ -4258,6 +4263,12 @@ spec = describe "TDF.Server helpers" $ do
                 baseRequest
                     { redirectUri =
                         Just "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
+                    }
+            assertInvalid
+                "redirectUri must match the configured Google Drive OAuth callback URL"
+                baseRequest
+                    { redirectUri =
+                        Just "https://other.example.com/oauth/google-drive/callback"
                     }
 
         it "rejects unexpected Drive OAuth exchange keys so typoed token writes fail explicitly" $

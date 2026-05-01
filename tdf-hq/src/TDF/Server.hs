@@ -2193,11 +2193,23 @@ validateDriveCodeVerifier rawVerifier =
         || ch `elem` ("-._~" :: String)
 
 resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
-resolveDriveRedirectUri cfg mProvided =
+resolveDriveRedirectUri cfg mProvided = do
+  let configuredRedirectUri =
+        resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback"
   maybe
-    (Right (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback"))
-    validateDriveRedirectUri
+    (Right configuredRedirectUri)
+    (validateProvidedRedirectUri configuredRedirectUri)
     (cleanOptional mProvided)
+  where
+    validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
+      redirectUri <- validateDriveRedirectUri rawRedirect
+      if redirectUri == configuredRedirectUri
+        then Right redirectUri
+        else
+          Left err400
+            { errBody =
+                "redirectUri must match the configured Google Drive OAuth callback URL"
+            }
 
 validateDriveRedirectUri :: Text -> Either ServerError Text
 validateDriveRedirectUri rawRedirect =
