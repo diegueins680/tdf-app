@@ -4842,7 +4842,7 @@ spec = do
       validateSocialReplyExternalId (Just " msg-1 ")
         `shouldBe` Right (Just "msg-1")
 
-    it "rejects blank, whitespace, control, or oversized ids before reply dispatch" $ do
+    it "rejects blank, whitespace, control, hidden formatting, or oversized ids before reply dispatch" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
@@ -4859,6 +4859,9 @@ spec = do
       assertInvalid
         "externalId must not contain control characters"
         (validateSocialReplyExternalId (Just ("msg" <> T.singleton '\NUL' <> "1")))
+      assertInvalid
+        "senderId must not contain hidden formatting characters"
+        (validateSocialReplySenderId ("ig" <> T.singleton '\x200D' <> "user"))
       assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId (T.replicate 257 "a"))

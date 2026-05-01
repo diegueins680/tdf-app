@@ -4363,6 +4363,12 @@ validateSocialReplyIdentifier fieldName value
   | T.any isControl value =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
+  | T.any isHiddenSocialReplyIdentifierChar value =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must not contain hidden formatting characters"))
+        }
   | T.length value > 256 =
       Left err400
         { errBody =
@@ -4371,6 +4377,10 @@ validateSocialReplyIdentifier fieldName value
         }
   | otherwise =
       Right value
+
+isHiddenSocialReplyIdentifierChar :: Char -> Bool
+isHiddenSocialReplyIdentifierChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 socialReplyOutcomeFields :: Either Text a -> (Text, Maybe Text)
 socialReplyOutcomeFields sendResult =
