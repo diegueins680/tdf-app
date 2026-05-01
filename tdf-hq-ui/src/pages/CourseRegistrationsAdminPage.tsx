@@ -107,6 +107,7 @@ const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const MIN_PHONE_SEARCH_DIGITS = 4;
+const MIN_FULL_PHONE_MATCH_DIGITS = 7;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH = 64;
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
@@ -316,6 +317,31 @@ const normalizeVisibleLocalSearchInput = (value: string) => (
   value.trim().length === 0 ? '' : value
 );
 const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
+const phoneSearchDigitCandidates = (digits: string) => {
+  const candidates = [digits];
+  if (digits.startsWith('0') && digits.length > MIN_PHONE_SEARCH_DIGITS) {
+    candidates.push(digits.slice(1));
+  }
+
+  return candidates.filter((candidate, index) => (
+    candidate.length >= MIN_PHONE_SEARCH_DIGITS && candidates.indexOf(candidate) === index
+  ));
+};
+const phoneDigitsMatchLocalSearch = (phoneValue: string | null | undefined, localSearchDigitsKey: string) => {
+  const phoneCandidates = phoneSearchDigitCandidates(normalizeLocalSearchDigits(phoneValue ?? ''));
+  const searchCandidates = phoneSearchDigitCandidates(localSearchDigitsKey);
+
+  return phoneCandidates.some((phoneDigits) => (
+    searchCandidates.some((searchDigits) => (
+      phoneDigits.includes(searchDigits)
+      || (
+        phoneDigits.length >= MIN_FULL_PHONE_MATCH_DIGITS
+        && searchDigits.length >= MIN_FULL_PHONE_MATCH_DIGITS
+        && searchDigits.endsWith(phoneDigits)
+      )
+    ))
+  ));
+};
 const looksLikeShortPhoneSearch = (value: string, digits: string) => (
   digits.length > 0
   && digits.length < MIN_PHONE_SEARCH_DIGITS
@@ -1025,7 +1051,7 @@ const registrationMatchesVisibleSearchFields = ({
     return false;
   }
 
-  return normalizeLocalSearchDigits(reg.crPhoneE164 ?? '').includes(localSearchDigitsKey);
+  return phoneDigitsMatchLocalSearch(reg.crPhoneE164, localSearchDigitsKey);
 };
 
 const hiddenLocalSearchFieldsForRegistration = (
@@ -1906,8 +1932,7 @@ export default function CourseRegistrationsAdminPage() {
       if (localSearchTextMatches(haystack, localSearchKey)) return true;
 
       if (localSearchDigitsKey.length >= MIN_PHONE_SEARCH_DIGITS) {
-        const phoneDigits = normalizeLocalSearchDigits(reg.crPhoneE164 ?? '');
-        return phoneDigits.includes(localSearchDigitsKey);
+        return phoneDigitsMatchLocalSearch(reg.crPhoneE164, localSearchDigitsKey);
       }
 
       return false;

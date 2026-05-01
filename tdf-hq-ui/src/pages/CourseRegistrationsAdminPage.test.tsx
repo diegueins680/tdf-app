@@ -8275,6 +8275,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('matches local leading-zero phone searches against E.164 registration phones', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => ({
+      crPhoneE164: index === 4 ? '+593 99 900-0111' : `+593 98 000-00${index + 1}`,
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), '0999000111');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Estudiante 5');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "0999000111"');
+      expect(container.textContent).not.toContain('Para buscar por teléfono, usa al menos 4 dígitos del número.');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps short E.164 phone fragments from flooding the visible registration list', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
