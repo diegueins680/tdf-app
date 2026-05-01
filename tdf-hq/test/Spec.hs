@@ -2236,6 +2236,30 @@ main = hspec $ do
                     "DATABASE_URL must not contain control characters"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with hidden formatting characters before building DB connection strings" $ do
+            let databaseUrl =
+                    "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                        <> "\x200B"
+            withEnvOverrides
+                [ ("DATABASE_URL", Just databaseUrl)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must not contain hidden formatting characters"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects DATABASE_URL fallback values with malformed ports before opening DB connections" $ do
             let expectInvalidPort raw expected =
                     withEnvOverrides

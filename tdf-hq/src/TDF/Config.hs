@@ -3,7 +3,14 @@ module TDF.Config where
 
 import           Control.Applicative ((<|>))
 import           Control.Monad      ((>=>), filterM, when)
-import           Data.Char          (isControl, isDigit, isSpace, toLower)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isDigit
+  , isSpace
+  , toLower
+  )
 import           Data.List          (isPrefixOf)
 import           Data.Maybe         (fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
@@ -130,6 +137,8 @@ validateFallbackConnUrl envName raw
           Left (envName <> " must not contain whitespace")
       | T.any isControl value =
           Left (envName <> " must not contain control characters")
+      | T.any isHiddenConnectionUrlChar value =
+          Left (envName <> " must not contain hidden formatting characters")
       | "#" `T.isInfixOf` value =
           Left (envName <> " must not include a fragment")
       | otherwise =
@@ -317,6 +326,10 @@ isValidConnectionSslMode rawMode =
 invalidConnectionSslModeMessage :: String -> String
 invalidConnectionSslModeMessage envName =
   envName <> " sslmode must be one of: disable, allow, prefer, require, verify-ca, verify-full"
+
+isHiddenConnectionUrlChar :: Char -> Bool
+isHiddenConnectionUrlChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateDbSslMode :: String -> String -> Either String String
 validateDbSslMode envName rawMode
