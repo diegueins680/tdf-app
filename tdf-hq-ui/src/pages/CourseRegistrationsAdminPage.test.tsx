@@ -11680,8 +11680,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Formulario de reserva de cupo - Beatmaking 101',
       'Solicitud de cupo - Beatmaking 101',
+      'Página de cupos - Beatmaking 101',
       'Beatmaking 101 - reserva de cupo',
       'Beatmaking 101 - solicitud de cupo',
+      'Beatmaking 101 - formulario de cupos',
     ];
 
     for (const title of titles) {
