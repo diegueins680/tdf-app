@@ -159,22 +159,44 @@ spec = do
             , iwrTransportPayload = Nothing
             , iwrSource = Just "history_spec"
             }
-      (firstExternalId, secondExternalId, firstText, secondText) <- runWhatsAppHistorySql $ do
-        first <- recordIncomingWhatsAppMessage now (incoming "   " "Primer mensaje")
-        second <- recordIncomingWhatsAppMessage now (incoming "wamid with spaces" "Segundo mensaje")
+      ( firstExternalId
+        , secondExternalId
+        , thirdExternalId
+        , firstText
+        , secondText
+        , thirdText
+        ) <- runWhatsAppHistorySql $ do
+        first <-
+          recordIncomingWhatsAppMessage now (incoming "   " "Primer mensaje")
+        second <-
+          recordIncomingWhatsAppMessage now
+            (incoming "wamid with spaces" "Segundo mensaje")
+        third <-
+          recordIncomingWhatsAppMessage now
+            ( incoming
+                ("wamid" <> T.singleton '\x200B' <> "hidden")
+                "Tercer mensaje"
+            )
         pure
           ( ME.whatsAppMessageExternalId (entityVal first)
           , ME.whatsAppMessageExternalId (entityVal second)
+          , ME.whatsAppMessageExternalId (entityVal third)
           , ME.whatsAppMessageText (entityVal first)
           , ME.whatsAppMessageText (entityVal second)
+          , ME.whatsAppMessageText (entityVal third)
           )
 
-      firstExternalId `shouldSatisfy` (\val -> ("+593991234567-in-" :: Text) `T.isPrefixOf` val)
+      firstExternalId
+        `shouldSatisfy`
+          (\val -> ("+593991234567-in-" :: Text) `T.isPrefixOf` val)
       secondExternalId `shouldBe` firstExternalId <> "-2"
+      thirdExternalId `shouldBe` firstExternalId <> "-3"
       T.any isSpace firstExternalId `shouldBe` False
       T.any isSpace secondExternalId `shouldBe` False
+      T.isInfixOf (T.singleton '\x200B') thirdExternalId `shouldBe` False
       firstText `shouldBe` Just "Primer mensaje"
       secondText `shouldBe` Just "Segundo mensaje"
+      thirdText `shouldBe` Just "Tercer mensaje"
 
     it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)

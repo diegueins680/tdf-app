@@ -21,7 +21,12 @@ module TDF.WhatsApp.History
 import           Control.Applicative ((<|>))
 import           Data.Aeson (Value, encode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.List (nub)
 import           Data.Maybe (catMaybes, isJust, fromMaybe)
 import           Data.Text (Text)
@@ -341,9 +346,15 @@ normalizeStoredWhatsAppExternalId raw =
   let externalId = T.strip raw
   in if T.null externalId
         || T.length externalId > 512
-        || T.any (\ch -> isSpace ch || isControl ch) externalId
+        || T.any isUnsafeStoredWhatsAppExternalIdChar externalId
        then Nothing
        else Just externalId
+
+isUnsafeStoredWhatsAppExternalIdChar :: Char -> Bool
+isUnsafeStoredWhatsAppExternalIdChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 allocateGeneratedWhatsAppExternalId :: Text -> SqlPersistT IO Text
 allocateGeneratedWhatsAppExternalId baseExternalId = go (0 :: Int)
