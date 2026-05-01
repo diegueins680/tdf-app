@@ -869,6 +869,7 @@ spec = do
             decodeServiceCatalogUpdate
                 "{\"scuRateCents\":null,\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            decodeServiceCatalogUpdate "{}" `shouldSatisfy` isLeft
 
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do

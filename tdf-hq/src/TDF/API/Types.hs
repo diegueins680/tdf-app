@@ -242,16 +242,38 @@ instance FromJSON ServiceCatalogUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in ServiceCatalogUpdate: " <> T.unpack key)
-      [] ->
-        ServiceCatalogUpdate
-          <$> o .:? "scuName"
-          <*> o .:? "scuKind"
-          <*> o .:? "scuPricingModel"
-          <*> o .:! "scuRateCents"
-          <*> o .:? "scuCurrency"
-          <*> o .:! "scuBillingUnit"
-          <*> o .:! "scuTaxBps"
-          <*> o .:? "scuActive"
+      [] -> do
+        nameValue <- o .:? "scuName"
+        kindValue <- o .:? "scuKind"
+        pricingModelValue <- o .:? "scuPricingModel"
+        rateCentsValue <- o .:! "scuRateCents"
+        currencyValue <- o .:? "scuCurrency"
+        billingUnitValue <- o .:! "scuBillingUnit"
+        taxBpsValue <- o .:! "scuTaxBps"
+        activeValue <- o .:? "scuActive"
+        case
+          ( nameValue
+          , kindValue
+          , pricingModelValue
+          , rateCentsValue
+          , currencyValue
+          , billingUnitValue
+          , taxBpsValue
+          , activeValue
+          ) of
+          (Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing) ->
+            fail "ServiceCatalogUpdate must include at least one field"
+          _ ->
+            pure ServiceCatalogUpdate
+              { scuName = nameValue
+              , scuKind = kindValue
+              , scuPricingModel = pricingModelValue
+              , scuRateCents = rateCentsValue
+              , scuCurrency = currencyValue
+              , scuBillingUnit = billingUnitValue
+              , scuTaxBps = taxBpsValue
+              , scuActive = activeValue
+              }
 
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]
