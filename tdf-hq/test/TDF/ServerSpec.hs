@@ -199,6 +199,7 @@ import TDF.Server
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
     , validateLabelTrackTitle
+    , validateOptionalLabelTrackNote
     , validateLabelTrackOwnerIdFilter
     , validateLabelTrackPathId
     , validateOptionalLabelTrackStatus
@@ -6201,11 +6202,15 @@ spec = describe "TDF.Server helpers" $ do
 
         it "trims required title updates and canonicalizes supported status values" $ do
             validateLabelTrackTitle "  Mezcla final  " `shouldBe` Right "Mezcla final"
+            validateOptionalLabelTrackNote Nothing `shouldBe` Right Nothing
+            validateOptionalLabelTrackNote (Just "   ") `shouldBe` Right Nothing
+            validateOptionalLabelTrackNote (Just "  Revisar stems\nConfirmar ISRC  ")
+                `shouldBe` Right (Just "Revisar stems\nConfirmar ISRC")
             validateOptionalLabelTrackStatus Nothing `shouldBe` Right Nothing
             validateOptionalLabelTrackStatus (Just " DONE ") `shouldBe` Right (Just "done")
             validateOptionalLabelTrackStatus (Just "open") `shouldBe` Right (Just "open")
 
-        it "rejects malformed titles and unsupported statuses before patching label-track rows" $ do
+        it "rejects malformed titles, notes, and unsupported statuses before patching label-track rows" $ do
             let assertTitleInvalid rawTitle expectedMessage =
                     case validateLabelTrackTitle rawTitle of
                         Left serverErr -> do
@@ -6213,6 +6218,14 @@ spec = describe "TDF.Server helpers" $ do
                             BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
                         Right titleVal ->
                             expectationFailure ("Expected invalid label track title to be rejected, got: " <> show titleVal)
+                assertNoteInvalid rawNote expectedMessage =
+                    case validateOptionalLabelTrackNote (Just rawNote) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right noteVal ->
+                            expectationFailure
+                                ("Expected invalid label track note to be rejected, got: " <> show noteVal)
                 assertStatusInvalid rawStatus =
                     case validateOptionalLabelTrackStatus (Just rawStatus) of
                         Left serverErr -> do
@@ -6229,6 +6242,15 @@ spec = describe "TDF.Server helpers" $ do
             assertTitleInvalid
                 (T.replicate 161 "a")
                 "Título debe tener 160 caracteres o menos"
+            assertNoteInvalid
+                (T.replicate 1001 "a")
+                "note must be 1000 characters or fewer"
+            assertNoteInvalid
+                "Revisar\NULstems"
+                "note must not contain unsafe control"
+            assertNoteInvalid
+                ("Revisar" <> T.singleton '\x202E' <> "stems")
+                "note must not contain unsafe control"
             assertStatusInvalid "closed"
             assertStatusInvalid "in_progress"
 

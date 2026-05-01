@@ -11449,6 +11449,33 @@ validateLabelTrackTitle rawTitle =
 labelTrackTitleMaxLength :: Int
 labelTrackTitleMaxLength = 160
 
+validateOptionalLabelTrackNote :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalLabelTrackNote Nothing = Right Nothing
+validateOptionalLabelTrackNote (Just rawNote) =
+  validateLabelTrackNote rawNote
+
+validateLabelTrackNote :: Text -> Either ServerError (Maybe Text)
+validateLabelTrackNote rawNote =
+  case normalizeOptionalInput (Just rawNote) of
+    Nothing -> Right Nothing
+    Just note
+      | T.length note > labelTrackNoteMaxLength ->
+          Left err400 { errBody = "note must be 1000 characters or fewer" }
+      | T.any isUnsafeLabelTrackNoteChar note ->
+          Left err400
+            { errBody =
+                "note must not contain unsafe control or Unicode separator/format characters"
+            }
+      | otherwise ->
+          Right (Just note)
+  where
+    isUnsafeLabelTrackNoteChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+labelTrackNoteMaxLength :: Int
+labelTrackNoteMaxLength = 1000
+
 validateOptionalLabelTrackStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalLabelTrackStatus Nothing = Right Nothing
 validateOptionalLabelTrackStatus (Just rawStatus) =
@@ -11483,10 +11510,11 @@ createLabelTrack :: AuthedUser -> LabelTrackCreate -> AppM LabelTrackDTO
 createLabelTrack user LabelTrackCreate{..} = do
   scope <- resolveTrackScope user ltcOwnerId
   title <- either throwError pure (validateLabelTrackTitle ltcTitle)
+  note <- either throwError pure (validateOptionalLabelTrackNote ltcNote)
   now <- liftIO getCurrentTime
   let record = ME.LabelTrack
         { ME.labelTrackTitle      = title
-        , ME.labelTrackNote       = T.strip <$> ltcNote
+        , ME.labelTrackNote       = note
         , ME.labelTrackStatus     = "open"
         , ME.labelTrackOwnerPartyId = tsOwner scope
         , ME.labelTrackCreatedAt  = now
@@ -11503,6 +11531,7 @@ updateLabelTrack user rawId LabelTrackUpdate{..} = do
   key <- parseLabelTrackId rawId
   scope <- resolveTrackScope user Nothing
   titleUpdate <- traverse (either throwError pure . validateLabelTrackTitle) ltuTitle
+  noteUpdate <- traverse (either throwError pure . validateLabelTrackNote) ltuNote
   statusUpdate <- either throwError pure (validateOptionalLabelTrackStatus ltuStatus)
   now <- liftIO getCurrentTime
   mTrack <- runDB $ getEntity key
@@ -11512,9 +11541,7 @@ updateLabelTrack user rawId LabelTrackUpdate{..} = do
       ensureTrackAccess scope track
       let updates = catMaybes
             [ (ME.LabelTrackTitle =.) <$> titleUpdate
-            , case ltuNote of
-                Nothing -> Nothing
-                Just n  -> Just (ME.LabelTrackNote =. if T.null (T.strip n) then Nothing else Just (T.strip n))
+            , (ME.LabelTrackNote =.) <$> noteUpdate
             , (ME.LabelTrackStatus =.) <$> statusUpdate
             , Just (ME.LabelTrackUpdatedAt =. now)
             ]
