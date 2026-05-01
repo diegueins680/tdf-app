@@ -1446,6 +1446,49 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps permission-matrix fallback titles from duplicating the built-in roles workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-permission-matrix',
+          title: 'Permission matrix',
+          body: ['Review role coverage across modules before editing admin access.'],
+        },
+        {
+          cardId: 'fallback-matriz-permisos',
+          title: 'Matriz de permisos',
+          body: ['Revisa cobertura de roles por módulo antes de cambiar accesos administrativos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Permission matrix')).not.toBeInTheDocument();
+    expect(screen.queryByText('Matriz de permisos')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review role coverage across modules before editing admin access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa cobertura de roles por módulo antes de cambiar accesos administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps access-profile fallback titles from duplicating the built-in users workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
