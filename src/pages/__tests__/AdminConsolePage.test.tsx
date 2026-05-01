@@ -3471,6 +3471,16 @@ describe('AdminConsolePage', () => {
           title: 'Tokens de servicio',
           body: ['Sin datos disponibles.'],
         },
+        {
+          cardId: 'empty-report',
+          title: 'Reporte operativo',
+          body: ['No data to display.'],
+        },
+        {
+          cardId: 'empty-dashboard',
+          title: 'Tablero operativo',
+          body: ['No hay datos para mostrar.'],
+        },
       ],
     });
 
@@ -3487,12 +3497,20 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Integraciones|Tokens de servicio/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /Integraciones|Tokens de servicio|Reporte operativo|Tablero operativo/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tablero operativo')).not.toBeInTheDocument();
     expect(screen.queryByText(/No data available/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Sin datos disponibles/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No data to display/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay datos para mostrar/i)).not.toBeInTheDocument();
   });
 
   it('ignores no-record fallback cards so first-run users do not open dead-end modules', async () => {
