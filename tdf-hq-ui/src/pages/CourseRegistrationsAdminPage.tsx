@@ -2100,11 +2100,11 @@ export default function CourseRegistrationsAdminPage() {
     && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
     ? ` ${
-      statusAlreadyVisibleInBusySearchOnboarding
-        ? allVisibleRowsCanOpenPaymentWorkflow
-          ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
-          : buildCompactDossierScopeHint(dossierIdentityTargetLabel)
-        : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
+      allVisibleRowsCanOpenPaymentWorkflow
+        ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+        : statusAlreadyVisibleInBusySearchOnboarding
+          ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+          : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
     }`
     : '';
   const localSearchSingleResult =
@@ -2118,7 +2118,9 @@ export default function CourseRegistrationsAdminPage() {
     ? ` ${
       shouldUseDirectPendingRecoveryAction(localSearchSingleResult.crStatus)
         ? buildPendingRecoveryScopeHint(localSearchSingleResultTargetLabel)
-        : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
+        : canOpenPaymentWorkflowFromStatus(localSearchSingleResult.crStatus)
+          ? buildPaymentWorkflowScopeHint(localSearchSingleResultTargetLabel)
+          : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
     }`
     : '';
   const baseLocalSearchHelperText = localSearchKey

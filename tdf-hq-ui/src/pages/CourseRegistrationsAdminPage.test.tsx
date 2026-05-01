@@ -228,6 +228,8 @@ const pendingRecoveryScopeHint =
   'Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.';
 const contactDossierScopeHint =
   'Abre el expediente desde el contacto; el botón de estado abre acciones rápidas.';
+const contactPaymentWorkflowDossierScopeHint =
+  'Abre el expediente desde el contacto; el botón de estado abre Registrar pago y acciones rápidas.';
 const contactDossierOnlyScopeHint =
   'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
@@ -2081,9 +2083,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado único en esta vista.');
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain(
-        'Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+        'Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. Abre el expediente desde el nombre; el botón de estado abre Registrar pago y acciones rápidas.',
       );
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(8);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
 
@@ -7952,7 +7955,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Estudiante 9');
       expect(container.textContent).toContain(
-        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; el botón de estado abre Registrar pago y acciones rápidas.',
       );
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
@@ -7960,6 +7963,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Pendiente de pago',
       );
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -9463,9 +9467,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
-      expect(container.textContent).toContain(contactDossierOnlyScopeHint);
+      expect(container.textContent).toContain(contactPaymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain(mixedBusySearchHint);
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
