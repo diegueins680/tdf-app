@@ -297,14 +297,22 @@ validateSignupInternshipTextField fieldName rawValue =
   case cleanOptional rawValue of
     Nothing -> Right ()
     Just cleanValue
-      | T.any isControl cleanValue ->
+      | T.any isUnsafeSignupInternshipTextChar cleanValue ->
           Left err400
             { errBody =
                 BL.fromStrict
-                  (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+                  ( TE.encodeUtf8
+                      ( fieldName
+                          <> " must not contain control characters or hidden formatting characters"
+                      )
+                  )
             }
       | otherwise ->
           Right ()
+
+isUnsafeSignupInternshipTextChar :: Char -> Bool
+isUnsafeSignupInternshipTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSignupInternshipDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
 validateSignupInternshipDateRange (Just startAt) (Just endAt)

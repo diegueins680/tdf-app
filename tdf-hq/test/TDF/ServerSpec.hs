@@ -4922,6 +4922,14 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "internshipSkills must not contain control characters" (Just "Stage\NULplotting") Nothing
             assertInvalid "internshipAreas must not contain control characters" Nothing (Just "Eventos\nLogistica\NUL")
+            assertInvalid
+                "hidden formatting characters"
+                (Just "Stage\x200Dplanning")
+                Nothing
+            assertInvalid
+                "hidden formatting characters"
+                Nothing
+                (Just "Eventos\x2028Logistica")
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers" $ do
