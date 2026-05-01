@@ -1086,7 +1086,9 @@ function buildAdminUsersSectionDescription({
   isSingleUserSummary?: boolean;
   primaryRoleActionLabel?: string;
 }) {
-  const editHint = `Revisa los roles actuales y usa ${primaryRoleActionLabel} para ajustar permisos desde esta misma vista.`;
+  const editHint = isSingleUserSummary
+    ? `Revisa los roles actuales y usa ${primaryRoleActionLabel} para ajustar permisos desde esta misma vista.`
+    : 'Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista.';
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
