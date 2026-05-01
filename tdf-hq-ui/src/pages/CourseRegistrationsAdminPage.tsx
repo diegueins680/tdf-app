@@ -79,6 +79,8 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; el botón de estado abre acciones rápidas.`;
+const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
+  `Abre el expediente desde ${targetLabel}; el botón de estado abre Registrar pago y acciones rápidas.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
@@ -2079,10 +2081,14 @@ export default function CourseRegistrationsAdminPage() {
     && !hasCustomFilters
     && !viewHitsCurrentLimit
     && limit === DEFAULT_LIMIT;
+  const allVisibleRowsCanOpenPaymentWorkflow = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
     ? ` ${
       statusAlreadyVisibleInBusySearchOnboarding
-        ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+        ? allVisibleRowsCanOpenPaymentWorkflow
+          ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+          : buildCompactDossierScopeHint(dossierIdentityTargetLabel)
         : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
     }`
     : '';

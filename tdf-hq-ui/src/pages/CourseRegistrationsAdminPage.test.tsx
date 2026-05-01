@@ -220,6 +220,8 @@ const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
   'Abre el expediente desde el nombre; el botón de estado abre acciones rápidas.';
+const paymentWorkflowDossierScopeHint =
+  'Abre el expediente desde el nombre; el botón de estado abre Registrar pago y acciones rápidas.';
 const dossierOnlyScopeHint =
   'Abre el expediente desde el nombre; el estado abre acciones rápidas.';
 const pendingRecoveryScopeHint =
@@ -230,8 +232,12 @@ const contactDossierOnlyScopeHint =
   'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
 const recordDossierScopeHint =
   'Abre el expediente desde el registro; el botón de estado abre acciones rápidas.';
+const recordPaymentWorkflowDossierScopeHint =
+  'Abre el expediente desde el registro; el botón de estado abre Registrar pago y acciones rápidas.';
 const mixedIdentityDossierScopeHint =
   'Abre el expediente desde el nombre, el contacto o el registro; el botón de estado abre acciones rápidas.';
+const mixedIdentityPaymentWorkflowDossierScopeHint =
+  'Abre el expediente desde el nombre, el contacto o el registro; el botón de estado abre Registrar pago y acciones rápidas.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
@@ -7836,8 +7842,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
-      expect(container.textContent).toContain(dossierScopeHint);
+      expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
 
@@ -8994,10 +9002,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchInput.getAttribute('placeholder')).toBe('Registro');
       expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
       expect(container.textContent).toContain(
-        `Busca dentro de las 9 inscripciones cargadas. ${recordDossierScopeHint}`,
+        `Busca dentro de las 9 inscripciones cargadas. ${recordPaymentWorkflowDossierScopeHint}`,
       );
       expect(container.textContent).not.toContain('sin cambiar filtros');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');
     });
@@ -9404,7 +9413,7 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('uses the single visible identity type after local search narrows a mixed busy list', async () => {
-    const mixedBusySearchHint = mixedIdentityDossierScopeHint;
+    const mixedBusySearchHint = mixedIdentityPaymentWorkflowDossierScopeHint;
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
