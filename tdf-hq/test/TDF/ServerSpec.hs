@@ -217,6 +217,7 @@ import TDF.Server
     , validateBookingNotes
     , validatePublicBookingNotes
     , validatePublicBookingServiceType
+    , validateOptionalBookingServiceType
     , validateRequiredBookingTitle
     , validateOptionalBookingTitleUpdate
     , validateRequiredCmsField
@@ -6974,6 +6975,30 @@ spec = describe "TDF.Server helpers" $ do
                 ("mixing" <> T.singleton '\x2029')
                 "marcas Unicode invisibles"
             assertInvalid (T.replicate 121 "A") "serviceType debe tener 120 caracteres o menos"
+
+    describe "validateOptionalBookingServiceType" $ do
+        it "normalizes optional protected booking service types before resource fallback handling" $ do
+            validateOptionalBookingServiceType Nothing `shouldBe` Right Nothing
+            validateOptionalBookingServiceType (Just "   ") `shouldBe` Right Nothing
+            validateOptionalBookingServiceType (Just "  mezcla vocal  ")
+                `shouldBe` Right (Just "mezcla vocal")
+
+        it "rejects unsafe or oversized protected booking service types before persistence" $ do
+            let assertInvalid rawServiceType expected =
+                    case validateOptionalBookingServiceType (Just rawServiceType) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expected
+                        Right serviceTypeVal ->
+                            expectationFailure
+                                ( "Expected invalid optional booking service type to be rejected, got: "
+                                    <> show serviceTypeVal
+                                )
+            assertInvalid "mixing\nmastering" "serviceType must not contain control characters"
+            assertInvalid
+                ("mixing" <> T.singleton '\x202E')
+                "hidden formatting characters"
+            assertInvalid (T.replicate 121 "A") "serviceType must be 120 characters or fewer"
 
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $

@@ -4567,6 +4567,22 @@ validatePublicBookingServiceType rawServiceType =
       | otherwise ->
           Right serviceTypeVal
 
+validateOptionalBookingServiceType :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalBookingServiceType Nothing = Right Nothing
+validateOptionalBookingServiceType (Just rawServiceType) =
+  case normalizeOptionalInput (Just rawServiceType) of
+    Nothing -> Right Nothing
+    Just serviceTypeVal
+      | T.length serviceTypeVal > 120 ->
+          Left err400 { errBody = "serviceType must be 120 characters or fewer" }
+      | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
+          Left err400
+            { errBody =
+                "serviceType must not contain control characters or hidden formatting characters"
+            }
+      | otherwise ->
+          Right (Just serviceTypeVal)
+
 isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
@@ -6614,6 +6630,9 @@ createBooking user req = do
   status' <- either throwBadRequest pure (parseBookingStatus (cbStatus req))
   either throwError pure $
     validateBookingTimeRange (cbStartsAt req) (cbEndsAt req)
+  serviceTypeClean <-
+    either throwError pure $
+      validateOptionalBookingServiceType (cbServiceType req)
   engineerIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (cbEngineerPartyId req)
@@ -6626,8 +6645,7 @@ createBooking user req = do
   mEngineerParty <-
     liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
       >>= either throwError pure
-  let serviceTypeClean = normalizeOptionalInput (cbServiceType req)
-      engineerNameClean = normalizeOptionalInput (cbEngineerName req)
+  let engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = entityKey <$> mParty
       requestedRooms   = fromMaybe [] (cbResourceIds req)
   notesClean <- either throwError pure (validateBookingNotes (cbNotes req))
@@ -6677,6 +6695,14 @@ updateBooking user bookingIdI req = do
   Env pool _ <- ask
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
+  serviceTypeUpdate <-
+    case ubServiceType req of
+      Nothing -> pure Nothing
+      Just rawServiceType -> do
+        serviceTypeClean <-
+          either throwError pure $
+            validateOptionalBookingServiceType (Just rawServiceType)
+        pure (Just serviceTypeClean)
   requestedEngineerId <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
@@ -6697,15 +6723,14 @@ updateBooking user bookingIdI req = do
             case traverse parseBookingStatus (ubStatus req) of
               Left msg -> pure (Left err400 { errBody = BL8.fromStrict (TE.encodeUtf8 msg) })
               Right requestedStatus -> do
-                let applyMaybeText fallback Nothing = fallback
-                    applyMaybeText _ (Just val) = normalizeOptionalInput (Just val)
-                    engineerNameFallback =
+                let engineerNameFallback =
                       maybe (bookingEngineerName current) (normalizeOptionalInput . Just) (ubEngineerName req)
                     effectiveEngineerParty =
                       requestedEngineerParty <|> currentEngineerParty
                     updated = current
                       { bookingTitle       = fromMaybe (bookingTitle current) titleUpdate
-                      , bookingServiceType = applyMaybeText (bookingServiceType current) (ubServiceType req)
+                      , bookingServiceType =
+                          fromMaybe (bookingServiceType current) serviceTypeUpdate
                       , bookingNotes       =
                           if isJust (ubNotes req)
                             then notesUpdate
