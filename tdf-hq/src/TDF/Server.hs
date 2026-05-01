@@ -9319,13 +9319,23 @@ extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
 extractApiErrorMessage :: Value -> Maybe Text
 extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
   mErr <- o .:? "error"
-  case mErr of
-    Just (String msg) -> pure msg
-    Just (Object errObj) -> requireText =<< errObj .:? "message"
-    _ -> requireText =<< o .:? "message"
+  candidates <- case mErr of
+    Just (String msg) ->
+      pure [msg]
+    Just (Object errObj) -> do
+      mType <- errObj .:? "type"
+      mCode <- errObj .:? "code"
+      mMessage <- errObj .:? "message"
+      pure (catMaybes [mType, mCode, mMessage])
+    _ -> do
+      mType <- o .:? "type"
+      mCode <- o .:? "code"
+      mMessage <- o .:? "message"
+      pure (catMaybes [mType, mCode, mMessage])
+  requireText candidates
   where
-    requireText mVal =
-      case mVal of
+    requireText values =
+      case nonEmptyText (T.intercalate ": " (map T.strip values)) of
         Just txt -> pure txt
         Nothing -> fail "message missing"
 

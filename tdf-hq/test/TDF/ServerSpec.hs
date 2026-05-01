@@ -272,6 +272,7 @@ import TDF.Server
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
+    , extractApiErrorMessage
     , extractChatKitSession
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
@@ -3568,6 +3569,37 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "campaignId must be a positive integer"
                 (adsUpsertAd adminUser creativePayload { acuCampaignId = Just 0 })
+
+    describe "extractApiErrorMessage" $ do
+        it "preserves OpenAI error code and type markers before model fallback checks" $ do
+            let codeOnlyPayload =
+                    object
+                        [ "error" .= object
+                            [ "code" .= ("model_not_found" :: Text)
+                            ]
+                        ]
+                authPayload =
+                    object
+                        [ "error" .= object
+                            [ "type" .= ("authentication_error" :: Text)
+                            , "code" .= ("model_not_found" :: Text)
+                            , "message" .= ("model lookup failed" :: Text)
+                            ]
+                        ]
+
+            case extractApiErrorMessage codeOnlyPayload of
+                Just msg -> do
+                    msg `shouldBe` "model_not_found"
+                    shouldRetryWithFallbackModel 404 msg `shouldBe` True
+                Nothing ->
+                    expectationFailure "Expected code-only OpenAI error to preserve model_not_found"
+
+            case extractApiErrorMessage authPayload of
+                Just msg -> do
+                    msg `shouldBe` "authentication_error: model_not_found: model lookup failed"
+                    shouldRetryWithFallbackModel 403 msg `shouldBe` False
+                Nothing ->
+                    expectationFailure "Expected typed OpenAI error to preserve authentication marker"
 
     describe "shouldRetryWithFallbackModel" $ do
         it "falls back only when the upstream error is explicitly model-related" $ do
