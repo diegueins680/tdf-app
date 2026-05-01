@@ -5100,15 +5100,33 @@ ensurePartyWithAccount mName emailAddr mPhone = do
 selectUniquePartyByPrimaryEmail
   :: Text
   -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
-selectUniquePartyByPrimaryEmail emailAddr = do
-  matches <- selectList [PartyPrimaryEmail ==. Just emailAddr] [Asc PartyId, LimitTo 2]
+selectUniquePartyByPrimaryEmail emailAddr =
+  selectUniquePartyByContact "email" [PartyPrimaryEmail ==. Just emailAddr]
+
+selectUniquePartyByPrimaryPhone
+  :: Text
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
+selectUniquePartyByPrimaryPhone phoneNumber =
+  selectUniquePartyByContact "phone" [PartyPrimaryPhone ==. Just phoneNumber]
+
+selectUniquePartyByContact
+  :: Text
+  -> [Filter Party]
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
+selectUniquePartyByContact contactLabel filters = do
+  matches <- selectList filters [Asc PartyId, LimitTo 2]
   pure $ case matches of
     [] -> Right Nothing
     [partyEnt] -> Right (Just partyEnt)
     _ ->
       Left err409
         { errBody =
-            "Multiple parties match this email; merge duplicate party records before creating an account"
+            BL.fromStrict $
+              TE.encodeUtf8
+                ( "Multiple parties match this "
+                    <> contactLabel
+                    <> "; merge duplicate party records before linking new records"
+                )
         }
 
 deriveBaseUsername :: Maybe Text -> Text -> Text
@@ -8744,7 +8762,7 @@ adsInquiryPublic rawInquiry = do
   inquiry <- either throwError pure (validateAdsInquiry rawInquiry)
   env <- ask
   now <- liftIO getCurrentTime
-  partyId <- runDB $ ensurePartyForInquiry inquiry now
+  partyId <- runDB (ensurePartyForInquiry inquiry now) >>= either throwError pure
   (mSubjectKey, courseLabel) <- runDB $ resolveSubject (aiCourse inquiry)
   inquiryId <- runDB $ do
     rid <- insert (Trials.LeadInterest
@@ -9542,29 +9560,41 @@ extractOutputFragments value =
           contentParts
   in directText <> partText
 
-ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO PartyId
+ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError PartyId)
 ensurePartyForInquiry AdsInquiry{..} now = do
   let emailClean = T.strip <$> aiEmail
       phoneClean = aiPhone >>= normalizePhone
       display = fromMaybe "Contacto Ads" (T.strip <$> aiName)
-  mExisting <- case emailClean of
-    Just e  -> selectFirst [M.PartyPrimaryEmail ==. Just e] []
+  existingResult <- case emailClean of
+    Just e  -> selectUniquePartyByPrimaryEmail e
     Nothing -> case phoneClean of
-      Just p  -> selectFirst [M.PartyPrimaryPhone ==. Just p] []
-      Nothing -> pure Nothing
-  case mExisting of
-    Just (Entity pid party) -> do
+      Just p  -> selectUniquePartyByPrimaryPhone p
+      Nothing -> pure (Right Nothing)
+  case existingResult of
+    Left err -> pure (Left err)
+    Right mExisting ->
+      Right <$> upsertInquiryParty emailClean phoneClean display mExisting
+  where
+    upsertInquiryParty emailClean phoneClean display (Just (Entity pid party)) = do
       let updates = catMaybes
-            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean then Nothing else Just (M.PartyPrimaryEmail =. emailClean)
-            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean then Nothing else Just (M.PartyPrimaryPhone =. phoneClean)
-            , if isJust (M.partyWhatsapp party) || isNothing phoneClean then Nothing else Just (M.PartyWhatsapp =. phoneClean)
-            , if T.null (M.partyDisplayName party) && not (T.null display) then Just (M.PartyDisplayName =. display) else Nothing
+            [ if isJust (M.partyPrimaryEmail party) || isNothing emailClean
+                then Nothing
+                else Just (M.PartyPrimaryEmail =. emailClean)
+            , if isJust (M.partyPrimaryPhone party) || isNothing phoneClean
+                then Nothing
+                else Just (M.PartyPrimaryPhone =. phoneClean)
+            , if isJust (M.partyWhatsapp party) || isNothing phoneClean
+                then Nothing
+                else Just (M.PartyWhatsapp =. phoneClean)
+            , if T.null (M.partyDisplayName party) && not (T.null display)
+                then Just (M.PartyDisplayName =. display)
+                else Nothing
             ]
       unless (null updates) $
         update pid updates
       ensureStudentRole pid
       pure pid
-    Nothing -> do
+    upsertInquiryParty emailClean phoneClean display Nothing = do
       pid <- insert M.Party
         { M.partyLegalName        = Nothing
         , M.partyDisplayName      = display
@@ -9580,8 +9610,9 @@ ensurePartyForInquiry AdsInquiry{..} now = do
         }
       ensureStudentRole pid
       pure pid
-  where
-    ensureStudentRole pid = void $ upsert (M.PartyRole pid Student True) [M.PartyRoleActive =. True]
+
+    ensureStudentRole pid =
+      void $ upsert (M.PartyRole pid Student True) [M.PartyRoleActive =. True]
 
 resolveSubject :: Maybe Text -> SqlPersistT IO (Maybe (Key Trials.Subject), Maybe Text)
 resolveSubject mCourse =

@@ -215,6 +215,8 @@ import TDF.Server
     , validateServiceMarketplaceCompletion
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
+    , selectUniquePartyByPrimaryPhone
+    , ensurePartyForInquiry
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validateBookingNotes
@@ -3041,6 +3043,67 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected duplicate party email match to fail, got: " <> show value)
+
+    describe "ensurePartyForInquiry" $
+        it "rejects duplicate contact fallbacks instead of arbitrary ad inquiry parties" $ do
+            (duplicateEmailResult, duplicatePhoneResult, phoneSelectorResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkParty displayName emailAddr phoneNumber =
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = displayName
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = emailAddr
+                            , partyPrimaryPhone = phoneNumber
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = now
+                            }
+                    emailInquiry =
+                        AdsInquiry
+                            { aiName = Just "Lead Email"
+                            , aiEmail = Just "duplicate@example.com"
+                            , aiPhone = Nothing
+                            , aiCourse = Nothing
+                            , aiMessage = Just "Quiero info"
+                            , aiChannel = Just "instagram"
+                            }
+                    phoneInquiry =
+                        AdsInquiry
+                            { aiName = Just "Lead Phone"
+                            , aiEmail = Nothing
+                            , aiPhone = Just "+593991234567"
+                            , aiCourse = Nothing
+                            , aiMessage = Just "Quiero info"
+                            , aiChannel = Just "whatsapp"
+                            }
+                insert_ (mkParty "First Email Duplicate" (Just "duplicate@example.com") Nothing)
+                insert_ (mkParty "Second Email Duplicate" (Just "duplicate@example.com") Nothing)
+                insert_ (mkParty "First Phone Duplicate" Nothing (Just "+593991234567"))
+                insert_ (mkParty "Second Phone Duplicate" Nothing (Just "+593991234567"))
+                duplicateEmail <- ensurePartyForInquiry emailInquiry now
+                duplicatePhone <- ensurePartyForInquiry phoneInquiry now
+                phoneSelector <- selectUniquePartyByPrimaryPhone "+593991234567"
+                pure (duplicateEmail, duplicatePhone, phoneSelector)
+
+            let assertConflict contactLabel result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 409
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` ("Multiple parties match this " <> contactLabel)
+                        Right _ ->
+                            expectationFailure
+                                ( "Expected duplicate party "
+                                    <> contactLabel
+                                    <> " match to fail"
+                                )
+            assertConflict "email" duplicateEmailResult
+            assertConflict "phone" duplicatePhoneResult
+            assertConflict "phone" phoneSelectorResult
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
