@@ -7534,6 +7534,34 @@ validateReceiptCurrency Nothing = Right Nothing
 validateReceiptCurrency (Just rawCurrency) =
   Just <$> validateCurrencyCode (Just rawCurrency)
 
+validateReceiptBuyerName :: Maybe Text -> Either ServerError (Maybe Text)
+validateReceiptBuyerName Nothing = Right Nothing
+validateReceiptBuyerName (Just rawName) =
+  case cleanOptional (Just rawName) of
+    Nothing -> Left err400 { errBody = "buyerName must not be blank" }
+    Just nameVal
+      | T.length nameVal > 160 ->
+          Left err400 { errBody = "buyerName must be 160 characters or fewer" }
+      | T.any isUnsafeMarketplaceBuyerNameChar nameVal ->
+          Left err400
+            { errBody =
+                "buyerName must not contain control characters or "
+                  <> "Unicode formatting/separator characters"
+            }
+      | otherwise ->
+          Right (Just nameVal)
+
+validateReceiptBuyerEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateReceiptBuyerEmail Nothing = Right Nothing
+validateReceiptBuyerEmail (Just rawEmail) =
+  case cleanOptional (Just rawEmail) of
+    Nothing ->
+      Left err400 { errBody = "buyerEmail must not be blank" }
+    Just _ ->
+      case validateCourseRegistrationEmail (Just rawEmail) of
+        Right (Just emailVal) -> Right (Just emailVal)
+        _ -> Left err400 { errBody = "buyerEmail must be a valid email address" }
+
 validateCurrencyCode :: Maybe Text -> Either ServerError Text
 validateCurrencyCode Nothing = Right "USD"
 validateCurrencyCode (Just rawCurrency) =
@@ -8124,6 +8152,8 @@ createReceipt user CreateReceiptReq{..} = do
   requireModule user ModuleInvoicing
   invoiceIdValid <- either throwError pure (validatePositiveIdField "invoiceId" crInvoiceId)
   currencyOverride <- either throwError pure (validateReceiptCurrency crCurrency)
+  buyerNameOverride <- either throwError pure (validateReceiptBuyerName crBuyerName)
+  buyerEmailOverride <- either throwError pure (validateReceiptBuyerEmail crBuyerEmail)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   let iid = toSqlKey invoiceIdValid :: Key Invoice
@@ -8143,7 +8173,7 @@ createReceipt user CreateReceiptReq{..} = do
               then pure (Left "invoice-empty")
               else do
                 (receiptEnt, receiptLines) <-
-                  issueReceipt now (normalizeOptionalText crBuyerName) (normalizeOptionalText crBuyerEmail)
+                  issueReceipt now buyerNameOverride buyerEmailOverride
                                (normalizeOptionalText crNotes) currencyOverride
                                invEnt invoiceLines
                 pure (Right (receiptToDTO receiptEnt receiptLines))

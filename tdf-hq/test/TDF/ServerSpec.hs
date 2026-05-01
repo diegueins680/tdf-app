@@ -129,6 +129,8 @@ import TDF.Server
     , validateRolePayload
     , validateServiceAdCurrency
     , validateReceiptCurrency
+    , validateReceiptBuyerName
+    , validateReceiptBuyerEmail
     , validateServiceAdSlotMinutes
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
@@ -2161,6 +2163,43 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "usdollars"
             assertInvalid "12$"
             assertInvalid "   "
+
+        it "normalizes explicit receipt buyer overrides before invoice fallbacks are applied" $ do
+            validateReceiptBuyerName Nothing `shouldBe` Right Nothing
+            validateReceiptBuyerName (Just " Ada Lovelace ")
+                `shouldBe` Right (Just "Ada Lovelace")
+            validateReceiptBuyerEmail Nothing `shouldBe` Right Nothing
+            validateReceiptBuyerEmail (Just " ADA@Example.COM ")
+                `shouldBe` Right (Just "ada@example.com")
+
+        it "rejects malformed receipt buyer overrides before invoice fallback lookup" $ do
+            let assertInvalid expectedMessage payload = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (createReceipt (mkUser [Accounting]) payload)
+                                (error "createReceipt should reject invalid buyer overrides before reading Env")
+
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right receipt ->
+                            expectationFailure
+                                ("Expected invalid receipt buyer override to be rejected, got: " <> show receipt)
+
+            assertInvalid
+                "buyerName must not be blank"
+                (DTO.CreateReceiptReq 1 (Just "   ") Nothing Nothing Nothing)
+            assertInvalid
+                "buyerName must not contain control characters"
+                (DTO.CreateReceiptReq 1 (Just "Ada\nLovelace") Nothing Nothing Nothing)
+            assertInvalid
+                "buyerEmail must not be blank"
+                (DTO.CreateReceiptReq 1 Nothing (Just "   ") Nothing Nothing)
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                (DTO.CreateReceiptReq 1 Nothing (Just "ada@localhost") Nothing Nothing)
 
     describe "validateBookingListFilters" $ do
         it "preserves omitted filters and accepts either a unique booking id or broader party filters" $ do
