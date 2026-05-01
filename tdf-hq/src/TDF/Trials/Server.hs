@@ -1165,9 +1165,10 @@ validatePublicLeadFallbackRelations :: PartyId -> AppM ()
 validatePublicLeadFallbackRelations partyId = do
   mRole <- selectFirst [Models.PartyRolePartyId ==. partyId] []
   mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
-  when (isJust mRole || isJust mCred) $
+  mToken <- selectFirst [Models.ApiTokenPartyId ==. partyId] []
+  when (isJust mRole || isJust mCred || isJust mToken) $
     liftIO $ throwIO err500
-      { errBody = "Anonymous public lead fallback party has account or role links" }
+      { errBody = "Anonymous public lead fallback party has account or role links, including API tokens" }
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do

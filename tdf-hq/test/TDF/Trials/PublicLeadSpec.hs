@@ -307,6 +307,14 @@ spec = do
           , Models.userCredentialActive = False
           }
         pure ()
+      assertRejected $ \partyId -> do
+        _ <- insert Models.ApiToken
+          { Models.apiTokenToken = "public-interest-token"
+          , Models.apiTokenPartyId = partyId
+          , Models.apiTokenLabel = Just "anonymous-public-lead"
+          , Models.apiTokenActive = False
+          }
+        pure ()
 
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
@@ -2192,6 +2200,16 @@ initializePartySchema = do
     \\"username\" VARCHAR NOT NULL,\
     \\"password_hash\" VARCHAR NOT NULL,\
     \\"active\" BOOLEAN NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"api_token\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"token\" VARCHAR NOT NULL,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"label\" VARCHAR NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\")\
     \)"
     []
 
