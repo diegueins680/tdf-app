@@ -1012,6 +1012,48 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps audit-trail fallback titles from duplicating recent audit', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-audit-trail',
+          title: 'Audit trail',
+          body: ['Review the audit trail before repeating administrative changes.'],
+        },
+        {
+          cardId: 'fallback-historial-cambios',
+          title: 'Historial de cambios',
+          body: ['Revisa los cambios administrativos antes de repetir una acción.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit trail')).not.toBeInTheDocument();
+    expect(screen.queryByText('Historial de cambios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review the audit trail before repeating administrative changes\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa los cambios administrativos antes de repetir una acción\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps system-status fallback cards out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
