@@ -865,7 +865,14 @@ function buildAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
   return normalizeRoleSelection(roles).length === 0 ? 'Asignar roles' : 'Editar roles';
 }
 
-function buildCompactAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
+function buildCompactAdminUserRoleActionLabel(
+  roles?: readonly RoleKey[] | null,
+  options?: { showFullLabel?: boolean },
+) {
+  if (options?.showFullLabel) {
+    return buildAdminUserRoleActionLabel(roles);
+  }
+
   return normalizeRoleSelection(roles).length === 0 ? 'Asignar' : 'Editar';
 }
 
@@ -1964,7 +1971,7 @@ export default function AdminConsolePage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {users.map((user) => {
+                    {users.map((user, index) => {
                       const identity = summarizeAdminUserIdentity(user);
                       const editRoleLabel = buildAdminUserRoleEditLabel(user);
                       const editRoleTitle = buildAdminUserRoleButtonTitle(user);
@@ -2010,7 +2017,9 @@ export default function AdminConsolePage() {
                                     textTransform: 'none',
                                   }}
                                 >
-                                  {buildCompactAdminUserRoleActionLabel(user.roles)}
+                                  {buildCompactAdminUserRoleActionLabel(user.roles, {
+                                    showFullLabel: index === 0,
+                                  })}
                                 </Button>
                               )}
                             </Stack>
