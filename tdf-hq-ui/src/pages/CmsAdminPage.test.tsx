@@ -719,6 +719,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(1);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
@@ -733,6 +734,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
@@ -750,6 +752,8 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Comparar cambios')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.',
