@@ -145,10 +145,18 @@ validateInternTodoText :: Text -> Either ServerError Text
 validateInternTodoText rawText
   | T.null normalized =
       Left err400 { errBody = "todo text is required" }
+  | T.length normalized > internTodoTextMaxLength =
+      Left err400 { errBody = "todo text must be 500 characters or fewer" }
+  | T.any isUnsafeInternTitleChar normalized =
+      Left err400
+        { errBody = "todo text must not contain control or hidden formatting characters" }
   | otherwise =
       Right normalized
   where
     normalized = T.strip rawText
+
+internTodoTextMaxLength :: Int
+internTodoTextMaxLength = 500
 
 validateInternTodoTextUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternTodoTextUpdate Nothing = Right Nothing

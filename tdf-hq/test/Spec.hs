@@ -7175,6 +7175,23 @@ main = hspec $ do
             assertInvalid (validateInternTodoText "   ")
             assertInvalid (validateInternTodoTextUpdate (Just "   "))
 
+        it "rejects unsafe or oversized todo text before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship todo text, got " <> show value)
+            assertInvalid
+                (validateInternTodoText "Confirm cables\NUL")
+                "todo text must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTodoText ("Confirm" <> Data.Text.singleton '\x202E' <> "cables"))
+                "todo text must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTodoText (Data.Text.replicate 501 "a"))
+                "todo text must be 500 characters or fewer"
+
     describe "internship party id validation" $ do
         it "preserves omitted optional ids, clear operations, and positive party references" $ do
             validateOptionalInternPartyIdInput "partyId" Nothing `shouldBe` Right Nothing
