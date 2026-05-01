@@ -127,6 +127,7 @@ import TDF.Server
     , validateBookingListFilters
     , validatePublicBookingDurationMinutes
     , validateRolePayload
+    , validateUserRoleUserId
     , validateServiceAdCurrency
     , validateReceiptCurrency
     , validateReceiptBuyerName
@@ -578,6 +579,21 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateUserRoleUserId" $
+        it "rejects non-positive admin user-role path ids before credential lookup" $ do
+            validateUserRoleUserId 42 `shouldBe` Right 42
+            let assertInvalid rawUserId =
+                    case validateUserRoleUserId rawUserId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "userId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid user-role id to be rejected, got: " <> show value)
+            assertInvalid 0
+            assertInvalid (-1)
 
     describe "validateSessionInputLookup" $ do
         it "accepts exactly one public input-list session selector" $ do

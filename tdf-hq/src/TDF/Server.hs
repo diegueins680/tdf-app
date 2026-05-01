@@ -8559,8 +8559,9 @@ userRolesServer user =
 
     getUserRolesH userId = do
       requireStrictAdmin user
+      userIdValid <- either throwError pure (validateUserRoleUserId userId)
       Env pool _ <- ask
-      let credKey = toSqlKey userId :: Key UserCredential
+      let credKey = toSqlKey userIdValid :: Key UserCredential
       mRoles <- liftIO $ flip runSqlPool pool $ do
         mCred <- getEntity credKey
         case mCred of
@@ -8576,8 +8577,9 @@ userRolesServer user =
 
     updateUserRolesH userId UserRoleUpdatePayload{roles = payloadRoles} = do
       requireStrictAdmin user
+      userIdValid <- either throwError pure (validateUserRoleUserId userId)
       Env pool _ <- ask
-      let credKey = toSqlKey userId :: Key UserCredential
+      let credKey = toSqlKey userIdValid :: Key UserCredential
       updated <- liftIO $ flip runSqlPool pool $ do
         mCred <- getEntity credKey
         case mCred of
@@ -8587,6 +8589,10 @@ userRolesServer user =
             pure True
       unless updated $ throwError err404
       pure NoContent
+
+validateUserRoleUserId :: Int64 -> Either ServerError Int64
+validateUserRoleUserId =
+  validatePositiveIdField "userId"
 
 loadUserRoleSummaries :: SqlPersistT IO [UserRoleSummaryDTO]
 loadUserRoleSummaries = do
