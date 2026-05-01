@@ -13,10 +13,13 @@ import Test.Hspec
 
 import TDF.Models (UserCredential (..))
 import TDF.ServerAuth
-  ( normalizeAuthEmailAddress
+  ( GoogleIdTokenInfo (..)
+  , GoogleProfile (..)
+  , normalizeAuthEmailAddress
   , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
+  , validateGoogleIdTokenInfo
   , validatePasswordResetToken
   , validateSignupDisplayName
   )
@@ -26,6 +29,7 @@ spec = do
   authEmailSpec
   signupDisplayNameSpec
   passwordResetTokenSpec
+  googleTokenInfoSpec
   loginEmailFallbackSpec
   googleLoginEmailFallbackSpec
   passwordResetDeliverySpec
@@ -129,6 +133,25 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
       Right value ->
         expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)
 
+googleTokenInfoSpec :: Spec
+googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
+  it "normalizes Google emails only after rejecting invalid token email shapes" $ do
+    case validateGoogleIdTokenInfo (Just "client-id") googleTokenInfo of
+      Right profile -> do
+        gpEmail profile `shouldBe` "ada@example.com"
+        gpName profile `shouldBe` Just "Ada Lovelace"
+      Left err ->
+        expectationFailure ("Expected valid Google token info, got " <> T.unpack err)
+
+    case validateGoogleIdTokenInfo
+      (Just "client-id")
+      googleTokenInfo { gitEmail = "ada@localhost" } of
+      Left err ->
+        T.unpack err `shouldContain` "correo válido"
+      Right profile ->
+        expectationFailure
+          ("Expected malformed Google token email to be rejected, got " <> show profile)
+
 loginEmailFallbackSpec :: Spec
 loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
   it "allows exactly one login email fallback credential candidate" $
@@ -188,6 +211,18 @@ credentialEntity credentialId partyId =
       , userCredentialPasswordHash = "hash"
       , userCredentialActive = True
       }
+
+googleTokenInfo :: GoogleIdTokenInfo
+googleTokenInfo =
+  GoogleIdTokenInfo
+    { gitAud = "client-id"
+    , gitEmail = " ADA@Example.COM "
+    , gitEmailVerified = True
+    , gitName = Just " Ada Lovelace "
+    , gitPicture = Nothing
+    , gitSub = "google-sub-1"
+    , gitIss = Just "https://accounts.google.com"
+    }
 
 credentialEntityKey :: Entity UserCredential -> Key UserCredential
 credentialEntityKey (Entity key _) = key

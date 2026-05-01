@@ -15,6 +15,8 @@ module TDF.ServerAuth
   , passwordReset
   , passwordResetConfirm
   , authV1Server
+  , GoogleIdTokenInfo(..)
+  , GoogleProfile(..)
   , PasswordResetError
   , findReusableActiveToken
   , normalizeAuthEmailAddress
@@ -25,6 +27,7 @@ module TDF.ServerAuth
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , signupEmailExists
+  , validateGoogleIdTokenInfo
   , validateAuthPassword
   , validatePasswordResetToken
   , validateSignupDisplayName
@@ -834,19 +837,23 @@ verifyGoogleIdToken manager rawToken mExpectedClientId = do
             then pure (Left "Tu sesión de Google es inválida o expiró.")
             else case eitherDecode (responseBody resp) of
               Left _ -> pure (Left "No pudimos validar tu sesión con Google.")
-              Right info -> pure (validate info)
-  where
-    validate info
-      | not (gitEmailVerified info) =
-          Left "Tu correo de Google debe estar verificado."
-      | Just expected <- mExpectedClientId
-      , gitAud info /= expected =
-          Left "El token de Google no coincide con el cliente configurado."
-      | not (issuerAllowed (gitIss info)) =
-          Left "El token de Google proviene de un emisor no permitido."
-      | otherwise =
-          let normalizedEmail = T.toLower (T.strip (gitEmail info))
-              normalizedName = cleanOptional (gitName info)
+              Right info -> pure (validateGoogleIdTokenInfo mExpectedClientId info)
+
+validateGoogleIdTokenInfo :: Maybe Text -> GoogleIdTokenInfo -> Either Text GoogleProfile
+validateGoogleIdTokenInfo mExpectedClientId info
+  | not (gitEmailVerified info) =
+      Left "Tu correo de Google debe estar verificado."
+  | Just expected <- mExpectedClientId
+  , gitAud info /= expected =
+      Left "El token de Google no coincide con el cliente configurado."
+  | not (issuerAllowed (gitIss info)) =
+      Left "El token de Google proviene de un emisor no permitido."
+  | otherwise =
+      case normalizeAuthEmailAddress (gitEmail info) of
+        Nothing ->
+          Left "El token de Google no contiene un correo válido."
+        Just normalizedEmail ->
+          let normalizedName = cleanOptional (gitName info)
               profile = GoogleProfile
                 { gpEmail = normalizedEmail
                 , gpName = normalizedName <|> Just normalizedEmail
