@@ -9,6 +9,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncPlatform
   , validateSocialSyncExternalPostId
   , validateSocialSyncIngestSource
+  , validateSocialSyncCaption
   , validateSocialSyncPermalink
   , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
@@ -20,7 +21,15 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isAsciiLower, isAsciiUpper, isControl, isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe)
@@ -45,6 +54,9 @@ maxSocialSyncMediaUrls = 20
 
 maxSocialSyncUrlChars :: Int
 maxSocialSyncUrlChars = 2048
+
+maxSocialSyncCaptionChars :: Int
+maxSocialSyncCaptionChars = 8192
 
 data ValidatedSocialSyncPost = ValidatedSocialSyncPost
   { vsspPayload          :: SocialSyncPostIn
@@ -251,12 +263,13 @@ validateSocialSyncPostPayload payload = do
   platform <- validateSocialSyncPlatform (sspPlatform payload)
   externalPostId <- validateSocialSyncExternalPostId (sspExternalPostId payload)
   ingestSrc <- validateSocialSyncIngestSource (sspIngestSource payload)
+  caption <- validateSocialSyncCaption (sspCaption payload)
   permalink <- validateSocialSyncPermalink (sspPermalink payload)
   mediaUrls <- validateSocialSyncMediaUrls (sspMediaUrls payload)
   artistPartyId <- traverse validateSocialSyncArtistPartyKey (sspArtistPartyId payload)
   artistProfileId <- traverse validateSocialSyncArtistProfileKey (sspArtistProfileId payload)
   pure ValidatedSocialSyncPost
-    { vsspPayload = payload
+    { vsspPayload = payload { sspCaption = caption }
     , vsspPlatform = platform
     , vsspExternalPostId = externalPostId
     , vsspIngestSource = ingestSrc
@@ -353,6 +366,33 @@ validateSocialSyncIngestSource (Just raw) =
 isSocialSyncLabelChar :: Char -> Bool
 isSocialSyncLabelChar c =
   isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+validateSocialSyncCaption :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncCaption Nothing = Right Nothing
+validateSocialSyncCaption (Just rawCaption) =
+  case nonEmptyText rawCaption of
+    Nothing -> Right Nothing
+    Just caption
+      | T.length caption > maxSocialSyncCaptionChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "caption must be 8192 characters or fewer")
+            }
+      | T.any isUnsupportedSocialSyncCaptionChar caption ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      "caption must not contain unsupported control or hidden formatting characters"
+                  )
+            }
+      | otherwise -> Right (Just caption)
+
+isUnsupportedSocialSyncCaptionChar :: Char -> Bool
+isUnsupportedSocialSyncCaptionChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialSyncPermalink :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialSyncPermalink Nothing = Right Nothing

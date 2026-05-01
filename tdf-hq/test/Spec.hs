@@ -227,6 +227,7 @@ import TDF.Server.SocialSync
       validateSocialSyncPostsLimit,
       validateSocialSyncTagFilter,
       validateSocialSyncIngestSource,
+      validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
@@ -4465,6 +4466,34 @@ main = hspec $ do
                 (Data.Text.replicate 65 "a")
                 "ingestSource must be 64 characters or fewer"
 
+    describe "social sync caption validation" $ do
+        it "normalizes optional captions before summary and tag fallback handling" $ do
+            validateSocialSyncCaption Nothing `shouldBe` Right Nothing
+            validateSocialSyncCaption (Just "   ") `shouldBe` Right Nothing
+            validateSocialSyncCaption (Just "  New single out now\nstream it  ")
+                `shouldBe` Right (Just "New single out now\nstream it")
+
+        it "rejects oversized or hidden-control captions before social sync rows are stored" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncCaption (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync caption to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (Data.Text.replicate 8193 "a")
+                "caption must be 8192 characters or fewer"
+            assertInvalid
+                ("New single" <> Data.Text.singleton '\NUL')
+                "caption must not contain unsupported control"
+            assertInvalid
+                ("New single" <> Data.Text.singleton '\x202E' <> "out now")
+                "caption must not contain unsupported control"
+
     describe "social sync permalink validation" $ do
         it "normalizes omitted, blank, and valid public permalink URLs before storage" $ do
             validateSocialSyncPermalink Nothing `shouldBe` Right Nothing
@@ -4650,6 +4679,39 @@ main = hspec $ do
                     socialSyncRunIngestSource run `shouldBe` "mixed"
                 _ ->
                     expectationFailure ("Expected one social sync run audit row, got: " <> show runs)
+
+        it "normalizes captions before persisting summary and tag data" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-caption"
+                            , sspCaption = Just "  New single out now  "
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, _runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err ->
+                    expectationFailure ("Expected social sync ingest to succeed, got: " <> show err)
+                Right response ->
+                    ssirInserted response `shouldBe` 1
+            case posts of
+                [post] -> do
+                    socialSyncPostCaption post `shouldBe` Just "New single out now"
+                    socialSyncPostSummary post `shouldBe` Just "New single out now"
+                    socialSyncPostTags post `shouldBe` Just "release"
+                _ ->
+                    expectationFailure ("Expected one stored social sync post, got: " <> show posts)
 
         it "rejects ambiguous media URL lists before recording ingest audit rows" $ do
             let request =
