@@ -6113,6 +6113,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+      expect(document.body.querySelector('[data-testid="mock-follow-up-upload"]')).toBeNull();
       expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Ocultar enlace existente')).toBe(0);
     });
@@ -6171,6 +6172,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+      expect(document.body.querySelector('[data-testid="mock-follow-up-upload"]')).toBeNull();
       expect(getInputByLabel(document.body, 'Asunto').value).toBe('Confirmar transferencia');
       expect(getButtonByText(document.body, 'Ocultar enlace existente')).toBeTruthy();
       expect(getButtonByText(document.body, 'Ocultar enlace existente').getAttribute('aria-expanded')).toBe('true');
@@ -6189,6 +6191,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto').getAttribute('aria-expanded')).toBe('false');
+      expect(document.body.querySelector('[data-testid="mock-follow-up-upload"]')).not.toBeNull();
       expect(countButtonsByText(document.body, 'Ocultar enlace existente')).toBe(0);
     });
 
@@ -6229,16 +6232,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(hasLabel(document.body, 'URL del adjunto')).toBe(false);
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto'));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(hasLabel(document.body, 'URL del adjunto')).toBe(true);
+      expect(document.body.querySelector('[data-testid="mock-follow-up-upload"]')).not.toBeNull();
     });
 
     const uploadButton = document.body.querySelector<HTMLButtonElement>('[data-testid="mock-follow-up-upload"]');

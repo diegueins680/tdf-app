@@ -3297,6 +3297,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasFollowUpAttachmentUrl = Boolean(trimToNull(followUpForm.attachmentUrl));
   const canHideFollowUpUrlField = showFollowUpUrlField && !hasFollowUpAttachmentUrl && !canHideFollowUpOptionalFields;
   const showFollowUpExistingLinkAction = !showFollowUpUrlField && !hasFollowUpAttachmentUrl;
+  const showFollowUpUploadWidget = !showFollowUpUrlField || followUpForm.editingId != null;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
@@ -5141,18 +5142,20 @@ export default function CourseRegistrationsAdminPage() {
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                   />
-                                  <GoogleDriveUploadWidget
-                                    label={
-                                      followUpForm.attachmentName
-                                        ? `Adjunto listo: ${followUpForm.attachmentName}`
-                                        : 'Adjuntar evidencia opcional'
-                                    }
-                                    helperText="Puedes adjuntar un audio, captura, PDF o imagen."
-                                    accept="application/pdf,image/*,audio/*"
-                                    multiple={false}
-                                    onComplete={handleFollowUpUpload}
-                                    dense
-                                  />
+                                  {showFollowUpUploadWidget && (
+                                    <GoogleDriveUploadWidget
+                                      label={
+                                        followUpForm.attachmentName
+                                          ? `Adjunto listo: ${followUpForm.attachmentName}`
+                                          : 'Adjuntar evidencia opcional'
+                                      }
+                                      helperText="Puedes adjuntar un audio, captura, PDF o imagen."
+                                      accept="application/pdf,image/*,audio/*"
+                                      multiple={false}
+                                      onComplete={handleFollowUpUpload}
+                                      dense
+                                    />
+                                  )}
                                   {showFollowUpExistingLinkAction && (
                                     <Button
                                       size="small"
