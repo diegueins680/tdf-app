@@ -2413,6 +2413,30 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "Instagram connected asset token no configurado"
 
+        it "rejects blank targeted Instagram credentials instead of falling back to configured credentials" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "   ")
+                        Nothing
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset token no configurado"
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected-token")
+                        (Just "   ")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset account id no configurado"
+
         it "rejects oversized configured fallback tokens before building Graph authorization headers" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)

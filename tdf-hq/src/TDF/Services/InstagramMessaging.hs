@@ -155,8 +155,7 @@ validateInstagramAccountId label mRawAccountId =
 
 hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
 hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
-  isJust (mTokenOverride >>= nonEmptyText)
-    || isJust (mAccountIdOverride >>= nonEmptyText)
+  isJust mTokenOverride || isJust mAccountIdOverride
 
 nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
 nubAttempts =
