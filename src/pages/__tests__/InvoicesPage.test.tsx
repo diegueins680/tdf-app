@@ -126,7 +126,18 @@ describe('InvoicesPage', () => {
   });
 
   it('keeps the invoice table available once invoice rows exist', async () => {
-    mockInvoicesList.mockResolvedValue([buildInvoice()]);
+    mockInvoicesList.mockResolvedValue([
+      buildInvoice(),
+      buildInvoice({
+        invId: 102,
+        number: 'FAC-002',
+        statusI: 'Draft',
+        subtotalC: 5000,
+        taxC: 600,
+        totalC: 5600,
+        receiptId: null,
+      }),
+    ]);
 
     renderPage();
 
@@ -138,7 +149,9 @@ describe('InvoicesPage', () => {
       expect(screen.getByRole('columnheader', { name: /^Total$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
       expect(screen.getByText('FAC-001')).toBeInTheDocument();
-      expect(screen.getByText('Issued')).toBeInTheDocument();
+      expect(screen.getByText('FAC-002')).toBeInTheDocument();
+      expect(screen.getByText('Emitida')).toHaveAttribute('title', 'Issued');
+      expect(screen.getByText('Borrador')).toHaveAttribute('title', 'Draft');
       expect(screen.getByRole('link', { name: /Ver recibo/i })).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -148,5 +161,39 @@ describe('InvoicesPage', () => {
     });
 
     expect(screen.queryByText('Todavía no hay facturas registradas.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Primera factura registrada.')).not.toBeInTheDocument();
+  });
+
+  it('replaces the one-invoice table with a compact first-invoice summary', async () => {
+    mockInvoicesList.mockResolvedValue([buildInvoice()]);
+
+    renderPage();
+
+    expect(await screen.findByText('Facturación')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primera factura registrada.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Revisa la primera factura aquí\. La tabla aparecerá cuando exista una segunda para comparar\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Revísala aquí; cuando exista una segunda, volverá la tabla para comparar totales, estado y recibos\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Factura:\s*#FAC-001/i)).toBeInTheDocument();
+      expect(screen.getByText(/Total:/i)).toHaveTextContent(/112/);
+      expect(screen.getByText(/Estado:\s*Emitida/i)).toHaveAttribute('title', 'Issued');
+      expect(screen.getByText(/Subtotal \/ IVA:/i)).toHaveTextContent(/100.*12/);
+      expect(screen.getByRole('link', { name: /Ver recibo/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^#$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Total$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Issued$/i)).not.toBeInTheDocument();
   });
 });

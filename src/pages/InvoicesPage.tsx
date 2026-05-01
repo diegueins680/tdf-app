@@ -56,6 +56,15 @@ type CreateInvoiceDialogProps = {
   onCreated: (invoice: InvoiceDTO) => void;
 };
 
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  CancelledI: 'Anulada',
+  Draft: 'Borrador',
+  Issued: 'Emitida',
+  Paid: 'Pagada',
+  PartiallyPaid: 'Parcialmente pagada',
+  Sent: 'Enviada',
+};
+
 function formatAmount(cents: number, currency: string) {
   const amount = cents / 100;
   try {
@@ -63,6 +72,16 @@ function formatAmount(cents: number, currency: string) {
   } catch {
     return `${amount.toFixed(2)} ${currency}`;
   }
+}
+
+function formatInvoiceStatus(status: string) {
+  return INVOICE_STATUS_LABELS[status] ?? status;
+}
+
+function getInvoiceStatusTitle(status: string) {
+  const formattedStatus = formatInvoiceStatus(status);
+
+  return formattedStatus === status ? undefined : status;
 }
 
 function CreateInvoiceDialog({ open, onClose, onCreated }: CreateInvoiceDialogProps) {
@@ -313,13 +332,19 @@ export default function InvoicesPage() {
     ? ((invoicesQuery.error as Error).message || 'No se pudo cargar facturación.')
     : null;
   const showFirstInvoiceSetup = !showInvoicesLoading && !hasInvoicesError && invoices.length === 0;
+  const singleInvoice =
+    !showInvoicesLoading && !hasInvoicesError && invoices.length === 1
+      ? (invoices[0] ?? null)
+      : null;
   const pageDescription = showInvoicesLoading
     ? 'Cargando facturas y recibos asociados…'
     : hasInvoicesError
       ? 'No se pudo cargar facturación. Revisa la conexión y vuelve a intentar.'
       : showFirstInvoiceSetup
         ? 'Empieza con Nueva factura. La tabla y enlaces a recibos aparecerán cuando exista la primera factura.'
-        : 'Revisa facturas emitidas, totales, estado y recibos asociados desde esta vista.';
+        : singleInvoice
+          ? 'Revisa la primera factura aquí. La tabla aparecerá cuando exista una segunda para comparar.'
+          : 'Revisa facturas emitidas, totales, estado y recibos asociados desde esta vista.';
 
   return (
     <Stack spacing={2}>
@@ -374,6 +399,59 @@ export default function InvoicesPage() {
             </Typography>
           </Stack>
         </Paper>
+      ) : singleInvoice ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+            <Box>
+              <Typography variant="h6">Primera factura registrada.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Revísala aquí; cuando exista una segunda, volverá la tabla para comparar totales, estado y recibos.
+              </Typography>
+            </Box>
+            <Stack
+              spacing={0.75}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Typography variant="body2">
+                <Box component="span" sx={{ fontWeight: 600 }}>Factura:</Box>{' '}
+                #{singleInvoice.number ?? singleInvoice.invId}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Total:</Box>{' '}
+                {formatAmount(singleInvoice.totalC, singleInvoice.currency)}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                title={getInvoiceStatusTitle(singleInvoice.statusI)}
+              >
+                <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>{' '}
+                {formatInvoiceStatus(singleInvoice.statusI)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <Box component="span" sx={{ fontWeight: 600 }}>Subtotal / IVA:</Box>{' '}
+                {formatAmount(singleInvoice.subtotalC, singleInvoice.currency)} / {formatAmount(singleInvoice.taxC, singleInvoice.currency)}
+              </Typography>
+              {singleInvoice.receiptId != null ? (
+                <Box>
+                  <Button component={RouterLink} to={`/finance/receipts/${singleInvoice.receiptId}`} size="small">
+                    Ver recibo
+                  </Button>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Recibo:</Box> Sin recibo asociado.
+                </Typography>
+              )}
+            </Stack>
+          </Stack>
+        </Paper>
       ) : (
         <Paper variant="outlined">
           <TableContainer>
@@ -394,7 +472,13 @@ export default function InvoicesPage() {
                     <TableCell>{invoice.number ?? invoice.invId}</TableCell>
                     <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={600}>{invoice.statusI}</Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        title={getInvoiceStatusTitle(invoice.statusI)}
+                      >
+                        {formatInvoiceStatus(invoice.statusI)}
+                      </Typography>
                     </TableCell>
                     <TableCell>{formatAmount(invoice.subtotalC, invoice.currency)}</TableCell>
                     <TableCell>{formatAmount(invoice.taxC, invoice.currency)}</TableCell>
