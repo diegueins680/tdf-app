@@ -267,6 +267,7 @@ import TDF.Server
     , validateCampaignBudgetCents
     , validateCalendarAuthorizationCode
     , validateCalendarEventListQuery
+    , validateCalendarSyncWindow
     , validateCalendarRedirectUri
     , validateConfiguredCalendarRedirectUri
     , validateGoogleCalendarEventId
@@ -4595,6 +4596,34 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "from must be on or before to"
                 (validateCalendarEventListQuery Nothing (Just fromTs) (Just toTs) Nothing)
+
+    describe "validateCalendarSyncWindow" $ do
+        it "allows unbounded cursor syncs and bounded full syncs" $ do
+            let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)
+                toTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 39600)
+            validateCalendarSyncWindow (Just "sync-token") Nothing Nothing
+                `shouldBe` Right ()
+            validateCalendarSyncWindow Nothing (Just fromTs) (Just toTs)
+                `shouldBe` Right ()
+
+        it "rejects requested ranges when an existing cursor would make Google ignore them" $ do
+            let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)
+                toTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 39600)
+                assertInvalid result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "existing Google sync cursor"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Calendar sync window, got: "
+                                    <> show value
+                                )
+            assertInvalid (validateCalendarSyncWindow (Just "sync-token") (Just fromTs) Nothing)
+            assertInvalid (validateCalendarSyncWindow (Just "sync-token") Nothing (Just toTs))
+            assertInvalid
+                (validateCalendarSyncWindow (Just "sync-token") (Just fromTs) (Just toTs))
 
     describe "selectUniqueCalendarConfigFallback" $ do
         it "uses the implicit config fallback only when it is unambiguous" $ do

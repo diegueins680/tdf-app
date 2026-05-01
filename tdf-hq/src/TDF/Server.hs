@@ -2511,6 +2511,20 @@ validateCalendarEventListQuery mCalendarId mFrom mTo mStatus = do
       Left err400 { errBody = "from must be on or before to" }
     _ -> Right (calendarIdVal, mFrom, mTo, statusVal)
 
+validateCalendarSyncWindow
+  :: Maybe Text
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Either ServerError ()
+validateCalendarSyncWindow mSyncCursor mFrom mTo =
+  case (mSyncCursor, mFrom <|> mTo) of
+    (Just _, Just _) ->
+      Left err400
+        { errBody =
+            "Calendar sync range cannot be combined with an existing Google sync cursor"
+        }
+    _ -> Right ()
+
 validateCalendarEventStatusQuery :: Maybe Text -> Either ServerError (Maybe Text)
 validateCalendarEventStatusQuery Nothing = Right Nothing
 validateCalendarEventStatusQuery (Just rawStatus) = do
@@ -2680,6 +2694,8 @@ calendarServer user =
         Nothing -> throwError err404
         Just (Entity cfgId cfg) -> do
           now <- liftIO getCurrentTime
+          either throwError pure $
+            validateCalendarSyncWindow (Cal.googleCalendarConfigSyncCursor cfg) from to
           cfgFresh <- ensureAccessToken cidEnv secEnv redirectEnv cfg now
           (createdCount, updatedCount, cancelledCount, newCursor) <-
             syncFromGoogle cfgFresh from to now
