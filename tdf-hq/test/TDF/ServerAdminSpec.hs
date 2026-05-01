@@ -59,6 +59,7 @@ import TDF.ServerAdmin (
     resolveAdminWhatsAppSendPhone,
     resolveAdminWhatsAppResendPhone,
     validateAdminEmailSubject,
+    validateOptionalAdminEmailName,
     validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
     validateAdminLogsLimit,
@@ -171,6 +172,33 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Subject must not contain control characters"
                 (validateAdminEmailSubject "Launch\NULHidden")
+
+    describe "validateOptionalAdminEmailName" $ do
+        it "trims optional display names and treats blanks as omitted" $ do
+            validateOptionalAdminEmailName Nothing `shouldBe` Right ""
+            validateOptionalAdminEmailName (Just "   ") `shouldBe` Right ""
+            validateOptionalAdminEmailName (Just "  Ada Lovelace  ")
+                `shouldBe` Right "Ada Lovelace"
+
+        it "rejects unsafe display names before they are used in email headers" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin email name, got " <> show value)
+            assertInvalid
+                "Name must be a single line"
+                (validateOptionalAdminEmailName (Just "Ada\nBcc: ops@example.com"))
+            assertInvalid
+                "Name must not contain control or hidden format characters"
+                (validateOptionalAdminEmailName (Just "Ada\NULHidden"))
+            assertInvalid
+                "Name must not contain control or hidden format characters"
+                (validateOptionalAdminEmailName (Just "Ada\x202EHidden"))
+            assertInvalid
+                "Name must be 120 characters or fewer"
+                (validateOptionalAdminEmailName (Just (T.replicate 121 "A")))
 
     describe "validateAdminEmailCtaUrl" $ do
         it "trims valid public https CTA URLs and treats blanks as omitted" $ do

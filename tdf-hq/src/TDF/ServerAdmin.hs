@@ -25,6 +25,7 @@ module TDF.ServerAdmin
   , resolveAdminWhatsAppSendPhone
   , resolveAdminWhatsAppResendPhone
   , validateAdminEmailSubject
+  , validateOptionalAdminEmailName
   , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
@@ -231,10 +232,10 @@ adminServer user =
         (normalizeAdminEmailAddress etrEmail)
       subj <- either throwError pure $
         maybe (Right "Correo de prueba TDF") validateAdminEmailSubject etrSubject
+      targetName <- either throwError pure (validateOptionalAdminEmailName etrName)
       ctaUrl <- either throwError pure (validateAdminEmailCtaUrl etrCtaUrl)
       body <- either throwError pure (resolveAdminEmailTestBody etrBody)
       let emailSvc = EmailSvc.mkEmailService cfg
-          targetName = fromMaybe "" etrName
           preMsg = "[Admin][EmailTest] Sending to " <> targetEmail <> " | subject: " <> subj
       liftIO $ addLog LogInfo preMsg
       sendResult <- liftIO $ try $
@@ -1299,6 +1300,26 @@ validateAdminEmailSubject rawSubject
 
 adminEmailSubjectMaxLength :: Int
 adminEmailSubjectMaxLength = 160
+
+validateOptionalAdminEmailName :: Maybe Text -> Either ServerError Text
+validateOptionalAdminEmailName Nothing = Right ""
+validateOptionalAdminEmailName (Just rawName)
+  | T.any isEmailHeaderLineBreak rawName =
+      Left err400 { errBody = "Name must be a single line" }
+  | T.any isUnsupportedAdminAuditChar rawName =
+      Left err400 { errBody = "Name must not contain control or hidden format characters" }
+  | T.null name =
+      Right ""
+  | T.length name > adminEmailNameMaxLength =
+      Left err400 { errBody = "Name must be 120 characters or fewer" }
+  | otherwise =
+      Right name
+  where
+    name = T.strip rawName
+    isEmailHeaderLineBreak c = c == '\r' || c == '\n'
+
+adminEmailNameMaxLength :: Int
+adminEmailNameMaxLength = 120
 
 validateAdminEmailCtaUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdminEmailCtaUrl Nothing = Right Nothing
