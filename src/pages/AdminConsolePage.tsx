@@ -1128,15 +1128,21 @@ function buildAdminUsersSectionDescription({
   showStatusColumn,
   isSingleUserSummary,
   primaryRoleActionLabel = 'Editar roles',
+  roleEditingDisabled = false,
 }: {
   showLastAccessColumn: boolean;
   showStatusColumn: boolean;
   isSingleUserSummary?: boolean;
   primaryRoleActionLabel?: string;
+  roleEditingDisabled?: boolean;
 }) {
-  const editHint = isSingleUserSummary
-    ? `Revisa los roles actuales y usa ${primaryRoleActionLabel} para ajustar permisos desde esta misma vista.`
-    : 'Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista.';
+  const editHint = roleEditingDisabled
+    ? 'Resuelve el estado del servicio para habilitar la edición de roles desde esta vista.'
+    : (
+      isSingleUserSummary
+        ? `Revisa los roles actuales y usa ${primaryRoleActionLabel} para ajustar permisos desde esta misma vista.`
+        : 'Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista.'
+    );
   const hiddenColumnLabels: string[] = [];
 
   if (!showLastAccessColumn) {
@@ -1480,6 +1486,7 @@ export default function AdminConsolePage() {
     healthQuery.data != null
     && isHealthyHealthIndicator(healthQuery.data.status)
     && isHealthyHealthIndicator(healthQuery.data.db);
+  const canEditAdminRoles = showCompactHealthyServiceSummary;
   const serviceHealthWarningMessage = buildServiceHealthWarningMessage({
     apiStatus: healthQuery.data?.status,
     dbStatus: healthQuery.data?.db,
@@ -1518,6 +1525,7 @@ export default function AdminConsolePage() {
       primaryRoleActionLabel: singleAdminUser != null && !showUsersTable
         ? buildAdminUserRoleActionLabel(singleAdminUser.roles)
         : 'Editar roles',
+      roleEditingDisabled: !canEditAdminRoles,
     });
   const auditSectionDescription = showGettingStartedGuidance
     ? null
@@ -1987,20 +1995,22 @@ export default function AdminConsolePage() {
                               >
                                 {formatInlineAdminUserRoleSummary(user.roles)}
                               </Typography>
-                              <Button
-                                size="small"
-                                onClick={() => setEditingUser(user)}
-                                aria-label={editRoleLabel}
-                                title={editRoleTitle}
-                                sx={{
-                                  px: 0,
-                                  minWidth: 0,
-                                  justifyContent: 'flex-start',
-                                  textTransform: 'none',
-                                }}
-                              >
-                                {buildCompactAdminUserRoleActionLabel(user.roles)}
-                              </Button>
+                              {canEditAdminRoles && (
+                                <Button
+                                  size="small"
+                                  onClick={() => setEditingUser(user)}
+                                  aria-label={editRoleLabel}
+                                  title={editRoleTitle}
+                                  sx={{
+                                    px: 0,
+                                    minWidth: 0,
+                                    justifyContent: 'flex-start',
+                                    textTransform: 'none',
+                                  }}
+                                >
+                                  {buildCompactAdminUserRoleActionLabel(user.roles)}
+                                </Button>
+                              )}
                             </Stack>
                           </TableCell>
                           {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
@@ -2049,19 +2059,21 @@ export default function AdminConsolePage() {
                     >
                       Roles: {formatInlineAdminUserRoleSummary(singleAdminUser.roles)}
                     </Typography>
-                    <Button
-                      size="small"
-                      onClick={() => setEditingUser(singleAdminUser)}
-                      aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
-                      title={buildAdminUserRoleButtonTitle(singleAdminUser)}
-                      sx={{
-                        px: 0,
-                        minWidth: 0,
-                        textTransform: 'none',
-                      }}
-                    >
-                      {buildAdminUserRoleActionLabel(singleAdminUser.roles)}
-                    </Button>
+                    {canEditAdminRoles && (
+                      <Button
+                        size="small"
+                        onClick={() => setEditingUser(singleAdminUser)}
+                        aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
+                        title={buildAdminUserRoleButtonTitle(singleAdminUser)}
+                        sx={{
+                          px: 0,
+                          minWidth: 0,
+                          textTransform: 'none',
+                        }}
+                      >
+                        {buildAdminUserRoleActionLabel(singleAdminUser.roles)}
+                      </Button>
+                    )}
                     {singleAdminUserLastAccess && (
                       <Typography variant="body2" color="text.secondary">
                         Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}

@@ -312,6 +312,45 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
+  it('keeps role editing read-only until service health is ready', async () => {
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Atención: base de datos requiere revisión antes de cambiar permisos o seguir con otras acciones administrativas\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Resuelve el estado del servicio para habilitar la edición de roles desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByText('Manager')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Editar roles de Ada Lovelace/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Editar roles de Grace Hopper/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/usa el botón de cada fila/i)).not.toBeInTheDocument();
+  });
+
   it('keeps optional preview errors hidden while first-run service health is blocked', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
     mockConsolePreview.mockRejectedValue(new Error('Vista dinámica no disponible'));
