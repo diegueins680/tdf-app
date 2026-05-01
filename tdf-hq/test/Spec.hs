@@ -961,6 +961,10 @@ main = hspec $ do
                 "https://hq-admin/app"
                 "HQ_APP_URL must be an absolute http(s) URL"
             assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com:0443/app"
+                "HQ_APP_URL must be an absolute http(s) URL"
+            assertInvalid
                 "HQ_ASSETS_BASE_URL"
                 "https://cdn/assets"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
@@ -1031,6 +1035,10 @@ main = hspec $ do
                 "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                "https://api.openai.com:0443"
+                "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
             withEnvOverrides
