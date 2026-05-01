@@ -10519,12 +10519,15 @@ validateMarketplacePathId label rawId =
               BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
           }
   in
-    if T.null normalized || not (T.all isDigit normalized)
+    if T.null normalized || not (T.all isDigit normalized) || hasLeadingZero normalized
       then invalid
       else
         case readMaybe (T.unpack normalized) of
           Just pathId | pathId > 0 -> Right pathId
           _ -> invalid
+  where
+    hasLeadingZero value =
+      T.length value > 1 && T.head value == '0'
 
 marketplaceCartNotFound :: ServerError
 marketplaceCartNotFound =

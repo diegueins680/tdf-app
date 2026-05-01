@@ -5739,6 +5739,7 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "cart" "0"
             assertInvalid "cart" "-1"
+            assertInvalid "listing" "007"
             assertInvalid "listing" "+1"
             assertInvalid "order" "abc"
 
