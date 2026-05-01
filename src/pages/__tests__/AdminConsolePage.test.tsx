@@ -1435,6 +1435,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps bare role-assignment fallback titles from duplicating the users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-roles',
+          title: 'Roles',
+          body: ['Review assigned roles before editing team access.'],
+        },
+        {
+          cardId: 'fallback-asignacion-roles',
+          title: 'Asignación de roles',
+          body: ['Confirma roles asignados antes de cambiar permisos administrativos.'],
+        },
+        {
+          cardId: 'fallback-role-assignments',
+          title: 'Role assignments',
+          body: ['Review role assignments before changing admin permissions.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Asignación de roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Role assignments')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review assigned roles before editing team access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma roles asignados antes de cambiar permisos administrativos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review role assignments before changing admin permissions\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps implementation-prefixed built-in fallback titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
