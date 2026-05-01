@@ -47,7 +47,8 @@ corsPolicy = do
   hqBaseDefaults <- either (ioError . userError) pure $
     traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
-    validateConfiguredCorsOriginList configuredOrigins >>= traverse normalizeConfiguredCorsOrigin
+    validateConfiguredCorsOriginList allowAllFlag configuredOrigins
+      >>= traverse normalizeConfiguredCorsOrigin
   let
       defaults = defaultsCore ++ hqBaseDefaults
       includeDefaults = not disableDefaultsFlag
@@ -127,8 +128,12 @@ normalizeConfiguredCorsOrigin raw =
               <> "without path, query, or fragment: "
               <> raw
 
-validateConfiguredCorsOriginList :: [String] -> Either String [String]
-validateConfiguredCorsOriginList origins
+validateConfiguredCorsOriginList :: Bool -> [String] -> Either String [String]
+validateConfiguredCorsOriginList allowAll origins
+  | allowAll && not (null origins) =
+      Left
+        "ALLOW_ALL_ORIGINS=true must not be combined with configured CORS origins; \
+        \unset the origin allowlist or disable allow-all."
   | "*" `elem` map trim origins && length origins > 1 =
       Left
         "Configured CORS origins must not mix wildcard '*' with explicit origins; \

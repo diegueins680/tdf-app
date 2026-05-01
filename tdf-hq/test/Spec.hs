@@ -3221,6 +3221,20 @@ main = hspec $ do
                 $ corsPolicy `shouldThrow` \err ->
                     "must not mix wildcard" `isInfixOf` show (err :: IOException)
 
+        it "rejects allow-all CORS flags mixed with explicit allowlists" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Just "true")
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not be combined with configured CORS origins"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed boolean CORS flags instead of treating typos as false" $ do
             let baseOverrides =
                     [ ("ALLOWED_ORIGINS", Nothing)
