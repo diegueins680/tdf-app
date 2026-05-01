@@ -2114,14 +2114,17 @@ export default function CourseRegistrationsAdminPage() {
     && limit === DEFAULT_LIMIT;
   const allVisibleRowsCanOpenPaymentWorkflow = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
+  const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(reg.crStatus));
+  const localSearchOnboardingActionText = allVisibleRowsUseDirectPendingRecoveryAction
+    ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+    : allVisibleRowsCanOpenPaymentWorkflow
+      ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+      : statusAlreadyVisibleInBusySearchOnboarding
+        ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+        : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
-    ? ` ${
-      allVisibleRowsCanOpenPaymentWorkflow
-        ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
-        : statusAlreadyVisibleInBusySearchOnboarding
-          ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
-          : buildDossierOnlyScopeHint(dossierIdentityTargetLabel)
-    }`
+    ? ` ${localSearchOnboardingActionText}`
     : '';
   const localSearchSingleResult =
     localSearchNarrowsRegistrations && searchedRegistrations.length === 1
@@ -2378,8 +2381,6 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
-  const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
-    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(reg.crStatus));
   const dossierScopeHint = [
     allVisibleRowsUseDirectPendingRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
@@ -5354,8 +5355,10 @@ export default function CourseRegistrationsAdminPage() {
                               const showFollowUpMetadata = showFollowUpTypeChip
                                 || Boolean(followUpCreatedLabel)
                                 || Boolean(entry.crfNextFollowUpAt);
-                              const followUpAttachmentLabel =
-                                entry.crfAttachmentName?.trim() || `Adjunto de ${followUpActionLabel}`;
+                              const trimmedFollowUpAttachmentName = entry.crfAttachmentName?.trim() ?? '';
+                              const followUpAttachmentLabel = trimmedFollowUpAttachmentName
+                                ? trimmedFollowUpAttachmentName
+                                : `Adjunto de ${followUpActionLabel}`;
                               const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
 
                               return (

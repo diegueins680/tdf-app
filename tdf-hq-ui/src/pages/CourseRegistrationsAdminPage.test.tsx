@@ -7890,6 +7890,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('matches busy cancelled-list guidance to the direct reopen row action', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, () => ({ crStatus: 'cancelled' })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+      expect(container.textContent).toContain(
+        `Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. ${pendingRecoveryScopeHint}`,
+      );
+      expect(container.textContent).not.toContain(
+        'Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el nombre; Cambiar estado abre acciones rápidas.',
+      );
+      expect(countButtonsByText(container, 'Reabrir')).toBe(9);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countOccurrences(container, 'Cancelado')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
