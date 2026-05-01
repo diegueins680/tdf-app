@@ -706,6 +706,16 @@ const normalizeCohortLabelKey = (value: string) =>
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const humanizeCohortSlug = (slug: string) => {
+  const normalized = slug.trim().replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ');
+  if (!normalized) return '';
+
+  return normalized
+    .split(' ')
+    .map((part) => (part ? `${part.charAt(0).toLocaleUpperCase('es')}${part.slice(1)}` : part))
+    .join(' ');
+};
+
 const stripTrailingCohortSlug = (title: string, slug: string) => {
   const trimmedTitle = title.trim();
   const trimmedSlug = slug.trim();
@@ -880,11 +890,16 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
 
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
+  const fallbackLabel = humanizeCohortSlug(slug) || slug;
   const title = cohort.ccTitle?.trim();
-  if (!title) return slug;
-  return stripFirstRunCohortDescriptorSuffix(
+  if (!title) return fallbackLabel;
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
-  ) || slug;
+  );
+  if (!strippedLabel || normalizeCohortLabelKey(strippedLabel) === normalizeCohortLabelKey(slug)) {
+    return fallbackLabel;
+  }
+  return strippedLabel;
 };
 
 const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {

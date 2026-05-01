@@ -10791,7 +10791,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps first-run cohort labels from repeating slug-only titles', async () => {
+  it('turns slug-only first-run cohort labels into readable course names', async () => {
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'beatmaking-101' }]);
     listRegistrationsMock.mockResolvedValue([]);
 
@@ -10803,18 +10803,24 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Todavía no hay inscripciones para beatmaking-101. Abre la página pública cuando estés listo para recibir la primera.',
+        singleCohortInitialEmptyStateMessage,
+      );
+      expect(emptyState?.textContent).not.toContain(
+        'Todavía no hay inscripciones para beatmaking-101.',
       );
       expect(emptyState?.textContent).not.toContain('beatmaking-101 (beatmaking-101)');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateFormActionLabel);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Beatmaking 101');
     });
 
     await cleanup();
   });
 
-  it('falls back to the cohort slug when first-run titles are only generic form descriptors', async () => {
+  it('falls back to a readable cohort label when first-run titles are only generic form descriptors', async () => {
     const titles = ['Formulario público', 'Public form', 'Google Forms'];
 
     for (const title of titles) {
@@ -10829,12 +10835,15 @@ describe('CourseRegistrationsAdminPage', () => {
         const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(
-          'Todavía no hay inscripciones para beatmaking-101. Abre la página pública cuando estés listo para recibir la primera.',
+          singleCohortInitialEmptyStateMessage,
+        );
+        expect(emptyState?.textContent).not.toContain(
+          'Todavía no hay inscripciones para beatmaking-101.',
         );
         expect(emptyState?.textContent).not.toContain(`Todavía no hay inscripciones para ${title}.`);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
-        ).toBe('Abrir formulario público de beatmaking-101');
+        ).toBe('Abrir formulario público de Beatmaking 101');
         expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       });
 
