@@ -10997,6 +10997,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Google Forms for Beatmaking 101',
       'Formulario de Google para Beatmaking 101',
       'Beatmaking 101 - Google form',
+      'Instagram Lead Form - Beatmaking 101',
+      'Beatmaking 101 - IG lead form',
     ];
 
     for (const title of titles) {
@@ -11013,6 +11015,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Google');
+        expect(emptyState?.textContent).not.toContain('Instagram Lead Form');
+        expect(emptyState?.textContent).not.toContain('IG lead form');
         expect(countOccurrences(emptyState!, 'Google')).toBe(0);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
