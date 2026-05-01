@@ -209,6 +209,7 @@ import TDF.Server
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
     , validateServiceMarketplaceBookingRefs
+    , validateServiceMarketplaceBookingNotes
     , validateServiceMarketplaceBookingSlot
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
@@ -1297,6 +1298,25 @@ spec = describe "TDF.Server helpers" $ do
                 (validateServiceMarketplaceBookingRefs 0 99)
             assertInvalid "slotId must be a positive integer"
                 (validateServiceMarketplaceBookingRefs 42 (-3))
+
+    describe "validateServiceMarketplaceBookingNotes" $ do
+        it "validates notes before duplicating marketplace notes into booking rows" $ do
+            validateServiceMarketplaceBookingNotes Nothing `shouldBe` Right Nothing
+            validateServiceMarketplaceBookingNotes (Just "  Necesito revision del balance  ")
+                `shouldBe` Right (Just "Necesito revision del balance")
+
+            let assertInvalid rawNotes expectedMessage =
+                    case validateServiceMarketplaceBookingNotes (Just rawNotes) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid service marketplace notes to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid (T.replicate 1001 "x") "notes must be 1000 characters or fewer"
+            assertInvalid "Revision\NULurgente" "notes must not contain control characters"
 
     describe "validateServiceMarketplaceBookingSlot" $ do
         it "accepts open slots that belong to the requested service ad" $ do

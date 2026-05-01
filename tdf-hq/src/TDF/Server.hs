@@ -6243,6 +6243,7 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
 createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
   paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
+  notesVal <- either throwError pure (validateServiceMarketplaceBookingNotes smbNotes)
   (adId, slotId) <- either throwError pure (validateServiceMarketplaceBookingRefs smbAdId smbSlotId)
   pool <- asks envPool
   now <- liftIO getCurrentTime
@@ -6269,7 +6270,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       , serviceOrderCatalogId = catalogId
       , serviceOrderServiceKind = catalogKind
       , serviceOrderTitle = Just orderTitle
-      , serviceOrderDescription = normalizeOptionalInput smbNotes
+      , serviceOrderDescription = notesVal
       , serviceOrderStatus = "escrow_held"
       , serviceOrderPriceQuotedCents = Just (serviceAdFeeCents ad)
       , serviceOrderQuoteSentAt = Just now
@@ -6288,7 +6289,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       , bookingEndsAt = serviceAdSlotEndsAt slot
       , bookingStatus = Confirmed
       , bookingCreatedBy = Just (auPartyId user)
-      , bookingNotes = normalizeOptionalInput smbNotes
+      , bookingNotes = notesVal
       , bookingCreatedAt = now
       }
     update slotKey [ServiceAdSlotStatus =. "booked"]
@@ -6964,6 +6965,10 @@ validateServiceMarketplaceBookingRefs rawAdId rawSlotId = do
   adId <- validatePositiveIdField "adId" rawAdId
   slotId <- validatePositiveIdField "slotId" rawSlotId
   pure (adId, slotId)
+
+validateServiceMarketplaceBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceMarketplaceBookingNotes =
+  validateBookingNotes
 
 validateServiceMarketplaceBookingSlot
   :: Key ServiceAd
