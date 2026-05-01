@@ -391,18 +391,22 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       message: 'Cargando agenda… El calendario quedará listo para crear sesiones cuando termine esta primera carga.',
       severity: 'info',
+      showCalendar: true,
     });
   });
 
-  it('guides first-time calendar setup without adding fallback chrome once bookings exist', () => {
+  it('guides first-time setup without showing empty calendar chrome', () => {
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: false,
       hasError: false,
       isLoading: false,
     })).toEqual({
-      message: 'Todavía no hay sesiones. Selecciona un horario en el calendario para crear la primera; luego esta vista servirá para mover, editar y revisar conflictos.',
+      message: 'Crea la primera sesión aquí. Cuando exista al menos una, la agenda semanal servirá para mover, editar y revisar conflictos.',
+      primaryActionLabel: 'Crear primera sesión',
       severity: 'info',
+      showCalendar: false,
+      title: 'Todavía no hay sesiones.',
     });
 
     expect(getBookingCalendarStatusState({
@@ -423,6 +427,7 @@ describe('bookingsPageLogic', () => {
       clearFilterActionLabel: 'Ver toda la agenda',
       message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
       severity: 'info',
+      showCalendar: true,
     });
     expect(getBookingCalendarStatusState({
       bookingCount: 0,

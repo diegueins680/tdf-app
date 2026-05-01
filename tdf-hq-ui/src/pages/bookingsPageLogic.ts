@@ -12,7 +12,10 @@ interface BookingCustomerFieldState {
 interface BookingCalendarStatusState {
   clearFilterActionLabel?: string;
   message: string;
+  primaryActionLabel?: string;
   severity: 'info';
+  showCalendar: boolean;
+  title?: string;
 }
 
 interface BookingServiceFieldState {
@@ -164,6 +167,7 @@ export const getBookingCalendarStatusState = ({
     return {
       message: 'Cargando agenda… El calendario quedará listo para crear sesiones cuando termine esta primera carga.',
       severity: 'info',
+      showCalendar: true,
     };
   }
 
@@ -174,12 +178,16 @@ export const getBookingCalendarStatusState = ({
       clearFilterActionLabel: 'Ver toda la agenda',
       message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
       severity: 'info',
+      showCalendar: true,
     };
   }
 
   return {
-    message: 'Todavía no hay sesiones. Selecciona un horario en el calendario para crear la primera; luego esta vista servirá para mover, editar y revisar conflictos.',
+    message: 'Crea la primera sesión aquí. Cuando exista al menos una, la agenda semanal servirá para mover, editar y revisar conflictos.',
+    primaryActionLabel: 'Crear primera sesión',
     severity: 'info',
+    showCalendar: false,
+    title: 'Todavía no hay sesiones.',
   };
 };
 

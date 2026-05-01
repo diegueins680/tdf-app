@@ -848,6 +848,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       },
     );
   };
+  const handleCreateFirstSession = () => {
+    const start = DateTime.now().setZone(zone).plus({ hours: 1 }).startOf('hour').toJSDate();
+    handleDateClick({ date: start });
+  };
+  const showCalendar = calendarStatusState?.showCalendar ?? true;
 
   return (
     <>
@@ -858,7 +863,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
-      {calendarStatusState && (
+      {calendarStatusState && showCalendar && (
         <Alert
           severity={calendarStatusState.severity}
           sx={{ mb: 1 }}
@@ -872,75 +877,93 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {bookingsQuery.error && <Alert severity="error" sx={{ mb: 1 }}>Error al cargar agenda: {bookingsQuery.error.message}</Alert>}
-      <Paper sx={{ p: 1 }}>
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          height="auto"
-          allDaySlot={false}
-          slotDuration="00:30:00"
-          editable
-          selectable
-          selectMirror
-          select={handleSelect}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
-          eventDrop={handleEventDropOrResize}
-          eventResize={handleEventDropOrResize}
-          eventClassNames={(arg) => {
-            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
-            return ext['isCourse'] ? ['course-event'] : [];
-          }}
-          eventContent={(arg) => {
-            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
-            const isCourse = Boolean(ext['isCourse']);
-            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) ?? undefined;
-            const priceText = (ext['priceText'] as string | undefined) ?? undefined;
-            const locationText = (ext['locationText'] as string | undefined) ?? undefined;
-            const engineerLabel = (ext['engineerName'] as string | undefined) ?? undefined;
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {!showCalendar && calendarStatusState ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1.5} alignItems="flex-start">
+            {calendarStatusState.title && (
+              <Typography variant="h6">{calendarStatusState.title}</Typography>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {calendarStatusState.message}
+            </Typography>
+            {calendarStatusState.primaryActionLabel && (
+              <Button variant="contained" onClick={handleCreateFirstSession}>
+                {calendarStatusState.primaryActionLabel}
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+      ) : (
+        <Paper sx={{ p: 1 }}>
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            height="auto"
+            allDaySlot={false}
+            slotDuration="00:30:00"
+            editable
+            selectable
+            selectMirror
+            select={handleSelect}
+            dateClick={handleDateClick}
+            eventClick={handleEventClick}
+            eventDrop={handleEventDropOrResize}
+            eventResize={handleEventDropOrResize}
+            eventClassNames={(arg) => {
+              const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+              return ext['isCourse'] ? ['course-event'] : [];
+            }}
+            eventContent={(arg) => {
+              const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+              const isCourse = Boolean(ext['isCourse']);
+              const courseSubtitle = (ext['courseSubtitle'] as string | undefined) ?? undefined;
+              const priceText = (ext['priceText'] as string | undefined) ?? undefined;
+              const locationText = (ext['locationText'] as string | undefined) ?? undefined;
+              const engineerLabel = (ext['engineerName'] as string | undefined) ?? undefined;
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {isCourse && (
+                      <span
+                        style={{
+                          background: 'rgba(59,130,246,0.18)',
+                          color: '#0f172a',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                        }}
+                      >
+                        Curso
+                      </span>
+                    )}
+                    <span>{arg.event.title}</span>
+                  </div>
                   {isCourse && (
-                    <span
-                      style={{
-                        background: 'rgba(59,130,246,0.18)',
-                        color: '#0f172a',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                      }}
-                    >
-                      Curso
+                    <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
+                      {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
                     </span>
                   )}
-                  <span>{arg.event.title}</span>
+                  {engineerLabel && (
+                    <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.85 }}>
+                      Ingeniero: {engineerLabel}
+                    </span>
+                  )}
                 </div>
-                {isCourse && (
-                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
-                    {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
-                  </span>
-                )}
-                {engineerLabel && (
-                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.85 }}>
-                    Ingeniero: {engineerLabel}
-                  </span>
-                )}
-              </div>
-            );
-          }}
-          events={events}
-          nowIndicator
-          timeZone={zone}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
-        />
-      </Paper>
+              );
+            }}
+            events={events}
+            nowIndicator
+            timeZone={zone}
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+          />
+        </Paper>
+      )}
 
       <Dialog open={Boolean(courseReadOnlyInfo)} onClose={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} maxWidth="xs" fullWidth>
         <DialogTitle>Bloque de curso</DialogTitle>
