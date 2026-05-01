@@ -2699,6 +2699,63 @@ main = hspec $ do
                 Right result ->
                     DTO.sirBuyerEmail result `shouldBe` Just "billing+sri@example.com"
 
+        it "validates nested SRI buyer data before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI buyer object to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "buyer.ruc must contain ASCII digits only"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"179A012345001\",\"legalName\":\"Cliente Demo\"}}"
+                )
+            assertInvalid
+                "buyer.legalName is required"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\",\"legalName\":\"   \"}}"
+                )
+            assertInvalid
+                "buyer.email must be a valid email address"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"email\":\"not-an-email\"}}"
+                )
+            assertInvalid
+                "buyer.phone must not contain control characters"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"phone\":\"099\\n123\"}}"
+                )
+
+            case Sri.decodeSriScriptOutput
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\" 1790012345001 \","
+                    <> "\"legalName\":\" Cliente Demo \","
+                    <> "\"email\":\" Billing@Example.COM \","
+                    <> "\"phone\":\" +593 99 123 4567 \"}}"
+                ) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid nested SRI buyer data to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    case DTO.sirBuyer result of
+                        Nothing ->
+                            expectationFailure "Expected nested SRI buyer data to be preserved"
+                        Just buyer -> do
+                            DTO.sibRuc buyer `shouldBe` "1790012345001"
+                            DTO.sibLegalName buyer `shouldBe` "Cliente Demo"
+                            DTO.sibEmail buyer `shouldBe` Just "billing@example.com"
+                            DTO.sibPhone buyer `shouldBe` Just "+593 99 123 4567"
+
         it "rejects negative SRI totals before invoice results are trusted" $
             case Sri.decodeSriScriptOutput
                 ( "{\"ok\":true,\"status\":\"issued\","

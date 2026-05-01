@@ -32,7 +32,7 @@ import           System.Process (proc, readCreateProcessWithExitCode)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 
-import           TDF.DTO (SriIssueResultDTO(..))
+import           TDF.DTO (SriIssueBuyerDTO(..), SriIssueResultDTO(..))
 
 data SriScriptCustomer = SriScriptCustomer
   { ruc       :: Text
@@ -131,11 +131,28 @@ validateSriScriptResult dto =
        else if T.any isInvalidVisibleTextChar statusValue
          then Left "SRI script JSON output status must not contain control characters or hidden formatting characters"
          else
-           validateScriptTotal dto { sirStatus = statusValue }
+             validateScriptTotal dto { sirStatus = statusValue }
              >>= validateIssuedResult
              >>= validateOptionalDocumentIdentifiers
+             >>= validateOptionalBuyer
              >>= validateOptionalBuyerEmail
   where
+    validateOptionalBuyer result = do
+      buyerValue <- traverse validateSriBuyer (sirBuyer result)
+      Right result { sirBuyer = buyerValue }
+
+    validateSriBuyer buyer = do
+      rucValue <- validateOutputTaxIdField "buyer.ruc" (sibRuc buyer)
+      legalNameValue <- validateOutputRequiredTextField "buyer.legalName" (sibLegalName buyer)
+      emailValue <- validateOutputOptionalEmailField "buyer.email" (sibEmail buyer)
+      phoneValue <- validateOutputOptionalTextField "buyer.phone" (sibPhone buyer)
+      Right buyer
+        { sibRuc = rucValue
+        , sibLegalName = legalNameValue
+        , sibEmail = emailValue
+        , sibPhone = phoneValue
+        }
+
     validateOptionalBuyerEmail result = do
       buyerEmail <-
         validateOptionalOutputField
@@ -247,6 +264,61 @@ validateSriScriptResult dto =
                 && T.all isAsciiDigit sequential
         _ ->
           False
+
+validateOutputTaxIdField :: Text -> Text -> Either Text Text
+validateOutputTaxIdField fieldName raw = do
+  value <- validateOutputRequiredTextField fieldName raw
+  if not (T.all isAsciiDigit value)
+    then Left (outputFieldMessage fieldName "must contain ASCII digits only")
+    else if T.length value == 10 || T.length value == 13
+      then Right value
+      else Left (outputFieldMessage fieldName "must contain 10 or 13 digits")
+
+validateOutputRequiredTextField :: Text -> Text -> Either Text Text
+validateOutputRequiredTextField fieldName raw =
+  let value = T.strip raw
+  in if T.null value
+       then Left (outputFieldMessage fieldName "is required")
+       else if T.any isInvalidVisibleTextChar value
+         then
+           Left
+             ( outputFieldMessage
+                 fieldName
+                 "must not contain control characters or hidden formatting characters"
+             )
+         else Right value
+
+validateOutputOptionalTextField :: Text -> Maybe Text -> Either Text (Maybe Text)
+validateOutputOptionalTextField _ Nothing = Right Nothing
+validateOutputOptionalTextField fieldName (Just raw) =
+  let value = T.strip raw
+  in if T.null value
+       then Right Nothing
+       else if T.any isInvalidVisibleTextChar value
+         then
+           Left
+             ( outputFieldMessage
+                 fieldName
+                 "must not contain control characters or hidden formatting characters"
+             )
+         else Right (Just value)
+
+validateOutputOptionalEmailField :: Text -> Maybe Text -> Either Text (Maybe Text)
+validateOutputOptionalEmailField fieldName raw = do
+  mValue <- validateOutputOptionalTextField fieldName raw
+  case mValue of
+    Nothing -> Right Nothing
+    Just value ->
+      let normalized = T.toLower value
+      in if T.length normalized > maxSriEmailChars
+           then Left (outputFieldMessage fieldName "must be 254 characters or fewer")
+           else if isValidSriEmail normalized
+             then Right (Just normalized)
+             else Left (outputFieldMessage fieldName "must be a valid email address")
+
+outputFieldMessage :: Text -> Text -> Text
+outputFieldMessage fieldName message =
+  "SRI script JSON output " <> fieldName <> " " <> message
 
 validateSriScriptRequest :: SriScriptRequest -> Either Text SriScriptRequest
 validateSriScriptRequest request = do
