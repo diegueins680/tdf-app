@@ -144,10 +144,13 @@ const getVisibleUserContactSummary = (
   user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail' | 'partyName' | 'username'>,
 ) => {
   const identityValues = [user.partyName, user.username];
-  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const whatsapp = normalizeContactValue(user.whatsapp);
+  const preferredPhone = whatsapp ?? normalizeContactValue(user.primaryPhone);
   const email = normalizeContactValue(user.primaryEmail);
-  const visiblePhone = matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone;
   const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
+  const visiblePhone = whatsapp && visibleEmail ? null : (
+    matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone
+  );
 
   if (visiblePhone && visibleEmail) return `${visiblePhone} · ${visibleEmail}`;
   return visiblePhone ?? visibleEmail;
@@ -1370,6 +1373,8 @@ function UserRow({
   const identity = summarizeUserIdentity(user);
   const communicationTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
   const whatsappActionLabel = `Abrir WhatsApp para ${communicationTarget}`;
+  const whatsappChannel = getUserWhatsAppChannel(user);
+  const whatsappActionTitle = whatsappChannel ? `${whatsappActionLabel} · ${whatsappChannel}` : whatsappActionLabel;
   const hasLinkedProfile = hasLinkedAdminUserProfile(user);
   const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
@@ -1449,13 +1454,14 @@ function UserRow({
               variant="outlined"
               color="primary"
               aria-label={whatsappActionLabel}
+              title={whatsappActionTitle}
               startIcon={<WhatsAppIcon fontSize="small" />}
               onClick={onOpenCommunications}
             >
               WhatsApp
             </Button>
           ) : (
-            <Tooltip title={whatsappActionLabel}>
+            <Tooltip title={whatsappActionTitle}>
               <IconButton
                 size="small"
                 color="primary"

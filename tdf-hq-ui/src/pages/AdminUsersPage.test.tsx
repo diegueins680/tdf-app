@@ -394,7 +394,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps mixed contact-state work in the header so rows only show the available WhatsApp action', async () => {
+  it('keeps mixed contact-state work in the header so rows avoid repeating explicit WhatsApp numbers', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -446,7 +446,8 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(phoneOnlyRow, 'WhatsApp')).toHaveLength(1);
 
         const whatsappRow = getRowByUserId(container, 103);
-        expect(whatsappRow.textContent).toContain('+593999000444 · whatsapp@example.com');
+        expect(whatsappRow.textContent).toContain('whatsapp@example.com');
+        expect(whatsappRow.textContent).not.toContain('+593999000444');
         expect(whatsappRow.textContent).not.toContain('+593999000333');
         expect(getButtonsByText(whatsappRow, 'WhatsApp')).toHaveLength(1);
 
@@ -1410,12 +1411,17 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const mergedRow = getRowByUserId(container, 101);
+        const whatsappButton = getButtonsByText(mergedRow, 'WhatsApp')[0];
 
         expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
         expect(hasLinkWithTextAndHref(mergedRow, 'Ada Lovelace', '/perfil/9')).toBe(true);
-        expect(mergedRow.textContent).toContain('+593999000222 · ada@example.com');
+        expect(mergedRow.textContent).toContain('ada@example.com');
+        expect(mergedRow.textContent).not.toContain('+593999000222');
         expect(hasExactText(mergedRow, 'Roles: Admin, Teacher · Módulos: admin, crm')).toBe(true);
         expect(getButtonsByText(mergedRow, 'WhatsApp')).toHaveLength(1);
+        expect(whatsappButton?.getAttribute('title')).toBe(
+          'Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin) · +593999000222',
+        );
       });
     } finally {
       await cleanup();
