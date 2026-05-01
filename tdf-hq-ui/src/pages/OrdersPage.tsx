@@ -447,7 +447,7 @@ export default function OrdersPage() {
     + (showRoomsColumn ? 1 : 0)
     + (showStatusColumn ? 1 : 0)
     + (showLiveSessionsColumn ? 1 : 0);
-  const rowActionSummary = rows.some((row) => row.isRecording)
+  const rowActionSummary = showLiveSessionsColumn
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
   const pageSummary = totalRows === 0
