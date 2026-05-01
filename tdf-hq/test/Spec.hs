@@ -7499,6 +7499,20 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected invalid stored finance currency to be rejected, got " <> show value)
 
+        it "rejects non-positive persisted finance amounts instead of including impossible rows in summaries" $ do
+            case validateStoredFinanceEntryDimensions
+                validStoredFinanceEntry { eventFinanceEntryAmountCents = 0 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry amount is invalid"
+                Right value ->
+                    expectationFailure ("Expected zero stored finance amount to be rejected, got " <> show value)
+            case validateStoredFinanceEntryDimensions
+                validStoredFinanceEntry { eventFinanceEntryAmountCents = -1 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry amount is invalid"
+                Right value ->
+                    expectationFailure ("Expected negative stored finance amount to be rejected, got " <> show value)
+
     describe "stored budget line invariants" $ do
         let budgetTimestamp = UTCTime (fromGregorian 2026 1 1) 0
             validStoredBudgetLine =

@@ -2763,6 +2763,9 @@ validateStoredFinanceEntryDimensions entry = do
     (parseFinanceEntryStatus (eventFinanceEntryStatus entry))
   _currencyVal <- maybe (Left "Stored finance entry currency is invalid") Right
     (normalizeEventCurrencyCode (eventFinanceEntryCurrency entry))
+  if eventFinanceEntryAmountCents entry <= 0
+    then Left "Stored finance entry amount is invalid"
+    else pure ()
   pure (directionVal, sourceVal, statusVal)
 
 normalizeFinanceDirectionInput :: T.Text -> AppM T.Text
