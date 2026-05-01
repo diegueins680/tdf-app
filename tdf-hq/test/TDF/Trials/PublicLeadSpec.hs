@@ -9,6 +9,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
 import Data.Text (Text, pack)
+import qualified Data.Text as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
@@ -126,6 +127,23 @@ spec = do
                 expectationFailure ("Expected implausible phone input to be rejected: " <> show rawPhone)
       assertRejected "12345"
       assertRejected "+1234567890123456"
+
+    it "rejects control or hidden phone separators instead of normalizing forged contact data" $ do
+      let assertRejected rawPhone = do
+            result <-
+              tryCreateOrFetchParty
+                (Just "Test User")
+                (Just "user@example.com")
+                (Just rawPhone)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "phone"
+              Right _ ->
+                expectationFailure ("Expected unsafe phone input to be rejected: " <> show rawPhone)
+      assertRejected "099\n1234567"
+      assertRejected ("099" <> T.singleton '\x2028' <> "1234567")
+      assertRejected ("099" <> T.singleton '\x202E' <> "1234567")
 
     it "rejects malformed emails instead of creating unusable parties" $ do
       let assertRejected rawEmail = do
