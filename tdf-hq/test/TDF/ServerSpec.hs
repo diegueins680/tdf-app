@@ -80,6 +80,7 @@ import TDF.Models
     , ServiceAd (..)
     , ServiceAdSlot (..)
     , ServiceCatalog (..)
+    , ServiceEscrow (..)
     , ServiceKind (..)
     , UnitsKind (..)
     , UserCredential (..)
@@ -211,6 +212,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingNotes
     , validateServiceMarketplaceBookingSlot
+    , validateServiceMarketplaceCompletion
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
     , validatePublicBookingContactDetails
@@ -1443,6 +1445,38 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unavailable service marketplace slot to be rejected, got: " <> show value)
+
+    describe "validateServiceMarketplaceCompletion" $ do
+        let now = UTCTime (fromGregorian 2026 4 14) 0
+            escrowWithStatus statusValue =
+                ServiceEscrow
+                    { serviceEscrowBookingId = toSqlKey 42
+                    , serviceEscrowServiceOrderId = toSqlKey 77
+                    , serviceEscrowAdId = toSqlKey 12
+                    , serviceEscrowPatronPartyId = toSqlKey 21
+                    , serviceEscrowProviderPartyId = toSqlKey 22
+                    , serviceEscrowAmountCents = 12000
+                    , serviceEscrowCurrency = "USD"
+                    , serviceEscrowStatus = statusValue
+                    , serviceEscrowHeldPaymentId = Nothing
+                    , serviceEscrowReleasedPaymentId = Nothing
+                    , serviceEscrowHeldAt = now
+                    , serviceEscrowReleasedAt = Nothing
+                    }
+
+        it "only allows provider completion while escrow is still held" $ do
+            validateServiceMarketplaceCompletion (escrowWithStatus "held") `shouldBe` Right ()
+            let assertInvalid statusValue =
+                    case validateServiceMarketplaceCompletion (escrowWithStatus statusValue) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 409
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Escrow must be held before booking completion"
+                        Right value ->
+                            expectationFailure
+                                ("Expected non-held escrow completion to be rejected, got: " <> show value)
+            assertInvalid "released"
+            assertInvalid "refunded"
 
     describe "resolveServiceAdEntity" $ do
         it "rejects non-positive ad ids before service slot handlers can treat them as missing ads or empty slot lists" $ do

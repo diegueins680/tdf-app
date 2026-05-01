@@ -6383,9 +6383,19 @@ completeServiceMarketplaceBooking user rawBookingId = do
     escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
     let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
     when (not canComplete) $ liftIO $ throwIO err403
+    case validateServiceMarketplaceCompletion (entityVal escrow) of
+      Left serverErr -> liftIO $ throwIO serverErr
+      Right () -> pure ()
     update bookingKey [BookingStatus =. Completed]
     update (serviceEscrowServiceOrderId (entityVal escrow)) [ServiceOrderStatus =. "performed"]
     pure (mkEscrowBookingDTO escrow)
+
+validateServiceMarketplaceCompletion :: ServiceEscrow -> Either ServerError ()
+validateServiceMarketplaceCompletion escrow
+  | serviceEscrowStatus escrow == "held" =
+      Right ()
+  | otherwise =
+      Left err409 { errBody = "Escrow must be held before booking completion" }
 
 releaseServiceMarketplaceEscrow :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 releaseServiceMarketplaceEscrow user rawBookingId = do
