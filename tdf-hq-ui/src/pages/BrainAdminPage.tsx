@@ -380,11 +380,13 @@ export default function BrainAdminPage() {
                           <Typography variant="h6" fontWeight={700}>
                             {entry.bedTitle}
                           </Typography>
-                          <Chip
-                            label={entry.bedActive ? 'Activa' : 'Inactiva'}
-                            color={entry.bedActive ? 'success' : 'default'}
-                            size="small"
-                          />
+                          {(includeInactive || !entry.bedActive) && (
+                            <Chip
+                              label={entry.bedActive ? 'Activa' : 'Inactiva'}
+                              color={entry.bedActive ? 'success' : 'default'}
+                              size="small"
+                            />
+                          )}
                           {entry.bedCategory && (
                             <Chip label={entry.bedCategory} variant="outlined" size="small" />
                           )}

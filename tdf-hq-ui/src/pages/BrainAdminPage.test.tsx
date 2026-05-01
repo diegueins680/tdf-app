@@ -109,9 +109,27 @@ const getActionByText = (root: ParentNode, labelText: string) => {
   return action;
 };
 
+const getCheckboxByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
+  );
+  if (!label) throw new Error(`Checkbox label not found: ${labelText}`);
+  const input = label.querySelector('input[type="checkbox"]');
+  if (!(input instanceof HTMLInputElement)) throw new Error(`Checkbox not found: ${labelText}`);
+  return input;
+};
+
 const clickAction = async (action: HTMLElement) => {
   await act(async () => {
     action.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
+const clickCheckbox = async (input: HTMLInputElement) => {
+  await act(async () => {
+    input.click();
+    await flushPromises();
     await flushPromises();
   });
 };
@@ -213,6 +231,53 @@ describe('BrainAdminPage', () => {
         expect(getActionByText(container, 'Refrescar indice')).toBeTruthy();
         expect(container.textContent).toContain('Incluir inactivas');
         expect(container.textContent).not.toContain('Revisar inactivas');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('omits repeated active chips until inactive entries are included', async () => {
+    listEntriesMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildEntry({ bedId: 101, bedTitle: 'Precios de estudio', bedActive: true }),
+            buildEntry({ bedId: 102, bedTitle: 'Politicas archivadas', bedActive: false }),
+          ]
+        : [
+            buildEntry({ bedId: 101, bedTitle: 'Precios de estudio', bedActive: true }),
+            buildEntry({
+              bedId: 102,
+              bedTitle: 'Horarios de sala',
+              bedCategory: 'scheduling',
+              bedTags: ['horarios'],
+              bedActive: true,
+            }),
+          ],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listEntriesMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain('Precios de estudio');
+        expect(container.textContent).toContain('Horarios de sala');
+        expect(container.textContent).toContain('Incluir inactivas');
+        expect(container.textContent).not.toContain('Activa');
+        expect(container.textContent).not.toContain('Inactiva');
+      });
+
+      await clickCheckbox(getCheckboxByLabelText(container, 'Incluir inactivas'));
+
+      await waitForExpectation(() => {
+        expect(listEntriesMock).toHaveBeenCalledWith(true);
+        expect(container.textContent).toContain('Precios de estudio');
+        expect(container.textContent).toContain('Politicas archivadas');
+        expect(container.textContent).toContain('Activa');
+        expect(container.textContent).toContain('Inactiva');
       });
     } finally {
       await cleanup();
