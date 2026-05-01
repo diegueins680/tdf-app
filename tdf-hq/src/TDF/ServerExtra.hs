@@ -3118,8 +3118,11 @@ isUnsafePaymentTextChar ch =
 
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod
-  | T.any isControl rawMethod =
-      Left err400 { errBody = "paymentMethod must not contain control characters" }
+  | T.any isUnsafePaymentTextChar rawMethod =
+      Left err400
+        { errBody =
+            "paymentMethod must not contain control characters or hidden formatting characters"
+        }
   | otherwise =
       case normalized of
         "cash" -> Right CashM
@@ -3159,8 +3162,10 @@ validatePaymentCurrency :: Text -> Either ServerError Text
 validatePaymentCurrency rawCurrency =
   let trimmed = T.strip rawCurrency
       normalized = T.toUpper trimmed
-  in if T.any isControl rawCurrency
-       then Left err400 { errBody = "currency must not contain control characters" }
+  in if T.any isUnsafePaymentTextChar rawCurrency
+       then Left err400
+         { errBody = "currency must not contain control characters or hidden formatting characters"
+         }
      else if T.null trimmed
        then Left err400 { errBody = "currency is required" }
      else if normalized == "USD"

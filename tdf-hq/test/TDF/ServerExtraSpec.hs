@@ -4604,6 +4604,9 @@ spec = do
       assertInvalid "paymentMethod must be one of" (validatePaymentMethod "   ")
       assertInvalid "paymentMethod must be one of" (validatePaymentMethod "wire-transfer")
       assertInvalid "paymentMethod must not contain control characters" (validatePaymentMethod "cash\n")
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentMethod ("cash" <> "\x202E"))
 
   describe "validatePaymentCurrency" $ do
     it "normalizes supported manual payment currencies to USD" $ do
@@ -4620,6 +4623,9 @@ spec = do
       assertInvalid "currency is required" (validatePaymentCurrency "   ")
       assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "EUR")
       assertInvalid "currency must not contain control characters" (validatePaymentCurrency "USD\n")
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentCurrency ("USD" <> "\x200B"))
 
   describe "validatePaymentAmountCents" $ do
     it "accepts positive payment amounts without rewriting them" $ do
