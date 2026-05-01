@@ -2500,6 +2500,7 @@ export default function CourseRegistrationsAdminPage() {
   );
   const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
     && !hidePassiveFiltersDuringEmptyLocalSearch
+    && !showEmptyLocalSearchLimitGuidance
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
   const showFilteredResetActionCandidate = !showEmptyLocalSearchResults

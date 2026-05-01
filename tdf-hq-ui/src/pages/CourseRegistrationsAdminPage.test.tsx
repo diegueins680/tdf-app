@@ -10429,6 +10429,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   }, 20_000);
 
+  it('keeps capped cohort empty-search recovery to one limit action', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    const registrations = buildRegistrations(200);
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      registrations.slice(0, params?.limit ?? 200),
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'beatmaking-101',
+        status: undefined,
+        limit: 200,
+      });
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')?.textContent).toContain(
+        'Pendiente de pago',
+      );
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin coincidencias');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
+      const statusSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-status-summary"]');
+
+      expect(emptySearch).not.toBeNull();
+      expect(statusSummary).not.toBeNull();
+      expect(emptySearch?.textContent).toContain(
+        'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
+      );
+      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(statusSummary!, 'Ajustar límite')).toBe(0);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the initial loading state focused on the first-result setup instead of filters or refresh actions', async () => {
     listRegistrationsMock.mockImplementation(() => new Promise(() => undefined));
 
