@@ -11941,7 +11941,10 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips sign-up sheet descriptors from first-run cohort copy', async () => {
     const titles = [
       'Sign-up sheet - Beatmaking 101',
+      'Google registration sheet - Beatmaking 101',
+      'Beatmaking 101 - Microsoft enrollment spreadsheet',
       'Beatmaking 101 - hoja de inscripción',
+      'Hoja de cálculo de inscripción - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -11958,7 +11961,10 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Sign-up sheet');
+        expect(emptyState?.textContent).not.toContain('Google registration sheet');
+        expect(emptyState?.textContent).not.toContain('Microsoft enrollment spreadsheet');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - hoja');
+        expect(emptyState?.textContent).not.toContain('Hoja de cálculo');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

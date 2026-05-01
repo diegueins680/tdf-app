@@ -760,10 +760,10 @@ const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
 const firstRunSignupSheetDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?sign[-\s]?up\s+sheet|(?:hoja|planilla)\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunSignupSheetDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?sign[-\s]?up\s+sheet|(?:hoja|planilla)\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)\s+de\s+registro)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)\s*$/i;
 
 const firstRunWorkshopDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
