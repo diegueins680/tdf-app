@@ -306,6 +306,7 @@ validateFutureAdminConsoleView view
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
       if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
            || hasDuplicateFutureAdminConsoleTitles validatedCards
+           || hasDuplicateFutureAdminConsoleBodyLinesAcrossCards validatedCards
         then invalidFutureAdminConsoleMetadata
         else Right view
           { viewPath = futureStubPath "admin" "console"
@@ -324,6 +325,11 @@ hasDuplicateFutureAdminConsoleTitles cardsValue =
 hasDuplicateFutureAdminConsoleBodyLines :: AdminConsoleCard -> Bool
 hasDuplicateFutureAdminConsoleBodyLines card =
   let normalizedBodyLines = map T.toCaseFold (body card)
+  in length normalizedBodyLines /= length (nub normalizedBodyLines)
+
+hasDuplicateFutureAdminConsoleBodyLinesAcrossCards :: [AdminConsoleCard] -> Bool
+hasDuplicateFutureAdminConsoleBodyLinesAcrossCards cardsValue =
+  let normalizedBodyLines = concatMap (map T.toCaseFold . body) cardsValue
   in length normalizedBodyLines /= length (nub normalizedBodyLines)
 
 invalidCardText :: Int -> Text -> Bool

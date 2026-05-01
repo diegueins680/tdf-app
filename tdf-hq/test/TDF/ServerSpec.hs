@@ -8561,6 +8561,17 @@ spec = describe "TDF.Server helpers" $ do
                     [ validUserManagementCard
                     , mkCard "api-tokens" "gestión de usuarios" apiTokensBody
                     ])
+            assertInvalid
+                (mkView
+                    "preview"
+                    [ validUserManagementCard
+                    , mkCard
+                        "api-tokens"
+                        "Tokens API"
+                        [ "La asignación de roles se administra desde la pantalla de Parties."
+                        , "El acceso quedará separado de usuarios humanos para integraciones internas."
+                        ]
+                    ])
 
     describe "futureServer" $ do
         it "serves a validated canonical fallback discovery catalog" $ do
