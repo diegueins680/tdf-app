@@ -3287,6 +3287,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds a shared custom status into busy-list search guidance instead of rendering fallback status chrome', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+        crStatus: 'manual_review',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o curso');
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Manual Review. Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+      );
+      expect(container.textContent).not.toContain('Estado no estándar');
+      expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
+      expect(countOccurrences(container, 'Manual Review')).toBe(1);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await cleanup();
+  });
+
   it('keeps custom-status row menus focused on normalization instead of payment workflow', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
