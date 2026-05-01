@@ -208,6 +208,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingSlot
     , requirePersistedBookingDTO
+    , selectUniquePartyByPrimaryEmail
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validateBookingNotes
@@ -2784,6 +2785,52 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "Bearer token\233")
                 Nothing
                 `shouldBe` Left "Missing or invalid auth token"
+
+    describe "selectUniquePartyByPrimaryEmail" $
+        it "rejects duplicate email account fallbacks instead of selecting an arbitrary party" $ do
+            (singleId, singleResult, missingResult, duplicateResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkParty displayName emailAddr =
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = displayName
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Just emailAddr
+                            , partyPrimaryPhone = Nothing
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = now
+                            }
+                expectedId <- insert (mkParty "Single Email" "single@example.com")
+                _ <- insert (mkParty "First Duplicate" "duplicate@example.com")
+                _ <- insert (mkParty "Second Duplicate" "duplicate@example.com")
+                resolvedSingle <- selectUniquePartyByPrimaryEmail "single@example.com"
+                resolvedMissing <- selectUniquePartyByPrimaryEmail "missing@example.com"
+                resolvedDuplicate <- selectUniquePartyByPrimaryEmail "duplicate@example.com"
+                pure (expectedId, resolvedSingle, resolvedMissing, resolvedDuplicate)
+
+            case singleResult of
+                Right (Just partyEnt) ->
+                    entityKey partyEnt `shouldBe` singleId
+                other ->
+                    expectationFailure
+                        ("Expected a single party email match, got: " <> show other)
+            case missingResult of
+                Right Nothing -> pure ()
+                other ->
+                    expectationFailure
+                        ("Expected a missing party email match, got: " <> show other)
+            case duplicateResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Multiple parties match this email"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate party email match to fail, got: " <> show value)
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do

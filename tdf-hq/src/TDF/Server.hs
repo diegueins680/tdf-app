@@ -4978,33 +4978,36 @@ ensurePartyWithAccount mName emailAddr mPhone = do
         Just nameTxt | not (T.null nameTxt) -> nameTxt
         _                                   -> emailAddr
       phoneClean = mPhone >>= normalizePhone
-  partyId <- runDB $ do
-    mParty <- selectFirst [PartyPrimaryEmail ==. Just emailAddr] []
-    case mParty of
-      Just (Entity pid party) -> do
-        let updates = catMaybes
-              [ if not (T.null (M.partyDisplayName party)) || T.null display
-                  then Nothing
-                  else Just (PartyDisplayName =. display)
-              , case phoneClean of
-                  Just phone | isNothing (partyPrimaryPhone party) -> Just (PartyPrimaryPhone =. Just phone)
-                  _ -> Nothing
-              ]
-        unless (null updates) (update pid updates)
-        pure pid
-      Nothing -> insert Party
-        { partyLegalName = Nothing
-        , partyDisplayName = display
-        , partyIsOrg = False
-        , partyTaxId = Nothing
-        , partyPrimaryEmail = Just emailAddr
-        , partyPrimaryPhone = phoneClean
-        , partyWhatsapp = Nothing
-        , partyInstagram = Nothing
-        , partyEmergencyContact = Nothing
-        , partyNotes = Nothing
-        , partyCreatedAt = now
-        }
+  partyResult <- runDB $ do
+    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
+    case mPartyOrErr of
+      Left serverErr -> pure (Left serverErr)
+      Right mParty -> fmap Right $ case mParty of
+        Just (Entity pid party) -> do
+          let updates = catMaybes
+                [ if not (T.null (M.partyDisplayName party)) || T.null display
+                    then Nothing
+                    else Just (PartyDisplayName =. display)
+                , case phoneClean of
+                    Just phone | isNothing (partyPrimaryPhone party) -> Just (PartyPrimaryPhone =. Just phone)
+                    _ -> Nothing
+                ]
+          unless (null updates) (update pid updates)
+          pure pid
+        Nothing -> insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = Just emailAddr
+          , partyPrimaryPhone = phoneClean
+          , partyWhatsapp = Nothing
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyCreatedAt = now
+          }
+  partyId <- either throwError pure partyResult
   mCred <- runDB $ selectFirst [UserCredentialPartyId ==. partyId] []
   newCred <- case mCred of
     Just _ -> pure Nothing
@@ -5025,6 +5028,20 @@ ensurePartyWithAccount mName emailAddr mPhone = do
         pure ()
       pure (Just (username, tempPassword))
   pure (partyId, newCred)
+
+selectUniquePartyByPrimaryEmail
+  :: Text
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
+selectUniquePartyByPrimaryEmail emailAddr = do
+  matches <- selectList [PartyPrimaryEmail ==. Just emailAddr] [Asc PartyId, LimitTo 2]
+  pure $ case matches of
+    [] -> Right Nothing
+    [partyEnt] -> Right (Just partyEnt)
+    _ ->
+      Left err409
+        { errBody =
+            "Multiple parties match this email; merge duplicate party records before creating an account"
+        }
 
 deriveBaseUsername :: Maybe Text -> Text -> Text
 deriveBaseUsername mName emailAddr =
