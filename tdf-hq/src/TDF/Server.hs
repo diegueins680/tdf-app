@@ -2199,8 +2199,9 @@ validateDriveCodeVerifier rawVerifier =
 
 resolveDriveRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
 resolveDriveRedirectUri cfg mProvided = do
-  let configuredRedirectUri =
-        resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback"
+  configuredRedirectUri <-
+    validateConfiguredDriveRedirectUri
+      (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback")
   maybe
     (Right configuredRedirectUri)
     (validateProvidedRedirectUri configuredRedirectUri)
@@ -2220,16 +2221,43 @@ validateDriveRedirectUri :: Text -> Either ServerError Text
 validateDriveRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
     Right (Just uri)
-      | googleDriveOAuthCallbackPath `T.isSuffixOf` uri -> Right uri
+      | isSafeDriveRedirectUri uri -> Right uri
       | otherwise -> invalid
     _ -> invalid
   where
-    googleDriveOAuthCallbackPath = "/oauth/google-drive/callback"
     invalid =
       Left err400
         { errBody =
-            "redirectUri must be an absolute http(s) Google Drive OAuth callback URL without query or fragment"
+            "redirectUri must be an absolute https Google Drive OAuth callback URL ending "
+              <> "in /oauth/google-drive/callback, or http://localhost for local development, "
+              <> "without query or fragment"
         }
+
+validateConfiguredDriveRedirectUri :: Text -> Either ServerError Text
+validateConfiguredDriveRedirectUri rawRedirect =
+  case normalizeConfiguredBaseUrl "HQ_APP_URL" (T.unpack rawRedirect) of
+    Right (Just uri)
+      | isSafeDriveRedirectUri uri -> Right uri
+    _ ->
+      Left err503
+        { errBody =
+            "Configured Google Drive OAuth callback URL must be an absolute https URL ending "
+              <> "in /oauth/google-drive/callback, or http://localhost for local development, "
+              <> "without query or fragment"
+        }
+
+isSafeDriveRedirectUri :: Text -> Bool
+isSafeDriveRedirectUri uri
+  | not (googleDriveOAuthCallbackPath `T.isSuffixOf` uri) = False
+  | "https://" `T.isPrefixOf` lowerUri = True
+  | "http://" `T.isPrefixOf` lowerUri =
+      maybe False isLocalCalendarRedirectHost (calendarRedirectHost (T.drop 7 uri))
+  | otherwise = False
+  where
+    lowerUri = T.toLower uri
+
+googleDriveOAuthCallbackPath :: Text
+googleDriveOAuthCallbackPath = "/oauth/google-drive/callback"
 
 driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
 driveTokenResponseFrom GoogleToken{..} fallbackRefresh =

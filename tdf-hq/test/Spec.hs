@@ -191,6 +191,7 @@ import TDF.ServerInstagramOAuth
 import TDF.Server
     ( buildWhatsappCtaFor,
       GoogleEventsPage (..),
+      resolveDriveRedirectUri,
       resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
@@ -201,6 +202,7 @@ import TDF.Server
       validateDatafastCheckoutId,
       validateDatafastCredential,
       validateDatafastBaseUrl,
+      validateDriveRedirectUri,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
@@ -4062,6 +4064,60 @@ main = hspec $ do
                 "https://tdf.example.com/curso/produccion"
                 `shouldSatisfy`
                     Data.Text.isPrefixOf "https://wa.me/?text="
+
+    describe "resolveDriveRedirectUri" $ do
+        let loadDriveConfig =
+                withEnvOverrides [("HQ_APP_URL", Just "https://hq.example.com/admin")] loadConfig
+
+        it "uses the validated configured Google Drive callback fallback" $ do
+            cfg <- loadDriveConfig
+            resolveDriveRedirectUri cfg Nothing
+                `shouldBe` Right "https://hq.example.com/admin/oauth/google-drive/callback"
+            resolveDriveRedirectUri cfg (Just "   ")
+                `shouldBe` Right "https://hq.example.com/admin/oauth/google-drive/callback"
+
+        it "rejects unsafe configured Google Drive callback fallbacks before token exchange" $ do
+            cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig
+            case resolveDriveRedirectUri cfg Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            ( "Configured Google Drive OAuth callback URL must be an "
+                                <> "absolute https URL"
+                            )
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsafe configured Drive redirect fallback to fail, got: "
+                            <> show value
+                        )
+
+        it "only accepts HTTPS or local development Google Drive OAuth callback shapes" $ do
+            validateDriveRedirectUri
+                " https://tdf-app.pages.dev/oauth/google-drive/callback "
+                `shouldBe` Right "https://tdf-app.pages.dev/oauth/google-drive/callback"
+            validateDriveRedirectUri
+                " http://127.0.0.1:5173/oauth/google-drive/callback "
+                `shouldBe` Right "http://127.0.0.1:5173/oauth/google-drive/callback"
+
+            let assertInvalid rawRedirect =
+                    case validateDriveRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    ( "redirectUri must be an absolute https Google Drive "
+                                        <> "OAuth callback URL"
+                                    )
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive redirectUri to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid "http://hq.example.com/oauth/google-drive/callback"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/other"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
 
     describe "resolveProvidedDriveAccessToken" $ do
         it "normalizes matching token sources and rejects conflicting upload credentials" $ do
