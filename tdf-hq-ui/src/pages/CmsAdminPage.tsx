@@ -695,7 +695,7 @@ export default function CmsAdminPage() {
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
       : payloadChanged
         ? editorHasMeaningfulPayloadDraft
-          ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
+          ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.'
           : showLiveStartGuidance
             ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
           : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
@@ -814,7 +814,7 @@ export default function CmsAdminPage() {
         </DialogActions>
       </Dialog>
       <Dialog open={showDraftDiff} onClose={() => setShowDraftDiff(false)} fullWidth maxWidth="md">
-        <DialogTitle>Comparar borrador vs. live</DialogTitle>
+        <DialogTitle>Comparar borrador con versión en vivo</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
@@ -1085,11 +1085,11 @@ export default function CmsAdminPage() {
                     </Button>
                   )}
                   {liveEditorActionState.showLiveInSyncChip && (
-                    <Chip label="Editor coincide con live" color="success" variant="outlined" />
+                    <Chip label="Editor coincide con versión en vivo" color="success" variant="outlined" />
                   )}
                   {canCompareWithLive && (
                     <Button variant="text" onClick={() => setShowDraftDiff(true)}>
-                      Comparar con live
+                      Comparar cambios
                     </Button>
                   )}
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}

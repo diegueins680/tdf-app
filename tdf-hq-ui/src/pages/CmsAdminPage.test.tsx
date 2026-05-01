@@ -448,7 +448,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
-      expect(container.textContent).toContain('Editor coincide con live');
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
       );
@@ -489,7 +489,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('El editor ya usa el payload en vivo.');
-      expect(container.textContent).toContain('Editor coincide con live');
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).not.toContain('Payload en vivo disponible.');
       expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
@@ -600,7 +600,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.',
       );
     });
 
@@ -718,7 +718,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
@@ -732,7 +732,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
@@ -749,11 +749,22 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Comparar con live')).toBe(1);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(1);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.',
       );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Comparar cambios').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Comparar borrador con versión en vivo');
+      expect(document.body.textContent).not.toContain('Comparar borrador vs. live');
     });
 
     await cleanup();
@@ -832,7 +843,7 @@ describe('CmsAdminPage', () => {
       );
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
       expect(container.textContent).toContain(
         'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.',
       );
