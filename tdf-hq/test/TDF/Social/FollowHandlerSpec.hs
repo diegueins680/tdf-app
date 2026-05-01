@@ -13,7 +13,11 @@ import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.DTO.SocialEventsDTO (ArtistFollowerDTO (..))
+import TDF.DTO.SocialEventsDTO
+    ( ArtistFollowerDTO (..)
+    , EventMetadataUpdateDTO (..)
+    , NullableFieldUpdate (..)
+    )
 import TDF.Models (Party (..))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
@@ -21,6 +25,8 @@ import TDF.Server.SocialEventsHandlers
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
     , validateEventImageUploadSize
+    , validateEventMetadataUpdate
+    , validateEventMetadataUrlField
     )
 
 spec :: Spec
@@ -65,6 +71,45 @@ spec = describe "social event handler helpers" $ do
         assertInvalid "event image upload size is invalid" (-1)
         assertInvalid "event image upload must not be empty" 0
         assertInvalid "event image upload must be 10 MB or smaller" (10 * 1024 * 1024 + 1)
+
+    it "rejects unsafe social event metadata URLs before storing public links" $ do
+        validateEventMetadataUrlField
+            "eventTicketUrl"
+            (Just " https://tickets.example.com/event?id=42 ")
+            `shouldBe` Right (Just "https://tickets.example.com/event?id=42")
+        validateEventMetadataUrlField "eventImageUrl" (Just "   ")
+            `shouldBe` Right Nothing
+
+        let assertInvalid field raw expectedMessage =
+                case validateEventMetadataUrlField field (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected unsafe event metadata URL to be rejected, got: " <> show value)
+
+        assertInvalid
+            "eventTicketUrl"
+            "http://tickets.example.com/event"
+            "eventTicketUrl must be an absolute https URL"
+        assertInvalid
+            "eventImageUrl"
+            "https://localhost/event.jpg"
+            "eventImageUrl must be an absolute https URL"
+
+        case validateEventMetadataUpdate
+            emptyEventMetadataUpdate
+                { emuTicketUrl = FieldValue " https://tickets.example.com/event "
+                , emuImageUrl = FieldValue "javascript:alert(1)"
+                } of
+            Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                    `shouldContain` "eventImageUrl must be an absolute https URL"
+            Right value ->
+                expectationFailure
+                    ("Expected metadata update with unsafe image URL to fail, got: " <> show value)
 
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
@@ -127,6 +172,18 @@ spec = describe "social event handler helpers" $ do
         liftIO $ do
             (afFollowId first) `shouldSatisfy` (/= Nothing)
             (afFollowId second) `shouldSatisfy` (/= Nothing)
+
+emptyEventMetadataUpdate :: EventMetadataUpdateDTO
+emptyEventMetadataUpdate =
+    EventMetadataUpdateDTO
+        { emuTicketUrl = FieldMissing
+        , emuImageUrl = FieldMissing
+        , emuIsPublic = FieldMissing
+        , emuType = FieldMissing
+        , emuStatus = FieldMissing
+        , emuCurrency = FieldMissing
+        , emuBudgetCents = FieldMissing
+        }
 
 initializeSocialSchema :: SqlPersistT IO ()
 initializeSocialSchema = do

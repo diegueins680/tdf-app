@@ -25,6 +25,7 @@ module TDF.Server.SocialEventsHandlers
   , parseEventStatusQueryParamEither
   , validateEventCreateTypeStatus
   , validateEventMetadataUpdate
+  , validateEventMetadataUrlField
   , validateBudgetLineTypeInput
   , normalizeBudgetLineType
   , normalizeFinanceDirection
@@ -128,6 +129,7 @@ import           TDF.DB (Env(..))
 import           TDF.Models (Party)
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
+import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
 
@@ -268,6 +270,14 @@ normalizeNullableTextUpdate invalidMessage normalizeValue (FieldValue value) =
 
 validateEventMetadataUpdate :: EventMetadataUpdateDTO -> Either ServerError EventMetadataUpdateDTO
 validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
+  normalizedTicketUrl <- normalizeNullableTextUpdate
+    "eventTicketUrl must be an absolute https URL"
+    normalizeEventMetadataUrl
+    emuTicketUrl
+  normalizedImageUrl <- normalizeNullableTextUpdate
+    "eventImageUrl must be an absolute https URL"
+    normalizeEventMetadataUrl
+    emuImageUrl
   normalizedType <- normalizeNullableTextUpdate
     "eventType must be one of: party, concert, festival, conference, showcase, other"
     normalizeEventType
@@ -281,14 +291,37 @@ validateEventMetadataUpdate EventMetadataUpdateDTO{..} = do
     normalizeEventCurrencyMaybe
     emuCurrency
   pure EventMetadataUpdateDTO
-    { emuTicketUrl = emuTicketUrl
-    , emuImageUrl = emuImageUrl
+    { emuTicketUrl = normalizedTicketUrl
+    , emuImageUrl = normalizedImageUrl
     , emuIsPublic = emuIsPublic
     , emuType = normalizedType
     , emuStatus = normalizedStatus
     , emuCurrency = normalizedCurrency
     , emuBudgetCents = emuBudgetCents
     }
+
+validateEventMetadataUrlField :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateEventMetadataUrlField _ Nothing = Right Nothing
+validateEventMetadataUrlField fieldName (Just rawUrl) =
+  case cleanMaybeText (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just urlVal
+      | Just normalizedUrl <- normalizeEventMetadataUrl (Just urlVal) ->
+          Right (Just normalizedUrl)
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must be an absolute https URL"
+            }
+
+normalizeEventMetadataUrl :: Maybe T.Text -> Maybe T.Text
+normalizeEventMetadataUrl rawValue = do
+  urlVal <- cleanMaybeText rawValue
+  if "https://" `T.isPrefixOf` T.toLower urlVal
+      && TrialsServer.isValidHttpUrl urlVal
+    then Just urlVal
+    else Nothing
 
 validateCreateNormalizedTextDefault
   :: BL.ByteString
@@ -522,12 +555,16 @@ socialEventsServer user = eventsServer
           (eventBudgetCents dto)
       (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
       currencyVal <- either throwError pure (validateEventCurrencyInput (eventCurrency dto))
+      ticketUrlVal <- either throwError pure $
+        validateEventMetadataUrlField "eventTicketUrl" (eventTicketUrl dto)
+      imageUrlVal <- either throwError pure $
+        validateEventMetadataUrlField "eventImageUrl" (eventImageUrl dto)
       artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
       let metadataVal =
             encodeEventMetadata
               EventMetadataDTO
-                { emTicketUrl = cleanMaybeText (eventTicketUrl dto)
-                , emImageUrl = cleanMaybeText (eventImageUrl dto)
+                { emTicketUrl = ticketUrlVal
+                , emImageUrl = imageUrlVal
                 , emIsPublic = eventIsPublic dto <|> Just True
                 , emType = Just eventTypeVal
                 , emStatus = Just eventStatusVal
