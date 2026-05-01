@@ -3772,6 +3772,12 @@ spec = describe "TDF.Server helpers" $ do
                 "fileName must not contain path separators"
                 (resolveDriveUploadName Nothing "folder\\Contract.pdf")
             assertInvalid
+                "name must include a non-dot name"
+                (resolveDriveUploadName (Just "...") "safe.pdf")
+            assertInvalid
+                "fileName must include a non-dot name"
+                (resolveDriveUploadName Nothing "...")
+            assertInvalid
                 "name must be 240 characters or fewer"
                 (resolveDriveUploadName (Just (T.replicate 241 "a")) "safe.pdf")
 

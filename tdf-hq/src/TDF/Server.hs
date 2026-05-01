@@ -2010,6 +2010,11 @@ validateDriveUploadName fieldName uploadName
         { errBody =
             BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain path separators"))
         }
+  | T.all (== '.') uploadName =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must include a non-dot name"))
+        }
   | otherwise = Right uploadName
   where
     isPathSeparator ch = ch == '/' || ch == '\\'
