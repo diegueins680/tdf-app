@@ -1097,6 +1097,56 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps API and database health fallback cards from duplicating service health', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-api-health',
+          title: 'API health',
+          body: ['Review API latency and uptime before changing admin permissions.'],
+        },
+        {
+          cardId: 'fallback-database-status',
+          title: 'Database status',
+          body: ['Confirm database readiness before loading admin demo data.'],
+        },
+        {
+          cardId: 'fallback-estado-api',
+          title: 'Estado de API',
+          body: ['Revisa disponibilidad y latencia antes de ajustar accesos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Estado del servicio')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('API health')).not.toBeInTheDocument();
+    expect(screen.queryByText('Database status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Estado de API')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review API latency and uptime before changing admin permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm database readiness before loading admin demo data\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa disponibilidad y latencia antes de ajustar accesos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps connector-formatted built-in access titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
