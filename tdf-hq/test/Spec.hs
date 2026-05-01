@@ -4996,6 +4996,36 @@ main = hspec $ do
                     []
                     [mkEventImageFile "file" (Data.Text.replicate 181 "a" <> ".png")])
 
+        it "rejects non-image or mismatched upload metadata before handler storage fallbacks run" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected invalid event image upload metadata to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image must be a raster image"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.pdf")
+                        { fdFileCType = "application/pdf" }
+                    ])
+            assertInvalid
+                "Uploaded image file name must include a supported image extension"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster"])
+            assertInvalid
+                "Uploaded image extension must match its MIME type"
+                (mkEventImageMultipart
+                    [("name", "poster.jpg")]
+                    [mkEventImageFile "file" "poster.png"])
+
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
                 { emuTicketUrl = FieldMissing

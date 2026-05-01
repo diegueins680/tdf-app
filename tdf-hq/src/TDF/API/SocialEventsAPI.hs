@@ -40,6 +40,7 @@ import Servant.Multipart
   , Tmp
   , fdInputName
   , fdFileName
+  , fdFileCType
   )
 import System.FilePath (takeExtension)
 
@@ -85,6 +86,7 @@ instance FromMultipart Tmp EventImageUploadForm where
     mName <- lookupOptionalInput "name" multipart
     mapM_ (validateUploadName "Uploaded image name") mName
     validateUploadName "Uploaded browser file name" (fdFileName file)
+    validateImageUploadMetadata mName file
     pure EventImageUploadForm
       { eiuFile = file
       , eiuName = mName
@@ -149,6 +151,52 @@ instance FromMultipart Tmp EventImageUploadForm where
                 then trimmed
                 else T.dropEnd (T.length ext) trimmed
         in T.any (\ch -> ch /= '.' && not (isSpace ch)) baseName
+
+      validateImageUploadMetadata mName file =
+        let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
+            requestedExt = maybe "" imageExtension mName
+            browserExt = imageExtension (fdFileName file)
+            resolvedExt =
+              if T.null requestedExt
+                then browserExt
+                else requestedExt
+            providedExts = filter (not . T.null) [requestedExt, browserExt]
+        in case allowedImageExtensions uploadMimeType of
+          Nothing ->
+            Left
+              ( "Uploaded image must be a raster image "
+                  <> "(jpg, jpeg, png, webp, gif, or bmp)"
+              )
+          Just allowedExts
+            | T.null resolvedExt ->
+                Left "Uploaded image file name must include a supported image extension"
+            | any (`notElem` allImageExtensions) (resolvedExt : providedExts) ->
+                Left
+                  ( "Uploaded image file name must end with "
+                      <> ".jpg, .jpeg, .png, .webp, .gif, or .bmp"
+                  )
+            | any (`notElem` allowedExts) (resolvedExt : providedExts) ->
+                Left "Uploaded image extension must match its MIME type"
+            | otherwise ->
+                Right ()
+
+      normalizeUploadMimeType rawContentType =
+        T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
+
+      imageExtension rawName =
+        T.toLower (T.pack (takeExtension (T.unpack (T.strip rawName))))
+
+      allowedImageExtensions mimeType =
+        case mimeType of
+          "image/jpeg" -> Just [".jpg", ".jpeg"]
+          "image/png"  -> Just [".png"]
+          "image/webp" -> Just [".webp"]
+          "image/gif"  -> Just [".gif"]
+          "image/bmp"  -> Just [".bmp"]
+          _ -> Nothing
+
+      allImageExtensions =
+        [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
 
 data EventImageUploadDTO = EventImageUploadDTO
   { eiuEventId   :: Text
