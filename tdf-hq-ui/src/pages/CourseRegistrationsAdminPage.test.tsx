@@ -181,7 +181,7 @@ const buildEmailEvent = (
 const emptyReceiptAlertMessage =
   'El primer comprobante documenta el pago y habilita Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const emptyReceiptEvidenceAlertMessage =
-  'El primer comprobante queda como evidencia de pago solo si hace falta documentarla. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+  'Agrega evidencia solo si necesitas documentar este pago. Se guardará aquí con un enlace para revisarla después.';
 const receiptComposerHelpText =
   'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText =
@@ -4506,6 +4506,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain('habilitar Marcar pagado');
+      expect(document.body.textContent).not.toContain('El primer comprobante queda como evidencia');
+      expect(document.body.textContent).not.toContain('enlace y acciones para revisarlo');
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
     });
@@ -4821,6 +4823,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain('habilitar Marcar pagado');
+      expect(document.body.textContent).not.toContain('El primer comprobante queda como evidencia');
+      expect(document.body.textContent).not.toContain('enlace y acciones para revisarlo');
       expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(1);
       expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
       expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
