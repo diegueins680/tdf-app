@@ -114,6 +114,38 @@ const hasLabel = (root: ParentNode, labelText: string) =>
     return text === labelText;
   });
 
+const getInputByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll('label')).find((element) => {
+    const text = (element.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+  if (!label) throw new Error(`Could not find label: ${labelText}`);
+
+  const inputId = label.getAttribute('for');
+  const input = inputId ? document.getElementById(inputId) : null;
+  if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) return input;
+
+  const nearbyInput = label.parentElement?.querySelector('input, textarea');
+  if (nearbyInput instanceof HTMLInputElement || nearbyInput instanceof HTMLTextAreaElement) {
+    return nearbyInput;
+  }
+
+  throw new Error(`Could not find input for label: ${labelText}`);
+};
+
+const setInputValue = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Input value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 const buildProject = (overrides: Record<string, unknown> = {}) => ({
   ipId: 'project-1',
   ipTitle: 'Campana de lanzamiento',
@@ -479,6 +511,33 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await secondRender.cleanup();
+    }
+  });
+
+  it('keeps the first to-do empty state passive until an admin starts typing', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasLabel(container, 'Nuevo to-do')).toBe(true);
+        expect(container.textContent).toContain(
+          'Escribe el primer to-do arriba. Agregar aparece cuando haya texto.',
+        );
+        expect(container.textContent).not.toContain('No hay to-dos aún.');
+        expect(getButtonsByText(container, 'Agregar')).toHaveLength(0);
+      });
+
+      await setInputValue(getInputByLabel(container, 'Nuevo to-do'), 'Preparar contrato de practicas');
+
+      await waitForExpectation(() => {
+        const addButtons = getButtonsByText(container, 'Agregar');
+        expect(addButtons).toHaveLength(1);
+        expect(addButtons[0]?.disabled).toBe(false);
+      });
+    } finally {
+      await cleanup();
     }
   });
 

@@ -533,6 +533,7 @@ export default function InternshipsPage() {
   const todos = todosQuery.data ?? [];
   const pendingTodoCount = todos.filter((todo) => !todo.itdDone).length;
   const showTodoCountChip = pendingTodoCount > 0;
+  const hasTodoDraft = todoForm.itdcText.trim().length > 0;
   const entries = entriesQuery.data ?? [];
   const showFirstRunAdminHoursEmptyState =
     isAdmin && internsQuery.isSuccess && entriesQuery.isSuccess && interns.length === 0 && entries.length === 0;
@@ -1425,17 +1426,21 @@ export default function InternshipsPage() {
                 value={todoForm.itdcText}
                 onChange={(event) => setTodoForm({ itdcText: event.target.value })}
               />
-              <Button
-                variant="contained"
-                onClick={() => void createTodoMutation.mutateAsync(todoForm)}
-                disabled={!todoForm.itdcText.trim() || createTodoMutation.isPending}
-              >
-                Agregar
-              </Button>
+              {hasTodoDraft && (
+                <Button
+                  variant="contained"
+                  onClick={() => void createTodoMutation.mutateAsync(todoForm)}
+                  disabled={!hasTodoDraft || createTodoMutation.isPending}
+                >
+                  Agregar
+                </Button>
+              )}
             </Stack>
 
             {todos.length === 0 && (
-              <Typography color="text.secondary">No hay to-dos aún.</Typography>
+              <Typography color="text.secondary">
+                Escribe el primer to-do arriba. Agregar aparece cuando haya texto.
+              </Typography>
             )}
 
             <Stack spacing={1}>
