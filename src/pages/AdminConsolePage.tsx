@@ -2294,8 +2294,14 @@ export default function AdminConsolePage() {
                       </Typography>
                     )}
                     {singleAuditHasDetail && (
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                        <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleAuditEntry.diff}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        title={getAuditDetailPreviewTitle(singleAuditEntry.diff)}
+                        sx={{ whiteSpace: 'pre-wrap' }}
+                      >
+                        <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box>{' '}
+                        {formatAuditDetailPreview(singleAuditEntry.diff)}
                       </Typography>
                     )}
                   </Stack>

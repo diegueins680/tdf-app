@@ -5230,6 +5230,38 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
   });
 
+  it('keeps long single-audit details compact while preserving the full diff', async () => {
+    const longDiff = 'Admin -> Admin, Manager; Teacher -> Teacher, Accounting; Reception -> Reception, ReadOnly; Artist -> Artist, Vendor';
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: longDiff,
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
+    });
+
+    const compactDetail = screen.getByText((content) => (
+      content.startsWith('Detalle: Admin -> Admin, Manager; Teacher -> Teacher')
+      && content.endsWith('…')
+    ));
+    expect(compactDetail).toHaveAttribute('title', longDiff);
+    expect(compactDetail).not.toHaveTextContent(longDiff);
+    expect(screen.queryByText(longDiff)).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+  });
+
   it('shows the known admin identity in audit attribution before using a labeled id fallback', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
     mockAuditLogs.mockResolvedValue([
