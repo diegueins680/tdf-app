@@ -30,6 +30,7 @@ import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types
     ( DriveTokenExchangeRequest (..)
     , DriveTokenRefreshRequest (..)
+    , LabelTrackUpdate (..)
     , maxMarketplaceCartItemQuantity
     )
 import TDF.Auth
@@ -202,6 +203,7 @@ import TDF.Server
     , validateOptionalLabelTrackNote
     , validateLabelTrackOwnerIdFilter
     , validateLabelTrackPathId
+    , validateLabelTrackUpdateHasChanges
     , validateOptionalLabelTrackStatus
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
@@ -6277,6 +6279,15 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid 0
             assertInvalid (-1)
 
+        it "rejects empty label-track patches instead of only touching updatedAt" $
+            case validateLabelTrackUpdateHasChanges (LabelTrackUpdate Nothing Nothing Nothing) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Label track update must include at least one field"
+                Right () ->
+                    expectationFailure "Expected empty label-track patch to be rejected"
+
         it "accepts canonical UUID track path ids before DB lookup" $ do
             let validTrackId = "00000000-0000-0000-0000-000000000042"
             case validateLabelTrackPathId ("  " <> validTrackId <> "  ") of
@@ -6303,6 +6314,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   "
 
         it "trims required title updates and canonicalizes supported status values" $ do
+            let assertHasChanges payload =
+                    case validateLabelTrackUpdateHasChanges payload of
+                        Left serverErr ->
+                            expectationFailure
+                                ( "Expected meaningful label-track patch to be accepted, got: "
+                                    <> show serverErr
+                                )
+                        Right () -> pure ()
+            assertHasChanges (LabelTrackUpdate (Just "Mezcla final") Nothing Nothing)
+            assertHasChanges (LabelTrackUpdate Nothing (Just "   ") Nothing)
+            assertHasChanges (LabelTrackUpdate Nothing Nothing (Just "done"))
             validateLabelTrackTitle "  Mezcla final  " `shouldBe` Right "Mezcla final"
             validateOptionalLabelTrackNote Nothing `shouldBe` Right Nothing
             validateOptionalLabelTrackNote (Just "   ") `shouldBe` Right Nothing

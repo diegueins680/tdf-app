@@ -11565,6 +11565,12 @@ validateOptionalLabelTrackStatus (Just rawStatus) =
     Just "done" -> Right (Just "done")
     _ -> Left err400 { errBody = "status must be one of: open, done" }
 
+validateLabelTrackUpdateHasChanges :: LabelTrackUpdate -> Either ServerError ()
+validateLabelTrackUpdateHasChanges LabelTrackUpdate{..}
+  | isJust ltuTitle || isJust ltuNote || isJust ltuStatus = Right ()
+  | otherwise =
+      Left err400 { errBody = "Label track update must include at least one field" }
+
 validateLabelTrackOwnerIdFilter :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateLabelTrackOwnerIdFilter = validateOptionalPositiveIdField "ownerId"
 
@@ -11608,9 +11614,10 @@ createLabelTrack user LabelTrackCreate{..} = do
   pure (toLabelTrackDTO nameMap entity)
 
 updateLabelTrack :: AuthedUser -> Text -> LabelTrackUpdate -> AppM LabelTrackDTO
-updateLabelTrack user rawId LabelTrackUpdate{..} = do
+updateLabelTrack user rawId updatePayload@LabelTrackUpdate{..} = do
   key <- parseLabelTrackId rawId
   scope <- resolveTrackScope user Nothing
+  either throwError pure (validateLabelTrackUpdateHasChanges updatePayload)
   titleUpdate <- traverse (either throwError pure . validateLabelTrackTitle) ltuTitle
   noteUpdate <- traverse (either throwError pure . validateLabelTrackNote) ltuNote
   statusUpdate <- either throwError pure (validateOptionalLabelTrackStatus ltuStatus)
