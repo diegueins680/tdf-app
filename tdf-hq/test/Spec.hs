@@ -600,6 +600,21 @@ main = hspec $ do
                     commit info `shouldBe` "abc123def456"
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
+        it "skips hidden-format runtime metadata instead of exposing misleading version fields" $
+            let hiddenBuildTime =
+                    "2026-04-18T"
+                        <> Data.Text.unpack (Data.Text.singleton '\x202E')
+                        <> "01:02:03Z"
+            in
+            withEnvOverrides
+                (clearEnv buildTimeEnvKeys
+                    ++ [ ("BUILD_TIME", Just hiddenBuildTime)
+                       , ("SOURCE_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
         it "skips whitespace-bearing commit aliases instead of exposing ambiguous version metadata" $
             withEnvOverrides
                 (clearEnv commitEnvKeys

@@ -8,7 +8,12 @@ module TDF.Version
   ) where
 
 import           Data.Aeson                   (ToJSON(..), object, (.=))
-import           Data.Char                    (isControl, isHexDigit, isSpace)
+import           Data.Char                    ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+                                                , generalCategory
+                                                , isControl
+                                                , isHexDigit
+                                                , isSpace
+                                                )
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Version                 (showVersion)
@@ -80,9 +85,14 @@ canonRuntimeMetadata txt =
       upper   = T.toUpper trimmed
   in if T.null trimmed
         || upper `elem` runtimeMetadataSentinels
-        || T.any isControl trimmed
+        || T.any invalidRuntimeMetadataChar trimmed
        then Nothing
        else Just trimmed
+
+invalidRuntimeMetadataChar :: Char -> Bool
+invalidRuntimeMetadataChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 runtimeMetadataSentinels :: [Text]
 runtimeMetadataSentinels =
