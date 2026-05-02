@@ -285,6 +285,7 @@ import TDF.Server.SocialEventsHandlers (
     ticketOrderAccountingEntriesEither,
     findTicketForCheckIn,
     validateOptionalTicketBuyerPartyId,
+    validateTicketPurchaseBuyerName,
     validateTicketPurchaseBuyerEmail,
     validateTicketTierCurrencyInput,
     validateEventCurrencyInput,
@@ -5820,6 +5821,34 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "validateTicketPurchaseBuyerName" $ do
+        it "normalizes optional buyer names before ticket order storage" $ do
+            validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerName (Just "   ") `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerName (Just "  Ada Lovelace  ")
+                `shouldBe` Right (Just "Ada Lovelace")
+
+        it "rejects unsafe buyer names before they are copied onto generated tickets" $ do
+            let assertInvalid raw expected =
+                    case validateTicketPurchaseBuyerName (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid ticket buyer name to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "ticketPurchaseBuyerName must be 160 characters or fewer"
+            assertInvalid
+                "Ada\nBcc: ops@example.com"
+                "ticketPurchaseBuyerName must not contain control characters"
+            assertInvalid
+                "Ada\x202ELovelace"
+                "ticketPurchaseBuyerName must not contain control characters or hidden formatting characters"
 
     describe "validateTicketPurchaseBuyerEmail" $ do
         it "normalizes valid optional buyer emails before ticket order storage" $ do

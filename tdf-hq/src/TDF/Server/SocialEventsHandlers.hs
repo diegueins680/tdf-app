@@ -55,6 +55,7 @@ module TDF.Server.SocialEventsHandlers
   , ticketOrderAccountingEntriesEither
   , findTicketForCheckIn
   , validateOptionalTicketBuyerPartyId
+  , validateTicketPurchaseBuyerName
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCurrencyInput
   , isImageUpload
@@ -68,7 +69,15 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAlphaNum, isAscii, isAsciiUpper, isControl, isHexDigit)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiUpper
+  , isControl
+  , isHexDigit
+  )
 import           Data.Int (Int64)
 import           Data.List (foldl', sortOn)
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
@@ -1559,7 +1568,8 @@ socialEventsServer user = eventsServer
           when (soldCount + ticketPurchaseQuantity > cap) $ throwError err409 { errBody = "Event capacity reached" }
 
       let orderAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
-          buyerName = cleanMaybeText ticketPurchaseBuyerName
+      buyerName <- either throwError pure
+        (validateTicketPurchaseBuyerName ticketPurchaseBuyerName)
       buyerEmail <-
         either throwError pure (validateTicketPurchaseBuyerEmail ticketPurchaseBuyerEmail)
       when (orderAmountCents < 0) $ throwError err400 { errBody = "Invalid amount" }
@@ -2406,6 +2416,27 @@ validateOptionalTicketBuyerPartyId fieldName mPartyId =
                   (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
             }
         Just normalized -> Right (Just normalized)
+
+validateTicketPurchaseBuyerName :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateTicketPurchaseBuyerName rawName =
+  case cleanMaybeText rawName of
+    Nothing -> Right Nothing
+    Just buyerName
+      | T.length buyerName > 160 ->
+          Left err400
+            { errBody = "ticketPurchaseBuyerName must be 160 characters or fewer" }
+      | T.any isUnsafeTicketPurchaseBuyerNameChar buyerName ->
+          Left err400
+            { errBody =
+                "ticketPurchaseBuyerName must not contain control characters "
+                  <> "or hidden formatting characters"
+            }
+      | otherwise ->
+          Right (Just buyerName)
+
+isUnsafeTicketPurchaseBuyerNameChar :: Char -> Bool
+isUnsafeTicketPurchaseBuyerNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateTicketPurchaseBuyerEmail :: Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateTicketPurchaseBuyerEmail rawEmail =
