@@ -2463,6 +2463,47 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps the dialog close action out of inline composer flows', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+    });
+
+    await openDossierContextAction('Agregar nota');
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(0);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar notas'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cerrar')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('absorbs a shared source into the shared cohort summary when the page still offers multiple cohort choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

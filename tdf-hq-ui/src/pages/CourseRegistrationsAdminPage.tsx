@@ -3525,7 +3525,8 @@ export default function CourseRegistrationsAdminPage() {
     ? (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
     : (followUps.length > 0 || showFollowUpComposer);
   const prioritizePaymentSection = isMarkPaidIntent;
-  const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
+  const hasVisibleDossierComposer = hasOpenDossierComposer && !dossierQuery.isLoading && !dossierQuery.isError;
+  const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow && !hasVisibleDossierComposer;
   const dossierDialogTitle = isMarkPaidIntent
     ? hasMarkedPaidInCurrentDossier
       ? 'Pago registrado'
