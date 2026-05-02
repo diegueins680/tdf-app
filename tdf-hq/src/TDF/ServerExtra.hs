@@ -1313,18 +1313,22 @@ validateInventoryOptionalTextField fieldName maxLength rawValue =
                 BL.fromStrict
                   (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
             }
-      | T.any isUnsafeInventoryTextControl cleanValue ->
+      | T.any isUnsafeInventoryTextChar cleanValue ->
           Left err400
             { errBody =
-                BL.fromStrict
-                  (TE.encodeUtf8 (fieldName <> " must not contain control characters other than tabs or line breaks"))
+                BL.fromStrict $
+                  TE.encodeUtf8
+                    ( fieldName
+                        <> " must not contain control characters other than tabs or line breaks, or hidden formatting characters"
+                    )
             }
       | otherwise ->
           Right (Just cleanValue)
 
-isUnsafeInventoryTextControl :: Char -> Bool
-isUnsafeInventoryTextControl ch =
-  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+isUnsafeInventoryTextChar :: Char -> Bool
+isUnsafeInventoryTextChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 inventoryConditionMaxLength :: Int
 inventoryConditionMaxLength = 240

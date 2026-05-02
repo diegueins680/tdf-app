@@ -1742,6 +1742,12 @@ spec = do
         "notes must not contain control characters other than tabs or line breaks"
         baseRequest { coNotes = Just "Cableado\NULcompleto" }
       assertInvalid
+        "hidden formatting characters"
+        baseRequest { coConditionOut = Just ("Returned" <> "\x202E" <> "OK") }
+      assertInvalid
+        "hidden formatting characters"
+        baseRequest { coTermsAndConditions = Just ("Return with case" <> "\x200B") }
+      assertInvalid
         "holderEmail must be a valid email address"
         baseRequest { coHolderEmail = Just "ops at example.com" }
       assertInvalid
