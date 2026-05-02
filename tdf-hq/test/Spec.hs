@@ -2580,6 +2580,23 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "INSTAGRAM_MESSAGING_TOKEN must be 4096 characters or fewer"
 
+        it "rejects hidden-format configured fallback tokens before building Graph authorization headers" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just ("configured" <> ['\x202E'] <> "token"))
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+
         it "rejects malformed targeted Instagram context instead of falling back to configured credentials" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)

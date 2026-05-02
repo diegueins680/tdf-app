@@ -6,7 +6,7 @@ module TDF.Services.InstagramMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.Char (isControl, isSpace)
+import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
 import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -129,6 +129,8 @@ validateInstagramBearerToken label mRawToken =
           Left (label <> " must be 4096 characters or fewer")
       | T.any invalidHeaderValueChar token ->
           Left (label <> " must not contain whitespace or control characters")
+      | T.any invalidHeaderTextChar token ->
+          Left (label <> " must contain visible ASCII characters only")
       | otherwise ->
           Right token
 
@@ -181,6 +183,10 @@ sourceAttempts base source =
 
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
+
+invalidHeaderTextChar :: Char -> Bool
+invalidHeaderTextChar ch =
+  ch < '!' || ch > '~' || generalCategory ch == Format
 
 invalidMessageBodyControlChar :: Char -> Bool
 invalidMessageBodyControlChar ch =
