@@ -10977,6 +10977,33 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips cohort wrappers from first-run course labels without adding extra setup actions', async () => {
+    const titles = ['Cohorte: Beatmaking 101', 'Cohort - Beatmaking 101', 'Beatmaking 101 - cohort'];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(`Todavía no hay inscripciones para ${title}.`);
+        expect(emptyState?.textContent).not.toMatch(/Todavía no hay inscripciones para (Cohorte|Cohort)/i);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('falls back to a readable cohort label when first-run titles are only generic form descriptors', async () => {
     const titles = ['Formulario público', 'Public form', 'Google Forms'];
 
