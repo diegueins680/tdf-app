@@ -22,6 +22,7 @@ import           TDF.Auth
   , hasModuleAccess
   , hasStrictAdminAccess
   , moduleName
+  , modulesForRoles
   )
 
 -- | Shared helper to quickly craft stub responses.
@@ -138,8 +139,11 @@ validateFutureAdminAccess user
   | fromSqlKey (auPartyId user) <= 0 =
       Left err403 { errBody = "Valid admin party required" }
   | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
-  | hasModuleAccess ModuleAdmin user = Right ()
-  | otherwise = Left err403 { errBody = "Admin module access required" }
+  | not (hasModuleAccess ModuleAdmin user) =
+      Left err403 { errBody = "Admin module access required" }
+  | auModules user /= modulesForRoles (auRoles user) =
+      Left err403 { errBody = "Admin module grants must match roles" }
+  | otherwise = Right ()
 
 requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
 requireFutureAdminAccess user =
