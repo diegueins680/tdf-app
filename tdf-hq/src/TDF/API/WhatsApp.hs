@@ -15,6 +15,7 @@ module TDF.API.WhatsApp
   , ensureLeadCompletionUpdated
   , leadCompletionConsumedToken
   , extractFirstWebhookMessage
+  , extractFirstEnrollmentWebhookMessage
   , PreviewReq(..)
   , CompleteReq(..)
   ) where
@@ -88,20 +89,18 @@ hookVerifyH mmode mchall mtoken = do
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value
 hookReceiveH conn payload = do
   svc <- liftIO mkWhatsAppService
-  let mMsg = extractFirstWebhookMessage payload
-  case mMsg of
-    Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
+  case extractFirstEnrollmentWebhookMessage payload of
+    Nothing ->
+      case extractFirstWebhookMessage payload of
+        Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
+        Just _ -> pure $ object ["ignored" .= True]
     Just msg ->
-      let normText = T.toUpper . T.strip $ maybe "" body (text msg)
-          fromPhone = from msg
-          looksEnroll = ("INSCRIBIRME" `T.isInfixOf` normText) || ("INSCRIBIR" `T.isInfixOf` normText)
-      in if looksEnroll
-         then do
-           unless (isValidE164 fromPhone) $
-             throwError err400 { errBody = "Invalid phone number format" }
-           (resp, _) <- liftIO $ enrollPhone svc conn fromPhone
-           pure resp
-         else pure $ object ["ignored" .= True]
+      let fromPhone = from msg
+      in do
+        unless (isValidE164 fromPhone) $
+          throwError err400 { errBody = "Invalid phone number format" }
+        (resp, _) <- liftIO $ enrollPhone svc conn fromPhone
+        pure resp
 
 previewH :: Connection -> PreviewReq -> Handler Value
 previewH conn (PreviewReq p) = do
@@ -111,18 +110,31 @@ previewH conn (PreviewReq p) = do
   liftIO $ previewEnrollment svc conn p
 
 extractFirstWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
-extractFirstWebhookMessage payload =
-  listToMaybe
-    [ msg
-    | ent <- entry payload
-    , chg <- changes ent
-    , msgs <- maybeToList (messages (value chg))
-    , msg <- msgs
-    , waType msg == "text"
-    , not (T.null (T.strip (from msg)))
-    , Just txt <- [text msg]
-    , not (T.null (T.strip (body txt)))
-    ]
+extractFirstWebhookMessage =
+  listToMaybe . extractWebhookTextMessages
+
+extractFirstEnrollmentWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
+extractFirstEnrollmentWebhookMessage =
+  listToMaybe . filter isEnrollmentWebhookMessage . extractWebhookTextMessages
+
+extractWebhookTextMessages :: WAMetaWebhook -> [WAMessage]
+extractWebhookTextMessages payload =
+  [ msg
+  | ent <- entry payload
+  , chg <- changes ent
+  , msgs <- maybeToList (messages (value chg))
+  , msg <- msgs
+  , waType msg == "text"
+  , not (T.null (T.strip (from msg)))
+  , Just txt <- [text msg]
+  , not (T.null (T.strip (body txt)))
+  ]
+
+isEnrollmentWebhookMessage :: WAMessage -> Bool
+isEnrollmentWebhookMessage msg =
+  ("INSCRIBIRME" `T.isInfixOf` normalizedText) || ("INSCRIBIR" `T.isInfixOf` normalizedText)
+  where
+    normalizedText = T.toUpper . T.strip $ maybe "" body (text msg)
 
 -- Link minting & sender -------------------------------------------------------
 

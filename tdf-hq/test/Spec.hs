@@ -57,6 +57,7 @@ import TDF.API.WhatsApp
     ( CompleteReq (..),
       PreviewReq (..),
       ensureLeadCompletionUpdated,
+      extractFirstEnrollmentWebhookMessage,
       extractFirstWebhookMessage,
       validateHookVerifyRequest,
       validateLeadCompletionId,
@@ -8301,6 +8302,43 @@ main = hspec $ do
                             expectationFailure "Expected later text body to be selected"
                 Nothing ->
                     expectationFailure "Expected later valid webhook text to be selected"
+
+    describe "extractFirstEnrollmentWebhookMessage" $ do
+        it "selects a later enrollment request instead of letting an unrelated first text hide it" $ do
+            let greetingMessage =
+                    WA.WAMessage
+                        (Just "wamid.greeting")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Hola"))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                enrollmentMessage =
+                    WA.WAMessage
+                        (Just "wamid.enroll")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                messageId (WA.WAMessage msgId _ _ _ _ _ _) = msgId
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [greetingMessage, enrollmentMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            fmap messageId (extractFirstWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.greeting")
+            fmap messageId (extractFirstEnrollmentWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.enroll")
 
     describe "PreviewReq" $ do
         it "accepts canonical preview-link bodies and normalizes user-entered phone formatting up front" $ do
