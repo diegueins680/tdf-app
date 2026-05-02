@@ -435,6 +435,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
       expect(container.textContent).toContain(
         'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
@@ -448,6 +449,8 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',

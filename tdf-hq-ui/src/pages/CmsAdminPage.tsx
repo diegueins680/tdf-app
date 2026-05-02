@@ -708,6 +708,7 @@ export default function CmsAdminPage() {
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
   const canSaveVersion = hasSlugSelection && !payloadError;
+  const showSaveVersionAction = !liveEditorActionState.showLiveInSyncChip;
   const showFirstVersionHistoryGuidance =
     hasSlugSelection &&
     !listQuery.isLoading &&
@@ -1118,13 +1119,15 @@ export default function CmsAdminPage() {
                   <MenuItem value="published">Publicado</MenuItem>
                 </TextField>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    onClick={handleCreate}
-                    disabled={createMutation.isPending || !canSaveVersion}
-                  >
-                    {saveActionLabel}
-                  </Button>
+                  {showSaveVersionAction && (
+                    <Button
+                      variant="contained"
+                      onClick={handleCreate}
+                      disabled={createMutation.isPending || !canSaveVersion}
+                    >
+                      {saveActionLabel}
+                    </Button>
+                  )}
                   {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
                   {createMutation.isError && (
                     <Alert severity="error" sx={{ flexGrow: 1 }}>
