@@ -101,7 +101,7 @@ futureServer user = futureCatalog
           , viewEndpoint = "console"
           , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
-          , status = "preview"
+          , viewStatus = "preview"
           , viewRequiredRole = futureStubRequiredRole
           , viewRequiredModule = futureStubRequiredModule
           , viewImplemented = False
@@ -311,7 +311,7 @@ validateFutureAdminConsoleView view
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
   | viewPath view /= futureStubPath "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
-  | status view /= "preview" = invalidFutureAdminConsoleMetadata
+  | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
@@ -326,6 +326,7 @@ validateFutureAdminConsoleView view
           , viewEndpoint = "console"
           , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
+          , viewStatus = "preview"
           , viewRequiredRole = futureStubRequiredRole
           , viewRequiredModule = futureStubRequiredModule
           , viewImplemented = False

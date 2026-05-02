@@ -8880,7 +8880,7 @@ spec = describe "TDF.Server helpers" $ do
                         , Future.viewEndpoint = endpointValue
                         , Future.viewPath = pathValue
                         , Future.viewMethod = methodValue
-                        , Future.status = statusValue
+                        , Future.viewStatus = statusValue
                         , Future.viewRequiredRole = roleValue
                         , Future.viewRequiredModule = moduleValue
                         , Future.viewImplemented = implementedValue
@@ -8921,6 +8921,7 @@ spec = describe "TDF.Server helpers" $ do
                     Future.viewEndpoint view `shouldBe` "console"
                     Future.viewPath view `shouldBe` "/stubs/admin/console"
                     Future.viewMethod view `shouldBe` "GET"
+                    Future.viewStatus view `shouldBe` "preview"
                     Future.viewRequiredRole view `shouldBe` "Admin"
                     Future.viewRequiredModule view `shouldBe` "Admin"
                     Future.viewImplemented view `shouldBe` False
@@ -9101,7 +9102,7 @@ spec = describe "TDF.Server helpers" $ do
                     Future.viewEndpoint consoleView `shouldBe` "console"
                     Future.viewPath consoleView `shouldBe` "/stubs/admin/console"
                     Future.viewMethod consoleView `shouldBe` "GET"
-                    Future.status consoleView `shouldBe` "preview"
+                    Future.viewStatus consoleView `shouldBe` "preview"
                     Future.viewRequiredRole consoleView `shouldBe` "Admin"
                     Future.viewRequiredModule consoleView `shouldBe` "Admin"
                     Future.viewImplemented consoleView `shouldBe` False
@@ -9114,7 +9115,7 @@ spec = describe "TDF.Server helpers" $ do
                             , "stubEndpoint" .= ("console" :: Text)
                             , "stubPath" .= ("/stubs/admin/console" :: Text)
                             , "stubMethod" .= ("GET" :: Text)
-                            , "status" .= ("preview" :: Text)
+                            , "stubStatus" .= ("preview" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
                             , "stubRequiredModule" .= ("Admin" :: Text)
                             , "stubImplemented" .= False

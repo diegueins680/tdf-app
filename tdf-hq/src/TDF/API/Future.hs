@@ -57,7 +57,7 @@ data AdminConsoleView = AdminConsoleView
   , viewEndpoint       :: Text
   , viewPath           :: Text
   , viewMethod         :: Text
-  , status             :: Text
+  , viewStatus         :: Text
   , viewRequiredRole   :: Text
   , viewRequiredModule :: Text
   , viewImplemented    :: Bool
@@ -71,7 +71,7 @@ instance ToJSON AdminConsoleView where
       , "stubEndpoint" .= viewEndpoint view
       , "stubPath" .= viewPath view
       , "stubMethod" .= viewMethod view
-      , "status" .= status view
+      , "stubStatus" .= viewStatus view
       , "stubRequiredRole" .= viewRequiredRole view
       , "stubRequiredModule" .= viewRequiredModule view
       , "stubImplemented" .= viewImplemented view
