@@ -11383,6 +11383,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Formstack - Beatmaking 101',
       'Zoho Forms for Beatmaking 101',
       'Beatmaking 101 - Gravity Forms',
+      'Webflow form - Beatmaking 101',
+      'Beatmaking 101 - Wix form',
+      'Squarespace form for Beatmaking 101',
+      'Beatmaking 101 - Notion form',
     ];
 
     for (const title of titles) {
@@ -11413,6 +11417,10 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Formstack');
         expect(emptyState?.textContent).not.toContain('Zoho');
         expect(emptyState?.textContent).not.toContain('Gravity Forms');
+        expect(emptyState?.textContent).not.toContain('Webflow');
+        expect(emptyState?.textContent).not.toContain('Wix');
+        expect(emptyState?.textContent).not.toContain('Squarespace');
+        expect(emptyState?.textContent).not.toContain('Notion form');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
