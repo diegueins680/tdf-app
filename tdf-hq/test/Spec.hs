@@ -81,6 +81,7 @@ import TDF.DTO.SocialEventsDTO
       EventMomentCreateDTO (..),
       EventMomentReactionRequestDTO (..),
       EventBudgetLineDTO (..),
+      EventFinanceEntryDTO (..),
       EventUpdateDTO (..),
       InvitationDTO (..),
       InvitationUpdateDTO (..),
@@ -278,6 +279,8 @@ import TDF.Server.SocialEventsHandlers (
     validateStoredTicketOrderStatus,
     validateTicketCheckInOrderStatus,
     validateTicketCheckInTicketStatus,
+    storedTicketOrderSummaryFields,
+    ticketOrderAccountingEntriesEither,
     findTicketForCheckIn,
     validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerEmail,
@@ -5923,6 +5926,50 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid stored ticket order status to be rejected, got " <> show value)
+
+    describe "ticket order finance accounting invariants" $ do
+        it "rejects invalid stored ticket order statuses before generated finance fallbacks" $ do
+            let eventKey = toSqlKey 42 :: SocialEventId
+                now = UTCTime (fromGregorian 2026 5 2) (secondsToDiffTime 0)
+                mkOrder rawStatus amountCents =
+                    Entity (toSqlKey 7) EventTicketOrder
+                        { eventTicketOrderEventId = eventKey
+                        , eventTicketOrderTierId = toSqlKey 3
+                        , eventTicketOrderBuyerPartyId = Just "11"
+                        , eventTicketOrderBuyerName = Just "Ada"
+                        , eventTicketOrderBuyerEmail = Just "ada@example.com"
+                        , eventTicketOrderQuantity = 1
+                        , eventTicketOrderAmountCents = amountCents
+                        , eventTicketOrderCurrency = "USD"
+                        , eventTicketOrderStatus = rawStatus
+                        , eventTicketOrderMetadata = Nothing
+                        , eventTicketOrderPurchasedAt = now
+                        , eventTicketOrderCreatedAt = now
+                        , eventTicketOrderUpdatedAt = now
+                        }
+
+            storedTicketOrderSummaryFields (mkOrder " paid " 1500)
+                `shouldBe` Right (1500, "paid")
+            case ticketOrderAccountingEntriesEither eventKey (mkOrder "paid" 1500) of
+                Right [entry] -> do
+                    efeAmountCents entry `shouldBe` 1500
+                    efeSource entry `shouldBe` "ticket_sale"
+                    efeStatus entry `shouldBe` "posted"
+                other ->
+                    expectationFailure
+                        ("Expected one generated paid ticket accounting entry, got " <> show other)
+
+            let assertInvalid result =
+                    case result of
+                        Left err ->
+                            err `shouldBe` "Stored ticket order status is invalid"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid ticket order status to be rejected, got " <> show value)
+                invalidOrder = mkOrder "unknown" 1500
+
+            assertInvalid (storedTicketOrderSummaryFields invalidOrder)
+            assertInvalid (ticketOrderAccountingEntriesEither eventKey invalidOrder)
 
     describe "validateTicketCheckInTicketStatus" $ do
         it "accepts canonical ticket states for ticket check-in decisions" $ do

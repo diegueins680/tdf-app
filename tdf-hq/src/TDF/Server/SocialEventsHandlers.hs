@@ -51,6 +51,8 @@ module TDF.Server.SocialEventsHandlers
   , validateStoredTicketOrderStatus
   , validateTicketCheckInOrderStatus
   , validateTicketCheckInTicketStatus
+  , storedTicketOrderSummaryFields
+  , ticketOrderAccountingEntriesEither
   , findTicketForCheckIn
   , validateOptionalTicketBuyerPartyId
   , validateTicketPurchaseBuyerEmail
@@ -1878,8 +1880,9 @@ socialEventsServer user = eventsServer
         envPool
       manualDtos <- either (throwError . financeInvariantServerError) pure
         (traverse financeEntryEntityToDTOEither manualRows)
-      let ticketDtos = concatMap (ticketOrderAccountingEntries eventKey) ticketOrders
-          merged = manualDtos ++ ticketDtos
+      ticketDtos <- either (throwError . financeInvariantServerError) pure
+        (fmap concat (traverse (ticketOrderAccountingEntriesEither eventKey) ticketOrders))
+      let merged = manualDtos ++ ticketDtos
           filtered = filter (matchesFinanceFilters directionFilter sourceFilter statusFilter) merged
       pure (sortOn (Down . efeOccurredAt) filtered)
 
@@ -1982,6 +1985,8 @@ socialEventsServer user = eventsServer
         (traverse storedBudgetLineSummaryFields budgetRows)
       normalizedFinanceRows <- either (throwError . financeInvariantServerError) pure
         (traverse storedFinanceEntrySummaryFields allFinanceRows)
+      normalizedTicketOrders <- either (throwError . financeInvariantServerError) pure
+        (traverse storedTicketOrderSummaryFields ticketOrders)
 
       let plannedIncomeCents =
             sum
@@ -2020,21 +2025,21 @@ socialEventsServer user = eventsServer
               ]
           ticketPaidRevenueCents =
             sum
-              [ eventTicketOrderAmountCents orderRec
-              | Entity _ orderRec <- ticketOrders
-              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "paid"
+              [ amountCents
+              | (amountCents, statusVal) <- normalizedTicketOrders
+              , statusVal == "paid"
               ]
           ticketRefundedRevenueCents =
             sum
-              [ eventTicketOrderAmountCents orderRec
-              | Entity _ orderRec <- ticketOrders
-              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "refunded"
+              [ amountCents
+              | (amountCents, statusVal) <- normalizedTicketOrders
+              , statusVal == "refunded"
               ]
           ticketPendingRevenueCents =
             sum
-              [ eventTicketOrderAmountCents orderRec
-              | Entity _ orderRec <- ticketOrders
-              , normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) == "pending"
+              [ amountCents
+              | (amountCents, statusVal) <- normalizedTicketOrders
+              , statusVal == "pending"
               ]
           accountsPayableCents =
             sum
@@ -3341,9 +3346,28 @@ storedBudgetLineSummaryFields :: Entity EventBudgetLine -> Either T.Text (Int, T
 storedBudgetLineSummaryFields (Entity _ lineRec) =
   validateStoredBudgetLineDimensions lineRec
 
-ticketOrderAccountingEntries :: SocialEventId -> Entity EventTicketOrder -> [EventFinanceEntryDTO]
-ticketOrderAccountingEntries eventKey (Entity orderKey orderRec) =
-  case normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRec)) of
+storedTicketOrderSummaryFields :: Entity EventTicketOrder -> Either T.Text (Int, T.Text)
+storedTicketOrderSummaryFields (Entity _ orderRec) =
+  case parseTicketOrderStatus (eventTicketOrderStatus orderRec) of
+    Just statusVal -> Right (eventTicketOrderAmountCents orderRec, statusVal)
+    Nothing -> Left "Stored ticket order status is invalid"
+
+ticketOrderAccountingEntriesEither
+  :: SocialEventId
+  -> Entity EventTicketOrder
+  -> Either T.Text [EventFinanceEntryDTO]
+ticketOrderAccountingEntriesEither eventKey orderEnt@(Entity _ orderRec) =
+  case parseTicketOrderStatus (eventTicketOrderStatus orderRec) of
+    Just statusVal -> Right (ticketOrderAccountingEntriesWithStatus eventKey orderEnt statusVal)
+    Nothing -> Left "Stored ticket order status is invalid"
+
+ticketOrderAccountingEntriesWithStatus
+  :: SocialEventId
+  -> Entity EventTicketOrder
+  -> T.Text
+  -> [EventFinanceEntryDTO]
+ticketOrderAccountingEntriesWithStatus eventKey (Entity orderKey orderRec) statusVal =
+  case statusVal of
     "paid" ->
       [ mkEntry "paid" "income" "ticket_sale" "posted" "Ticket sale"
       ]
