@@ -2450,6 +2450,8 @@ export default function CourseRegistrationsAdminPage() {
   const dossierScopeHint = [
     allVisibleRowsUseDirectPendingRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsCanOpenPaymentWorkflow && useCompactStatusActionLabel
+      ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
       : useCompactStatusActionLabel
       ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
       : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),
