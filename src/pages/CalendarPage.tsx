@@ -8,7 +8,6 @@ import {
   Chip,
   Divider,
   Grid,
-  IconButton,
   Link,
   List,
   ListItem,
@@ -17,7 +16,6 @@ import {
   Stack,
   Tab,
   Tabs,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -25,7 +23,6 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import LaunchIcon from '@mui/icons-material/Launch';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import ReplayIcon from '@mui/icons-material/Replay';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
 type CalendarMode = 'week' | 'month' | 'agenda';
@@ -271,11 +268,6 @@ export default function CalendarPage() {
                     <Typography variant="h6" fontWeight={600}>
                       Highlights semana
                     </Typography>
-                    <Tooltip title="Actualizar desde FullCalendar">
-                      <IconButton size="small">
-                        <ReplayIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                   </Stack>
                   <List dense disablePadding>
                     {UPCOMING_BLOCKS.map(block => (
