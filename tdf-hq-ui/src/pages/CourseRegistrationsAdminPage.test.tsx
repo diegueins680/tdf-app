@@ -11699,26 +11699,36 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('strips English enrollment-form descriptors from first-run cohort copy', async () => {
-    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Course enrollment form - Beatmaking 101' }]);
-    listRegistrationsMock.mockResolvedValue([]);
+    const titles = [
+      'Course enrollment form - Beatmaking 101',
+      'Course inscription form - Beatmaking 101',
+      'Beatmaking 101 - inscription page',
+    ];
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
 
-    await waitForExpectation(() => {
-      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
-      expect(emptyState).not.toBeNull();
-      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
-      expect(emptyState?.textContent).not.toContain('Course enrollment form - Beatmaking 101');
-      expect(countOccurrences(emptyState!, 'Course enrollment')).toBe(0);
-      expect(
-        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateFormActionLabel);
-      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
-    });
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
 
-    await cleanup();
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(countOccurrences(emptyState!, 'Course enrollment')).toBe(0);
+        expect(countOccurrences(emptyState!, 'Course inscription')).toBe(0);
+        expect(emptyState?.textContent).not.toContain('inscription page');
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+        ).toBe(initialEmptyStateFormActionLabel);
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
   });
 
   it('strips registration-portal descriptors from first-run cohort copy', async () => {
