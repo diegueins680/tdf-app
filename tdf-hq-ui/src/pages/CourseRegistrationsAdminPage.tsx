@@ -4708,8 +4708,11 @@ export default function CourseRegistrationsAdminPage() {
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
                   const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(
                     reg.crStatus,
-                    searchedRegistrations.length === 1
-                      && (showActiveStatusFilterSummary || showSingleStatusSummaryInPageChrome),
+                    showActiveStatusFilterSummary
+                      || (
+                        searchedRegistrations.length === 1
+                        && showSingleStatusSummaryInPageChrome
+                      ),
                   );
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)

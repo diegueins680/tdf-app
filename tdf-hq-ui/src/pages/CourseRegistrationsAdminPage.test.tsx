@@ -3064,7 +3064,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps status-filtered rows action-first once the filter already states the shared status', async () => {
+  it('uses direct payment-pending actions once the active filter already states paid status', async () => {
     const paidRegistration = buildRegistration({
       crId: 102,
       crFullName: 'Grace Hopper',
@@ -3109,9 +3109,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(activeStatusSummary?.textContent).toContain('Pagado');
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);
+      const graceAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
+      const katherineAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Katherine Johnson');
+      expect(graceAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(katherineAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(graceAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
+      expect(graceAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Katherine Johnson"]')).toBeNull();
+      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(2);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Estado: Pagado')).toBe(0);
     });
 
