@@ -2313,7 +2313,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasManualFilters
     && !hasLocalSearch
     && loadedRegistrationCount > 1
-    && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
+    && loadedRegistrationCount <= MIN_DEFAULT_CSV_EXPORT_ROWS;
   const hasExplicitCsvExportScope = hasManualFilters
     || localSearchNarrowsRegistrations
     || (hasCustomLimit && !hasTinyLimitOnlyView);

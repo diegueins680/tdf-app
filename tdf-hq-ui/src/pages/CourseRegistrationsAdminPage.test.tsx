@@ -7231,6 +7231,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   }, 20_000);
 
+  it('keeps exact-threshold limit-only views free of default CSV export clutter', async () => {
+    const exactThresholdRegistrations = buildRegistrations(8);
+    listRegistrationsMock.mockImplementation((params) =>
+      Promise.resolve(exactThresholdRegistrations.slice(0, params?.limit ?? exactThresholdRegistrations.length)),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=8');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 8,
+      });
+      expect(getButtonByText(container, 'Ajustar límite (8)')).toBeTruthy();
+      expect(getButtonByText(container, 'Restablecer límite')).toBeTruthy();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(8))).toBe(0);
+      expect(container.querySelector('button[aria-label="Copiar 8 inscripciones visibles como CSV"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a filtered-empty view focused on clearing filters instead of offering duplicate recovery actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
