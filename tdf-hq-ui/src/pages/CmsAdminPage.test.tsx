@@ -982,14 +982,16 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the editor status field distinct from the versions filter so first-time admins do not see two ambiguous Estado controls', async () => {
+  it('keeps the two-version history focused on rows instead of showing a second status control', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(countLabelsByText(container, 'Estado')).toBe(1);
-      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(container.textContent).toContain('2 versiones');
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
 
     await cleanup();
@@ -1195,6 +1197,36 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain('3 versiones');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('shows the history status filter once enough mixed-status versions exist to narrow meaningfully', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'archived',
+        ccdPublishedAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('3 versiones');
+      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
     });
 
     await cleanup();

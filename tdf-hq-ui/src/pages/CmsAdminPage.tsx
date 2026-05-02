@@ -625,7 +625,7 @@ export default function CmsAdminPage() {
     liveContent?.ccdId === versions[0]?.ccdId;
   const visibleVersionRows = showSingleLiveVersionSummary ? [] : filteredVersions;
   const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
-  const showHistoryStatusFilter = historyStatuses.length > 1 || statusFilter !== 'all';
+  const showHistoryStatusFilter = (versions.length > 2 && historyStatuses.length > 1) || statusFilter !== 'all';
   const showHistoryMinVersionFilter = versions.length > 2 || minVersionFilter != null;
   const showVersionToolbarControls =
     versionListUiState.showToolbarFilters
