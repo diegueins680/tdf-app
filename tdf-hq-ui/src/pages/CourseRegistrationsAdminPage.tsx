@@ -765,6 +765,12 @@ const firstRunRegistrationLinkDescriptorPrefixPattern =
 const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
+const firstRunPaymentDescriptorPrefixPattern =
+  /^(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPaymentDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
+
 const firstRunSignupSheetDescriptorPrefixPattern =
   /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -865,6 +871,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
+    .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
@@ -902,6 +909,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
   const strippedTitle = trimmedTitle
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
+    .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
