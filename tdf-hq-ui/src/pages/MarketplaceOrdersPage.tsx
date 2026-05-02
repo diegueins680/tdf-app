@@ -385,6 +385,7 @@ export default function MarketplaceOrdersPage() {
   const showListChrome = ordersQuery.isLoading || filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState);
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
+  const showFilterTrayHelper = showSearchOwnedFilterHelper && !showEmptyOrdersState;
   const showPaidOnlyAdvancedFilter = !statusFilterImpliesPaid;
   const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || activePaidOnlyFilter;
   const advancedFiltersButtonSubject = showPaidOnlyAdvancedFilter ? 'fechas y pago' : 'fechas';
@@ -402,9 +403,8 @@ export default function MarketplaceOrdersPage() {
     : showSearchWithExtraFilters
       ? 'No hay órdenes en la vista actual. Usa Limpiar otros filtros para conservar la búsqueda o Limpiar dentro del campo para volver a la bandeja completa.'
       : 'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.';
-  const filterTrayHelperText = showSearchOwnedFilterHelper
-    ? 'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.'
-    : 'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.';
+  const searchOwnedFilterHelperText =
+    'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa. Los demás filtros aparecerán aquí cuando combines más criterios.';
   const clearFiltersActionLabel = showSearchWithExtraFilters ? 'Limpiar otros filtros' : 'Limpiar filtros';
   const paidOrdersRecoveryMessage = activePaidOnlyFilter
     ? 'Hay órdenes pagadas, pero no coinciden con los filtros actuales. Ajusta los filtros o desmarca "Solo con pago".'
@@ -881,9 +881,9 @@ export default function MarketplaceOrdersPage() {
                     {clearFiltersActionLabel}
                   </Button>
                 </>
-              ) : !showEmptyOrdersState ? (
+              ) : showFilterTrayHelper ? (
                 <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-                  {filterTrayHelperText}
+                  {searchOwnedFilterHelperText}
                 </Typography>
               ) : null}
             </Stack>

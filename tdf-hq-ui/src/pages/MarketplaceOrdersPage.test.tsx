@@ -496,7 +496,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados.',
         );
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
         expect(container.textContent).not.toContain('Atajos rápidos');
@@ -1312,7 +1312,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(queryActionByText(container, 'Limpiar')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
       });
@@ -1523,7 +1523,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).not.toContain('La búsqueda activa se maneja desde el campo superior.');
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
         expect(listOrdersMock).toHaveBeenCalledTimes(1);
@@ -2143,7 +2143,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
         expect(container.querySelector('tbody tr')).not.toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
       });
@@ -2176,7 +2176,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
       });
