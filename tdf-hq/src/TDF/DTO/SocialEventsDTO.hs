@@ -606,8 +606,18 @@ instance FromJSON TicketOrderStatusUpdateDTO where
       [ "ticketOrderStatus"
       ]
       o
-    TicketOrderStatusUpdateDTO
-      <$> o .: "ticketOrderStatus"
+    rawStatus <- o .: "ticketOrderStatus"
+    normalizedStatus <- normalizeTicketOrderStatusUpdate rawStatus
+    pure (TicketOrderStatusUpdateDTO normalizedStatus)
+
+normalizeTicketOrderStatusUpdate :: Text -> Parser Text
+normalizeTicketOrderStatusUpdate rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "paid" -> pure "paid"
+    "cancelled" -> pure "cancelled"
+    "canceled" -> pure "cancelled"
+    "refunded" -> pure "refunded"
+    _ -> fail "ticketOrderStatus must be one of: paid, cancelled, refunded"
 
 data TicketCheckInRequestDTO = TicketCheckInRequestDTO
   { ticketCheckInTicketId   :: Maybe Text

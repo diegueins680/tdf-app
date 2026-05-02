@@ -1544,6 +1544,13 @@ spec = do
                 Right payload ->
                     SocialEvents.ticketOrderStatus payload `shouldBe` "paid"
 
+            case decodeTicketOrderStatus "{\"ticketOrderStatus\":\" CANCELED \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected ticket order status alias to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.ticketOrderStatus payload `shouldBe` "cancelled"
+
             case decodeTicketCheckIn "{\"ticketCheckInTicketCode\":\" TDF-ABCDEF123456 \"}" of
                 Left err ->
                     expectationFailure
@@ -1568,6 +1575,17 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeTicketCheckIn
                 "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects blank, pending, or unknown ticket order status updates before handler fallback" $ do
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"pending\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"void\"}"
                 `shouldSatisfy` isLeft
 
         it "rejects non-positive or excessive ticket quantities before ticket-tier lookup" $ do
