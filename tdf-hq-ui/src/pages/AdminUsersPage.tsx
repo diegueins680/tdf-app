@@ -578,6 +578,24 @@ const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'rol
   });
 };
 
+const buildNonDefaultUserAccessSummaryCopy = (user: Pick<AdminUser, 'modules' | 'roles'> | null) => {
+  const fullSummary = buildNonDefaultUserAccessSummary(user);
+
+  if (!user || !fullSummary) {
+    return { text: '', title: undefined as string | undefined };
+  }
+
+  const compactSummary = buildUserRowAccessSummary({
+    roles: user.roles,
+    modules: user.modules,
+  });
+
+  return {
+    text: compactSummary,
+    title: compactSummary === fullSummary ? undefined : fullSummary,
+  };
+};
+
 const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   let hasNameIdentity = false;
   let hasDistinctUsername = false;
@@ -1179,11 +1197,11 @@ export default function AdminUsersPage() {
     )
     : '';
   const singleSearchResultAccessSummary = useMemo(
-    () => buildNonDefaultUserAccessSummary(singleSearchResult),
+    () => buildNonDefaultUserAccessSummaryCopy(singleSearchResult),
     [singleSearchResult],
   );
   const singleUserAccessSummary = useMemo(
-    () => buildNonDefaultUserAccessSummary(singleVisibleUser),
+    () => buildNonDefaultUserAccessSummaryCopy(singleVisibleUser),
     [singleVisibleUser],
   );
   const primaryGuidance = showSingleUserGuidance
@@ -1196,18 +1214,27 @@ export default function AdminUsersPage() {
   const pageGuidanceParts = [
     primaryGuidance,
     viewGuidance,
-    singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
-    singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
+    singleUserAccessSummary.text ? `Acceso de este usuario: ${singleUserAccessSummary.text}.` : '',
+    singleSearchResultAccessSummary.text ? `Acceso en este resultado: ${singleSearchResultAccessSummary.text}.` : '',
     sharedAccessGuidance,
   ].filter(Boolean);
   const pageGuidance = pageGuidanceParts.join(' ');
-  const pageGuidanceTitle = sharedAccessGuidanceCopy.title
+  const hasExpandedGuidanceTitle = Boolean(
+    singleUserAccessSummary.title
+    || singleSearchResultAccessSummary.title
+    || sharedAccessGuidanceCopy.title,
+  );
+  const pageGuidanceTitle = hasExpandedGuidanceTitle
     ? [
         primaryGuidance,
         viewGuidance,
-        singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
-        singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
-        sharedAccessGuidanceCopy.title,
+        singleUserAccessSummary.text
+          ? `Acceso de este usuario: ${singleUserAccessSummary.title ?? singleUserAccessSummary.text}.`
+          : '',
+        singleSearchResultAccessSummary.text
+          ? `Acceso en este resultado: ${singleSearchResultAccessSummary.title ?? singleSearchResultAccessSummary.text}.`
+          : '',
+        sharedAccessGuidanceCopy.title ?? sharedAccessGuidance,
       ].filter(Boolean).join(' ')
     : undefined;
 

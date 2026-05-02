@@ -2908,6 +2908,40 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps long lone-user access guidance compact while preserving the full scope', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-wide-access',
+        roles: ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'],
+        modules: ['admin', 'crm', 'inventory', 'reports'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Admin, Engineer, Manager +2 roles · Módulos: admin, crm, inventory +1 módulo.',
+        );
+        expect(getPageGuidanceElement(container).getAttribute('title')).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Admin, Engineer, Manager, Reception, Teacher · Módulos: admin, crm, inventory, reports.',
+        );
+
+        const loneRow = getRowByUserId(container, 101);
+        expect(loneRow.textContent).not.toContain('Roles:');
+        expect(loneRow.textContent).not.toContain('Módulos:');
+        expect(container.textContent).not.toContain('Reception, Teacher');
+        expect(container.textContent).not.toContain('reports');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('flags a lone admin account with no assigned access without adding row filler', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
