@@ -366,6 +366,11 @@ export default function MarketplaceOrdersPage() {
     !showFirstOrderEmptyState && !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 0;
   const showFilteredSingleOrderSummary = showSingleVisibleOrderSummary && !showSingleOrderFocusedState;
   const singleVisibleOrder = showSingleVisibleOrderSummary ? (filtered[0] ?? null) : null;
+  const singleVisibleBuyerEmail = singleVisibleOrder ? normalizeEmailValue(singleVisibleOrder.moBuyerEmail) : '';
+  const singleVisibleBuyerPhone = singleVisibleOrder ? normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone) : '';
+  const showSingleVisibleContactEmptyState = Boolean(
+    singleVisibleOrder && !singleVisibleBuyerEmail && !singleVisibleBuyerPhone,
+  );
   const singleVisibleOrderSummaryText = showSingleOrderFocusedState
     ? 'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
     : showSearchWithExtraFilters
@@ -966,14 +971,19 @@ export default function MarketplaceOrdersPage() {
               <Typography variant="body2" color="text.secondary">
                 <Box component="span" sx={{ fontWeight: 600 }}>Comprador:</Box> {singleVisibleOrder.moBuyerName}
               </Typography>
-              {singleVisibleOrder.moBuyerEmail && (
+              {singleVisibleBuyerEmail && (
                 <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Email:</Box> {singleVisibleOrder.moBuyerEmail}
+                  <Box component="span" sx={{ fontWeight: 600 }}>Email:</Box> {singleVisibleBuyerEmail}
                 </Typography>
               )}
-              {normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone) && (
+              {singleVisibleBuyerPhone && (
                 <Typography variant="body2" color="text.secondary">
-                  <Box component="span" sx={{ fontWeight: 600 }}>Teléfono:</Box> {normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone)}
+                  <Box component="span" sx={{ fontWeight: 600 }}>Teléfono:</Box> {singleVisibleBuyerPhone}
+                </Typography>
+              )}
+              {showSingleVisibleContactEmptyState && (
+                <Typography variant="body2" color="text.secondary">
+                  Sin email ni teléfono registrado.
                 </Typography>
               )}
               <Typography variant="body2" color="text.secondary">

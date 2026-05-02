@@ -409,6 +409,34 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('uses one focused contact empty state in sparse single-order summaries', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-sparse',
+        moBuyerName: 'Sparse Buyer',
+        moBuyerEmail: '   ',
+        moBuyerPhone: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain('Comprador: Sparse Buyer');
+        expect(container.textContent).toContain('Sin email ni teléfono registrado.');
+        expect(container.textContent).not.toContain('Email:');
+        expect(container.textContent).not.toContain('Teléfono:');
+        expect(container.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('restores the refresh action once the page has a real order list to revisit', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
