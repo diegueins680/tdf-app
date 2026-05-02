@@ -91,6 +91,7 @@ import           TDF.Config ( AppConfig(..)
                             , courseMapFallback
                             , courseSlugFallback
                             , normalizeConfiguredGraphNodeId
+                            , normalizeConfiguredGoogleClientId
                             , normalizeConfiguredBaseUrl
                             , resolveConfiguredAppBase
                             , resolveConfiguredAssetsBase
@@ -2346,10 +2347,10 @@ resolveDriveClientCreds
   rawDriveClientSecret
   rawGoogleClientId
   rawGoogleClientSecret = do
-  mDriveClientId <- validateOptionalDriveClientCredential "DRIVE_CLIENT_ID" rawDriveClientId
+  mDriveClientId <- validateOptionalDriveClientId "DRIVE_CLIENT_ID" rawDriveClientId
   mDriveClientSecret <-
     validateOptionalDriveClientCredential "DRIVE_CLIENT_SECRET" rawDriveClientSecret
-  mGoogleClientId <- validateOptionalDriveClientCredential "GOOGLE_CLIENT_ID" rawGoogleClientId
+  mGoogleClientId <- validateOptionalDriveClientId "GOOGLE_CLIENT_ID" rawGoogleClientId
   mGoogleClientSecret <-
     validateOptionalDriveClientCredential "GOOGLE_CLIENT_SECRET" rawGoogleClientSecret
   case (mDriveClientId, mDriveClientSecret) of
@@ -2381,6 +2382,17 @@ resolveDriveClientCreds
             "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
             "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
         }
+
+validateOptionalDriveClientId :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalDriveClientId envName rawClientId =
+  case rawClientId of
+    Nothing -> Right Nothing
+    Just clientId ->
+      case normalizeConfiguredGoogleClientId (T.unpack envName) (T.unpack clientId) of
+        Left msg ->
+          Left err503
+            { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
+        Right normalized -> Right normalized
 
 validateOptionalDriveClientCredential :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveClientCredential envName rawCredential =

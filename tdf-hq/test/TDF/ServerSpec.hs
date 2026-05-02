@@ -4341,7 +4341,23 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "google-client")
                     (Just "google-secret")
                 )
-                "DRIVE_CLIENT_ID must not contain control characters or whitespace"
+                "DRIVE_CLIENT_ID must not contain whitespace"
+            assertInvalid
+                ( resolveDriveClientCreds
+                    (Just "drive-client.apps.googleusercontent.com/oauth")
+                    (Just "drive-secret")
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_ID must not contain path, query, or fragment characters"
+            assertInvalid
+                ( resolveDriveClientCreds
+                    Nothing
+                    Nothing
+                    (Just "google-client.apps.googleusercontent.com?debug=1")
+                    (Just "google-secret")
+                )
+                "GOOGLE_CLIENT_ID must not contain path, query, or fragment characters"
             assertInvalid
                 ( resolveDriveClientCreds
                     Nothing
