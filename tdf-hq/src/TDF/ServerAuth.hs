@@ -904,7 +904,7 @@ validateGoogleIdTokenInfo mExpectedClientId info
         Nothing ->
           Left "El token de Google no contiene un correo válido."
         Just normalizedEmail ->
-          let normalizedName = cleanOptional (gitName info)
+          let normalizedName = sanitizeGoogleProfileName (gitName info)
               profile = GoogleProfile
                 { gpEmail = normalizedEmail
                 , gpName = normalizedName <|> Just normalizedEmail
@@ -923,6 +923,13 @@ invalidGoogleSubjectChar ch =
   isSpace ch
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+sanitizeGoogleProfileName :: Maybe Text -> Maybe Text
+sanitizeGoogleProfileName rawName = do
+  name <- cleanOptional rawName
+  if T.length name <= maxSignupDisplayNameChars && not (T.any isUnsafeSignupNameChar name)
+    then Just name
+    else Nothing
 
 completeGoogleLogin :: GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
 completeGoogleLogin GoogleProfile{..} = do

@@ -201,6 +201,21 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
     assertRejected "google sub 1"
     assertRejected ("google-sub-" <> hiddenFormat <> "1")
 
+  it "falls back to verified email when Google profile names are unsafe" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertFallsBack rawName =
+          case validateGoogleIdTokenInfo
+            (Just "client-id")
+            googleTokenInfo { gitName = Just rawName } of
+            Right profile ->
+              gpName profile `shouldBe` Just "ada@example.com"
+            Left err ->
+              expectationFailure
+                ("Expected unsafe Google profile name to fall back, got " <> T.unpack err)
+    assertFallsBack ("Ada" <> hiddenFormat <> "Lovelace")
+    assertFallsBack "Ada\nLovelace"
+    assertFallsBack (T.replicate 161 "a")
+
 loginEmailFallbackSpec :: Spec
 loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
   it "allows exactly one login email fallback credential candidate" $
