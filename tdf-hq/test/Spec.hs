@@ -206,8 +206,10 @@ import TDF.Server
       validateCoursePublicUrlField,
       validateDatafastCheckoutId,
       validateDatafastCredential,
+      validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
       validateDriveRedirectUri,
+      validatePayPalCredential,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
@@ -3983,6 +3985,38 @@ main = hspec $ do
                 "DATAFAST_BEARER_TOKEN"
                 (Just "bearer token")
                 "must not contain control characters or whitespace"
+
+        it "rejects oversized Datafast credentials before gateway requests are built" $ do
+            let oversized = Data.Text.unpack (Data.Text.replicate 4097 "a")
+                assertInvalid envName result =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (envName <> " must be 4096 characters or fewer")
+                        Right value ->
+                            expectationFailure
+                                ("Expected oversized Datafast credential, got " <> show value)
+            assertInvalid
+                "DATAFAST_BEARER_TOKEN"
+                (validateDatafastCredential "DATAFAST_BEARER_TOKEN" (Just oversized))
+            assertInvalid
+                "DATAFAST_VERSIONDF"
+                (validateOptionalDatafastCredential "DATAFAST_VERSIONDF" (Just oversized))
+
+    describe "validatePayPalCredential" $ do
+        it "rejects oversized PayPal credentials before Basic auth headers are built" $ do
+            let oversized = Data.Text.unpack (Data.Text.replicate 4097 "a")
+            case validatePayPalCredential "PAYPAL_CLIENT_SECRET" (Just oversized) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "PAYPAL_CLIENT_SECRET must be 4096 characters or fewer"
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized PayPal credential, got " <> show value)
 
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do

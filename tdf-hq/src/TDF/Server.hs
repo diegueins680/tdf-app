@@ -10995,6 +10995,12 @@ validateOptionalDatafastCredential envName mRawCredential =
                 BL.fromStrict . TE.encodeUtf8 $
                   gatewayAuthHeaderUnsafeMessage envName
             }
+      | T.length credential > maxGatewayCredentialChars ->
+          Left err500
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  gatewayCredentialTooLongMessage envName
+            }
       | otherwise ->
           Right (Just credential)
 
@@ -11127,6 +11133,12 @@ validateRequiredGatewayCredential envName mRawCredential =
                 BL.fromStrict . TE.encodeUtf8 $
                   gatewayAuthHeaderUnsafeMessage envName
             }
+      | T.length credential > maxGatewayCredentialChars ->
+          Left err500
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  gatewayCredentialTooLongMessage envName
+            }
       | otherwise ->
           Right credential
 
@@ -11135,6 +11147,13 @@ gatewayAuthHeaderUnsafeMessage fieldName =
   fieldName
     <> " must not contain control characters or whitespace, "
     <> "or hidden formatting characters"
+
+gatewayCredentialTooLongMessage :: Text -> Text
+gatewayCredentialTooLongMessage fieldName =
+  fieldName <> " must be 4096 characters or fewer"
+
+maxGatewayCredentialChars :: Int
+maxGatewayCredentialChars = 4096
 
 isGatewayAuthHeaderUnsafeChar :: Char -> Bool
 isGatewayAuthHeaderUnsafeChar ch =
