@@ -11038,7 +11038,7 @@ validateDatafastBaseUrl mRawBase
   | not (isApprovedDatafastOrigin cleanBase) =
       invalidDatafastBaseUrl
   | otherwise =
-      Right (T.unpack cleanBase)
+      Right (T.unpack (canonicalDatafastBaseUrl cleanBase))
   where
     rawBase = maybe "https://test.oppwa.com" T.pack mRawBase
     cleanBase = T.dropWhileEnd (== '/') (T.strip rawBase)
@@ -11053,6 +11053,11 @@ validateDatafastBaseUrl mRawBase
             && (T.null portSuffix || portSuffix == ":443")
         Nothing ->
           False
+
+    canonicalDatafastBaseUrl rawUrl =
+      case datafastOriginParts rawUrl of
+        Just (host, portSuffix) -> "https://" <> host <> portSuffix
+        Nothing -> rawUrl
 
     datafastOriginParts rawUrl =
       let authority = T.drop 8 rawUrl

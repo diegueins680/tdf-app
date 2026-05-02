@@ -3981,6 +3981,8 @@ main = hspec $ do
             validateDatafastBaseUrl Nothing `shouldBe` Right "https://test.oppwa.com"
             validateDatafastBaseUrl (Just " https://eu-prod.oppwa.com/ ")
                 `shouldBe` Right "https://eu-prod.oppwa.com"
+            validateDatafastBaseUrl (Just " HTTPS://EU-PROD.OPPWA.COM/ ")
+                `shouldBe` Right "https://eu-prod.oppwa.com"
             validateDatafastBaseUrl (Just "https://eu-prod.oppwa.com:443")
                 `shouldBe` Right "https://eu-prod.oppwa.com:443"
 
