@@ -377,7 +377,14 @@ spec = do
           [mkAssetUploadFile "camera.jpg"]
         )
       assertInvalid
+        (mkAssetUploadMultipart
+          [("name", "----.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
         (mkAssetUploadMultipart [] [mkAssetUploadFile ".jpg"])
+      assertInvalid
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "----.jpg"])
 
     it "rejects browser filenames with control characters instead of silently rewriting them into stored asset names" $
       case fromMultipart

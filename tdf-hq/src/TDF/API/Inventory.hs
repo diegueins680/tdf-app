@@ -146,7 +146,13 @@ hasNonEmptyUploadBaseName rawName =
         if T.null ext
           then trimmed
           else T.dropEnd (T.length ext) trimmed
-  in T.any (/= '.') baseName
+  in T.any isUploadBaseNameAtom baseName
+
+isUploadBaseNameAtom :: Char -> Bool
+isUploadBaseNameAtom ch =
+  (ch >= 'A' && ch <= 'Z')
+    || (ch >= 'a' && ch <= 'z')
+    || (ch >= '0' && ch <= '9')
 
 nonEmptyBaseName :: Text -> Maybe Text
 nonEmptyBaseName rawName =
