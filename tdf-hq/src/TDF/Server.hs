@@ -11087,7 +11087,15 @@ loadPaypalEnv = do
   pure (cid, secret, baseUrl)
 
 validatePayPalCredential :: Text -> Maybe String -> Either ServerError Text
-validatePayPalCredential = validateRequiredGatewayCredential
+validatePayPalCredential envName mRawCredential = do
+  credential <- validateRequiredGatewayCredential envName mRawCredential
+  if envName == "PAYPAL_CLIENT_ID" && T.any (== ':') credential
+    then
+      Left err500
+        { errBody =
+            "PAYPAL_CLIENT_ID must not contain ':' because PayPal Basic auth uses it as a delimiter"
+        }
+    else Right credential
 
 validateRequiredGatewayCredential :: Text -> Maybe String -> Either ServerError Text
 validateRequiredGatewayCredential envName mRawCredential =

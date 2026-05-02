@@ -6398,7 +6398,7 @@ spec = describe "TDF.Server helpers" $ do
             validatePayPalCredential "PAYPAL_CLIENT_SECRET" (Just "\tsecret-value\n")
                 `shouldBe` Right "secret-value"
 
-        it "rejects missing, blank, or control-bearing PayPal credentials before calling PayPal" $ do
+        it "rejects missing, blank, delimiter, or control-bearing PayPal credentials before calling PayPal" $ do
             let assertInvalid envName rawValue expectedMessage =
                     case validatePayPalCredential envName rawValue of
                         Left serverErr -> do
@@ -6425,6 +6425,10 @@ spec = describe "TDF.Server helpers" $ do
                 "PAYPAL_CLIENT_ID"
                 (Just ("client" <> [toEnum 0x202E] <> "id"))
                 "hidden formatting characters"
+            assertInvalid
+                "PAYPAL_CLIENT_ID"
+                (Just "client:id")
+                "PAYPAL_CLIENT_ID must not contain ':'"
 
     describe "validatePayPalAccessTokenField" $ do
         it "normalizes PayPal access tokens before Bearer auth headers are built" $
