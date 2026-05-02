@@ -11470,6 +11470,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips info-session descriptors from first-run cohort copy', async () => {
+    const titles = [
+      'Formulario de sesión informativa - Beatmaking 101',
+      'Beatmaking 101 - information session form',
+      'Orientation signup for Beatmaking 101',
+      'Beatmaking 101 - página de clase abierta',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toContain('sesión informativa');
+        expect(emptyState?.textContent).not.toContain('information session');
+        expect(emptyState?.textContent).not.toContain('Orientation signup');
+        expect(emptyState?.textContent).not.toContain('página de clase abierta');
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips course-form descriptors from first-run cohort copy', async () => {
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Formulario del curso - Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([]);
