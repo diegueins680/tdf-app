@@ -1718,6 +1718,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps account-management fallback titles from duplicating the built-in users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'account-management',
+          title: 'Workspace accounts',
+          body: ['Review admin account access before changing roles.'],
+        },
+        {
+          cardId: 'fallback-cuentas-admin',
+          title: 'Cuentas administrativas',
+          body: ['Revisa cuentas admin antes de cambiar accesos.'],
+        },
+        {
+          cardId: 'fallback-team-members',
+          title: 'Team members',
+          body: ['Review team members before assigning roles.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Workspace accounts')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cuentas administrativas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Team members')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review admin account access before changing roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa cuentas admin antes de cambiar accesos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review team members before assigning roles\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps user-access fallback titles from duplicating the built-in access workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
