@@ -277,8 +277,9 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario inactivo por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario inactivo por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
+        expect(getPageGuidance(container)).not.toContain('Cuando la lista crezca');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([201]);
       });
@@ -2242,8 +2243,9 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([201]);
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario inactivo por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario inactivo por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
+        expect(getPageGuidance(container)).not.toContain('Cuando la lista crezca');
         expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(0);

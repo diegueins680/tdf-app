@@ -388,8 +388,12 @@ const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const SINGLE_USER_FUTURE_LIST_HINT =
+  ' Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const makeSingleUserInactiveGuidance = (guidance: string) =>
-  guidance.replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.');
+  guidance
+    .replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.')
+    .replace(SINGLE_USER_FUTURE_LIST_HINT, '');
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
