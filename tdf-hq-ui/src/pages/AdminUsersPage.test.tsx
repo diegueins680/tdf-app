@@ -427,6 +427,13 @@ describe('AdminUsersPage', () => {
         primaryPhone: null,
         whatsapp: null,
       }),
+      buildUser({
+        userId: 105,
+        username: 'phone-and-email',
+        primaryEmail: 'both@example.com',
+        primaryPhone: '+593999000555',
+        whatsapp: null,
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -462,6 +469,14 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
         expect(getButtonsByText(noContactRow, 'WhatsApp')).toHaveLength(0);
+
+        const phoneAndEmailRow = getRowByUserId(container, 105);
+        expect(phoneAndEmailRow.textContent).toContain('both@example.com');
+        expect(phoneAndEmailRow.textContent).not.toContain('+593999000555');
+        const phoneAndEmailAction = getButtonsByText(phoneAndEmailRow, 'WhatsApp')[0]!;
+        expect(phoneAndEmailAction.getAttribute('aria-label')).toBe(
+          'Abrir WhatsApp para Ada Lovelace (Usuario: phone-and-email)',
+        );
       });
     } finally {
       await cleanup();

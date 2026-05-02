@@ -152,7 +152,7 @@ const getVisibleUserContactSummary = (
   const preferredPhone = whatsapp ?? normalizeContactValue(user.primaryPhone);
   const email = normalizeContactValue(user.primaryEmail);
   const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
-  const visiblePhone = whatsapp && visibleEmail ? null : (
+  const visiblePhone = preferredPhone && visibleEmail ? null : (
     matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone
   );
 
