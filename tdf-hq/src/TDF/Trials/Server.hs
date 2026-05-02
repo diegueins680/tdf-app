@@ -1076,9 +1076,9 @@ createOrFetchParty mName mEmail mPhone now = do
   phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
   let
       display = fromMaybe emailVal (cleanOptional mName)
-  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
-  case mExisting of
-    Just (Entity pid party) -> do
+  existing <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] [LimitTo 2]
+  case existing of
+    [Entity pid party] -> do
       let updates = catMaybes
             [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (Models.PartyPrimaryPhone =. phoneVal)
             , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (Models.PartyWhatsapp =. phoneVal)
@@ -1087,7 +1087,7 @@ createOrFetchParty mName mEmail mPhone now = do
       unless (null updates) $
         update pid updates
       pure pid
-    Nothing -> insert Party
+    [] -> insert Party
       { partyLegalName       = Nothing
       , partyDisplayName     = display
       , partyIsOrg           = False
@@ -1100,6 +1100,8 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyNotes           = Nothing
       , partyCreatedAt       = now
       }
+    _ ->
+      liftIO $ throwIO err409 { errBody = "Multiple parties match this email" }
 
 composeFullName :: Text -> Text -> Maybe Text
 composeFullName firstName lastName =

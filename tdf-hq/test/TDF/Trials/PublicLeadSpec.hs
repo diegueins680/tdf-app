@@ -91,6 +91,38 @@ spec = do
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
 
+    it "rejects duplicate email party matches instead of choosing an arbitrary signup fallback" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        let party displayName =
+              Models.Party
+                { Models.partyLegalName = Nothing
+                , Models.partyDisplayName = displayName
+                , Models.partyIsOrg = False
+                , Models.partyTaxId = Nothing
+                , Models.partyPrimaryEmail = Just "duplicate@example.com"
+                , Models.partyPrimaryPhone = Nothing
+                , Models.partyWhatsapp = Nothing
+                , Models.partyInstagram = Nothing
+                , Models.partyEmergencyContact = Nothing
+                , Models.partyNotes = Nothing
+                , Models.partyCreatedAt = now
+                }
+        _ <- insert (party "Duplicate Public Lead A")
+        _ <- insert (party "Duplicate Public Lead B")
+        createOrFetchParty
+          (Just "Duplicate Public Lead")
+          (Just " duplicate@example.com ")
+          Nothing
+          now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Multiple parties match this email"
+        Right partyId ->
+          expectationFailure
+            ("Expected duplicate signup parties to be rejected, got " <> show partyId)
+
     it "falls back to the normalized email when the provided name is blank" $ do
       storedName <- runInMemory $ do
         now <- liftIO getCurrentTime
