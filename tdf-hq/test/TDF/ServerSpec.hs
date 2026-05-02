@@ -4386,13 +4386,14 @@ spec = describe "TDF.Server helpers" $ do
                 "GOOGLE_CLIENT_SECRET must not contain control characters or whitespace"
 
     describe "DriveApiResp FromJSON" $ do
-        it "normalizes valid Google Drive file ids from upload responses" $ do
+        it "normalizes valid Google Drive file ids and resource keys from upload responses" $ do
             let rawResponse =
                     "{\"id\":\" file_123-A \","
                         <> "\"webViewLink\":\""
                         <> "https://drive.google.com/file/d/file_123-A/view?usp=drivesdk"
                         <> "\","
-                        <> "\"webContentLink\":\"https://drive.google.com/uc?id=file_123-A\"}"
+                        <> "\"webContentLink\":\"https://drive.google.com/uc?id=file_123-A\","
+                        <> "\"resourceKey\":\" rk-123 \"}"
             case (eitherDecode rawResponse :: Either String DriveApiResp) of
                 Left err ->
                     expectationFailure ("Expected Drive upload response to decode, got: " <> err)
@@ -4402,8 +4403,9 @@ spec = describe "TDF.Server helpers" $ do
                         `shouldBe` Just "https://drive.google.com/file/d/file_123-A/view?usp=drivesdk"
                     darWebContentLink payload
                         `shouldBe` Just "https://drive.google.com/uc?id=file_123-A"
+                    darResourceKey payload `shouldBe` Just "rk-123"
 
-        it "rejects blank or malformed Drive file ids before public fallback URLs are built" $ do
+        it "rejects blank or malformed Drive upload response identifiers before fallback URLs" $ do
             let assertRejected rawPayload =
                     (eitherDecode rawPayload :: Either String DriveApiResp) `shouldSatisfy` isLeft
             assertRejected "{\"id\":\"   \"}"
@@ -4415,6 +4417,9 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected $
                 "{\"id\":\"file-123\","
                     <> "\"webViewLink\":\"https://drive.google.com/file/d/other-file/view\"}"
+            assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"   \"}"
+            assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk bad\"}"
+            assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk%20bad\"}"
 
     describe "GoogleToken FromJSON" $ do
         it "normalizes valid Google OAuth token responses before proxying them" $ do
