@@ -264,6 +264,20 @@ const getSharedAccessSummary = (values: string[]) => {
 const isSameAccessSummary = (left: string, right: string) =>
   normalizeAccessKey(left) === normalizeAccessKey(right);
 
+const getSharedAccessValues = (valuesByUser: readonly string[][]) => {
+  if (valuesByUser.length < 2) return [];
+
+  const normalizedValuesByUser = valuesByUser.map(normalizeAccessValues);
+  if (normalizedValuesByUser.some((values) => values.length === 0)) return [];
+
+  const [firstValues = [], ...restValues] = normalizedValuesByUser;
+  const firstSummary = getUserAccessSummary(firstValues);
+
+  return restValues.every((values) => isSameAccessSummary(getUserAccessSummary(values), firstSummary))
+    ? firstValues
+    : [];
+};
+
 const formatAccessSummaryParts = ({
   modulesSummary,
   rolesSummary,
@@ -845,6 +859,14 @@ export default function AdminUsersPage() {
     () => getSharedAccessSummary(usersInCurrentSummary.map((user) => getUserAccessSummary(user.modules))),
     [usersInCurrentSummary],
   );
+  const sharedRolesValues = useMemo(
+    () => getSharedAccessValues(usersInCurrentSummary.map((user) => user.roles)),
+    [usersInCurrentSummary],
+  );
+  const sharedModulesValues = useMemo(
+    () => getSharedAccessValues(usersInCurrentSummary.map((user) => user.modules)),
+    [usersInCurrentSummary],
+  );
   const currentSummaryMissingWhatsAppCount = usersInCurrentSummary.filter((user) => !hasUserWhatsAppChannel(user)).length;
   const currentSummaryMissingContactCount = usersInCurrentSummary.filter(
     (user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user),
@@ -1014,30 +1036,77 @@ export default function AdminUsersPage() {
     currentSummaryPendingProfileCount,
     usersInCurrentSummary.length,
   ]);
-  const sharedAccessGuidance = useMemo(() => {
-    if (showSingleUserGuidance) return '';
+  const sharedAccessGuidanceCopy = useMemo(() => {
+    const emptyGuidance = { text: '', title: undefined as string | undefined };
+
+    if (showSingleUserGuidance) return emptyGuidance;
     if (showSharedNoAccessGuidance) {
-      return `Acceso compartido en esta vista: ${NO_ACCESS_ASSIGNED_SUMMARY}.`;
+      return {
+        text: `Acceso compartido en esta vista: ${NO_ACCESS_ASSIGNED_SUMMARY}.`,
+        title: undefined,
+      };
     }
 
     const isDefaultSharedAdminAccess = isDefaultAdminAccessSummary({
       rolesSummary: sharedRolesSummary,
       modulesSummary: sharedModulesSummary,
     });
-    if (isDefaultSharedAdminAccess) return '';
+    if (isDefaultSharedAdminAccess) return emptyGuidance;
 
     const showSharedRolesSummary = Boolean(sharedRolesSummary)
       && !isSameAccessSummary(sharedRolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
     const showSharedModulesSummary = Boolean(sharedModulesSummary)
       && !isSameAccessSummary(sharedModulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
-    const sharedAccessSummary = formatAccessSummaryParts({
+    const fullSharedAccessSummary = formatAccessSummaryParts({
       rolesSummary: showSharedRolesSummary ? sharedRolesSummary : '',
       modulesSummary: showSharedModulesSummary ? sharedModulesSummary : '',
     });
-    return sharedAccessSummary
-      ? `Acceso compartido en esta vista: ${sharedAccessSummary}.`
-      : '';
-  }, [sharedModulesSummary, sharedRolesSummary, showSharedNoAccessGuidance, showSingleUserGuidance]);
+
+    if (!fullSharedAccessSummary) return emptyGuidance;
+
+    const compactSharedAccessSummary = (
+      showSharedRolesSummary
+      && showSharedModulesSummary
+      && isSameAccessSummary(sharedRolesSummary, sharedModulesSummary)
+    )
+      ? `Roles y módulos: ${
+        sharedRolesValues.length > 0
+          ? formatCompactAccessValues(sharedRolesValues, 'acceso', 'accesos')
+          : sharedRolesSummary
+      }`
+      : formatAccessSummaryParts({
+        rolesSummary: showSharedRolesSummary
+          ? (
+            sharedRolesValues.length > 0
+              ? formatCompactAccessValues(sharedRolesValues, 'rol', 'roles')
+              : sharedRolesSummary
+          )
+          : '',
+        modulesSummary: showSharedModulesSummary
+          ? (
+            sharedModulesValues.length > 0
+              ? formatCompactAccessValues(sharedModulesValues, 'módulo', 'módulos')
+              : sharedModulesSummary
+          )
+          : '',
+      });
+    const text = `Acceso compartido en esta vista: ${compactSharedAccessSummary}.`;
+
+    return {
+      text,
+      title: compactSharedAccessSummary === fullSharedAccessSummary
+        ? undefined
+        : `Acceso compartido en esta vista: ${fullSharedAccessSummary}.`,
+    };
+  }, [
+    sharedModulesSummary,
+    sharedModulesValues,
+    sharedRolesSummary,
+    sharedRolesValues,
+    showSharedNoAccessGuidance,
+    showSingleUserGuidance,
+  ]);
+  const sharedAccessGuidance = sharedAccessGuidanceCopy.text;
   const hideAccessSummaryForCurrentRows = hideRowAccessSummary || showSharedNoAccessGuidance;
   const viewGuidance = useMemo(
     () => [
@@ -1108,13 +1177,23 @@ export default function AdminUsersPage() {
     : showGeneralIntro
       ? generalIntro
       : '';
-  const pageGuidance = [
+  const pageGuidanceParts = [
     primaryGuidance,
     viewGuidance,
     singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
     singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
     sharedAccessGuidance,
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean);
+  const pageGuidance = pageGuidanceParts.join(' ');
+  const pageGuidanceTitle = sharedAccessGuidanceCopy.title
+    ? [
+        primaryGuidance,
+        viewGuidance,
+        singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
+        singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
+        sharedAccessGuidanceCopy.title,
+      ].filter(Boolean).join(' ')
+    : undefined;
 
   return (
     <>
@@ -1157,7 +1236,12 @@ export default function AdminUsersPage() {
               {(pageGuidance || showReviewInactiveSingleUserAction) && (
                 <Stack spacing={0.75} alignItems="flex-start">
                   {pageGuidance && (
-                    <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
+                    <Typography
+                      data-testid="admin-users-page-guidance"
+                      variant="body2"
+                      color="text.secondary"
+                      title={pageGuidanceTitle}
+                    >
                       {pageGuidance}
                     </Typography>
                   )}

@@ -178,11 +178,13 @@ const getRenderedRowUserIds = (container: HTMLElement) => (
     .map((row) => Number(row.dataset['testid']?.replace('admin-user-row-', '')))
 );
 
-const getPageGuidance = (container: HTMLElement) => {
+const getPageGuidanceElement = (container: HTMLElement) => {
   const guidance = container.querySelector<HTMLElement>('[data-testid="admin-users-page-guidance"]');
   if (!guidance) throw new Error('Page guidance not found');
-  return buttonText(guidance);
+  return guidance;
 };
+
+const getPageGuidance = (container: HTMLElement) => buttonText(getPageGuidanceElement(container));
 
 describe('AdminUsersPage', () => {
   beforeAll(() => {
@@ -3369,6 +3371,47 @@ describe('AdminUsersPage', () => {
         expect(firstRow.textContent).not.toContain('Módulos:');
         expect(secondRow.textContent).not.toContain('Roles:');
         expect(secondRow.textContent).not.toContain('Módulos:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps long shared access summaries compact while preserving the full scope in the header title', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        roles: ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'],
+        modules: ['admin', 'crm', 'inventory', 'reports', 'studio'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        roles: ['Teacher', 'Reception', 'Manager', 'Engineer', 'Admin'],
+        modules: ['studio', 'reports', 'inventory', 'crm', 'admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Acceso compartido en esta vista: Roles: Admin, Engineer, Manager +2 roles · Módulos: admin, crm, inventory +2 módulos.',
+        );
+        expect(getPageGuidanceElement(container).getAttribute('title')).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios activos. Acceso compartido en esta vista: Roles: Admin, Engineer, Manager, Reception, Teacher · Módulos: admin, crm, inventory, reports, studio.',
+        );
+        expect(container.textContent).not.toContain('Reception, Teacher');
+        expect(container.textContent).not.toContain('reports, studio');
+        expect(getRowByUserId(container, 101).textContent).not.toContain('Roles:');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Módulos:');
       });
     } finally {
       await cleanup();
