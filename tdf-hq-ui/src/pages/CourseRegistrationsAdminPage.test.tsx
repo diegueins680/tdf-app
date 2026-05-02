@@ -8868,6 +8868,53 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps known source acronyms readable in busy-list rows and search', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'api_referral' }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 102 + index,
+        crPartyId: 10 + index,
+        crFullName: `Estudiante ${index + 2}`,
+        crEmail: `student${index + 2}@example.com`,
+        crSource: index % 2 === 0 ? 'landing' : null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, contacto o fuente',
+      );
+      expect(container.textContent).toContain('Fuente: API referral');
+      expect(container.textContent).not.toContain('Fuente: Api referral');
+      expect(container.textContent).not.toContain('Fuente: api_referral');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'api_referral');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Ada Lovelace');
+      expect(container.textContent).not.toContain('Estudiante 2');
+      expect(container.textContent).toContain('Fuente visible: API referral.');
+      expect(container.textContent).not.toContain('api_referral');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a shared humanized source out of the busy-list search placeholder', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),

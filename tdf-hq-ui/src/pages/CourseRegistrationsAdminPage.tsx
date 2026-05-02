@@ -940,6 +940,22 @@ const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
   return summaryLabel || cohortOptionLabel(cohort);
 };
 
+const sourceLabelAcronyms = new Map([
+  ['api', 'API'],
+  ['crm', 'CRM'],
+  ['qr', 'QR'],
+  ['sms', 'SMS'],
+  ['utm', 'UTM'],
+]);
+
+const formatDelimitedSourceWord = (word: string, index: number) => {
+  const lowerWord = word.toLocaleLowerCase('es');
+  const acronym = sourceLabelAcronyms.get(lowerWord);
+  if (acronym) return acronym;
+  if (index > 0) return lowerWord;
+  return `${lowerWord.charAt(0).toLocaleUpperCase('es')}${lowerWord.slice(1)}`;
+};
+
 const humanizeDelimitedSourceLabel = (source: string) => {
   const hasDelimitedParts = /[_./-]/.test(source);
   const hasCamelCaseParts = /[a-z0-9][A-Z]/.test(source);
@@ -951,8 +967,7 @@ const humanizeDelimitedSourceLabel = (source: string) => {
     .replace(/\s+/g, ' ')
     .trim();
   if (!normalized) return source;
-  const sentenceCaseSource = normalized.toLocaleLowerCase('es');
-  return `${sentenceCaseSource.charAt(0).toLocaleUpperCase('es')}${sentenceCaseSource.slice(1)}`;
+  return normalized.split(' ').map(formatDelimitedSourceWord).join(' ');
 };
 
 const normalizeSourceAliasKey = (source: string) =>
