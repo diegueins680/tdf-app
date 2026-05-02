@@ -8889,6 +8889,12 @@ validateCampaignBudgetCents (Just amount)
   | amount < 0 = Left err400 { errBody = "budgetCents must be non-negative" }
   | otherwise = Right (Just amount)
 
+validateCampaignDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
+validateCampaignDateRange (Just startDate) (Just endDate)
+  | endDate < startDate =
+      Left err400 { errBody = "campaign endDate must be on or after startDate" }
+validateCampaignDateRange _ _ = Right ()
+
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
 adsAssistPublic req = do
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
@@ -8988,6 +8994,7 @@ adsUpsertCampaign :: AuthedUser -> CampaignUpsert -> AppM CampaignDTO
 adsUpsertCampaign user CampaignUpsert{..} = do
   requireModule user ModuleAdmin
   budgetCentsVal <- either throwError pure (validateCampaignBudgetCents cuBudgetCents)
+  either throwError pure (validateCampaignDateRange cuStartDate cuEndDate)
   campaignIdUpdate <- either throwError pure (validateOptionalPositiveIdField "campaignId" cuId)
   let nameClean = T.strip cuName
       statusVal =

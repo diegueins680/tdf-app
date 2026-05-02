@@ -271,6 +271,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
     , validateCampaignBudgetCents
+    , validateCampaignDateRange
     , validateCalendarAuthorizationCode
     , validateCalendarEventListQuery
     , validateCalendarSyncWindow
@@ -3818,6 +3819,23 @@ spec = describe "TDF.Server helpers" $ do
                 Right budgetVal ->
                     expectationFailure
                         ("Expected negative campaign budget to be rejected, got: " <> show budgetVal)
+
+    describe "validateCampaignDateRange" $ do
+        it "rejects inverted campaign date ranges before admin writes persist impossible schedules" $ do
+            let startDate = fromGregorian 2026 5 10
+                endDate = fromGregorian 2026 5 9
+            validateCampaignDateRange Nothing Nothing `shouldBe` Right ()
+            validateCampaignDateRange (Just startDate) Nothing `shouldBe` Right ()
+            validateCampaignDateRange Nothing (Just endDate) `shouldBe` Right ()
+            validateCampaignDateRange (Just startDate) (Just startDate) `shouldBe` Right ()
+            case validateCampaignDateRange (Just startDate) (Just endDate) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "campaign endDate must be on or after startDate"
+                Right value ->
+                    expectationFailure
+                        ("Expected inverted campaign dates to be rejected, got: " <> show value)
 
     describe "ads admin id validation" $ do
         it "rejects non-positive campaign and ad ids before database lookup" $ do
