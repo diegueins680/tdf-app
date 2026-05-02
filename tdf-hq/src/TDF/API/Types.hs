@@ -25,6 +25,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKM
+import           Data.List    (nub)
 import           Data.Time    (UTCTime, Day)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
@@ -182,7 +183,11 @@ data UserRoleUpdatePayload = UserRoleUpdatePayload
 
 instance ToJSON UserRoleUpdatePayload
 instance FromJSON UserRoleUpdatePayload where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@(UserRoleUpdatePayload roleValues) <- genericParseJSON strictObjectOptions value
+    if length roleValues == length (nub roleValues)
+      then pure payload
+      else fail "roles must not contain duplicates"
 
 data ServiceCatalogDTO = ServiceCatalogDTO
   { scId            :: Int64

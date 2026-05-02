@@ -114,6 +114,11 @@ spec = do
                 "{\"roles\":[\"Admin\"],\"active\":false}"
                 `shouldSatisfy` isLeft
 
+        it "rejects duplicate roles so admin updates cannot rely on silent set-collapsing" $
+            decodeUserRoleUpdate
+                "{\"roles\":[\"Admin\",\"Teacher\",\"Admin\"]}"
+                `shouldSatisfy` isLeft
+
     describe "Dropdown option write payload FromJSON" $ do
         it "accepts canonical admin dropdown create and update payloads" $ do
             case decodeDropdownOptionCreate
