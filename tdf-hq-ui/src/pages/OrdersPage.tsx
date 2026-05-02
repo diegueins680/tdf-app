@@ -141,11 +141,11 @@ function formatNaturalLanguageList(values: readonly string[], conjunction: 'y' |
 }
 
 function buildCombinedSharedContextSummary(
-  contexts: ReadonlyArray<{
+  contexts: readonly {
     value: string;
     singularLabel: string;
     pluralLabel: string;
-  }>,
+  }[],
 ) {
   const visibleContexts = contexts.filter((context) => context.value !== '');
 
@@ -214,12 +214,17 @@ function buildBookingPrimary({
   serviceOrderTitle?: string | null;
   sessionTitle: string;
 }) {
-  return serviceOrderTitle?.trim()
-    || customerName?.trim()
-    || partyDisplayName?.trim()
-    || partyName?.trim()
-    || sessionTitle
-    || (serviceOrderId ? `SO #${serviceOrderId}` : 'Sin booking asignado');
+  const primaryCandidate = [
+    serviceOrderTitle,
+    customerName,
+    partyDisplayName,
+    partyName,
+    sessionTitle,
+  ]
+    .map((value) => value?.trim() ?? '')
+    .find((value) => value !== '');
+
+  return primaryCandidate ?? (serviceOrderId ? `SO #${serviceOrderId}` : 'Sin booking asignado');
 }
 
 function buildBookingSecondarySummary({
@@ -360,7 +365,10 @@ export default function OrdersPage() {
     return rows.slice(start, end);
   }, [rows, page, rowsPerPage]);
   const showPagination = totalRows > rowsPerPage;
-  const showLiveSessionsColumn = paginatedRows.some((row) => row.isRecording);
+  const visibleRecordingRowsCount = paginatedRows.filter((row) => row.isRecording).length;
+  const showSharedLiveSessionsAction =
+    visibleRecordingRowsCount > 1 && visibleRecordingRowsCount === paginatedRows.length;
+  const showLiveSessionsColumn = visibleRecordingRowsCount > 0 && !showSharedLiveSessionsAction;
   const sharedServiceSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.service)),
     [rows],
@@ -447,7 +455,9 @@ export default function OrdersPage() {
     + (showRoomsColumn ? 1 : 0)
     + (showStatusColumn ? 1 : 0)
     + (showLiveSessionsColumn ? 1 : 0);
-  const rowActionSummary = showLiveSessionsColumn
+  const rowActionSummary = showSharedLiveSessionsAction
+    ? 'Todas las sesiones visibles son de grabación. Usa Live Sessions una vez para revisar capturas o selecciona una fila para editar.'
+    : showLiveSessionsColumn
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
   const pageSummary = totalRows === 0
@@ -464,6 +474,10 @@ export default function OrdersPage() {
 
   const handleCreateSession = () => {
     navigate('/estudio/calendario');
+  };
+
+  const handleOpenLiveSessions = () => {
+    navigate('/estudio/live-sessions');
   };
 
   const handleRefresh = () => {
@@ -529,6 +543,11 @@ export default function OrdersPage() {
                 </IconButton>
               </span>
             </Tooltip>
+          )}
+          {showSharedLiveSessionsAction && (
+            <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={handleOpenLiveSessions}>
+              Live Sessions
+            </Button>
           )}
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
             Nueva sesión
@@ -742,7 +761,7 @@ export default function OrdersPage() {
                               <IconButton
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  navigate('/estudio/live-sessions');
+                                  handleOpenLiveSessions();
                                 }}
                                 aria-label={`Abrir Live Sessions para sesión ${row.bookingId}`}
                               >

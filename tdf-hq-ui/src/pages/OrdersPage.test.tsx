@@ -56,11 +56,14 @@ const changeTextControlValue = async (control: HTMLInputElement | HTMLTextAreaEl
   const prototype = control instanceof HTMLTextAreaElement
     ? HTMLTextAreaElement.prototype
     : HTMLInputElement.prototype;
-  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
-  if (!valueSetter) throw new Error('Text control value setter not found');
+  const valueDescriptor = Object.getOwnPropertyDescriptor(prototype, 'value');
+  if (!valueDescriptor?.set) throw new Error('Text control value setter not found');
+  const setControlValue = (nextValue: string) => {
+    valueDescriptor.set?.call(control, nextValue);
+  };
 
   await act(async () => {
-    valueSetter.call(control, value);
+    setControlValue(value);
     control.dispatchEvent(new Event('input', { bubbles: true }));
     control.dispatchEvent(new Event('change', { bubbles: true }));
     await flushPromises();
@@ -205,7 +208,7 @@ describe('OrdersPage', () => {
   });
 
   it('keeps the first loading pass focused on setup instead of table chrome and refresh controls', async () => {
-    listBookingsMock.mockImplementation(() => new Promise(() => {}));
+    listBookingsMock.mockImplementation(() => new Promise<BookingDTO[]>(() => undefined));
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -497,6 +500,63 @@ describe('OrdersPage', () => {
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar sesión #102');
         expect(document.body.textContent).not.toContain('Editar sesión #101');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses repeated Live Sessions shortcuts when every visible row is a recording session', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 111,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Grabación de banda',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 112,
+        title: 'Voz lead',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Grabación vocal',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Todas las sesiones visibles son de grabación. Usa Live Sessions una vez para revisar capturas o selecciona una fila para editar.',
+        );
+        expect(container.textContent).not.toContain(
+          'Live Sessions aparece solo en sesiones de grabación.',
+        );
+        expect(hasTableHeader(container, 'Live Sessions')).toBe(false);
+        expect(container.querySelectorAll('button[aria-label^="Abrir Live Sessions para sesión "]')).toHaveLength(0);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Live Sessions',
+          ),
+        ).toHaveLength(1);
+      });
+
+      await clickButton(getRowByBookingId(container, 112));
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Editar sesión #112');
       });
     } finally {
       await cleanup();
