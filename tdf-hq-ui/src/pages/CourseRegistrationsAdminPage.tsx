@@ -754,10 +754,10 @@ const firstRunApplicationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal))?|application\s+(?:form|page|portal)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
 const firstRunCohortDescriptorPrefixPattern =
-  /^(?:cohorte|cohort)\s*[-:/|]\s*/i;
+  /^(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*[-:/|]\s*/i;
 
 const firstRunCohortDescriptorSuffixPattern =
-  /\s*[-:/|]\s*(?:cohorte|cohort)\s*$/i;
+  /\s*[-:/|]\s*(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*$/i;
 
 const firstRunRegistrationLinkDescriptorPrefixPattern =
   /^(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

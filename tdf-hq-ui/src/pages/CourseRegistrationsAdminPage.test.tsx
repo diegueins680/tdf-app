@@ -11025,7 +11025,19 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('strips cohort wrappers from first-run course labels without adding extra setup actions', async () => {
-    const titles = ['Cohorte: Beatmaking 101', 'Cohort - Beatmaking 101', 'Beatmaking 101 - cohort'];
+    const titles = [
+      'Cohorte: Beatmaking 101',
+      'Cohort - Beatmaking 101',
+      'Grupo: Beatmaking 101',
+      'Group - Beatmaking 101',
+      'Batch - Beatmaking 101',
+      'Ciclo - Beatmaking 101',
+      'Edición - Beatmaking 101',
+      'Beatmaking 101 - cohort',
+      'Beatmaking 101 - grupo',
+      'Beatmaking 101 - batch',
+      'Beatmaking 101 - edición',
+    ];
 
     for (const title of titles) {
       listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
@@ -11040,7 +11052,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(`Todavía no hay inscripciones para ${title}.`);
-        expect(emptyState?.textContent).not.toMatch(/Todavía no hay inscripciones para (Cohorte|Cohort)/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /Todavía no hay inscripciones para (Cohorte|Cohort|Grupo|Group|Batch|Ciclo|Edici[oó]n)/i,
+        );
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
         ).toBe('Abrir formulario público de Beatmaking 101');
