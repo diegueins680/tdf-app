@@ -468,10 +468,14 @@ validFutureStubSlug :: Text -> Bool
 validFutureStubSlug slug =
   not (T.null slug)
     && T.length slug <= 64
-    && T.head slug /= '-'
+    && validFutureStubSlugStart (T.head slug)
     && T.last slug /= '-'
     && not ("--" `T.isInfixOf` slug)
     && T.all validFutureStubSlugChar slug
+
+validFutureStubSlugStart :: Char -> Bool
+validFutureStubSlugStart ch =
+  ch >= 'a' && ch <= 'z'
 
 validFutureStubSlugChar :: Char -> Bool
 validFutureStubSlugChar ch =

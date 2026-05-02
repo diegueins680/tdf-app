@@ -8525,10 +8525,12 @@ spec = describe "TDF.Server helpers" $ do
 
             assertInvalid " crm" "parties/list-columns"
             assertInvalid "CRM" "parties/list-columns"
+            assertInvalid "1crm" "parties/list-columns"
             assertInvalid "-crm" "parties/list-columns"
             assertInvalid "crm-" "parties/list-columns"
             assertInvalid "crm" "/parties/list-columns"
             assertInvalid "crm" "parties//list-columns"
+            assertInvalid "crm" "parties/1list-columns"
             assertInvalid "crm" "parties/-list-columns"
             assertInvalid "crm" "parties/list-columns-"
             assertInvalid "crm" "parties/list--columns"
@@ -8606,6 +8608,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (reverse allowedFutureStubMetadata)
             assertInvalid [("crm", "parties/list-columns"), ("crm", "parties/list-columns")]
             assertInvalid [(" crm", "parties/list-columns")]
+            assertInvalid [("crm", "parties/1list-columns")]
             assertInvalid [("crm", "parties/list columns")]
 
     describe "validateFutureStubCatalogResponses" $ do
