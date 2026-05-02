@@ -2724,6 +2724,35 @@ main = hspec $ do
                         `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
 
+        it "validates optional SRI target ids before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI target id to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "targetId must contain only ASCII letters"
+                "{\"ok\":false,\"status\":\"received\",\"targetId\":\"page/../../secret\"}"
+            assertInvalid
+                "targetId must be 128 characters or fewer"
+                ( "{\"ok\":false,\"status\":\"received\",\"targetId\":\""
+                    <> Data.Text.unpack (Data.Text.replicate 129 "a")
+                    <> "\"}"
+                )
+            case Sri.decodeSriScriptOutput
+                "{\"ok\":false,\"status\":\"received\",\"targetId\":\" Page-ABC_123.4:debug \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI target id to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    DTO.sirTargetId result `shouldBe` Just "Page-ABC_123.4:debug"
+
         it "validates optional SRI buyer email before returning script output" $ do
             let assertInvalid expected raw =
                     case Sri.decodeSriScriptOutput raw of

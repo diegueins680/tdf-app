@@ -135,9 +135,18 @@ validateSriScriptResult dto =
              validateScriptTotal dto { sirStatus = canonicalStatus }
              >>= validateIssuedResult
              >>= validateOptionalDocumentIdentifiers
+             >>= validateOptionalTargetId
              >>= validateOptionalBuyer
              >>= validateOptionalBuyerEmail
   where
+    validateOptionalTargetId result = do
+      targetIdValue <-
+        validateOptionalOutputField
+          "targetId"
+          validateSriTargetId
+          (sirTargetId result)
+      Right result { sirTargetId = targetIdValue }
+
     validateOptionalBuyer result = do
       buyerValue <- traverse validateSriBuyer (sirBuyer result)
       Right result { sirBuyer = buyerValue }
@@ -253,6 +262,24 @@ validateSriScriptResult dto =
            else if isValidSriEmail normalized
              then Right normalized
              else Left "SRI script JSON output buyerEmail must be a valid email address"
+
+    validateSriTargetId value
+      | T.length value > maxSriTargetIdChars =
+          Left "SRI script JSON output targetId must be 128 characters or fewer"
+      | not (T.all isSafeSriTargetIdChar value) =
+          Left $
+            "SRI script JSON output targetId must contain only ASCII letters, digits, "
+              <> "dots, dashes, underscores, or colons"
+      | otherwise = Right value
+
+    isSafeSriTargetIdChar ch =
+      isAsciiLower ch
+        || isAsciiUpper ch
+        || isAsciiDigit ch
+        || ch `elem` (".-_:" :: String)
+
+    maxSriTargetIdChars :: Int
+    maxSriTargetIdChars = 128
 
     isSriInvoiceNumber value =
       case T.splitOn "-" value of
@@ -541,6 +568,9 @@ isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 isAsciiLower :: Char -> Bool
 isAsciiLower ch = ch >= 'a' && ch <= 'z'
+
+isAsciiUpper :: Char -> Bool
+isAsciiUpper ch = ch >= 'A' && ch <= 'Z'
 
 fieldMessage :: Text -> Text -> Text
 fieldMessage fieldName message =
