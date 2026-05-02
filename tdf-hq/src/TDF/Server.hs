@@ -3398,40 +3398,51 @@ ensurePartyForCourseRegistrationDb
   -> Maybe Text
   -> Maybe Text
   -> UTCTime
-  -> SqlPersistT IO PartyId
+  -> SqlPersistT IO (Either ServerError PartyId)
 ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
   let display = fromMaybe "Alumno / cliente" (cleanOptional mName <|> mEmail <|> mPhone)
-  mExisting <- case mEmail of
-    Just addr -> selectFirst [PartyPrimaryEmail ==. Just addr] []
+  mExistingResult <- case mEmail of
+    Just addr -> selectUniquePartyByPrimaryEmail addr
     Nothing -> case mPhone of
-      Just phone -> selectFirst [PartyPrimaryPhone ==. Just phone] []
-      Nothing -> pure Nothing
-  pid <- case mExisting of
-    Just (Entity partyId party) -> do
-      let updates = catMaybes
-            [ if isJust (partyPrimaryEmail party) || isNothing mEmail then Nothing else Just (PartyPrimaryEmail =. mEmail)
-            , if isJust (partyPrimaryPhone party) || isNothing mPhone then Nothing else Just (PartyPrimaryPhone =. mPhone)
-            , if isJust (partyWhatsapp party) || isNothing mPhone then Nothing else Just (PartyWhatsapp =. mPhone)
-            , if T.null (M.partyDisplayName party) then Just (PartyDisplayName =. display) else Nothing
-            ]
-      unless (null updates) $
-        update partyId updates
-      pure partyId
-    Nothing -> insert Party
-      { partyLegalName = Nothing
-      , partyDisplayName = display
-      , partyIsOrg = False
-      , partyTaxId = Nothing
-      , partyPrimaryEmail = mEmail
-      , partyPrimaryPhone = mPhone
-      , partyWhatsapp = mPhone
-      , partyInstagram = Nothing
-      , partyEmergencyContact = Nothing
-      , partyNotes = Nothing
-      , partyCreatedAt = now
-      }
-  ensureCourseRegistrationPartyRoles pid
-  pure pid
+      Just phone -> selectUniquePartyByPrimaryPhone phone
+      Nothing -> pure (Right Nothing)
+  case mExistingResult of
+    Left err -> pure (Left err)
+    Right mExisting -> fmap Right $ do
+      pid <- case mExisting of
+        Just (Entity partyId party) -> do
+          let updates = catMaybes
+                [ if isJust (partyPrimaryEmail party) || isNothing mEmail
+                    then Nothing
+                    else Just (PartyPrimaryEmail =. mEmail)
+                , if isJust (partyPrimaryPhone party) || isNothing mPhone
+                    then Nothing
+                    else Just (PartyPrimaryPhone =. mPhone)
+                , if isJust (partyWhatsapp party) || isNothing mPhone
+                    then Nothing
+                    else Just (PartyWhatsapp =. mPhone)
+                , if T.null (M.partyDisplayName party)
+                    then Just (PartyDisplayName =. display)
+                    else Nothing
+                ]
+          unless (null updates) $
+            update partyId updates
+          pure partyId
+        Nothing -> insert Party
+          { partyLegalName = Nothing
+          , partyDisplayName = display
+          , partyIsOrg = False
+          , partyTaxId = Nothing
+          , partyPrimaryEmail = mEmail
+          , partyPrimaryPhone = mPhone
+          , partyWhatsapp = mPhone
+          , partyInstagram = Nothing
+          , partyEmergencyContact = Nothing
+          , partyNotes = Nothing
+          , partyCreatedAt = now
+          }
+      ensureCourseRegistrationPartyRoles pid
+      pure pid
 
 ensureCourseRegistrationParty
   :: Maybe Text
@@ -3448,7 +3459,8 @@ ensureCourseRegistrationParty mName mEmail mPhone now =
     Nothing -> case mPhone of
       Nothing -> pure (Nothing, Nothing)
       Just _ -> do
-        partyId <- runDB $ ensurePartyForCourseRegistrationDb mName Nothing mPhone now
+        partyResult <- runDB $ ensurePartyForCourseRegistrationDb mName Nothing mPhone now
+        partyId <- either throwError pure partyResult
         pure (Just partyId, Nothing)
 
 ensureCourseRegistrationPartyLink

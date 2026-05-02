@@ -218,6 +218,7 @@ import TDF.Server
     , selectUniquePartyByPrimaryEmail
     , selectUniquePartyByPrimaryPhone
     , ensurePartyForInquiry
+    , ensurePartyForCourseRegistrationDb
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validateBookingNotes
@@ -3106,6 +3107,59 @@ spec = describe "TDF.Server helpers" $ do
             assertConflict "email" duplicateEmailResult
             assertConflict "phone" duplicatePhoneResult
             assertConflict "phone" phoneSelectorResult
+
+    describe "ensurePartyForCourseRegistrationDb" $
+        it "rejects duplicate phone fallbacks instead of linking a course registration arbitrarily" $ do
+            (singleId, singleResult, duplicateResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkParty displayName phoneNumber =
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = displayName
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Nothing
+                            , partyPrimaryPhone = Just phoneNumber
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = now
+                            }
+                expectedId <- insert (mkParty "Single Course Lead" "+593991111111")
+                insert_ (mkParty "First Course Duplicate" "+593992222222")
+                insert_ (mkParty "Second Course Duplicate" "+593992222222")
+                resolvedSingle <-
+                    ensurePartyForCourseRegistrationDb
+                        (Just "Single Course Lead")
+                        Nothing
+                        (Just "+593991111111")
+                        now
+                resolvedDuplicate <-
+                    ensurePartyForCourseRegistrationDb
+                        (Just "Duplicate Course Lead")
+                        Nothing
+                        (Just "+593992222222")
+                        now
+                pure (expectedId, resolvedSingle, resolvedDuplicate)
+
+            case singleResult of
+                Right partyId -> partyId `shouldBe` singleId
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected single course registration party match, got: "
+                            <> show serverErr
+                        )
+            case duplicateResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Multiple parties match this phone"
+                Right partyId ->
+                    expectationFailure
+                        ( "Expected duplicate course registration party match to fail, got: "
+                            <> show partyId
+                        )
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
