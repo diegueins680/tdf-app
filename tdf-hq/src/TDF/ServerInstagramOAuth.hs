@@ -21,7 +21,12 @@ import           Data.Aeson.Types           (Parser)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Char                  (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.List                  (find)
 import           Data.Maybe                 (fromMaybe, listToMaybe)
 import           Data.Text                  (Text)
@@ -71,9 +76,15 @@ normalizeFacebookAccessToken rawToken =
   let tokenValue = T.strip rawToken
   in if T.null tokenValue
        then fail "Facebook access_token must not be blank"
-       else if T.any (\ch -> isSpace ch || isControl ch) tokenValue
-         then fail "Facebook access_token must not contain whitespace or control characters"
+       else if T.any isUnsafeFacebookAccessTokenChar tokenValue
+         then fail $
+           "Facebook access_token must not contain whitespace or control characters "
+             <> "or hidden formatting characters"
          else pure tokenValue
+
+isUnsafeFacebookAccessTokenChar :: Char -> Bool
+isUnsafeFacebookAccessTokenChar ch =
+  isSpace ch || isControl ch || generalCategory ch == Format
 
 normalizeFacebookTokenType :: Maybe Text -> Parser Text
 normalizeFacebookTokenType Nothing = pure "bearer"

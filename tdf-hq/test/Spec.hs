@@ -3482,6 +3482,9 @@ main = hspec $ do
                 "{\"access_token\":\"token with spaces\",\"token_type\":\"bearer\"}"
                 "Facebook access_token must not contain whitespace or control characters"
             assertInvalid
+                "{\"access_token\":\"token\\u202E123\",\"token_type\":\"bearer\"}"
+                "hidden formatting characters"
+            assertInvalid
                 "{\"access_token\":\"token-123\",\"token_type\":\"Basic\"}"
                 "Facebook token_type must be Bearer"
             assertInvalid
