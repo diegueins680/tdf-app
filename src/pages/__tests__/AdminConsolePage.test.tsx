@@ -1289,6 +1289,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps area-labeled built-in admin titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-health-area',
+          title: 'Area of service health',
+          body: ['Confirm API and database readiness before changing admin access.'],
+        },
+        {
+          cardId: 'fallback-users-roles-area',
+          title: 'Área de usuarios y roles',
+          body: ['Review assigned teammates before changing workspace access.'],
+        },
+        {
+          cardId: 'fallback-audit-zone',
+          title: 'Zona de auditoría reciente',
+          body: ['Review who changed what before repeating an admin action.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Area of service health')).not.toBeInTheDocument();
+    expect(screen.queryByText('Área de usuarios y roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Zona de auditoría reciente')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm API and database readiness before changing admin access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review assigned teammates before changing workspace access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review who changed what before repeating an admin action\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps wrapper-labeled built-in admin titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

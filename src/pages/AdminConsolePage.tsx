@@ -488,7 +488,7 @@ function normalizeAdminConsoleSectionKey(value: string) {
 function normalizeBuiltInAdminConsoleSectionKey(value: string) {
   return normalizeAdminConsoleSectionKey(value)
     .replace(
-      /\b(?:and|y|draft|fallback|planned|placeholder|preview|stub|module|modules|modulo|modulos|section|sections|seccion|secciones|page|pages|pagina|paginas|screen|screens|pantalla|pantallas|view|views|vista|vistas|workflow|workflows|flow|flows|flujo|flujos|card|cards|tarjeta|tarjetas|panel|panels|dashboard|dashboards|tile|tiles|widget|widgets|tab|tabs|pestana|pestanas|bloque|bloques)\b/g,
+      /\b(?:and|y|of|de|del|la|el|the|draft|fallback|planned|placeholder|preview|stub|module|modules|modulo|modulos|section|sections|seccion|secciones|page|pages|pagina|paginas|screen|screens|pantalla|pantallas|view|views|vista|vistas|workflow|workflows|flow|flows|flujo|flujos|area|areas|zona|zonas|card|cards|tarjeta|tarjetas|panel|panels|dashboard|dashboards|tile|tiles|widget|widgets|tab|tabs|pestana|pestanas|bloque|bloques)\b/g,
       ' ',
     )
     .replace(/\s+/g, ' ')
