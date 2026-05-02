@@ -7320,7 +7320,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps a URL-only cohort slug as a filter instead of treating it as a configured form', async () => {
+  it('keeps a URL-only cohort slug as a readable filter instead of treating it as a configured form', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([]);
 
@@ -7336,8 +7336,9 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(container.textContent).toContain(
-        'No hay inscripciones con los filtros actuales: cohorte archived-course.',
+        'No hay inscripciones con los filtros actuales: cohorte Archived Course.',
       );
+      expect(container.textContent).not.toContain('cohorte archived-course');
       expect(container.textContent).not.toContain('Revisa los filtros o restablece la vista si esperabas resultados.');
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para archived-course.');
       expect(container.textContent).not.toContain(initialEmptyStateFormActionLabel);

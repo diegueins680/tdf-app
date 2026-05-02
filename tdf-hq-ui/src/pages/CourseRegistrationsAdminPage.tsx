@@ -1775,7 +1775,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortOptionLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, selectedSlug);
+      bySlug.set(selectedSlug, humanizeCohortSlug(selectedSlug) || selectedSlug);
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -1787,7 +1787,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortSummaryLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, selectedSlug);
+      bySlug.set(selectedSlug, humanizeCohortSlug(selectedSlug) || selectedSlug);
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
