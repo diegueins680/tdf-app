@@ -3769,6 +3769,51 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No content available/i)).not.toBeInTheDocument();
   });
 
+  it('ignores nothing-here fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-nothing-here',
+          title: 'Integraciones',
+          body: ['Nothing here yet.'],
+        },
+        {
+          cardId: 'service-tokens-nada',
+          title: 'Tokens de servicio',
+          body: ['No hay nada que mostrar todavía.'],
+        },
+        {
+          cardId: 'api-access-empty',
+          title: 'Acceso API',
+          body: ['Nada que mostrar por ahora.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Integraciones|Tokens de servicio|Acceso API/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nothing here/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay nada que mostrar/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nada que mostrar/i)).not.toBeInTheDocument();
+  });
+
   it('ignores not-applicable fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
