@@ -4457,7 +4457,7 @@ normalizeCourseRegistrationPhoneInput raw =
       plusIndex = T.findIndex (== '+') trimmed
       firstDigitIndex = T.findIndex isAsciiPhoneDigit trimmed
       allowedPhoneChar ch =
-        isAsciiPhoneDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isAsciiPhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of

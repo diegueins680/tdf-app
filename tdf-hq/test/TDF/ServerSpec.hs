@@ -6688,6 +6688,18 @@ spec = describe "TDF.Server helpers" $ do
                             <> show phoneVal
                         )
 
+        it "rejects unsafe phone separators before normalizing contact details" $ do
+            let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "phoneE164"
+                    Right phoneVal ->
+                        expectationFailure
+                            ("Expected unsafe course-registration phone to be rejected, got: " <> show phoneVal)
+            assertInvalid "+593\n991234567"
+            assertInvalid ("+593" <> T.singleton '\x00A0' <> "991234567")
+            assertInvalid ("+593" <> T.singleton '\x2028' <> "991234567")
+
     describe "validateCourseRegistrationSource" $ do
         it "normalizes meaningful public registration source keywords before persistence" $ do
             validateCourseRegistrationSource " Landing " `shouldBe` Right "landing"
