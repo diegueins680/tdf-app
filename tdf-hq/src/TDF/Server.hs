@@ -2483,9 +2483,13 @@ validateCalendarAuthorizationCode rawCode =
        then Left err400 { errBody = "code is required" }
        else if T.any isControl codeVal
          then Left err400 { errBody = "code must not contain control characters" }
-         else if T.any isSpace codeVal
-           then Left err400 { errBody = "code must not contain whitespace" }
-           else Right codeVal
+       else if T.any isHiddenDriveOAuthTokenChar codeVal
+         then Left err400 { errBody = "code must not contain hidden formatting characters" }
+       else if T.any isSpace codeVal
+         then Left err400 { errBody = "code must not contain whitespace" }
+       else if T.length codeVal > maxDriveOAuthTokenChars
+         then Left err400 { errBody = "code must be 4096 characters or fewer" }
+       else Right codeVal
 
 validateConfiguredCalendarRedirectUri :: Text -> Either ServerError Text
 validateConfiguredCalendarRedirectUri rawRedirect =

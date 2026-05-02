@@ -4671,6 +4671,10 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "code is required" "   "
             assertInvalid "code must not contain whitespace" "oauth code"
             assertInvalid "code must not contain control characters" "oauth\NUL\&code"
+            assertInvalid
+                "code must not contain hidden formatting characters"
+                ("oauth" <> T.singleton '\8205' <> "code")
+            assertInvalid "code must be 4096 characters or fewer" (T.replicate 4097 "a")
 
     describe "validateCalendarRedirectUri" $ do
         it "normalizes absolute Calendar OAuth callbacks and rejects ambiguous redirect shapes" $ do
