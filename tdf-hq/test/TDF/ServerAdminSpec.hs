@@ -475,6 +475,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     beuActive payload `shouldBe` Just False
 
         it "rejects unexpected brain entry keys so admin writes fail before turning into silent partial updates" $ do
+            decodeBrainEntryUpdate "{}" `shouldSatisfy` isLeft
             decodeBrainEntryCreate
                 "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft

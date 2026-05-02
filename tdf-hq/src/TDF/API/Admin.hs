@@ -286,10 +286,14 @@ data BrainEntryUpdate = BrainEntryUpdate
   } deriving (Show, Generic)
 instance FromJSON BrainEntryUpdate where
   parseJSON = withObject "BrainEntryUpdate" $ \o -> do
-    case filter (`notElem` brainEntryUpdateAllowedKeys) (map Key.toString (KeyMap.keys o)) of
+    let providedKeys = map Key.toString (KeyMap.keys o)
+    case filter (`notElem` brainEntryUpdateAllowedKeys) providedKeys of
       [] -> pure ()
       unexpected ->
         fail ("Unexpected BrainEntryUpdate keys: " <> show unexpected)
+    if null providedKeys
+      then fail "BrainEntryUpdate must include at least one field"
+      else pure ()
     titleVal <- o .:? "beuTitle"
     bodyVal <- o .:? "beuBody"
     categoryVal <- o .:! "beuCategory"
