@@ -6690,6 +6690,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes repeated follow-up due dates once instead of repeating reminder chips', async () => {
+    const sharedNextFollowUpAt = '2030-03-05T12:00:00.000Z';
+    const sharedNextFollowUpLabel = formatTimestampForDisplay(sharedNextFollowUpAt, '-');
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdFollowUps: [
+          buildFollowUp({ crfNextFollowUpAt: sharedNextFollowUpAt }),
+          buildFollowUp({
+            crfId: 402,
+            crfSubject: 'Confirmar cupo',
+            crfNextFollowUpAt: sharedNextFollowUpAt,
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(`Próximo seguimiento: ${sharedNextFollowUpLabel}`);
+      expect(countOccurrences(document.body, sharedNextFollowUpLabel)).toBe(1);
+      expect(countOccurrences(document.body, 'Próximo:')).toBe(0);
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+      expect(document.body.textContent).toContain('Confirmar cupo');
+    });
+
+    await cleanup();
+  });
+
   it('summarizes repeated receipt notes once instead of repeating them on every saved proof', async () => {
     const sharedReceiptNote = 'Transferencia confirmada por coordinación.';
 

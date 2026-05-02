@@ -3294,6 +3294,7 @@ export default function CourseRegistrationsAdminPage() {
   const sharedReceiptNotes = getSharedReceiptNotes(receipts);
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
+  const sharedFollowUpNextLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfNextFollowUpAt));
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
   const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
@@ -5208,6 +5209,11 @@ export default function CourseRegistrationsAdminPage() {
                         Tipo de seguimiento: {sharedFollowUpTypeLabel}
                       </Typography>
                     )}
+                    {sharedFollowUpNextLabel && (
+                      <Typography variant="body2" color="text.secondary">
+                        Próximo seguimiento: {sharedFollowUpNextLabel}
+                      </Typography>
+                    )}
 
                     <Grid container spacing={2}>
                       {showFollowUpComposer && (
@@ -5420,7 +5426,7 @@ export default function CourseRegistrationsAdminPage() {
                                               {followUpCreatedLabel}
                                             </Typography>
                                           )}
-                                          {entry.crfNextFollowUpAt && (
+                                          {entry.crfNextFollowUpAt && !sharedFollowUpNextLabel && (
                                             <Chip
                                               size="small"
                                               color="warning"
