@@ -121,6 +121,7 @@ import TDF.ServerExtra (
     assetMatchesSearchQuery,
     extractMetaInbound,
     normalizeAssetSearchQuery,
+    validateAssetSearchQuery,
     normalizeAssetCategory,
     normalizeAssetCategoryUpdate,
     normalizeAssetCheckinFields,
@@ -586,6 +587,26 @@ spec = do
       normalizeAssetSearchQuery Nothing `shouldBe` Nothing
       normalizeAssetSearchQuery (Just "   ") `shouldBe` Nothing
       normalizeAssetSearchQuery (Just "  SYNTH  ") `shouldBe` Just "synth"
+      validateAssetSearchQuery Nothing `shouldBe` Right Nothing
+      validateAssetSearchQuery (Just "   ") `shouldBe` Right Nothing
+      validateAssetSearchQuery (Just "  SYNTH  ") `shouldBe` Right (Just "synth")
+
+    it "rejects malformed inventory search queries before broad list scans" $ do
+      let assertInvalid expectedMessage rawQuery =
+            case validateAssetSearchQuery (Just rawQuery) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected invalid inventory search query, got " <> show value)
+      assertInvalid "q must be 120 characters or fewer" (T.replicate 121 "a")
+      assertInvalid
+        "q must not contain control characters"
+        ("Juno" <> T.singleton '\NUL' <> "106")
+      assertInvalid
+        "hidden formatting"
+        ("Juno" <> T.singleton '\x202E' <> "106")
 
     it "matches name/category/brand/model/owner/notes case-insensitively once q is provided" $ do
       let synthAsset = fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" (Just "Analog poly")
@@ -601,6 +622,15 @@ spec = do
     let existingAssetId = "00000000-0000-0000-0000-000000000926"
         checkoutIdText = "00000000-0000-0000-0000-000000000927"
         secondCheckoutIdText = "00000000-0000-0000-0000-000000000928"
+
+    it "rejects invalid q parameters before querying inventory rows" $ do
+      result <- runInventoryListHandler (pure ()) (Just (T.replicate 121 "a")) Nothing Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "q must be 120 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected invalid inventory query to fail, got " <> show value)
 
     it "rejects assets with multiple active checkout rows so list views cannot silently hide broken custody state" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of

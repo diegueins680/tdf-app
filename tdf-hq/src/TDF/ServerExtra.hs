@@ -227,11 +227,12 @@ inventoryServer user =
 
     listAssets mq mp mps = do
       ensureInventoryAccess
+      assetQuery <- either throwError pure (validateAssetSearchQuery mq)
       (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
       let
           pageOffset = (pageNum - 1) * pageSize'
       entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
-      let filteredEntities = filterAssetsByQuery mq entities
+      let filteredEntities = filterAssetsByQuery assetQuery entities
           totalCount = length filteredEntities
           pagedEntities = take pageSize' (drop pageOffset filteredEntities)
       activeMap <- either throwError pure =<< withPool
@@ -2597,6 +2598,38 @@ normalizeAssetSearchQuery Nothing = Nothing
 normalizeAssetSearchQuery (Just rawQuery) =
   let normalized = T.toCaseFold (T.strip rawQuery)
   in if T.null normalized then Nothing else Just normalized
+
+validateAssetSearchQuery :: Maybe Text -> Either ServerError (Maybe Text)
+validateAssetSearchQuery Nothing = Right Nothing
+validateAssetSearchQuery (Just rawQuery) =
+  let cleanQuery = T.strip rawQuery
+  in if T.null cleanQuery
+       then Right Nothing
+       else if T.length cleanQuery > assetSearchQueryMaxLength
+         then
+           Left err400
+             { errBody =
+                 BL.fromStrict
+                   ( TE.encodeUtf8
+                       ( "q must be "
+                           <> T.pack (show assetSearchQueryMaxLength)
+                           <> " characters or fewer"
+                       )
+                   )
+             }
+         else if T.any isUnsafeAssetSearchQueryChar cleanQuery
+           then
+             Left err400
+               { errBody = "q must not contain control characters or hidden formatting characters"
+               }
+           else Right (Just (T.toCaseFold cleanQuery))
+
+assetSearchQueryMaxLength :: Int
+assetSearchQueryMaxLength = 120
+
+isUnsafeAssetSearchQueryChar :: Char -> Bool
+isUnsafeAssetSearchQueryChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 assetMatchesSearchQuery :: Text -> Asset -> Bool
 assetMatchesSearchQuery normalizedQuery asset =
