@@ -8848,15 +8848,28 @@ describe('CourseRegistrationsAdminPage', () => {
       'public_course_form',
       'public_course_page',
       'public_course_signup_form',
+      'public_registration_form',
+      'public-course-registration-form',
+      'public_enrollment_form',
+      'public-course-enrollment-form',
       'formulario-publico',
+      'formulario_publico_de_inscripcion',
+      'formulario_de_inscripcion_publica',
       'formulario_web',
       'sitio-web',
       'pagina_web_del_curso',
       'formulario_publico_del_curso',
       'pagina-publica-de-curso',
+      'pagina_de_inscripcion',
+      'pagina_de_registro',
       'registration_form',
+      'course_registration_page',
       'course_signup_page',
       'enrollment_form',
+      'student_registration_form',
+      'application_form',
+      'solicitud_de_inscripcion',
+      'ficha_de_inscripcion',
       null,
     ] as const;
     listRegistrationsMock.mockResolvedValue(
@@ -8886,15 +8899,28 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Public course form');
       expect(container.textContent).not.toContain('Fuente: Public course page');
       expect(container.textContent).not.toContain('Fuente: Public course signup form');
+      expect(container.textContent).not.toContain('Fuente: Public registration form');
+      expect(container.textContent).not.toContain('Fuente: Public course registration form');
+      expect(container.textContent).not.toContain('Fuente: Public enrollment form');
+      expect(container.textContent).not.toContain('Fuente: Public course enrollment form');
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
+      expect(container.textContent).not.toContain('Fuente: Formulario publico de inscripcion');
+      expect(container.textContent).not.toContain('Fuente: Formulario de inscripcion publica');
       expect(container.textContent).not.toContain('Fuente: Formulario web');
       expect(container.textContent).not.toContain('Fuente: Sitio web');
       expect(container.textContent).not.toContain('Fuente: Pagina web del curso');
       expect(container.textContent).not.toContain('Fuente: Formulario publico del curso');
       expect(container.textContent).not.toContain('Fuente: Pagina publica de curso');
+      expect(container.textContent).not.toContain('Fuente: Pagina de inscripcion');
+      expect(container.textContent).not.toContain('Fuente: Pagina de registro');
       expect(container.textContent).not.toContain('Fuente: Registration form');
+      expect(container.textContent).not.toContain('Fuente: Course registration page');
       expect(container.textContent).not.toContain('Fuente: Course signup page');
       expect(container.textContent).not.toContain('Fuente: Enrollment form');
+      expect(container.textContent).not.toContain('Fuente: Student registration form');
+      expect(container.textContent).not.toContain('Fuente: Application form');
+      expect(container.textContent).not.toContain('Fuente: Solicitud de inscripcion');
+      expect(container.textContent).not.toContain('Fuente: Ficha de inscripcion');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente visible: web.');
@@ -8908,15 +8934,28 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Public course form.');
       expect(container.textContent).not.toContain('Fuente visible: Public course page.');
       expect(container.textContent).not.toContain('Fuente visible: Public course signup form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public registration form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public course registration form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public enrollment form.');
+      expect(container.textContent).not.toContain('Fuente visible: Public course enrollment form.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
+      expect(container.textContent).not.toContain('Fuente visible: Formulario publico de inscripcion.');
+      expect(container.textContent).not.toContain('Fuente visible: Formulario de inscripcion publica.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario web.');
       expect(container.textContent).not.toContain('Fuente visible: Sitio web.');
       expect(container.textContent).not.toContain('Fuente visible: Pagina web del curso.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico del curso.');
       expect(container.textContent).not.toContain('Fuente visible: Pagina publica de curso.');
+      expect(container.textContent).not.toContain('Fuente visible: Pagina de inscripcion.');
+      expect(container.textContent).not.toContain('Fuente visible: Pagina de registro.');
       expect(container.textContent).not.toContain('Fuente visible: Registration form.');
+      expect(container.textContent).not.toContain('Fuente visible: Course registration page.');
       expect(container.textContent).not.toContain('Fuente visible: Course signup page.');
       expect(container.textContent).not.toContain('Fuente visible: Enrollment form.');
+      expect(container.textContent).not.toContain('Fuente visible: Student registration form.');
+      expect(container.textContent).not.toContain('Fuente visible: Application form.');
+      expect(container.textContent).not.toContain('Fuente visible: Solicitud de inscripcion.');
+      expect(container.textContent).not.toContain('Fuente visible: Ficha de inscripcion.');
       expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
     });
 
