@@ -30,6 +30,7 @@ import TDF.Trials.DTO
   , TeacherStudentLinkIn (..)
   , TeacherSubjectsUpdate (..)
   , TrialRequestIn (TrialRequestIn)
+  , TrialSlotDTO
   , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
@@ -468,6 +469,20 @@ spec = do
         Right (Right value) ->
           expectationFailure
             ("Expected invalid public trial request to be rejected, got " <> show value)
+
+  describe "public trial slots handler" $ do
+    it "requires subjectId instead of returning an ambiguous empty availability list" $ do
+      result <- runPublicTrialSlotsHandler Nothing
+      case result of
+        Left ex ->
+          expectationFailure
+            ("Expected missing subjectId to return a ServerError, got exception: " <> show ex)
+        Right (Left err) -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "subjectId is required for public trial slots"
+        Right (Right slots) ->
+          expectationFailure
+            ("Expected missing subjectId to be rejected, got slots: " <> show slots)
 
   describe "validateOptionalTrialRequestStatusFilter" $ do
     it "treats omitted or blank filters as absent and canonicalizes supported values" $ do
@@ -2462,6 +2477,21 @@ runPublicTrialRequestHandler req =
               case publicServer of
                 _signupH :<|> _interestH :<|> trialRequestH :<|> _subjectsH :<|> _trialSlotsH ->
                   trialRequestH req
+    liftIO $ try (runHandler handler)
+
+runPublicTrialSlotsHandler
+  :: Maybe Int
+  -> IO (Either SomeException (Either ServerError [TrialSlotDTO]))
+runPublicTrialSlotsHandler mSubjectId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeTrialsSchema pool
+    let handler =
+          case trialsServer pool of
+            publicServer :<|> _privateServer ->
+              case publicServer of
+                _signupH :<|> _interestH :<|> _trialRequestH :<|> _subjectsH :<|> trialSlotsH ->
+                  trialSlotsH mSubjectId
     liftIO $ try (runHandler handler)
 
 privateQueueHandler :: Maybe Int -> Maybe Text -> SqlPersistT IO [TrialQueueItem]

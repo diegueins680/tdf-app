@@ -579,6 +579,12 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validatePublicTrialSlotsSubjectId :: Maybe Int -> Either ServerError Int
+validatePublicTrialSlotsSubjectId Nothing =
+  Left err400 { errBody = "subjectId is required for public trial slots" }
+validatePublicTrialSlotsSubjectId (Just subjectIdInt) =
+  validatePublicSubjectIdInput subjectIdInt
+
 validateTeacherSubjectIdsInput :: [Int] -> Either ServerError [Int]
 validateTeacherSubjectIdsInput rawSubjectIds
   | any (<= 0) rawSubjectIds =
@@ -1051,8 +1057,8 @@ publicTrialsServer =
     publicSubjectsH = listActiveSubjects
 
     publicSlotsH :: Maybe Int -> AppM [TrialSlotDTO]
-    publicSlotsH Nothing = pure []
-    publicSlotsH (Just subjectIdInt) = do
+    publicSlotsH rawSubjectId = do
+      subjectIdInt <- either (liftIO . throwIO) pure (validatePublicTrialSlotsSubjectId rawSubjectId)
       _ <- requirePublicActiveSubject subjectIdInt
       trialSlotsForSubject (Just subjectIdInt)
 
