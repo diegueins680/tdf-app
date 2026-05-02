@@ -578,6 +578,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   let hasContact = false;
   let hasActiveUsers = false;
   let hasInactiveUsers = false;
+  let hasNoAccessAssignedUsers = false;
   const roleSummaries: string[] = [];
   const moduleSummaries: string[] = [];
 
@@ -586,6 +587,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
     const username = user.username.trim();
     const rolesSummary = getUserAccessSummary(user.roles);
     const modulesSummary = getUserAccessSummary(user.modules);
+    if (!rolesSummary && !modulesSummary) hasNoAccessAssignedUsers = true;
 
     if (partyName) hasNameIdentity = true;
     if (username && normalizeIdentityComparison(username) !== normalizeIdentityComparison(partyName)) {
@@ -621,6 +623,14 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
   if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
   if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  if (
+    hasNoAccessAssignedUsers
+    && !hasNonDefaultRoles
+    && !hasNonDefaultModules
+    && terms.length > 0
+  ) {
+    terms.push('acceso');
+  }
   if (hasActiveUsers && hasInactiveUsers) terms.push(terms.length === 0 ? 'Estado' : 'estado');
 
   return formatSearchPlaceholderTerms(

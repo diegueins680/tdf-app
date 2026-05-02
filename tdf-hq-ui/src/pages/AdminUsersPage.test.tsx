@@ -3005,6 +3005,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Buscar usuarios');
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
         expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
       });
 
