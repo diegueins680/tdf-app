@@ -436,6 +436,7 @@ const MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH = 32;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
 const AUDIT_VISIBLE_ENTRY_LIMIT = 5;
+const AUDIT_DETAIL_PREVIEW_LIMIT = 72;
 const ADMIN_DATE_UNAVAILABLE_LABEL = 'Fecha no disponible';
 const HEALTHY_HEALTH_INDICATORS = new Set(['ok', 'healthy', 'up', 'ready']);
 const WARNING_HEALTH_INDICATORS = new Set(['degraded', 'warning', 'warn', 'starting']);
@@ -972,6 +973,32 @@ function hasAuditActor(actorId?: number | null) {
 
 function hasAuditDetail(diff?: string | null) {
   return (diff?.trim().length ?? 0) > 0;
+}
+
+function formatAuditDetailPreview(diff?: string | null) {
+  const detail = diff?.trim();
+
+  if (!detail) {
+    return '—';
+  }
+
+  const compactDetail = detail.replace(/\s+/g, ' ');
+
+  if (compactDetail.length <= AUDIT_DETAIL_PREVIEW_LIMIT) {
+    return compactDetail;
+  }
+
+  return `${compactDetail.slice(0, AUDIT_DETAIL_PREVIEW_LIMIT - 1).trimEnd()}…`;
+}
+
+function getAuditDetailPreviewTitle(diff?: string | null) {
+  const detail = diff?.trim();
+
+  if (!detail) {
+    return undefined;
+  }
+
+  return formatAuditDetailPreview(diff) === detail ? undefined : detail;
 }
 
 function formatAuditAction(action: string) {
@@ -2203,8 +2230,12 @@ export default function AdminConsolePage() {
                           {showAuditActorColumn && <TableCell>{formatAuditActor(entry.actorId, usersById)}</TableCell>}
                           {showAuditDetailColumn && (
                             <TableCell>
-                              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, whiteSpace: 'pre-wrap' }}>
-                                {entry.diff ?? '—'}
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                title={getAuditDetailPreviewTitle(entry.diff)}
+                              >
+                                {formatAuditDetailPreview(entry.diff)}
                               </Typography>
                             </TableCell>
                           )}

@@ -5583,6 +5583,54 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/^777$/i)).not.toBeInTheDocument();
   });
 
+  it('keeps long audit table details compact while preserving the full diff', async () => {
+    const longDiff = 'Admin -> Admin, Manager; Teacher -> Teacher, Accounting; Reception -> Reception, ReadOnly; Artist -> Artist, Vendor';
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: null,
+        entity: 'package',
+        entityId: 'PKG-1',
+        action: 'package.synced',
+        diff: '   ',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: 777,
+        entity: 'user',
+        entityId: 'USR-1',
+        action: 'roles.updated',
+        diff: longDiff,
+        createdAt: '2026-04-09T16:00:00.000Z',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Roles actualizados')).toBeInTheDocument();
+      expect(screen.getByText('Package synced')).toBeInTheDocument();
+    });
+
+    const compactDetail = screen.getByText((content) => (
+      content.startsWith('Admin -> Admin, Manager; Teacher -> Teacher')
+      && content.endsWith('…')
+    ));
+    expect(compactDetail).toHaveAttribute('title', longDiff);
+    expect(compactDetail).not.toHaveTextContent(longDiff);
+    expect(screen.queryByText(longDiff)).not.toBeInTheDocument();
+
+    const emptyDetailRow = screen.getByText('Package synced').closest('tr');
+    if (!(emptyDetailRow instanceof HTMLElement)) {
+      throw new Error('Expected audit row to render inside the table');
+    }
+
+    expect(within(emptyDetailRow).getByText('—')).toBeInTheDocument();
+  });
+
   it('sorts the recent audit table from newest to oldest regardless of API order', async () => {
     mockAuditLogs.mockResolvedValue([
       {
