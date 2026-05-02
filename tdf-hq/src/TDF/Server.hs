@@ -207,12 +207,12 @@ instance FromJSON GoogleToken where
     expiresIn <- o .: "expires_in"
     when (expiresIn <= (0 :: Int)) $
       fail "expires_in must be positive"
-    tokenType <- o .:? "token_type" >>= traverse parseGoogleTokenType
+    tokenType <- o .: "token_type" >>= parseGoogleTokenType
     pure GoogleToken
       { access_token = accessToken
       , refresh_token = refreshToken
       , expires_in = Just expiresIn
-      , token_type = tokenType
+      , token_type = Just tokenType
       }
 
 parseGoogleTokenField :: Text -> Text -> Parser Text

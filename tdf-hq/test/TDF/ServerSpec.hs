@@ -4353,6 +4353,7 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"access_token\":\"access-token\","
                     <> "\"refresh_token\":\"refresh token\","
                     <> "\"expires_in\":3600}"
+            assertRejected "{\"access_token\":\"access-token\",\"expires_in\":3600}"
             assertRejected $
                 BL8.pack $
                     "{\"access_token\":\""
