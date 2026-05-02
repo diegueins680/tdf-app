@@ -12576,6 +12576,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips prospect-form descriptors from first-run cohort copy', async () => {
+    const titles = [
+      'Prospect form - Beatmaking 101',
+      'Beatmaking 101 - prospects page',
+      'Formulario de prospectos - Beatmaking 101',
+      'Beatmaking 101 - página de prospectos',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Prospect');
+        expect(emptyState?.textContent).not.toContain('prospects page');
+        expect(emptyState?.textContent).not.toContain('Formulario de prospectos');
+        expect(emptyState?.textContent).not.toContain('página de prospectos');
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips reservation-form descriptors from first-run cohort copy', async () => {
     const titles = [
       'Booking form for Beatmaking 101',
