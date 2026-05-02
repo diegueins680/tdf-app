@@ -7313,6 +7313,46 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps limit-only cohort failures focused on the cohort retry instead of duplicate list refresh', async () => {
+    listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(container.textContent).toContain(
+        'No hay inscripciones con el límite actual de hasta 50 inscripciones.',
+      );
+      expect(container.textContent).not.toContain('Usa refrescar si esperabas resultados.');
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-initial-cohort-error"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).not.toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listCohortsMock).toHaveBeenCalledTimes(2);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('treats a redundant single-cohort limit as passive in the first-run empty state', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 

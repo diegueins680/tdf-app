@@ -2275,7 +2275,7 @@ export default function CourseRegistrationsAdminPage() {
     && cohortOptions.length === 0
     && !hasSlugFilter;
   const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
-  const filteredEmptyStateRecoveryHint = hasManualFilters
+  const filteredEmptyStateRecoveryHint = hasManualFilters || cohortsQuery.isError
     ? ''
     : 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
@@ -2600,7 +2600,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showScopedCopyMessage;
   const showFilteredResetAction = showFilteredResetActionCandidate && !showInlineActiveStatusResetAction;
   const showFilteredEmptyStateResetAction = hasManualFilters;
-  const showFilteredEmptyStateRefreshAction = !hasManualFilters;
+  const showFilteredEmptyStateRefreshAction = !hasManualFilters && !cohortsQuery.isError;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
       activeViewSummaryMessage,
