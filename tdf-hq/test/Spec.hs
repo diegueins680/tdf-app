@@ -7235,6 +7235,24 @@ main = hspec $ do
                 , "\\end\n{verbatim}"
                 ]
 
+        it "rejects payload keys that would break out of contract PDF verbatim rendering" $
+            case validateContractPayload
+                (A.object
+                    [ "kind" .= ("generic" :: Text)
+                    , "sections" .=
+                        [ A.object
+                            [ "\\end{verbatim}" .= ("\\input{/tmp/private}" :: Text)
+                            ]
+                        ]
+                    ]
+                ) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
+                Right value ->
+                    expectationFailure ("Expected unsafe contract payload key to be rejected, got: " <> show value)
+
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $
             validateContractSendPayload (A.object ["email" .= (" Sales@Example.com " :: Text)])

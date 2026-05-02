@@ -264,7 +264,8 @@ containsLatexVerbatimTerminator :: A.Value -> Bool
 containsLatexVerbatimTerminator (A.String value) =
   any isLatexVerbatimTerminatorAt (T.tails value)
 containsLatexVerbatimTerminator (A.Object payloadObj) =
-  any containsLatexVerbatimTerminator (KM.elems payloadObj)
+  any (containsLatexVerbatimTerminator . A.String . K.toText) (KM.keys payloadObj)
+    || any containsLatexVerbatimTerminator (KM.elems payloadObj)
 containsLatexVerbatimTerminator (A.Array payloadValues) =
   any containsLatexVerbatimTerminator payloadValues
 containsLatexVerbatimTerminator _ =
