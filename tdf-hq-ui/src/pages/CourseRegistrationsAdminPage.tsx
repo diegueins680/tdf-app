@@ -723,6 +723,9 @@ const normalizeCohortLabelKey = (value: string) =>
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const normalizeFirstRunDescriptorSeparators = (value: string) =>
+  value.replace(/\s*[\u00b7\u2022\u2013\u2014]\s*/g, ' - ');
+
 const humanizeCohortSlug = (slug: string) => {
   const normalized = slug.trim().replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ');
   if (!normalized) return '';
@@ -738,13 +741,14 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
   const trimmedSlug = slug.trim();
   if (!trimmedTitle || !trimmedSlug) return trimmedTitle;
 
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const escapedSlug = escapeRegExp(trimmedSlug);
   const suffixPattern = new RegExp(
     `\\s*(?:\\(${escapedSlug}\\)|\\[${escapedSlug}\\]|[-:/|]\\s*${escapedSlug})\\s*$`,
     'i',
   );
-  const strippedTitle = trimmedTitle.replace(suffixPattern, '').trim();
-  return strippedTitle || trimmedSlug;
+  const strippedTitle = normalizedTitle.replace(suffixPattern, '').trim();
+  return strippedTitle === normalizedTitle ? trimmedTitle : strippedTitle || trimmedSlug;
 };
 
 const firstRunApplicationDescriptorPrefixPattern =
@@ -869,7 +873,8 @@ const firstRunLooseEnrollmentDescriptorSuffixPattern =
 
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
-  const strippedTitle = trimmedTitle
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -895,19 +900,20 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     )
     .replace(firstRunApplicationDescriptorPrefixPattern, '')
     .trim();
-  const strippedCourseNoun = strippedTitle === trimmedTitle
-    ? strippedTitle
-    : strippedTitle
-      .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
-      .replace(/^(?:de|del|para(?:\s+el)?)\s+/, '')
-      .trim();
+  if (strippedTitle === normalizedTitle) return trimmedTitle;
+
+  const strippedCourseNoun = strippedTitle
+    .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
+    .replace(/^(?:de|del|para(?:\s+el)?)\s+/, '')
+    .trim();
 
   return strippedCourseNoun || strippedTitle;
 };
 
 const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
-  const strippedTitle = trimmedTitle
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
@@ -934,7 +940,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .trim();
 
-  return strippedTitle;
+  return strippedTitle === normalizedTitle ? trimmedTitle : strippedTitle;
 };
 
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
