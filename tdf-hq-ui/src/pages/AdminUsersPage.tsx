@@ -29,7 +29,13 @@ const normalizeContactValue = (value?: string | null) => {
   return trimmed;
 };
 
-const normalizeAccessKey = (value: string) => value.trim().toLocaleLowerCase('es');
+const normalizeAccessKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
 
 const normalizeAccessValues = (values: readonly string[]) => {
   const valuesByKey = new Map<string, string>();

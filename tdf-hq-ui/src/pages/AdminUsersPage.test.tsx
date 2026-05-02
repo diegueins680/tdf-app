@@ -3080,6 +3080,38 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('deduplicates accented and spaced access labels before rendering row summaries', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        roles: ['Producción', 'Produccion', ' Producción '],
+        modules: ['Control Room', 'Control   Room'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace',
+        roles: ['Manager'],
+        modules: ['Operación'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const row = getRowByUserId(container, 101);
+        expect(hasExactText(row, 'Roles: Producción · Módulos: Control Room')).toBe(true);
+        expect(row.textContent).not.toContain('Producción, Produccion');
+        expect(row.textContent).not.toContain('Control Room, Control');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps long row access summaries compact while exposing the full scope in the title', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
