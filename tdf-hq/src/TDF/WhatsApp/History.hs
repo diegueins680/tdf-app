@@ -256,16 +256,22 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
       providedExternalId = case sendResult of
         Left _ -> Nothing
         Right resp -> sendTextMessageId resp >>= normalizeStoredWhatsAppExternalId
+      missingProviderMessageId =
+        case sendResult of
+          Right _ -> providedExternalId == Nothing
+          Left _ -> False
   externalId <- maybe (allocateGeneratedWhatsAppExternalId fallbackExternalId) pure providedExternalId
   let
       isFailure =
         case sendResult of
           Left _ -> True
-          Right _ -> False
+          Right _ -> missingProviderMessageId
       deliveryStatus = if isFailure then "failed" else "sent"
       deliveryError =
         case sendResult of
           Left err -> cleanMaybeText (Just err)
+          Right _ | missingProviderMessageId ->
+            Just "WhatsApp provider response did not include a usable message id"
           Right _ -> Nothing
       transportPayload =
         case sendResult of

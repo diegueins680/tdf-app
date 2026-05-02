@@ -307,7 +307,7 @@ spec = do
       secondStatus `shouldBe` Just "read"
 
   describe "recordOutgoingWhatsAppMessage" $ do
-    it "falls back to a generated external id when a transport success returns a blank message id" $ do
+    it "records blank provider message ids as failed while allocating a safe fallback id" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
           sendResult =
             Right SendTextResult
@@ -334,6 +334,10 @@ spec = do
       externalId `shouldSatisfy` (\val -> not (T.null (T.strip val)))
       externalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
       externalId `shouldSatisfy` (T.all (not . isSpace))
+      ME.whatsAppMessageDeliveryStatus (entityVal stored) `shouldBe` "failed"
+      ME.whatsAppMessageReplyStatus (entityVal stored) `shouldBe` "error"
+      ME.whatsAppMessageDeliveryError (entityVal stored)
+        `shouldBe` Just "WhatsApp provider response did not include a usable message id"
 
     it "allocates distinct fallback external ids for repeated blank-id sends at the same timestamp" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
