@@ -19,7 +19,13 @@ import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny, throwM)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
 import           Data.ByteString.Lazy   (ByteString, toStrict)
-import           Data.Char              (isAlphaNum, ord, toLower)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , ord
+  , toLower
+  )
 import           Data.Int               (Int64)
 import           Data.List              (foldl', sortOn)
 import qualified Data.IntMap.Strict     as IntMap
@@ -829,7 +835,12 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
               }
       respResult <-
         (Right <$> runEmbeddingRequest req) `catchAny` \err ->
-          pure (Left ("OpenAI embeddings request failed: " <> T.pack (show err)))
+          pure
+            ( Left
+                ( "OpenAI embeddings request failed: "
+                    <> sanitizeOpenAIEmbeddingErrorMessage (T.pack (show err))
+                )
+            )
       case respResult of
         Left err -> pure (Left err)
         Right resp -> do
@@ -838,7 +849,12 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
           if status < 200 || status >= 300
             then case eitherDecode raw of
               Right OpenAIErrorResp{..} ->
-                pure (Left ("OpenAI embeddings error: " <> oeMessage oeError))
+                pure
+                  ( Left
+                      ( "OpenAI embeddings error: "
+                          <> sanitizeOpenAIEmbeddingErrorMessage (oeMessage oeError)
+                      )
+                  )
               Left _ ->
                 pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
             else
@@ -852,6 +868,21 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
                         (length inputs)
                         [(index item, embedding item) | item <- embeddings]
                     validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
+
+sanitizeOpenAIEmbeddingErrorMessage :: Text -> Text
+sanitizeOpenAIEmbeddingErrorMessage raw =
+  let sanitized = T.strip (T.map sanitizeChar raw)
+  in if T.length sanitized <= maxOpenAIEmbeddingErrorChars
+       then sanitized
+       else T.take maxOpenAIEmbeddingErrorChars sanitized <> " [truncated]"
+  where
+    sanitizeChar ch
+      | ch == '\DEL' || ch < ' ' = ' '
+      | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+      | otherwise = ch
+
+maxOpenAIEmbeddingErrorChars :: Int
+maxOpenAIEmbeddingErrorChars = 500
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)

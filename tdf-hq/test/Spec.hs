@@ -7974,7 +7974,7 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
 
     describe "callOpenAIEmbeddingsWith" $
-        it "returns request exceptions as errors so embedding fallback can handle them" $
+        it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
             withEnvOverrides
                 ( clearRagEnv
                     ++ [ ("OPENAI_API_KEY", Just "sk-test")
@@ -7985,7 +7985,14 @@ main = hspec $ do
                     cfg <- loadConfig
                     result <-
                         callOpenAIEmbeddingsWith
-                            (\_ -> ioError (userError "socket closed"))
+                            ( \_ ->
+                                ioError
+                                    ( userError
+                                        ( "socket\nclosed\NUL"
+                                            <> replicate 700 'x'
+                                        )
+                                    )
+                            )
                             cfg
                             ["consulta"]
                     case result of
@@ -7993,6 +8000,10 @@ main = hspec $ do
                             err `shouldSatisfy`
                                 Data.Text.isInfixOf "OpenAI embeddings request failed"
                             err `shouldSatisfy` Data.Text.isInfixOf "socket closed"
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+                            err `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+                            Data.Text.length err `shouldSatisfy` (<= 560)
                         Right value ->
                             expectationFailure
                                 ("Expected request exception to return Left, got " <> show value)
