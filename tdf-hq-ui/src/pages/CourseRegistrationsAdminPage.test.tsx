@@ -12408,6 +12408,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Pre-matrícula del curso - Beatmaking 101',
       'Beatmaking 101 - pre matrícula del curso',
       'Beatmaking 101 - página de prematrícula',
+      'Formulario de matriculación - Beatmaking 101',
+      'Beatmaking 101 - formulario de matriculación',
+      'Matriculación del curso - Beatmaking 101',
+      'Beatmaking 101 - matriculación del curso',
     ];
 
     for (const title of titles) {
@@ -12426,6 +12430,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Matrícula');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - matrícula');
         expect(emptyState?.textContent?.toLocaleLowerCase('es')).not.toMatch(/pre[-\s]?matr[ií]cula/);
+        expect(emptyState?.textContent?.toLocaleLowerCase('es')).not.toMatch(/matriculaci[oó]n/);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

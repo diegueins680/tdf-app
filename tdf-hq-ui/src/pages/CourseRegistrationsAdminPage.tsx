@@ -837,6 +837,12 @@ const firstRunPreMatriculaDescriptorPrefixPattern =
 const firstRunPreMatriculaDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+pre[-\s]?matr[ií]cula|pre[-\s]?matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunMatriculacionDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+matriculaci[oó]n|matriculaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunMatriculacionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+matriculaci[oó]n|matriculaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
 const firstRunSpanishAdmissionsDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
 
@@ -865,6 +871,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
+    .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
@@ -900,6 +907,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
+    .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
