@@ -2629,6 +2629,8 @@ validateGoogleCalendarEventId rawEventId
       Left "Google Calendar event id must not be blank"
   | T.any isControl eventIdVal =
       Left "Google Calendar event id must not contain control characters"
+  | T.any isHiddenDriveOAuthTokenChar eventIdVal =
+      Left "Google Calendar event id must not contain hidden formatting characters"
   | T.any isSpace eventIdVal =
       Left "Google Calendar event id must not contain whitespace"
   | otherwise =

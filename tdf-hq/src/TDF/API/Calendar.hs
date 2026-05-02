@@ -9,7 +9,12 @@ module TDF.API.Calendar where
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -34,9 +39,15 @@ normalizeCalendarId raw =
        then Left "calendarId must not be blank"
        else if T.any isControl trimmed
          then Left "calendarId must not contain control characters"
+         else if T.any isHiddenCalendarIdChar trimmed
+           then Left "calendarId must not contain hidden formatting characters"
          else if T.any isSpace trimmed
            then Left "calendarId must not contain whitespace"
            else Right trimmed
+
+isHiddenCalendarIdChar :: Char -> Bool
+isHiddenCalendarIdChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 requiredCalendarId :: Text -> Parser Text
 requiredCalendarId raw =

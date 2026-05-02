@@ -33,6 +33,7 @@ import Web.PathPieces (toPathPiece)
 import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
+import qualified TDF.API.Calendar as CalAPI
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
@@ -210,6 +211,7 @@ import TDF.Server
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
+      validateGoogleCalendarEventId,
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
@@ -3626,6 +3628,14 @@ main = hspec $ do
             assertRejected "{\"items\":[],\"nextPageToken\":\"   \"}"
             assertRejected "{\"items\":[],\"nextSyncToken\":\"sync cursor\"}"
             assertRejected "{\"items\":[],\"nextPageToken\":\"page-cursor\",\"nextSyncToken\":\"sync-cursor\"}"
+
+        it "rejects hidden formatting marks in Calendar ids before fallback lookups" $ do
+            CalAPI.normalizeCalendarId " primary "
+                `shouldBe` Right "primary"
+            CalAPI.normalizeCalendarId ("primary" <> Data.Text.singleton '\x200B')
+                `shouldBe` Left "calendarId must not contain hidden formatting characters"
+            validateGoogleCalendarEventId ("event-123" <> Data.Text.singleton '\x202E')
+                `shouldBe` Left "Google Calendar event id must not contain hidden formatting characters"
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
