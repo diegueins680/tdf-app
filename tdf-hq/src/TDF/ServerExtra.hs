@@ -4347,6 +4347,8 @@ validateSocialReplyBody rawBody
       Left err400 { errBody = "message must be 4096 characters or fewer" }
   | T.any isUnsupportedMessageControl body =
       Left err400 { errBody = "message must not contain unsupported control characters" }
+  | T.any isHiddenSocialReplyBodyChar body =
+      Left err400 { errBody = "message must not contain hidden formatting characters" }
   | otherwise =
       Right body
   where
@@ -4358,6 +4360,10 @@ maxSocialReplyBodyChars = 4096
 isUnsupportedMessageControl :: Char -> Bool
 isUnsupportedMessageControl ch =
   isControl ch && ch `notElem` ("\n\r\t" :: String)
+
+isHiddenSocialReplyBodyChar :: Char -> Bool
+isHiddenSocialReplyBodyChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialReplyIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialReplyIdentifier fieldName value

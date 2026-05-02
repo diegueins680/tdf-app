@@ -6882,6 +6882,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "message must not contain unsupported control characters"
                 (validateSocialReplyBody ("hola" <> T.singleton '\NUL'))
+            assertInvalid
+                "message must not contain hidden formatting characters"
+                (validateSocialReplyBody ("hola" <> "\x202E" <> "mundo"))
 
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
