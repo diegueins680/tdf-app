@@ -790,6 +790,11 @@ spec = do
                 (driveTokenExchangeJson "oauth code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
                 `shouldSatisfy` isLeft
             decodeDriveTokenExchange
+                (driveTokenExchangeJson
+                    "oauth\\u202Ecode"
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
                 (driveTokenExchangeJson "oauth-code" "short")
                 `shouldSatisfy` isLeft
             decodeDriveTokenExchange
@@ -807,6 +812,9 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeDriveTokenRefresh
                 "{\"refreshToken\":\"refresh\\ntoken\"}"
+                `shouldSatisfy` isLeft
+            decodeDriveTokenRefresh
+                "{\"refreshToken\":\"refresh\\u202Etoken\"}"
                 `shouldSatisfy` isLeft
             decodeDriveTokenRefresh
                 "{\"refreshToken\":\"refresh-token\",\"refresh_token\":\"legacy\"}"

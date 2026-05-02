@@ -822,12 +822,18 @@ parseDriveOAuthTokenField fieldName rawValue
       fail (fieldName <> " must not be blank")
   | T.any (\ch -> isSpace ch || isControl ch) cleanValue =
       fail (fieldName <> " must not contain whitespace or control characters")
+  | T.any isHiddenDriveOAuthRequestTokenChar cleanValue =
+      fail (fieldName <> " must not contain hidden formatting characters")
   | T.length cleanValue > maxDriveOAuthRequestTokenChars =
       fail (fieldName <> " must be 4096 characters or fewer")
   | otherwise =
       pure cleanValue
   where
     cleanValue = T.strip rawValue
+
+isHiddenDriveOAuthRequestTokenChar :: Char -> Bool
+isHiddenDriveOAuthRequestTokenChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 parseDriveCodeVerifierField :: Text -> Parser Text
 parseDriveCodeVerifierField rawValue =
