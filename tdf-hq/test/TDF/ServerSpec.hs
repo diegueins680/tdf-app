@@ -8432,6 +8432,17 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected stale Admin module grants to be rejected, got: " <> show value)
 
+        it "rejects duplicated role grants before serving fallback discovery metadata" $ do
+            let duplicatedAdmin = mkUser [Admin, Admin]
+            case validateFutureAdminAccess duplicatedAdmin of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Admin role grants must be unique"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicated Admin roles to be rejected, got: " <> show value)
+
         it "rejects Admin-shaped sessions with impossible party ids" $ do
             forM_ [0, -7] $ \rawPartyId -> do
                 let malformedAdmin =

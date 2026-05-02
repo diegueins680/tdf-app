@@ -138,6 +138,8 @@ validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
 validateFutureAdminAccess user
   | fromSqlKey (auPartyId user) <= 0 =
       Left err403 { errBody = "Valid admin party required" }
+  | length (auRoles user) /= length (nub (auRoles user)) =
+      Left err403 { errBody = "Admin role grants must be unique" }
   | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
   | not (hasModuleAccess ModuleAdmin user) =
       Left err403 { errBody = "Admin module access required" }
