@@ -2320,7 +2320,9 @@ export default function CourseRegistrationsAdminPage() {
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
   const showLocalSearchInlineClearAction = hasLocalSearch
-    && !showEmptyLocalSearchResults;
+    && (!showEmptyLocalSearchResults || showEmptyLocalSearchLimitRecoveryAction);
+  const showEmptyLocalSearchAlertClearAction = showEmptyLocalSearchResults
+    && !showLocalSearchInlineClearAction;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -4664,7 +4666,7 @@ export default function CourseRegistrationsAdminPage() {
             <Alert
               severity="info"
               data-testid="course-registration-empty-local-search"
-              action={(
+              action={showEmptyLocalSearchLimitRecoveryAction || showEmptyLocalSearchAlertClearAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {showEmptyLocalSearchLimitRecoveryAction && (
                     <Button
@@ -4676,11 +4678,13 @@ export default function CourseRegistrationsAdminPage() {
                       {limitToggleLabel}
                     </Button>
                   )}
-                  <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
-                    Limpiar búsqueda
-                  </Button>
+                  {showEmptyLocalSearchAlertClearAction && (
+                    <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
+                      Limpiar búsqueda
+                    </Button>
+                  )}
                 </Stack>
-              )}
+              ) : undefined}
             >
               {emptyLocalSearchResultsMessage}
             </Alert>
