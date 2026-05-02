@@ -346,8 +346,9 @@ const getSearchValueVariants = (value?: string | null) => {
 };
 const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
 const MAX_SEARCH_QUERY_SUMMARY_LENGTH = 64;
+const normalizeSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const formatSearchQuerySummary = (value: string) => {
-  const normalizedValue = value.trim().replace(/\s+/g, ' ');
+  const normalizedValue = normalizeSearchQuerySummary(value);
 
   if (normalizedValue.length <= MAX_SEARCH_QUERY_SUMMARY_LENGTH) {
     return normalizedValue;
@@ -835,6 +836,7 @@ export default function AdminUsersPage() {
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
+  const fullSearchSummary = normalizeSearchQuerySummary(searchQuery);
   const activeSearchSummary = formatSearchQuerySummary(searchQuery);
   const hasMultipleUsers = totalUsersCount > 1;
   const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
@@ -1022,6 +1024,13 @@ export default function AdminUsersPage() {
         : `No hay coincidencias para "${activeSearchSummary}".`
     )
     : '';
+  const searchEmptyStateTitle = showSearchEmptyState && activeSearchSummary !== fullSearchSummary
+    ? (
+      !includeInactive
+        ? `No hay coincidencias para "${fullSearchSummary}" entre los usuarios activos.`
+        : `No hay coincidencias para "${fullSearchSummary}".`
+    )
+    : undefined;
   const visibleUsersSummary = useMemo(() => {
     if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || usersInCurrentSummary.length === 0) return '';
 
@@ -1356,7 +1365,7 @@ export default function AdminUsersPage() {
             )}
             {showSearchEmptyState ? (
               <Stack spacing={1} alignItems="flex-start">
-                <Typography color="text.secondary">
+                <Typography color="text.secondary" title={searchEmptyStateTitle}>
                   {searchEmptyStateMessage}
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

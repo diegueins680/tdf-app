@@ -5042,11 +5042,17 @@ describe('AdminUsersPage', () => {
       await changeInputValue(searchInput, longQuery);
 
       await waitForExpectation(() => {
-        expect(searchInput.value).toBe(longQuery);
-        expect(container.textContent).toContain(
-          'No hay coincidencias para "permisos administrativos pendientes para revisar cuentas sin..." entre los usuarios activos.',
+        const compactEmptyMessage =
+          'No hay coincidencias para "permisos administrativos pendientes para revisar cuentas sin..." entre los usuarios activos.';
+        const fullEmptyMessage = `No hay coincidencias para "${longQuery}" entre los usuarios activos.`;
+        const emptyMessageElement = Array.from(container.querySelectorAll<HTMLElement>('*')).find(
+          (element) => buttonText(element) === compactEmptyMessage,
         );
+
+        expect(searchInput.value).toBe(longQuery);
+        expect(container.textContent).toContain(compactEmptyMessage);
         expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
+        expect(emptyMessageElement?.getAttribute('title')).toBe(fullEmptyMessage);
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
         expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
