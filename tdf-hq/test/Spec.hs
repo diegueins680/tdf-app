@@ -223,6 +223,7 @@ import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
       resolveLiveSessionMusicianLookup,
+      selectUniqueLiveSessionMusicianByEmail,
       sanitizeLiveSessionRiderFileName,
       validateLiveSessionOptionalEmail,
       validateLiveSessionReferencedPartyEmail,
@@ -8775,6 +8776,50 @@ main = hspec $ do
                 `shouldBe` LookupLiveSessionMusicianByEmail "player@example.com"
             resolveLiveSessionMusicianLookup Nothing `shouldBe` CreateLiveSessionMusician
             resolveLiveSessionMusicianLookup (Just "   ") `shouldBe` CreateLiveSessionMusician
+
+    describe "selectUniqueLiveSessionMusicianByEmail" $
+        it "rejects duplicate musician email matches instead of selecting an arbitrary party" $ do
+            let now = UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 0)
+                mkParty displayName emailAddr =
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = displayName
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just emailAddr
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                singleParty =
+                    Entity (toSqlKey 7) (mkParty "Single Musician" "player@example.com")
+                duplicateParties =
+                    [ Entity (toSqlKey 11) (mkParty "First Duplicate" "dupe@example.com")
+                    , Entity (toSqlKey 12) (mkParty "Second Duplicate" "dupe@example.com")
+                    ]
+
+            case selectUniqueLiveSessionMusicianByEmail [] of
+                Right Nothing -> pure ()
+                other ->
+                    expectationFailure
+                        ("Expected no musician email match, got " <> show other)
+            case selectUniqueLiveSessionMusicianByEmail [singleParty] of
+                Right (Just partyEnt) ->
+                    entityKey partyEnt `shouldBe` toSqlKey 7
+                other ->
+                    expectationFailure
+                        ("Expected a single musician email match, got " <> show other)
+            case selectUniqueLiveSessionMusicianByEmail duplicateParties of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err)
+                        `shouldContain` "Multiple parties match this musician email"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate musician email matches to fail, got " <> show value)
 
     describe "validateLiveSessionOptionalEmail" $ do
         it "normalizes optional live-session emails before lookup and persistence" $ do

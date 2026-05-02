@@ -8,6 +8,7 @@ module TDF.ServerLiveSessions
   , LiveSessionMusicianLookup(..)
   , buildLiveSessionUsernameCollisionCandidate
   , resolveLiveSessionMusicianLookup
+  , selectUniqueLiveSessionMusicianByEmail
   , sanitizeLiveSessionRiderFileName
   , validateLiveSessionOptionalEmail
   , validateLiveSessionReferencedPartyEmail
@@ -182,8 +183,11 @@ liveSessionsServer user = intakeHandler
               pure (key, referencedPartyEmail)
         Nothing -> do
           found <- case resolveLiveSessionMusicianLookup mEmail of
-            LookupLiveSessionMusicianByEmail email ->
-              withPool $ selectFirst [M.PartyPrimaryEmail ==. Just email] []
+            LookupLiveSessionMusicianByEmail email -> do
+              matches <-
+                withPool $
+                  selectList [M.PartyPrimaryEmail ==. Just email] [LimitTo 2]
+              either throwError pure (selectUniqueLiveSessionMusicianByEmail matches)
             CreateLiveSessionMusician ->
               pure Nothing
           case found of
@@ -319,6 +323,14 @@ resolveLiveSessionMusicianLookup rawEmail =
   case rawEmail >>= normalizeAuthEmailAddress of
     Just email -> LookupLiveSessionMusicianByEmail email
     _ -> CreateLiveSessionMusician
+
+selectUniqueLiveSessionMusicianByEmail
+  :: [Entity Party]
+  -> Either ServerError (Maybe (Entity Party))
+selectUniqueLiveSessionMusicianByEmail [] = Right Nothing
+selectUniqueLiveSessionMusicianByEmail [partyEnt] = Right (Just partyEnt)
+selectUniqueLiveSessionMusicianByEmail _ =
+  Left err409 { errBody = "Multiple parties match this musician email" }
 
 validateLiveSessionOptionalEmail
   :: Text
