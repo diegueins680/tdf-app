@@ -30,6 +30,9 @@ import TDF.WhatsApp.Client
 import TDF.WhatsApp.History
   ( IncomingWhatsAppRecord (..)
   , OutgoingWhatsAppRecord (..)
+  , WhatsAppDeliveryUpdate (..)
+  , applyWhatsAppDeliveryUpdate
+  , normalizeWhatsAppDeliveryStatus
   , normalizeWhatsAppPhone
   , recordIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
@@ -66,6 +69,15 @@ spec = do
       normalizeWhatsAppPhone ("+593" <> T.singleton '\x00A0' <> "991234567") `shouldBe` Nothing
       normalizeWhatsAppPhone ("+593" <> T.singleton '\x200B' <> "991234567") `shouldBe` Nothing
       normalizeWhatsAppPhone arabicIndicPhone `shouldBe` Nothing
+
+  describe "TDF.WhatsApp.History.normalizeWhatsAppDeliveryStatus" $ do
+    it "keeps delivery statuses as bounded safe tokens before persistence" $ do
+      normalizeWhatsAppDeliveryStatus " Delivered " `shouldBe` "delivered"
+      normalizeWhatsAppDeliveryStatus "read_legacy" `shouldBe` "read_legacy"
+      normalizeWhatsAppDeliveryStatus "   " `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus "delivered\nX-Injected: yes" `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus ("read" <> T.singleton '\x200B') `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus (T.replicate 65 "a") `shouldBe` "unknown"
 
   describe "TDF.WhatsApp.Client.normalizeGraphApiVersion" $ do
     it "defaults blank versions and canonicalizes supported Graph API versions" $ do
@@ -269,6 +281,30 @@ spec = do
 
       partyId `shouldBe` Nothing
       phoneE164 `shouldBe` Just "+593991234567"
+
+  describe "applyWhatsAppDeliveryUpdate" $ do
+    it "sanitizes provider status tokens before persisting delivery fallback updates" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          deliveryUpdate rawStatus = WhatsAppDeliveryUpdate
+            { wduExternalId = "wamid.delivery-status"
+            , wduStatus = rawStatus
+            , wduRecipientId = Nothing
+            , wduOccurredAt = Nothing
+            , wduDeliveryError = Nothing
+            , wduStatusPayload = Nothing
+            }
+      (firstStatus, secondStatus) <- runWhatsAppHistorySql $ do
+        _ <- insert (seedWhatsAppMessage now "wamid.delivery-status" "outgoing")
+        first <- applyWhatsAppDeliveryUpdate now
+          (deliveryUpdate "delivered\nX-Injected: yes")
+        second <- applyWhatsAppDeliveryUpdate now (deliveryUpdate " READ ")
+        pure
+          ( fmap (ME.whatsAppMessageDeliveryStatus . entityVal) first
+          , fmap (ME.whatsAppMessageDeliveryStatus . entityVal) second
+          )
+
+      firstStatus `shouldBe` Just "unknown"
+      secondStatus `shouldBe` Just "read"
 
   describe "recordOutgoingWhatsAppMessage" $ do
     it "falls back to a generated external id when a transport success returns a blank message id" $ do

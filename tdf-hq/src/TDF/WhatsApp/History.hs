@@ -8,6 +8,7 @@ module TDF.WhatsApp.History
   , OutgoingWhatsAppRecord(..)
   , WhatsAppDeliveryUpdate(..)
   , normalizeWhatsAppPhone
+  , normalizeWhatsAppDeliveryStatus
   , phoneLookupAliases
   , cleanMaybeText
   , resolvePartyPhones
@@ -356,6 +357,25 @@ isUnsafeStoredWhatsAppExternalIdChar ch =
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
+normalizeWhatsAppDeliveryStatus :: Text -> Text
+normalizeWhatsAppDeliveryStatus raw =
+  let status = T.toLower (T.strip raw)
+  in if T.null status
+        || T.length status > maxWhatsAppDeliveryStatusChars
+        || T.any (not . isWhatsAppDeliveryStatusChar) status
+       then "unknown"
+       else status
+
+maxWhatsAppDeliveryStatusChars :: Int
+maxWhatsAppDeliveryStatusChars = 64
+
+isWhatsAppDeliveryStatusChar :: Char -> Bool
+isWhatsAppDeliveryStatusChar ch =
+  isAsciiLower ch || isAsciiDigit ch || ch == '_' || ch == '-'
+
+isAsciiLower :: Char -> Bool
+isAsciiLower ch = ch >= 'a' && ch <= 'z'
+
 allocateGeneratedWhatsAppExternalId :: Text -> SqlPersistT IO Text
 allocateGeneratedWhatsAppExternalId baseExternalId = go (0 :: Int)
   where
@@ -375,7 +395,7 @@ applyWhatsAppDeliveryUpdate
   -> SqlPersistT IO (Maybe (Entity ME.WhatsAppMessage))
 applyWhatsAppDeliveryUpdate now WhatsAppDeliveryUpdate{..} = do
   let externalId = nonEmptyOr "" wduExternalId
-      statusVal = nonEmptyOr "unknown" wduStatus
+      statusVal = normalizeWhatsAppDeliveryStatus wduStatus
       updateTs = wduOccurredAt <|> Just now
   if T.null externalId
     then pure Nothing
