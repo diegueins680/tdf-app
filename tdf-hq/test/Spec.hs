@@ -3262,6 +3262,19 @@ main = hspec $ do
                 $ corsPolicy `shouldThrow` \err ->
                     "must not mix wildcard" `isInfixOf` show (err :: IOException)
 
+        it "rejects blank CORS allowlist entries instead of silently dropping them" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com, ,https://admin.example.com")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not contain blank entries" `isInfixOf` show (err :: IOException)
+
         it "rejects allow-all CORS flags mixed with explicit allowlists" $
             withEnvOverrides
                 [ ("ALLOWED_ORIGINS", Just "https://app.example.com")

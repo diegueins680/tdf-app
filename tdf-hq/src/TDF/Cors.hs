@@ -43,7 +43,7 @@ corsPolicy = do
         ]
       hqBaseCandidates = filter (not . null . trim) (maybe [] pure hqBaseEnv)
       parsed = maybe [] splitComma originsEnv
-      configuredOrigins = filter (not . null) parsed
+      configuredOrigins = parsed
   hqBaseDefaults <- either (ioError . userError) pure $
     traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
@@ -130,6 +130,10 @@ normalizeConfiguredCorsOrigin raw =
 
 validateConfiguredCorsOriginList :: Bool -> [String] -> Either String [String]
 validateConfiguredCorsOriginList allowAll origins
+  | any (null . trim) origins =
+      Left
+        "Configured CORS origins must not contain blank entries; \
+        \remove extra commas from the origin allowlist."
   | allowAll && not (null origins) =
       Left
         "ALLOW_ALL_ORIGINS=true must not be combined with configured CORS origins; \
