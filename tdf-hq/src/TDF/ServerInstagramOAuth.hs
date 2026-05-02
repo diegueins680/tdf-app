@@ -80,7 +80,12 @@ normalizeFacebookAccessToken rawToken =
          then fail $
            "Facebook access_token must not contain whitespace or control characters "
              <> "or hidden formatting characters"
+         else if T.length tokenValue > maxFacebookAccessTokenChars
+           then fail "Facebook access_token must be 4096 characters or fewer"
          else pure tokenValue
+
+maxFacebookAccessTokenChars :: Int
+maxFacebookAccessTokenChars = 4096
 
 isUnsafeFacebookAccessTokenChar :: Char -> Bool
 isUnsafeFacebookAccessTokenChar ch =

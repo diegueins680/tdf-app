@@ -3486,6 +3486,13 @@ main = hspec $ do
                 "{\"access_token\":\"token\\u202E123\",\"token_type\":\"bearer\"}"
                 "hidden formatting characters"
             assertInvalid
+                ( BL.pack $
+                    "{\"access_token\":\""
+                        <> Data.Text.unpack (Data.Text.replicate 4097 "x")
+                        <> "\",\"token_type\":\"bearer\"}"
+                )
+                "Facebook access_token must be 4096 characters or fewer"
+            assertInvalid
                 "{\"access_token\":\"token-123\",\"token_type\":\"Basic\"}"
                 "Facebook token_type must be Bearer"
             assertInvalid
