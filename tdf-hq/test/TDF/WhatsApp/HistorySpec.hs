@@ -148,6 +148,12 @@ spec = do
         `shouldBe` Left recipientShapeMessage
       normalizeWhatsAppRecipientPhone "+-593991234567"
         `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+593\n991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone ("+593" <> T.singleton '\x00A0' <> "991234567")
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone ("+593" <> T.singleton '\x2028' <> "991234567")
+        `shouldBe` Left recipientShapeMessage
       normalizeWhatsAppMessageBody "   "
         `shouldBe` Left "Invalid WhatsApp message body: message is required"
       normalizeWhatsAppMessageBody (T.replicate 4097 "a")

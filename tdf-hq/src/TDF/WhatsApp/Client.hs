@@ -172,7 +172,7 @@ normalizeWhatsAppRecipientPhone rawPhone =
       plusIndex = T.findIndex (== '+') trimmed
       firstDigitIndex = T.findIndex isAsciiDigit trimmed
       allowedPhoneChar ch =
-        isAsciiDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isAsciiDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
