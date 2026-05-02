@@ -458,9 +458,11 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  fallbackConnUrl <- lookupFirstConnUrlEnv (not keywordDbEnvConfigured)
-    ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
-  connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
+  connUrl <-
+    if keywordDbEnvConfigured
+      then pure Nothing
+      else lookupUniqueConnUrlEnv
+        ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
   rawHost    <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
   rawPort    <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
   rawUser    <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
@@ -706,17 +708,25 @@ loadConfig = do
         case value >>= normalizeEnvString of
           Just normalized -> (key, normalized) : values
           Nothing -> values
-    lookupFirstConnUrlEnv _ [] = pure Nothing
-    lookupFirstConnUrlEnv requireValid (key:rest) = do
-      value <- lookupEnv key
-      case value >>= normalizeEnvString of
-        Nothing -> lookupFirstConnUrlEnv requireValid rest
-        Just normalized ->
-          case validateFallbackConnUrl key normalized of
-            Right conn -> pure (Just conn)
-            Left msg
-              | requireValid -> fail msg
-              | otherwise -> lookupFirstConnUrlEnv requireValid rest
+    lookupUniqueConnUrlEnv keys = do
+      values <- lookupNamedEnvValues keys
+      validatedValues <- traverse validateNamedConnUrl values
+      case validatedValues of
+        [] -> pure Nothing
+        firstValue:rest ->
+          case filter ((/= snd firstValue) . snd) rest of
+            [] -> pure (Just (snd firstValue))
+            conflict:_ ->
+              fail
+                ( fst firstValue
+                    <> " and "
+                    <> fst conflict
+                    <> " must not be set to different values"
+                )
+    validateNamedConnUrl (key, normalized) =
+      case validateFallbackConnUrl key normalized of
+        Right conn -> pure (key, conn)
+        Left msg -> fail msg
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed

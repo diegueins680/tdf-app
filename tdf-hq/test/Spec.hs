@@ -1874,6 +1874,29 @@ main = hspec $ do
                         `shouldBe`
                             "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
 
+        it "rejects conflicting connection URL aliases before choosing a DB fallback target" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db-primary.internal:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Just "postgresql://flyuser:flypass@db-replica.internal:5432/tdf_hq")
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                , ("DB_SSLMODE", Nothing)
+                , ("PGSSLMODE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL and DATABASE_PRIVATE_URL must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "keeps DATABASE_URL authoritative when only partial keyword DB env vars exist" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq")
