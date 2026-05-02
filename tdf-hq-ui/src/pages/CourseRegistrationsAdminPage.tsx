@@ -2275,9 +2275,12 @@ export default function CourseRegistrationsAdminPage() {
       ? 'en la vista actual'
       : 'con los filtros actuales'
     : 'con el límite actual';
-  const filteredEmptyStateBaseMessage = activeFilterSummary
-    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}.`
-    : `No hay inscripciones ${filteredEmptyStateScope}.`;
+  const filteredEmptyStateBaseMessage =
+    !hasManualFilters && hasCustomLimit
+      ? `No hay inscripciones con el límite actual de hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
+      : activeFilterSummary
+        ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}.`
+        : `No hay inscripciones ${filteredEmptyStateScope}.`;
   const filteredEmptyStateMessage = [
     filteredEmptyStateBaseMessage,
     filteredEmptyStateRecoveryHint,

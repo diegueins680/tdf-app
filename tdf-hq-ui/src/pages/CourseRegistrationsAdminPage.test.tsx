@@ -7303,8 +7303,9 @@ describe('CourseRegistrationsAdminPage', () => {
         limit: 50,
       });
       expect(container.textContent).toContain(
-        'No hay inscripciones con el límite actual: límite 50. Usa refrescar si esperabas resultados.',
+        'No hay inscripciones con el límite actual de hasta 50 inscripciones. Usa refrescar si esperabas resultados.',
       );
+      expect(container.textContent).not.toContain('límite actual: límite 50');
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(1);
     });
