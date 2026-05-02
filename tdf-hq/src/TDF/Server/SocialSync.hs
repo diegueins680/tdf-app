@@ -336,7 +336,17 @@ validateSocialSyncExternalPostId raw =
          then Left err400
            { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain control characters")
            }
+       else if T.any isHiddenSocialSyncIdentityChar trimmed
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 "externalPostId must not contain hidden formatting characters")
+           }
        else Right trimmed
+
+isHiddenSocialSyncIdentityChar :: Char -> Bool
+isHiddenSocialSyncIdentityChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialSyncIngestSource :: Maybe Text -> Either ServerError Text
 validateSocialSyncIngestSource Nothing = Right "manual"

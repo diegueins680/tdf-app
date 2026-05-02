@@ -4722,6 +4722,9 @@ main = hspec $ do
                 "externalPostId must not contain control characters"
                 ("ig-media" <> Data.Text.singleton '\NUL' <> "42")
             assertInvalid
+                "externalPostId must not contain hidden formatting characters"
+                ("ig-media" <> Data.Text.singleton '\x200D' <> "42")
+            assertInvalid
                 "externalPostId must be 256 characters or fewer"
                 (Data.Text.replicate 257 "a")
 
