@@ -97,7 +97,9 @@ futureServer user = futureCatalog
       either throwError pure $
         validateFutureAdminConsoleView $
         AdminConsoleView
-          { viewPath = futureStubPath "admin" "console"
+          { viewArea = "admin"
+          , viewEndpoint = "console"
+          , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
           , status = "preview"
           , viewRequiredRole = futureStubRequiredRole
@@ -305,6 +307,8 @@ allowedFutureAdminConsoleCardIds =
 
 validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminConsoleView
 validateFutureAdminConsoleView view
+  | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
+  | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
   | viewPath view /= futureStubPath "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | status view /= "preview" = invalidFutureAdminConsoleMetadata
@@ -318,7 +322,9 @@ validateFutureAdminConsoleView view
            || hasDuplicateFutureAdminConsoleBodyLinesAcrossCards validatedCards
         then invalidFutureAdminConsoleMetadata
         else Right view
-          { viewPath = futureStubPath "admin" "console"
+          { viewArea = "admin"
+          , viewEndpoint = "console"
+          , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
           , viewRequiredRole = futureStubRequiredRole
           , viewRequiredModule = futureStubRequiredModule

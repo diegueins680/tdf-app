@@ -8858,6 +8858,8 @@ spec = describe "TDF.Server helpers" $ do
                 validApiTokensCard =
                     mkCard "api-tokens" "Tokens API" apiTokensBody
                 mkViewWithRoute
+                    areaValue
+                    endpointValue
                     pathValue
                     methodValue
                     statusValue
@@ -8866,7 +8868,9 @@ spec = describe "TDF.Server helpers" $ do
                     implementedValue
                     cardsValue =
                     Future.AdminConsoleView
-                        { Future.viewPath = pathValue
+                        { Future.viewArea = areaValue
+                        , Future.viewEndpoint = endpointValue
+                        , Future.viewPath = pathValue
                         , Future.viewMethod = methodValue
                         , Future.status = statusValue
                         , Future.viewRequiredRole = roleValue
@@ -8876,6 +8880,8 @@ spec = describe "TDF.Server helpers" $ do
                         }
                 mkViewWith statusValue roleValue moduleValue implementedValue cardsValue =
                     mkViewWithRoute
+                        "admin"
+                        "console"
                         "/stubs/admin/console"
                         "GET"
                         statusValue
@@ -8903,6 +8909,8 @@ spec = describe "TDF.Server helpers" $ do
 
             case validateFutureAdminConsoleView validView of
                 Right view -> do
+                    Future.viewArea view `shouldBe` "admin"
+                    Future.viewEndpoint view `shouldBe` "console"
                     Future.viewPath view `shouldBe` "/stubs/admin/console"
                     Future.viewMethod view `shouldBe` "GET"
                     Future.viewRequiredRole view `shouldBe` "Admin"
@@ -8917,6 +8925,30 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (mkView "planned" [validUserManagementCard])
             assertInvalid
                 (mkViewWithRoute
+                    "crm"
+                    "console"
+                    "/stubs/admin/console"
+                    "GET"
+                    "preview"
+                    "Admin"
+                    "Admin"
+                    False
+                    validCards)
+            assertInvalid
+                (mkViewWithRoute
+                    "admin"
+                    "seed"
+                    "/stubs/admin/console"
+                    "GET"
+                    "preview"
+                    "Admin"
+                    "Admin"
+                    False
+                    validCards)
+            assertInvalid
+                (mkViewWithRoute
+                    "admin"
+                    "console"
                     "/stubs/admin/seed"
                     "GET"
                     "preview"
@@ -8926,6 +8958,8 @@ spec = describe "TDF.Server helpers" $ do
                     validCards)
             assertInvalid
                 (mkViewWithRoute
+                    "admin"
+                    "console"
                     "/stubs/admin/console"
                     "POST"
                     "preview"
@@ -9055,6 +9089,8 @@ spec = describe "TDF.Server helpers" $ do
         it "serves admin console preview cards only after metadata validation" $
             case firstFutureAdminConsole (mkUser [Admin]) of
                 Right consoleView -> do
+                    Future.viewArea consoleView `shouldBe` "admin"
+                    Future.viewEndpoint consoleView `shouldBe` "console"
                     Future.viewPath consoleView `shouldBe` "/stubs/admin/console"
                     Future.viewMethod consoleView `shouldBe` "GET"
                     Future.status consoleView `shouldBe` "preview"
@@ -9066,7 +9102,9 @@ spec = describe "TDF.Server helpers" $ do
                     Future.cards consoleView `shouldSatisfy` (not . null)
                     A.toJSON consoleView
                         `shouldBe` A.object
-                            [ "stubPath" .= ("/stubs/admin/console" :: Text)
+                            [ "stubArea" .= ("admin" :: Text)
+                            , "stubEndpoint" .= ("console" :: Text)
+                            , "stubPath" .= ("/stubs/admin/console" :: Text)
                             , "stubMethod" .= ("GET" :: Text)
                             , "status" .= ("preview" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
