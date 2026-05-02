@@ -7189,23 +7189,31 @@ main = hspec $ do
                 (A.object ["kind" .= ("generic" :: Text), "created_at" .= ("2026-01-01T00:00:00Z" :: Text)])
                 "Contract payload must not include server-managed field: created_at"
 
-        it "rejects payload text that would break out of contract PDF verbatim rendering" $
-            case validateContractPayload
-                (A.object
-                    [ "kind" .= ("generic" :: Text)
-                    , "sections" .=
-                        [ A.object
-                            [ "body" .= ("line one\n\\end{verbatim}\n\\input{/tmp/private}" :: Text)
+        it "rejects payload text that would break out of contract PDF verbatim rendering" $ do
+            let assertInvalid terminator =
+                    case validateContractPayload
+                        (A.object
+                            [ "kind" .= ("generic" :: Text)
+                            , "sections" .=
+                                [ A.object
+                                    [ "body" .= ("line one\n" <> terminator <> "\n\\input{/tmp/private}" :: Text)
+                                    ]
+                                ]
                             ]
-                        ]
-                    ]
-                ) of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err)
-                        `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
-                Right value ->
-                    expectationFailure ("Expected unsafe contract payload text to be rejected, got: " <> show value)
+                        ) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
+                        Right value ->
+                            expectationFailure ("Expected unsafe contract payload text to be rejected, got: " <> show value)
+            mapM_
+                assertInvalid
+                [ "\\end{verbatim}"
+                , "\\end {verbatim}"
+                , "\\end\t{verbatim}"
+                , "\\end\n{verbatim}"
+                ]
 
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $

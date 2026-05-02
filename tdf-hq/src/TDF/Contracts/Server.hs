@@ -17,7 +17,7 @@ import           Data.Aeson.Types (withObject)
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAsciiLower, isDigit)
+import           Data.Char (isAsciiLower, isDigit, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -262,13 +262,21 @@ validateContractPayloadForPdf payload
 
 containsLatexVerbatimTerminator :: A.Value -> Bool
 containsLatexVerbatimTerminator (A.String value) =
-  "\\end{verbatim}" `T.isInfixOf` value
+  any isLatexVerbatimTerminatorAt (T.tails value)
 containsLatexVerbatimTerminator (A.Object payloadObj) =
   any containsLatexVerbatimTerminator (KM.elems payloadObj)
 containsLatexVerbatimTerminator (A.Array payloadValues) =
   any containsLatexVerbatimTerminator payloadValues
 containsLatexVerbatimTerminator _ =
   False
+
+isLatexVerbatimTerminatorAt :: Text -> Bool
+isLatexVerbatimTerminatorAt value =
+  case T.stripPrefix "\\end" value of
+    Just rest ->
+      "{verbatim}" `T.isPrefixOf` T.dropWhile isSpace rest
+    Nothing ->
+      False
 
 normalizeContractEmail :: Text -> Maybe Text
 normalizeContractEmail rawEmail =
