@@ -11440,7 +11440,10 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips public-registration descriptors from first-run cohort copy', async () => {
     const titles = [
       'Formulario de inscripción pública - Beatmaking 101',
+      'Formulario público de inscripción - Beatmaking 101',
+      'Página pública para inscripciones - Beatmaking 101',
       'Beatmaking 101 - página de inscripción pública',
+      'Beatmaking 101 - página pública de inscripción',
       'Public registration form - Beatmaking 101',
     ];
 
@@ -11458,7 +11461,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Página pública');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - página');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para inscripciones');
         expect(emptyState?.textContent).not.toContain('Public registration form');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
