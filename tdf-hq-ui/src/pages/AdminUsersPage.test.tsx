@@ -233,6 +233,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('Buscar usuarios');
         expect(container.textContent).not.toContain('0 usuarios');
         expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid="admin-users-header-actions"]')).toBeNull();
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
       });
@@ -390,6 +391,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Buscar usuarios');
+        expect(container.querySelector('[data-testid="admin-users-header-actions"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
     } finally {

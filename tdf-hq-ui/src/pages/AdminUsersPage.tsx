@@ -967,6 +967,7 @@ export default function AdminUsersPage() {
   const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
   const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && showSearchField);
+  const showHeaderActions = showInactiveFilterAction || showRefreshAction;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
@@ -1305,9 +1306,16 @@ export default function AdminUsersPage() {
                 </Stack>
               )}
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              {showInactiveFilterAction && (
-                <>
+            {showHeaderActions && (
+              <Stack
+                data-testid="admin-users-header-actions"
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+                useFlexGap
+              >
+                {showInactiveFilterAction && (
                   <FormControlLabel
                     control={(
                       <Checkbox
@@ -1317,22 +1325,22 @@ export default function AdminUsersPage() {
                     )}
                     label={inactiveFilterLabel}
                   />
-                </>
-              )}
-              {showRefreshAction && (
-                <Tooltip title="Refrescar">
-                  <span>
-                    <IconButton
-                      aria-label="Refrescar lista de usuarios"
-                      onClick={handleRefresh}
-                      disabled={usersQuery.isFetching}
-                    >
-                      <RefreshIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-            </Stack>
+                )}
+                {showRefreshAction && (
+                  <Tooltip title="Refrescar">
+                    <span>
+                      <IconButton
+                        aria-label="Refrescar lista de usuarios"
+                        onClick={handleRefresh}
+                        disabled={usersQuery.isFetching}
+                      >
+                        <RefreshIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Stack>
+            )}
           </Stack>
         </Stack>
 
