@@ -5234,6 +5234,9 @@ spec = do
       assertInvalid
         "caracteres de control"
         (normalizeServiceCatalogName "Podcast\nLive")
+      assertInvalid
+        "marcas de formato ocultas"
+        (normalizeServiceCatalogName ("Podcast" <> "\x202E" <> "Live"))
       assertInvalid "Nombre requerido" (normalizeServiceCatalogNameUpdate (Just "   "))
       assertInvalid
         "caracteres de control"
@@ -5301,6 +5304,9 @@ spec = do
       assertInvalid
         "caracteres de control"
         (validateServiceCatalogBillingUnit (Just "sesión\nextra"))
+      assertInvalid
+        "marcas de formato ocultas"
+        (validateServiceCatalogBillingUnit (Just ("sesión" <> "\x200B" <> "extra")))
 
   describe "validateServiceCatalogBillingUnitUpdate" $ do
     it "preserves omitted and explicit-null updates while trimming meaningful billing units" $ do
@@ -5322,6 +5328,9 @@ spec = do
       assertInvalid
         "caracteres de control"
         (validateServiceCatalogBillingUnitUpdate (Just (Just "por\nhora")))
+      assertInvalid
+        "marcas de formato ocultas"
+        (validateServiceCatalogBillingUnitUpdate (Just (Just ("por" <> "\x202E" <> "hora"))))
 
   describe "validateServiceCatalogTaxBps" $ do
     it "accepts omitted values and basis points within a 0..10000 percentage range" $ do

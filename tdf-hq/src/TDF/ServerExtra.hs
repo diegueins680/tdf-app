@@ -2487,9 +2487,16 @@ normalizeServiceCatalogName rawName =
        then Left err400 { errBody = "Nombre requerido" }
        else if T.length trimmed > 160
          then Left err400 { errBody = "Nombre debe tener 160 caracteres o menos" }
-         else if T.any isControl trimmed
-         then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
+         else if T.any isUnsafeServiceCatalogLabelChar trimmed
+           then Left err400
+             { errBody =
+                 "Nombre no debe contener caracteres de control o marcas de formato ocultas"
+             }
          else Right trimmed
+
+isUnsafeServiceCatalogLabelChar :: Char -> Bool
+isUnsafeServiceCatalogLabelChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateServiceCatalogId :: Int64 -> Either ServerError Int64
 validateServiceCatalogId rawId
@@ -2519,8 +2526,11 @@ validateServiceCatalogBillingUnitValue :: Text -> Either ServerError Text
 validateServiceCatalogBillingUnitValue billingUnit
   | T.length billingUnit > 80 =
       Left err400 { errBody = "Unidad debe tener 80 caracteres o menos" }
-  | T.any isControl billingUnit =
-      Left err400 { errBody = "Unidad no debe contener caracteres de control" }
+  | T.any isUnsafeServiceCatalogLabelChar billingUnit =
+      Left err400
+        { errBody =
+            "Unidad no debe contener caracteres de control o marcas de formato ocultas"
+        }
   | otherwise =
       Right billingUnit
 
