@@ -9,7 +9,7 @@ import           Data.Char
   , generalCategory
   , isControl
   )
-import           Data.List            (nub)
+import           Data.List            (group, nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Database.Persist.Sql (fromSqlKey)
@@ -175,6 +175,7 @@ validateFutureStubCatalog catalog = do
   normalized <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
+  _ <- validateFutureStubCatalogAreaOrder normalized
   if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
     else Right normalized
@@ -188,6 +189,13 @@ validateFutureStubCatalogEntry (area, endpoint) = do
     else if (areaClean, endpointClean) `notElem` allowedFutureStubMetadata
       then invalidFutureStubMetadata
     else pure (areaClean, endpointClean)
+
+validateFutureStubCatalogAreaOrder :: [(Text, Text)] -> Either ServerError [Text]
+validateFutureStubCatalogAreaOrder catalog =
+  let areaRuns = map head (group (map fst catalog))
+  in if areaRuns == allowedFutureStubAreas && length areaRuns == length (nub areaRuns)
+       then Right areaRuns
+       else invalidFutureStubCatalog
 
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =
@@ -433,7 +441,15 @@ allowedFutureStubMetadata =
 
 allowedFutureStubAreas :: [Text]
 allowedFutureStubAreas =
-  nub (map fst allowedFutureStubMetadata)
+  [ "access"
+  , "crm"
+  , "scheduling"
+  , "packages"
+  , "invoicing"
+  , "inventory"
+  , "admin"
+  , "experience"
+  ]
 
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea

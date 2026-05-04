@@ -337,6 +337,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleView
     , validateFutureStubArea
     , validateFutureStubCatalog
+    , validateFutureStubCatalogAreaOrder
     , validateFutureStubCatalogEntry
     , validateFutureStubCatalogResponses
     , validateFutureStubMetadata
@@ -8655,6 +8656,27 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [(" crm", "parties/list-columns")]
             assertInvalid [("crm", "parties/1list-columns")]
             assertInvalid [("crm", "parties/list columns")]
+
+        it "keeps fallback discovery areas grouped in mounted route order" $ do
+            validateFutureStubCatalogAreaOrder allowedFutureStubMetadata
+                `shouldBe` Right allowedFutureStubAreas
+
+            let accessEntries = filter ((== "access") . fst) allowedFutureStubMetadata
+                crmEntries = filter ((== "crm") . fst) allowedFutureStubMetadata
+                assertInvalid catalog =
+                    case validateFutureStubCatalogAreaOrder catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid fallback discovery area order, got: " <> show value)
+            case (accessEntries, crmEntries) of
+                (firstAccess : secondAccess : _, firstCrm : _) ->
+                    assertInvalid [firstAccess, firstCrm, secondAccess]
+                _ ->
+                    expectationFailure "Expected fallback discovery area fixtures to include access and crm entries"
 
     describe "validateFutureStubCatalogResponses" $ do
         it "rejects missing, duplicated, or reordered fallback discovery responses" $ do
