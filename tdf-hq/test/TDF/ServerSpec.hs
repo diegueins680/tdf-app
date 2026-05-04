@@ -127,6 +127,8 @@ import TDF.Server
     , validateEngineer
     , validateWhatsAppMessagesLimit
     , validateBookingListFilters
+    , validatePartyDisplayName
+    , validatePartyDisplayNameUpdate
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateUserRoleUserId
@@ -259,6 +261,7 @@ import TDF.Server
     , getInvoiceById
     , getInvoicesBySession
     , createReceipt
+    , createParty
     , getReceipt
     , resolvePartyRoleAssignmentTarget
     , resolvePartyRelatedTarget
@@ -627,6 +630,48 @@ spec = describe "TDF.Server helpers" $ do
             decodePartyUpdate
                 "{\"uDisplayName\":\"Ada Updated\",\"primaryEmail\":\"ignored@example.com\"}"
                 `shouldSatisfy` isLeft
+
+        it "normalizes valid CRM display names before persistence" $ do
+            validatePartyDisplayName "  Ada Lovelace  "
+                `shouldBe` Right "Ada Lovelace"
+            validatePartyDisplayNameUpdate Nothing `shouldBe` Right Nothing
+            validatePartyDisplayNameUpdate (Just "  Ada Updated  ")
+                `shouldBe` Right (Just "Ada Updated")
+
+        it "rejects blank or unsafe CRM display names before party creation reaches storage" $ do
+            let assertInvalid rawDisplayName expectedMessage = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                ( createParty
+                                    (mkUser [Admin])
+                                    ( DTO.PartyCreate
+                                        Nothing
+                                        rawDisplayName
+                                        False
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                        Nothing
+                                    )
+                                )
+                                (error "createParty should reject invalid displayName before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid party displayName to be rejected, got: " <> show value)
+            assertInvalid "   " "displayName must not be blank"
+            assertInvalid "Ada\nLovelace" "displayName must not contain control characters"
+            assertInvalid
+                ("Ada" <> T.singleton '\x202E' <> "Lovelace")
+                "displayName must not contain control characters"
 
     describe "normalizeOptionalInput" $ do
         it "returns Nothing when input is Nothing" $

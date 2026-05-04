@@ -6023,11 +6023,12 @@ listParties user = do
 createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
 createParty user req = do
   requireModule user ModuleCRM
+  displayNameVal <- either throwError pure (validatePartyDisplayName (cDisplayName req))
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   let p = Party
           { partyLegalName = cLegalName req
-          , partyDisplayName = cDisplayName req
+          , partyDisplayName = displayNameVal
           , partyIsOrg = cIsOrg req
           , partyTaxId = cTaxId req
           , partyPrimaryEmail = cPrimaryEmail req
@@ -6061,6 +6062,7 @@ getParty user pidI = do
 updateParty :: AuthedUser -> Int64 -> PartyUpdate -> AppM PartyDTO
 updateParty user pidI req = do
   requireModule user ModuleCRM
+  displayNameUpdate <- either throwError pure (validatePartyDisplayNameUpdate (uDisplayName req))
   Env pool _ <- ask
   let pid = toSqlKey pidI :: Key Party
   liftIO $ flip runSqlPool pool $ do
@@ -6070,7 +6072,7 @@ updateParty user pidI req = do
       Just p -> do
         let p' = p
               { partyLegalName        = maybe (partyLegalName p) Just (uLegalName req)
-              , partyDisplayName      = fromMaybe (M.partyDisplayName p) (uDisplayName req)
+              , partyDisplayName      = fromMaybe (M.partyDisplayName p) displayNameUpdate
               , partyIsOrg            = fromMaybe (partyIsOrg p)         (uIsOrg req)
               , partyTaxId            = maybe (partyTaxId p) Just       (uTaxId req)
               , partyPrimaryEmail     = maybe (partyPrimaryEmail p) Just (uPrimaryEmail req)
@@ -6082,6 +6084,28 @@ updateParty user pidI req = do
               }
         replace pid p'
   getParty user pidI
+
+validatePartyDisplayName :: Text -> Either ServerError Text
+validatePartyDisplayName rawDisplayName =
+  let displayNameVal = T.strip rawDisplayName
+  in if T.null displayNameVal
+       then Left err400 { errBody = "displayName must not be blank" }
+       else if T.any isUnsafePartyDisplayNameChar displayNameVal
+         then Left err400
+           { errBody =
+               "displayName must not contain control characters or hidden formatting characters"
+           }
+         else Right displayNameVal
+
+validatePartyDisplayNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
+validatePartyDisplayNameUpdate Nothing = Right Nothing
+validatePartyDisplayNameUpdate (Just rawDisplayName) =
+  Just <$> validatePartyDisplayName rawDisplayName
+
+isUnsafePartyDisplayNameChar :: Char -> Bool
+isUnsafePartyDisplayNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 addRole :: AuthedUser -> Int64 -> RolePayload -> AppM NoContent
 addRole user pidI (RolePayload roleTxt) = do
