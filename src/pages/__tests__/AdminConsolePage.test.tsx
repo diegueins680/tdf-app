@@ -3499,6 +3499,44 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores not-ready preview cards so first-run only shows actionable admin modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'api-tokens-not-ready',
+          title: 'Tokens API',
+          body: ['Esta vista aún no está lista todavía.'],
+        },
+        {
+          cardId: 'service-keys-not-ready',
+          title: 'Service keys',
+          body: ['This workflow is not ready yet.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /Tokens API|Service keys/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens API')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service keys')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Esta vista aún no está lista todavía\./i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/This workflow is not ready yet\./i)).not.toBeInTheDocument();
+  });
+
   it('ignores terse Spanish coming-soon preview cards so fallback discovery does not add dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
