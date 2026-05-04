@@ -1063,8 +1063,9 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       const pageText = container.textContent ?? '';
-      expect(pageText).toContain('Base: v3 · ID 102');
-      expect(pageText.split('Base: v3 · ID 102').length - 1).toBe(1);
+      expect(pageText).toContain('Base: v3');
+      expect(pageText.split('Base: v3').length - 1).toBe(1);
+      expect(pageText).not.toContain('Base: v3 · ID 102');
       expect(pageText).not.toContain('Editando desde ID');
     });
 
@@ -1103,7 +1104,8 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Borrar')).toBe(0);
       expect(countExactText(container, 'En formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
-      expect(container.textContent).toContain('Base: v3 · ID 102');
+      expect(container.textContent).toContain('Base: v3');
+      expect(container.textContent).not.toContain('Base: v3 · ID 102');
     });
 
     await cleanup();

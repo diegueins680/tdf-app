@@ -643,7 +643,7 @@ export default function CmsAdminPage() {
   }, [filteredVersions.length, versions.length]);
   const editingSourceChipLabel = editingFromId
     ? editingVersion != null
-      ? `Base: v${editingVersion} · ID ${editingFromId}`
+      ? `Base: v${editingVersion}`
       : `Base: ID ${editingFromId}`
     : null;
   const samplePayload = getSamplePayload(normalizedSlugFilter);
