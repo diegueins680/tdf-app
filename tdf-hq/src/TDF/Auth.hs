@@ -28,7 +28,12 @@ import           Control.Applicative        ((<|>))
 import           Control.Monad              (forM_, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.List                  (foldl')
 import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
@@ -178,8 +183,22 @@ resolveUsernameFromLabel rawLabel =
           <|> attempt "google-login:"
       nonEmpty txt =
         let stripped = T.strip txt
-        in if T.null stripped then Nothing else Just stripped
+        in
+          if T.null stripped
+              || T.length stripped > maxResolvedUsernameLabelChars
+              || T.any invalidResolvedUsernameLabelChar stripped
+            then Nothing
+            else Just stripped
   in resolved >>= nonEmpty
+
+maxResolvedUsernameLabelChars :: Int
+maxResolvedUsernameLabelChars = 254
+
+invalidResolvedUsernameLabelChar :: Char -> Bool
+invalidResolvedUsernameLabelChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 modulesForRoles :: [RoleEnum] -> Set ModuleAccess
 modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty

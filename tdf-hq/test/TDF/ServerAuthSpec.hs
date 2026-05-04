@@ -11,6 +11,7 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
+import TDF.Auth (resolveUsernameFromLabel)
 import TDF.DTO (LoginRequest (..))
 import TDF.Models (UserCredential (..))
 import TDF.ServerAuth
@@ -30,6 +31,7 @@ spec :: Spec
 spec = do
   authEmailSpec
   loginRequestSpec
+  tokenLabelUsernameSpec
   signupDisplayNameSpec
   passwordResetTokenSpec
   googleTokenInfoSpec
@@ -99,6 +101,23 @@ loginRequestSpec = describe "validateLoginRequest" $ do
     assertRejected
       "Password must not contain control characters"
       (LoginRequest "ada@example.com" "Temp\nPass123!")
+
+tokenLabelUsernameSpec :: Spec
+tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
+  it "keeps generated auth labels usable as current-session username fallbacks" $ do
+    resolveUsernameFromLabel " password-login: ada@example.com "
+      `shouldBe` Just "ada@example.com"
+    resolveUsernameFromLabel "google-login:ada@example.com"
+      `shouldBe` Just "ada@example.com"
+
+  it "rejects malformed stored label usernames before session fallback rendering" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+    resolveUsernameFromLabel ("password-login:ada" <> hiddenFormat <> "@example.com")
+      `shouldBe` Nothing
+    resolveUsernameFromLabel "password-login:ada example.com"
+      `shouldBe` Nothing
+    resolveUsernameFromLabel ("password-login:" <> T.replicate 255 "a")
+      `shouldBe` Nothing
 
 signupDisplayNameSpec :: Spec
 signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
