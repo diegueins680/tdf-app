@@ -1504,6 +1504,30 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for availability upserts"
 
+    it "rejects availability upserts for non-teacher parties instead of publishing invalid teacher slots" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let availabilityStart = addUTCTime 3600 now
+            availabilityEnd = addUTCTime 7200 now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        privateAvailabilityUpsertHandler
+          (TrialAvailabilityUpsert
+            Nothing
+            (fromIntegral (fromSqlKey subjectKey))
+            (pack (show (fromSqlKey roomResourceId)))
+            availabilityStart
+            availabilityEnd
+            Nothing
+            (Just (fromIntegral (fromSqlKey nonTeacherPartyId))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for availability upserts"
+
   describe "private trial scheduling" $ do
     it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
       let assertRejected expectedMessage rawRequestId rawTeacherId = do

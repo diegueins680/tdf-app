@@ -1391,6 +1391,7 @@ privateTrialsServer user@AuthedUser{..} =
       teacherKey <- resolveTeacherKey teacherId
       let isSelf = teacherKey == auPartyId
       subjectKey <- ensureSubjectExists subjectId
+      ensureTeacherSelection teacherKey
       roomKey <- parseRoomKey roomId
       ensureRoomAllowed subjectKey roomKey
       when (isSelf && not (hasModuleAccess ModuleAdmin user)) $
