@@ -5086,6 +5086,19 @@ spec = describe "TDF.Server helpers" $ do
                             <> show (fmap (fromSqlKey . entityKey) value)
                         )
 
+        it "rejects a malformed stored fallback config before returning it" $
+            case selectUniqueCalendarConfigFallback
+                    [calendarConfigEntity 1 " primary "] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Stored Google Calendar config calendarId is invalid"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed Calendar config fallback to fail, got: "
+                            <> show (fmap (fromSqlKey . entityKey) value)
+                        )
+
     describe "validateGoogleCalendarEventStatus" $ do
         it "normalizes only statuses the sync path can persist and report consistently" $ do
             validateGoogleCalendarEventStatus " CONFIRMED " `shouldBe` Right "confirmed"

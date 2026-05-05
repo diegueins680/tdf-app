@@ -3029,12 +3029,27 @@ selectUniqueCalendarConfigFallback
   :: [Entity Cal.GoogleCalendarConfig]
   -> Either ServerError (Maybe (Entity Cal.GoogleCalendarConfig))
 selectUniqueCalendarConfigFallback [] = Right Nothing
-selectUniqueCalendarConfigFallback [cfg] = Right (Just cfg)
+selectUniqueCalendarConfigFallback [cfg] =
+  Just <$> validateStoredCalendarConfigFallback cfg
 selectUniqueCalendarConfigFallback _ =
   Left err409
     { errBody =
         "calendarId is required when multiple Google Calendar configs exist"
     }
+
+validateStoredCalendarConfigFallback
+  :: Entity Cal.GoogleCalendarConfig
+  -> Either ServerError (Entity Cal.GoogleCalendarConfig)
+validateStoredCalendarConfigFallback cfg
+  | Right calendarIdVal <- CalAPI.normalizeCalendarId storedCalendarId
+  , calendarIdVal == storedCalendarId =
+      Right cfg
+  | otherwise =
+      Left err500
+        { errBody = "Stored Google Calendar config calendarId is invalid"
+        }
+  where
+    storedCalendarId = Cal.googleCalendarConfigCalendarId (entityVal cfg)
 
 encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =
