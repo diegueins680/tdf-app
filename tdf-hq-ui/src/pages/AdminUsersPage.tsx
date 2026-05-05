@@ -968,7 +968,7 @@ export default function AdminUsersPage() {
   const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
     || (!hasActiveSearch && hasUsers && !showSearchEmptyState && showSearchField);
   const showHeaderActions = showInactiveFilterAction || showRefreshAction;
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const collapsedInactiveUsersToggleLabel = useMemo(
@@ -1376,8 +1376,8 @@ export default function AdminUsersPage() {
                 <Typography color="text.secondary" title={searchEmptyStateTitle}>
                   {searchEmptyStateMessage}
                 </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {showReviewInactiveSearchEmptyAction && (
+                {showReviewInactiveSearchEmptyAction && (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <Button
                       size="small"
                       variant="outlined"
@@ -1385,16 +1385,8 @@ export default function AdminUsersPage() {
                     >
                       {ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION}
                     </Button>
-                  )}
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={handleClearSearch}
-                    data-testid="admin-users-empty-search-clear"
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                </Stack>
+                  </Stack>
+                )}
               </Stack>
             ) : null}
             {visibleUsers.length ? (
