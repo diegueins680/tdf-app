@@ -57,6 +57,7 @@ module TDF.Server.SocialEventsHandlers
   , validateOptionalTicketBuyerPartyId
   , validateTicketPurchaseBuyerName
   , validateTicketPurchaseBuyerEmail
+  , validateTicketTierCodeInput
   , validateTicketTierCurrencyInput
   , isImageUpload
   , validateEventImageUploadSize
@@ -1431,9 +1432,9 @@ socialEventsServer user = eventsServer
       when (ticketTierQuantityTotal dto <= 0) $ throwError err400 { errBody = "ticket tier quantity must be > 0" }
       currencyVal <- either throwError pure $
         validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
-      let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
-          tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
-          salesStartVal = ticketTierSalesStart dto
+      tierCode <- either throwError pure $
+        validateTicketTierCodeInput tierName (ticketTierCode dto)
+      let salesStartVal = ticketTierSalesStart dto
           salesEndVal = ticketTierSalesEnd dto
       when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
       mInserted <- liftIO $ runSqlPool (insertUnique EventTicketTier
@@ -1476,9 +1477,9 @@ socialEventsServer user = eventsServer
       when (ticketTierQuantityTotal dto < eventTicketTierQuantitySold tier) $ throwError err400 { errBody = "ticket tier quantity cannot be below sold quantity" }
       currencyVal <- either throwError pure $
         validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
-      let baseCode = cleanMaybeText (Just (ticketTierCode dto)) <|> Just tierName
-          tierCode = normalizeTicketTierCode (fromMaybe tierName baseCode)
-          salesStartVal = ticketTierSalesStart dto
+      tierCode <- either throwError pure $
+        validateTicketTierCodeInput tierName (ticketTierCode dto)
+      let salesStartVal = ticketTierSalesStart dto
           salesEndVal = ticketTierSalesEnd dto
       when (invalidSalesWindow salesStartVal salesEndVal) $ throwError err400 { errBody = "invalid sales window" }
       mCodeOwner <- liftIO $ runSqlPool (getBy (UniqueEventTicketTierCode eventKey tierCode)) envPool
@@ -2671,6 +2672,16 @@ validateFinanceEntryCurrencyInput defaultCurrency rawCurrency =
         Just currency -> Right currency
         Nothing ->
           Left err400 { errBody = "finance entry currency must be a 3-letter ISO code" }
+
+validateTicketTierCodeInput :: T.Text -> T.Text -> Either ServerError T.Text
+validateTicketTierCodeInput rawTierName rawCode =
+  let source = fromMaybe (T.strip rawTierName) (cleanMaybeText (Just rawCode))
+      normalized = normalizeTicketTierCode source
+  in if not (T.any isAlphaNum source)
+       then Left err400 { errBody = "ticket tier code must include at least one letter or digit" }
+       else if T.length normalized > 64
+         then Left err400 { errBody = "ticket tier code must be 64 characters or fewer" }
+         else Right normalized
 
 validateTicketTierCurrencyInput :: T.Text -> T.Text -> Either ServerError T.Text
 validateTicketTierCurrencyInput defaultCurrency rawCurrency =

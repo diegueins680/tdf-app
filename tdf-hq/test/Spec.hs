@@ -290,6 +290,7 @@ import TDF.Server.SocialEventsHandlers (
     validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerName,
     validateTicketPurchaseBuyerEmail,
+    validateTicketTierCodeInput,
     validateTicketTierCurrencyInput,
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
@@ -7923,6 +7924,34 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected blank budgetLineId to be rejected, got " <> show value)
+
+        it "validates ticket tier codes before fallback normalization can hide ambiguous input" $ do
+            validateTicketTierCodeInput "General Admission" " vip pass "
+                `shouldBe` Right "VIP-PASS"
+            validateTicketTierCodeInput "General Admission" "   "
+                `shouldBe` Right "GENERAL-ADMISSION"
+
+            let assertInvalid rawName rawCode expected =
+                    case validateTicketTierCodeInput rawName rawCode of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid ticket tier code to be rejected, got " <> show value)
+
+            assertInvalid
+                "General Admission"
+                "!!!"
+                "ticket tier code must include at least one letter or digit"
+            assertInvalid
+                "!!!"
+                "   "
+                "ticket tier code must include at least one letter or digit"
+            assertInvalid
+                "General Admission"
+                (Data.Text.replicate 65 "A")
+                "ticket tier code must be 64 characters or fewer"
 
         it "validates ticket tier currencies before ticket tiers can persist opaque codes" $ do
             validateTicketTierCurrencyInput "eur" " usd " `shouldBe` Right "USD"
