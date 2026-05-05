@@ -885,6 +885,42 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the first-version save action until the editor has real content', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sin contenido publicado');
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Cargar ejemplo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(container.textContent).toContain(
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
+      );
+      expect(container.textContent).not.toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('keeps version-history load failures separate from the first-version empty state', async () => {
     listMock.mockRejectedValue(new Error('versions unavailable'));
 

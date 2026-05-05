@@ -280,7 +280,7 @@ export default function CmsAdminPage() {
     ? 'Usa el mismo slug que consume la ruta pública.'
     : 'Completa este slug para habilitar el guardado y Abrir página en vivo.';
   const saveActionLabel = status === 'published' ? 'Guardar y publicar' : 'Guardar borrador';
-  const statusHelperText =
+  const baseStatusHelperText =
     status === 'published'
       ? 'Publicará esta versión al guardar y actualizará la página en vivo.'
       : 'Guardará esta versión como borrador sin cambiar la página en vivo.';
@@ -712,8 +712,23 @@ export default function CmsAdminPage() {
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
   const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
-  const canSaveVersion = hasSlugSelection && !payloadError;
-  const showSaveVersionAction = !liveEditorActionState.showLiveInSyncChip;
+  const editorHasFirstVersionContentDraft =
+    title.trim().length > 0 || (!payloadError && formattedPayload.trim() !== '{}');
+  const showFirstVersionEmptyDraftGuard =
+    hasSlugSelection
+    && !payloadError
+    && !liveLookupUnresolved
+    && !listQuery.isLoading
+    && !listQuery.isError
+    && !listDataInvalid
+    && versions.length === 0
+    && !liveContent
+    && !editorHasFirstVersionContentDraft;
+  const statusHelperText = showFirstVersionEmptyDraftGuard
+    ? 'Agrega un título o payload antes de guardar la primera versión.'
+    : baseStatusHelperText;
+  const canSaveVersion = hasSlugSelection && !payloadError && !showFirstVersionEmptyDraftGuard;
+  const showSaveVersionAction = !liveEditorActionState.showLiveInSyncChip && !showFirstVersionEmptyDraftGuard;
   const showFirstVersionHistoryGuidance =
     hasSlugSelection &&
     !listQuery.isLoading &&
