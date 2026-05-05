@@ -402,6 +402,13 @@ clearWhatsAppTransportVersionEnv =
     , ("WA_API_VERSION", Nothing)
     ]
 
+clearWhatsAppContactEnv :: [(String, Maybe String)]
+clearWhatsAppContactEnv =
+    [ ("COURSE_WHATSAPP_NUMBER", Nothing)
+    , ("WHATSAPP_CONTACT_NUMBER", Nothing)
+    , ("WA_CONTACT_NUMBER", Nothing)
+    ]
+
 initializeTicketCheckInSchema :: SqlPersistT IO ()
 initializeTicketCheckInSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
@@ -1512,6 +1519,7 @@ main = hspec $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WHATSAPP_VERIFY_TOKEN", Just " webhook-secret_123 ") ])
                 $ do
                     cfg <- WhatsAppService.loadWhatsAppConfig
@@ -1552,6 +1560,7 @@ main = hspec $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WA_TOKEN", Just " token_123 ")
                 , ("WA_PHONE_ID", Just " 1234567890 ")
                 , ("WA_API_VERSION", Just " V21.0 ")
@@ -1562,10 +1571,27 @@ main = hspec $ do
                     WhatsAppTransport.waPhoneId cfg `shouldBe` Just "1234567890"
                     WhatsAppTransport.waApiVersion cfg `shouldBe` Just "v21.0"
 
+        it "normalizes WhatsApp contact-number fallbacks before course CTAs use them" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just " +593 99 123 4567 ") ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waContactNumber cfg `shouldBe` Just "+593991234567"
+                    buildWhatsappCtaFor
+                        (WhatsAppTransport.waContactNumber cfg)
+                        "Curso de Producción Musical"
+                        "https://tdf.example.com/curso/produccion"
+                        `shouldSatisfy`
+                            Data.Text.isPrefixOf "https://wa.me/593991234567?text="
+
         it "rejects malformed WhatsApp transport fallbacks before provider sends" $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WHATSAPP_TOKEN", Just "token value") ])
                 $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
                     "Invalid WhatsApp access token"
@@ -1574,6 +1600,7 @@ main = hspec $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
                 $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
                     "Invalid WhatsApp phone number id"
@@ -1582,6 +1609,7 @@ main = hspec $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WHATSAPP_API_VERSION", Just "latest") ])
                 $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
                     "Invalid WhatsApp Graph API version"
@@ -1590,14 +1618,24 @@ main = hspec $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
                 clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
                 [ ("WHATSAPP_VERIFY_TOKEN", Just "webhook\nsecret") ])
                 $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
                     "Invalid WhatsApp verify token"
                         `isInfixOf` show (err :: IOException)
 
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_CONTACT_NUMBER", Just "099 123 4567") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp contact number"
+                        `isInfixOf` show (err :: IOException)
+
         it "validates outgoing WhatsApp send input before reporting missing provider config" $
             withEnvOverrides
-                (clearWhatsAppProviderCredentialEnv ++ clearWhatsAppTransportVersionEnv)
+                (clearWhatsAppProviderCredentialEnv ++ clearWhatsAppTransportVersionEnv ++ clearWhatsAppContactEnv)
                 $ do
                     cfg <- WhatsAppTransport.loadWhatsAppEnv
                     let assertSendError rawPhone rawMessage expectedMessage = do
@@ -3877,7 +3915,7 @@ main = hspec $ do
                     (Just (Data.Text.replicate 121 "a"))
                 )
             assertInvalid
-                "source must not contain control characters"
+                "source must not contain control or formatting characters"
                 (validateWhatsAppConsentSource "public" (Just "landing\npage"))
             assertInvalid
                 "reason is too long"

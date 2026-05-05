@@ -46,7 +46,9 @@ loadWhatsAppEnv = do
   verify <-
     validateOptionalEnvText normalizeWhatsAppVerifyToken
       =<< firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
-  contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+  contact <-
+    validateOptionalEnvText normalizeWhatsAppContactNumber
+      =<< firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <-
     validateOptionalEnvText normalizeGraphApiVersion
       =<< firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
@@ -63,6 +65,20 @@ validateOptionalEnvText :: (Text -> Either String Text) -> Maybe Text -> IO (May
 validateOptionalEnvText _ Nothing = pure Nothing
 validateOptionalEnvText normalizeValue (Just rawValue) =
   either fail (pure . Just) (normalizeValue rawValue)
+
+normalizeWhatsAppContactNumber :: Text -> Either String Text
+normalizeWhatsAppContactNumber rawPhone =
+  case normalizeWhatsAppRecipientPhone rawPhone of
+    Left _ -> Left contactNumberMessage
+    Right phone ->
+      let digitsOnly = T.filter (\ch -> ch >= '0' && ch <= '9') phone
+      in case T.uncons digitsOnly of
+           Just (firstDigit, _)
+             | firstDigit /= '0' -> Right phone
+           _ -> Left contactNumberMessage
+  where
+    contactNumberMessage =
+      "Invalid WhatsApp contact number: expected international 8-15 digits with country code"
 
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
 sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
