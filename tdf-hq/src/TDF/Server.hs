@@ -8475,9 +8475,20 @@ normalizeOptionalText =
         in if T.null trimmed then Nothing else Just trimmed
   in (>>= clean)
 
+validateSessionPathId :: Text -> Either ServerError (Key ME.Session)
+validateSessionPathId raw =
+  let normalized = T.strip raw
+      invalid = Left err400 { errBody = "Invalid session identifier" }
+  in if T.null normalized || normalized /= raw
+       then invalid
+       else
+         case fromPathPiece normalized of
+           Just key | toPathPiece key == normalized -> Right key
+           _ -> invalid
+
 parseSessionKey :: Text -> AppM (Key ME.Session)
 parseSessionKey raw =
-  maybe (throwBadRequest "Invalid session identifier") pure (fromPathPiece raw)
+  either throwError pure (validateSessionPathId raw)
 
 resolveSessionInvoiceCustomer :: Entity ME.Session -> GenerateSessionInvoiceReq -> AppM (Key Party)
 resolveSessionInvoiceCustomer (Entity _ session) req =

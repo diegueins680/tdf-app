@@ -210,6 +210,7 @@ import TDF.Server
     , validateOptionalCourseNonNegativeField
     , validatePositiveIdField
     , validateOptionalPositiveIdField
+    , validateSessionPathId
     , validateSessionInputLookup
     , validateInputListInventoryFilters
     , resolveSocialTargetPartyId
@@ -762,6 +763,33 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Invalid sessionId"
                 (validateSessionInputLookup Nothing (Just "not-a-session-id"))
+
+    describe "validateSessionPathId" $ do
+        it "accepts canonical session UUID path identifiers" $ do
+            let validSessionId = "00000000-0000-0000-0000-000000000084"
+            case validateSessionPathId validSessionId of
+                Right keyVal ->
+                    toPathPiece keyVal `shouldBe` validSessionId
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid session path id, got: " <> show serverErr)
+
+        it "rejects malformed or non-canonical session invoice ids before lookup fallback" $ do
+            let assertInvalid rawId =
+                    case validateSessionPathId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid session identifier"
+                        Right keyVal ->
+                            expectationFailure
+                                ( "Expected invalid session path id, got: "
+                                    <> T.unpack (toPathPiece keyVal)
+                                )
+            assertInvalid "not-a-session-id"
+            assertInvalid " 00000000-0000-0000-0000-000000000084"
+            assertInvalid "AAAAAAAA-0000-0000-0000-000000000084"
+            assertInvalid "00000000000000000000000000000084"
 
     describe "validateInputListInventoryFilters" $ do
         it "accepts broad inventory browsing and scoped field availability lookups" $ do
