@@ -30,6 +30,7 @@ module TDF.ServerAdmin
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   , validateAdminPassword
+  , validateDropdownOptionCategory
   , validateDropdownOptionValue
   , validateDropdownOptionLabel
   , normalizeBrainEntryTags
@@ -667,8 +668,8 @@ adminServer user =
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
-          includeInactive = fromMaybe False mIncludeInactive
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
+      let includeInactive = fromMaybe False mIncludeInactive
           filters = [ME.DropdownOptionCategory ==. categoryKey]
                  ++ [ME.DropdownOptionActive ==. True | not includeInactive]
           ordering =
@@ -681,7 +682,7 @@ adminServer user =
 
     createOption rawCategory DropdownOptionCreate{..} = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
       valueTxt <- either throwError pure (validateDropdownOptionValue docValue)
       labelValue <- either throwError pure (validateDropdownOptionLabel docLabel)
       let sortOrderValue = docSortOrder
@@ -709,7 +710,7 @@ adminServer user =
 
     updateOption rawCategory rawId DropdownOptionUpdate{..} = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
       valueUpdate <- either throwError pure (traverse validateDropdownOptionValue douValue)
       optionId <- parseKey rawId
       mOption <- withPool $ getEntity optionId
@@ -1073,6 +1074,36 @@ parseKey raw =
 
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip
+
+validateDropdownOptionCategory :: Text -> Either ServerError Text
+validateDropdownOptionCategory rawCategory
+  | T.null category =
+      Left err400 { errBody = "Dropdown category is required" }
+  | T.length category > maxDropdownCategoryChars =
+      Left err400 { errBody = "Dropdown category must be 64 characters or fewer" }
+  | T.any isControl category =
+      Left err400 { errBody = "Dropdown category must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar category =
+      Left err400 { errBody = "Dropdown category must not contain hidden format characters" }
+  | not (T.all isDropdownCategoryChar category) =
+      Left err400
+        { errBody =
+            "Dropdown category must use only ASCII letters, numbers, hyphens, or underscores"
+        }
+  | not (isDropdownCategoryAtom (T.head category))
+      || not (isDropdownCategoryAtom (T.last category)) =
+      Left err400
+        { errBody = "Dropdown category must start and end with an ASCII letter or number" }
+  | otherwise =
+      Right category
+  where
+    category = normaliseCategory rawCategory
+    isDropdownCategoryAtom ch = isAsciiLower ch || isDigit ch
+    isDropdownCategoryChar ch =
+      isDropdownCategoryAtom ch || ch == '-' || ch == '_'
+
+maxDropdownCategoryChars :: Int
+maxDropdownCategoryChars = 64
 
 normaliseText :: Maybe Text -> Maybe Text
 normaliseText Nothing = Nothing

@@ -66,6 +66,7 @@ import TDF.ServerAdmin (
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
     validateAdminPassword,
+    validateDropdownOptionCategory,
     validateDropdownOptionValue,
     validateDropdownOptionLabel,
     normalizeBrainEntryTags,
@@ -291,19 +292,44 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Password must not contain control characters" "TempPass123!\t"
 
     describe "dropdown option validation" $ do
-        it "trims valid dropdown option values and labels before persistence" $ do
+        it "normalizes valid dropdown categories, values, and labels before persistence" $ do
+            validateDropdownOptionCategory "  Asset-Category  "
+                `shouldBe` Right "asset-category"
+            validateDropdownOptionCategory "band_role"
+                `shouldBe` Right "band_role"
             validateDropdownOptionValue "  open  " `shouldBe` Right "open"
             validateDropdownOptionLabel (Just "  Open for booking  ")
                 `shouldBe` Right (Just "Open for booking")
             validateDropdownOptionLabel (Just "   ") `shouldBe` Right Nothing
 
-        it "rejects control-character dropdown option writes instead of storing ambiguous admin metadata" $ do
+        it
+            ( "rejects control-character dropdown option writes instead of storing "
+                <> "ambiguous admin metadata"
+            )
+            $ do
             let assertInvalid expectedMessage result = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL8.unpack (errBody err) `shouldContain` expectedMessage
                     Right value ->
-                        expectationFailure ("Expected invalid dropdown option field, got " <> show value)
+                        expectationFailure
+                            ("Expected invalid dropdown option field, got " <> show value)
+            assertInvalid "Dropdown category is required" (validateDropdownOptionCategory "   ")
+            assertInvalid
+                "Dropdown category must use only ASCII letters, numbers, hyphens, or underscores"
+                (validateDropdownOptionCategory "asset category")
+            assertInvalid
+                "Dropdown category must start and end with an ASCII letter or number"
+                (validateDropdownOptionCategory "-asset-category")
+            assertInvalid
+                "Dropdown category must be 64 characters or fewer"
+                (validateDropdownOptionCategory (T.replicate 65 "a"))
+            assertInvalid
+                "Dropdown category must not contain control characters"
+                (validateDropdownOptionCategory "asset\ncategory")
+            assertInvalid
+                "Dropdown category must not contain hidden format characters"
+                (validateDropdownOptionCategory ("asset" <> "\x200B" <> "category"))
             assertInvalid "Value is required" (validateDropdownOptionValue "   ")
             assertInvalid
                 "Value must not contain control characters"
