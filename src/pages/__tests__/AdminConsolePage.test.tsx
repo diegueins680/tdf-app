@@ -3811,6 +3811,56 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No hay datos para mostrar/i)).not.toBeInTheDocument();
   });
 
+  it('ignores terse no-data fallback cards without hiding actionable setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-empty',
+          title: 'Integraciones',
+          body: ['Sin datos.'],
+        },
+        {
+          cardId: 'ops-empty',
+          title: 'Reporte operativo',
+          body: ['No data:'],
+        },
+        {
+          cardId: 'team-contact-setup',
+          title: 'Datos de contacto del equipo',
+          body: [
+            'Sin datos de contacto cargados. Invita al equipo para completar el perfil administrativo.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sin datos\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No data:$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Datos de contacto del equipo')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Sin datos de contacto cargados\. Invita al equipo para completar el perfil administrativo\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('ignores no-record fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

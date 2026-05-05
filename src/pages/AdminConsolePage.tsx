@@ -444,6 +444,10 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'aun no esta configurado',
   'todavia no esta configurado',
 ] as const;
+const ADMIN_CONSOLE_PLACEHOLDER_BODY_EXACT_KEYS = new Set([
+  'no data',
+  'sin datos',
+]);
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'revisa el estado del sistema ajusta permisos y valida cambios recientes desde un solo lugar',
   'review system status adjust permissions and validate recent changes from one place',
@@ -608,6 +612,11 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
 
 function isPlaceholderAdminConsoleParagraph(paragraph: string) {
   const normalizedParagraph = normalizeAdminConsoleCardKey(paragraph);
+  const exactPlaceholderKey = normalizedParagraph.replace(/[.!?:;]+$/g, '').trim();
+
+  if (ADMIN_CONSOLE_PLACEHOLDER_BODY_EXACT_KEYS.has(exactPlaceholderKey)) {
+    return true;
+  }
 
   return ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS.some((fragment) => (
     normalizedParagraph.includes(fragment)
