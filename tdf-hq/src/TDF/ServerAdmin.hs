@@ -1348,6 +1348,8 @@ validateAdminEmailSubject rawSubject
       Left err400 { errBody = "Subject must be a single line" }
   | T.any isControl rawSubject =
       Left err400 { errBody = "Subject must not contain control characters" }
+  | T.any isHiddenAdminTextChar rawSubject =
+      Left err400 { errBody = "Subject must not contain hidden format characters" }
   | T.null subject =
       Left err400 { errBody = "Subject must not be empty" }
   | T.length subject > adminEmailSubjectMaxLength =
@@ -1564,10 +1566,16 @@ validateAdminEmailBodyLines rawLines
       Left err400 { errBody = "Body lines must be 1000 characters or fewer" }
   | any (T.any isControl) bodyLines =
       Left err400 { errBody = "Body lines must not contain control characters" }
+  | any (T.any isHiddenAdminTextChar) bodyLines =
+      Left err400 { errBody = "Body lines must not contain hidden format characters" }
   | otherwise =
       Right bodyLines
   where
     bodyLines = normalizeAdminEmailBodyLines rawLines
+
+isHiddenAdminTextChar :: Char -> Bool
+isHiddenAdminTextChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 adminEmailBodyLineMaxCount :: Int
 adminEmailBodyLineMaxCount = 50

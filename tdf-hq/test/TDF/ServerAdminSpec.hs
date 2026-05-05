@@ -120,6 +120,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Body lines must not contain control characters"
                 (validateAdminEmailBodyLines ["Hola\nBcc: ops@example.com"])
+            assertInvalid
+                "Body lines must not contain hidden format characters"
+                (validateAdminEmailBodyLines ["Hola\x202EHidden"])
 
     describe "resolveAdminEmailTestBody" $ do
         it "uses a stable default for omitted test bodies and trims explicit bodies" $ do
@@ -173,6 +176,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Subject must not contain control characters"
                 (validateAdminEmailSubject "Launch\NULHidden")
+            assertInvalid
+                "Subject must not contain hidden format characters"
+                (validateAdminEmailSubject "Launch\x202EHidden")
 
     describe "validateOptionalAdminEmailName" $ do
         it "trims optional display names and treats blanks as omitted" $ do
