@@ -4222,6 +4222,9 @@ main = hspec $ do
             assertInvalid Nothing "PayPal capture response did not include a status"
             assertInvalid (Just "   ") "PayPal capture response status cannot be blank"
             assertInvalid
+                (Just (Data.Text.replicate 65 "A"))
+                "PayPal capture response status must be 64 characters or fewer"
+            assertInvalid
                 (Just "COM PLETED")
                 "PayPal capture response status must not contain control characters"
             assertInvalid

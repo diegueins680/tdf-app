@@ -11449,6 +11449,11 @@ validatePayPalCaptureStatusField Nothing =
 validatePayPalCaptureStatusField (Just rawStatus)
   | T.null statusTxt =
       Left err502 { errBody = "PayPal capture response status cannot be blank" }
+  | T.length statusTxt > 64 =
+      Left err502
+        { errBody =
+            "PayPal capture response status must be 64 characters or fewer"
+        }
   | T.any (\ch -> isControl ch || isSpace ch) statusTxt =
       Left err502
         { errBody =
