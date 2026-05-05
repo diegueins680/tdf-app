@@ -1153,6 +1153,16 @@ function getHealthStatusChipColor(value?: string | null): 'default' | 'success' 
   return 'warning';
 }
 
+function shouldShowServiceHealthChip(value?: string | null) {
+  return !isHealthyHealthIndicator(value);
+}
+
+function formatHealthStatusChipValue(value?: string | null) {
+  const trimmedValue = value?.trim();
+
+  return trimmedValue ? trimmedValue : '—';
+}
+
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
   return normalizeRoleList(roles);
 }
@@ -1637,6 +1647,20 @@ export default function AdminConsolePage() {
     apiStatus: healthQuery.data?.status,
     dbStatus: healthQuery.data?.db,
   });
+  const serviceHealthStatusChips = healthQuery.data
+    ? [
+      {
+        key: 'api',
+        label: `API: ${formatHealthStatusChipValue(healthQuery.data.status)}`,
+        value: healthQuery.data.status,
+      },
+      {
+        key: 'db',
+        label: `Base de datos: ${formatHealthStatusChipValue(healthQuery.data.db)}`,
+        value: healthQuery.data.db,
+      },
+    ].filter((chip) => shouldShowServiceHealthChip(chip.value))
+    : [];
   const showGettingStartedGuidance =
     !usersQuery.isLoading
     && !auditQuery.isLoading
@@ -2050,20 +2074,16 @@ export default function AdminConsolePage() {
                   </Typography>
                 )}
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                  <Chip
-                    data-testid="admin-service-health-chip"
-                    label={`API: ${healthQuery.data?.status ?? '—'}`}
-                    color={getHealthStatusChipColor(healthQuery.data?.status)}
-                    size="small"
-                    variant={isHealthyHealthIndicator(healthQuery.data?.status) ? 'outlined' : 'filled'}
-                  />
-                  <Chip
-                    data-testid="admin-service-health-chip"
-                    label={`Base de datos: ${healthQuery.data?.db ?? '—'}`}
-                    color={getHealthStatusChipColor(healthQuery.data?.db)}
-                    size="small"
-                    variant={isHealthyHealthIndicator(healthQuery.data?.db) ? 'outlined' : 'filled'}
-                  />
+                  {serviceHealthStatusChips.map((chip) => (
+                    <Chip
+                      key={chip.key}
+                      data-testid="admin-service-health-chip"
+                      label={chip.label}
+                      color={getHealthStatusChipColor(chip.value)}
+                      size="small"
+                      variant="filled"
+                    />
+                  ))}
                 </Stack>
               </Stack>
             ) : null}
