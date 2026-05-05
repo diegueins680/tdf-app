@@ -883,6 +883,12 @@ const firstRunInfoSessionDescriptorPrefixPattern =
 const firstRunInfoSessionDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:info(?:rmation)?\s+session|orientation|open\s+house)\s+(?:form|page|signup|sign[-\s]?up|registration)|(?:formulario|p[aá]gina|registro|inscripci[oó]n(?:es)?)\s+de\s+(?:sesi[oó]n\s+informativa|orientaci[oó]n|clase\s+abierta)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
+const firstRunLiveSessionDescriptorPrefixPattern =
+  /^(?:(?:(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+)?(?:webinar|meeting|live\s+session|sesi[oó]n\s+en\s+vivo)\s+(?:registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page|portal|link|url))?|(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+(?:registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page|portal|link|url))?|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:registro|inscripci[oó]n)\s+(?:de|para)\s+(?:webinar|meeting|sesi[oó]n\s+en\s+vivo))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLiveSessionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+)?(?:webinar|meeting|live\s+session|sesi[oó]n\s+en\s+vivo)\s+(?:registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page|portal|link|url))?|(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+(?:registration|enrollment|sign[-\s]?up)(?:\s+(?:form|page|portal|link|url))?|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:registro|inscripci[oó]n)\s+(?:de|para)\s+(?:webinar|meeting|sesi[oó]n\s+en\s+vivo))\s*$/i;
+
 const firstRunPublicRegistrationDescriptorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+p[uú]blic[oa]s?\s+(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -962,6 +968,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
+    .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
@@ -1005,6 +1012,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunInfoSessionDescriptorSuffixPattern, '')
+    .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
