@@ -1269,6 +1269,16 @@ describe('AdminConsolePage', () => {
           title: 'Estado de API',
           body: ['Revisa disponibilidad y latencia antes de ajustar accesos.'],
         },
+        {
+          cardId: 'fallback-api-connectivity',
+          title: 'API connectivity',
+          body: ['Confirm API connectivity before updating admin roles.'],
+        },
+        {
+          cardId: 'fallback-db-connection',
+          title: 'Conexión de base de datos',
+          body: ['Valida la conexión de base de datos antes del recorrido inicial.'],
+        },
       ],
     });
 
@@ -1289,6 +1299,8 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('API health')).not.toBeInTheDocument();
     expect(screen.queryByText('Database status')).not.toBeInTheDocument();
     expect(screen.queryByText('Estado de API')).not.toBeInTheDocument();
+    expect(screen.queryByText('API connectivity')).not.toBeInTheDocument();
+    expect(screen.queryByText('Conexión de base de datos')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Review API latency and uptime before changing admin permissions\./i),
     ).not.toBeInTheDocument();
@@ -1297,6 +1309,12 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Revisa disponibilidad y latencia antes de ajustar accesos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm API connectivity before updating admin roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Valida la conexión de base de datos antes del recorrido inicial\./i),
     ).not.toBeInTheDocument();
   });
 
