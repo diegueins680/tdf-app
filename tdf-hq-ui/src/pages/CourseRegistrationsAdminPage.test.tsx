@@ -219,27 +219,27 @@ const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
-  'Abre el expediente desde el nombre; Cambiar estado abre acciones rápidas.';
+  'Usa el nombre para abrir expediente; Cambiar estado muestra acciones.';
 const paymentWorkflowDossierScopeHint =
-  'Abre el expediente desde el nombre; Cambiar estado abre Registrar pago y acciones rápidas.';
+  'Usa el nombre para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
 const dossierOnlyScopeHint =
-  'Abre el expediente desde el nombre; el estado abre acciones rápidas.';
+  'Usa el nombre para abrir expediente; Estado para acciones rápidas.';
 const pendingRecoveryScopeHint =
-  'Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.';
+  'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
 const contactDossierScopeHint =
-  'Abre el expediente desde el contacto; Cambiar estado abre acciones rápidas.';
+  'Usa el contacto para abrir expediente; Cambiar estado muestra acciones.';
 const contactPaymentWorkflowDossierScopeHint =
-  'Abre el expediente desde el contacto; Cambiar estado abre Registrar pago y acciones rápidas.';
+  'Usa el contacto para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
 const contactDossierOnlyScopeHint =
-  'Abre el expediente desde el contacto; el estado abre acciones rápidas.';
+  'Usa el contacto para abrir expediente; Estado para acciones rápidas.';
 const recordDossierScopeHint =
-  'Abre el expediente desde el registro; Cambiar estado abre acciones rápidas.';
+  'Usa el registro para abrir expediente; Cambiar estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Abre el expediente desde el registro; Cambiar estado abre Registrar pago y acciones rápidas.';
+  'Usa el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
 const mixedIdentityDossierScopeHint =
-  'Abre el expediente desde el nombre, el contacto o el registro; Cambiar estado abre acciones rápidas.';
+  'Usa el nombre, el contacto o el registro para abrir expediente; Cambiar estado muestra acciones.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Abre el expediente desde el nombre, el contacto o el registro; Cambiar estado abre Registrar pago y acciones rápidas.';
+  'Usa el nombre, el contacto o el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
@@ -1625,7 +1625,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(contactDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
       expect(container.textContent).not.toContain('dato principal de cada fila');
-      expect(countOccurrences(container, 'Abre el expediente desde')).toBe(1);
+      expect(countOccurrences(container, 'para abrir expediente')).toBe(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
@@ -2123,7 +2123,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado único en esta vista.');
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain(
-        'Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. Abre el expediente desde el nombre; Cambiar estado abre Registrar pago y acciones rápidas.',
+        `Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(8);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
@@ -3490,7 +3490,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.textContent).toContain(
-        'Manual Review. Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+        `Manual Review. Busca dentro de las 9 inscripciones cargadas. ${dossierOnlyScopeHint}`,
       );
       expect(container.textContent).not.toContain('Estado no estándar');
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
@@ -8192,7 +8192,7 @@ describe('CourseRegistrationsAdminPage', () => {
         `Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. ${pendingRecoveryScopeHint}`,
       );
       expect(container.textContent).not.toContain(
-        'Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. Abre el expediente desde el nombre; Cambiar estado abre acciones rápidas.',
+        `Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. ${dossierScopeHint}`,
       );
       expect(countButtonsByText(container, 'Reabrir')).toBe(9);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
@@ -8245,7 +8245,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).toContain('Abre el expediente desde el nombre;');
+      expect(container.textContent).toContain('Usa el nombre para abrir expediente;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
@@ -8302,7 +8302,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Estudiante 9');
       expect(container.textContent).toContain(
-        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; Cambiar estado abre Registrar pago y acciones rápidas.',
+        `Mostrando 1 de 9 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
@@ -8351,10 +8351,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain(
-        'Mostrando 1 de 9 inscripciones cargadas. Abre el expediente desde el nombre; usa Reabrir para volver a pendiente.',
+        `Mostrando 1 de 9 inscripciones cargadas. ${pendingRecoveryScopeHint}`,
       );
       expect(container.textContent).not.toContain(
-        'Abre el expediente desde el nombre; el estado abre acciones rápidas.',
+        dossierOnlyScopeHint,
       );
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Nina Simone').textContent?.trim()).toBe(
         'Reabrir como pendiente',

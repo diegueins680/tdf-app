@@ -78,13 +78,13 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre la página pública cuando estés listo para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; Cambiar estado abre acciones rápidas.`;
+  `Usa ${targetLabel} para abrir expediente; Cambiar estado muestra acciones.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; Cambiar estado abre Registrar pago y acciones rápidas.`;
+  `Usa ${targetLabel} para abrir expediente; Cambiar estado incluye Registrar pago y acciones.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
+  `Usa ${targetLabel} para abrir expediente; Estado para acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; usa Reabrir para volver a pendiente.`;
+  `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
