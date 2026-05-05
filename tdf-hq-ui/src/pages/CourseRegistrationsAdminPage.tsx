@@ -1061,6 +1061,24 @@ const humanizeDelimitedSourceLabel = (source: string) => {
 const normalizeSourceAliasKey = (source: string) =>
   normalizeLocalSearchText(humanizeDelimitedSourceLabel(source));
 
+const sourceAliasKeyVariants = (sourceKey: string) => {
+  const variants = new Set([sourceKey]);
+
+  if (sourceKey.endsWith(' forms')) {
+    variants.add(sourceKey.replace(/\s+forms$/, ' form'));
+    variants.add(sourceKey.replace(/\s+forms$/, ''));
+    variants.add(sourceKey.replace(/\s+forms$/, 'form'));
+  } else if (sourceKey.endsWith(' form')) {
+    variants.add(sourceKey.replace(/\s+form$/, ' forms'));
+    variants.add(sourceKey.replace(/\s+form$/, ''));
+    variants.add(sourceKey.replace(/\s+form$/, 'form'));
+  } else if (sourceKey.endsWith('forms')) {
+    variants.add(sourceKey.replace(/forms$/, 'form'));
+  }
+
+  return variants;
+};
+
 const defaultPublicFormSourceKeys = new Set([
   defaultPublicFormSource,
   'landing page',
@@ -1169,7 +1187,9 @@ const normalizeRegistrationSourceKey = (sourceLabel: string) =>
   registrationSourceLabel(sourceLabel).toLocaleLowerCase('es');
 
 const isDefaultPublicFormSource = (sourceLabel: string) =>
-  defaultPublicFormSourceKeys.has(normalizeSourceAliasKey(sourceLabel));
+  Array.from(sourceAliasKeyVariants(normalizeSourceAliasKey(sourceLabel))).some((sourceKey) =>
+    defaultPublicFormSourceKeys.has(sourceKey)
+  );
 
 const getSearchableRegistrationSource = (source: string | null | undefined) => {
   const trimmedSource = source?.trim() ?? '';

@@ -9176,25 +9176,39 @@ describe('CourseRegistrationsAdminPage', () => {
   it('treats form-provider sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'google_forms',
+      'ms_forms',
       'typeform',
       'tally_form',
       'jotform',
+      'jotform_form',
       'microsoft_forms',
       'airtable_form',
+      'hubspot_form',
       'hubspot_forms',
       'mailchimp_form',
+      'mailchimp_forms',
+      'paper_forms',
+      'paperforms',
       'surveymonkey_form',
+      'surveymonkey_forms',
     ] as const;
     const hiddenSourceLabels = [
       'Google forms',
+      'Ms forms',
       'Typeform',
       'Tally form',
       'Jotform',
+      'Jotform form',
       'Microsoft forms',
       'Airtable form',
+      'Hubspot form',
       'Hubspot forms',
       'Mailchimp form',
+      'Mailchimp forms',
+      'Paper forms',
+      'paperforms',
       'Surveymonkey form',
+      'Surveymonkey forms',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
