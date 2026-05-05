@@ -343,12 +343,16 @@ normalizeContractKind rawKind
       Left err400
         { errBody = "Contract payload kind must include at least one ASCII letter or number"
         }
-  | T.all validKindChar kindText =
-      Right kindText
-  | otherwise =
+  | not (T.all validKindChar kindText) =
       Left err400
         { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
         }
+  | not (isKindMeaningfulChar (T.head kindText) && isKindMeaningfulChar (T.last kindText)) =
+      Left err400
+        { errBody = "Contract payload kind must start and end with an ASCII letter or number"
+        }
+  | otherwise =
+      Right kindText
   where
     kindText = T.toLower (T.strip rawKind)
     isKindMeaningfulChar c = isAsciiLower c || isDigit c

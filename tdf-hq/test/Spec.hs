@@ -7329,6 +7329,12 @@ main = hspec $ do
                 (A.object ["kind" .= ("___" :: Text)])
                 "Contract payload kind must include at least one ASCII letter or number"
             assertInvalid
+                (A.object ["kind" .= ("_generic" :: Text)])
+                "Contract payload kind must start and end with an ASCII letter or number"
+            assertInvalid
+                (A.object ["kind" .= ("generic-" :: Text)])
+                "Contract payload kind must start and end with an ASCII letter or number"
+            assertInvalid
                 (A.object ["kind" .= Data.Text.replicate 65 "a"])
                 "Contract payload kind must be 64 characters or fewer"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
