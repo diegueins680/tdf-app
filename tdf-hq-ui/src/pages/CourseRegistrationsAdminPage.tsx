@@ -895,11 +895,19 @@ const firstRunOnlineRegistrationDescriptorPrefixPattern =
 const firstRunOnlineRegistrationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
+
 const firstRunReservationDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:booking|reservation)\s+(?:form|page|portal)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)|reservas?\s+de\s+cupos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  new RegExp(
+    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
 
 const firstRunReservationDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:booking|reservation)\s+(?:form|page|portal)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)|reservas?\s+de\s+cupos?)\s*$/i;
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
+    'i',
+  );
 
 const firstRunCourseEnrollmentConnectorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)(?:\s*(?:[-:/|]\s*)?)/i;
