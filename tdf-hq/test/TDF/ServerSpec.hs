@@ -134,6 +134,7 @@ import TDF.Server
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateUserRoleUserId
+    , validateServiceAdCatalogId
     , validateServiceAdCurrency
     , validateReceiptCurrency
     , validateReceiptBuyerName
@@ -5951,6 +5952,27 @@ spec = describe "TDF.Server helpers" $ do
                     T.isInfixOf "Cancelled" msg `shouldBe` True
                 Right statusVal ->
                     expectationFailure ("Expected an invalid-status error, got: " <> show statusVal)
+
+    describe "validateServiceAdCatalogId" $ do
+        it "requires a positive service catalog id before ad creation reaches catalog lookup" $ do
+            validateServiceAdCatalogId (Just 42) `shouldBe` Right 42
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right catalogId ->
+                            expectationFailure
+                                ("Expected invalid serviceCatalogId, got: " <> show catalogId)
+
+            assertInvalid "serviceCatalogId is required" (validateServiceAdCatalogId Nothing)
+            assertInvalid
+                "serviceCatalogId must be a positive integer"
+                (validateServiceAdCatalogId (Just 0))
+            assertInvalid
+                "serviceCatalogId must be a positive integer"
+                (validateServiceAdCatalogId (Just (-3)))
 
     describe "validateServiceMarketplaceCatalog" $ do
         it "returns the active catalog kind so marketplace bookings inherit the real service kind" $

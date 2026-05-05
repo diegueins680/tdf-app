@@ -6381,20 +6381,20 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
+  catalogId <- either throwError pure (validateServiceAdCatalogId sacServiceCatalogId)
   currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
   pool <- asks envPool
-  when (isNothing sacServiceCatalogId) $ throwError err400 { errBody = "serviceCatalogId is required" }
-  let catalogKey = toSqlKey <$> sacServiceCatalogId
+  let catalogKey = toSqlKey catalogId
   liftIO $ flip runSqlPool pool $ do
-    mCatalog <- maybe (pure Nothing) get catalogKey
+    mCatalog <- get catalogKey
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
       Right _ -> pure ()
   let record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
-        , serviceAdServiceCatalogId = catalogKey
+        , serviceAdServiceCatalogId = Just catalogKey
         , serviceAdRoleTag = T.strip sacRoleTag
         , serviceAdHeadline = T.strip sacHeadline
         , serviceAdDescription = normalizeOptionalInput sacDescription
@@ -7767,6 +7767,12 @@ validateServiceMarketplaceCatalog (Just catalog)
       Left err409 { errBody = "Service catalog is inactive" }
   | otherwise =
       Right (serviceCatalogKind catalog)
+
+validateServiceAdCatalogId :: Maybe Int64 -> Either ServerError Int64
+validateServiceAdCatalogId Nothing =
+  Left err400 { errBody = "serviceCatalogId is required" }
+validateServiceAdCatalogId (Just rawCatalogId) =
+  validatePositiveIdField "serviceCatalogId" rawCatalogId
 
 validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
 validateServiceAdCurrency = validateCurrencyCode
