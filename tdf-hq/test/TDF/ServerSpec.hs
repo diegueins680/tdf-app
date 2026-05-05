@@ -1615,10 +1615,11 @@ spec = describe "TDF.Server helpers" $ do
                     , serviceEscrowReleasedAt = Nothing
                     }
 
-        it "only allows provider completion while escrow is still held" $ do
-            validateServiceMarketplaceCompletion (escrowWithStatus "held") `shouldBe` Right ()
-            let assertInvalid statusValue =
-                    case validateServiceMarketplaceCompletion (escrowWithStatus statusValue) of
+        it "only allows provider completion while the booking and escrow are both active" $ do
+            validateServiceMarketplaceCompletion Confirmed (escrowWithStatus "held") `shouldBe` Right ()
+            validateServiceMarketplaceCompletion InProgress (escrowWithStatus "held") `shouldBe` Right ()
+            let assertInvalidEscrow statusValue =
+                    case validateServiceMarketplaceCompletion Confirmed (escrowWithStatus statusValue) of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 409
                             BL8.unpack (errBody serverErr)
@@ -1626,8 +1627,21 @@ spec = describe "TDF.Server helpers" $ do
                         Right value ->
                             expectationFailure
                                 ("Expected non-held escrow completion to be rejected, got: " <> show value)
-            assertInvalid "released"
-            assertInvalid "refunded"
+                assertInvalidBooking statusValue =
+                    case validateServiceMarketplaceCompletion statusValue (escrowWithStatus "held") of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 409
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Booking must be confirmed or in progress"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid booking completion state to be rejected, got: " <> show value)
+            assertInvalidEscrow "released"
+            assertInvalidEscrow "refunded"
+            assertInvalidBooking Tentative
+            assertInvalidBooking Completed
+            assertInvalidBooking Cancelled
+            assertInvalidBooking NoShow
 
     describe "resolveServiceAdEntity" $ do
         it "rejects non-positive ad ids before service slot handlers can treat them as missing ads or empty slot lists" $ do

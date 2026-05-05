@@ -6501,24 +6501,26 @@ completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMark
 completeServiceMarketplaceBooking user rawBookingId = do
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
-    Entity bookingKey _ <- resolveServiceMarketplaceBookingEntity rawBookingId
+    Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
     let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
     when (not canComplete) $ liftIO $ throwIO err403
-    case validateServiceMarketplaceCompletion (entityVal escrow) of
+    case validateServiceMarketplaceCompletion (bookingStatus booking) (entityVal escrow) of
       Left serverErr -> liftIO $ throwIO serverErr
       Right () -> pure ()
     update bookingKey [BookingStatus =. Completed]
     update (serviceEscrowServiceOrderId (entityVal escrow)) [ServiceOrderStatus =. "performed"]
     pure (mkEscrowBookingDTO escrow)
 
-validateServiceMarketplaceCompletion :: ServiceEscrow -> Either ServerError ()
-validateServiceMarketplaceCompletion escrow
-  | serviceEscrowStatus escrow == "held" =
+validateServiceMarketplaceCompletion :: BookingStatus -> ServiceEscrow -> Either ServerError ()
+validateServiceMarketplaceCompletion bookingStatusVal escrow
+  | serviceEscrowStatus escrow /= "held" =
+      Left err409 { errBody = "Escrow must be held before booking completion" }
+  | bookingStatusVal == Confirmed || bookingStatusVal == InProgress =
       Right ()
   | otherwise =
-      Left err409 { errBody = "Escrow must be held before booking completion" }
+      Left err409 { errBody = "Booking must be confirmed or in progress before marketplace completion" }
 
 releaseServiceMarketplaceEscrow :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 releaseServiceMarketplaceEscrow user rawBookingId = do
