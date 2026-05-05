@@ -8129,6 +8129,18 @@ main = hspec $ do
                         `shouldContain` "hub.challenge must be 512 characters or fewer"
                 Right value ->
                     expectationFailure ("Expected oversized challenge to be rejected, got " <> show value)
+            case validateHookVerifyRequest
+                (Just "subscribe")
+                (Just ("challenge" <> Data.Text.singleton '\x200B' <> "-123"))
+                (Just "secret")
+                (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.challenge must not contain hidden formatting characters"
+                Right value ->
+                    expectationFailure
+                        ("Expected hidden-format challenge to be rejected, got " <> show value)
 
         it "rejects missing verification query params with precise 400s" $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of

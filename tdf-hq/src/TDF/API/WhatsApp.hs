@@ -365,5 +365,11 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isHiddenHookChallengeChar challenge =
+          Left err400
+            { errBody = "hub.challenge must not contain hidden formatting characters" }
       | otherwise =
           Right challenge
+
+    isHiddenHookChallengeChar ch =
+      generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
