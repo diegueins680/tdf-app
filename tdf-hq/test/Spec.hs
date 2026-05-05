@@ -2921,6 +2921,37 @@ main = hspec $ do
                             <> show value
                         )
 
+        it "requires SRI script totals to match the validated invoice request" $ do
+            case Sri.decodeSriScriptOutputForRequest
+                sampleSriScriptRequest
+                "{\"ok\":true,\"status\":\"saved\",\"total\":90}" of
+                    Left err ->
+                        expectationFailure
+                            ( "Expected matching SRI script total to decode, got: "
+                                <> Data.Text.unpack err
+                            )
+                    Right result ->
+                        DTO.sirTotal result `shouldBe` Just 90
+
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutputForRequest sampleSriScriptRequest raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected mismatched SRI script total to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "total is required"
+                "{\"ok\":true,\"status\":\"saved\"}"
+            assertInvalid
+                "total does not match request total"
+                "{\"ok\":true,\"status\":\"saved\",\"total\":91}"
+            assertInvalid
+                "total must use cents precision"
+                "{\"ok\":true,\"status\":\"saved\",\"total\":90.001}"
+
         it "rejects unexpected top-level or nested SRI keys so script schema drift fails explicitly" $ do
             let assertInvalid raw =
                     case Sri.decodeSriScriptOutput raw of

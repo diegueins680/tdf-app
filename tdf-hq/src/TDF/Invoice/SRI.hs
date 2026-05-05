@@ -6,6 +6,7 @@ module TDF.Invoice.SRI
   , SriScriptLine(..)
   , SriScriptRequest(..)
   , decodeSriScriptOutput
+  , decodeSriScriptOutputForRequest
   , formatSriScriptFailure
   , validateSriScriptRequest
   , runSriInvoiceScript
@@ -92,7 +93,7 @@ runSriInvoiceScript payload = do
             Right (exitCode, stdoutTxt, stderrTxt) ->
               case exitCode of
                 ExitSuccess ->
-                  pure (decodeSriScriptOutput stdoutTxt)
+                  pure (decodeSriScriptOutputForRequest validatedPayload stdoutTxt)
                 ExitFailure _ ->
                   pure (Left (formatSriScriptFailure stderrTxt))
 
@@ -122,6 +123,42 @@ decodeSriScriptOutput stdoutTxt =
   case Aeson.eitherDecodeStrict' (TE.encodeUtf8 (T.pack stdoutTxt)) of
     Left err -> Left (T.pack ("Invalid SRI script JSON output: " <> err))
     Right dto -> validateSriScriptResult dto
+
+decodeSriScriptOutputForRequest :: SriScriptRequest -> String -> Either Text SriIssueResultDTO
+decodeSriScriptOutputForRequest request stdoutTxt = do
+  validatedRequest <- validateSriScriptRequest request
+  decodeSriScriptOutput stdoutTxt >>= validateSriScriptResultTotal validatedRequest
+
+validateSriScriptResultTotal :: SriScriptRequest -> SriIssueResultDTO -> Either Text SriIssueResultDTO
+validateSriScriptResultTotal request result =
+  case sirTotal result of
+    Nothing ->
+      Left "SRI script JSON output total is required"
+    Just totalValue ->
+      let scaled = totalValue * 100
+          reportedCents = round scaled :: Integer
+          expectedCents = sriRequestTotalCents request
+      in if abs (scaled - fromIntegral reportedCents) > sriTotalCentEpsilon
+           then Left "SRI script JSON output total must use cents precision"
+           else if reportedCents /= expectedCents
+             then
+               Left $
+                 "SRI script JSON output total does not match request total: expected "
+                   <> T.pack (show expectedCents)
+                   <> " cents, got "
+                   <> T.pack (show reportedCents)
+                   <> " cents"
+             else Right result
+
+sriRequestTotalCents :: SriScriptRequest -> Integer
+sriRequestTotalCents request =
+  sum
+    [ fromIntegral (quantity line) * fromIntegral (unitCents line)
+    | line <- lines request
+    ]
+
+sriTotalCentEpsilon :: Double
+sriTotalCentEpsilon = 0.000001
 
 validateSriScriptResult :: SriIssueResultDTO -> Either Text SriIssueResultDTO
 validateSriScriptResult dto =
