@@ -3331,6 +3331,16 @@ main = hspec $ do
                     lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
                         `shouldReturn` Just "1"
 
+        it "rejects conflicting documented CORS aliases instead of silently picking one" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com")
+                , ("ALLOW_ORIGINS", Just "https://admin.example.com")
+                ]
+                $ lookupFirstNonEmptyEnv ["ALLOWED_ORIGINS", "ALLOW_ORIGINS"]
+                    `shouldThrow` \err ->
+                        "CORS fallback aliases ALLOWED_ORIGINS and ALLOW_ORIGINS must not be set to different values"
+                            `isInfixOf` show (err :: IOException)
+
         it "derives origin-only defaults from configured app fallback bases" $ do
             deriveCorsOriginFromAppBase " https://hq.example.com/app/ "
                 `shouldBe` Right "https://hq.example.com"

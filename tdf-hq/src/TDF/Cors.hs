@@ -301,9 +301,28 @@ parseBoolFlag name raw =
           <> value
 
 lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
-lookupFirstNonEmptyEnv [] = pure Nothing
-lookupFirstNonEmptyEnv (key:rest) = do
-  value <- lookupEnv key
-  case value of
-    Just raw | not (null (trim raw)) -> pure (Just raw)
-    _ -> lookupFirstNonEmptyEnv rest
+lookupFirstNonEmptyEnv keys = do
+  values <- traverse lookupNamed keys
+  case nonEmptyValues values of
+    [] -> pure Nothing
+    (primaryKey, primaryRaw, primaryTrimmed):rest ->
+      case filter (\(_, _, trimmed) -> trimmed /= primaryTrimmed) rest of
+        (conflictKey, _, _):_ ->
+          ioError . userError $
+            "CORS fallback aliases "
+              <> primaryKey
+              <> " and "
+              <> conflictKey
+              <> " must not be set to different values"
+        [] -> pure (Just primaryRaw)
+  where
+    lookupNamed key = do
+      value <- lookupEnv key
+      pure (key, value)
+
+    nonEmptyValues values =
+      [ (key, raw, trimmed)
+      | (key, Just raw) <- values
+      , let trimmed = trim raw
+      , not (null trimmed)
+      ]
