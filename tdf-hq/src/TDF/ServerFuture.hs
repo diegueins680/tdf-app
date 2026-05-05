@@ -214,9 +214,11 @@ validateFutureStubCatalogAreaOrder catalog = do
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
   let areaRuns = map head (group (map fst validatedCatalog))
-  if areaRuns == allowedFutureStubAreas && length areaRuns == length (nub areaRuns)
-    then Right areaRuns
-    else invalidFutureStubCatalog
+  if length validatedCatalog /= length (nub validatedCatalog)
+       || areaRuns /= allowedFutureStubAreas
+       || length areaRuns /= length (nub areaRuns)
+    then invalidFutureStubCatalog
+    else Right areaRuns
 
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =

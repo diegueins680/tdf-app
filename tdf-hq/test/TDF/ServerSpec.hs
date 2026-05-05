@@ -9014,6 +9014,12 @@ spec = describe "TDF.Server helpers" $ do
                 _ ->
                     expectationFailure "Expected fallback discovery area fixtures to include access and crm entries"
 
+            case accessEntries of
+                firstAccess : _ ->
+                    assertInvalid (firstAccess : allowedFutureStubMetadata)
+                _ ->
+                    expectationFailure "Expected fallback discovery area fixtures to include access entries"
+
             let driftedEndpoint =
                     map
                         (\entry ->
