@@ -18,6 +18,7 @@ import           Data.Char
   , isAsciiLower
   , isControl
   , isDigit
+  , isHexDigit
   , isSpace
   )
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
@@ -809,6 +810,7 @@ isValidHttpUrl rawUrl
         && not (T.isSuffixOf "." normalizedHost)
         && not (isAmbiguousNumericHost normalizedHost)
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
+        && not (looksLikeNonDecimalIpv4 normalizedHost)
         && not (looksLikeInvalidIpv4 normalizedHost)
         && not (requiresExplicitPublicHostname normalizedHost)
         && not (isPrivateHost normalizedHost)
@@ -846,6 +848,23 @@ isValidHttpUrl rawUrl
         [a, b, c, d]
           | all isNumericLabel [a, b, c, d] -> isNothing (parseIpv4Octets host)
         _ -> False
+
+    looksLikeNonDecimalIpv4 host =
+      case T.splitOn "." host of
+        [a, b, c, d] ->
+          let labels = [a, b, c, d]
+          in any isHexIpv4Label labels && all isIpv4LiteralLikeLabel labels
+        _ -> False
+
+    isIpv4LiteralLikeLabel label =
+      isNumericLabel label || isHexIpv4Label label
+
+    isHexIpv4Label label =
+      let lowerLabel = T.toLower label
+          digitsOnly = T.drop 2 lowerLabel
+      in "0x" `T.isPrefixOf` lowerLabel
+           && not (T.null digitsOnly)
+           && T.all isHexDigit digitsOnly
 
     isAmbiguousNumericHost host =
       T.all (\c -> isDigit c || c == '.') host
