@@ -11987,7 +11987,7 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
   appendDriveResourceKey resolvedResourceKey baseUrl
   where
     fallbackPublicUrl = "https://drive.google.com/uc?export=download&id=" <> encodeQueryValue fileId
-    mContentLink = sanitizeDriveWebContentLink fileId mWebContentLink
+    mContentLink = sanitizeDriveDownloadLink fileId mWebContentLink
     baseUrlCandidate = fromMaybe fallbackPublicUrl mContentLink
     baseUrl =
       if explicitResourceKeysConflict
@@ -12036,6 +12036,13 @@ sanitizeDriveWebContentLink expectedFileId mWebContentLink = do
     then Just (normalizeDriveResourceKeyParams url)
     else Nothing
 
+sanitizeDriveDownloadLink :: Text -> Maybe Text -> Maybe Text
+sanitizeDriveDownloadLink expectedFileId mWebContentLink = do
+  url <- sanitizeDriveWebContentLink expectedFileId mWebContentLink
+  if extractDriveDownloadFileId url == Just expectedFileId
+    then Just url
+    else Nothing
+
 extractDriveContentFileId :: Text -> Maybe Text
 extractDriveContentFileId rawUrl =
   case drivePathSegments rawUrl of
@@ -12059,6 +12066,23 @@ extractDriveContentFileId rawUrl =
       , not (hasNamedQueryParam "id" rawUrl)
       , suffix `elem` ["view", "preview", "edit"] ->
           Just fileId
+    _ ->
+      Nothing
+
+extractDriveDownloadFileId :: Text -> Maybe Text
+extractDriveDownloadFileId rawUrl =
+  case drivePathSegments rawUrl of
+    ["uc"] ->
+      singleDriveIdQueryParam rawUrl
+    ["download"] ->
+      singleDriveIdQueryParam rawUrl
+    ["download", fileId]
+      | isValidDriveFileId fileId
+      , not (hasNamedQueryParam "id" rawUrl) ->
+          Just fileId
+    ["u", userSegment, "uc"]
+      | T.all isDigit userSegment ->
+          singleDriveIdQueryParam rawUrl
     _ ->
       Nothing
 

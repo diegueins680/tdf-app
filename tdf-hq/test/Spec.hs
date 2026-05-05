@@ -4446,6 +4446,13 @@ main = hspec $ do
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/file/d/1A_B-99/view?usp=sharing")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
 
         it "drops Drive resource keys when explicit API fallback candidates disagree" $ do
             resolveDrivePublicUrl
