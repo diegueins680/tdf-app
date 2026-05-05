@@ -417,7 +417,7 @@ describe('bookingsPageLogic', () => {
     })).toBeNull();
   });
 
-  it('uses filtered-empty calendar guidance with one agenda reset action only when an active booking filter has no sessions', () => {
+  it('uses one reset-focused empty state when an active booking filter has no sessions', () => {
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: true,
@@ -427,7 +427,8 @@ describe('bookingsPageLogic', () => {
       clearFilterActionLabel: 'Ver toda la agenda',
       message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
       severity: 'info',
-      showCalendar: true,
+      showCalendar: false,
+      title: 'No hay sesiones en esta vista.',
     });
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
@@ -435,6 +436,12 @@ describe('bookingsPageLogic', () => {
       hasError: false,
       isLoading: false,
     })?.message).not.toContain('crear una sesión nueva');
+    expect(getBookingCalendarStatusState({
+      bookingCount: 0,
+      hasActiveFilter: true,
+      hasError: false,
+      isLoading: false,
+    })?.primaryActionLabel).toBeUndefined();
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: false,

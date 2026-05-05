@@ -891,6 +891,11 @@ const openDialogForRange = (start: Date, end: Date) => {
                 {calendarStatusState.primaryActionLabel}
               </Button>
             )}
+            {calendarStatusState.clearFilterActionLabel && (
+              <Button variant="outlined" onClick={handleClearBookingFilters}>
+                {calendarStatusState.clearFilterActionLabel}
+              </Button>
+            )}
           </Stack>
         </Paper>
       ) : (

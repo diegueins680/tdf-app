@@ -178,7 +178,8 @@ export const getBookingCalendarStatusState = ({
       clearFilterActionLabel: 'Ver toda la agenda',
       message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
       severity: 'info',
-      showCalendar: true,
+      showCalendar: false,
+      title: 'No hay sesiones en esta vista.',
     };
   }
 
