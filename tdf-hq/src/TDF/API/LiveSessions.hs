@@ -283,6 +283,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
                 }
         in if T.null normalizedTitle
              then Left "each setlist song must include a non-blank title"
+             else if T.length normalizedTitle > 160
+               then Left "setlist song title must be 160 characters or fewer"
+             else if T.any isUnsafeIntakeTextChar normalizedTitle
+               then Left "setlist song title must not contain control characters or hidden formatting characters"
              else
                case lssBpm song of
                  Just bpm | bpm <= 0 ->

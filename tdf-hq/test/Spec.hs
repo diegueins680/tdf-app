@@ -9441,6 +9441,34 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected blank setlist title to be rejected, got: " <> show payload)
 
+        it "rejects unsafe setlist titles before intake rows can persist ambiguous display text" $ do
+            let assertInvalid rawTitle expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\""
+                                    <> rawTitle
+                                    <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe setlist title to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "Intro\\nJam"
+                "setlist song title must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "Intro\\u202EJam"
+                "setlist song title must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "setlist song title must be 160 characters or fewer"
+
         it "rejects non-positive setlist bpm values instead of persisting impossible tempo metadata" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
