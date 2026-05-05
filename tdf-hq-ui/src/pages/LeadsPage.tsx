@@ -266,7 +266,7 @@ export default function LeadsPage() {
     ? 'Revísalo aquí sin tabla ni buscador. Cuando llegue el segundo, volverá la vista comparativa para revisar contacto y seguimiento lado a lado.'
     : 'La búsqueda dejó un solo lead visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar leads en la tabla.';
   const tableGuidance = trimmedSearch === ''
-    ? 'Haz clic en el nombre para revisar relaciones. Notas / Estado concentra estado, fuente y siguiente paso en una sola columna. Usa Editar solo cuando necesites actualizarlo.'
+    ? 'Haz clic en el nombre para revisar relaciones. Contacto reúne correo y teléfono en una sola columna. Notas / Estado concentra estado, fuente y siguiente paso. Usa Editar solo cuando necesites actualizarlo.'
     : `Mostrando ${leads.length} de ${allLeads.length} leads para "${trimmedSearch}".`;
 
   return (
@@ -401,8 +401,7 @@ export default function LeadsPage() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Lead</TableCell>
-                    <TableCell>Correo</TableCell>
-                    <TableCell>Teléfono</TableCell>
+                    <TableCell>Contacto</TableCell>
                     <TableCell>Notas / Estado</TableCell>
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
@@ -427,8 +426,7 @@ export default function LeadsPage() {
                           {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
                         </Stack>
                       </TableCell>
-                      <TableCell>{l.primaryEmail ?? '—'}</TableCell>
-                      <TableCell>{l.primaryPhone ?? '—'}</TableCell>
+                      <TableCell>{getLeadContactSummary(l)}</TableCell>
                       <TableCell>{l.notes ?? '—'}</TableCell>
                       <TableCell align="right">
                         <Button

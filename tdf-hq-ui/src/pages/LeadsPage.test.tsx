@@ -123,6 +123,12 @@ const countButtonsByText = (root: ParentNode, labelText: string) =>
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ).length;
 
+const getColumnHeaders = (root: ParentNode) =>
+  Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
+
+const getRowCellTexts = (row: HTMLTableRowElement) =>
+  Array.from(row.querySelectorAll('td')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
+
 describe('LeadsPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -210,6 +216,64 @@ describe('LeadsPage', () => {
         expect(container.textContent).toContain(
           'Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar.',
         );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses one combined contact column in the multi-lead table', async () => {
+    listPartiesMock.mockResolvedValue([
+      buildLead({
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+        primaryPhone: '+593999000111',
+      }),
+      buildLead({
+        partyId: 2,
+        displayName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: null,
+        notes: 'Contactado · Referido',
+      }),
+      buildLead({
+        partyId: 3,
+        displayName: 'Linus Missing',
+        primaryEmail: null,
+        primaryPhone: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const bodyRows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
+
+        expect(getColumnHeaders(container)).toEqual(['Lead', 'Contacto', 'Notas / Estado', 'Acciones']);
+        expect(container.textContent).toContain('Contacto reúne correo y teléfono en una sola columna.');
+        expect(bodyRows).toHaveLength(3);
+        expect(getRowCellTexts(bodyRows[0] ?? document.createElement('tr'))).toEqual([
+          'Ada Lovelace',
+          'ada@example.com · +593999000111',
+          '—',
+          'Editar',
+        ]);
+        expect(getRowCellTexts(bodyRows[1] ?? document.createElement('tr'))).toEqual([
+          'Grace Hopper',
+          'grace@example.com',
+          'Contactado · Referido',
+          'Editar',
+        ]);
+        expect(getRowCellTexts(bodyRows[2] ?? document.createElement('tr'))).toEqual([
+          'Linus Missing',
+          'Falta correo y teléfono',
+          '—',
+          'Editar',
+        ]);
       });
     } finally {
       await cleanup();
