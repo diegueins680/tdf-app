@@ -3822,6 +3822,74 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('labels inactive expansion as search-scoped while a query already has active matches', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'maria-archivada',
+              partyName: 'María Archivada',
+              active: false,
+              primaryEmail: 'maria@example.com',
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'lovelace');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101]);
+        expect(getCheckboxByLabelText(container, 'Buscar también en inactivos').checked).toBe(false);
+        expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Buscar también en inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101]);
+        expect(getCheckboxByLabelText(container, 'Buscando en inactivos').checked).toBe(true);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps mixed filtered results focused by summarizing contact blockers once in the header', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

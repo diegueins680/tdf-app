@@ -382,6 +382,8 @@ const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar cuentas inactivas';
 const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en cuentas inactivas';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
+const INCLUDE_INACTIVE_SEARCH_FILTER_LABEL = 'Buscar también en inactivos';
+const INACTIVE_SEARCH_FILTER_ACTIVE_LABEL = 'Buscando en inactivos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -1009,9 +1011,13 @@ export default function AdminUsersPage() {
     : '';
   const showNoInactiveScopeSummary = hasConfirmedNoInactiveUsers;
   const usersErrorMessage = usersQuery.error instanceof Error ? usersQuery.error.message : '';
-  const inactiveFilterLabel = includeInactive
-    ? INACTIVE_FILTER_ACTIVE_LABEL
-    : INCLUDE_INACTIVE_FILTER_LABEL;
+  const inactiveFilterLabel = hasActiveSearch
+    ? includeInactive
+      ? INACTIVE_SEARCH_FILTER_ACTIVE_LABEL
+      : INCLUDE_INACTIVE_SEARCH_FILTER_LABEL
+    : includeInactive
+      ? INACTIVE_FILTER_ACTIVE_LABEL
+      : INCLUDE_INACTIVE_FILTER_LABEL;
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos en esta vista.'
     : '';
