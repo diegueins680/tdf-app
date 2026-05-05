@@ -490,6 +490,51 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not turn malformed phone placeholders into WhatsApp actions', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'bad-phone',
+        primaryEmail: 'bad@example.com',
+        primaryPhone: 'pendiente por validar',
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Ready',
+        username: 'grace-ready',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de WhatsApp. Vista actual: solo usuarios activos.',
+        );
+
+        const invalidPhoneRow = getRowByUserId(container, 101);
+        expect(invalidPhoneRow.textContent).toContain('bad@example.com');
+        expect(invalidPhoneRow.textContent).not.toContain('pendiente por validar');
+        expect(getButtonsByText(invalidPhoneRow, 'WhatsApp')).toHaveLength(0);
+        expect(invalidPhoneRow.querySelector('[aria-label^="Abrir WhatsApp para "]')).toBeNull();
+
+        const readyRow = getRowByUserId(container, 102);
+        expect(getButtonsByText(readyRow, 'WhatsApp')).toHaveLength(1);
+        expect(container.querySelectorAll('button[aria-label^="Abrir WhatsApp para "]')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('distinguishes missing WhatsApp from missing contact in the page summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

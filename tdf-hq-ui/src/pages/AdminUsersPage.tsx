@@ -178,8 +178,13 @@ const getUserContactSearchValues = (
     })
 );
 
+const normalizeWhatsAppChannel = (value?: string | null) => {
+  const normalizedValue = normalizeContactValue(value);
+  return normalizedValue && normalizePhoneComparisonValue(normalizedValue) ? normalizedValue : null;
+};
+
 const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
-  normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  normalizeWhatsAppChannel(user.whatsapp) ?? normalizeWhatsAppChannel(user.primaryPhone);
 
 const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   Boolean(getUserWhatsAppChannel(user));
