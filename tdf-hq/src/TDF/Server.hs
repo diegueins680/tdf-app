@@ -6097,8 +6097,9 @@ createParty user req = do
 getParty :: AuthedUser -> Int64 -> AppM PartyDTO
 getParty user pidI = do
   requireModule user ModuleCRM
+  pidValid <- either throwError pure (validatePositiveIdField "partyId" pidI)
   Env pool _ <- ask
-  let pid = toSqlKey pidI :: Key Party
+  let pid = toSqlKey pidValid :: Key Party
   mp <- liftIO $ flip runSqlPool pool $ getEntity pid
   case mp of
     Nothing -> throwError err404
@@ -6111,9 +6112,10 @@ getParty user pidI = do
 updateParty :: AuthedUser -> Int64 -> PartyUpdate -> AppM PartyDTO
 updateParty user pidI req = do
   requireModule user ModuleCRM
+  pidValid <- either throwError pure (validatePositiveIdField "partyId" pidI)
   displayNameUpdate <- either throwError pure (validatePartyDisplayNameUpdate (uDisplayName req))
   Env pool _ <- ask
-  let pid = toSqlKey pidI :: Key Party
+  let pid = toSqlKey pidValid :: Key Party
   liftIO $ flip runSqlPool pool $ do
     mp <- get pid
     case mp of
@@ -6132,7 +6134,7 @@ updateParty user pidI req = do
               , partyNotes            = maybe (partyNotes p) Just       (uNotes req)
               }
         replace pid p'
-  getParty user pidI
+  getParty user pidValid
 
 validatePartyDisplayName :: Text -> Either ServerError Text
 validatePartyDisplayName rawDisplayName =

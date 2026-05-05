@@ -265,6 +265,8 @@ import TDF.Server
     , getInvoicesBySession
     , createReceipt
     , createParty
+    , getParty
+    , updateParty
     , getReceipt
     , resolvePartyRoleAssignmentTarget
     , resolvePartyRelatedTarget
@@ -713,6 +715,36 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("Ada" <> T.singleton '\x202E' <> "Lovelace")
                 "displayName must not contain control characters"
+
+        it "rejects non-positive CRM party path ids before database lookup" $ do
+            let emptyUpdate =
+                    DTO.PartyUpdate
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                assertInvalidPath action = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                action
+                                (error "party path id should reject before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "partyId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid party path id to be rejected, got: " <> show value)
+            assertInvalidPath (getParty (mkUser [Admin]) 0)
+            assertInvalidPath (updateParty (mkUser [Admin]) (-10) emptyUpdate)
 
     describe "normalizeOptionalInput" $ do
         it "returns Nothing when input is Nothing" $
