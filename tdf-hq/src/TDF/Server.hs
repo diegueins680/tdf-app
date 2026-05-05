@@ -103,7 +103,18 @@ import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO
 import qualified TDF.DTO as DTO
-import           TDF.Auth (AuthedUser(..), ModuleAccess(..), authContext, hasAiToolingAccess, hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess, hasStrictAdminAccess, moduleName)
+import           TDF.Auth
+  ( AuthedUser(..)
+  , ModuleAccess(..)
+  , authContext
+  , hasAiToolingAccess
+  , hasModuleAccess
+  , hasOperationsAccess
+  , hasSocialInboxAccess
+  , hasStrictAdminAccess
+  , moduleName
+  , modulesForRoles
+  )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
@@ -1875,12 +1886,21 @@ driveServer user =
 
 validateDriveAccess :: AuthedUser -> Either ServerError ()
 validateDriveAccess user
+  | not (hasCoherentDriveAuthScope user) =
+      Left err403
+        { errBody = "Google Drive access requires coherent role grants"
+        }
   | hasOperationsAccess user || any (`elem` auRoles user) [Artist, Artista] =
       Right ()
   | otherwise =
       Left err403
         { errBody = "Google Drive access requires operations or artist role"
         }
+
+hasCoherentDriveAuthScope :: AuthedUser -> Bool
+hasCoherentDriveAuthScope user =
+  length (auRoles user) == length (nub (auRoles user))
+    && auModules user == modulesForRoles (auRoles user)
 
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer user mAccessToken DriveUploadForm{..} = do

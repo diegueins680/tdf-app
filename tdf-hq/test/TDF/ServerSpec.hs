@@ -8744,6 +8744,24 @@ spec = describe "TDF.Server helpers" $ do
             forM_ [Admin, Manager, StudioManager, Webmaster, Maintenance, Artist, Artista] $ \role ->
                 validateDriveAccess (mkUser [role]) `shouldBe` Right ()
 
+        it "rejects stale or duplicated grants before honoring Drive module fallbacks" $ do
+            let staleModuleUser =
+                    (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                duplicatedArtist = mkUser [Artist, Artist]
+                assertRejected user =
+                    case validateDriveAccess user of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Google Drive access requires coherent role grants"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Drive auth scope to be rejected, got: "
+                                    <> show value
+                                )
+            assertRejected staleModuleUser
+            assertRejected duplicatedArtist
+
     describe "hasStrictAdminAccess" $ do
         it "requires the literal Admin role instead of broad admin-module membership" $ do
             hasStrictAdminAccess (mkUser [Fan, Customer]) `shouldBe` False
