@@ -206,6 +206,7 @@ import TDF.Server
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateDatafastCheckoutId,
+      validateOptionalDatafastPaymentIdField,
       validateDatafastCredential,
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
@@ -4185,6 +4186,28 @@ main = hspec $ do
             assertInvalid "checkout?entityId=other"
             assertInvalid "checkout&entityId=other"
             assertInvalid "checkout#fragment"
+
+    describe "validateOptionalDatafastPaymentIdField" $ do
+        it "normalizes optional Datafast payment ids before marketplace storage" $ do
+            validateOptionalDatafastPaymentIdField Nothing `shouldBe` Right Nothing
+            validateOptionalDatafastPaymentIdField (Just " 8ac7a4a18c9d_pay-01.02 ")
+                `shouldBe` Right (Just "8ac7a4a18c9d_pay-01.02")
+
+        it "rejects malformed upstream Datafast payment ids before storage" $ do
+            let assertInvalid rawValue =
+                    case validateOptionalDatafastPaymentIdField rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "Datafast returned an invalid payment id"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Datafast payment id, got " <> show value)
+            assertInvalid (Just "   ")
+            assertInvalid (Just "../payment")
+            assertInvalid (Just "payment?entityId=other")
+            assertInvalid (Just "payment#fragment")
 
     describe "validatePayPalApprovalUrl" $ do
         it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do

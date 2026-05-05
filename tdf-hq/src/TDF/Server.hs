@@ -10321,6 +10321,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
+  paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   let nextStatus
         | success = "paid"
         | pending = "datafast_pending"
@@ -10332,7 +10333,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
         , ME.MarketplaceOrderPaidAt =. paidAtVal
         , ME.MarketplaceOrderUpdatedAt =. now
         , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
-        , ME.MarketplaceOrderDatafastPaymentId =. dfpId statusResp
+        , ME.MarketplaceOrderDatafastPaymentId =. paymentId
         , ME.MarketplaceOrderDatafastResultCode =. Just code
         , ME.MarketplaceOrderDatafastResultDescription =. dfrDescription (dfpResult statusResp)
         , ME.MarketplaceOrderDatafastPaymentBrand =. dfpPaymentBrand statusResp
@@ -10579,6 +10580,19 @@ validateDatafastCheckoutId rawCheckoutId
       invalidDatafastCheckoutId
   where
     checkoutId = T.strip rawCheckoutId
+
+validateOptionalDatafastPaymentIdField :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalDatafastPaymentIdField Nothing = Right Nothing
+validateOptionalDatafastPaymentIdField (Just rawPaymentId)
+  | isValidDatafastCheckoutId paymentId =
+      Right (Just paymentId)
+  | otherwise =
+      Left err502
+        { errBody =
+            "Datafast returned an invalid payment id"
+        }
+  where
+    paymentId = T.strip rawPaymentId
 
 isValidDatafastCheckoutId :: Text -> Bool
 isValidDatafastCheckoutId checkoutId =
