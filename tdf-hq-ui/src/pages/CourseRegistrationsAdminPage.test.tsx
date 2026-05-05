@@ -219,25 +219,25 @@ const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago
 const customStatusFilterUnavailableMessage =
   'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
 const dossierScopeHint =
-  'Usa el nombre para abrir expediente; Cambiar estado muestra acciones.';
+  'Usa el nombre para abrir expediente; Estado muestra acciones.';
 const paymentWorkflowDossierScopeHint =
-  'Usa el nombre para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
+  'Usa el nombre para abrir expediente; Estado incluye Registrar pago.';
 const dossierOnlyScopeHint =
-  'Usa el nombre para abrir expediente; Estado para acciones rápidas.';
+  'Usa el nombre para abrir expediente; Estado abre acciones rápidas.';
 const pendingRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
 const contactDossierScopeHint =
-  'Usa el contacto para abrir expediente; Cambiar estado muestra acciones.';
+  'Usa el contacto para abrir expediente; Estado muestra acciones.';
 const contactPaymentWorkflowDossierScopeHint =
-  'Usa el contacto para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
+  'Usa el contacto para abrir expediente; Estado incluye Registrar pago.';
 const contactDossierOnlyScopeHint =
-  'Usa el contacto para abrir expediente; Estado para acciones rápidas.';
+  'Usa el contacto para abrir expediente; Estado abre acciones rápidas.';
 const recordDossierScopeHint =
-  'Usa el registro para abrir expediente; Cambiar estado muestra acciones.';
+  'Usa el registro para abrir expediente; Estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Usa el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
+  'Usa el registro para abrir expediente; Estado incluye Registrar pago.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Usa el nombre, el contacto o el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
+  'Usa el nombre, el contacto o el registro para abrir expediente; Estado incluye Registrar pago.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
@@ -8177,6 +8177,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
       expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(container.textContent).not.toContain('Cambiar estado incluye Registrar pago y acciones.');
       expect(container.textContent).not.toContain('el botón de estado');
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);

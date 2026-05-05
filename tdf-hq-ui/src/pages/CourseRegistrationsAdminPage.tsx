@@ -118,11 +118,11 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. Abre la página pública cuando estés listo para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Cambiar estado muestra acciones.`;
+  `Usa ${targetLabel} para abrir expediente; Estado muestra acciones.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Cambiar estado incluye Registrar pago y acciones.`;
+  `Usa ${targetLabel} para abrir expediente; Estado incluye Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Estado para acciones rápidas.`;
+  `Usa ${targetLabel} para abrir expediente; Estado abre acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
