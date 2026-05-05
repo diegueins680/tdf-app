@@ -8269,7 +8269,7 @@ listInvoices user = do
 createInvoice :: AuthedUser -> CreateInvoiceReq -> AppM InvoiceDTO
 createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
-  when (null ciLineItems) $ throwBadRequest "Invoice requires at least one line item"
+  either throwBadRequest pure (validateInvoiceLineItemCount ciLineItems)
   currency <- either throwError pure (validateCurrencyCode ciCurrency)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
@@ -8401,6 +8401,21 @@ data PreparedLine = PreparedLine
   , plTax               :: Int
   , plTotal             :: Int
   }
+
+maxInvoiceLineItems :: Int
+maxInvoiceLineItems = 100
+
+validateInvoiceLineItemCount :: [CreateInvoiceLineReq] -> Either Text ()
+validateInvoiceLineItemCount lineItems
+  | null lineItems =
+      Left "Invoice requires at least one line item"
+  | length lineItems > maxInvoiceLineItems =
+      Left $
+        "Invoice supports at most "
+          <> T.pack (show maxInvoiceLineItems)
+          <> " line items"
+  | otherwise =
+      Right ()
 
 prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
 prepareLine CreateInvoiceLineReq{..} = do

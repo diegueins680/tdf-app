@@ -1052,7 +1052,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right resolvedKey ->
                     resolvedKey `shouldBe` expectedPartyId
 
-    describe "createInvoice" $
+    describe "createInvoice" $ do
         it "rejects malformed explicit currencies before invoice creation can persist ambiguous totals" $ do
             let validLine =
                     CreateInvoiceLineReq
@@ -1085,6 +1085,40 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "usdollars"
             assertInvalid "12$"
             assertInvalid "   "
+
+        it "rejects oversized line item lists before invoice creation can fan out database writes" $ do
+            let validLine =
+                    CreateInvoiceLineReq
+                        { cilDescription = "Studio session"
+                        , cilQuantity = 1
+                        , cilUnitCents = 9000
+                        , cilTaxBps = Nothing
+                        , cilServiceOrderId = Nothing
+                        , cilPackagePurchaseId = Nothing
+                        }
+                oversizedInvoice =
+                    DTO.CreateInvoiceReq
+                        42
+                        Nothing
+                        Nothing
+                        Nothing
+                        (replicate 101 validLine)
+                        Nothing
+
+            result <-
+                runHandler $
+                    runReaderT
+                        (createInvoice (mkUser [Accounting]) oversizedInvoice)
+                        (error "createInvoice should reject oversized ciLineItems before reading Env")
+
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invoice supports at most 100 line items"
+                Right invoice ->
+                    expectationFailure
+                        ("Expected oversized invoice to be rejected, got: " <> show invoice)
 
     describe "invoice and receipt lookup ids" $
         it "rejects non-positive lookup ids before treating them as missing rows" $ do
