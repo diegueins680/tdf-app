@@ -359,6 +359,10 @@ mkUser roles =
         , auModules = modulesForRoles roles
         }
 
+futureAdminUser :: AuthedUser
+futureAdminUser =
+    mkUser [Admin, Fan, Customer]
+
 firstFutureStub :: AuthedUser -> Either ServerError StubResponse
 firstFutureStub user =
     let _catalog :<|> accessStubs :<|> _ = futureServer user
@@ -8539,7 +8543,7 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureAdminAccess" $ do
         it "keeps admin discovery stubs scoped to literal Admin sessions" $ do
-            validateFutureAdminAccess (mkUser [Admin]) `shouldBe` Right ()
+            validateFutureAdminAccess futureAdminUser `shouldBe` Right ()
             forM_ [Manager, StudioManager, Webmaster, Fan, Customer] $ \role ->
                 case validateFutureAdminAccess (mkUser [role]) of
                     Left serverErr -> do
@@ -8550,7 +8554,7 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected admin discovery access to be rejected, got: " <> show value)
 
         it "rejects Admin sessions missing the matching admin module grant" $ do
-            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            let malformedAdmin = futureAdminUser { auModules = modulesForRoles [] }
             case validateFutureAdminAccess malformedAdmin of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 403
@@ -8562,7 +8566,7 @@ spec = describe "TDF.Server helpers" $ do
 
         it "rejects Admin sessions whose module grants do not match their roles" $ do
             let staleAdmin =
-                    (mkUser [Admin]) { auModules = modulesForRoles [Webmaster] }
+                    futureAdminUser { auModules = modulesForRoles [Webmaster] }
             case validateFutureAdminAccess staleAdmin of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 403
@@ -8573,7 +8577,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected stale Admin module grants to be rejected, got: " <> show value)
 
         it "rejects duplicated role grants before serving fallback discovery metadata" $ do
-            let duplicatedAdmin = mkUser [Admin, Admin]
+            let duplicatedAdmin = mkUser [Admin, Fan, Customer, Admin]
             case validateFutureAdminAccess duplicatedAdmin of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 403
@@ -8584,10 +8588,9 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected duplicated Admin roles to be rejected, got: " <> show value)
 
         it "accepts default Admin role scope but rejects mixed staff roles before discovery" $ do
-            validateFutureAdminAccess (mkUser [Admin, Fan, Customer])
-                `shouldBe` Right ()
+            validateFutureAdminAccess futureAdminUser `shouldBe` Right ()
 
-            let mixedAdmin = mkUser [Admin, Webmaster]
+            let mixedAdmin = mkUser [Admin, Fan, Customer, Webmaster]
             case validateFutureAdminAccess mixedAdmin of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 403
@@ -8598,10 +8601,23 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected mixed Admin role scope to be rejected, got: " <> show value)
 
+        it "rejects Admin sessions missing baseline roles before fallback discovery" $
+            forM_ [[Admin], [Admin, Fan], [Admin, Customer]] $ \roles ->
+                case validateFutureAdminAccess (mkUser roles) of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 403
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "Admin fallback discovery requires baseline roles"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected Admin session without baseline roles to be rejected, got: "
+                                <> show value
+                            )
+
         it "rejects Admin-shaped sessions with impossible party ids" $ do
             forM_ [0, -7] $ \rawPartyId -> do
                 let malformedAdmin =
-                        (mkUser [Admin]) { auPartyId = toSqlKey rawPartyId }
+                        futureAdminUser { auPartyId = toSqlKey rawPartyId }
                 case validateFutureAdminAccess malformedAdmin of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 403
@@ -9206,7 +9222,7 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected fallback discovery catalog access to be rejected, got: " <> show value)
 
-            case futureCatalog (mkUser [Admin]) of
+            case futureCatalog futureAdminUser of
                 Right catalog -> do
                     map (\response -> (stubArea response, stubEndpoint response)) catalog
                         `shouldBe` allowedFutureStubMetadata
@@ -9237,7 +9253,7 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             mapM_ assertRejected (allFutureStubs (mkUser [StudioManager]))
 
-            case sequence (allFutureStubs (mkUser [Admin])) of
+            case sequence (allFutureStubs futureAdminUser) of
                 Right routeResponses -> do
                     map (\response -> (stubArea response, stubEndpoint response)) routeResponses
                         `shouldBe` allowedFutureStubMetadata
@@ -9264,7 +9280,7 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected fallback discovery access to be rejected, got: " <> show value)
 
-            case firstFutureStub (mkUser [Admin]) of
+            case firstFutureStub futureAdminUser of
                 Right stubResponse -> do
                     stubArea stubResponse `shouldBe` "access"
                     stubEndpoint stubResponse `shouldBe` "login-options"
@@ -9277,7 +9293,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)
 
         it "serves admin console preview cards only after metadata validation" $
-            case firstFutureAdminConsole (mkUser [Admin]) of
+            case firstFutureAdminConsole futureAdminUser of
                 Right consoleView -> do
                     Future.viewArea consoleView `shouldBe` "admin"
                     Future.viewEndpoint consoleView `shouldBe` "console"
@@ -9328,7 +9344,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected Admin fallback console access, got: " <> show serverErr)
 
         it "marks fallback discovery stubs as non-implemented placeholders" $
-            case firstFutureStub (mkUser [Admin]) of
+            case firstFutureStub futureAdminUser of
                 Right stubResponse -> do
                     stubImplemented stubResponse `shouldBe` False
                     A.toJSON stubResponse

@@ -147,6 +147,8 @@ validateFutureAdminAccess user
   | any (not . isFutureAdminRoleScope) (auRoles user) =
       Left err403
         { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }
+  | not (all (`elem` auRoles user) requiredFutureAdminBaselineRoles) =
+      Left err403 { errBody = "Admin fallback discovery requires baseline roles" }
   | not (hasModuleAccess ModuleAdmin user) =
       Left err403 { errBody = "Admin module access required" }
   | auModules user /= modulesForRoles (auRoles user) =
@@ -156,6 +158,12 @@ validateFutureAdminAccess user
 isFutureAdminRoleScope :: RoleEnum -> Bool
 isFutureAdminRoleScope role =
   role `elem` [Admin, Fan, Customer]
+
+requiredFutureAdminBaselineRoles :: [RoleEnum]
+requiredFutureAdminBaselineRoles =
+  [ Fan
+  , Customer
+  ]
 
 requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
 requireFutureAdminAccess user =
