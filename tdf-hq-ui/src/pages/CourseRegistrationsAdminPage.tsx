@@ -2159,6 +2159,18 @@ export default function CourseRegistrationsAdminPage() {
     const [onlyStatus] = Array.from(statusLabelsByKey.values());
     return statusLabelsByKey.size === 1 && onlyStatus ? registrationStatusLabel(onlyStatus) : '';
   }, [searchedRegistrations]);
+  const singleSearchedKnownStatus = useMemo<RegistrationStatus | null>(() => {
+    if (searchedRegistrations.length < 2) return null;
+    const statusKeys = new Set<RegistrationStatus>();
+
+    searchedRegistrations.forEach((reg) => {
+      const knownStatus = normalizeKnownRegistrationStatus(reg.crStatus.trim());
+      if (knownStatus) statusKeys.add(knownStatus);
+    });
+
+    const [onlyStatus] = Array.from(statusKeys.values());
+    return statusKeys.size === 1 && onlyStatus ? onlyStatus : null;
+  }, [searchedRegistrations]);
   const sharedVisibleSourceSummary = hasNamedVisibleSource
     ? `Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
@@ -2789,13 +2801,33 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomStatusSearch
     && actionableStatusFilters.length === 0
     && !showSingleStatusSummary;
+  const redundantSharedSearchStatusFilter = shouldShowSharedStatusSummary
+    && hasLocalSearch
+    && !hasManualFilters
+    && !hasCustomLimit
+    && !cohortsQuery.isError
+    ? singleSearchedKnownStatus
+    : null;
+  const displayedActionableStatusFilters = useMemo(
+    () => (redundantSharedSearchStatusFilter == null
+      ? actionableStatusFilters
+      : actionableStatusFilters.filter((value) => value !== redundantSharedSearchStatusFilter)),
+    [actionableStatusFilters, redundantSharedSearchStatusFilter],
+  );
   const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
     && !showSingleStatusSummary
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
   const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch
     && !hidePassiveFiltersDuringEmptyLocalSearch
-    && !hideBusyListPassiveSingleStatusSummary;
+    && !hideBusyListPassiveSingleStatusSummary
+    && (
+      showSingleStatusSummaryBlock
+      || showActiveStatusFilterSummary
+      || showSingleCustomStatusSummary
+      || showCustomStatusFilterUnavailableSummary
+      || displayedActionableStatusFilters.length > 0
+    );
   const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
     && !hidePassiveFiltersDuringEmptyLocalSearch
     && !hideBusyListPassiveSingleCohortSummary;
@@ -4408,7 +4440,7 @@ export default function CourseRegistrationsAdminPage() {
                             role="group"
                             aria-label={statusFilterGroupLabel}
                           >
-                            {actionableStatusFilters.map((value) => (
+                            {displayedActionableStatusFilters.map((value) => (
                               <Chip
                                 key={value}
                                 clickable

@@ -8250,6 +8250,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).toContain('Usa el nombre para abrir expediente;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
@@ -9606,6 +9607,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Estado visible: Pagado. Mostrando una sola cohorte: Mixing Bootcamp. Fuente visible: referral.',
       );
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Simone').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Garcia').textContent?.trim()).toBe('Cambiar estado');
       expect(countButtonsByText(container, 'Pagado')).toBe(0);
