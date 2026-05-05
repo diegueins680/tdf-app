@@ -449,18 +449,21 @@ describe('AdminUsersPage', () => {
         expect(emailOnlyRow.textContent).not.toContain('Sin teléfono');
         expect(emailOnlyRow.textContent).not.toContain('Sin correo');
         expect(emailOnlyRow.textContent).not.toContain('WhatsApp pendiente');
+        expect(emailOnlyRow.querySelector('[data-testid="admin-user-actions-101"]')).toBeNull();
         expect(getButtonsByText(emailOnlyRow, 'WhatsApp')).toHaveLength(0);
 
         const phoneOnlyRow = getRowByUserId(container, 102);
         expect(phoneOnlyRow.textContent).toContain('+593999000222');
         expect(phoneOnlyRow.textContent).not.toContain('Sin teléfono');
         expect(phoneOnlyRow.textContent).not.toContain('Sin correo');
+        expect(phoneOnlyRow.querySelector('[data-testid="admin-user-actions-102"]')).not.toBeNull();
         expect(getButtonsByText(phoneOnlyRow, 'WhatsApp')).toHaveLength(1);
 
         const whatsappRow = getRowByUserId(container, 103);
         expect(whatsappRow.textContent).toContain('whatsapp@example.com');
         expect(whatsappRow.textContent).not.toContain('+593999000444');
         expect(whatsappRow.textContent).not.toContain('+593999000333');
+        expect(whatsappRow.querySelector('[data-testid="admin-user-actions-103"]')).not.toBeNull();
         expect(getButtonsByText(whatsappRow, 'WhatsApp')).toHaveLength(1);
 
         const noContactRow = getRowByUserId(container, 104);
@@ -470,11 +473,13 @@ describe('AdminUsersPage', () => {
         expect(noContactRow.textContent).not.toContain('Contacto pendiente');
         expect(noContactRow.textContent).not.toContain('WhatsApp pendiente');
         expect(noContactRow.textContent).not.toContain('Falta contacto');
+        expect(noContactRow.querySelector('[data-testid="admin-user-actions-104"]')).toBeNull();
         expect(getButtonsByText(noContactRow, 'WhatsApp')).toHaveLength(0);
 
         const phoneAndEmailRow = getRowByUserId(container, 105);
         expect(phoneAndEmailRow.textContent).toContain('both@example.com');
         expect(phoneAndEmailRow.textContent).not.toContain('+593999000555');
+        expect(phoneAndEmailRow.querySelector('[data-testid="admin-user-actions-105"]')).not.toBeNull();
         const phoneAndEmailAction = getButtonsByText(phoneAndEmailRow, 'WhatsApp')[0]!;
         expect(phoneAndEmailAction.getAttribute('aria-label')).toBe(
           'Abrir WhatsApp para Ada Lovelace (Usuario: phone-and-email)',
