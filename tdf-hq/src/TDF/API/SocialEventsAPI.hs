@@ -24,8 +24,9 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAlphaNum
+  , isAscii
   , isControl
-  , isSpace
   )
 import Servant
 import Data.Text (Text)
@@ -150,7 +151,10 @@ instance FromMultipart Tmp EventImageUploadForm where
               if T.null ext
                 then trimmed
                 else T.dropEnd (T.length ext) trimmed
-        in T.any (\ch -> ch /= '.' && not (isSpace ch)) baseName
+        in T.any isStableUploadBaseNameAtom baseName
+
+      isStableUploadBaseNameAtom ch =
+        isAscii ch && isAlphaNum ch
 
       validateImageUploadMetadata mName file =
         let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
