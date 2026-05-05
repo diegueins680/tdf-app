@@ -127,6 +127,13 @@ export default function BrainAdminPage() {
     ? 'No hay entradas cargadas, incluyendo inactivas.'
     : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
   const showRagFirstEntryGuidance = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
+  const hasBuiltRagIndex = Boolean(
+    ragStatusQuery.data
+      && (ragStatusQuery.data.risCount > 0 || ragStatusQuery.data.risUpdatedAt),
+  );
+  const showRagIndexPendingState = Boolean(
+    ragStatusQuery.data && !showRagFirstEntryGuidance && !hasBuiltRagIndex,
+  );
   const singleActiveEntry = !entriesQuery.isLoading
     && !entriesQuery.isError
     && !includeInactive
@@ -256,7 +263,12 @@ export default function BrainAdminPage() {
               </Alert>
             )}
             {refreshNotice && <Alert severity="success">{refreshNotice}</Alert>}
-            {ragStatusQuery.data && !showRagFirstEntryGuidance && (
+            {showRagIndexPendingState && (
+              <Alert severity="info" variant="outlined" data-testid="brain-admin-rag-index-pending">
+                El indice todavia no tiene chunks. Usa Refrescar indice cuando termines de revisar entradas.
+              </Alert>
+            )}
+            {ragStatusQuery.data && !showRagFirstEntryGuidance && hasBuiltRagIndex && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <Chip label={`Chunks: ${ragStatusQuery.data.risCount}`} color="primary" />
                 <Chip

@@ -215,6 +215,11 @@ describe('BrainAdminPage', () => {
 
   it('shows the inactive filter when the Brain list has entries to filter', async () => {
     listEntriesMock.mockResolvedValue([buildEntry()]);
+    ragStatusMock.mockResolvedValue({
+      risCount: 12,
+      risUpdatedAt: '2030-01-04T12:00:00.000Z',
+      risStale: false,
+    });
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -225,12 +230,43 @@ describe('BrainAdminPage', () => {
         expect(listEntriesMock).toHaveBeenCalledWith(false);
         expect(container.textContent).toContain('Precios de estudio');
         expect(container.textContent).toContain('Ultima actualizacion y total de chunks indexados.');
-        expect(container.textContent).toContain('Chunks: 0');
-        expect(container.textContent).toContain('Actualizado: -');
+        expect(container.textContent).toContain('Chunks: 12');
+        expect(container.textContent).toContain('Actualizado:');
+        expect(container.textContent).not.toContain('Actualizado: -');
         expect(container.textContent).toContain('OK');
+        expect(container.querySelector('[data-testid="brain-admin-rag-index-pending"]')).toBeNull();
         expect(getActionByText(container, 'Refrescar indice')).toBeTruthy();
         expect(container.textContent).toContain('Incluir inactivas');
         expect(container.textContent).not.toContain('Revisar inactivas');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces unbuilt RAG index placeholders with one next-step hint once entries exist', async () => {
+    listEntriesMock.mockResolvedValue([buildEntry()]);
+    ragStatusMock.mockResolvedValue({
+      risCount: 0,
+      risUpdatedAt: null,
+      risStale: true,
+    });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="brain-admin-rag-index-pending"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'El indice todavia no tiene chunks. Usa Refrescar indice cuando termines de revisar entradas.',
+        );
+        expect(getActionByText(container, 'Refrescar indice')).toBeTruthy();
+        expect(container.textContent).not.toContain('Chunks: 0');
+        expect(container.textContent).not.toContain('Actualizado: -');
+        expect(container.textContent).not.toContain('OK');
+        expect(container.textContent).not.toContain('Stale');
       });
     } finally {
       await cleanup();
