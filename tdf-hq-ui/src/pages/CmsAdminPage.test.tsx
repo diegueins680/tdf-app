@@ -1337,4 +1337,37 @@ describe('CmsAdminPage', () => {
 
     await cleanup();
   });
+
+  it('collapses published history row state and timestamp into one clear chip', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain('Publicado:');
+      expect(history?.textContent).not.toContain('pub:');
+      expect(countExactText(history!, 'Publicado')).toBe(0);
+      expect(countExactText(history!, 'Borrador')).toBe(1);
+    });
+
+    await cleanup();
+  });
 });

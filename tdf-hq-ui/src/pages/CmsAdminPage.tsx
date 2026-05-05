@@ -1249,6 +1249,12 @@ export default function CmsAdminPage() {
           <Stack spacing={1.5}>
             {visibleVersionRows.map((v) => {
               const isCurrentLiveVersion = liveContent?.ccdId === v.ccdId;
+              const rowStatus = normalizeCmsStatus(v.ccdStatus);
+              const rowHasPublishedTimestamp = Boolean(v.ccdPublishedAt);
+              const showRowStatusChip =
+                !sharedVersionStatus
+                && !isCurrentLiveVersion
+                && !(rowStatus === 'published' && rowHasPublishedTimestamp);
               const rowActions = getCmsVersionRowActions(v.ccdStatus, {
                 isCurrentLive: isCurrentLiveVersion,
                 isLoadedInEditor: editingFromId === v.ccdId,
@@ -1268,16 +1274,16 @@ export default function CmsAdminPage() {
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
                         {!sharedVersionLocale && <Chip label={formatLocaleLabel(v.ccdLocale)} size="small" />}
                         {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
-                        {!sharedVersionStatus && !isCurrentLiveVersion && (
+                        {showRowStatusChip && (
                           <Chip
                             label={formatCmsStatusLabel(v.ccdStatus)}
                             size="small"
-                            color={normalizeCmsStatus(v.ccdStatus) === 'published' ? 'success' : 'default'}
+                            color={rowStatus === 'published' ? 'success' : 'default'}
                           />
                         )}
                         {v.ccdPublishedAt && !isCurrentLiveVersion && (
                           <Chip
-                            label={`pub: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
+                            label={`Publicado: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
                             size="small"
                             variant="outlined"
                           />
