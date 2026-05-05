@@ -773,6 +773,8 @@ const humanizeCohortSlug = (slug: string) => {
     .join(' ');
 };
 
+const readableCohortFallbackLabel = (slug: string) => humanizeCohortSlug(slug) || slug.trim();
+
 const stripTrailingCohortSlug = (title: string, slug: string) => {
   const trimmedTitle = title.trim();
   const trimmedSlug = slug.trim();
@@ -1893,7 +1895,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortOptionLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, humanizeCohortSlug(selectedSlug) || selectedSlug);
+      bySlug.set(selectedSlug, readableCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -1905,7 +1907,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortSummaryLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, humanizeCohortSlug(selectedSlug) || selectedSlug);
+      bySlug.set(selectedSlug, readableCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -1943,7 +1945,11 @@ export default function CourseRegistrationsAdminPage() {
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
 
   const activeCohortLabel = selectedSlug
-    ? (cohortSummaryLabelsBySlug.get(selectedSlug) ?? cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug)
+    ? (
+      cohortSummaryLabelsBySlug.get(selectedSlug)
+      ?? cohortLabelsBySlug.get(selectedSlug)
+      ?? readableCohortFallbackLabel(selectedSlug)
+    )
     : '';
 
   const regsQuery = useQuery({
@@ -2167,7 +2173,9 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueCohortSlugs.length !== 1) return '';
     const cohortSlug = uniqueCohortSlugs[0];
     if (!cohortSlug) return '';
-    return cohortSummaryLabelsBySlug.get(cohortSlug) ?? cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
+    return cohortSummaryLabelsBySlug.get(cohortSlug)
+      ?? cohortLabelsBySlug.get(cohortSlug)
+      ?? readableCohortFallbackLabel(cohortSlug);
   }, [cohortLabelsBySlug, cohortSummaryLabelsBySlug, searchedRegistrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
     if (searchedRegistrations.length === 0) return '';
@@ -3638,7 +3646,7 @@ export default function CourseRegistrationsAdminPage() {
     ? (
       cohortSummaryLabelsBySlug.get(activeRegistrationCourseSlug)
       ?? cohortLabelsBySlug.get(activeRegistrationCourseSlug)
-      ?? activeRegistrationCourseSlug
+      ?? readableCohortFallbackLabel(activeRegistrationCourseSlug)
     )
     : '';
   const activeRegistrationIdentity = activeRegistration
@@ -4864,7 +4872,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
-                    ?? rowCohortSlug;
+                    ?? readableCohortFallbackLabel(rowCohortSlug);
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const rowMatchesVisibleSearchFields = hasLocalSearch
                     ? registrationMatchesVisibleSearchFields({

@@ -2037,7 +2037,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await secondRender.cleanup();
   });
 
-  it('keeps cohort context visible when one configured cohort does not cover every loaded registration', async () => {
+  it('keeps cohort context visible without exposing raw slugs when one configured cohort does not cover every loaded registration', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -2058,7 +2058,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Cohorte única por ahora.');
       expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(true);
-      expect(hasExactText(container, 'Cohorte: legacy-workshop')).toBe(true);
+      expect(hasExactText(container, 'Cohorte: Legacy Workshop')).toBe(true);
+      expect(container.textContent).not.toContain('Cohorte: legacy-workshop');
       expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101.');
     });
 
