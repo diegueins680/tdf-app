@@ -224,6 +224,11 @@ describe('OrdersPage', () => {
         expect(hasTableHeader(container, 'Horario')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Nueva sesión',
+          ),
+        ).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -254,6 +259,11 @@ describe('OrdersPage', () => {
             (button) => buttonText(button) === 'Reintentar carga',
           ),
         ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Nueva sesión',
+          ),
+        ).toHaveLength(0);
       });
 
       await clickButton(

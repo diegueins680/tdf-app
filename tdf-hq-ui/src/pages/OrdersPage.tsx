@@ -352,6 +352,9 @@ export default function OrdersPage() {
     : null;
   const showSingleSessionSummary = singleRow != null;
   const showRefreshAction = totalRows > 1;
+  const showHeaderCreateSessionAction =
+    !showInitialLoadingState && !showInitialErrorState && !showFirstSessionEmptyState;
+  const showInlineCreateSessionAction = showFirstSessionEmptyState;
 
   useEffect(() => {
     if (page > maxPage) {
@@ -549,9 +552,11 @@ export default function OrdersPage() {
               Live Sessions
             </Button>
           )}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
-            Nueva sesión
-          </Button>
+          {showHeaderCreateSessionAction && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
+              Nueva sesión
+            </Button>
+          )}
         </Stack>
       </Stack>
 
@@ -594,6 +599,16 @@ export default function OrdersPage() {
             <Typography variant="body2" color="text.secondary">
               La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.
             </Typography>
+            {showInlineCreateSessionAction && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateSession}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Nueva sesión
+              </Button>
+            )}
           </Stack>
         ) : showSingleSessionSummary && singleRow ? (
           <Stack spacing={2} sx={{ p: 3 }}>
