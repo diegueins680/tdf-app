@@ -390,8 +390,11 @@ validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
                           )
                       )
                 }
-          | T.any isControl termsVersion ->
-              Left err400 { errBody = "termsVersion must not contain control characters" }
+          | T.any isUnsafeLiveSessionTermsVersionChar termsVersion ->
+              Left err400
+                { errBody =
+                    "termsVersion must not contain control characters or hidden formatting characters"
+                }
           | otherwise ->
               Right termsVersion
         _ ->
@@ -399,6 +402,10 @@ validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
   where
     missingTermsVersion =
       Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
+
+isUnsafeLiveSessionTermsVersionChar :: Char -> Bool
+isUnsafeLiveSessionTermsVersionChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateLiveSessionRiderFileName :: Text -> Either ServerError Text
 validateLiveSessionRiderFileName rawName
