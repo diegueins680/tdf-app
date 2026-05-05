@@ -1172,6 +1172,9 @@ spec = do
             decodeClockOut
                 "{\"corNotes\":\"Closed\\u0000after inventory\"}"
                 `shouldSatisfy` isLeft
+            decodeClockIn
+                "{\"cirNotes\":\"Opening\\u200Dstudio\"}"
+                `shouldSatisfy` isLeft
 
         it "rejects unexpected clock fields so over-posted time-entry intent fails explicitly" $ do
             decodeClockIn

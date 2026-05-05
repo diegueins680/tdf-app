@@ -1689,16 +1689,21 @@ normalizeTimeEntryNotesField fieldName (Just rawValue)
       pure Nothing
   | T.length trimmed > timeEntryNotesMaxLength =
       fail (fieldName <> " must be 1000 characters or fewer")
-  | T.any isUnsafeTimeEntryNotesControl trimmed =
-      fail (fieldName <> " must not contain control characters other than tabs or line breaks")
+  | T.any isUnsafeTimeEntryNotesChar trimmed =
+      fail
+        ( fieldName
+            <> " must not contain control characters other than tabs or line breaks, "
+            <> "or hidden formatting characters"
+        )
   | otherwise =
       pure (Just trimmed)
   where
     trimmed = T.strip rawValue
 
-isUnsafeTimeEntryNotesControl :: Char -> Bool
-isUnsafeTimeEntryNotesControl ch =
-  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+isUnsafeTimeEntryNotesChar :: Char -> Bool
+isUnsafeTimeEntryNotesChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 data InternPermissionDTO = InternPermissionDTO
   { iprId          :: Text
