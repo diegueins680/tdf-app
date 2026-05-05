@@ -60,8 +60,28 @@ const receiptComposerHelpText = 'Este formulario ya está abierto para guardar o
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
+const normalizeInitialCohortPreviewKey = (label: string) =>
+  label
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
 const formatInitialCohortPreview = (labels: readonly string[]) => {
-  const uniqueLabels = Array.from(new Set(labels.map((label) => label.trim()).filter(Boolean)));
+  const uniqueLabelsByKey = new Map<string, string>();
+
+  labels.forEach((label) => {
+    const trimmedLabel = label.trim();
+    if (!trimmedLabel) return;
+
+    const labelKey = normalizeInitialCohortPreviewKey(trimmedLabel);
+    if (!uniqueLabelsByKey.has(labelKey)) {
+      uniqueLabelsByKey.set(labelKey, trimmedLabel);
+    }
+  });
+
+  const uniqueLabels = Array.from(uniqueLabelsByKey.values());
   if (uniqueLabels.length === 0) return '';
   if (uniqueLabels.length === 1) return uniqueLabels[0] ?? '';
   if (uniqueLabels.length === 2) return `${uniqueLabels[0]} y ${uniqueLabels[1]}`;
