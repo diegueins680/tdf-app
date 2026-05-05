@@ -245,13 +245,21 @@ describe('InventoryPage', () => {
 
     try {
       await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="inventory-first-run-empty-state"]');
+
+        expect(emptyState).not.toBeNull();
         expect(container.textContent).toContain('Primeros pasos');
         expect(container.textContent).toContain(
           'Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila.',
         );
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Si estás esperando la carga inicial del inventario, vuelve a consultar desde aquí sin revisar una tabla vacía.',
         );
+        expect(
+          Array.from(emptyState!.querySelectorAll('p')).filter(
+            (paragraph) => (paragraph.textContent ?? '').trim().length > 0,
+          ),
+        ).toHaveLength(1);
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);

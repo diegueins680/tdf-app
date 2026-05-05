@@ -847,7 +847,10 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       ) : showFirstAssetEmptyState ? (
-        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <Card
+          data-testid="inventory-first-run-empty-state"
+          sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
           <CardContent>
             <Stack spacing={1}>
               <Typography variant="h6" fontWeight={700}>
@@ -856,9 +859,6 @@ export default function InventoryPage() {
               <Typography variant="body2" color="rgba(226,232,240,0.78)">
                 Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial
                 para operar check-out y check-in desde una sola fila.
-              </Typography>
-              <Typography variant="body2" color="rgba(226,232,240,0.68)">
-                Si estás esperando la carga inicial del inventario, vuelve a consultar desde aquí sin revisar una tabla vacía.
               </Typography>
               <Button
                 size="small"
