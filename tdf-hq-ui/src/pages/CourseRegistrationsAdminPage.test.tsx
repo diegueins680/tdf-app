@@ -11920,6 +11920,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Facebook leads - Beatmaking 101',
       'Leads de Instagram para Beatmaking 101',
       'Beatmaking 101 - Meta leads',
+      'LinkedIn Lead Gen Form - Beatmaking 101',
+      'TikTok lead form for Beatmaking 101',
+      'Beatmaking 101 - LinkedIn leads',
+      'Leads de TikTok para Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -11936,7 +11940,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(/lead ads?|leads? de|leads?/i);
-        expect(emptyState?.textContent).not.toMatch(/Facebook|Instagram|Meta/);
+        expect(emptyState?.textContent).not.toMatch(/Facebook|Instagram|Meta|LinkedIn|TikTok/);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
