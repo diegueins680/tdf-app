@@ -4,7 +4,17 @@
 module TDF.Trials.DTO where
 
 import GHC.Generics (Generic)
-import Data.Aeson (FromJSON (parseJSON), Options, ToJSON, defaultOptions, genericParseJSON, rejectUnknownFields)
+import Data.Aeson
+  ( FromJSON (parseJSON)
+  , Options
+  , ToJSON
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  , withObject
+  )
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
@@ -30,7 +40,14 @@ data TrialRequestIn = TrialRequestIn
   } deriving (Show, Generic)
 instance ToJSON TrialRequestIn
 instance FromJSON TrialRequestIn where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    withObject "TrialRequestIn" rejectPublicPartyId value
+    genericParseJSON strictObjectOptions value
+    where
+      rejectPublicPartyId object
+        | AesonKeyMap.member (AesonKey.fromString "partyId") object =
+            fail "TrialRequestIn.partyId must be omitted on the public endpoint"
+        | otherwise = pure ()
 
 data TrialRequestOut = TrialRequestOut
   { requestId   :: Int

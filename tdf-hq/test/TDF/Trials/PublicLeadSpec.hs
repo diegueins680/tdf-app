@@ -384,6 +384,53 @@ spec = do
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
 
+  describe "TrialRequestIn request decoding" $ do
+    it "requires the public partyId field to be absent, not merely null" $ do
+      let canonicalPayload = BL8.pack $ concat
+            [ "{\"subjectId\":7"
+            , ",\"preferred\":["
+            , "{\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\"}]"
+            , ",\"notes\":\"Piano goals\""
+            , ",\"fullName\":\"Ada Lovelace\""
+            , ",\"email\":\"ada@example.com\""
+            , ",\"phone\":\"+593991234567\"}"
+            ]
+      case A.eitherDecode canonicalPayload of
+        Left decodeErr ->
+          expectationFailure
+            ("Expected canonical public trial request payload to decode, got: " <> decodeErr)
+        Right
+          ( TrialRequestIn
+              partyIdValue
+              subjectIdValue
+              preferredValue
+              notesValue
+              fullNameValue
+              emailValue
+              phoneValue
+          ) -> do
+          partyIdValue `shouldBe` Nothing
+          subjectIdValue `shouldBe` 7
+          preferredValue `shouldBe` [validSlot]
+          notesValue `shouldBe` Just "Piano goals"
+          fullNameValue `shouldBe` Just "Ada Lovelace"
+          emailValue `shouldBe` Just "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+
+      isLeft
+        ( A.eitherDecode
+            "{\"partyId\":null,\"subjectId\":7,\"preferred\":[]}"
+            :: Either String TrialRequestIn
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode
+            "{\"partyId\":42,\"subjectId\":7,\"preferred\":[]}"
+            :: Either String TrialRequestIn
+        )
+        `shouldBe` True
+
   describe "validatePublicTrialRequestInput" $ do
     it "normalizes public trial contact fields before party, credential, and request writes" $ do
       case validatePublicTrialRequestInput
