@@ -7225,6 +7225,7 @@ main = hspec $ do
                         expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
             assertInvalid "contract-123"
             assertInvalid "../contracts/store"
+            assertInvalid "00000000-0000-0000-0000-000000000000"
 
     describe "validateContractPayload" $ do
         it "requires object payloads and normalizes the explicit stored contract kind" $ do
@@ -7375,11 +7376,15 @@ main = hspec $ do
                     expectationFailure "Expected stored contract with unexpected keys to be rejected"
 
         it "rejects stored contracts with invalid persisted ids instead of rendering the wrong contract identity" $
-            case decodeStoredContract "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
-                Left err ->
-                    Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
-                Right _ ->
-                    expectationFailure "Expected stored contract with invalid id to be rejected"
+            let assertInvalidStoredId storedPayload =
+                    case decodeStoredContract storedPayload of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
+                        Right _ ->
+                            expectationFailure "Expected stored contract with invalid id to be rejected"
+            in do
+                assertInvalidStoredId "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+                assertInvalidStoredId "{\"id\":\"00000000-0000-0000-0000-000000000000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
 
         it "rejects stored contracts whose envelope id does not match the requested route id" $
             case decodeStoredContractFor

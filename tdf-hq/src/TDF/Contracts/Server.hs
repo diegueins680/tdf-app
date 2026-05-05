@@ -169,7 +169,9 @@ validateStoredContract stored@StoredContract{..} = do
 validateStoredContractId :: Text -> Either Text Text
 validateStoredContractId rawId =
   case UUID.fromText (T.strip rawId) of
-    Just uuid -> Right (toText uuid)
+    Just uuid
+      | isNilUuid uuid -> Left "Stored contract id is invalid"
+      | otherwise -> Right (toText uuid)
     Nothing -> Left "Stored contract id is invalid"
 
 validateStoredContractKind :: Text -> Either Text Text
@@ -185,11 +187,18 @@ firstServerErrorText =
 validateContractId :: Text -> Either ServerError Text
 validateContractId raw =
   case UUID.fromText (T.strip raw) of
-    Just uuid -> Right (toText uuid)
-    Nothing ->
+    Just uuid
+      | isNilUuid uuid -> invalidContractId
+      | otherwise -> Right (toText uuid)
+    Nothing -> invalidContractId
+  where
+    invalidContractId =
       Left err400
         { errBody = "Invalid contract id"
         }
+
+isNilUuid :: UUID.UUID -> Bool
+isNilUuid uuid = toText uuid == "00000000-0000-0000-0000-000000000000"
 
 validateContractSendPayload :: A.Value -> Either ServerError Text
 validateContractSendPayload (A.Object payloadObj)
