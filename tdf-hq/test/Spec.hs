@@ -736,6 +736,33 @@ main = hspec $ do
                     cfg <- loadConfig
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 2525
 
+        it "rejects SMTP_USERNAME/SMTP_USER conflicts before choosing a fallback" $ do
+            withEnvOverrides
+                [ ("SMTP_PORT", Just "587")
+                , ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Just "primary-mailer")
+                , ("SMTP_USER", Just "alias-mailer")
+                , ("SMTP_PASSWORD", Just "secret")
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_USERNAME and SMTP_USER must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("SMTP_PORT", Just "587")
+                , ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Just "mailer")
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASSWORD", Just "primary-secret")
+                , ("SMTP_PASS", Just "alias-secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_PASSWORD and SMTP_PASS must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes SMTP_FROM_NAME and rejects unsafe email display names" $ do
             withEnvOverrides
                 [ ("SMTP_HOST", Just "smtp.example.com")

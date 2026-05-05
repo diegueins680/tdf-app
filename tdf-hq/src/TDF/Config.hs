@@ -516,8 +516,10 @@ loadConfig = do
   ragEmbedBatchSizeEnv <- lookupEnv "RAG_EMBED_BATCH_SIZE"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
-  smtpUserEnv <- lookupFirstEnv ["SMTP_USERNAME", "SMTP_USER"]
-  smtpPassEnv <- lookupFirstEnv ["SMTP_PASSWORD", "SMTP_PASS"]
+  smtpUserEnv <- fmap (fmap snd) $
+    lookupUniqueNamedEnv ["SMTP_USERNAME", "SMTP_USER"]
+  smtpPassEnv <- fmap (fmap snd) $
+    lookupUniqueNamedEnv ["SMTP_PASSWORD", "SMTP_PASS"]
   smtpFromEnv <- lookupEnv "SMTP_FROM"
   smtpFromNameEnv <- lookupEnv "SMTP_FROM_NAME"
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
