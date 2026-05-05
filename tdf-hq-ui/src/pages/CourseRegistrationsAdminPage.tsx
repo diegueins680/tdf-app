@@ -794,10 +794,10 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
 };
 
 const firstRunApplicationDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal))?|application\s+(?:form|page|portal)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal))?|student\s+applications?\s+(?:form|page|portal)|application\s+(?:form|page|portal)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunApplicationDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal))?|application\s+(?:form|page|portal)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal))?|student\s+applications?\s+(?:form|page|portal)|application\s+(?:form|page|portal)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
 const firstRunCohortDescriptorPrefixPattern =
   /^(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*[-:/|]\s*/i;

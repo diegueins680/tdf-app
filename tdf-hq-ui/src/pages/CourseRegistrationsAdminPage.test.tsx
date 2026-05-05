@@ -12895,7 +12895,9 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips application-form descriptors from first-run cohort copy', async () => {
     const titles = [
       'Application form for Beatmaking 101',
+      'Student application form for Beatmaking 101',
       'Beatmaking 101 - postulación al curso',
+      'Beatmaking 101 - student application page',
     ];
 
     for (const title of titles) {
@@ -12912,6 +12914,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Application form');
+        expect(emptyState?.textContent).not.toContain('Student application');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - postulación');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
@@ -12922,6 +12925,28 @@ describe('CourseRegistrationsAdminPage', () => {
 
       await cleanup();
     }
+  });
+
+  it('keeps legitimate student-application course titles in first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'student-applications', ccTitle: 'Student Applications in Music Production' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Student Applications in Music Production. Abre la página pública cuando estés listo para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Music Production.');
+    });
+
+    await cleanup();
   });
 
   it('strips course-connector enrollment descriptors from first-run cohort copy', async () => {
