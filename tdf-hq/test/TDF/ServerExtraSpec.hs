@@ -5134,12 +5134,28 @@ spec = do
         (validate (Just "challenge\nInjected: value") (Just "secret") [Just "secret"])
       assertInvalid
         400
+        "hub.challenge must not contain hidden formatting characters"
+        ( validate
+            (Just ("challenge" <> T.singleton '\x200B' <> "-123"))
+            (Just "secret")
+            [Just "secret"]
+        )
+      assertInvalid
+        400
         "hub.verify_token must not contain whitespace or control characters"
         (validate (Just "challenge-123") (Just "secret\nInjected") [Just "secret"])
       assertInvalid
         400
         "hub.verify_token must not contain whitespace or control characters"
         (validate (Just "challenge-123") (Just "secret token") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token must not contain hidden formatting characters"
+        ( validate
+            (Just "challenge-123")
+            (Just ("secret" <> T.singleton '\x202E'))
+            [Just "secret"]
+        )
       assertInvalid
         403
         "Meta verify token is misconfigured"
@@ -5148,6 +5164,14 @@ spec = do
         403
         "Meta verify token is misconfigured"
         (validate (Just "challenge-123") (Just "secret") [Just "bad secret", Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token is misconfigured"
+        ( validate
+            (Just "challenge-123")
+            (Just "secret")
+            [Just ("secret" <> T.singleton '\x200D')]
+        )
 
   describe "validateMetaWebhookChannel" $ do
     it "accepts only route-matching Meta webhook object values" $ do

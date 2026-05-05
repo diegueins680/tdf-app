@@ -3840,6 +3840,11 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
                       | T.any isUnsafeMetaVerifyTokenChar provided ->
                           Left err400
                             { errBody = "hub.verify_token must not contain whitespace or control characters" }
+                      | T.any isHiddenMetaWebhookTextChar provided ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must not contain hidden formatting characters"
+                            }
                       | provided == expected -> Right challengeVal
                       | otherwise ->
                           Left err403
@@ -3858,6 +3863,8 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
         expected : rest
           | any (T.any isUnsafeMetaVerifyTokenChar) (expected : rest) ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
+          | any (T.any isHiddenMetaWebhookTextChar) (expected : rest) ->
+              Left err403 { errBody = "Meta verify token is misconfigured" }
           | any (/= expected) rest ->
               Left err403 { errBody = "Meta verify token candidates conflict" }
           | otherwise ->
@@ -3875,10 +3882,16 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isHiddenMetaWebhookTextChar challenge =
+          Left err400
+            { errBody = "hub.challenge must not contain hidden formatting characters" }
       | otherwise =
           Right challenge
 
     isUnsafeMetaVerifyTokenChar ch = isSpace ch || isControl ch
+
+    isHiddenMetaWebhookTextChar ch =
+      generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 instagramWebhookServer
   :: ( MonadIO m
