@@ -603,7 +603,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.',
       );
     });
 
@@ -714,7 +714,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('waits to show the compare action until the editor has a meaningful draft payload', async () => {
+  it('lets compare own changed-payload review instead of reopening the live payload inspector', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -758,8 +758,11 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
+      const liveCard = container.querySelector<HTMLElement>('[data-testid="cms-admin-live-content-card"]');
+      expect(liveCard?.textContent).toContain('El comparador revisa el payload en vivo contra este borrador.');
+      expect(liveCard?.textContent).not.toContain('El editor ya usa el payload en vivo.');
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.',
       );
     });
 

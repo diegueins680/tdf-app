@@ -552,6 +552,11 @@ export default function CmsAdminPage() {
   );
   const showLivePayloadInspectAction =
     Boolean(liveContent) && !liveEditorActionState.showLiveInSyncChip && !canCompareWithLive;
+  const liveContentSummary = canCompareWithLive
+    ? 'El comparador revisa el payload en vivo contra este borrador.'
+    : showLivePayloadInspectAction
+      ? 'Payload en vivo disponible.'
+      : 'El editor ya usa el payload en vivo.';
   const draftVsLiveDiff = useMemo(
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
     [formattedPayload, livePayloadPretty],
@@ -698,10 +703,10 @@ export default function CmsAdminPage() {
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
       : payloadChanged
         ? editorHasMeaningfulPayloadDraft
-          ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar cambios si necesitas revisar cambios línea por línea.'
+          ? 'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.'
           : showLiveStartGuidance
             ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
-          : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
+            : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
         : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
@@ -979,9 +984,7 @@ export default function CmsAdminPage() {
                         </Stack>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                           <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                            {showLivePayloadInspectAction
-                              ? 'Payload en vivo disponible.'
-                              : 'El editor ya usa el payload en vivo.'}
+                            {liveContentSummary}
                           </Typography>
                           <Button
                             size="small"
