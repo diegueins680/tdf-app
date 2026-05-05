@@ -12,6 +12,7 @@ module TDF.Routes.Academy
   , MicrocourseDTO(..)
   , LessonDTO(..)
   , NextCohortDTO(..)
+  , validateAcademyRole
   ) where
 
 import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
@@ -37,7 +38,7 @@ instance FromJSON EnrollReq where
       genericParseJSON strictObjectOptions value
     EnrollReq
       <$> requiredEmail "email" rawEmail
-      <*> requiredLowerText "role" rawRole
+      <*> requiredAcademyRole rawRole
       <*> pure (optionalNonBlank rawPlatform)
       <*> pure (T.toUpper <$> optionalNonBlank rawReferralCode)
 
@@ -122,6 +123,22 @@ requiredEmail fieldName raw =
 requiredLowerText :: String -> Text -> Parser Text
 requiredLowerText fieldName raw =
   T.toLower <$> requiredNonBlank fieldName raw
+
+requiredAcademyRole :: Text -> Parser Text
+requiredAcademyRole raw =
+  either (fail . T.unpack) pure (validateAcademyRole raw)
+
+validateAcademyRole :: Text -> Either Text Text
+validateAcademyRole raw =
+  let normalized = T.toLower (T.strip raw)
+  in if T.null normalized
+       then Left "role must not be blank"
+       else if normalized `elem` allowedAcademyRoles
+         then Right normalized
+         else Left "role must be one of: artist, manager"
+
+allowedAcademyRoles :: [Text]
+allowedAcademyRoles = ["artist", "manager"]
 
 requiredNonBlank :: String -> Text -> Parser Text
 requiredNonBlank fieldName raw =

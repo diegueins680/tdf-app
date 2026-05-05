@@ -46,6 +46,7 @@ import TDF.Auth
     , modulesForRoles
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
+import qualified TDF.Routes.Academy as Academy
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
@@ -526,6 +527,9 @@ decodeVCardExchangeRequest = eitherDecode
 decodePublicBookingRequest :: BL8.ByteString -> Either String PublicBookingReq
 decodePublicBookingRequest = eitherDecode
 
+decodeAcademyEnrollReq :: BL8.ByteString -> Either String Academy.EnrollReq
+decodeAcademyEnrollReq = eitherDecode
+
 decodeCreateBookingRequest :: BL8.ByteString -> Either String CreateBookingReq
 decodeCreateBookingRequest = eitherDecode
 
@@ -550,6 +554,32 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "Academy enrollment request contract" $ do
+        it "normalizes allowed academy roles before persistence" $ do
+            Academy.validateAcademyRole " Artist " `shouldBe` Right "artist"
+            Academy.validateAcademyRole "manager" `shouldBe` Right "manager"
+
+            case decodeAcademyEnrollReq
+                "{\"email\":\" Learner@Example.com \",\"role\":\" MANAGER \",\"platform\":\" web \",\"referralCode\":\" abc123 \"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected canonical academy enrollment payload to decode, got: " <> decodeErr)
+                Right (Academy.EnrollReq emailValue roleValue platformValue referralCodeValue) -> do
+                    emailValue `shouldBe` "learner@example.com"
+                    roleValue `shouldBe` "manager"
+                    platformValue `shouldBe` Just "web"
+                    referralCodeValue `shouldBe` Just "ABC123"
+
+        it "rejects unsupported academy roles before the database role check can fail ambiguously" $ do
+            case Academy.validateAcademyRole "student" of
+                Left msg ->
+                    msg `shouldBe` "role must be one of: artist, manager"
+                Right roleValue ->
+                    expectationFailure ("Expected unsupported academy role to be rejected, got: " <> show roleValue)
+
+            decodeAcademyEnrollReq
+                "{\"email\":\"learner@example.com\",\"role\":\"student\"}"
+                `shouldSatisfy` isLeft
+
     describe "radio metadata validation" $ do
         it "rejects hidden formatting markers in upstream now-playing titles" $
             case Radio.resolveRadioNowPlayingFetchResult

@@ -143,6 +143,7 @@ import           TDF.Routes.Academy ( AcademyAPI
                                     , MicrocourseDTO(..)
                                     , LessonDTO(..)
                                     , NextCohortDTO(..)
+                                    , validateAcademyRole
                                     )
 import           TDF.Routes.Courses ( CoursesPublicAPI
                                     , WhatsAppHooksAPI
@@ -5937,9 +5938,7 @@ requireEmail raw = do
 
 requireRole :: Text -> AppM Text
 requireRole raw = do
-  let normalized = T.toLower (T.strip raw)
-  when (T.null normalized) (throwBadRequest "role requerido")
-  pure normalized
+  either throwBadRequest pure (validateAcademyRole raw)
 
 requireSlug :: Text -> AppM Text
 requireSlug raw = do
