@@ -9084,6 +9084,85 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats generic intake and admissions sources as default form traffic', async () => {
+    const defaultSources = [
+      'intake_form',
+      'intake_page',
+      'course_intake',
+      'course_intake_page',
+      'student_intake_form',
+      'student_intake_page',
+      'admission_page',
+      'admissions_page',
+      'course_admission_page',
+      'course_admissions_page',
+      'application_page',
+      'course_application_page',
+      'formulario_de_ingreso',
+      'pagina_de_admision',
+      'pagina_de_admisiones',
+      'pagina_de_ingreso',
+      'solicitud_de_ingreso',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Intake form',
+      'Intake page',
+      'Course intake',
+      'Course intake page',
+      'Student intake form',
+      'Student intake page',
+      'Admission page',
+      'Admissions page',
+      'Course admission page',
+      'Course admissions page',
+      'Application page',
+      'Course application page',
+      'Formulario de ingreso',
+      'Pagina de admision',
+      'Pagina de admisiones',
+      'Pagina de ingreso',
+      'Solicitud de ingreso',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'intake form');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "intake form" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
