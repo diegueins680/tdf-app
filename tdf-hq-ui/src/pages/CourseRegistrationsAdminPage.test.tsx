@@ -236,8 +236,6 @@ const recordDossierScopeHint =
   'Usa el registro para abrir expediente; Cambiar estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
   'Usa el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
-const mixedIdentityDossierScopeHint =
-  'Usa el nombre, el contacto o el registro para abrir expediente; Cambiar estado muestra acciones.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
   'Usa el nombre, el contacto o el registro para abrir expediente; Cambiar estado incluye Registrar pago y acciones.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
@@ -2125,7 +2123,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         `Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(8);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(8);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
@@ -3495,7 +3494,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado no estándar');
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
       expect(countOccurrences(container, 'Manual Review')).toBe(1);
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -8168,7 +8168,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain('el botón de estado');
       expect(container.textContent).not.toContain(dossierScopeHint);
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
@@ -8287,7 +8288,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
       );
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
     });
 
     listRegistrationsMock.mockClear();
@@ -9510,7 +9512,8 @@ describe('CourseRegistrationsAdminPage', () => {
         `Busca dentro de las 9 inscripciones cargadas. ${recordPaymentWorkflowDossierScopeHint}`,
       );
       expect(container.textContent).not.toContain('sin cambiar filtros');
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(9);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(9);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');

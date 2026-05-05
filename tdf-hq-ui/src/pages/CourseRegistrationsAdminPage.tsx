@@ -2486,6 +2486,9 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const showBusyStatusIconActions = showBusyListSearchOnboarding
+    && useCompactStatusActionLabel
+    && !allVisibleRowsUseDirectPendingRecoveryAction;
   const dossierScopeHint = [
     allVisibleRowsUseDirectPendingRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
@@ -4757,6 +4760,7 @@ export default function CourseRegistrationsAdminPage() {
                         && showSingleStatusSummaryInPageChrome
                       ),
                   );
+                  const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
@@ -4842,41 +4846,61 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       )}
-                      <Button
-                        size="small"
-                        variant="text"
-                        color={
-                          useDirectPendingRecoveryAction
-                            ? registrationStatusButtonColor('pending_payment')
-                            : registrationStatusButtonColor(reg.crStatus)
-                        }
-                        endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
-                        title={
-                          useDirectPendingRecoveryAction
-                            ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
-                            : `Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`
-                        }
-                        aria-label={
-                          useDirectPendingRecoveryAction
-                            ? `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`
-                            : `Cambiar estado para ${rowActionTarget}`
-                        }
-                        aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
-                        disabled={isUpdating}
-                        onClick={(event) => {
-                          if (useDirectPendingRecoveryAction) {
-                            handleCloseStatusMenu();
-                            handleQuickStatus(reg, 'pending_payment');
-                            return;
+                      {useStatusIconAction ? (
+                        <Tooltip title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              color={registrationStatusButtonColor(reg.crStatus)}
+                              title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}
+                              aria-label={`Cambiar estado para ${rowActionTarget}`}
+                              aria-haspopup="menu"
+                              disabled={isUpdating}
+                              onClick={(event) => {
+                                handleOpenStatusMenu(event.currentTarget, reg);
+                              }}
+                            >
+                              <MoreVertIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          size="small"
+                          variant="text"
+                          color={
+                            useDirectPendingRecoveryAction
+                              ? registrationStatusButtonColor('pending_payment')
+                              : registrationStatusButtonColor(reg.crStatus)
                           }
+                          endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
+                          title={
+                            useDirectPendingRecoveryAction
+                              ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
+                              : `Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`
+                          }
+                          aria-label={
+                            useDirectPendingRecoveryAction
+                              ? `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`
+                              : `Cambiar estado para ${rowActionTarget}`
+                          }
+                          aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
+                          disabled={isUpdating}
+                          onClick={(event) => {
+                            if (useDirectPendingRecoveryAction) {
+                              handleCloseStatusMenu();
+                              handleQuickStatus(reg, 'pending_payment');
+                              return;
+                            }
 
-                          handleOpenStatusMenu(event.currentTarget, reg);
-                        }}
-                      >
-                        {useDirectPendingRecoveryAction
-                          ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
-                          : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
-                      </Button>
+                            handleOpenStatusMenu(event.currentTarget, reg);
+                          }}
+                        >
+                          {useDirectPendingRecoveryAction
+                            ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
+                            : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
+                        </Button>
+                      )}
                       <Box sx={{ flexGrow: 1 }} />
                     </Box>
                   );
