@@ -835,6 +835,12 @@ const firstRunClassDescriptorPrefixPattern =
 const firstRunClassDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|(?:master\s*class|masterclass|class)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
 
+const firstRunProgramDescriptorPrefixPattern =
+  /^(?:(?:program(?:me)?|training)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|matr[ií]culas?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunProgramDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:program(?:me)?|training)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|matr[ií]culas?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa)\s*$/i;
+
 const firstRunWaitlistDescriptorPrefixPattern =
   /^(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|(?:captaci[oó]n|captura)\s+de\s+(?:leads?|prospectos|interesad[oa]s))|lista\s+de\s+(?:espera|interesad[oa]s)|(?:captaci[oó]n|captura)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|(?:course\s+)?interest(?:ed)?\s+sign[-\s]?up(?:\s+(?:form|page))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -948,6 +954,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
+    .replace(firstRunProgramDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
@@ -990,6 +997,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
+    .replace(firstRunProgramDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
