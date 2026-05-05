@@ -1812,12 +1812,15 @@ export default function AdminConsolePage() {
   const firstRunServiceGateCopy = shouldShowHealthLoadingState
     ? 'Espera la comprobación de API y base de datos para habilitar usuarios, auditoría y datos de ejemplo.'
     : 'Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo.';
+  const gettingStartedDescription = showFirstRunServiceHealthGate
+    ? firstRunServiceGateCopy
+    : 'Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.';
   const firstRunDataGateCopy = 'Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo.';
   const firstRunDemoStatusCopy = seedMutation.isSuccess
     ? null
     : hasFirstRunDataError
       ? firstRunDataGateCopy
-      : showFirstRunDemoAction
+      : showFirstRunDemoAction || showFirstRunServiceHealthGate
         ? null
         : firstRunServiceGateCopy;
   const firstRunRefreshActionCopy = hasFirstRunDataError
@@ -1908,7 +1911,7 @@ export default function AdminConsolePage() {
             <Box>
               <Typography variant="subtitle2">Primeros pasos</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías.
+                {gettingStartedDescription}
               </Typography>
             </Box>
             {showGettingStartedSectionLinks && (

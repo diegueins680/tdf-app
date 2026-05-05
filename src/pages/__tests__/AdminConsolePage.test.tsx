@@ -298,6 +298,14 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
     });
 
+    expect(
+      screen.getAllByText(
+        /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
+      ),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByText(/Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /1\. Estado del servicio/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /2\. Usuarios y roles/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /3\. Auditoría reciente/i })).not.toBeInTheDocument();
