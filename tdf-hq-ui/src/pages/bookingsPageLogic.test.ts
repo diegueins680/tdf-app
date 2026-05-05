@@ -391,7 +391,8 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       message: 'Cargando agenda… El calendario quedará listo para crear sesiones cuando termine esta primera carga.',
       severity: 'info',
-      showCalendar: true,
+      showCalendar: false,
+      title: 'Preparando agenda.',
     });
   });
 
