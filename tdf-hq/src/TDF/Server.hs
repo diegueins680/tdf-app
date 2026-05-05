@@ -9496,8 +9496,17 @@ shouldRetryWithFallbackModel status rawMessage =
   where
     msg = T.toLower (T.strip rawMessage)
     statusAllowsFallback = status == 0 || status == 400 || status == 403 || status == 404
-    hasMarker = any (`T.isInfixOf` msg) markers
+    hasMarker = any (`T.isInfixOf` msg) markers || hasMissingModelMarker
     hasNonFallbackMarker = any (`T.isInfixOf` msg) nonFallbackMarkers
+    hasMissingModelMarker =
+      "does not exist" `T.isInfixOf` msg
+        && any (`T.isInfixOf` msg)
+          [ "the requested model "
+          , "requested model "
+          , "the model `"
+          , "the model '"
+          , "the model \""
+          ]
     markers =
       [ "does not have access to model"
       , "doesn't have access to model"

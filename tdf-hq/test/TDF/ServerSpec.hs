@@ -4230,6 +4230,9 @@ spec = describe "TDF.Server helpers" $ do
             shouldRetryWithFallbackModel 404
                 "The model `gpt-x` does not exist or you do not have access to it"
                 `shouldBe` True
+            shouldRetryWithFallbackModel 404
+                "The requested model gpt-expired does not exist."
+                `shouldBe` True
             shouldRetryWithFallbackModel 403 "API key needs write access to model configuration"
                 `shouldBe` False
             shouldRetryWithFallbackModel 401 "Error al generar respuesta (HTTP 401)"
@@ -4273,6 +4276,10 @@ spec = describe "TDF.Server helpers" $ do
             shouldRetryWithFallbackModel
                 0
                 "TLS certificate verification failed for model_not_found"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "insufficient_quota: The requested model gpt-expired does not exist."
                 `shouldBe` False
 
     describe "resolveWorkflowId" $ do
