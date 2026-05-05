@@ -308,6 +308,41 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a current-live draft row passive instead of offering a duplicate publish action', async () => {
+    listMock.mockResolvedValue([
+      buildContent({
+        ccdId: 201,
+        ccdVersion: 5,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 202,
+        ccdVersion: 4,
+        ccdStatus: 'published',
+      }),
+    ]);
+    getPublicMock.mockResolvedValue(buildContent({
+      ccdId: 201,
+      ccdVersion: 5,
+      ccdStatus: 'draft',
+      ccdPublishedAt: null,
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countExactText(container, 'En vivo')).toBe(1);
+      expect(countActionsByText(container, 'Publicar')).toBe(0);
+      expect(countActionsByText(container, 'Borrar')).toBe(1);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single live-to-editor action in the editor instead of repeating load-live buttons across the page', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

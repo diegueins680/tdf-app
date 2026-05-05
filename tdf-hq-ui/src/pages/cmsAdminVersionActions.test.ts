@@ -42,9 +42,9 @@ describe('getCmsVersionRowActions', () => {
     });
   });
 
-  it('removes destructive row actions from the current live version', () => {
+  it('replaces current live row actions with passive row state even when the status is not published', () => {
     expect(getCmsVersionRowActions('draft', { isCurrentLive: true })).toEqual({
-      showPublish: true,
+      showPublish: false,
       showLoadInEditor: false,
       showDelete: false,
       loadedStateLabel: 'En vivo',
