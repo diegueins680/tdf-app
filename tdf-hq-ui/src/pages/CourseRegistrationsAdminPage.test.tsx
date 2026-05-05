@@ -1552,6 +1552,46 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes record-only missing contact once without adding row placeholders', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crPhoneE164: '+593999000111',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: null,
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #102')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
+      expect(hasExactText(container, '2 inscripciones visibles con contacto pendiente.')).toBe(true);
+      expect(countOccurrences(container, '2 inscripciones visibles con contacto pendiente.')).toBe(1);
+      expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
+      expect(countOccurrences(container, 'Sin nombre')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('uses one precise first-time hint for mixed identity rows instead of row-level guidance', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

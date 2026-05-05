@@ -1278,12 +1278,10 @@ const registrationIdentityKind = (
   return 'record';
 };
 
-const namedRegistrationNeedsContact = (
+const registrationNeedsContact = (
   reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ) => (
-  Boolean(reg.crFullName?.trim())
-  && !reg.crEmail?.trim()
-  && !reg.crPhoneE164?.trim()
+  !reg.crEmail?.trim() && !reg.crPhoneE164?.trim()
 );
 
 const formatVisibleMissingContactSummary = (missingContactCount: number, visibleCount: number) => {
@@ -2152,10 +2150,10 @@ export default function CourseRegistrationsAdminPage() {
     ].filter(Boolean).join(' · ')
     : '';
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
-  const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
+  const singleVisibleRegistrationNeedsContact = searchedRegistrations.length === 1
     && searchedRegistrations[0] != null
-    && namedRegistrationNeedsContact(searchedRegistrations[0]);
-  const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
+    && registrationNeedsContact(searchedRegistrations[0]);
+  const singleVisibleMissingContactSummary = singleVisibleRegistrationNeedsContact
     ? 'Contacto pendiente en esta inscripción.'
     : '';
   const hiddenLocalSearchMatchSummary = useMemo(
@@ -2181,6 +2179,7 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
     && !showAdvancedFilters;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
+  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations),
     [registrations],
@@ -2376,12 +2375,14 @@ export default function CourseRegistrationsAdminPage() {
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
-  const visibleNamedRegistrationsMissingContactCount =
-    searchedRegistrations.filter(namedRegistrationNeedsContact).length;
+  const visibleRegistrationsMissingContactCount =
+    searchedRegistrations.filter(registrationNeedsContact).length;
   const sharedVisibleMissingContactSummary = formatVisibleMissingContactSummary(
-    visibleNamedRegistrationsMissingContactCount,
+    visibleRegistrationsMissingContactCount,
     searchedRegistrations.length,
   );
+  const showSharedVisibleMissingContactSummary = Boolean(sharedVisibleMissingContactSummary)
+    && !showBusyListSearchOnboarding;
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
     const createdLabels = searchedRegistrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
@@ -2405,7 +2406,7 @@ export default function CourseRegistrationsAdminPage() {
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
     sharedVisibleCreatedAtSummary,
-    sharedVisibleMissingContactSummary,
+    showSharedVisibleMissingContactSummary ? sharedVisibleMissingContactSummary : '',
     sharedVisibleNotesSummary,
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
@@ -2452,7 +2453,6 @@ export default function CourseRegistrationsAdminPage() {
     && !hasEffectiveSlugFilter
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
-  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const showBusyListNonNarrowingSearch = showLocalSearchControl
     && hasLocalSearch
     && !localSearchNarrowsRegistrations
@@ -2509,7 +2509,7 @@ export default function CourseRegistrationsAdminPage() {
       || shouldShowSharedCohortSummary
       || shouldShowSharedSourceSummary
       || sharedVisibleCreatedAtSummary
-      || sharedVisibleMissingContactSummary
+      || showSharedVisibleMissingContactSummary
       || sharedVisibleNotesSummary
     ),
   );
@@ -4515,7 +4515,7 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleCreatedAtSummary}
                   </Typography>
                 )}
-                {sharedVisibleMissingContactSummary && (
+                {showSharedVisibleMissingContactSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
