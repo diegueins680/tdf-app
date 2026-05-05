@@ -9173,6 +9173,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats form-provider sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'google_forms',
+      'typeform',
+      'tally_form',
+      'jotform',
+      'microsoft_forms',
+      'airtable_form',
+      'hubspot_forms',
+      'mailchimp_form',
+      'surveymonkey_form',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Google forms',
+      'Typeform',
+      'Tally form',
+      'Jotform',
+      'Microsoft forms',
+      'Airtable form',
+      'Hubspot forms',
+      'Mailchimp form',
+      'Surveymonkey form',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'google forms');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "google forms" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
