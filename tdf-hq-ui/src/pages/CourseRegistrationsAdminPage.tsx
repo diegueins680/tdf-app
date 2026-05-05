@@ -68,7 +68,7 @@ const normalizeInitialCohortPreviewKey = (label: string) =>
     .trim()
     .toLocaleLowerCase('es');
 
-const formatInitialCohortPreview = (labels: readonly string[]) => {
+const formatInitialCohortPreview = (labels: readonly string[], totalCount = labels.length) => {
   const uniqueLabelsByKey = new Map<string, string>();
 
   labels.forEach((label) => {
@@ -83,17 +83,20 @@ const formatInitialCohortPreview = (labels: readonly string[]) => {
 
   const uniqueLabels = Array.from(uniqueLabelsByKey.values());
   if (uniqueLabels.length === 0) return '';
-  if (uniqueLabels.length === 1) return uniqueLabels[0] ?? '';
-  if (uniqueLabels.length === 2) return `${uniqueLabels[0]} y ${uniqueLabels[1]}`;
-  if (uniqueLabels.length === 3) {
-    return `${uniqueLabels[0]}, ${uniqueLabels[1]} y ${uniqueLabels[2]}`;
+  const visibleLabels = uniqueLabels.slice(0, 3);
+  const hiddenCount = Math.max(0, totalCount - visibleLabels.length);
+
+  if (hiddenCount > 0) {
+    if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenCount} más`;
+    return `${visibleLabels.join(', ')} y ${hiddenCount} más`;
   }
 
-  const visibleLabels = uniqueLabels.slice(0, 3);
-  return `${visibleLabels.join(', ')} y ${uniqueLabels.length - visibleLabels.length} más`;
+  if (visibleLabels.length === 1) return visibleLabels[0] ?? '';
+  if (visibleLabels.length === 2) return `${visibleLabels[0]} y ${visibleLabels[1]}`;
+  return `${visibleLabels[0]}, ${visibleLabels[1]} y ${visibleLabels[2]}`;
 };
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
-  const preview = formatInitialCohortPreview(labels);
+  const preview = formatInitialCohortPreview(labels, count);
   if (preview) {
     return `Hay ${count} formularios públicos listos para recibir la primera inscripción: ${preview}.`;
   }
