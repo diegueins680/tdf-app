@@ -1719,6 +1719,13 @@ main = hspec $ do
                             ]
                         ]
             WhatsAppClient.extractMessageId whitespacePayload `shouldBe` Nothing
+            let hiddenFormatPayload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("wamid.valid\x202E\&fdp" :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId hiddenFormatPayload `shouldBe` Nothing
 
         it "rejects multiple WhatsApp provider message ids instead of choosing an ambiguous acknowledgement" $ do
             let payload =

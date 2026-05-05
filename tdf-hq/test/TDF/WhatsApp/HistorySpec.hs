@@ -26,6 +26,7 @@ import TDF.WhatsApp.Client
   , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
   , normalizeWhatsAppRecipientPhone
+  , normalizeWhatsAppVerifyToken
   )
 import TDF.WhatsApp.History
   ( IncomingWhatsAppRecord (..)
@@ -113,6 +114,10 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
       normalizeWhatsAppAccessToken "token\nX-Extra: value"
         `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+      normalizeWhatsAppAccessToken ("token" <> T.singleton '\x202E' <> "value")
+        `shouldBe` Left "Invalid WhatsApp access token: must not contain hidden formatting characters"
+      normalizeWhatsAppVerifyToken ("webhook" <> T.singleton '\x202E' <> "secret")
+        `shouldBe` Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
       normalizeWhatsAppPhoneNumberId "   "
         `shouldBe` Left "Invalid WhatsApp phone number id: id is required"
       normalizeWhatsAppPhoneNumberId "123/messages"

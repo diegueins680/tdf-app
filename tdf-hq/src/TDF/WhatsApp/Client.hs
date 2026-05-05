@@ -13,7 +13,7 @@ module TDF.WhatsApp.Client
 
 import Data.Aeson
 import Data.Aeson.Types (parseMaybe)
-import Data.Char (isControl, isSpace)
+import Data.Char (GeneralCategory (Format), generalCategory, isControl, isSpace)
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -134,8 +134,10 @@ normalizeWhatsAppAccessToken :: Text -> Either String Text
 normalizeWhatsAppAccessToken rawToken
   | T.null token =
       Left "Invalid WhatsApp access token: token is required"
-  | T.any isUnsafeHeaderChar token =
+  | T.any isWhitespaceOrControlChar token =
       Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+  | T.any isHiddenFormattingChar token =
+      Left "Invalid WhatsApp access token: must not contain hidden formatting characters"
   | otherwise =
       Right token
   where
@@ -145,8 +147,10 @@ normalizeWhatsAppVerifyToken :: Text -> Either String Text
 normalizeWhatsAppVerifyToken rawToken
   | T.null token =
       Left "Invalid WhatsApp verify token: token is required"
-  | T.any isUnsafeHeaderChar token =
+  | T.any isWhitespaceOrControlChar token =
       Left "Invalid WhatsApp verify token: must not contain whitespace or control characters"
+  | T.any isHiddenFormattingChar token =
+      Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
   | otherwise =
       Right token
   where
@@ -227,7 +231,15 @@ isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 isUnsafeHeaderChar :: Char -> Bool
 isUnsafeHeaderChar ch =
+  isWhitespaceOrControlChar ch || isHiddenFormattingChar ch
+
+isWhitespaceOrControlChar :: Char -> Bool
+isWhitespaceOrControlChar ch =
   isControl ch || isSpace ch
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch == Format
 
 extractMessageId :: Value -> Maybe Text
 extractMessageId =
