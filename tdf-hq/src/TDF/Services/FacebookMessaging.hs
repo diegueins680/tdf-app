@@ -5,7 +5,12 @@ module TDF.Services.FacebookMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.Char (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -77,6 +82,8 @@ validateFacebookBearerToken rawToken =
           Left "FACEBOOK_MESSAGING_TOKEN must be 4096 characters or fewer"
       | T.any invalidHeaderValueChar token ->
           Left "FACEBOOK_MESSAGING_TOKEN must not contain whitespace or control characters"
+      | T.any invalidHiddenHeaderValueChar token ->
+          Left "FACEBOOK_MESSAGING_TOKEN must not contain hidden formatting characters"
       | otherwise ->
           Right token
 
@@ -141,6 +148,10 @@ validateFacebookMessageBody rawBody =
 
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
+
+invalidHiddenHeaderValueChar :: Char -> Bool
+invalidHiddenHeaderValueChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 invalidFacebookRecipientIdChar :: Char -> Bool
 invalidFacebookRecipientIdChar ch = isSpace ch || isControl ch
