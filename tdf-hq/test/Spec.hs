@@ -1342,6 +1342,15 @@ main = hspec $ do
                     cfg <- loadConfig
                     chatKitWorkflowId cfg `shouldBe` Just "wf_public"
 
+        it "rejects conflicting ChatKit workflow aliases before creating sessions" $
+            withEnvOverrides
+                [ ("CHATKIT_WORKFLOW_ID", Just "wf_private")
+                , ("VITE_CHATKIT_WORKFLOW_ID", Just "wf_public")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "CHATKIT_WORKFLOW_ID and VITE_CHATKIT_WORKFLOW_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed ChatKit workflow fallbacks at startup" $ do
             let assertInvalid :: String -> String -> String -> Expectation
                 assertInvalid envName rawWorkflowId expectedMessage =
