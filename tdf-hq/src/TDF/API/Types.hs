@@ -996,13 +996,17 @@ instance FromJSON PipelineCardUpdate where
       } <- genericParseJSON (prefixedStrictObjectOptions 4) value
     artistValue <- o .:! "artist"
     notesValue <- o .:! "notes"
-    pure PipelineCardUpdate
-      { pcuTitle = titleValue
-      , pcuArtist = artistValue
-      , pcuStage = stageValue
-      , pcuSortOrder = sortOrderValue
-      , pcuNotes = notesValue
-      }
+    case (titleValue, artistValue, stageValue, sortOrderValue, notesValue) of
+      (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+        fail "PipelineCardUpdate must include at least one field"
+      _ ->
+        pure PipelineCardUpdate
+          { pcuTitle = titleValue
+          , pcuArtist = artistValue
+          , pcuStage = stageValue
+          , pcuSortOrder = sortOrderValue
+          , pcuNotes = notesValue
+          }
   parseJSON _ = fail "PipelineCardUpdate must be an object"
 
 data PipelineCardUpdateParsed = PipelineCardUpdateParsed

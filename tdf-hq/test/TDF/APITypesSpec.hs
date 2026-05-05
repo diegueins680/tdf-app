@@ -607,6 +607,7 @@ spec = do
             decodePipelineCardCreate
                 "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            decodePipelineCardUpdate "{}" `shouldSatisfy` isLeft
             decodePipelineCardUpdate
                 "{\"unexpected\":true}"
                 `shouldSatisfy` isLeft
