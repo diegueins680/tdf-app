@@ -588,8 +588,15 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function stripAdminConsoleListMarker(paragraph: string) {
+  return paragraph
+    .trim()
+    .replace(/^(?:[-*•]\s+|\d+[.)]\s+)/, '')
+    .trim();
+}
+
 function stripAdminConsoleTitlePrefix(paragraph: string, title: string) {
-  const trimmedParagraph = paragraph.trim();
+  const trimmedParagraph = stripAdminConsoleListMarker(paragraph);
   const trimmedTitle = title.trim();
 
   if (trimmedParagraph === '' || trimmedTitle === '') {
