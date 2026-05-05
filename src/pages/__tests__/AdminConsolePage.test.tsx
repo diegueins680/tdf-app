@@ -4033,6 +4033,46 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No items found/i)).not.toBeInTheDocument();
   });
 
+  it('ignores grid row and entry fallback cards so first-run users do not open empty table modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-row-empty',
+          title: 'Reporte operativo',
+          body: ['No rows to display.'],
+        },
+        {
+          cardId: 'admin-entry-empty',
+          title: 'Bitácora técnica',
+          body: ['Sin entradas todavía.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Reporte operativo|Bitácora técnica/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora técnica')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No rows to display/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sin entradas/i)).not.toBeInTheDocument();
+  });
+
   it('ignores no-result fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
