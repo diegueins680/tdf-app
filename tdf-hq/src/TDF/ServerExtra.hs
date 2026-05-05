@@ -2188,9 +2188,17 @@ normalizePipelineCardTitle rawTitle =
   let trimmed = T.strip rawTitle
   in if T.null trimmed
        then Left err400 { errBody = "Pipeline card title is required" }
-       else if T.any isControl trimmed
-         then Left err400 { errBody = "Pipeline card title must not contain control characters" }
+       else if T.any isUnsafePipelineCardTitleChar trimmed
+         then
+           Left err400
+             { errBody =
+                 "Pipeline card title must not contain control characters or hidden formatting characters"
+             }
        else Right trimmed
+
+isUnsafePipelineCardTitleChar :: Char -> Bool
+isUnsafePipelineCardTitleChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizePipelineCardTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizePipelineCardTitleUpdate Nothing = Right Nothing

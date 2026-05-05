@@ -1367,7 +1367,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
 
-    it "rejects control-character titles on create and patch so CRM cards keep single-line labels" $ do
+    it "rejects non-printing titles on create and patch so CRM cards keep visible labels" $ do
       createResult <- runPipelineCreateHandler
         (pure ())
         pipelineType
@@ -1404,6 +1404,43 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Pipeline card title must not contain control characters"
         Right value ->
           expectationFailure ("Expected control-character pipeline card patch title to fail, got " <> show value)
+
+      let hiddenFormat = T.singleton '\x200B'
+      hiddenCreateResult <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate ("Demo" <> hiddenFormat <> "Lead") Nothing Nothing Nothing Nothing)
+      case hiddenCreateResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card title must not contain control characters or hidden formatting characters"
+        Right value ->
+          expectationFailure ("Expected hidden-format pipeline card create title to fail, got " <> show value)
+
+      hiddenPatchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Nothing
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 0
+              , ME.pipelineCardNotes = Nothing
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate (Just ("Final" <> hiddenFormat <> "Lead")) Nothing Nothing Nothing Nothing)
+      case hiddenPatchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card title must not contain control characters or hidden formatting characters"
+        Right value ->
+          expectationFailure ("Expected hidden-format pipeline card patch title to fail, got " <> show value)
 
     it "rejects negative sort orders before Kanban ordering is persisted" $ do
       createResult <- runPipelineCreateHandler
