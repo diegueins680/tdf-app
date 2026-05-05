@@ -9001,6 +9001,50 @@ validateCampaignDateRange (Just startDate) (Just endDate)
       Left err400 { errBody = "campaign endDate must be on or after startDate" }
 validateCampaignDateRange _ _ = Right ()
 
+validateCampaignStatus :: Maybe Text -> Either ServerError Text
+validateCampaignStatus =
+  validateAdsAdminStatus "campaign status"
+
+validateAdCreativeStatus :: Maybe Text -> Either ServerError Text
+validateAdCreativeStatus =
+  validateAdsAdminStatus "ad status"
+
+validateAdsAdminStatus :: Text -> Maybe Text -> Either ServerError Text
+validateAdsAdminStatus _ Nothing = Right "active"
+validateAdsAdminStatus fieldName (Just rawStatus) =
+  let statusVal = T.toLower (T.strip rawStatus)
+  in if T.null statusVal
+       then Right "active"
+       else
+         if validAdsAdminStatus statusVal
+           then Right statusVal
+           else
+             Left err400
+               { errBody =
+                   BL.fromStrict $
+                     TE.encodeUtf8 $
+                       fieldName
+                         <> " must be an ASCII keyword using letters, numbers, underscores, "
+                         <> "or hyphens (64 chars max)"
+               }
+
+validAdsAdminStatus :: Text -> Bool
+validAdsAdminStatus statusVal =
+  not (T.null statusVal)
+    && T.length statusVal <= 64
+    && T.all isStatusChar statusVal
+    && isStatusAtom (T.head statusVal)
+    && isStatusAtom (T.last statusVal)
+    && not (hasAdjacentSeparators statusVal)
+  where
+    isStatusAtom ch = isAsciiLower ch || isDigit ch
+    isStatusSeparator ch = ch == '_' || ch == '-'
+    isStatusChar ch = isStatusAtom ch || isStatusSeparator ch
+    hasAdjacentSeparators txt =
+      any
+        (\(left, right) -> isStatusSeparator left && isStatusSeparator right)
+        (T.zip txt (T.drop 1 txt))
+
 adsAssistPublic :: AdsAssistRequest -> AppM AdsAssistResponse
 adsAssistPublic req = do
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
@@ -9102,13 +9146,8 @@ adsUpsertCampaign user CampaignUpsert{..} = do
   budgetCentsVal <- either throwError pure (validateCampaignBudgetCents cuBudgetCents)
   either throwError pure (validateCampaignDateRange cuStartDate cuEndDate)
   campaignIdUpdate <- either throwError pure (validateOptionalPositiveIdField "campaignId" cuId)
+  statusVal <- either throwError pure (validateCampaignStatus cuStatus)
   let nameClean = T.strip cuName
-      statusVal =
-        case cuStatus of
-          Nothing -> "active"
-          Just raw ->
-            let trimmed = T.strip raw
-            in if T.null trimmed then "active" else trimmed
   when (T.null nameClean) $ throwBadRequest "Nombre requerido"
   now <- liftIO getCurrentTime
   cid <- case campaignIdUpdate of
@@ -9147,14 +9186,9 @@ adsUpsertAd user AdCreativeUpsert{..} = do
   landingUrlVal <- either throwError pure (validateAdCreativeLandingUrl acuLandingUrl)
   adIdUpdate <- either throwError pure (validateOptionalPositiveIdField "adId" acuId)
   campaignIdRef <- either throwError pure (validateOptionalPositiveIdField "campaignId" acuCampaignId)
+  statusVal <- either throwError pure (validateAdCreativeStatus acuStatus)
   let nameClean = T.strip acuName
       mCampaign = fmap toSqlKey campaignIdRef :: Maybe ME.CampaignId
-      statusVal =
-        case acuStatus of
-          Nothing -> "active"
-          Just raw ->
-            let trimmed = T.strip raw
-            in if T.null trimmed then "active" else trimmed
   when (T.null nameClean) $ throwBadRequest "Nombre del anuncio requerido"
   case mCampaign of
     Nothing -> pure ()

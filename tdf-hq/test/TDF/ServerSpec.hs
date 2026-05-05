@@ -280,6 +280,8 @@ import TDF.Server
     , validateAdCreativeLandingUrl
     , validateCampaignBudgetCents
     , validateCampaignDateRange
+    , validateCampaignStatus
+    , validateAdCreativeStatus
     , validateCalendarAuthorizationCode
     , validateCalendarEventListQuery
     , validateCalendarSyncWindow
@@ -4010,6 +4012,52 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected inverted campaign dates to be rejected, got: " <> show value)
 
+    describe "validate ads admin statuses" $ do
+        it "normalizes omitted, blank, and mixed-case status fields before admin writes" $ do
+            validateCampaignStatus Nothing `shouldBe` Right "active"
+            validateCampaignStatus (Just "   ") `shouldBe` Right "active"
+            validateCampaignStatus (Just " Paused ") `shouldBe` Right "paused"
+            validateCampaignStatus (Just "IN_REVIEW") `shouldBe` Right "in_review"
+            validateAdCreativeStatus Nothing `shouldBe` Right "active"
+            validateAdCreativeStatus (Just "  Archived ") `shouldBe` Right "archived"
+            validateAdCreativeStatus (Just "pre-launch") `shouldBe` Right "pre-launch"
+
+        it "rejects ambiguous status labels before ads admin writes store unqueryable states" $ do
+            let assertInvalid validateStatus expectedMessage rawStatus =
+                    case validateStatus (Just rawStatus) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected invalid ads admin status to be rejected, got: "
+                                    <> show statusVal
+                                )
+            assertInvalid
+                validateCampaignStatus
+                "campaign status must be an ASCII keyword"
+                "in review"
+            assertInvalid
+                validateCampaignStatus
+                "campaign status must be an ASCII keyword"
+                "-active"
+            assertInvalid
+                validateCampaignStatus
+                "campaign status must be an ASCII keyword"
+                "active--paused"
+            assertInvalid
+                validateCampaignStatus
+                "campaign status must be an ASCII keyword"
+                (T.replicate 65 "a")
+            assertInvalid
+                validateCampaignStatus
+                "campaign status must be an ASCII keyword"
+                ("active" <> T.singleton '\x202E')
+            assertInvalid
+                validateAdCreativeStatus
+                "ad status must be an ASCII keyword"
+                "paused/hidden"
+
     describe "ads admin id validation" $ do
         it "rejects non-positive campaign and ad ids before database lookup" $ do
             let unusedEnv =
@@ -4070,6 +4118,54 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "campaignId must be a positive integer"
                 (adsUpsertAd adminUser creativePayload { acuCampaignId = Just 0 })
+
+        it "rejects malformed campaign and ad statuses before database writes" $ do
+            let unusedEnv =
+                    Env
+                        { envPool = error "envPool should be unused by ads admin status validation"
+                        , envConfig = error "envConfig should be unused by ads admin status validation"
+                        }
+                adminUser = mkUser [Admin]
+                campaignPayload =
+                    CampaignUpsert
+                        { cuId = Nothing
+                        , cuName = "Curso Abril"
+                        , cuObjective = Nothing
+                        , cuPlatform = Nothing
+                        , cuStatus = Just "in review"
+                        , cuBudgetCents = Nothing
+                        , cuStartDate = Nothing
+                        , cuEndDate = Nothing
+                        }
+                creativePayload =
+                    AdCreativeUpsert
+                        { acuId = Nothing
+                        , acuCampaignId = Nothing
+                        , acuExternalId = Nothing
+                        , acuName = "Meta lead ad"
+                        , acuChannel = Nothing
+                        , acuAudience = Nothing
+                        , acuLandingUrl = Nothing
+                        , acuCta = Nothing
+                        , acuStatus = Just "paused/hidden"
+                        , acuNotes = Nothing
+                        }
+                assertInvalid expectedMessage action = do
+                    result <- runHandler (runReaderT action unusedEnv)
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right _ ->
+                            expectationFailure
+                                "Expected invalid ads admin status to be rejected"
+
+            assertInvalid
+                "campaign status must be an ASCII keyword"
+                (adsUpsertCampaign adminUser campaignPayload)
+            assertInvalid
+                "ad status must be an ASCII keyword"
+                (adsUpsertAd adminUser creativePayload)
 
     describe "extractApiErrorMessage" $ do
         it "preserves OpenAI error code and type markers before model fallback checks" $ do
