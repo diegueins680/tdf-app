@@ -31,7 +31,7 @@ import TDF.API.Admin
     )
 import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate (..))
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Config (loadConfig)
+import TDF.Config (loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
 import TDF.DTO
     ( ArtistProfileDTO
@@ -725,11 +725,11 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected multiline broadcast subject to be rejected, got " <> show value)
 
-    describe "admin seed route authorization" $
+    describe "admin seed route authorization" $ do
         it "requires literal Admin instead of broad Admin-module membership before seeding" $ do
             let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
             let assertRejected role = do
-                    result <- runAdminTest (seedHandlerFor (mkUser [role]))
+                    result <- runAdminTest (seedHandlerFor (mkUser [role]) Nothing)
                     case result of
                         Left err -> do
                             errHTTPCode err `shouldBe` 403
@@ -740,7 +740,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
 
             assertRejected StudioManager
             assertRejected Webmaster
-            result <- runAdminTest (seedHandlerFor malformedAdmin)
+            result <- runAdminTest (seedHandlerFor malformedAdmin Nothing)
             case result of
                 Left err -> do
                     errHTTPCode err `shouldBe` 403
@@ -749,6 +749,41 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right NoContent ->
                     expectationFailure
                         "Expected malformed Admin seed access to be rejected"
+
+        it "requires a configured seed token even for strict Admin seed requests" $ do
+            cfg <- loadConfig
+            let seedHandler = seedHandlerFor (mkUser [Admin])
+                token = "correct-seed-token-123"
+                envWithToken =
+                    dummyEnv { envConfig = cfg { seedTriggerToken = Just token } }
+                envWithoutToken =
+                    dummyEnv { envConfig = cfg { seedTriggerToken = Nothing } }
+
+            missingResult <- runAdminTestWith envWithToken (seedHandler Nothing)
+            case missingResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 401
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing X-Seed-Token header"
+                Right NoContent ->
+                    expectationFailure "Expected missing seed token to be rejected"
+
+            invalidResult <-
+                runAdminTestWith envWithToken (seedHandler (Just "wrong-seed-token-123"))
+            case invalidResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Invalid seed token"
+                Right NoContent ->
+                    expectationFailure "Expected invalid seed token to be rejected"
+
+            disabledResult <- runAdminTestWith envWithoutToken (seedHandler (Just token))
+            case disabledResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Seeding endpoint disabled"
+                Right NoContent ->
+                    expectationFailure "Expected disabled seed route to be rejected"
 
     describe "admin lookup id validation" $ do
         it "rejects non-positive user ids before admin user lookups can degrade malformed input into 404s" $ do
@@ -1285,8 +1320,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
 
 type AdminTestM = ReaderT Env (ExceptT ServerError IO)
 
-seedHandlerFor :: AuthedUser -> AdminTestM NoContent
-seedHandlerFor user =
+seedHandlerFor :: AuthedUser -> Maybe T.Text -> AdminTestM NoContent
+seedHandlerFor user rawToken =
     case adminServer user of
         seedHandler
             :<|> _dropdowns
@@ -1299,7 +1334,7 @@ seedHandlerFor user =
             :<|> _brain
             :<|> _rag
             :<|> _social ->
-                seedHandler
+                seedHandler rawToken
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =

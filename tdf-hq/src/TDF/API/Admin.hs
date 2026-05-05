@@ -90,7 +90,7 @@ type SocialAdminAPI =
   :<|> "social" :> "errors" :> QueryParam "channel" Text :> QueryParam "limit" Int :> Get '[JSON] Value
 
 type AdminAPI =
-       "seed" :> Post '[JSON] NoContent
+       "seed" :> Header "X-Seed-Token" Text :> Post '[JSON] NoContent
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
   :<|> UserCommunicationsAPI

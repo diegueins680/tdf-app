@@ -126,7 +126,7 @@ import           TDF.Auth               ( AuthedUser
                                         , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
-import           TDF.Config             (ragRefreshHours)
+import           TDF.Config             (ragRefreshHours, seedTriggerToken)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
@@ -157,6 +157,26 @@ data SocialUnholdLookup
   | SocialUnholdBySenderId Text
   deriving (Show, Eq)
 
+ensureAdminSeedToken
+  :: ( MonadReader Env m
+     , MonadError ServerError m
+     )
+  => Maybe Text
+  -> m ()
+ensureAdminSeedToken rawToken = do
+  cfg <- asks envConfig
+  let encodeBody = BL.fromStrict . TE.encodeUtf8
+      missingHeader =
+        throwError err401 { errBody = encodeBody "Missing X-Seed-Token header" }
+      disabled =
+        throwError err403 { errBody = encodeBody "Seeding endpoint disabled" }
+      invalid =
+        throwError err403 { errBody = encodeBody "Invalid seed token" }
+  secret <- maybe disabled pure (seedTriggerToken cfg)
+  token <- maybe missingHeader (pure . T.strip) rawToken
+  when (T.null token) missingHeader
+  when (token /= secret) invalid
+
 adminServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -177,9 +197,10 @@ adminServer user =
   :<|> ragRouter
   :<|> socialRouter
   where
-    seedHandler = do
+    seedHandler rawToken = do
       ensureStrictAdmin user
       ensureModule ModuleAdmin user
+      ensureAdminSeedToken rawToken
       withPool seedAll
       pure NoContent
 
