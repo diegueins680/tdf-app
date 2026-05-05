@@ -57,7 +57,7 @@ import           Data.Char              ( GeneralCategory
                                         , isSpace
                                         )
 import           Data.List              (nub)
-import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing)
 import           Data.Int               (Int64)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
@@ -1313,10 +1313,13 @@ resolveAdminWhatsAppSendPhone "reply" _ (Just msg) =
 resolveAdminWhatsAppSendPhone "reply" _ Nothing =
   Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje de referencia requerido para responder") }
 resolveAdminWhatsAppSendPhone _ candidatePhones _ =
-  maybe
-    (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") })
-    Right
-    (listToMaybe candidatePhones)
+  case candidatePhones of
+    [] ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }
+    [phone] ->
+      Right phone
+    _ ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario tiene más de un número WhatsApp posible; responde a un mensaje existente para elegir destino") }
 
 resolveAdminWhatsAppResendPhone :: ME.WhatsAppMessage -> Either ServerError Text
 resolveAdminWhatsAppResendPhone msg =

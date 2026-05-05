@@ -598,12 +598,25 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     replyTarget { ME.whatsAppMessagePhoneE164 = Just "not-a-phone" }
                 partyPhones = ["+593999000111", "+593999000222"]
 
-            resolveAdminWhatsAppSendPhone "notify" partyPhones Nothing
+            resolveAdminWhatsAppSendPhone "notify" ["+593999000111"] Nothing
                 `shouldBe` Right "+593999000111"
             resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTarget)
                 `shouldBe` Right "+593999000222"
             resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTargetWithBadStoredPhone)
                 `shouldBe` Right "+593999000222"
+
+        it "rejects notify sends when party phone fallbacks are ambiguous" $ do
+            case resolveAdminWhatsAppSendPhone
+                "notify"
+                ["+593999000111", "+593999000222"]
+                Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "WhatsApp posible"
+                Right phone ->
+                    expectationFailure
+                        ("Expected ambiguous notify phone fallback to be rejected, got " <> show phone)
 
         it "rejects reply targets without a resolvable WhatsApp phone" $ do
             let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
