@@ -9316,6 +9316,15 @@ spec = describe "TDF.Server helpers" $ do
             hasSocialSyncAccess (mkUser [Webmaster]) `shouldBe` False
             hasSocialSyncAccess (mkUser [StudioManager]) `shouldBe` False
 
+        it "rejects malformed Admin sessions before global sync data access" $ do
+            let staleAdmin =
+                    (mkUser [Admin]) { auModules = modulesForRoles [Webmaster] }
+                duplicatedAdmin =
+                    mkUser [Admin, Admin]
+            hasSocialSyncAccess staleAdmin `shouldBe` False
+            hasSocialSyncAccess duplicatedAdmin `shouldBe` False
+            hasSocialSyncAccess (mkUser [Fan, Customer, Admin]) `shouldBe` True
+
         it "matches the strict-admin matrix for global sync data" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialSyncAccess (mkUser [role]) `shouldBe` hasStrictAdminAccess (mkUser [role])
