@@ -586,6 +586,15 @@ describe('AdminUsersPage', () => {
         expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
         expect(getRowByUserId(container, 102).textContent).not.toContain('Contacto pendiente');
       });
+
+      await changeInputValue(searchInput, 'WhatsApp pendiente');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getRowByUserId(container, 102).textContent).toContain('email@example.com');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('Contacto pendiente');
+      });
     } finally {
       await cleanup();
     }

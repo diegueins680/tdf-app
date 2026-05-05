@@ -202,7 +202,7 @@ const getUserContactReadinessSearchValues = (
   }
 
   if (readiness === 'contact-ready') {
-    return ['pendiente de WhatsApp', 'pendiente WhatsApp', 'sin WhatsApp'];
+    return ['pendiente de WhatsApp', 'pendiente WhatsApp', 'WhatsApp pendiente', 'sin WhatsApp'];
   }
 
   return ['pendiente de contacto', 'pendiente contacto', 'contacto pendiente', 'sin contacto'];
