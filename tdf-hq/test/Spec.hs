@@ -661,6 +661,8 @@ main = hspec $ do
                 `shouldSatisfy` isNothing
             parseMcpRequest (requestWithMethod "tools/call\nextra")
                 `shouldSatisfy` isNothing
+            parseMcpRequest (requestWithMethod "tools/call?debug=true")
+                `shouldSatisfy` isNothing
 
         it "rejects ambiguous tool call names before constructing error messages" $ do
             let callWithName toolName =
@@ -671,6 +673,8 @@ main = hspec $ do
             parseToolCallParams (callWithName "tdf_health_check extra")
                 `shouldSatisfy` isNothing
             parseToolCallParams (callWithName "tdf_health_check\nextra")
+                `shouldSatisfy` isNothing
+            parseToolCallParams (callWithName "tdf_health_check?verbose=true")
                 `shouldSatisfy` isNothing
 
     describe "loadConfig" $ do

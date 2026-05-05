@@ -418,7 +418,18 @@ validateMcpNameField fieldName rawName = do
       ( T.unpack fieldName
           <> " must not contain whitespace, control characters, or Unicode formatting marks"
       )
+  when (T.any (not . isMcpNameChar) name) $
+    fail
+      ( T.unpack fieldName
+          <> " must use only ASCII lowercase letters, numbers, '/', '_' or '-'"
+      )
   pure name
+
+isMcpNameChar :: Char -> Bool
+isMcpNameChar ch =
+  isAsciiLower ch
+    || isDigit ch
+    || ch `elem` ("/_-" :: String)
 
 isUnsafeMcpNameChar :: Char -> Bool
 isUnsafeMcpNameChar ch =
