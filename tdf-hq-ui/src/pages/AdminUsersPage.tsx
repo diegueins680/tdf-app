@@ -1523,14 +1523,21 @@ function UserRow({
     sharedModulesSummary,
   });
   const identity = summarizeUserIdentity(user);
-  const communicationTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
+  const hasLinkedProfile = hasLinkedAdminUserProfile(user);
+  const identityDisambiguator = hasLinkedProfile ? `Perfil #${user.partyId}` : `Cuenta #${user.userId}`;
+  const visibleIdentityDisambiguator = showIdentityDisambiguator ? identityDisambiguator : '';
+  const identityTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
+  const communicationTarget = visibleIdentityDisambiguator
+    ? `${identityTarget} · ${visibleIdentityDisambiguator}`
+    : identityTarget;
   const whatsappActionLabel = `Abrir WhatsApp para ${communicationTarget}`;
   const whatsappChannel = getUserWhatsAppChannel(user);
   const whatsappActionTitle = whatsappChannel ? `${whatsappActionLabel} · ${whatsappChannel}` : whatsappActionLabel;
-  const hasLinkedProfile = hasLinkedAdminUserProfile(user);
   const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
-  const identityDisambiguator = hasLinkedProfile ? `Perfil #${user.partyId}` : `Cuenta #${user.userId}`;
+  const profileActionLabel = visibleIdentityDisambiguator
+    ? `Abrir perfil de ${identity.primary} (${visibleIdentityDisambiguator})`
+    : `Abrir perfil de ${identity.primary}`;
   const showCommunicationActions = hasWhatsAppChannel || !hidePendingStateChip;
 
   return (
@@ -1554,7 +1561,7 @@ function UserRow({
             underline="hover"
             color="primary"
             variant="subtitle1"
-            aria-label={`Abrir perfil de ${identity.primary}`}
+            aria-label={profileActionLabel}
             sx={{ display: 'inline-flex', width: 'fit-content', fontWeight: 700 }}
           >
             {identity.primary}

@@ -746,6 +746,16 @@ describe('AdminUsersPage', () => {
         expect(getRowByUserId(container, 102).textContent).toContain('Perfil #10');
         expect(getRowByUserId(container, 103).textContent).not.toContain('Perfil #11');
         expect(getRowByUserId(container, 103).textContent).not.toContain('ID 11');
+        expect(getButtonsByText(container, 'Abrir WhatsApp para Ana Admin · Perfil #9')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir WhatsApp para Ana Admin · Perfil #10')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Abrir WhatsApp para Ana Admin')).toHaveLength(0);
+
+        const profileActionLabels = Array.from(container.querySelectorAll('a')).map((link) =>
+          link.getAttribute('aria-label'),
+        );
+        expect(profileActionLabels).toContain('Abrir perfil de Ana Admin (Perfil #9)');
+        expect(profileActionLabels).toContain('Abrir perfil de Ana Admin (Perfil #10)');
+        expect(profileActionLabels).toContain('Abrir perfil de Grace Hopper');
       });
     } finally {
       await cleanup();
