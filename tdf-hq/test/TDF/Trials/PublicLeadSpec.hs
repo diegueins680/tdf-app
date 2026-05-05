@@ -60,6 +60,7 @@ import TDF.Trials.Server
   , validateAvailabilityIdInput
   , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
+  , validateOptionalClassSessionNotes
   , validatePurchaseInput
   , validatePreferredSlots
   , validatePreferredSlotsAt
@@ -1302,6 +1303,32 @@ spec = do
             :: Either String AttendIn
         )
         `shouldBe` True
+
+  describe "validateOptionalClassSessionNotes" $ do
+    it "normalizes class-session notes before attendance or update persistence" $ do
+      validateOptionalClassSessionNotes Nothing `shouldBe` Right Nothing
+      validateOptionalClassSessionNotes (Just "  Completed exercises  ")
+        `shouldBe` Right (Just "Completed exercises")
+      validateOptionalClassSessionNotes (Just "   ") `shouldBe` Right Nothing
+
+    it "rejects unsafe class-session notes before storing private session metadata" $ do
+      let assertRejected rawNotes expectedMessage =
+            case validateOptionalClassSessionNotes (Just rawNotes) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected malformed class-session notes to be rejected, got " <> show value)
+      assertRejected
+        "line one\nline two"
+        "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected
+        (pack (replicate 2001 'a'))
+        "notes must be 1-2000 characters"
 
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do

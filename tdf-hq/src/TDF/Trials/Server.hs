@@ -616,6 +616,10 @@ validateTrialScheduleInput input@TrialScheduleIn{..}
   | otherwise =
       Right input
 
+validateOptionalClassSessionNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalClassSessionNotes =
+  validateOptionalPublicTextField "notes" 2000
+
 badRequestText :: Text -> ServerError
 badRequestText message =
   err400 { errBody = BL8.pack (T.unpack message) }
@@ -1835,6 +1839,11 @@ privateTrialsServer user@AuthedUser{..} =
               newEnd     = fromMaybe (Trials.classSessionEndAt sess) endAt
               newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
               newRoom    = maybe (Trials.classSessionRoomId sess) intKey roomId
+          notesUpdate <- case notes of
+            Nothing -> pure Nothing
+            Just rawNotes ->
+              Just <$> either (liftIO . throwIO) pure
+                (validateOptionalClassSessionNotes (Just rawNotes))
           when (newEnd <= newStart) $
             liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
           ensureTeacherSelection newTeacher
@@ -1859,7 +1868,7 @@ privateTrialsServer user@AuthedUser{..} =
                 , maybe [] (\v   -> [ClassSessionEndAt     =. v])         endAt
                 , maybe [] (\rid -> [ClassSessionRoomId    =. intKey rid]) roomId
                 , maybe [] (\bid -> [ClassSessionBookingId =. Just bid])  newBooking
-                , maybe [] (\txt -> [ClassSessionNotes     =. Just txt])  notes
+                , maybe [] (\txt -> [ClassSessionNotes     =. txt])       notesUpdate
                 ]
           unless (null updates) $
             update cid updates
@@ -1879,10 +1888,11 @@ privateTrialsServer user@AuthedUser{..} =
         Just sess -> do
           unless (isSchoolStaff || Trials.classSessionTeacherId sess == auPartyId) $
             liftIO $ throwIO err403
+          notesValue <- either (liftIO . throwIO) pure (validateOptionalClassSessionNotes notes)
           let duration = classSessionConsumedMinutes sess
           update cid
             [ ClassSessionAttended =. attended
-            , ClassSessionNotes    =. notes
+            , ClassSessionNotes    =. notesValue
             ]
           pure (ClassSessionOut (entityKeyInt cid) duration)
 
