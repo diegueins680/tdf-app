@@ -10,6 +10,7 @@ module TDF.ServerLiveSessions
   , resolveLiveSessionMusicianLookup
   , selectUniqueLiveSessionMusicianByEmail
   , sanitizeLiveSessionRiderFileName
+  , validateLiveSessionBandName
   , validateLiveSessionOptionalEmail
   , validateLiveSessionReferencedPartyEmail
   , validateLiveSessionRiderFileName
@@ -58,6 +59,9 @@ import           TDF.ServerAuth             (normalizeAuthEmailAddress)
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
 
+liveSessionBandNameMaxLength :: Int
+liveSessionBandNameMaxLength = 160
+
 liveSessionTermsVersionMaxLength :: Int
 liveSessionTermsVersionMaxLength = 160
 
@@ -83,9 +87,7 @@ liveSessionsServer
 liveSessionsServer user = intakeHandler
   where
     intakeHandler payload = do
-      let bandName = T.strip (lsiBandName payload)
-      when (T.null bandName) $
-        throwError err400 { errBody = "bandName is required" }
+      bandName <- either throwError pure (validateLiveSessionBandName (lsiBandName payload))
       acceptedTermsVersion <-
         either throwError pure $
           validateLiveSessionTermsAcceptance
@@ -317,6 +319,35 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
           then T.take liveSessionUsernameCollisionBudget trimmedBase
           else T.take baseBudget trimmedBase
   in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
+
+validateLiveSessionBandName :: Text -> Either ServerError Text
+validateLiveSessionBandName rawBandName
+  | T.null bandName =
+      Left err400 { errBody = "bandName is required" }
+  | T.length bandName > liveSessionBandNameMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "bandName must be "
+                      <> T.pack (show liveSessionBandNameMaxLength)
+                      <> " characters or fewer"
+                  )
+              )
+        }
+  | T.any isUnsafeLiveSessionBandNameChar bandName =
+      Left err400
+        { errBody =
+            "bandName must not contain control characters or hidden formatting characters"
+        }
+  | otherwise =
+      Right bandName
+  where
+    bandName = T.strip rawBandName
+
+isUnsafeLiveSessionBandNameChar :: Char -> Bool
+isUnsafeLiveSessionBandNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 resolveLiveSessionMusicianLookup :: Maybe Text -> LiveSessionMusicianLookup
 resolveLiveSessionMusicianLookup rawEmail =

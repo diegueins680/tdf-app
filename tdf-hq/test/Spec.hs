@@ -225,6 +225,7 @@ import TDF.ServerLiveSessions
       resolveLiveSessionMusicianLookup,
       selectUniqueLiveSessionMusicianByEmail,
       sanitizeLiveSessionRiderFileName,
+      validateLiveSessionBandName,
       validateLiveSessionOptionalEmail,
       validateLiveSessionReferencedPartyEmail,
       validateLiveSessionRiderFileName,
@@ -8841,6 +8842,34 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected duplicate musician email matches to fail, got " <> show value)
+
+    describe "validateLiveSessionBandName" $ do
+        it "trims live-session band names before intake persistence" $
+            validateLiveSessionBandName "  The House Band  "
+                `shouldBe` Right "The House Band"
+
+        it "rejects unsafe live-session band names before intake persistence" $ do
+            let assertInvalid rawBandName expectedMessage =
+                    case validateLiveSessionBandName rawBandName of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session bandName, got "
+                                    <> show value
+                                )
+
+            assertInvalid "   " "bandName is required"
+            assertInvalid
+                (Data.Text.replicate 161 "a")
+                "bandName must be 160 characters or fewer"
+            assertInvalid
+                "The House Band\NUL"
+                "bandName must not contain control characters"
+            assertInvalid
+                ("The House" <> Data.Text.singleton '\x202E' <> "Band")
+                "bandName must not contain control characters"
 
     describe "validateLiveSessionOptionalEmail" $ do
         it "normalizes optional live-session emails before lookup and persistence" $ do
