@@ -9701,6 +9701,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the redundant shared-status chip after local search when only the load limit is custom', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: 'ada@example.com',
+        crStatus: 'pending_payment',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(6, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crStatus: index % 2 === 0 ? 'pending_payment' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Estado visible: Pagado.');
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('summarizes shared internal notes once after local search narrows a mixed list', async () => {
     const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 

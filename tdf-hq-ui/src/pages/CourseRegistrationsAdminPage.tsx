@@ -2858,7 +2858,6 @@ export default function CourseRegistrationsAdminPage() {
   const redundantSharedSearchStatusFilter = shouldShowSharedStatusSummary
     && hasLocalSearch
     && !hasManualFilters
-    && !hasCustomLimit
     && !cohortsQuery.isError
     ? singleSearchedKnownStatus
     : null;
