@@ -850,6 +850,12 @@ const firstRunEmergingSocialLeadDescriptorPrefixPattern =
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
+const firstRunEventPlatformDescriptorPrefixPattern =
+  /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
+
+const firstRunEventPlatformDescriptorSuffixPattern =
+  /(?:\s*[-:/|]\s*(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s*(?:[-:/|]\s*)?(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup))\s*$/i;
+
 const firstRunInquiryDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:contact|inquiry|enquiry|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -927,6 +933,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
+    .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
@@ -967,6 +974,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
+    .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunInfoSessionDescriptorSuffixPattern, '')

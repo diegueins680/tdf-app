@@ -12078,6 +12078,67 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips event-platform wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Eventbrite - Beatmaking 101',
+      'Eventbrite registration page - Beatmaking 101',
+      'Beatmaking 101 - Lu.ma signup page',
+      'Meetup event registration page for Beatmaking 101',
+      'Formulario de Eventbrite para Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/Eventbrite|Lu\.?ma|Meetup/i);
+        expect(emptyState?.textContent).not.toMatch(/event registration|signup page/i);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
+  it('keeps event-platform words when they are part of the course name', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'meetup-music-production', ccTitle: 'Meetup Music Production' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Meetup Music Production. Abre la página pública cuando estés listo para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Music Production.');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/meetup-music-production"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Meetup Music Production');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips provider-prefixed registration descriptors from first-run cohort copy', async () => {
     const titles = [
       'Google application form - Beatmaking 101',
