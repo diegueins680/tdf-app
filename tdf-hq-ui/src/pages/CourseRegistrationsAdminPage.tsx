@@ -2442,6 +2442,10 @@ export default function CourseRegistrationsAdminPage() {
     ? buildReachedListLimitSummary(limit)
     : '';
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
+  const showLimitAdjustmentAction = showAdvancedLimitControl && (
+    viewHitsCurrentLimit
+    || showAdvancedFilters
+  );
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
   const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
     && !hasCustomFilters
@@ -2622,7 +2626,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch
     && !showEmptyLocalSearchResults,
   );
-  const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
+  const showInlineSingleChoiceLimitToggle = showLimitAdjustmentAction
     && !hidePassiveFiltersDuringEmptyLocalSearch
     && !showEmptyLocalSearchLimitGuidance
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
@@ -4399,7 +4403,7 @@ export default function CourseRegistrationsAdminPage() {
                 </>
               )}
             </Grid>
-            {showAdvancedLimitControl
+            {showLimitAdjustmentAction
               && !showInlineSingleChoiceLimitToggle
               && !showEmptyLocalSearchLimitGuidance && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>

@@ -7256,6 +7256,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the limit adjust toggle when a custom limit is not constraining the loaded view', async () => {
+    listRegistrationsMock.mockResolvedValue([buildRegistration()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(container.textContent).toContain('Límite actual: hasta 50 inscripciones.');
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(1);
+      expect(countButtonsByText(container, 'Ajustar límite (50)')).toBe(0);
+      expect(countButtonsByText(container, 'Ocultar límite')).toBe(0);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')?.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago',
+      );
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Restablecer límite'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenLastCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.textContent).not.toContain('Límite actual:');
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a filtered-empty view focused on clearing filters instead of offering duplicate recovery actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
