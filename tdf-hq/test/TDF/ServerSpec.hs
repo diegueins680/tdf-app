@@ -293,6 +293,7 @@ import TDF.Server
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
     , extractApiErrorMessage
+    , extractModelReplyText
     , extractChatKitSession
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
@@ -4078,6 +4079,27 @@ spec = describe "TDF.Server helpers" $ do
                     shouldRetryWithFallbackModel 403 msg `shouldBe` False
                 Nothing ->
                     expectationFailure "Expected typed OpenAI error to preserve authentication marker"
+
+    describe "extractModelReplyText" $ do
+        it "requires chat completion replies to come from the assistant role" $ do
+            let chatPayload messageRole messageContent =
+                    object
+                        [ "choices" .=
+                            [ object
+                                [ "message" .= object
+                                    [ "role" .= (messageRole :: Text)
+                                    , "content" .= (messageContent :: Text)
+                                    ]
+                                ]
+                            ]
+                        ]
+
+            extractModelReplyText (chatPayload "assistant" "SEND: Hola")
+                `shouldBe` Just "SEND: Hola"
+            extractModelReplyText (chatPayload "user" "SEND: spoofed")
+                `shouldBe` Nothing
+            extractModelReplyText (chatPayload "system" "SEND: policy")
+                `shouldBe` Nothing
 
     describe "shouldRetryWithFallbackModel" $ do
         it "falls back only when the upstream error is explicitly model-related" $ do

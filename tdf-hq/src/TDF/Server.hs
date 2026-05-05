@@ -9654,8 +9654,12 @@ extractModelReplyText payload =
 
 extractChatCompletionText :: Value -> Maybe Text
 extractChatCompletionText payload = do
-  ChatCompletionResp{choices = (ChatChoice OpenAIChatMessage{content = reply} : _)} <- parseMaybe parseJSON payload
-  nonEmptyText reply
+  ChatCompletionResp
+    { choices = (ChatChoice OpenAIChatMessage{role = replyRole, content = reply} : _)
+    } <- parseMaybe parseJSON payload
+  if replyRole == "assistant"
+    then nonEmptyText reply
+    else Nothing
 
 extractResponsesOutputText :: Value -> Maybe Text
 extractResponsesOutputText payload = parseMaybe parsePayload payload
