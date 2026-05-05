@@ -4263,7 +4263,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('only mentions the active-only scope inside the empty search state while inactive accounts are still hidden', async () => {
+  it('keeps the empty-search scope in one line as admins expand from active to inactive accounts', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
         ? [
@@ -4335,7 +4335,9 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
-        expect(container.textContent).toContain('No hay coincidencias para "sin coincidencias".');
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "sin coincidencias" entre usuarios activos e inactivos.',
+        );
         expect(container.textContent).not.toContain(
           'No hay coincidencias para "sin coincidencias" entre los usuarios activos.',
         );

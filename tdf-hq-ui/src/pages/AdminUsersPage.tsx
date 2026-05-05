@@ -1022,14 +1022,14 @@ export default function AdminUsersPage() {
     ? (
       !includeInactive
         ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos.`
-        : `No hay coincidencias para "${activeSearchSummary}".`
+        : `No hay coincidencias para "${activeSearchSummary}" entre usuarios activos e inactivos.`
     )
     : '';
   const searchEmptyStateTitle = showSearchEmptyState && activeSearchSummary !== fullSearchSummary
     ? (
       !includeInactive
         ? `No hay coincidencias para "${fullSearchSummary}" entre los usuarios activos.`
-        : `No hay coincidencias para "${fullSearchSummary}".`
+        : `No hay coincidencias para "${fullSearchSummary}" entre usuarios activos e inactivos.`
     )
     : undefined;
   const visibleUsersSummary = useMemo(() => {
