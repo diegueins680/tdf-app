@@ -12756,10 +12756,12 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('strips English request descriptors from first-run cohort copy', async () => {
+  it('strips English request and submission descriptors from first-run cohort copy', async () => {
     const titles = [
       'Enrollment request - Beatmaking 101',
       'Beatmaking 101 - registration request',
+      'Course submission form - Beatmaking 101',
+      'Beatmaking 101 - student submission page',
     ];
 
     for (const title of titles) {
@@ -12777,6 +12779,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Enrollment request');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - registration request');
+        expect(emptyState?.textContent).not.toContain('Course submission form');
+        expect(emptyState?.textContent).not.toContain('student submission page');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
