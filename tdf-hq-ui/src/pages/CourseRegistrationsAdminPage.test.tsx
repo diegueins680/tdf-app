@@ -10176,6 +10176,60 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('clears stale status feedback when the admin starts another row action', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, 'Cancelar inscripción'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Estado actualizado para Ada Lovelace.');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).not.toContain('Estado actualizado para Ada Lovelace.');
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('uses one explicit empty-search recovery action instead of an icon-only clear control', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 

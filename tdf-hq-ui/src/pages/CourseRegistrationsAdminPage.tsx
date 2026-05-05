@@ -3178,6 +3178,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
     setHasUsedRowAction(true);
+    setPageFlash(null);
     setStatusMenuTarget({ anchorEl, reg });
   };
 
@@ -3223,6 +3224,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleOpenDossier = (reg: CourseRegistrationDTO, intent: DossierIntent) => {
     setHasUsedRowAction(true);
+    setPageFlash(null);
     setSelectedDossier({ reg, intent });
   };
 
