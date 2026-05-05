@@ -40,6 +40,7 @@ stub rawArea rawEndpoint = do
       StubResponse
         { stubArea        = area
         , stubEndpoint    = endpoint
+        , stubId          = futureStubId area endpoint
         , stubPath        = futureStubPath area endpoint
         , stubMethod      = futureStubMethod
         , stubStatus      = "planned"
@@ -100,6 +101,7 @@ futureServer user = futureCatalog
         AdminConsoleView
           { viewArea = "admin"
           , viewEndpoint = "console"
+          , viewId = futureStubId "admin" "console"
           , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
           , viewStatus = "preview"
@@ -226,6 +228,7 @@ validateFutureStubResponse response =
   case validateFutureStubMetadata (stubArea response) (stubEndpoint response) of
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
+      | stubId response /= futureStubId area endpoint -> invalidFutureStubResponse
       | stubPath response /= futureStubPath area endpoint -> invalidFutureStubResponse
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
@@ -236,6 +239,7 @@ validateFutureStubResponse response =
           Right response
             { stubArea = area
             , stubEndpoint = endpoint
+            , stubId = futureStubId area endpoint
             , stubPath = futureStubPath area endpoint
             , stubMethod = futureStubMethod
             , stubRequiredRole = futureStubRequiredRole
@@ -258,9 +262,11 @@ validateFutureStubCatalogResponses :: [StubResponse] -> Either ServerError [Stub
 validateFutureStubCatalogResponses responses = do
   validatedResponses <- traverse validateFutureStubResponse responses
   let metadata = map (\response -> (stubArea response, stubEndpoint response)) validatedResponses
+      ids = map stubId validatedResponses
       paths = map stubPath validatedResponses
   if metadata /= allowedFutureStubMetadata
        || length metadata /= length (nub metadata)
+       || length ids /= length (nub ids)
        || length paths /= length (nub paths)
     then invalidFutureStubCatalog
     else Right validatedResponses
@@ -271,6 +277,7 @@ futureStubResponseFor area endpoint =
     StubResponse
       { stubArea = area
       , stubEndpoint = endpoint
+      , stubId = futureStubId area endpoint
       , stubPath = futureStubPath area endpoint
       , stubMethod = futureStubMethod
       , stubStatus = "planned"
@@ -282,6 +289,10 @@ futureStubResponseFor area endpoint =
 futureStubPath :: Text -> Text -> Text
 futureStubPath area endpoint =
   "/stubs/" <> area <> "/" <> endpoint
+
+futureStubId :: Text -> Text -> Text
+futureStubId area endpoint =
+  area <> "." <> T.replace "/" "." endpoint
 
 futureStubMethod :: Text
 futureStubMethod = "GET"
@@ -336,6 +347,7 @@ validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminCo
 validateFutureAdminConsoleView view
   | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
+  | viewId view /= futureStubId "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewPath view /= futureStubPath "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
@@ -351,6 +363,7 @@ validateFutureAdminConsoleView view
         else Right view
           { viewArea = "admin"
           , viewEndpoint = "console"
+          , viewId = futureStubId "admin" "console"
           , viewPath = futureStubPath "admin" "console"
           , viewMethod = futureStubMethod
           , viewStatus = "preview"

@@ -337,6 +337,7 @@ import TDF.ServerProposals
 import TDF.ServerFuture
     ( allowedFutureStubMetadata
     , allowedFutureStubAreas
+    , futureStubId
     , futureServer
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
@@ -9028,6 +9029,7 @@ spec = describe "TDF.Server helpers" $ do
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
+                        , stubId = futureStubId area endpoint
                         , stubPath = "/stubs/" <> area <> "/" <> endpoint
                         , stubMethod = "GET"
                         , stubStatus = "planned"
@@ -9106,10 +9108,20 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
-            let mkResponse area endpoint path method status requiredRole requiredModule implemented =
+            let mkResponseWithId
+                    stubIdValue
+                    area
+                    endpoint
+                    path
+                    method
+                    status
+                    requiredRole
+                    requiredModule
+                    implemented =
                     StubResponse
                         { stubArea = area
                         , stubEndpoint = endpoint
+                        , stubId = stubIdValue
                         , stubPath = path
                         , stubMethod = method
                         , stubStatus = status
@@ -9117,6 +9129,8 @@ spec = describe "TDF.Server helpers" $ do
                         , stubRequiredModule = requiredModule
                         , stubImplemented = implemented
                         }
+                mkResponse area endpoint =
+                    mkResponseWithId (futureStubId area endpoint) area endpoint
                 validResponse =
                     mkResponse
                         "crm"
@@ -9141,6 +9155,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right response -> do
                     stubArea response `shouldBe` "crm"
                     stubEndpoint response `shouldBe` "parties/list-columns"
+                    stubId response `shouldBe` "crm.parties.list-columns"
                     stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
@@ -9151,6 +9166,17 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected valid future stub response, got: " <> show serverErr)
 
+            assertInvalid
+                (mkResponseWithId
+                    "crm.parties.filters"
+                    "crm"
+                    "parties/list-columns"
+                    "/stubs/crm/parties/list-columns"
+                    "GET"
+                    "planned"
+                    "Admin"
+                    "Admin"
+                    False)
             assertInvalid
                 (mkResponse
                     "crm"
@@ -9314,6 +9340,7 @@ spec = describe "TDF.Server helpers" $ do
                     Future.AdminConsoleView
                         { Future.viewArea = areaValue
                         , Future.viewEndpoint = endpointValue
+                        , Future.viewId = futureStubId areaValue endpointValue
                         , Future.viewPath = pathValue
                         , Future.viewMethod = methodValue
                         , Future.viewStatus = statusValue
@@ -9355,6 +9382,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right view -> do
                     Future.viewArea view `shouldBe` "admin"
                     Future.viewEndpoint view `shouldBe` "console"
+                    Future.viewId view `shouldBe` "admin.console"
                     Future.viewPath view `shouldBe` "/stubs/admin/console"
                     Future.viewMethod view `shouldBe` "GET"
                     Future.viewStatus view `shouldBe` "preview"
@@ -9368,6 +9396,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected valid admin console view, got: " <> show serverErr)
 
             assertInvalid (mkView "planned" [validUserManagementCard])
+            assertInvalid (validView { Future.viewId = "admin.seed" })
             assertInvalid
                 (mkViewWithRoute
                     "crm"
@@ -9465,6 +9494,8 @@ spec = describe "TDF.Server helpers" $ do
                 Right catalog -> do
                     map (\response -> (stubArea response, stubEndpoint response)) catalog
                         `shouldBe` allowedFutureStubMetadata
+                    map stubId catalog
+                        `shouldBe` map (uncurry futureStubId) allowedFutureStubMetadata
                     map stubPath catalog
                         `shouldBe` map
                             (\(area, endpoint) -> "/stubs/" <> area <> "/" <> endpoint)
@@ -9496,6 +9527,8 @@ spec = describe "TDF.Server helpers" $ do
                 Right routeResponses -> do
                     map (\response -> (stubArea response, stubEndpoint response)) routeResponses
                         `shouldBe` allowedFutureStubMetadata
+                    map stubId routeResponses
+                        `shouldBe` map (uncurry futureStubId) allowedFutureStubMetadata
                     map stubPath routeResponses
                         `shouldBe` map
                             (\(area, endpoint) -> "/stubs/" <> area <> "/" <> endpoint)
@@ -9523,6 +9556,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right stubResponse -> do
                     stubArea stubResponse `shouldBe` "access"
                     stubEndpoint stubResponse `shouldBe` "login-options"
+                    stubId stubResponse `shouldBe` "access.login-options"
                     stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
                     stubRequiredRole stubResponse `shouldBe` "Admin"
@@ -9536,6 +9570,7 @@ spec = describe "TDF.Server helpers" $ do
                 Right consoleView -> do
                     Future.viewArea consoleView `shouldBe` "admin"
                     Future.viewEndpoint consoleView `shouldBe` "console"
+                    Future.viewId consoleView `shouldBe` "admin.console"
                     Future.viewPath consoleView `shouldBe` "/stubs/admin/console"
                     Future.viewMethod consoleView `shouldBe` "GET"
                     Future.viewStatus consoleView `shouldBe` "preview"
@@ -9549,6 +9584,7 @@ spec = describe "TDF.Server helpers" $ do
                         `shouldBe` A.object
                             [ "stubArea" .= ("admin" :: Text)
                             , "stubEndpoint" .= ("console" :: Text)
+                            , "stubId" .= ("admin.console" :: Text)
                             , "stubPath" .= ("/stubs/admin/console" :: Text)
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("preview" :: Text)
@@ -9590,6 +9626,7 @@ spec = describe "TDF.Server helpers" $ do
                         `shouldBe` A.object
                             [ "stubArea" .= ("access" :: Text)
                             , "stubEndpoint" .= ("login-options" :: Text)
+                            , "stubId" .= ("access.login-options" :: Text)
                             , "stubPath" .= ("/stubs/access/login-options" :: Text)
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("planned" :: Text)

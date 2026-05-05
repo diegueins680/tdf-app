@@ -13,6 +13,7 @@ import           Servant
 data StubResponse = StubResponse
   { stubArea        :: Text
   , stubEndpoint    :: Text
+  , stubId          :: Text
   , stubPath        :: Text
   , stubMethod      :: Text
   , stubStatus      :: Text
@@ -26,6 +27,7 @@ instance ToJSON StubResponse where
     object
       [ "stubArea" .= stubArea response
       , "stubEndpoint" .= stubEndpoint response
+      , "stubId" .= stubId response
       , "stubPath" .= stubPath response
       , "stubMethod" .= stubMethod response
       , "stubStatus" .= stubStatus response
@@ -55,6 +57,7 @@ instance ToJSON AdminConsoleCard where
 data AdminConsoleView = AdminConsoleView
   { viewArea           :: Text
   , viewEndpoint       :: Text
+  , viewId             :: Text
   , viewPath           :: Text
   , viewMethod         :: Text
   , viewStatus         :: Text
@@ -69,6 +72,7 @@ instance ToJSON AdminConsoleView where
     object
       [ "stubArea" .= viewArea view
       , "stubEndpoint" .= viewEndpoint view
+      , "stubId" .= viewId view
       , "stubPath" .= viewPath view
       , "stubMethod" .= viewMethod view
       , "stubStatus" .= viewStatus view
