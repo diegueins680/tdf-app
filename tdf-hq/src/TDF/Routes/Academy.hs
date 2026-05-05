@@ -17,7 +17,7 @@ module TDF.Routes.Academy
 
 import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl, isSpace)
+import           Data.Char (isAsciiLower, isControl, isDigit, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -163,8 +163,44 @@ isValidAcademyEmail :: Text -> Bool
 isValidAcademyEmail candidate =
   case T.splitOn "@" candidate of
     [local, domain] ->
-      not (T.null local)
+      T.length candidate <= maxAcademyEmailChars
+        && isValidAcademyEmailLocalPart local
         && not (T.null domain)
-        && T.any (== '.') domain
         && not (T.any (\ch -> isSpace ch || isControl ch) candidate)
+        && T.isInfixOf "." domain
+        && all isValidAcademyEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+maxAcademyEmailChars :: Int
+maxAcademyEmailChars = 254
+
+isValidAcademyEmailLocalPart :: Text -> Bool
+isValidAcademyEmailLocalPart local =
+  not (T.null local)
+    && T.length local <= maxAcademyEmailLocalPartChars
+    && not (T.isPrefixOf "." local)
+    && not (T.isSuffixOf "." local)
+    && not (".." `T.isInfixOf` local)
+    && T.all isValidAcademyEmailLocalChar local
+
+maxAcademyEmailLocalPartChars :: Int
+maxAcademyEmailLocalPartChars = 64
+
+isValidAcademyEmailLocalChar :: Char -> Bool
+isValidAcademyEmailLocalChar ch =
+  isAsciiLower ch || isDigit ch || ch `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidAcademyEmailDomainLabel :: Text -> Bool
+isValidAcademyEmailDomainLabel label =
+  not (T.null label)
+    && T.length label <= maxAcademyEmailDomainLabelChars
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidAcademyEmailDomainChar label
+
+maxAcademyEmailDomainLabelChars :: Int
+maxAcademyEmailDomainLabelChars = 63
+
+isValidAcademyEmailDomainChar :: Char -> Bool
+isValidAcademyEmailDomainChar ch =
+  isAsciiLower ch || isDigit ch || ch == '-'

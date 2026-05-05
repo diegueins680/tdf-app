@@ -1431,6 +1431,22 @@ spec = do
                 "{\"email\":\"ada@example.com\",\"code\":\"   \"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects malformed academy email shapes before enrollment fallback lookup" $ do
+            let assertInvalidEmail rawEmail =
+                    decodeEnroll
+                        ( "{\"email\":\""
+                            <> rawEmail
+                            <> "\",\"role\":\"artist\"}"
+                        )
+                        `shouldSatisfy` isLeft
+            assertInvalidEmail "ada@example..com"
+            assertInvalidEmail "ada@-example.com"
+            assertInvalidEmail "ada@example-.com"
+            assertInvalidEmail ".ada@example.com"
+            assertInvalidEmail "ada.@example.com"
+            assertInvalidEmail "ada..lovelace@example.com"
+            assertInvalidEmail "ada()@example.com"
+
         it "rejects unexpected keys so malformed academy bodies fail explicitly" $ do
             decodeEnroll
                 "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"instagram\",\"unexpected\":true}"
