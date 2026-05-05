@@ -297,7 +297,8 @@ validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
 
 isCompletableLeadStatus :: Text -> Bool
 isCompletableLeadStatus rawStatus =
-  T.toUpper (T.strip rawStatus) `elem` ["NEW", "LINK_SENT"]
+  let statusValue = T.strip rawStatus
+  in rawStatus == statusValue && statusValue `elem` ["NEW", "LINK_SENT"]
 
 ensureLeadCompletionUpdated :: Int64 -> Either ServerError ()
 ensureLeadCompletionUpdated updatedRows

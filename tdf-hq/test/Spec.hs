@@ -8584,6 +8584,14 @@ main = hspec $ do
                 409
                 "Lead completion is not available"
             assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just ("link_sent", Just validToken)))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just (" LINK_SENT ", Just validToken)))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
                 (validateLeadCompletionLookup validToken (Just ("completed", Nothing)))
                 409
                 "Lead already completed"
