@@ -5489,6 +5489,22 @@ main = hspec $ do
                     eiuName parsed `shouldBe` Just "Poster final"
                     fdFileName (eiuFile parsed) `shouldBe` "poster.png"
 
+        it "rejects uploads with no usable image name or browser filename" $
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "   ")]
+                    [mkEventImageFile "file" "   "])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err
+                        `shouldContain`
+                            "Either image name or uploaded browser file name must be provided"
+                Right parsed ->
+                    expectationFailure
+                        ( "Expected unnamed event image upload to be rejected, got file: "
+                            <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                        )
+
         it "rejects duplicate or unexpected multipart parts instead of silently ignoring upload intent" $ do
             case fromMultipart
                 (mkEventImageMultipart

@@ -85,6 +85,7 @@ instance FromMultipart Tmp EventImageUploadForm where
     rejectUnexpectedParts multipart
     file <- lookupSingleFile "file" multipart
     mName <- lookupOptionalInput "name" multipart
+    rejectUnnamedUpload mName file
     mapM_ (validateUploadName "Uploaded image name") mName
     validateUploadName "Uploaded browser file name" (fdFileName file)
     validateImageUploadMetadata mName file
@@ -123,6 +124,12 @@ instance FromMultipart Tmp EventImageUploadForm where
           [] -> Left ("Missing file field: " <> T.unpack name)
           [file] -> Right file
           _ -> Left ("Duplicate file field: " <> T.unpack name)
+
+      rejectUnnamedUpload mName file =
+        case (mName, T.strip (fdFileName file)) of
+          (Nothing, fileName) | T.null fileName ->
+            Left "Either image name or uploaded browser file name must be provided"
+          _ -> Right ()
 
       validateUploadName label rawName
         | T.null (T.strip rawName) = Right ()
