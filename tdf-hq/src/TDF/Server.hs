@@ -7868,11 +7868,35 @@ resolveResourcesForBooking service requested start end =
     Right [] -> defaultResourcesForService service start end
     Right explicit -> resolveRequestedResources explicit start end
 
+maxBookingResourceIds :: Int
+maxBookingResourceIds = 20
+
+maxBookingResourceIdLength :: Int
+maxBookingResourceIdLength = 160
+
 normalizeRequestedResourceIds :: [Text] -> Either ServerError [Text]
 normalizeRequestedResourceIds rawIds =
   let normalized = map T.strip rawIds
   in if any T.null normalized
        then Left err400 { errBody = "resourceIds must not contain blank entries" }
+       else if length normalized > maxBookingResourceIds
+       then
+         Left err400
+           { errBody =
+               BL8.pack $
+                 "resourceIds must contain "
+                   <> show maxBookingResourceIds
+                   <> " entries or fewer"
+           }
+       else if any ((> maxBookingResourceIdLength) . T.length) normalized
+       then
+         Left err400
+           { errBody =
+               BL8.pack $
+                 "resourceIds entries must be "
+                   <> show maxBookingResourceIdLength
+                   <> " characters or fewer"
+           }
        else if any (T.any isUnsafeResourceIdChar) normalized
        then
          Left err400

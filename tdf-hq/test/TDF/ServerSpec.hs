@@ -107,6 +107,7 @@ import TDF.Server
     , WAInbound(..)
     , extractWhatsAppInbound
     , normalizeOptionalInput
+    , normalizeRequestedResourceIds
     , parseMcpRequest
     , parseToolCallParams
     , validateMcpToolArguments
@@ -7669,6 +7670,24 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
 
     describe "resolveResourcesForBooking" $ do
+        it "rejects oversized explicit room id shapes before lookup fallback can echo them" $ do
+            let assertInvalid expected result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expected
+                        Right resourceIds ->
+                            expectationFailure
+                                ( "Expected oversized booking resourceIds to be rejected, got: "
+                                    <> show resourceIds
+                                )
+            assertInvalid
+                "resourceIds entries must be 160 characters or fewer"
+                (normalizeRequestedResourceIds [T.replicate 161 "a"])
+            assertInvalid
+                "resourceIds must contain 20 entries or fewer"
+                (normalizeRequestedResourceIds (replicate 21 "room-control"))
+
         it "resolves explicit room slugs from booking payloads instead of silently dropping them" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
