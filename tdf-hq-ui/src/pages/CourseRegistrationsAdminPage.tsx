@@ -60,8 +60,25 @@ const receiptComposerHelpText = 'Este formulario ya está abierto para guardar o
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
-const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
-  `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
+const formatInitialCohortPreview = (labels: readonly string[]) => {
+  const uniqueLabels = Array.from(new Set(labels.map((label) => label.trim()).filter(Boolean)));
+  if (uniqueLabels.length === 0) return '';
+  if (uniqueLabels.length === 1) return uniqueLabels[0] ?? '';
+  if (uniqueLabels.length === 2) return `${uniqueLabels[0]} y ${uniqueLabels[1]}`;
+  if (uniqueLabels.length === 3) {
+    return `${uniqueLabels[0]}, ${uniqueLabels[1]} y ${uniqueLabels[2]}`;
+  }
+
+  const visibleLabels = uniqueLabels.slice(0, 3);
+  return `${visibleLabels.join(', ')} y ${uniqueLabels.length - visibleLabels.length} más`;
+};
+const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
+  const preview = formatInitialCohortPreview(labels);
+  if (preview) {
+    return `Hay ${count} formularios públicos listos para recibir la primera inscripción: ${preview}.`;
+  }
+  return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
+};
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir cuál compartir';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -2814,7 +2831,10 @@ export default function CourseRegistrationsAdminPage() {
   const initialEmptyStateMessage = firstRunCohort
     ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
-      ? buildInitialEmptyStateMultiCohortMessage(configuredCohortOptions.length)
+      ? buildInitialEmptyStateMultiCohortMessage(
+        configuredCohortOptions.length,
+        configuredCohortOptions.map((option) => option.firstRunLabel),
+      )
     : initialEmptyStateConfigMessage;
   const initialEmptyStateAction = firstRunCohort
     ? {
